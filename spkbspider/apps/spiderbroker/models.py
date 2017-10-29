@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 
 class Broker(models.Model):
+    id = models.BigAutoField(primary_key=True)
     CHOICES = [
         ("oauth", "OAUTH"),
         ("jwt", "JWT")

@@ -15,8 +15,6 @@ class Protection(models.Model):
     objects = ProtectionManager()
     code = models.CharField(max_length=10, primary_key=True)
     protections = {}
-    def validate(self, component, request):
-        return self.protections[self.code].validate(component, request)
 
     @classmethod
     def create_protections(cls):
@@ -35,27 +33,34 @@ class Protection(models.Model):
     def __str__(self):
         return _(self.code)
 
+    def validate(self, user, data, request):
+        return self.protections[self.code].validate(user, data, request)
+
 
 class AssignedProtection(models.Model):
     protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned")
     usercomponent = models.ForeignKey("spiderpk.UserComponent", on_delete=models.CASCADE)
-    # data for
-    data = JSONField(default={}, null=False)
+    # data for protection
+    protectiondata = JSONField(default={}, null=False)
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
     class Meta:
         unique_together = [("protection", "usercomponent"),]
 
+
+    def validate(self, request):
+        return self.protection.validate(usercomponent.user, self.protectiondata, request)
+
 @Protection.add("self")
-def validate_user(component, request):
-    if request.user.is_authenticated and request.user.pk == component.user.pk:
+def validate_user(user, data, request):
+    if request.user.is_authenticated and request.user.pk == user.pk:
         return True
     else:
         return False
 
 @Protection.add("friends")
-def validate_friends(component, request):
-    if request.user.pk in component.authdata.get("friends", []) == user.pk:
+def validate_friends(user, data, request):
+    if request.user.pk in data.get("friends", []):
         return True
     else:
         return False
