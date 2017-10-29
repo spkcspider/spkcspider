@@ -5,4 +5,5 @@ from django.contrib.auth.models import AbstractUser
 
 
 class SpiderUser(AbstractUser):
-    pass
+    class Meta(AbstractUser.Meta):
+        swappable = 'AUTH_USER_MODEL'
