@@ -18,12 +18,12 @@ class Broker(models.Model):
         ("jwt", "JWT")
 
     ]
-    brokertype = models.SlugField(max_length=10, choices=CHOICES)
-    brokerdata = JSONField(default={})
-    url = models.URLField(max_length=300, default="")
+    brokertype = models.SlugField(max_length=10, choices=CHOICES, editable=False)
+    brokerdata = JSONField(default={}, editable=False)
+    url = models.URLField(max_length=300, default="", editable=False)
     # for extra information e.g. content of broker
     extra = JSONField(default={})
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
 
     class Meta:
         unique_together = [("url", "user"),]

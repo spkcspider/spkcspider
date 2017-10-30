@@ -26,11 +26,11 @@ class PublicKeyManager(models.Manager):
 
 # also for account recovery
 class PublicKey(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    id = models.BigAutoField(primary_key=True, editable=False)
     # don't check for similarity as the hash check will reveal all clashes
     key = models.BinaryField(editable=True)
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    modified = models.DateTimeField(auto_now=True, editable=False)
     note = models.TextField(max_length=400, null=False)
     # can only be retrieved by hash or if it is the user
     # every hash has to be unique
@@ -60,13 +60,13 @@ class PublicKey(models.Model):
 
 
 class UserComponent(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    id = models.BigAutoField(primary_key=True, editable=False)
     name = models.SlugField(max_length=50, null=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
     #data for requester (NOT FOR PROTECTION)
     data = JSONField(default={}, null=False)
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    modified = models.DateTimeField(auto_now=True, editable=False)
     # should be used for retrieving active protections, related_name
     assigned = None
     protections = models.ManyToManyField(Protection, through=AssignedProtection, limit_choices_to=Protection.objects.valid())
@@ -78,8 +78,8 @@ class UserComponent(models.Model):
 
     def validate(self, request):
         # with deny and protections
-        if self.assigned.filter(code="deny").exists() and len(self.assigned) > 1:
-            for p in self.assigned.exclude(code="deny"):
+        if self.assigned.filter(code="deny", active=True).exists() and len(self.assigned) > 1:
+            for p in self.assigned.filter(active=True).exclude(code="deny"):
                 if not p.validate(request):
                     return False
             for rec, error in validate_success.send_robust(sender=self.__class__, name=self.name, code="deny"):
@@ -87,7 +87,7 @@ class UserComponent(models.Model):
             return True
         else:
             # normally just one must be fullfilled (or)
-            for p in self.assigned.all():
+            for p in self.assigned.filter(active=True):
                 if p.validate(request):
                     for rec, error in validate_success.send_robust(sender=self.__class__, name=self.name, code=p.code)
                         logger.error(error)

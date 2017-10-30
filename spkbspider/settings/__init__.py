@@ -54,7 +54,7 @@ ROOT_URLCONF = 'spkbspider.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_PATH, "spkbspider", "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

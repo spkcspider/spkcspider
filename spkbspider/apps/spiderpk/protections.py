@@ -38,12 +38,13 @@ class Protection(models.Model):
 
 
 class AssignedProtection(models.Model):
-    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned")
-    usercomponent = models.ForeignKey("spiderpk.UserComponent", on_delete=models.CASCADE)
+    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", editable=False)
+    usercomponent = models.ForeignKey("spiderpk.UserComponent", on_delete=models.CASCADE, editable=False)
     # data for protection
     protectiondata = JSONField(default={}, null=False)
-    created = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    modified = models.DateTimeField(auto_now=True, editable=False)
+    active = models.BooleanField(default=True)
     class Meta:
         unique_together = [("protection", "usercomponent"),]
 
