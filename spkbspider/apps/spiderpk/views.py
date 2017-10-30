@@ -11,7 +11,7 @@ class PublicKeyIndex(ListView):
     #    # TODO: filter
     #    pass
 
-class PublicKeyView(DetailView):
+class PublicKeyDetail(DetailView):
     model = PublicKey
 
 class PublicKeyCreate(CreateView):
@@ -33,7 +33,7 @@ class UserComponentIndex(ListView):
         # TODO: filter
         pass
 
-class UserComponentView(DetailView):
+class UserComponentDetail(DetailView):
     model = UserComponent
 
 class UserComponentCreate(CreateView):

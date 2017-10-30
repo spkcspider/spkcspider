@@ -50,6 +50,9 @@ class PublicKey(models.Model):
         super().__init__(*args, **kwargs)
         self.__original_key = self.key
 
+    def __str__(self):
+        return self.hash
+
     def save(self, *args, **kwargs):
         if self.key and self.__original_key != self.key:
             h = hashlib.new(settings.KEY_HASH_ALGO))
@@ -57,6 +60,7 @@ class PublicKey(models.Model):
             self.hash = h.hexdigest()
 
         super().save(*args, **kwargs)
+
 
 
 class UserComponent(models.Model):
@@ -75,6 +79,9 @@ class UserComponent(models.Model):
         indexes = [
             models.Index(fields=['user', 'name']),
         ]
+
+    def __str__(self):
+        return self.name
 
     def validate(self, request):
         # with deny and protections

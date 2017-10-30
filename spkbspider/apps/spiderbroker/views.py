@@ -11,7 +11,7 @@ class BrokerIndex(ListView):
     #    # TODO: filter
     #    pass
 
-class BrokerView(DetailView):
+class BrokerDetail(DetailView):
     model = Broker
 
 class BrokerCreate(CreateView):
