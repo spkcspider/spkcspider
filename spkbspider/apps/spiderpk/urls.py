@@ -3,7 +3,7 @@ from django.conf.urls import url
 from .views import PublicKeyIndex, PublicKeyDetail, PublicKeyCreate, PublicKeyUpdate, PublicKeyDelete
 from .views import UserComponentIndex, UserComponentDetail, UserComponentCreate, UserComponentUpdate, UserComponentDelete
 
-
+# pk = PublicKey, uc = UserComponent
 urlpatterns = [
     url(r'^pk/(?P<user>[-\w]+)/$', PublicKeyIndex.as_view(), name='pk-list'),
     url(r'^pk/(?P<user>[-\w]+)/create/$', PublicKeyCreate.as_view(), name='pk-create'),
