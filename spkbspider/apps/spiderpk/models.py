@@ -5,8 +5,15 @@ from django.utils.translation import pgettext_lazy
 
 from jsonfield import JSONField
 import hashlib
+import logging
+
+logger = logger.getLogger(__name__)
+
+
 # Create your models here.
-from .protections import Protection
+from .protections import Protection, AssignedProtection
+from .signals import validate_success
+
 _htest = hashlib.new(settings.KEY_HASH_ALGO))
 _htest.update("test")
 
@@ -54,7 +61,7 @@ class PublicKey(models.Model):
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=40, null=False)
+    name = models.SlugField(max_length=50, null=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     #data for requester (NOT FOR PROTECTION)
     data = JSONField(default={}, null=False)
@@ -68,3 +75,21 @@ class UserComponent(models.Model):
         indexes = [
             models.Index(fields=['user', 'name']),
         ]
+
+    def validate(self, request):
+        # with deny and protections
+        if self.assigned.filter(code="deny").exists() and len(self.assigned) > 1:
+            for p in self.assigned.exclude(code="deny"):
+                if not p.validate(request):
+                    return False
+            for rec, error in validate_success.send_robust(sender=self.__class__, name=self.name, code="deny"):
+                logger.error(error)
+            return True
+        else:
+            # normally just one must be fullfilled (or)
+            for p in self.assigned.all():
+                if p.validate(request):
+                    for rec, error in validate_success.send_robust(sender=self.__class__, name=self.name, code=p.code)
+                        logger.error(error)
+                    return True
+            return False

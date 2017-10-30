@@ -18,7 +18,7 @@ class Broker(models.Model):
         ("jwt", "JWT")
 
     ]
-    brokertype = models.CharField(max_length=10, choices=CHOICES)
+    brokertype = models.SlugField(max_length=10, choices=CHOICES)
     brokerdata = JSONField(default={})
     url = models.URLField(max_length=300, default="")
     # for extra information e.g. content of broker
