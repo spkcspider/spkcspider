@@ -1,8 +1,9 @@
 from django.shortcuts import render
 from django.views.generic.detail import DetailView, ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+import swapper
 # Create your views here.
-from .models import Broker
+Broker = swapper.load_model("spiderbroker", "Broker")
 
 class BrokerIndex(ListView):
     model = Broker
