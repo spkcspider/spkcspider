@@ -5,16 +5,16 @@ from setuptools import setup, find_packages
 
 install_requirements = [
     "django",
-    "django-extensions",
     "swapper",
-    "jsonfield"
+    "jsonfield",
 
     #"pillow",
 ]
 
 debug_requirements = [
-    "werkzeug",
-    "PyOpenSSL",
+    "Werkzeug",
+    "pyOpenSSL",
+    "django-extensions",
 ]
 
 install_requirements += debug_requirements

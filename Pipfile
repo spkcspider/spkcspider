@@ -1,0 +1,19 @@
+[[source]]
+url = 'https://pypi.python.org/simple'
+verify_ssl = true
+name = 'pypi'
+
+[requires]
+python_version = '3'
+
+[packages]
+
+django = '*'
+swapper = '*'
+jsonfield = '*'
+
+[dev-packages]
+
+Werkzeug = '*'
+pyOpenSSL = '*'
+django-extensions = '*'
