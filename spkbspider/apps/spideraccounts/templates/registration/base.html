@@ -1,7 +1,16 @@
 {% extends "spkbspider/base.html" %}
 
 {% block robots %}none{% endblock %}
-
 {% block base_style %}
 {{block.super}}
+{% endblock %}
+
+{% block content %}
+{% block messages %}
+    {% if messages %}
+    <ul class="messagelist">{% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+    {% endfor %}</ul>
+    {% endif %}
+{% endblock messages %}
 {% endblock %}

@@ -107,6 +107,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+LOGIN_URL="/accounts/login"
+
 AUTH_USER_MODEL = 'spideraccounts.SpiderUser'
 KEY_HASH_ALGO = "sha512"
 # as hex digest

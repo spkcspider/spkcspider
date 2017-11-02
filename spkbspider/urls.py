@@ -18,7 +18,7 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
+    url(r'^accounts/', include('spkbspider.apps.spideraccounts.urls', namespace="auth")),
     url(r'^usercomponents/', include('spkbspider.apps.spiderpk.urls', namespace="spiderpk")),
     url(r'^broker/', include('spkbspider.apps.spiderbroker.urls', namespace="spiderbroker")),
 
