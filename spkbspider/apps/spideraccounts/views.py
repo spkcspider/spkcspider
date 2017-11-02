@@ -41,6 +41,7 @@ class UserLoginView(LoginView):
         return super().post(request, *args, **kwargs)
 
 class UserUpdateView(LoginRequiredMixin, UpdateView):
+    success_url = reverse_lazy('auth:profile')
     template_name = 'registration/profile.html'
     form_class = UserUpdateForm
     def get_object(self, queryset=None):

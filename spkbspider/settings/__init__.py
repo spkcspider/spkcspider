@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'django.contrib.flatpages',
     'django_extensions',
     #'django.contrib.sites',
     'spkbspider.apps.spiderbroker',
@@ -48,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
 ]
 
 ROOT_URLCONF = 'spkbspider.urls'
@@ -113,3 +116,5 @@ AUTH_USER_MODEL = 'spideraccounts.SpiderUser'
 KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
+
+SITE_ID = 1

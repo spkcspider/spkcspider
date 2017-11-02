@@ -2,51 +2,53 @@ from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+
 import swapper
 # Create your views here.
 UserComponent = None #swapper.load_model("spiderpk", "UserComponent")
 PublicKey = None #swapper.load_model("spiderpk", "PublicKey")
 
 
-class PublicKeyIndex(ListView):
+class PublicKeyIndex(UserPassesTestMixin, ListView):
     model = PublicKey
 
     #def object_list(self):
     #    # TODO: filter
     #    pass
 
-class PublicKeyDetail(DetailView):
+class PublicKeyDetail(UserPassesTestMixin, DetailView):
     model = PublicKey
 
-class PublicKeyCreate(CreateView):
-    model = PublicKey
-    fields = ['note', 'key']
-
-class PublicKeyUpdate(UpdateView):
+class PublicKeyCreate(LoginRequiredMixin, CreateView):
     model = PublicKey
     fields = ['note', 'key']
 
-class PublicKeyDelete(DeleteView):
+class PublicKeyUpdate(LoginRequiredMixin, UpdateView):
+    model = PublicKey
+    fields = ['note', 'key']
+
+class PublicKeyDelete(LoginRequiredMixin, DeleteView):
     model = PublicKey
 
 
-class UserComponentIndex(ListView):
+class UserComponentIndex(UserPassesTestMixin, ListView):
     model = UserComponent
 
     def object_list(self):
         # TODO: filter
         pass
 
-class UserComponentDetail(DetailView):
+class UserComponentDetail(UserPassesTestMixin, DetailView):
     model = UserComponent
 
-class UserComponentCreate(CreateView):
-    model = UserComponent
-    fields = ['name', 'data', 'protections']
-
-class UserComponentUpdate(UpdateView):
+class UserComponentCreate(LoginRequiredMixin, CreateView):
     model = UserComponent
     fields = ['name', 'data', 'protections']
 
-class UserComponentDelete(DeleteView):
+class UserComponentUpdate(LoginRequiredMixin, UpdateView):
+    model = UserComponent
+    fields = ['name', 'data', 'protections']
+
+class UserComponentDelete(LoginRequiredMixin, DeleteView):
     model = UserComponent

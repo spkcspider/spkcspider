@@ -65,6 +65,9 @@ class AbstractPublicKey(models.Model):
             self.hash = h.hexdigest()
         super().save(*args, **kwargs)
 
+    def get_absolute_url(self):
+        return reverse("spiderpk:pk-view", user=self.username, hash=self.hash)
+
 class PublicKey(AbstractPublicKey):
     class Meta:
         swappable = swapper.swappable_setting('spiderpk', 'PublicKey')
@@ -108,6 +111,9 @@ class AbstractUserComponent(models.Model):
                         logger.error(error)
                     return True
             return False
+
+    def get_absolute_url(self):
+        return reverse("spiderpk:uc-view", user=self.username, hash=self.name)
 
 
 class UserComponent(AbstractUserComponent):
