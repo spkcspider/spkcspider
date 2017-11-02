@@ -11,9 +11,9 @@ python_version = '3'
 django = '*'
 swapper = '*'
 jsonfield = '*'
+django-extensions = '*'
 
 [dev-packages]
 
 Werkzeug = '*'
 pyOpenSSL = '*'
-django-extensions = '*'
