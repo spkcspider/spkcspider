@@ -12,7 +12,9 @@
       {% block favicon %}
           <link rel="shortcut icon" type="image/png" href="{% static 'spkbspider/favicon.png' %}" />
       {% endblock %}
-      {# CSS #}
+      {# CSS for all pages #}
+      {% block base_styles %}{% endblock %}
+      {# CSS for page #}
       {% block styles %}{% endblock %}
       {# scripts and foo #}
       {% block extrahead %}{% endblock %}
@@ -21,6 +23,9 @@
   <body class="{% block body_class %}{% endblock %}">
     {# Main content  #}
     {% block content %}{% endblock %}
+
+    {# Scripts #}
+    {% block base_scripts %}{% endblock %}
 
     {# Scripts #}
     {% block scripts %}{% endblock %}

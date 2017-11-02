@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 # Create your models here.
-from .protections import Protection, AssignedProtection
 from .signals import validate_success
+from .protections import Protection, AssignedProtection
 
 _htest = hashlib.new(settings.KEY_HASH_ALGO)
 _htest.update(b"test")
@@ -21,9 +21,11 @@ _htest.update(b"test")
 if settings.MAX_HASH_SIZE > len(_htest.hexdigest()):
     raise Exception("MAX_HASH_SIZE too small to hold digest in hexadecimal")
 
+
 class PublicKeyManager(models.Manager):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
 # also for account recovery
 class AbstractPublicKey(models.Model):
@@ -78,7 +80,7 @@ class AbstractUserComponent(models.Model):
     modified = models.DateTimeField(auto_now=True, editable=False)
     # should be used for retrieving active protections, related_name
     assigned = None
-    protections = models.ManyToManyField(Protection, through=AssignedProtection, limit_choices_to=Protection.objects.valid())
+    protections = models.ManyToManyField("spiderpk.Protection", through="spiderpk.AssignedProtection")
     class Meta:
         abstract = True
         unique_together = [("user", "name"),]

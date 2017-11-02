@@ -1,10 +1,11 @@
 from django.shortcuts import render
-from django.views.generic.detail import DetailView, ListView
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 import swapper
 # Create your views here.
-UserComponent = swapper.load_model("spiderpk", "UserComponent")
-PublicKey = swapper.load_model("spiderpk", "PublicKey")
+UserComponent = None #swapper.load_model("spiderpk", "UserComponent")
+PublicKey = None #swapper.load_model("spiderpk", "PublicKey")
 
 
 class PublicKeyIndex(ListView):
