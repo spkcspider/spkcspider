@@ -1,12 +1,14 @@
 {% extends "registration/base.html" %}
 {% load i18n %}
+{% block extrahead %}
+{{block.super}}
+<meta http-equiv="refresh" content="3; URL={% url 'auth:login' %}">
+{% endblock %}
 
-{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'auth:login' %}">{% trans 'Home' %}</a></div>{% endblock %}
 
 {% block content %}
-
-<p>{% trans "Thanks for spending some quality time with the Web site today." %}</p>
-
-<p><a href="{% url 'auth:login' %}">{% trans 'Log in again' %}</a></p>
-
+<p>{% trans "Logout successful." %}</p>
+<a href="{% url 'auth:login' %}">{% trans 'Click if not redirected' %}</a>
 {% endblock %}
+{# form errors should not appear here #}
+{% block errors %}{% endblock errors%}

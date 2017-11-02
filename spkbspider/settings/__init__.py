@@ -26,6 +26,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'spkbspider.apps.spideraccounts',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -34,7 +35,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     #'django.contrib.sites',
-    'spkbspider.apps.spideraccounts',
     'spkbspider.apps.spiderbroker',
     'spkbspider.apps.spiderpk',
 

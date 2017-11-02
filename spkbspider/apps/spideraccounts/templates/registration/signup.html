@@ -3,10 +3,10 @@
 
 {% block content %}
   <h2>Sign up</h2>
-  <form method="post">
+  <form action="{{ app_path }}" method="post">
     {% csrf_token %}
     {% for field in form %}
-      <p>
+      <div>
         {{ field.label_tag }}<br>
         {{ field }}
         {% if field.help_text %}
@@ -15,7 +15,7 @@
         {% for error in field.errors %}
           <p style="color: red">{{ error|safe }}</p>
         {% endfor %}
-      </p>
+      </div>
     {% endfor %}
     <button type="submit">Sign up</button>
   </form>

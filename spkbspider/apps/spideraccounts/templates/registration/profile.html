@@ -2,6 +2,7 @@
 {% load i18n static %}
 
 {% block content %}
+  {{form.media}}
   <h2>Change User</h2>
   <form method="post">
     {% csrf_token %}

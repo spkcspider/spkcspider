@@ -5,12 +5,10 @@
 {{block.super}}
 {% endblock %}
 
-{% block content %}
-{% block messages %}
-    {% if messages %}
-    <ul class="messagelist">{% for message in messages %}
-      <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
-    {% endfor %}</ul>
-    {% endif %}
-{% endblock messages %}
+{% block layout %}
+  <div>{% if request.user.is_authenticated %}<a href="{% url 'auth:logout'%}">Logout</a>{%endif%}</div>
+  <div id="content-main">
+    {{block.super}}
+    {% include "spkbspider/form_errors.html" %}
+  </div>
 {% endblock %}

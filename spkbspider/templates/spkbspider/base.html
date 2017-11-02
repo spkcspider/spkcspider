@@ -16,15 +16,25 @@
       {% block base_styles %}{% endblock %}
       {# CSS for page #}
       {% block styles %}{% endblock %}
-      {# scripts and foo #}
+      {# form scripts and foo #}
       {% block extrahead %}{% endblock %}
   </head>
 
   <body class="{% block body_class %}{% endblock %}">
-    {# Main content  #}
-    {% block content %}{% endblock %}
+    {# Deco content, e.g.base.html  #}
+    {% block layout %}
+      {% block messages %}
+          {% if messages %}
+          <ul class="messagelist">{% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+          {% endfor %}</ul>
+          {% endif %}
+      {% endblock messages %}
+      {# Main content  #}
+      {% block content %}{% endblock %}
+    {% endblock %}
 
-    {# Scripts #}
+    {# Main scripts #}
     {% block base_scripts %}{% endblock %}
 
     {# Scripts #}
