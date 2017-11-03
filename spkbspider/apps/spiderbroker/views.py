@@ -4,6 +4,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
+from django.shortcuts import get_list_or_404
 
 
 from spkbspider.common import ObjectTestMixin
@@ -45,9 +46,9 @@ class BrokerDetail(UserPassesTestMixin, DetailView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], id=self.kwargs["id"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], id=self.kwargs["id"])
 
 class BrokerCreate(PermissionRequiredMixin, CreateView):
     model = Broker
@@ -64,9 +65,9 @@ class BrokerUpdate(UserPassesTestMixin, UpdateView):
         return False
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], id=self.kwargs["id"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], id=self.kwargs["id"])
 
 class BrokerDelete(UserPassesTestMixin, DeleteView):
     model = Broker
@@ -78,6 +79,6 @@ class BrokerDelete(UserPassesTestMixin, DeleteView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], id=self.kwargs["id"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], id=self.kwargs["id"])

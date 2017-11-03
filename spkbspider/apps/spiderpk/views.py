@@ -5,6 +5,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.views.generic.base import RedirectView
 from django.urls import reverse
+from django.shortcuts import get_list_or_404
 
 import swapper
 
@@ -47,9 +48,9 @@ class PublicKeyDetail(ObjectTestMixin, DetailView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.filter(user__username=self.kwargs["user"], hash=self.kwargs["hash"]).first()
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], hash=self.kwargs["hash"])
         else:
-            return self.model.objects.filter(user__username=self.kwargs["user"], hash=self.kwargs["hash"]).first()
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["hash"])
 
 
 class PublicKeyCreate(PermissionRequiredMixin, CreateView):
@@ -68,9 +69,9 @@ class PublicKeyUpdate(ObjectTestMixin, UpdateView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], hash=self.kwargs["hash"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["hash"])
 
 class PublicKeyDelete(ObjectTestMixin, DeleteView):
     model = PublicKey
@@ -82,9 +83,9 @@ class PublicKeyDelete(ObjectTestMixin, DeleteView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], hash=self.kwargs["hash"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["hash"])
 
 class UserComponentAllIndex(ListView):
     model = UserComponent
@@ -117,9 +118,9 @@ class UserComponentDetail(ObjectTestMixin, DetailView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], name=self.kwargs["name"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], hash=self.kwargs["name"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["name"])
 
 class UserComponentCreate(PermissionRequiredMixin, CreateView):
     model = UserComponent
@@ -137,9 +138,9 @@ class UserComponentUpdate(ObjectTestMixin, UpdateView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], name=self.kwargs["name"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], hash=self.kwargs["name"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["name"])
 
 
 class UserComponentDelete(ObjectTestMixin, DeleteView):
@@ -152,6 +153,6 @@ class UserComponentDelete(ObjectTestMixin, DeleteView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return queryset.get(user__username=self.kwargs["user"], name=self.kwargs["name"])
+            return get_list_or_404(queryset, user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:
-            return self.model.objects.get(user__username=self.kwargs["user"], hash=self.kwargs["name"])
+            return get_list_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["name"])
