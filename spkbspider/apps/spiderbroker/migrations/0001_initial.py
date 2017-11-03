@@ -22,9 +22,9 @@ class Migration(migrations.Migration):
             name='Broker',
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('brokertype', models.SlugField(choices=[('oauth', 'OAUTH'), ('jwt', 'JWT')], editable=False, max_length=10)),
-                ('brokerdata', jsonfield.fields.JSONField(default={}, editable=False)),
-                ('url', models.URLField(default='', editable=False, max_length=300)),
+                ('brokertype', models.SlugField(choices=[('oauth', 'OAUTH'), ('jwt', 'JWT')], max_length=10)),
+                ('brokerdata', jsonfield.fields.JSONField(default={})),
+                ('url', models.URLField(default='', max_length=300)),
                 ('extra', jsonfield.fields.JSONField(default={})),
                 ('protected_by', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.SPIDERPK_USERCOMPONENT_MODEL)),
                 ('user', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),

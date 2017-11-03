@@ -6,8 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 
 import swapper
 # Create your views here.
-UserComponent = None #swapper.load_model("spiderpk", "UserComponent")
-PublicKey = None #swapper.load_model("spiderpk", "PublicKey")
+UserComponent = swapper.load_model("spiderpk", "UserComponent")
+PublicKey = swapper.load_model("spiderpk", "PublicKey")
 
 
 class PublicKeyIndex(UserPassesTestMixin, ListView):

@@ -44,7 +44,7 @@ class AbstractPublicKey(models.Model):
     hash = models.CharField(max_length=settings.MAX_HASH_SIZE, unique=True, null=False, editable=False)
     # allow admins editing to solve conflicts
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False)
-    protected_by = models.ForeignKey(swapper.get_model_name('spiderpk', 'UserComponent'), blank=True, null=True, default=None)
+    protected_by = models.ForeignKey(swapper.get_model_name('spiderpk', 'UserComponent'), blank=True, null=True, default=None, related_name="publickeys")
     class Meta:
         abstract = True
         indexes = [
@@ -81,6 +81,8 @@ class AbstractUserComponent(models.Model):
     data = JSONField(default={}, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
+    brokers = None
+    publickeys = None
     # should be used for retrieving active protections, related_name
     assigned = None
     protections = models.ManyToManyField("spiderpk.Protection", through="spiderpk.AssignedProtection")

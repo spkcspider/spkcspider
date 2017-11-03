@@ -10,16 +10,24 @@ Broker = swapper.load_model("spiderbroker", "Broker")
 class BrokerIndex(UserPassesTestMixin, ListView):
     model = Broker
 
-    #def object_list(self):
-    #    # TODO: filter
-    #    pass
+    def get_queryset(self):
+        return self.model.filter(user__username=self.kwargs["user"])
+
+    def test_func(self):
+        return True
 
 class BrokerDetail(UserPassesTestMixin, DetailView):
     model = Broker
+    def test_func(self):
+        return True
 
 class BrokerCreate(LoginRequiredMixin, CreateView):
     model = Broker
     fields = []
+    def test_func(self):
+        return True
 
 class BrokerDelete(LoginRequiredMixin, DeleteView):
     model = Broker
+    def test_func(self):
+        return True

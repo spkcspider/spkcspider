@@ -16,13 +16,13 @@ class AbstractBroker(models.Model):
         ("jwt", "JWT")
 
     ]
-    brokertype = models.SlugField(max_length=10, choices=CHOICES, editable=False)
-    brokerdata = JSONField(default={}, editable=False)
-    url = models.URLField(max_length=300, default="", editable=False)
-    # for extra information e.g. content of broker
+    brokertype = models.SlugField(max_length=10, choices=CHOICES)
+    brokerdata = JSONField(default={})
+    url = models.URLField(max_length=300, default="")
+    # for extra information e.g. content of broker, admin only editing
     extra = JSONField(default={})
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
-    protected_by = models.ForeignKey(swapper.get_model_name('spiderpk', 'UserComponent'), blank=True, null=True, default=None)
+    protected_by = models.ForeignKey(swapper.get_model_name('spiderpk', 'UserComponent'), blank=True, null=True, default=None, related_name="brokers")
 
     class Meta:
         abstract = True
