@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        swapper.dependency('spiderpk', 'UserComponent'),
+        ('spiderpk', '0002_auto_20171102_1253'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
