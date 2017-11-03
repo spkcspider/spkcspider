@@ -42,7 +42,7 @@ class BrokerDetail(UserPassesTestMixin, DetailView):
 
 class BrokerCreate(PermissionRequiredMixin, CreateView):
     model = Broker
-    permission_required = '{}.{}_add'.format(model._meta.app_label, model._meta.model_name)
+    permission_required = 'add_{}'.format(model._meta.model_name)
     fields = ['brokertype', 'brokerdata', 'url']
 
 class BrokerUpdate(UserPassesTestMixin, UpdateView):

@@ -42,7 +42,7 @@ class PublicKeyDetail(UserPassesTestMixin, DetailView):
 
 class PublicKeyCreate(PermissionRequiredMixin, CreateView):
     model = PublicKey
-    permission_required = '{}.{}_add'.format(model._meta.app_label, model._meta.model_name)
+    permission_required = 'add_{}'.format(model._meta.model_name)
     fields = ['note', 'key']
 
 class PublicKeyUpdate(LoginRequiredMixin, UpdateView):
@@ -83,7 +83,7 @@ class UserComponentDetail(UserPassesTestMixin, DetailView):
 
 class UserComponentCreate(PermissionRequiredMixin, CreateView):
     model = UserComponent
-    permission_required = '{}.{}_add'.format(model._meta.app_label, model._meta.model_name)
+    permission_required = 'add_{}'.format(model._meta.model_name)
     fields = ['name', 'data', 'protections']
 
 class UserComponentUpdate(UserPassesTestMixin, UpdateView):
