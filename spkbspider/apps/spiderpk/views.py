@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.views.generic.base import RedirectView
 from django.urls import reverse
 
@@ -11,45 +11,38 @@ import swapper
 UserComponent = swapper.load_model("spiderpk", "UserComponent")
 PublicKey = swapper.load_model("spiderpk", "PublicKey")
 
-class RedirectUserPK(RedirectView):
-    permanent = False
-    def get_redirect_url(self, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            return reverse("spiderpk:pk-list", kwargs={"user":self.request.user.username})
-        else:
-            return "/"
-
-class RedirectUserUC(RedirectView):
-    permanent = False
-    def get_redirect_url(self, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            return reverse("spiderpk:uc-list", kwargs={"user":self.request.user.username})
-        else:
-            return "/"
-
 class PublicKeyAllIndex(ListView):
     model = PublicKey
 
     def get_queryset(self):
-        return self.model.filter(protected_by=[])
+        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
+            return self.model.all()
+        return self.model.filter(models.Q(protected_by=[])|models.Q(user=self.request.user))
 
 class PublicKeyIndex(UserPassesTestMixin, ListView):
     model = PublicKey
 
     def test_func(self):
-        if self.request.user.is_authenticated:
+        if self.request.user == self.user:
             return True
-        return True
+        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
+            return True
+        uc = UserComponent.objects.get_or_create(user=self.request.user, name="publickeys")
+        return uc.validate(self.request)
 
 class PublicKeyDetail(UserPassesTestMixin, DetailView):
     model = PublicKey
     def test_func(self):
-        if self.request.user.is_authenticated:
+        if self.request.user == self.user:
             return True
-        return True
+        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
+            return True
+        uc = UserComponent.objects.get_or_create(user=self.request.user, name="publickeys")
+        return uc.validate(self.request)
 
-class PublicKeyCreate(LoginRequiredMixin, CreateView):
+class PublicKeyCreate(PermissionRequiredMixin, CreateView):
     model = PublicKey
+    permission_required = '{}.{}_add'.format(model._meta.app_label, model._meta.model_name)
     fields = ['note', 'key']
 
 class PublicKeyUpdate(LoginRequiredMixin, UpdateView):
@@ -63,31 +56,39 @@ class UserComponentAllIndex(ListView):
     model = UserComponent
 
     def get_queryset(self):
-        return self.model.filter(protected_by=[])
+        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
+            return self.model.all()
+        return self.model.filter(models.Q(protected_by=[])|models.Q(user=self.request.user))
 
 class UserComponentIndex(UserPassesTestMixin, ListView):
     model = UserComponent
 
     def test_func(self):
-        if self.request.user.is_authenticated:
+        if self.request.user == self.user:
             return True
-        return True
+        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
+            return True
+        uc = self.objects.get_or_create(user=self.request.user, name="identity")
+        return uc.validate(self.request)
 
 class UserComponentDetail(UserPassesTestMixin, DetailView):
     model = UserComponent
 
     def test_func(self):
-        if self.request.user.is_authenticated:
+        if self.request.user == self.user:
             return True
-        return True
+        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
+            return True
+        return self.validate(self.request)
 
-class UserComponentCreate(LoginRequiredMixin, CreateView):
+class UserComponentCreate(PermissionRequiredMixin, CreateView):
+    model = UserComponent
+    permission_required = '{}.{}_add'.format(model._meta.app_label, model._meta.model_name)
+    fields = ['name', 'data', 'protections']
+
+class UserComponentUpdate(UserPassesTestMixin, UpdateView):
     model = UserComponent
     fields = ['name', 'data', 'protections']
 
-class UserComponentUpdate(LoginRequiredMixin, UpdateView):
-    model = UserComponent
-    fields = ['name', 'data', 'protections']
-
-class UserComponentDelete(LoginRequiredMixin, DeleteView):
+class UserComponentDelete(UserPassesTestMixin, DeleteView):
     model = UserComponent

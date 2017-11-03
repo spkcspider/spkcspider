@@ -34,6 +34,7 @@ setup(name='spkbspider',
       packages=["spkbspider", "spkbspider.apps.spideraccounts", "spkbspider.apps.spiderbroker", "spkbspider.apps.spiderpk"],
       package_data={
         '': ['templates/**.*'],
+        '': ['static/**.*'],
       },
       #ext_modules=distributions,
       test_suite="tests")

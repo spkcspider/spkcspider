@@ -1,6 +1,5 @@
 from django.conf.urls import url
 
-from .views import RedirectUserPK, RedirectUserUC
 from .views import PublicKeyIndex, PublicKeyAllIndex, PublicKeyDetail, PublicKeyCreate, PublicKeyUpdate, PublicKeyDelete
 from .views import UserComponentIndex, UserComponentAllIndex, UserComponentDetail, UserComponentCreate, UserComponentUpdate, UserComponentDelete
 

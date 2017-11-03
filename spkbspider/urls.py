@@ -20,7 +20,7 @@ from django.conf import settings
 
 
 favicon_view = RedirectView.as_view(url='{}spkbspider/favicon.png'.format(settings.STATIC_URL), permanent=True)
-robots_view = RedirectView.as_view(url='{}robots.txt'.format(settings.STATIC_URL), permanent=True)
+robots_view = RedirectView.as_view(url='{}spkbspider/robots.txt'.format(settings.STATIC_URL), permanent=True)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),

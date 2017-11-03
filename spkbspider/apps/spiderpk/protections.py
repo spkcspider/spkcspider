@@ -62,13 +62,6 @@ class AssignedProtection(models.Model):
 def validate_deny(user, data, request):
     return False
 
-@add_protection("self")
-def validate_user(user, data, request):
-    if request.user.is_authenticated and request.user.pk == user.pk:
-        return True
-    else:
-        return False
-
 @add_protection("friends")
 def validate_friends(user, data, request):
     if request.user.pk in data.get("friends", []):
