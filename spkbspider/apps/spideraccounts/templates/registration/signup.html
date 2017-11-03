@@ -18,5 +18,6 @@
       </div>
     {% endfor %}
     <button type="submit">Sign up</button>
+    <a href="{% url 'auth:login' %}">{% trans 'Already an account? Login?' %}</a>
   </form>
 {% endblock %}

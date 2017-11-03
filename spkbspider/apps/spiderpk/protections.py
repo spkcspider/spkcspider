@@ -64,7 +64,7 @@ def validate_deny(user, data, request):
 
 @add_protection("friends")
 def validate_friends(user, data, request):
-    if request.user.pk in data.get("friends", []):
+    if request.user.username in data.get("friends", []):
         return True
     else:
         return False

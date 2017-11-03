@@ -10,7 +10,7 @@ class SignupForm(UserCreationForm):
     # fake for spammers
     email = forms.EmailField(label="", max_length=100, required=False, widget=forms.HiddenInput())
     #email, real
-    liame = forms.EmailField(label=_('email address'), max_length=100, required=False)
+    liame = forms.EmailField(label=_('email address (optional)'), max_length=100, required=False)
     #question = forms.CharField(max_length=100, required=True)
     #question_answer = None
 

@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from django.db.models.signals import post_migrate
 
 
 class SpiderPKConfig(AppConfig):
@@ -7,4 +8,5 @@ class SpiderPKConfig(AppConfig):
     verbose_name = 'SPKBSpider public keys and components'
 
     def ready(self):
-        import spkbspider.apps.spiderpk.signals_init
+        from .signals import InitProtectionsCallback
+        post_migrate.connect(InitProtectionsCallback, sender=self, dispatch_uid="update_protections")

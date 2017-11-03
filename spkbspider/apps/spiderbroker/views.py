@@ -5,6 +5,9 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
 
+
+from spkbspider.common import ObjectTestMixin
+
 import swapper
 # Create your views here.
 Broker = swapper.load_model("spiderbroker", "Broker")
@@ -26,7 +29,7 @@ class BrokerIndex(UserPassesTestMixin, ListView):
         return self.model.filter(user__username=self.kwargs["user"])
 
     def test_func(self):
-        if self.request.user == self.user:
+        if self.request.user == self.object.user:
             return True
         if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
             return True
@@ -40,6 +43,12 @@ class BrokerDetail(UserPassesTestMixin, DetailView):
             return True
         return True
 
+    def get_object2(self, queryset=None):
+        if queryset:
+            return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+        else:
+            return self.model.objects.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+
 class BrokerCreate(PermissionRequiredMixin, CreateView):
     model = Broker
     permission_required = 'add_{}'.format(model._meta.model_name)
@@ -50,14 +59,25 @@ class BrokerUpdate(UserPassesTestMixin, UpdateView):
     fields = ['protected_by']
     # only owner can update
     def test_func(self):
-        if self.request.user == self.user:
+        if self.request.user == self.object.user:
             return True
         return False
+    def get_object2(self, queryset=None):
+        if queryset:
+            return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+        else:
+            return self.model.objects.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
 
 class BrokerDelete(UserPassesTestMixin, DeleteView):
     model = Broker
     # only owner can delete
     def test_func(self):
-        if self.request.user == self.user:
+        if self.request.user == self.object.user:
             return True
         return False
+
+    def get_object2(self, queryset=None):
+        if queryset:
+            return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
+        else:
+            return self.model.objects.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
