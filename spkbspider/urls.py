@@ -15,6 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.views.generic.base import RedirectView
+from django.conf import settings
+
+
+favicon_view = RedirectView.as_view(url='{}spkbspider/favicon.png'.format(settings.STATIC_URL), permanent=True)
+robots_view = RedirectView.as_view(url='{}robots.txt'.format(settings.STATIC_URL), permanent=True)
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -22,5 +28,7 @@ urlpatterns = [
     url(r'^userc/', include('spkbspider.apps.spiderpk.urls', namespace="spiderpk")),
     url(r'^broker/', include('spkbspider.apps.spiderbroker.urls', namespace="spiderbroker")),
     url(r'^pages/', include('django.contrib.flatpages.urls')),
+    #url(r'^favicon\.ico$', favicon_view),
+    #url(r'^robots\.txt$', robots_view),
 
 ]

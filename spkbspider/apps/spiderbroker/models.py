@@ -19,8 +19,10 @@ class AbstractBroker(models.Model):
     brokertype = models.SlugField(max_length=10, choices=CHOICES)
     brokerdata = JSONField(default={})
     url = models.URLField(max_length=300, default="")
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    modified = models.DateTimeField(auto_now=True, editable=False)
     # for extra information e.g. content of broker, admin only editing
-    extra = JSONField(default={})
+    content = models.TextField(null=False, default="")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
     protected_by = models.ForeignKey(swapper.get_model_name('spiderpk', 'UserComponent'), blank=True, null=True, default=None, related_name="brokers")
 
@@ -33,6 +35,9 @@ class AbstractBroker(models.Model):
 
     def __str__(self):
         return urlsplit(self.url).netloc
+
+    def get_absolute_url(self):
+        return reverse("spiderbroker:bk-view", kwargs={"user": self.user.username, "id": self.id})
 
 class Broker(AbstractBroker):
     class Meta:

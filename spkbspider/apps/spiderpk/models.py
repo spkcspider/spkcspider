@@ -66,7 +66,7 @@ class AbstractPublicKey(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse("spiderpk:pk-view", user=self.username, hash=self.hash)
+        return reverse("spiderpk:pk-view", kwargs={"user":self.user.username, "hash":self.hash})
 
 class PublicKey(AbstractPublicKey):
     class Meta:
@@ -115,7 +115,7 @@ class AbstractUserComponent(models.Model):
             return False
 
     def get_absolute_url(self):
-        return reverse("spiderpk:uc-view", user=self.username, hash=self.name)
+        return reverse("spiderpk:uc-view", kwargs={"user":self.user.username, "name":self.name})
 
 
 class UserComponent(AbstractUserComponent):

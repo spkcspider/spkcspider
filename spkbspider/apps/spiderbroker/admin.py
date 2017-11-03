@@ -7,4 +7,4 @@ Broker = swapper.load_model("spiderbroker", "Broker")
 
 @admin.register(Broker)
 class BrokerAdmin(admin.ModelAdmin):
-    fields = ['extra', 'title', 'content']
+    fields = ['extra', 'protected_by']
