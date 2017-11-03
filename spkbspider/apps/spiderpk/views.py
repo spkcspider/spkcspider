@@ -45,7 +45,7 @@ class PublicKeyDetail(ObjectTestMixin, DetailView):
         uc = UserComponent.objects.get_or_create(user=self.request.user, name="publickeys")
         return uc.validate(self.request)
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.filter(user__username=self.kwargs["user"], hash=self.kwargs["hash"]).first()
         else:
@@ -66,7 +66,7 @@ class PublicKeyUpdate(ObjectTestMixin, UpdateView):
             return True
         return False
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], hash=self.kwargs["hash"])
         else:
@@ -80,7 +80,7 @@ class PublicKeyDelete(ObjectTestMixin, DeleteView):
             return True
         return False
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], hash=self.kwargs["hash"])
         else:
@@ -115,7 +115,7 @@ class UserComponentDetail(ObjectTestMixin, DetailView):
             return True
         return self.validate(self.request)
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:
@@ -135,7 +135,7 @@ class UserComponentUpdate(ObjectTestMixin, UpdateView):
             return True
         return False
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:
@@ -150,7 +150,7 @@ class UserComponentDelete(ObjectTestMixin, DeleteView):
             return True
         return False
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:

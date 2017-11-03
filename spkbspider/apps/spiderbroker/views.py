@@ -43,7 +43,7 @@ class BrokerDetail(UserPassesTestMixin, DetailView):
             return True
         return True
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
         else:
@@ -62,7 +62,7 @@ class BrokerUpdate(UserPassesTestMixin, UpdateView):
         if self.request.user == self.object.user:
             return True
         return False
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
         else:
@@ -76,7 +76,7 @@ class BrokerDelete(UserPassesTestMixin, DeleteView):
             return True
         return False
 
-    def get_object2(self, queryset=None):
+    def get_object(self, queryset=None):
         if queryset:
             return queryset.get(user__username=self.kwargs["user"], id=self.kwargs["id"])
         else:
