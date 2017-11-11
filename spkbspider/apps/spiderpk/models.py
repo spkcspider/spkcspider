@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 # Create your models here.
 from .signals import validate_success
-from .protections import Protection, AssignedProtection
 
 _htest = hashlib.new(settings.KEY_HASH_ALGO)
 _htest.update(b"test")
@@ -121,3 +120,6 @@ class AbstractUserComponent(models.Model):
 class UserComponent(AbstractUserComponent):
     class Meta:
         swappable = swapper.swappable_setting('spiderpk', 'UserComponent')
+
+
+from .protections import Protection, AssignedProtection

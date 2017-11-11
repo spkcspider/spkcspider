@@ -34,15 +34,25 @@ class BrokerIndex(UserPassesTestMixin, ListView):
             return True
         if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
             return True
-        uc = UserComponent.objects.get_or_create(user=self.request.user, name="broker")
+        uc = UserComponent.objects.get_or_create(user=self.request.user, name="broker")[0]
         return uc.validate(self.request)
 
 class BrokerDetail(UserPassesTestMixin, DetailView):
     model = Broker
     def test_func(self):
-        if self.request.user == self.user:
+        if not self.object:
             return True
-        return True
+        if self.request.user == self.object.user:
+            return True
+        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
+            return True
+        obuser = get_user_model().objects.filter(username=self.kwargs["user"]).first()
+        if not obuser:
+            return False
+        if self.object.protected_by:
+            return self.object.protected_by.validate(self.request)
+        uc = UserComponent.objects.get_or_create(user=self.object.user, name="publickeys")[0]
+        return uc.validate(self.request)
 
     def get_object(self, queryset=None):
         if queryset:

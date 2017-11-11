@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.views.generic.base import RedirectView
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
 
 import swapper
 
@@ -31,8 +32,12 @@ class PublicKeyIndex(UserPassesTestMixin, ListView):
             return True
         if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
             return True
-        uc = UserComponent.objects.get_or_create(user=self.request.user, name="publickeys")
+        obuser = get_user_model().objects.filter(username=self.kwargs["user"]).first()
+        if not obuser:
+            return False
+        uc = UserComponent.objects.get_or_create(user=obuser, name="publickeys")[0]
         return uc.validate(self.request)
+
     def get_queryset(self):
         return self.model.objects.filter(user__username=self.kwargs["user"])
 
@@ -45,7 +50,12 @@ class PublicKeyDetail(ObjectTestMixin, DetailView):
             return True
         if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
             return True
-        uc = UserComponent.objects.get_or_create(user=self.request.user, name="publickeys")
+        obuser = get_user_model().filter(username=self.kwargs["user"]).first()
+        if not obuser:
+            return False
+        if self.object.protected_by:
+            return self.object.protected_by.validate(self.request)
+        uc = UserComponent.objects.get_or_create(user=self.object.user, name="publickeys")[0]
         return uc.validate(self.request)
 
     def get_object(self, queryset=None):
