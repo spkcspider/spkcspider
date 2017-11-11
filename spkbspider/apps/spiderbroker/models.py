@@ -22,7 +22,7 @@ class AbstractBroker(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     # for extra information e.g. content of broker, admin only editing
-    content = models.TextField(null=False, default="")
+    content_info = models.TextField(null=False, default="")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
     protected_by = models.ForeignKey(swapper.get_model_name('spiderpk', 'UserComponent'), blank=True, null=True, default=None, related_name="brokers")
 

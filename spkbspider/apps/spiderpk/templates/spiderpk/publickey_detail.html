@@ -1,12 +1,11 @@
 {% extends "spiderpk/base.html" %}
-
+{% load i18n %}
 {% block content %}
-  <h1>Broker</h1>
-  <ul>
-  {% for broker in object_list %}
-      <li>{{ article.pub_date|date }} - {{ article.headline }}</li>
-  {% empty %}
-      <li>No Brokers yet.</li>
-  {% endfor %}
-  </ul>
+  <h1>{% trans 'Public Key' %}</h1>
+  <br/>{% trans 'Public Key' %}: {{object.key}}
+  <br/>{% trans 'Public Hash' %}: {{object.hash}}
+  <br/>{% trans 'last modified' %}: {{object.modified}}
+  {% if request.user == object.user %}
+    <a href="{% url 'spiderpk:pk-update' %}">{% trans 'Edit'%}</a>
+  {% endif %}
 {% endblock %}
