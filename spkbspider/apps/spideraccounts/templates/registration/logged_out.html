@@ -7,8 +7,8 @@
 
 
 {% block content %}
-<p>{% trans "Logout successful." %}</p>
-<a href="{% url 'auth:login' %}">{% trans 'Click if not redirected' %}</a>
+  <p>{% trans "Logout successful." %}</p>
+  <a href="{% url 'auth:login' %}">{% trans 'Click if not redirected' %}</a>
 {% endblock %}
 {# form errors should not appear here #}
 {% block errors %}{% endblock errors%}

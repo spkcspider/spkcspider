@@ -1,6 +1,7 @@
 {% extends "spiderbroker/base.html" %}
+
 {% block content %}
-<h1>Broker</h1>
+  <h1>Broker</h1>
   <form action="{{ app_path }}" method="post">
     {% csrf_token %}
     {% for field in form %}
@@ -17,4 +18,4 @@
     {% endfor %}
     <button type="submit">Sign up</button>
   </form>
-  {% endblock %}
+{% endblock %}

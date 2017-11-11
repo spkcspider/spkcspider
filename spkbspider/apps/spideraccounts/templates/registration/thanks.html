@@ -1,14 +1,13 @@
 {% extends "registration/base.html" %}
 {% load i18n %}
 {% block extrahead %}
-{{block.super}}
-<meta http-equiv="refresh" content="3; URL={% url 'auth:profile' %}">
+  {{block.super}}
+  <meta http-equiv="refresh" content="3; URL={% url 'auth:account' %}">
 {% endblock %}
 
-
 {% block content %}
-<p>{% blocktrans with name=site_name trimmed=True %} Signup successful. Thank you for using {{name}} {% endblocktrans  %}</p>
-<a href="{% url 'auth:profile' %}">{% trans 'Click if not redirected' %}</a>
+  <p>{% blocktrans with name=site_name trimmed=True %} Signup successful. Thank you for using {{name}} {% endblocktrans  %}</p>
+  <a href="{% url 'auth:account' %}">{% trans 'Click if not redirected' %}</a>
 {% endblock %}
 {# form errors should not appear here #}
 {% block errors %}{% endblock errors%}
