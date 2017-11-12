@@ -11,7 +11,7 @@ class UserComponentForm(forms.ModelForm):
     protection_forms = None
     class Meta:
         model = UserComponent
-        fields = ['data', 'brokers', 'protections']
+        fields = ['data', 'protections']
 
     def __init__(self, protection_forms, *args, **kwargs):
         super().__init__(*args, **kwargs)

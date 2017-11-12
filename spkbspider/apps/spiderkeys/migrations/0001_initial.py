@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
             name='PublicKey',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('key', models.TextField(validators=[spkbspider.apps.spiderkeys.models.key_trimmed, spkbspider.apps.spiderkeys.models.key_public])),
+                ('key', models.TextField(validators=[spkbspider.apps.spiderkeys.models.valid_pkey_properties])),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('note', models.TextField(max_length=400)),
