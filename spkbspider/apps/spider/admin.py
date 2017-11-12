@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .protections import Protection, AssignedProtection
+from .models import Protection, AssignedProtection
 import swapper
 UserComponent = swapper.load_model("spiderucs", "UserComponent")
 

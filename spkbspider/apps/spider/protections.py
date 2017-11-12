@@ -14,6 +14,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.template.response import TemplateResponse
+from django.contrib.auth import get_user_model
 
 
 try:
@@ -41,6 +42,7 @@ def add_protection(klass):
 # form with inner form for authentication
 class BaseProtection(forms.Form):
     active = forms.BooleanField(required=True)
+    can_render = False
     @classmethod
     def auth_test(cls, **kwargs):
         return False
@@ -59,11 +61,14 @@ class AllowProtection(BaseProtection):
     def __str__(self):
         return _("Allow")
 
+
+def friend_query():
+    return get_user_model().objects.filter(active=True)
 # only friends have access
 @add_protection
 class FriendProtection(BaseProtection):
     name = "friends"
-    users = forms.ModelMultipleChoiceField(queryset=get_user_model().objects.filter(active=True))
+    users = forms.ModelMultipleChoiceField(queryset=friend_query)
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.user.id in data["users"]:
