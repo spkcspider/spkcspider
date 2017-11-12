@@ -1,0 +1,11 @@
+{% extends "spiderpk/base.html" %}
+{% load i18n %}
+{% block content %}
+  <h1>{% trans 'Public Key' %}</h1>
+  <br/>{% trans 'Public Key' %}: {{object.key}}
+  <br/>{% trans 'Public Hash' %}: {{object.hash}}
+  <br/>{% trans 'last modified' %}: {{object.modified}}
+  {% if request.user == object.user %}
+    <a href="{% url 'spiderkeys:pk-update' %}">{% trans 'Edit'%}</a>
+  {% endif %}
+{% endblock %}

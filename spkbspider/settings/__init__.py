@@ -37,9 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.flatpages',
     'django_extensions',
     #'django.contrib.sites',
-    'spkbspider.apps.spiderbroker',
-    'spkbspider.apps.spiderpk',
-
+    'spkbspider.apps.spider',
+    'spkbspider.apps.spiderbrokers',
+    'spkbspider.apps.spiderkeys',
 ]
 
 MIDDLEWARE = [
@@ -58,7 +58,7 @@ ROOT_URLCONF = 'spkbspider.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, "spkbspider", "templates")],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -107,10 +107,6 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "spkbspider", "static"),
-]
 
 STATIC_URL = '/static/'
 

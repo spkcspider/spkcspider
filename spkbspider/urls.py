@@ -25,8 +25,9 @@ robots_view = RedirectView.as_view(url='{}spkbspider/robots.txt'.format(settings
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^accounts/', include('spkbspider.apps.spideraccounts.urls', namespace="auth")),
-    url(r'^comps/', include('spkbspider.apps.spiderpk.urls', namespace="spiderpk")),
-    url(r'^brokers/', include('spkbspider.apps.spiderbroker.urls', namespace="spiderbroker")),
+    url(r'^ucs/', include('spkbspider.apps.spider.urls', namespace="spiderucs")),
+    url(r'^keys/', include('spkbspider.apps.spiderkeys.urls', namespace="spiderkeys")),
+    url(r'^brokers/', include('spkbspider.apps.spiderbrokers.urls', namespace="spiderbrokers")),
     url(r'^pages/', include('django.contrib.flatpages.urls')),
     #url(r'^favicon\.ico$', favicon_view),
     #url(r'^robots\.txt$', robots_view),

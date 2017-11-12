@@ -6,8 +6,10 @@ This project can either be used as a standalone project (clone) or as a set of r
 
 spkbspider.apps.spideraccounts: user implementation suitable for the spiders, you may want to use your own user model
 
-spkbspider.apps.spiderbroker: broker
+spkbspider.apps.spider: store User Components, base stuff
 
-spkbspider.apps.spiderpk: store public keys and whatever
+spkbspider.apps.spiderbrokers: broker
 
-spkbspider.spkbspider: only required for standalone stuff
+spkbspider.apps.spiderkeys: store public keys
+
+spkbspider.spkbspider: only required for standalone project

@@ -17,7 +17,7 @@ debug_requirements = [
     "django-extensions",
 ]
 
-install_requirements += debug_requirements
+#install_requirements += debug_requirements
 
 version=0.1
 
@@ -29,9 +29,9 @@ setup(name='spkbspider',
       install_requires=install_requirements,
       extra_requires={
         "debug": debug_requirements
-      }
-      data_files=[('spkbspider', ['bm/LICENSE']),
-      packages=["spkbspider", "spkbspider.apps.spideraccounts", "spkbspider.apps.spiderbroker", "spkbspider.apps.spiderpk"],
+      },
+      data_files=[('spkbspider', ['LICENSE'])],
+      packages=["spkbspider", "spkbspider.apps.spider", "spkbspider.apps.spideraccounts", "spkbspider.apps.spiderbrokers", "spkbspider.apps.spiderkeys"],
       package_data={
         '': ['templates/**.*'],
         '': ['static/**.*'],

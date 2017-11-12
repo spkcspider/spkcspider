@@ -2,9 +2,9 @@ from django.contrib.auth.models import Permission
 
 import swapper
 
-UserComponent = swapper.load_model("spiderpk", "UserComponent")
-PublicKey = swapper.load_model("spiderpk", "PublicKey")
-Broker = swapper.load_model("spiderbroker", "Broker")
+UserComponent = swapper.load_model("spider", "UserComponent")
+PublicKey = swapper.load_model("spiderkeys", "PublicKey")
+Broker = swapper.load_model("spiderbrokers", "Broker")
 
 def InitialGrantsCallback(sender, instance, **kwargs):
     for t in [UserComponent, PublicKey, Broker]:
