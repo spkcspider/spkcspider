@@ -15,6 +15,7 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.template.response import TemplateResponse
 from django.contrib.auth import get_user_model
+from django.views.decorators import sensitive_variables
 
 
 try:
@@ -43,6 +44,12 @@ def add_protection(klass):
 class BaseProtection(forms.Form):
     active = forms.BooleanField(required=True)
     can_render = False
+
+    template_name = None
+    template_engine = None
+    response_class = TemplateResponse
+    content_type = None
+
     @classmethod
     def auth_test(cls, **kwargs):
         return False
@@ -50,10 +57,28 @@ class BaseProtection(forms.Form):
     def auth_render(cls, **kwargs):
         return None
 
+    @classmethod
+    def render_template(cls, request, context, **response_kwargs):
+        response_kwargs.setdefault('content_type', cls.content_type)
+        return cls.response_class(
+            request=request,
+            template=cls.get_template_names(),
+            context=context,
+            using=cls.template_engine,
+            **response_kwargs)
+
+    @classmethod
+    def get_template_names(cls):
+        if cls.template_name:
+            return [cls.template_name]
+        else:
+            return
+
 # if specified with multiple protections all protections must be fullfilled
 @add_protection
 class AllowProtection(BaseProtection):
     name = "allow"
+    can_render = False
 
     @classmethod
     def auth_test(cls, request, **kwargs):
@@ -69,6 +94,7 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     users = forms.ModelMultipleChoiceField(queryset=friend_query)
+    can_render = False
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.user.id in data["users"]:
@@ -82,21 +108,27 @@ class FriendProtection(BaseProtection):
 @add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
+    can_render = True
 
+    @sensitive_variables(data, request)
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.POST.get("password", "") in data["passwords"]:
             return True
         else:
             return False
+    @classmethod
+    def auth_render(cls, **kwargs):
+        return TemplateResponse()
 
     def __str__(self):
         return _("Password based authentication")
 
 @add_protection
-class AuditPasswordProtection(object):
+class AuditPasswordProtection(BaseProtection):
     name = "auditpw"
 
+    @sensitive_variables(data, request)
     @classmethod
     def auth_test(cls, request, data, obj, **kwargs):
         if "user" not in request.POST:
