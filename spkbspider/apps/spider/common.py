@@ -36,9 +36,15 @@ class ObjectTestMixin(UserPassesTestMixin):
     def test_use_uc(self, ucname, obuser):
         if hasattr(self, "object"):
             if self.object.protected_by:
-                return self.object.protected_by.validate(self.request)
+                return self.object.protected_by.auth_test(self.request)
         uc = self.model.objects.get_or_create(name=ucname, user=obuser)
-        return uc.validate(self.request)
+        return uc.test(self.request)
+
+    def handle_no_permission(self):
+
+        if self.raise_exception:
+            raise PermissionDenied(self.get_permission_denied_message())
+        return redirect_to_login(self.request.get_full_path(), self.get_login_url(), self.get_redirect_field_name())
 
 
 class UserListView(UserPassesTestMixin, ListView):

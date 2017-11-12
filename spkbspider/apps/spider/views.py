@@ -10,8 +10,10 @@ from django.contrib.auth import get_user_model
 import swapper
 
 from spkbspider.apps.spider.common import ObjectTestMixin, UserListView, UserDetailView
+from .forms import UserComponentForm
 
-# Create your views here.
+
+
 UserComponent = swapper.load_model("spiderucs", "UserComponent")
 
 class UserComponentAllIndex(ListView):
@@ -36,6 +38,13 @@ class UserComponentCreate(PermissionRequiredMixin, CreateView):
 class UserComponentUpdate(ObjectTestMixin, UpdateView):
     model = UserComponent
     fields = ['name', 'data', 'protections']
+    form_class = UserComponentForm
+
+    def get_form_kwargs(self, **kwargs):
+        cargs = super().get_form_kwargs(**kwargs)
+        cargs["protection_forms"] = self.object.settings()
+        return cargs
+
 
     def get_object(self, queryset=None):
         if queryset:

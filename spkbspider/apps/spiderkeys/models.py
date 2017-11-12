@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import pgettext_lazy
+from django.core.exceptions import ValidationError
 
 from jsonfield import JSONField
 import swapper
@@ -24,22 +25,19 @@ class PublicKeyManager(models.Manager):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-def key_trimmed(val):
-    if key.strip() != key:
-        return False
-    return True
-
-
-def key_public(val):
+def valid_pkey_properties(val):
     if "PRIVAT" in key.upper():
-        return False
-    return True
+        raise ValidationError(_('Private Key'))
+    if key.strip() != key:
+        raise ValidationError(_('Not trimmed'))
+    if len(key) < 100:
+        raise ValidationError(_('Not a key'))
 
 # also for account recovery
 class AbstractPublicKey(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # don't check for similarity as the hash check will reveal all clashes
-    key = models.TextField(editable=True, validators=[key_trimmed, key_public])
+    key = models.TextField(editable=True, validators=[valid_pkey_properties])
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     note = models.TextField(max_length=400, null=False)

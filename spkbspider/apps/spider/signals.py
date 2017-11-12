@@ -1,7 +1,8 @@
 from django.dispatch import Signal
-from .protections import Protection, installed_protections
+from .models import Protection
+from .protections import installed_protections
 
-validate_success = Signal(providing_args=["name", "code"])
+test_success = Signal(providing_args=["name", "code"])
 
 def InitProtectionsCallback(sender, **kwargs):
     for code in installed_protections:
