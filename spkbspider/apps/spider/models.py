@@ -117,10 +117,7 @@ class AssignedProtection(models.Model):
         return installed_protections[self.protection.code].auth_test(request=request, user=usercomponent.user, data=self.protectiondata, obj=self)
 
     def auth_render(self, request):
-        if installed_protections[self.protection.code].authform:
-            return installed_protections[self.protection.code].authform(request=request, user=usercomponent.user, data=self.protectiondata)
-        else:
-            return None
+        return installed_protections[self.protection.code].auth_render(request=request, user=usercomponent.user, data=self.protectiondata, obj=self)
 
     def settings(self, request):
         if request.method == "GET":

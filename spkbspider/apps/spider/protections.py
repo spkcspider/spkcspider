@@ -40,24 +40,24 @@ def add_protection(klass):
 
 # form with inner form for authentication
 class BaseProtection(forms.Form):
-    Authform = None
     active = forms.BooleanField(required=True)
     @classmethod
     def auth_test(cls, **kwargs):
-        if Authform:
-            return authform.is_valid(**kwargs)
         return False
+    @classmethod
+    def auth_render(cls, **kwargs):
+        return None
 
 # if specified with multiple protections all protections must be fullfilled
 @add_protection
-class DenyProtection(BaseProtection):
-    name = "deny"
+class AllowProtection(BaseProtection):
+    name = "allow"
 
     @classmethod
     def auth_test(cls, request, **kwargs):
-        return False
+        return True
     def __str__(self):
-        return _("Deny/Invert")
+        return _("Allow")
 
 # only friends have access
 @add_protection
