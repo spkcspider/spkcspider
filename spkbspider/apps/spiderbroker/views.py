@@ -37,11 +37,7 @@ class BrokerCreate(PermissionRequiredMixin, CreateView):
 class BrokerUpdate(UserPassesTestMixin, UpdateView):
     model = Broker
     fields = ['protected_by']
-    # only owner can update
-    def test_func(self):
-        if self.request.user == self.object.user:
-            return True
-        return False
+
     def get_object(self, queryset=None):
         if queryset:
             return get_object_or_404(queryset, user__username=self.kwargs["user"], id=self.kwargs["id"])
@@ -50,12 +46,6 @@ class BrokerUpdate(UserPassesTestMixin, UpdateView):
 
 class BrokerDelete(UserPassesTestMixin, DeleteView):
     model = Broker
-    # only owner can delete
-    def test_func(self):
-        if self.request.user == self.object.user:
-            return True
-        return False
-
     def get_object(self, queryset=None):
         if queryset:
             return get_object_or_404(queryset, user__username=self.kwargs["user"], id=self.kwargs["id"])

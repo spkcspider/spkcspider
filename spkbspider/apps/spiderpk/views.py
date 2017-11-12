@@ -33,16 +33,11 @@ class PublicKeyDetail(UserDetailView):
 class PublicKeyCreate(PermissionRequiredMixin, CreateView):
     model = PublicKey
     permission_required = 'add_{}'.format(model._meta.model_name)
-    fields = ['note', 'key']
+    fields = ['note', 'key', 'protected_by']
 
 class PublicKeyUpdate(ObjectTestMixin, UpdateView):
     model = PublicKey
     fields = ['note', 'key', 'protected_by']
-    # only owner can update
-    def test_func(self):
-        if self.request.user == self.object.user:
-            return True
-        return False
 
     def get_object(self, queryset=None):
         if queryset:
@@ -52,11 +47,6 @@ class PublicKeyUpdate(ObjectTestMixin, UpdateView):
 
 class PublicKeyDelete(ObjectTestMixin, DeleteView):
     model = PublicKey
-    # only owner can delete
-    def test_func(self):
-        if self.request.user == self.object.user:
-            return True
-        return False
 
     def get_object(self, queryset=None):
         if queryset:
@@ -86,29 +76,19 @@ class UserComponentCreate(PermissionRequiredMixin, CreateView):
 class UserComponentUpdate(ObjectTestMixin, UpdateView):
     model = UserComponent
     fields = ['name', 'data', 'protections']
-    # only owner can update
-    def test_func(self):
-        if self.request.user == self.object.user:
-            return True
-        return False
 
     def get_object(self, queryset=None):
         if queryset:
             return get_object_or_404(queryset, user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:
-            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["name"])
+            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], name=self.kwargs["name"])
 
 
 class UserComponentDelete(ObjectTestMixin, DeleteView):
     model = UserComponent
-    # only owner can delete
-    def test_func(self):
-        if self.request.user == self.object.user:
-            return True
-        return False
 
     def get_object(self, queryset=None):
         if queryset:
             return get_object_or_404(queryset, user__username=self.kwargs["user"], name=self.kwargs["name"])
         else:
-            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["name"])
+            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], name=self.kwargs["name"])

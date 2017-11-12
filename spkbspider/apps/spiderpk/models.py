@@ -25,12 +25,22 @@ class PublicKeyManager(models.Manager):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+def key_trimmed(val):
+    if key.strip() != key:
+        return False
+    return True
+
+
+def key_public(val):
+    if "PRIVAT" in key.upper():
+        return False
+    return True
 
 # also for account recovery
 class AbstractPublicKey(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # don't check for similarity as the hash check will reveal all clashes
-    key = models.BinaryField(editable=True)
+    key = models.TextField(editable=True, validators=[key_trimmed, key_public])
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     note = models.TextField(max_length=400, null=False)
@@ -60,7 +70,7 @@ class AbstractPublicKey(models.Model):
     def save(self, *args, **kwargs):
         if self.key and self.__original_key != self.key:
             h = hashlib.new(settings.KEY_HASH_ALGO)
-            h.update(self.key)
+            h.update(self.key.encode("utf-8", "ignore"))
             self.hash = h.hexdigest()
         super().save(*args, **kwargs)
 
