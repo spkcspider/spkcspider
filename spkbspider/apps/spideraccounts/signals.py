@@ -2,7 +2,7 @@ from django.contrib.auth.models import Permission
 
 import swapper
 
-UserComponent = swapper.load_model("spider", "UserComponent")
+UserComponent = swapper.load_model("spiderucs", "UserComponent")
 PublicKey = swapper.load_model("spiderkeys", "PublicKey")
 Broker = swapper.load_model("spiderbrokers", "Broker")
 

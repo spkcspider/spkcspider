@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .protections import Protection, AssignedProtection
 import swapper
-UserComponent = swapper.load_model("spider", "UserComponent")
+UserComponent = swapper.load_model("spiderucs", "UserComponent")
 
 # Register your models here.
 

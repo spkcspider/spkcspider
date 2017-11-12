@@ -24,7 +24,7 @@ class AbstractBroker(models.Model):
     # for extra information e.g. content of broker, admin only editing
     content_info = models.TextField(null=False, default="")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
-    protected_by = models.ForeignKey(swapper.get_model_name('spider', 'UserComponent'), blank=True, null=True, default=None, related_name="brokers")
+    protected_by = models.ForeignKey(swapper.get_model_name('spiderucs', 'UserComponent'), blank=True, null=True, default=None, related_name="brokers")
 
     class Meta:
         abstract = True

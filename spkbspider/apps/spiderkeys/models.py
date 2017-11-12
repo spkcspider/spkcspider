@@ -52,7 +52,7 @@ class AbstractPublicKey(models.Model):
     hash = models.CharField(max_length=settings.MAX_HASH_SIZE, unique=True, null=False, editable=False)
     # allow admins editing to solve conflicts
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False)
-    protected_by = models.ForeignKey(swapper.get_model_name('spider', 'UserComponent'), blank=True, null=True, default=None, related_name="publickeys")
+    protected_by = models.ForeignKey(swapper.get_model_name('spiderucs', 'UserComponent'), blank=True, null=True, default=None, related_name="publickeys")
     class Meta:
         abstract = True
         indexes = [

@@ -4,7 +4,7 @@ from django.db.models.signals import post_migrate
 
 class SpiderUCConfig(AppConfig):
     name = 'spkbspider.apps.spider'
-    label = 'spider'
+    label = 'spiderucs'
     verbose_name = 'SPKBSpider user components (Basis)'
 
     def ready(self):

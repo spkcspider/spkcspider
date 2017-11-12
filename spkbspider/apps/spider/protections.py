@@ -43,8 +43,8 @@ class Protection(models.Model):
         return self.protections[self.code].validate(user, data, request)
 
 class AssignedProtection(models.Model):
-    protection = models.ForeignKey("spider.Protection", on_delete=models.CASCADE, related_name="assigned", limit_choices_to={"code__in": "installed_protections"}, editable=False)
-    usercomponent = models.ForeignKey(swapper.get_model_name('spider', 'UserComponent'), on_delete=models.CASCADE, editable=False)
+    protection = models.ForeignKey("spiderucs.Protection", on_delete=models.CASCADE, related_name="assigned", limit_choices_to={"code__in": "installed_protections"}, editable=False)
+    usercomponent = models.ForeignKey(swapper.get_model_name('spiderucs', 'UserComponent'), on_delete=models.CASCADE, editable=False)
     # data for protection
     protectiondata = JSONField(default={}, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)

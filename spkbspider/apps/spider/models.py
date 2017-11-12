@@ -26,7 +26,7 @@ class AbstractUserComponent(models.Model):
     publickeys = None
     # should be used for retrieving active protections, related_name
     assigned = None
-    protections = models.ManyToManyField("spider.Protection", through="spider.AssignedProtection")
+    protections = models.ManyToManyField("spiderucs.Protection", through="spiderucs.AssignedProtection")
     class Meta:
         abstract = True
         unique_together = [("user", "name"),]
@@ -61,7 +61,7 @@ class AbstractUserComponent(models.Model):
 
 class UserComponent(AbstractUserComponent):
     class Meta:
-        swappable = swapper.swappable_setting('spider', 'UserComponent')
+        swappable = swapper.swappable_setting('spiderucs', 'UserComponent')
 
 
 from .protections import Protection, AssignedProtection

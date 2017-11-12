@@ -12,7 +12,7 @@ import swapper
 from spkbspider.apps.spider.common import ObjectTestMixin, UserListView, UserDetailView
 
 # Create your views here.
-UserComponent = swapper.load_model("spider", "UserComponent")
+UserComponent = swapper.load_model("spiderucs", "UserComponent")
 
 class UserComponentAllIndex(ListView):
     model = UserComponent
