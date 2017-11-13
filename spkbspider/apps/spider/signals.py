@@ -7,7 +7,7 @@ def InitProtectionsCallback(sender, **kwargs):
     from .models import Protection
     for code, val in installed_protections.items():
         ret = Protection.objects.get_or_create(code=code)[0]
-        ret.can_render = val.can_render
+        ret.skip_render = val.skip_render
         ret.save()
     temp = Protection.objects.exclude(code__in=installed_protections.keys())
     if temp.exists():

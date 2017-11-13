@@ -15,7 +15,7 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 from django.template.response import TemplateResponse
 from django.contrib.auth import get_user_model
-from django.views.decorators import sensitive_variables
+from django.views.decorators.debug import sensitive_variables
 
 
 try:
@@ -43,7 +43,9 @@ def add_protection(klass):
 # form with inner form for authentication
 class BaseProtection(forms.Form):
     active = forms.BooleanField(required=True)
-    can_render = False
+    # if False active content is rendered (auth_render)
+    # if True apply test instantly and don't show as authentication option
+    skip_render = True
 
     template_name = None
     template_engine = None
@@ -78,7 +80,7 @@ class BaseProtection(forms.Form):
 @add_protection
 class AllowProtection(BaseProtection):
     name = "allow"
-    can_render = False
+    skip_render = True
 
     @classmethod
     def auth_test(cls, request, **kwargs):
@@ -94,7 +96,7 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     users = forms.ModelMultipleChoiceField(queryset=friend_query)
-    can_render = False
+    skip_render = True
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.user.id in data["users"]:
@@ -108,9 +110,9 @@ class FriendProtection(BaseProtection):
 @add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
-    can_render = True
+    skip_render = False
 
-    @sensitive_variables(data, request)
+    @sensitive_variables("data", "request")
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.POST.get("password", "") in data["passwords"]:
@@ -127,8 +129,9 @@ class PasswordProtection(BaseProtection):
 @add_protection
 class AuditPasswordProtection(BaseProtection):
     name = "auditpw"
+    skip_render = False
 
-    @sensitive_variables(data, request)
+    @sensitive_variables("data", "request")
     @classmethod
     def auth_test(cls, request, data, obj, **kwargs):
         if "user" not in request.POST:
@@ -156,6 +159,7 @@ class AuditPasswordProtection(BaseProtection):
 if jwt:
     @add_protection
     class JWTProtection(object):
+        skip_render = False
         name = "jwt"
         def validate(self, request, data, **kwargs):
             if request.user.username in data.get("users", []):
