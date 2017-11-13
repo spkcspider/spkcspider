@@ -1,0 +1,12 @@
+{% extends "spiderpk/base.html" %}
+
+{% block content %}
+  <h1>Protections</h1>
+  <ul>
+  {% for uc in object_list %}
+      <li>{% if not nouser %}{{uc.user}} - {%endif%}{{ uc }}</li>
+  {% empty %}
+      <li>Error.</li>
+  {% endfor %}
+  </ul>
+{% endblock %}

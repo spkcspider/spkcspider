@@ -3,10 +3,16 @@ from django.contrib.auth.mixins import UserPassesTestMixin
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 
+import swapper
+
+UserComponent = swapper.load_model("spiderucs", "UserComponent")
 
 class ObjectTestMixin(UserPassesTestMixin):
     object = None
+    protection = None
+    noperm_template_name = "spiderucs/protection_list.html"
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -33,21 +39,46 @@ class ObjectTestMixin(UserPassesTestMixin):
             return True
         return False
 
-    def test_use_uc(self, ucname, obuser):
+    def use_uc(self, obuser, ucname=None):
         if hasattr(self, "object"):
             if self.object.protected_by:
-                return self.object.protected_by.auth_test(self.request)
-        uc = self.model.objects.get_or_create(name=ucname, user=obuser)
-        return uc.test(self.request)
+                self.uc = self.object.protected_by
+        else:
+            self.uc = UserComponent.objects.get_or_create(name=ucname, user=obuser)
+        if "protection" in request.GET:
+            self.protection = get_object_or_404(AssignedProtection, usercomponent=self.uc, protection__name=request.GET["protection"])
+            if self.request.method == "GET":
+                # skip testing because no values exist
+                return False
+            else:
+                return self.protection.auth_test(self.request)
+        else:
+            return self.uc.auth_test_pre(self.request)
+
+    def get_noperm_template_names(self):
+        return [self.noperm_template_name]
 
     def handle_no_permission(self):
-
-        if self.raise_exception:
+        if self.protection:
+            return self.protection.auth_render(self.request)
+        if not self.uc:
             raise PermissionDenied(self.get_permission_denied_message())
-        return redirect_to_login(self.request.get_full_path(), self.get_login_url(), self.get_redirect_field_name())
+        auth_methods = self.uc.list_protections(self.request)
+        if len(auth_methods) == 0:
+            raise PermissionDenied(self.get_permission_denied_message())
+        context = {"object_list": auth_methods}
+        return TemplateResponse(
+            request=self.request,
+            template=self.get_noperm_template_names(),
+            context=context,
+            using=self.template_engine,
+            content_type=getattr(self, "content_type",None)
+        )
+        #return redirect_to_login(self.request.get_full_path(), self.get_login_url(), self.get_redirect_field_name())
 
 
 class UserListView(UserPassesTestMixin, ListView):
+    uc_name = None
     def test_func(self):
         # 404 if user does not exist
         obuser = get_object_or_404(self.get_user())
@@ -56,7 +87,7 @@ class UserListView(UserPassesTestMixin, ListView):
         #    return True
         if self.test_user_has_special_permissions(obuser):
             return True
-        if self.test_use_uc("publickeys", obuser):
+        if self.use_uc(obuser, uc_name):
             return True
         return False
 
@@ -64,6 +95,7 @@ class UserListView(UserPassesTestMixin, ListView):
         return self.model.objects.filter(user__username=self.kwargs["user"])
 
 class UserDetailView(UserPassesTestMixin, DetailView):
+    uc_name = None
     def test_func(self):
         obuser = self.get_user()
         if not obuser:
@@ -71,7 +103,7 @@ class UserDetailView(UserPassesTestMixin, DetailView):
             return True
         if self.test_user_has_special_permissions(obuser):
             return True
-        if self.test_use_uc("publickeys", obuser):
+        if self.use_uc(obuser, uc_name):
             return True
         return False
 

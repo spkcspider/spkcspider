@@ -43,23 +43,18 @@ class AbstractUserComponent(models.Model):
     def __str__(self):
         return self.name
 
-    """def auth_test(self, request):
-        # with deny and protections
-        if self.assigned.filter(code="deny", active=True).exists() and len(self.assigned) > 1:
-            for p in self.assigned.filter(active=True).exclude(code="deny"):
-                if not p.test(request):
-                    return False
-            for rec, error in test_success.send_robust(sender=self.__class__, name=self.name, code="deny"):
-                logger.error(error)
-            return True
-        else:
-            # normally just one must be fullfilled (or)
-            for p in self.assigned.filter(active=True):
-                if p.test(request):
-                    for rec, error in test_success.send_robust(sender=self.__class__, name=self.name, code=p.code):
-                        logger.error(error)
-                    return True
-            return False"""
+    def auth_test_pre(self, request):
+        for p in self.assigned.filter(skip_render=True, active=True):
+            if p.auth_test(request):
+                return True
+        return False
+
+    def list_protections(self, request):
+        ret = []
+        for p in self.assigned.filter(skip_render=False, active=True):
+            ret.append(p.auth_render(request))
+        return ret
+
     def settings(self, request):
         pall = []
         for p in self.assigned.all():
