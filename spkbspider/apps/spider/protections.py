@@ -45,10 +45,7 @@ class BaseProtection(forms.Form):
     active = forms.BooleanField(required=True)
     # if False active content is rendered (auth_render)
     # if True apply test instantly and don't show as authentication option
-    skip_render = True
-    # if Protection can only be executed by machines
-    # in practice this causes a copyable link in the auth listing process
-    machine_only = False
+    can_render = True
 
     template_name = None
     template_engine = None
