@@ -5,9 +5,7 @@ from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 
-import swapper
-
-UserComponent = swapper.load_model("spiderucs", "UserComponent")
+from .models import UserComponent
 
 class ObjectTestMixin(UserPassesTestMixin):
     object = None
@@ -23,7 +21,7 @@ class ObjectTestMixin(UserPassesTestMixin):
 
     # by default only owner can access view
     def test_func(self):
-        if self.request.user == self.object.user:
+        if self.request.user == self.object.associated.usercomponent.user:
             return True
         return False
 
@@ -41,10 +39,10 @@ class ObjectTestMixin(UserPassesTestMixin):
 
     def use_uc(self, obuser, ucname=None):
         if hasattr(self, "object"):
-            if self.object.protected_by:
-                self.uc = self.object.protected_by
+            if self.object.associated:
+                self.uc = self.object.associated.usercomponent
         else:
-            self.uc = UserComponent.objects.get_or_create(name=ucname, user=obuser)
+            self.uc = UserComponent.objects.get(name=ucname, user=obuser)
         if "protection" in request.GET:
             self.protection = get_object_or_404(AssignedProtection, usercomponent=self.uc, protection__name=request.GET["protection"])
             if self.request.method == "GET":
@@ -106,9 +104,3 @@ class UserDetailView(UserPassesTestMixin, DetailView):
         if self.use_uc(obuser, uc_name):
             return True
         return False
-
-    def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(queryset, user__username=self.kwargs["user"], hash=self.kwargs["hash"])
-        else:
-            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["hash"])

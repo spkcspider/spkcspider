@@ -19,7 +19,7 @@ class BrokerAllIndex(ListView):
     def get_queryset(self):
         if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
             return self.model.all()
-        return self.model.filter(models.Q(protected_by=[])|models.Q(user=self.request.user))
+        return self.model.filter(associated__usercomponent__user=self.request.user)
 
 
 class BrokerIndex(UserListView):

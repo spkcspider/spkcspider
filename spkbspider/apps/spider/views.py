@@ -2,19 +2,17 @@ from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-
-import swapper
 
 from spkbspider.apps.spider.common import ObjectTestMixin, UserListView, UserDetailView
 from .forms import UserComponentForm
 
 
 
-UserComponent = swapper.load_model("spiderucs", "UserComponent")
+from .models import UserComponent
 
 class UserComponentAllIndex(ListView):
     model = UserComponent
@@ -24,11 +22,41 @@ class UserComponentAllIndex(ListView):
             return self.model.all()
         return self.model.filter(models.Q(protected_by=[])|models.Q(user=self.request.user))
 
-class UserComponentIndex(UserListView):
+class UserComponentIndex(UserPassesTestMixin, ListView):
     model = UserComponent
 
-class UserComponentDetail(UserDetailView):
+    def test_func(self):
+        if self.request.user == self.object.user:
+            return True
+        return False
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        user_test_result = self.test_func()
+        if not user_test_result:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return self.model.objects.filter(user__username=self.kwargs["user"])
+
+class UserComponentDetail(UserPassesTestMixin, DetailView):
     model = UserComponent
+
+    def test_func(self):
+        if self.request.user == self.object.user:
+            return True
+        return False
+
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        user_test_result = self.test_func()
+        if not user_test_result:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return self.model.objects.filter(user__username=self.kwargs["user"])
 
 class UserComponentCreate(PermissionRequiredMixin, CreateView):
     model = UserComponent

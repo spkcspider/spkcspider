@@ -38,15 +38,15 @@ class PublicKeyUpdate(ObjectTestMixin, UpdateView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_object_or_404(queryset, hash=self.kwargs["hash"])
         else:
-            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_object_or_404(self.get_queryset(), hash=self.kwargs["hash"])
 
 class PublicKeyDelete(ObjectTestMixin, DeleteView):
     model = PublicKey
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_object_or_404(queryset, hash=self.kwargs["hash"])
         else:
-            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], hash=self.kwargs["hash"])
+            return get_object_or_404(self.get_queryset(), hash=self.kwargs["hash"])

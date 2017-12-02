@@ -107,7 +107,7 @@ class FriendProtection(BaseProtection):
     def __str__(self):
         return _("Friends")
 
-@add_protection
+#@add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
     skip_render = False
@@ -126,7 +126,7 @@ class PasswordProtection(BaseProtection):
     def __str__(self):
         return _("Password based authentication")
 
-@add_protection
+#@add_protection
 class AuditPasswordProtection(BaseProtection):
     name = "auditpw"
     skip_render = False
@@ -157,7 +157,7 @@ class AuditPasswordProtection(BaseProtection):
 
 
 if jwt:
-    @add_protection
+    #@add_protection
     class JWTProtection(object):
         skip_render = False
         name = "jwt"

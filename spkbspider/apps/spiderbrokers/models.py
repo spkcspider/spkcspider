@@ -1,11 +1,15 @@
 from django.db import models
 from django.utils.translation import pgettext_lazy
+from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 
 from jsonfield import JSONField
 import swapper
 
 from urllib.parse import urlsplit
+
+
+from spkbspider.apps.spider.models import UserComponentContent
 
 # Create your models here.
 
@@ -19,12 +23,7 @@ class AbstractBroker(models.Model):
     brokertype = models.SlugField(max_length=10, choices=CHOICES)
     brokerdata = JSONField(default={})
     url = models.URLField(max_length=300, default="")
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    modified = models.DateTimeField(auto_now=True, editable=False)
-    # for extra information e.g. content of broker, admin only editing
-    content_info = models.TextField(null=False, default="")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
-    protected_by = models.ForeignKey(swapper.get_model_name('spiderucs', 'UserComponent'), blank=True, null=True, default=None, related_name="brokers")
+    associated = GenericRelation(UserComponentContent)
 
     class Meta:
         abstract = True

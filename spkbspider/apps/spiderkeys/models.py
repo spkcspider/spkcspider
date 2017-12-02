@@ -2,12 +2,15 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import pgettext_lazy
 from django.core.exceptions import ValidationError
+from django.contrib.contenttypes.fields import GenericRelation
 
 from jsonfield import JSONField
 import swapper
 
 import hashlib
 import logging
+
+from spkbspider.apps.spider.models import UserComponentContent
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +52,7 @@ class AbstractPublicKey(models.Model):
     # DON'T allow users to change hash
     hash = models.CharField(max_length=settings.MAX_HASH_SIZE, unique=True, null=False, editable=False)
     # allow admins editing to solve conflicts
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False)
-    protected_by = models.ForeignKey(swapper.get_model_name('spiderucs', 'UserComponent'), blank=True, null=True, default=None, related_name="publickeys")
+    associated = GenericRelation(UserComponentContent)
     class Meta:
         abstract = True
         indexes = [

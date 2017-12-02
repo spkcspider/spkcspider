@@ -8,9 +8,11 @@ namespace: spiderucs
 from django.db import models
 from django.conf import settings
 from django.utils.translation import pgettext_lazy
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
 
 from jsonfield import JSONField
-import swapper
 
 from .signals import test_success
 from .protections import installed_protections
@@ -20,21 +22,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class AbstractUserComponent(models.Model):
+class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     name = models.SlugField(max_length=50, null=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
-    #data for requester (NOT FOR PROTECTION)
-    data = JSONField(default={}, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
-    brokers = None
-    publickeys = None
+    contents = None
     # should be used for retrieving active protections, related_name
     assigned = None
     protections = models.ManyToManyField("spiderucs.Protection", through="spiderucs.AssignedProtection")
     class Meta:
-        abstract = True
         unique_together = [("user", "name"),]
         indexes = [
             models.Index(fields=['user', 'name']),
@@ -64,10 +62,15 @@ class AbstractUserComponent(models.Model):
         return reverse("spiderucs:uc-view", kwargs={"user":self.user.username, "name":self.name})
 
 
-class UserComponent(AbstractUserComponent):
-    class Meta:
-        swappable = swapper.swappable_setting('spiderucs', 'UserComponent')
-
+class UserComponentContent(models.Model):
+    usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False, related_name="contents")
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    modified = models.DateTimeField(auto_now=True, editable=False)
+    # for extra information e.g. content of broker, admin only editing
+    info = models.TextField(null=False, default="")
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, editable=False)
+    object_id = models.BigIntegerField(editable=False)
+    content = GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
 
 
 class ProtectionManager(models.Manager):
@@ -91,8 +94,8 @@ class Protection(models.Model):
 
 class AssignedProtection(models.Model):
     id = models.BigAutoField(primary_key=True)
-    protection = models.ForeignKey("spiderucs.Protection", on_delete=models.CASCADE, related_name="assigned", limit_choices_to={"code__in": installed_protections}, editable=False)
-    usercomponent = models.ForeignKey(swapper.get_model_name('spiderucs', 'UserComponent'), on_delete=models.CASCADE, editable=False)
+    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", limit_choices_to={"code__in": installed_protections}, editable=False)
+    usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False)
     # data for protection
     protectiondata = JSONField(default={}, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)

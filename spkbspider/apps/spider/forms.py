@@ -2,16 +2,15 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 import swapper
-UserComponent = swapper.load_model("spiderucs", "UserComponent")
 
-from .models import AssignedProtection
+from .models import AssignedProtection, UserComponent
 
 
 class UserComponentForm(forms.ModelForm):
     protection_forms = None
     class Meta:
         model = UserComponent
-        fields = ['data', 'protections']
+        fields = ['contents', 'protections']
 
     def __init__(self, protection_forms, *args, **kwargs):
         super().__init__(*args, **kwargs)
