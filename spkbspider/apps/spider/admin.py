@@ -16,8 +16,8 @@ class UserComponentAdmin(admin.ModelAdmin):
     inlines = [
         AssignedProtectionInline,
     ]
-    fields = ['brokers', 'publickeys', 'name', 'data']
+    fields = ['contents', 'name']
 
 @admin.register(Protection)
 class ProtectionAdmin(admin.ModelAdmin):
-    pass
+    fields = ['code']

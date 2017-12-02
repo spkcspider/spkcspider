@@ -4,7 +4,7 @@ namespace: spiderucs
 
 """
 
-__all__ = ["add_protection", "check_blacklisted", "installed_protections"]
+__all__ = ["add_protection", "check_blacklisted", "installed_protections", "BaseProtection"]
 
 from django.http.response import HttpResponseForbidden
 from django.conf import settings
@@ -44,8 +44,10 @@ def add_protection(klass):
 class BaseProtection(forms.Form):
     active = forms.BooleanField(required=True)
     # if False active content is rendered (auth_render)
-    # if True apply test instantly and don't show as authentication option
-    can_render = True
+    # can be used as normal test
+    can_test = False
+    # can be used for interactive render
+    can_render = False
 
     template_name = None
     template_engine = None
@@ -80,7 +82,7 @@ class BaseProtection(forms.Form):
 @add_protection
 class AllowProtection(BaseProtection):
     name = "allow"
-    skip_render = True
+    can_test = True
 
     @classmethod
     def auth_test(cls, request, **kwargs):
@@ -96,7 +98,7 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     users = forms.ModelMultipleChoiceField(queryset=friend_query)
-    skip_render = True
+    can_test = True
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.user.id in data["users"]:

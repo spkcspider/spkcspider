@@ -1,9 +1,0 @@
-{% extends "spiderpk/base.html" %}
-
-{% block content %}
-  <h1>{% trans 'Public Component' %}</h1>
-  <br/>{% trans 'last modified' %}: {{object.modified}}
-  {% if request.user == object.user %}
-    <a href="{% url 'spiderpk:uc-update' %}">{% trans 'Edit'%}</a>
-  {% endif %}
-{% endblock %}
