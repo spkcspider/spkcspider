@@ -9,7 +9,6 @@ python_version = '3'
 [packages]
 
 django = '*'
-swapper = '*'
 jsonfield = '*'
 django-extensions = '*'
 

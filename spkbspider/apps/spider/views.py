@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
 from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
@@ -12,12 +12,13 @@ from .forms import UserComponentForm
 
 
 
-from .models import UserComponent, UserComponentContent
+from .models import UserComponent, UserContent
+from .contents import available_contenttypes
 
 class ObjectTestMixin(UserPassesTestMixin):
     object = None
     protection = None
-    noperm_template_name = "spiderucs/protection_list.html"
+    #noperm_template_name = "spiderucs/protection_list.html"
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -44,14 +45,14 @@ class ObjectTestMixin(UserPassesTestMixin):
     def get_user(self):
         return self.object.user
 
-    def get_noperm_template_names(self):
-        return [self.noperm_template_name]
+    #def get_noperm_template_names(self):
+    #    return [self.noperm_template_name]
 
-    def handle_no_permission(self):
-        raise PermissionDenied(self.get_permission_denied_message())
+    #def handle_no_permission(self):
+    #    raise PermissionDenied(self.get_permission_denied_message())
 
 
-class UserComponentAllIndex(ListView):
+class ComponentAllIndex(ListView):
     model = UserComponent
 
     def get_queryset(self):
@@ -59,7 +60,7 @@ class UserComponentAllIndex(ListView):
             return self.model.all()
         return self.model.filter(models.Q(protected_by=[])|models.Q(user=self.request.user))
 
-class UserComponentIndex(ObjectTestMixin, ListView):
+class ComponentIndex(ObjectTestMixin, ListView):
     model = UserComponent
 
     def test_func(self):
@@ -70,12 +71,12 @@ class UserComponentIndex(ObjectTestMixin, ListView):
     def get_queryset(self):
         return self.model.objects.filter(user__username=self.kwargs["user"])
 
-class UserComponentCreate(PermissionRequiredMixin, CreateView):
+class ComponentCreate(PermissionRequiredMixin, CreateView):
     model = UserComponent
     permission_required = 'add_{}'.format(model._meta.model_name)
     fields = ['name', 'data', 'protections']
 
-class UserComponentUpdate(ObjectTestMixin, UpdateView):
+class ComponentUpdate(ObjectTestMixin, UpdateView):
     model = UserComponent
     fields = ['name', 'data', 'protections']
     form_class = UserComponentForm
@@ -91,7 +92,7 @@ class UserComponentUpdate(ObjectTestMixin, UpdateView):
         else:
             return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], name=self.kwargs["name"])
 
-class UserComponentDelete(ObjectTestMixin, DeleteView):
+class ComponentDelete(ObjectTestMixin, DeleteView):
     model = UserComponent
 
     def get_object(self, queryset=None):
@@ -101,7 +102,7 @@ class UserComponentDelete(ObjectTestMixin, DeleteView):
             return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], name=self.kwargs["name"])
 
 class ContentIndex(ObjectTestMixin, ListView):
-    model = UserComponentContent
+    model = UserContent
 
     def test_func(self):
         if self.test_user_has_special_permissions():
@@ -110,3 +111,26 @@ class ContentIndex(ObjectTestMixin, ListView):
 
     def get_queryset(self):
         return self.model.objects.filter(user__username=self.kwargs["user"])
+
+class ContentAdd(PermissionRequiredMixin, FormView):
+    model = UserContent
+    permission_required = 'add_{}'.format(model._meta.model_name)
+    fields = ['name', 'data', 'protections']
+
+class ContentUpdate(ObjectTestMixin, FormView):
+    model = UserContent
+
+    def get_object(self, queryset=None):
+        if queryset:
+            return get_object_or_404(queryset, user__username=self.kwargs["user"], name=self.kwargs["name"])
+        else:
+            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], name=self.kwargs["name"])
+
+class ContentRemove(ObjectTestMixin, DeleteView):
+    model = UserContent
+
+    def get_object(self, queryset=None):
+        if queryset:
+            return get_object_or_404(queryset, user__username=self.kwargs["user"], name=self.kwargs["name"])
+        else:
+            return get_object_or_404(self.get_queryset(), user__username=self.kwargs["user"], name=self.kwargs["name"])

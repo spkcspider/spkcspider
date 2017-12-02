@@ -6,9 +6,11 @@ from .models import AssignedProtection, UserComponent
 
 class UserComponentForm(forms.ModelForm):
     protection_forms = None
+    #contents = forms.ModelMultipleChoiceField()
+
     class Meta:
         model = UserComponent
-        fields = ['contents', 'protections']
+        fields = ['protections']
 
     def __init__(self, protection_forms, *args, **kwargs):
         super().__init__(*args, **kwargs)

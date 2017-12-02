@@ -56,11 +56,13 @@ class UserComponent(models.Model):
         return reverse("spiderucs:uc-view", kwargs={"user":self.user.username, "name":self.name})
 
 
-class UserComponentContent(models.Model):
+class UserContent(models.Model):
     usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False, related_name="contents")
+
+    #creator = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, null=True, on_delete=models.SET_ZERO)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
-    # for extra information e.g. content of broker, admin only editing
+    # for extra information over content, admin only editing
     info = models.TextField(null=False, default="")
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, editable=False)
     object_id = models.BigIntegerField(editable=False)

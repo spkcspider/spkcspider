@@ -5,12 +5,11 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
 
 from jsonfield import JSONField
-import swapper
 
 import hashlib
 import logging
 
-from spkbspider.apps.spider.models import UserComponentContent
+from spkbspider.apps.spider.contents import BaseContent
 
 logger = logging.getLogger(__name__)
 
@@ -37,12 +36,9 @@ def valid_pkey_properties(val):
         raise ValidationError(_('Not a key'))
 
 # also for account recovery
-class AbstractPublicKey(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
+class AbstractPublicKey(BaseContent):
     # don't check for similarity as the hash check will reveal all clashes
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    modified = models.DateTimeField(auto_now=True, editable=False)
     note = models.TextField(max_length=400, null=False)
     # can only be retrieved by hash or if it is the user
     # every hash has to be unique
@@ -51,13 +47,10 @@ class AbstractPublicKey(models.Model):
     # don't use as primary key as algorithms could change
     # DON'T allow users to change hash
     hash = models.CharField(max_length=settings.MAX_HASH_SIZE, unique=True, null=False, editable=False)
-    # allow admins editing to solve conflicts
-    associated = GenericRelation(UserComponentContent)
     class Meta:
         abstract = True
         indexes = [
             models.Index(fields=['hash']),
-            models.Index(fields=['user']),
         ]
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -73,9 +66,8 @@ class AbstractPublicKey(models.Model):
             self.hash = h.hexdigest()
         super().save(*args, **kwargs)
 
-    def get_absolute_url(self):
-        return reverse("spiderpk:pk-view", kwargs={"user":self.user.username, "hash":self.hash})
+    #def get_absolute_url(self):
+    #    return reverse("spiderpk:pk-view", kwargs={"user":self.user.username, "hash":self.hash})
 
 class PublicKey(AbstractPublicKey):
-    class Meta:
-        swappable = swapper.swappable_setting('spiderpk', 'PublicKey')
+    pass
