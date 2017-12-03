@@ -3,14 +3,16 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from .models import UserContent
 
-__all__ = ["add_content", "available_contenttypes", "BaseContent"]
+__all__ = ["add_content", "installed_contents", "BaseContent"]
 
-available_contenttypes = {}
+installed_contents = {}
 
 def add_content(klass):
-    if klass._meta.model_name in available_contenttypes:
+    if klass._meta.model_name in installed_contents:
         raise Exception("Duplicate content name")
-    available_contenttypes[klass._meta.model_name] = klass
+    if klass._meta.model_name in getattr(settings, "BLACKLISTED_CONTENTS", {}):
+        return klass
+    installed_contents[klass._meta.model_name] = klass
     return klass
 
 class BaseContent(models.Model):

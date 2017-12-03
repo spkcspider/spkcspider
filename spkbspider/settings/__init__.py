@@ -38,8 +38,8 @@ INSTALLED_APPS = [
     'django_extensions',
     #'django.contrib.sites',
     'spkbspider.apps.spider',
-    'spkbspider.apps.spiderbrokers',
-    'spkbspider.apps.spiderkeys',
+    #'spkbspider.apps.spiderbrokers',
+    #'spkbspider.apps.spiderkeys',
 ]
 
 MIDDLEWARE = [

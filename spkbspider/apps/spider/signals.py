@@ -1,4 +1,5 @@
 from django.dispatch import Signal
+from django.conf import settings
 
 test_success = Signal(providing_args=["name", "code"])
 
@@ -12,3 +13,10 @@ def InitProtectionsCallback(sender, **kwargs):
     temp = Protection.objects.exclude(code__in=installed_protections.keys())
     if temp.exists():
         print("Invalid protections, please update or remove them:", [t.code for t in temp.keys()])
+
+def InitUserComponentsCallback(sender, instance, **kwargs):
+    from .models import UserComponent
+    if not getattr(settings, "SPIDER_NOINDEX", False):
+        UserComponent.objects.get_or_create(name="index", user=instance)
+    if not getattr(settings, "SPIDER_NORECOVERY", False):
+        UserComponent.objects.get_or_create(name="recovery", user=instance)

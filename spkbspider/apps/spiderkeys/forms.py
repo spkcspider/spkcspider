@@ -1,10 +1,8 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-import swapper
-PublicKey = swapper.load_model("spiderkeys", "PublicKey")
-
 class ProtectionForm(forms.ModelForm):
+    from .models import PublicKey
     class Meta:
         model = PublicKey
         fields = ['key']

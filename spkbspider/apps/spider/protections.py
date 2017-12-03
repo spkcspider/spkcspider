@@ -32,7 +32,7 @@ def check_blacklisted(name):
     return True
 
 def add_protection(klass):
-    if klass.name != "deny":
+    if klass.name != "allow":
         if klass.name in getattr(settings, "BLACKLISTED_PROTECTIONS", {}):
             return klass
     if klass.name in installed_protections:
