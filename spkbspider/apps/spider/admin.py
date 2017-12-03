@@ -23,7 +23,7 @@ class UserComponentAdmin(admin.ModelAdmin):
     fields = ['name']
 
     def has_delete_permission(self, request, obj=None):
-        if obj and obj.name in ["index", "recovery"]:
+        if obj and obj.is_protected:
             return False
         return super().has_delete_permission(request, obj)
 

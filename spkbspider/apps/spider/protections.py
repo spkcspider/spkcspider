@@ -57,9 +57,10 @@ class BaseProtection(forms.Form):
     @classmethod
     def auth_test(cls, **kwargs):
         return False
+
     @classmethod
-    def auth_render(cls, **kwargs):
-        return None
+    def render(cls, **kwargs):
+        raise NotImplementedError
 
     @classmethod
     def render_template(cls, request, context, **response_kwargs):

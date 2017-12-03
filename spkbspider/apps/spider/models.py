@@ -51,9 +51,9 @@ class UserComponent(models.Model):
     def __str__(self):
         return self.name
 
-    def auth_test(self, request):
+    def auth_test(self, request, scope):
         for p in self.assigned.filter(can_test=True, active=True):
-            if p.auth_test(request):
+            if p.auth_test(request, scope):
                 return True
         return False
 
@@ -65,6 +65,10 @@ class UserComponent(models.Model):
 
     def get_absolute_url(self):
         return reverse("spiderucs:uc-view", kwargs={"user":self.user.username, "name":self.name})
+
+    @property
+    def is_protected(self):
+        return self.name in ["index", "recovery"]
 
 
 def info_field_validator(value):
@@ -167,8 +171,8 @@ class AssignedProtection(models.Model):
     #def get_absolute_url(self):
     #    return reverse("spiderucs:protection", kwargs={"user":self.usercomponent.user.username, "ucid":self.usercomponent.id, "pname": self.protection.code})
 
-    def auth_test(self):
-        return installed_protections[self.protection.code].auth_test(request=request, user=usercomponent.user, data=self.protectiondata, obj=self)
+    def auth_test(self, request, scope):
+        return installed_protections[self.protection.code].auth_test(request=request, user=usercomponent.user, data=self.protectiondata, obj=self, scope=scope)
 
     def settings(self, request):
         if request.method == "GET":

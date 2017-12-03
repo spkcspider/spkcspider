@@ -3,7 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from .models import UserContent
 
-__all__ = ["add_content", "installed_contents", "BaseContent"]
+__all__ = ["add_content", "installed_contents", "allowed_search_fields", "BaseContent"]
 
 installed_contents = {}
 
@@ -16,12 +16,20 @@ def add_content(klass):
     return klass
 
 class BaseContent(models.Model):
-    form = None
-    view_template = None
+    # for setup
+    form_class = None
+
     # consider not writing admin wrapper for (sensitive) inherited content
     # this way content could be protected to be only visible to admin, user and legitimated users (if not index)
 
     id = models.BigAutoField(primary_key=True, editable=False)
-    associated  = GenericRelation(UserContent)
+    associated = GenericRelation(UserContent)
     class Meta:
         abstract = True
+
+    # for viewing
+    def render(self, **kwargs):
+        raise NotImplementedError
+
+    def get_info(self, usercomponent):
+        return "type=%s;" % self._meta.model_name

@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.views.generic.detail import DetailView
+from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
@@ -23,13 +23,11 @@ class UserTestMixin(UserPassesTestMixin):
 
     # by default only owner can access view
     def test_func(self):
-        if self.request.user == self.get_user():
+        if self.has_special_access(staff=False, root=False):
             return True
         return False
 
     def has_special_access(self, staff=False, root=True):
-        if not self.request.user.is_active or not self.request.user.is_authenticated:
-            return False
         if self.request.user == self.get_user():
             return True
         if root and self.request.user.is_superuser:
@@ -131,20 +129,37 @@ class ComponentResetDelete(UserTestMixin, UpdateView):
 class ComponentDelete(UserTestMixin, DeleteView):
     model = UserComponent
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        # deleting them should not be possible, except by deleting user
-        if self.object.name in ["index", "recovery"]:
-            return self.handle_no_permission()
-        success_url = self.get_success_url()
+    def get_required_timedelta(self):
         _time = getattr(settings, "UC_DELETION_PERIOD", {}).get(self.object.name, None)
         if not _time:
             _time = getattr(settings, "DEFAULT_DELETION_PERIOD", None)
         if _time:
             now = timezone.now()
             _time = timedelta(seconds=_time)
+        return timedelta(seconds=_time)
+
+    def get_context_data(self, **kwargs):
+        self.object = self.get_object()
+        _time = self.get_required_timedelta()
+        if _time and self.object.deletion_requested:
+            now = timezone.now()
+            if self.object.deletion_requested+_time>=now:
+                kwargs["remaining"] = timedelta(seconds=0)
+            else:
+                kwargs["remaining"] = self.object.deletion_requested+_time-now
+        return super().get_context_data(**kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        # deleting them should not be possible, except by deleting user
+        if self.object.is_protected:
+            return self.handle_no_permission()
+        success_url = self.get_success_url()
+        _time = self.get_required_timedelta()
+        if _time:
+            now = timezone.now()
             if self.object.deletion_requested:
-                if self.object.deletion_requested+_time>now:
+                if self.object.deletion_requested+_time>=now:
                     return self.get(request, *args, **kwargs)
             else:
                 self.object.deletion_requested = now
@@ -162,20 +177,51 @@ class ComponentDelete(UserTestMixin, DeleteView):
 
 ################################################################################
 
+class ContentView(UCTestMixin, BaseDetailView):
+    model = UserContent
+    def get_context_data(self, **kwargs):
+        kwargs["request"] = self.request
+        return super().get_context_data(**kwargs)
+
+    def test_func(self):
+        if self.has_special_access(staff=(self.usercomponent.name!="index"), root=True):
+            return True
+        # block view on special objects for non user and non superusers
+        if self.usercomponent.is_protected:
+            return False
+        if self.usercomponent.auth_test(self.request, "access"):
+            return True
+        return False
+
+    def get_object(self, queryset=None):
+        if queryset:
+            return get_object_or_404(queryset, usercomponent=self.usercomponent, id=self.kwargs["id"])
+        else:
+            return get_object_or_404(self.get_queryset(), usercomponent=self.usercomponent, id=self.kwargs["id"])
+
+    def render_to_response(self, context):
+        return self.object.render(**context)
 
 class ContentIndex(UCTestMixin, ListView):
     model = UserContent
 
     def test_func(self):
-        if self.has_special_access(staff=(self.object.name!="index")):
+        if self.has_special_access(staff=(self.usercomponent.name!="index"), root=True):
             return True
         # block view on special objects for non user and non superusers
-        if self.object.name in ["index", "recovery"]:
+        if self.usercomponent.is_protected:
             return False
+        if self.usercomponent.auth_test(self.request, "list"):
+            return True
         return False
 
     def get_queryset(self):
-        return self.model.objects.filter(usercomponent=self.usercomponent)
+        ret = self.model.objects.filter(usercomponent=self.usercomponent)
+        if "info" in kwargs:
+            ret = ret.filter(info__contains="%s;" % kwargs["info"])
+        if "type" in kwargs:
+            ret = ret.filter(info__contains="type=%s;" % kwargs["type"])
+        return ret
 
 
 class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
@@ -202,10 +248,10 @@ class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
         """
         content = form.save()
         try:
+            info = content.get_info(self.usercomponent)
             if hasattr(form, "get_info"):
-                self.object = UserContent.objects.create(usercomponent=self.usercomponent, content=content, info=form.get_info(self.usercomponent))
-            else:
-                self.object = UserContent.objects.create(usercomponent=self.usercomponent, content=content)
+                info = "".join([info, form.get_info(self.usercomponent)])
+            self.object = UserContent.objects.create(usercomponent=self.usercomponent, content=content, info=info)
         except Exception as exc:
             content.delete()
             raise exc
@@ -224,7 +270,7 @@ class ContentUpdate(UCTestMixin, UpdateView):
         # give user and staff the ability to update Content
         # except it is protected, in this case only the user can update
         # reason: admins could be tricked into malicious updates; for index the same reason as for add
-        uncritically = (self.usercomponent.name not in ["index", "recovery"])
+        uncritically = not self.usercomponent.is_protected
         if self.has_special_access(staff=uncritically, root=uncritically):
             # block update if noupdate flag is set
             # don't override for special users as the form could trigger unsafe stuff
@@ -235,7 +281,7 @@ class ContentUpdate(UCTestMixin, UpdateView):
         return False
 
     def get_form_class(self):
-        return self.object.content.form
+        return self.object.content.form_class
 
     def get_form_kwargs(self):
         """
@@ -250,9 +296,13 @@ class ContentUpdate(UCTestMixin, UpdateView):
         """
         If the form is valid, save the associated model.
         """
-        self.object = form.save().associated
+        content = form.save()
+        self.object = content.associated
+        info = content.get_info(self.usercomponent)
         if hasattr(form, "get_info"):
-            self.object.info = form.get_info(self.usercomponent)
+            info = "".join([info, form.get_info(self.usercomponent)])
+        if info != self.object.info:
+            self.object.info = info
             self.object.save(update_fields=["info"])
         return HttpResponseRedirect(self.get_success_url())
 
@@ -278,17 +328,31 @@ class ContentResetRemove(UCTestMixin, UpdateView):
 class ContentRemove(UCTestMixin, DeleteView):
     model = UserContent
 
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        success_url = self.get_success_url()
+    def get_required_timedelta(self):
         _time = self.object.get_value("protected_for")
         if not _time:
             _time = getattr(settings, "DEFAULT_CONTENT_DELETION_PERIOD", None)
+        return timedelta(seconds=_time)
+
+    def get_context_data(self, **kwargs):
+        self.object = self.get_object()
+        _time = self.get_required_timedelta()
+        if _time and self.object.deletion_requested:
+            now = timezone.now()
+            if self.object.deletion_requested+_time>=now:
+                kwargs["remaining"] = timedelta(seconds=0)
+            else:
+                kwargs["remaining"] = self.object.deletion_requested+_time-now
+        return super().get_context_data(**kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+        _time = self.get_required_timedelta()
         if _time:
             now = timezone.now()
-            _time = timedelta(seconds=_time)
             if self.object.deletion_requested:
-                if self.object.deletion_requested+_time>now:
+                if self.object.deletion_requested+_time>=now:
                     return self.get(request, *args, **kwargs)
             else:
                 self.object.deletion_requested = now
