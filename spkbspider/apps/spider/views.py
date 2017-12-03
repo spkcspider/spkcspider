@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from datetime import timedelta
 
-from .forms import UserComponentForm
+from .forms import UserComponentCreateForm, UserComponentUpdateForm
 
 
 
@@ -27,12 +27,14 @@ class UserTestMixin(UserPassesTestMixin):
             return True
         return False
 
-    def test_user_has_special_permissions(self):
+    def has_special_access(self, staff=False, root=True):
         if not self.request.user.is_active or not self.request.user.is_authenticated:
             return False
         if self.request.user == self.get_user():
             return True
-        if self.request.user.is_staff or self.request.user.is_superuser:
+        if root and self.request.user.is_superuser:
+            return True
+        if staff and self.request.user.is_staff:
             return True
         return False
 
@@ -72,7 +74,7 @@ class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
 
     def test_func(self):
-        if self.test_user_has_special_permissions():
+        if self.has_special_access(staff=True):
             return True
         return False
 
@@ -85,12 +87,12 @@ class ComponentIndex(UCTestMixin, ListView):
 class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     model = UserComponent
     permission_required = 'add_{}'.format(model._meta.model_name)
-    fields = ['name', 'data', 'protections']
+    form_class = UserComponentCreateForm
 
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
     fields = ['name', 'data', 'protections']
-    form_class = UserComponentForm
+    form_class = UserComponentUpdateForm
 
     def get_form_kwargs(self, **kwargs):
         cargs = super().get_form_kwargs(**kwargs)
@@ -108,8 +110,48 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         else:
             return get_object_or_404(self.get_queryset(), user=self.get_user(), name=self.kwargs["name"])
 
+class ComponentResetDelete(UserTestMixin, UpdateView):
+    model = UserContent
+    fields = []
+    http_method_names = ['post']
+    def get_object(self, queryset=None):
+        if queryset:
+            return get_object_or_404(queryset, usercomponent=self.usercomponent, id=self.kwargs["id"])
+        else:
+            return get_object_or_404(self.get_queryset(), usercomponent=self.usercomponent, id=self.kwargs["id"])
+    def form_valid(self, form):
+        """
+        If the form is valid, save the associated model.
+        """
+        self.object = form.instance
+        self.object.deletion_requested = None
+        self.object.save(update_fields=["deletion_requested"])
+        return HttpResponseRedirect(self.get_success_url())
+
 class ComponentDelete(UserTestMixin, DeleteView):
     model = UserComponent
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        # deleting them should not be possible, except by deleting user
+        if self.object.name in ["index", "recovery"]:
+            return self.handle_no_permission()
+        success_url = self.get_success_url()
+        _time = getattr(settings, "UC_DELETION_PERIOD", {}).get(self.object.name, None)
+        if not _time:
+            _time = getattr(settings, "DEFAULT_DELETION_PERIOD", None)
+        if _time:
+            now = timezone.now()
+            _time = timedelta(seconds=_time)
+            if self.object.deletion_requested:
+                if self.object.deletion_requested+_time>now:
+                    return self.get(request, *args, **kwargs)
+            else:
+                self.object.deletion_requested = now
+                self.object.save()
+                return self.get(request, *args, **kwargs)
+        self.object.delete()
+        return HttpResponseRedirect(success_url)
 
     def get_object(self, queryset=None):
         if queryset:
@@ -125,8 +167,11 @@ class ContentIndex(UCTestMixin, ListView):
     model = UserContent
 
     def test_func(self):
-        if self.test_user_has_special_permissions():
+        if self.has_special_access(staff=(self.object.name!="index")):
             return True
+        # block view on special objects for non user and non superusers
+        if self.object.name in ["index", "recovery"]:
+            return False
         return False
 
     def get_queryset(self):
@@ -136,6 +181,15 @@ class ContentIndex(UCTestMixin, ListView):
 class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
     model = UserContent
     permission_required = 'add_{}'.format(model._meta.model_name)
+
+    def test_func(self):
+        # give user and staff the ability to add Content
+        # except it is protected, in this case only the user can add
+        # reason: rogue admins could insert false evidence
+        uncritically = (self.usercomponent.name not in ["index"])
+        if self.has_special_access(staff=uncritically, root=uncritically):
+            return True
+        return False
 
     def get_form_class(self):
         try:
@@ -162,9 +216,23 @@ class ContentUpdate(UCTestMixin, UpdateView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset.exclude(info__contains="noupdate;"), usercomponent=self.usercomponent, id=self.kwargs["id"])
+            return get_object_or_404(queryset, usercomponent=self.usercomponent, id=self.kwargs["id"])
         else:
-            return get_object_or_404(self.get_queryset().exclude(info__contains="noupdate;"), usercomponent=self.usercomponent, id=self.kwargs["id"])
+            return get_object_or_404(self.get_queryset(), usercomponent=self.usercomponent, id=self.kwargs["id"])
+
+    def test_func(self):
+        # give user and staff the ability to update Content
+        # except it is protected, in this case only the user can update
+        # reason: admins could be tricked into malicious updates; for index the same reason as for add
+        uncritically = (self.usercomponent.name not in ["index", "recovery"])
+        if self.has_special_access(staff=uncritically, root=uncritically):
+            # block update if noupdate flag is set
+            # don't override for special users as the form could trigger unsafe stuff
+            # special users: do it in the admin interface
+            if self.object.get_flag("noupdate"):
+                return False
+            return True
+        return False
 
     def get_form_class(self):
         return self.object.content.form
@@ -214,6 +282,8 @@ class ContentRemove(UCTestMixin, DeleteView):
         self.object = self.get_object()
         success_url = self.get_success_url()
         _time = self.object.get_value("protected_for")
+        if not _time:
+            _time = getattr(settings, "DEFAULT_CONTENT_DELETION_PERIOD", None)
         if _time:
             now = timezone.now()
             _time = timedelta(seconds=_time)

@@ -18,6 +18,8 @@ def add_content(klass):
 class BaseContent(models.Model):
     form = None
     view_template = None
+    # consider not writing admin wrapper for (sensitive) inherited content
+    # this way content could be protected to be only visible to admin, user and legitimated users (if not index)
 
     id = models.BigAutoField(primary_key=True, editable=False)
     associated  = GenericRelation(UserContent)

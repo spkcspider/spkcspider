@@ -16,7 +16,6 @@ def InitProtectionsCallback(sender, **kwargs):
 
 def InitUserComponentsCallback(sender, instance, **kwargs):
     from .models import UserComponent
-    if not getattr(settings, "SPIDER_NOINDEX", False):
-        UserComponent.objects.get_or_create(name="index", user=instance)
+    UserComponent.objects.get_or_create(name="index", user=instance)
     if not getattr(settings, "SPIDER_NORECOVERY", False):
         UserComponent.objects.get_or_create(name="recovery", user=instance)

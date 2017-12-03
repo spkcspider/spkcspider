@@ -1,5 +1,5 @@
 """
-User Components and Protections
+User Components, (Base)Contents and Protections
 namespace: spiderucs
 
 """
@@ -25,10 +25,19 @@ logger = logging.getLogger(__name__)
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
+    # special names:
+    # index:
+    #    protections are used for index
+    #    attached content is only visible for admin and user
+    # recovery (optional):
+    #    protections are meaningless here (maybe later)
+    #    attached content is only visible for admin, staff and user and can be used for recovery
     name = models.SlugField(max_length=50, null=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
+    # only editable for admins
+    deletion_requested = models.DateTimeField(null=True, default=None)
     contents = None
     # should be used for retrieving active protections, related_name
     assigned = None
@@ -80,7 +89,6 @@ def info_field_validator(value):
                 _('multiple elements: %(element)s in %(value)s'),
                 params={'element': elem, 'value': value},
             )
-
 
 class UserContent(models.Model):
     id = models.BigAutoField(primary_key=True)

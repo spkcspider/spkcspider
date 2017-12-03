@@ -3,8 +3,22 @@ from django.utils.translation import ugettext_lazy as _
 
 from .models import AssignedProtection, UserComponent
 
+class UserComponentCreateForm(forms.ModelForm):
+    class Meta:
+        model = UserComponent
+        fields = ['name', 'data', 'protections']
 
-class UserComponentForm(forms.ModelForm):
+    # don't disallow creation of internal names
+    #def clean_name(self):
+    #    data = self.cleaned_data['name']
+    #    if data == "":
+    #        raise forms.ValidationError(_('Empty name'))
+    #    # don't disallow recreation of UserComponents with special names
+    #    #if data.lower() in ["index", "recovery"]:
+    #    #    raise forms.ValidationError(_('Internal names'))
+    #    return data
+
+class UserComponentUpdateForm(forms.ModelForm):
     protection_forms = None
     #contents = forms.ModelMultipleChoiceField()
 

@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 class SpiderUCConfig(AppConfig):
     name = 'spkbspider.apps.spider'
     label = 'spiderucs'
-    verbose_name = 'SPKBSpider user components (Basis)'
+    verbose_name = 'SPKBSpider base'
 
     def ready(self):
         from .signals import InitProtectionsCallback, InitUserComponentsCallback
