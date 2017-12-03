@@ -217,10 +217,17 @@ class ContentIndex(UCTestMixin, ListView):
 
     def get_queryset(self):
         ret = self.model.objects.filter(usercomponent=self.usercomponent)
-        if "info" in kwargs:
-            ret = ret.filter(info__contains="%s;" % kwargs["info"])
-        if "type" in kwargs:
-            ret = ret.filter(info__contains="type=%s;" % kwargs["type"])
+
+        filt = models.Q()
+        for info in self.request.GET.getlist("info"):
+            filt |= models.Q(info__contains="%s;" % info)
+        for info in self.request.POST.getlist("info"):
+            filt |= models.Q(info__contains="%s;" % info)
+        ret = ret.filter(filt)
+        if "type" in self.request.POST:
+            ret = ret.filter(info__contains="type=%s;" % self.request.POST["type"])
+        elif "type" in self.request.GET:
+            ret = ret.filter(info__contains="type=%s;" % self.request.GET["type"])
         return ret
 
 
