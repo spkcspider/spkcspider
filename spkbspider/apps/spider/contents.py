@@ -3,7 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 
 from .models import UserContent
 
-__all__ = ["add_content", "installed_contents", "allowed_search_fields", "BaseContent"]
+__all__ = ["add_content", "installed_contents", "BaseContent"]
 
 installed_contents = {}
 
