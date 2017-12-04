@@ -33,7 +33,7 @@ class UserComponent(models.Model):
     #    protections are meaningless here (maybe later)
     #    attached content is only visible for admin, staff and user and can be used for recovery
     name = models.SlugField(max_length=50, null=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     # only editable for admins
@@ -155,7 +155,7 @@ class Protection(models.Model):
 
 class AssignedProtection(models.Model):
     id = models.BigAutoField(primary_key=True)
-    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", limit_choices_to={"code__in": installed_protections}, editable=False)
+    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", limit_choices_to={"code__in": Protection.objects.valid}, editable=False)
     usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False)
     # data for protection
     protectiondata = JSONField(default={}, null=False)

@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 install_requirements = [
-    "django",
+    "django>=2",
     #"swapper",
     "jsonfield",
 

@@ -1,22 +1,23 @@
-from django.conf.urls import url
+from django.urls import path
 
-from .views import ComponentIndex, ComponentAllIndex, ComponentCreate, ComponentUpdate, ComponentDelete
+from .views import ComponentIndex, ComponentAllIndex, ComponentCreate, ComponentUpdate, ComponentDelete, ComponentResetDelete
 from .views import ContentView, ContentIndex, ContentAdd, ContentUpdate, ContentRemove, ContentResetRemove
 
+app_name = "spiderucs"
 
 # uc = UserComponent
 urlpatterns = [
-    url(r'^(?P<user>[-\w]+)/$', ComponentIndex.as_view(), name='ucomponent-list'),
-    url(r'^(?P<user>[-\w]+)/create/$', ComponentCreate.as_view(), name='ucomponent-create'),
-    url(r'^(?P<user>[-\w]+)/update/(?P<name>[-\w]+)/$', ComponentUpdate.as_view(), name='ucomponent-update'),
-    url(r'^(?P<user>[-\w]+)/delete-reset/(?P<name>[-\w]+)/(?P<id>[0-9]+)/$', ContentResetRemove.as_view(), name='ucontent-resetdelete'),
-    url(r'^(?P<user>[-\w]+)/delete/(?P<name>[-\w]+)/$', ComponentDelete.as_view(), name='ucomponent-delete'),
+    path('<slug:user>/', ComponentIndex.as_view(), name='ucomponent-list'),
+    path('<slug:user>/create/', ComponentCreate.as_view(), name='ucomponent-create'),
+    path('<slug:user>/update/<slug:name>/', ComponentUpdate.as_view(), name='ucomponent-update'),
+    path('<slug:user>/delete-reset/<slug:name>/', ComponentResetDelete.as_view(), name='ucomponent-resetdelete'),
+    path('<slug:user>/delete/<slug:name>/', ComponentDelete.as_view(), name='ucomponent-delete'),
 
-    url(r'^(?P<user>[-\w]+)/list/(?P<name>[-\w]+)/$', ContentIndex.as_view(), name='ucontent-list'),
-    url(r'^(?P<user>[-\w]+)/view/(?P<name>[-\w]+)/(?P<id>[0-9]+)/$', ContentView.as_view(), name='ucontent-view'),
-    url(r'^(?P<user>[-\w]+)/add/(?P<name>[-\w]+)/(?P<type>[_\w]+)$', ContentCreate.as_view(), name='ucontent-add'),
-    url(r'^(?P<user>[-\w]+)/cupdate/(?P<name>[-\w]+)/(?P<id>[0-9]+)/$', ContentUpdate.as_view(), name='ucontent-update'),
-    url(r'^(?P<user>[-\w]+)/remove-reset/(?P<name>[-\w]+)/(?P<id>[0-9]+)/$', ContentResetRemove.as_view(), name='ucontent-resetremove'),
-    url(r'^(?P<user>[-\w]+)/remove/(?P<name>[-\w]+)/(?P<id>[0-9]+)/$', ContentRemove.as_view(), name='ucontent-remove'),
-    url(r'^$', ComponentAllIndex.as_view()),
+    path('<slug:user>/list/<slug:name>', ContentIndex.as_view(), name='ucontent-list'),
+    path('<slug:user>/view/<slug:name>/<int:id>/', ContentView.as_view(), name='ucontent-view'),
+    path('<slug:user>/add/<slug:name>/<slug:type>/', ContentAdd.as_view(), name='ucontent-add'),
+    path('<slug:user>/cupdate/<slug:name>/<int:id>/', ContentUpdate.as_view(), name='ucontent-update'),
+    path('<slug:user>/remove-reset/<slug:name>/<int:id>/', ContentResetRemove.as_view(), name='ucontent-resetremove'),
+    path('<slug:user>/remove/<slug:name>/<int:id>/', ContentRemove.as_view(), name='ucontent-remove'),
+    path('', ComponentAllIndex.as_view()),
 ]

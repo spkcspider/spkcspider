@@ -6,7 +6,7 @@ from .models import AssignedProtection, UserComponent
 class UserComponentCreateForm(forms.ModelForm):
     class Meta:
         model = UserComponent
-        fields = ['name', 'data', 'protections']
+        fields = ['name', 'protections']
 
     # don't disallow creation of internal names
     #def clean_name(self):
