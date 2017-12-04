@@ -94,7 +94,10 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def get_form_kwargs(self, **kwargs):
         cargs = super().get_form_kwargs(**kwargs)
-        cargs["protection_forms"] = self.object.settings()
+        if self.request.method == "GET":
+            cargs["protection_forms"] = self.object.settings()
+        else:
+            cargs["protection_forms"] = self.object.settings(self.request.POST)
         return cargs
 
     def get_context_data(self, **kwargs):

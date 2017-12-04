@@ -1,10 +1,11 @@
 from django import template
-from django.urls import resolve
-from django.core.exceptions import Resolver404, ObjectDoesNotExist
+from django.urls import resolve, Resolver404
+from django.core.exceptions import ObjectDoesNotExist
 
 from ..models import AssignedProtection, UserComponent
 from ..views import ContentView, ComponentIndex, ContentIndex
 from ..protections import installed_protections
+from django.contrib.auth import get_user_model
 
 register = template.Library()
 
@@ -27,20 +28,26 @@ def use_protections(context):
 
 
 @register.simple_tag(takes_context=True)
-def list_protections(context, path=None):
-    if not path:
-        path = context["request"].path
-    try:
-        res = resolve(path)
-        if res.kwargs.get("name", None) in unavailable_components_for_list:
+def list_protections(context, user=None, name=None):
+    if not user or not name:
+        try:
+            res = resolve(context["request"].path)
+            user = res.kwargs["user"]
+            name = res.kwargs.get("name", "index")
+        except (KeyError, Resolver404):
             return AssignedProtection.objects.none()
-        usercomponent = UserComponent.objects.get(
-            user__username=res.kwargs["user"],
-            name=res.kwargs.get("name", "index"))
+
+    if isinstance(user, str):
+        user = get_user_model().objects.filter(username=user).first()
+
+    if name in unavailable_components_for_list or not user:
+        return AssignedProtection.objects.none()
+    try:
+        usercomponent = UserComponent.objects.get(user=user, name=name)
         #.prefetch_related('protection')
         return usercomponent.assigned.filter(protection__code__in=installed_protections)
-    except (KeyError, Resolver404, ObjectDoesNotExist):
-            return AssignedProtection.objects.none()
+    except ObjectDoesNotExist:
+        return AssignedProtection.objects.none()
 
 # WARNING: check usercomponent user against target
 @register.simple_tag

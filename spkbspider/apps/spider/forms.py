@@ -28,7 +28,7 @@ class UserComponentUpdateForm(forms.ModelForm):
 
     def __init__(self, protection_forms, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        protection_forms = protection_forms
+        self.protection_forms = protection_forms
 
     def is_valid(self):
         isvalid = self.is_bound and not self.errors
@@ -47,5 +47,5 @@ class UserComponentUpdateForm(forms.ModelForm):
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
         for f in self.protection_forms:
-            f.save(*args, **kwargs)
+            f.save()
         return ret

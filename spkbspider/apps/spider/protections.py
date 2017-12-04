@@ -54,6 +54,21 @@ class BaseProtection(forms.Form):
     response_class = TemplateResponse
     content_type = None
 
+    # auto populated
+    assignedprotection = None
+
+    def __init__(self, *args, **kwargs):
+        self.assignedprotection = kwargs.pop("assignedprotection")
+        super().__init__(*args, **kwargs)
+
+    def get_data(self):
+        return self.cleaned_data
+
+    def save(self)::
+        self.assignedprotection.active = self.cleaned_data.pop("active")
+        self.assignedprotection.protectiondata = self.get_data()
+        self.assignedprotection.save(update_fields=["active","protectiondata"])
+
     @classmethod
     def auth_test(cls, **kwargs):
         return False

@@ -7,7 +7,8 @@ namespace: spiderucs
 
 from django.db import models
 from django.conf import settings
-from django.utils.translation import pgettext_lazy
+from django.utils.translation import pgettext_lazy as _
+from django.urls import reverse, reverse_lazy
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -20,11 +21,14 @@ from .protections import installed_protections
 
 
 import logging
+import typing
 
 logger = logging.getLogger(__name__)
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
+    # fix linter warning
+    objects = models.Manager()
     # special names:
     # index:
     #    protections are used for index
@@ -57,10 +61,10 @@ class UserComponent(models.Model):
                 return True
         return False
 
-    def settings(self, request):
+    def settings(self, dct=None):
         pall = []
         for p in self.assigned.all():
-            pall.append(p.settings(request))
+            pall.append(p.settings(dct))
         return pall
 
     #def get_absolute_url(self):
@@ -96,6 +100,8 @@ def info_field_validator(value):
 
 class UserContent(models.Model):
     id = models.BigAutoField(primary_key=True)
+    # fix linter warning
+    objects = models.Manager()
     usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False, related_name="contents", null=False)
 
     #creator = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, null=True, on_delete=models.SET_ZERO)
@@ -124,13 +130,14 @@ class UserContent(models.Model):
         return False
 
     def get_value(self, key):
-        pstart = self.info.find("%s=" % key)
+        info = self.info
+        pstart = info.find("%s=" % key)
         if pstart == -1:
             return None
-        pend = self.info.find(";", len(key)+1)
+        pend = info.find(";", pstart+len(key)+1)
         if pend == -1:
-            raise Exception("Info field format broken (must end with ;): \"%s\"" % self.info)
-        return self.info[pstart:pend]
+            raise Exception("Info field format broken (must end with ;): \"%s\"" % info)
+        return info[pstart:pend]
 
     def get_absolute_url(self):
         return reverse("spiderucs:ucontent-view", kwargs={"user":self.user.username, "name":self.name, "id": self.id})
@@ -158,6 +165,8 @@ class Protection(models.Model):
 
 class AssignedProtection(models.Model):
     id = models.BigAutoField(primary_key=True)
+    # fix linter warning
+    objects = models.Manager()
     protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", limit_choices_to={"code__in": Protection.objects.valid}, editable=False)
     usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False)
     # data for protection
@@ -175,18 +184,10 @@ class AssignedProtection(models.Model):
     #    return reverse("spiderucs:protection", kwargs={"user":self.usercomponent.user.username, "ucid":self.usercomponent.id, "pname": self.protection.code})
 
     def auth_test(self, request, scope):
-        return installed_protections[self.protection.code].auth_test(request=request, user=usercomponent.user, data=self.protectiondata, obj=self, scope=scope)
+        return installed_protections[self.protection.code].auth_test(request=request, user=self.usercomponent.user, data=self.protectiondata, obj=self, scope=scope)
 
-    def settings(self, request):
-        if request.method == "GET":
-            return installed_protections[self.protection.code](self.protectiondata, prefix=self.protection.code)
+    def settings(self, dct=None):
+        if dct:
+            return installed_protections[self.protection.code](dct, prefix=self.protection.code, assignedprotection=self)
         else:
-            prot = installed_protections[self.protection.code](request.POST, prefix=self.protection.code)
-            if prot.is_valid():
-                self.active = prot.cleaned_data.pop("active")
-                self.protectiondata = prot.cleaned_data
-                self.save()
-            return prot
-
-    def clean(self):
-        installed_protections[self.protection.code].clean(self)
+            return installed_protections[self.protection.code](self.protectiondata, prefix=self.protection.code, assignedprotection=self)
