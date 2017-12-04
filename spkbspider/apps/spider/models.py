@@ -63,8 +63,8 @@ class UserComponent(models.Model):
             pall.append(p.settings(request))
         return pall
 
-    def get_absolute_url(self):
-        return reverse("spiderucs:uc-view", kwargs={"user":self.user.username, "name":self.name})
+    #def get_absolute_url(self):
+    #    return reverse("spiderucs:uc-view", kwargs={"user":self.user.username, "name":self.name})
 
     @property
     def is_protected(self):
@@ -131,6 +131,9 @@ class UserContent(models.Model):
         if pend == -1:
             raise Exception("Info field format broken (must end with ;): \"%s\"" % self.info)
         return self.info[pstart:pend]
+
+    def get_absolute_url(self):
+        return reverse("spiderucs:ucontent-view", kwargs={"user":self.user.username, "name":self.name, "id": self.id})
 
 
 class ProtectionManager(models.Manager):

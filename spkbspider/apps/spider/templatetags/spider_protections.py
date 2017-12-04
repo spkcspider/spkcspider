@@ -37,6 +37,15 @@ def list_protections(context, path=None):
         usercomponent = UserComponent.objects.get(
             user__username=res.kwargs["user"],
             name=res.kwargs.get("name", "index"))
-        return usercomponent.assigned.prefetch_related('protection').filter(protection__code__in=installed_protections)
+        #.prefetch_related('protection')
+        return usercomponent.assigned.filter(protection__code__in=installed_protections)
     except (KeyError, Resolver404, ObjectDoesNotExist):
             return AssignedProtection.objects.none()
+
+# WARNING: check usercomponent user against target
+@register.simple_tag
+def get_protection(protectionid):
+    #.prefetch_related('protection', 'usercomponent')
+    # prevent unsafe protections
+    ret = AssignedProtection.objects.filter(id=protectionid, protection__code__in=installed_protections)
+    return ret.first()
