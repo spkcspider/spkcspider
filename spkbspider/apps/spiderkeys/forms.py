@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-class ProtectionForm(forms.ModelForm):
+class KeyForm(forms.ModelForm):
     from .models import PublicKey
     class Meta:
         model = PublicKey

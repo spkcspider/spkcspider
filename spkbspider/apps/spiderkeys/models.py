@@ -10,6 +10,7 @@ import hashlib
 import logging
 
 from spkbspider.apps.spider.contents import BaseContent
+from .forms import KeyForm
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,6 @@ _htest.update(b"test")
 if settings.MAX_HASH_SIZE > len(_htest.hexdigest()):
     raise Exception("MAX_HASH_SIZE too small to hold digest in hexadecimal")
 
-
-class PublicKeyManager(models.Manager):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
 def valid_pkey_properties(val):
     if "PRIVAT" in key.upper():
         raise ValidationError(_('Private Key'))
@@ -37,6 +33,7 @@ def valid_pkey_properties(val):
 
 # also for account recovery
 class AbstractPublicKey(BaseContent):
+    form_class = KeyForm
     # don't check for similarity as the hash check will reveal all clashes
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
     note = models.TextField(max_length=400, null=False)
@@ -57,7 +54,13 @@ class AbstractPublicKey(BaseContent):
         self.__original_key = self.key
 
     def __str__(self):
-        return self.hash
+        return "{}: {}".format(self.hash, self.note)
+
+    def render(self, **context):
+        if context["request"].GET.get("hash", None):
+            return self.hash
+        elif context["request"].GET.get("key", None):
+            return self.key
 
     def save(self, *args, **kwargs):
         if self.key and self.__original_key != self.key:
