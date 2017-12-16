@@ -23,14 +23,14 @@ class UserTestMixin(UserPassesTestMixin):
 
     # by default only owner can access view
     def test_func(self):
-        if self.has_special_access(staff=False, root=False):
+        if self.has_special_access(staff=False, superuser=False):
             return True
         return False
 
-    def has_special_access(self, staff=False, root=True):
+    def has_special_access(self, staff=False, superuser=True):
         if self.request.user == self.get_user():
             return True
-        if root and self.request.user.is_superuser:
+        if superuser and self.request.user.is_superuser:
             return True
         if staff and self.request.user.is_staff:
             return True
@@ -187,7 +187,7 @@ class ContentView(UCTestMixin, BaseDetailView):
         return super().get_context_data(**kwargs)
 
     def test_func(self):
-        if self.has_special_access(staff=(self.usercomponent.name!="index"), root=True):
+        if self.has_special_access(staff=(self.usercomponent.name!="index"), superuser=True):
             return True
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_protected:
@@ -209,7 +209,7 @@ class ContentIndex(UCTestMixin, ListView):
     model = UserContent
 
     def test_func(self):
-        if self.has_special_access(staff=(self.usercomponent.name!="index"), root=True):
+        if self.has_special_access(staff=(self.usercomponent.name!="index"), superuser=True):
             return True
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_protected:
@@ -243,7 +243,7 @@ class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
         # except it is protected, in this case only the user can add
         # reason: rogue admins could insert false evidence
         uncritically = (self.usercomponent.name not in ["index"])
-        if self.has_special_access(staff=uncritically, root=uncritically):
+        if self.has_special_access(staff=uncritically, superuser=uncritically):
             return True
         return False
 
@@ -281,7 +281,7 @@ class ContentUpdate(UCTestMixin, UpdateView):
         # except it is protected, in this case only the user can update
         # reason: admins could be tricked into malicious updates; for index the same reason as for add
         uncritically = not self.usercomponent.is_protected
-        if self.has_special_access(staff=uncritically, root=uncritically):
+        if self.has_special_access(staff=uncritically, superuser=uncritically):
             # block update if noupdate flag is set
             # don't override for special users as the form could trigger unsafe stuff
             # special users: do it in the admin interface
