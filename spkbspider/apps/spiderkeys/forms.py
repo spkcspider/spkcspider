@@ -6,7 +6,7 @@ class KeyForm(forms.ModelForm):
     from .models import PublicKey
     class Meta:
         model = PublicKey
-        fields = ['key']
+        fields = ['key', 'note']
 
     def get_info(self, uc):
         if uc.name == "recovery":

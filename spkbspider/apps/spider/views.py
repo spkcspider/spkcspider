@@ -340,7 +340,7 @@ class ContentRemove(UCTestMixin, DeleteView):
 
     def get_required_timedelta(self):
         _time = self.object.get_value("protected_for")
-        if not _time:
+        if not _time and _time>0:
             _time = getattr(settings, "DEFAULT_CONTENT_DELETION_PERIOD", None)
         return timedelta(seconds=_time)
 

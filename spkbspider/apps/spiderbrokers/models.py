@@ -32,12 +32,13 @@ class AbstractBroker(BaseContent):
 
 class Broker(AbstractBroker):
     pass
-class IBroker(AbstractBroker):
+class InverseBroker(AbstractBroker):
     pass
 
 class Tag(BaseContent):
+    """ Tag from provider assuring e.g.age """
     name = models.CharField(max_length=100)
-    content = models.CharField(max_length=100)
+    content = models.TextField()
 
     def __str__(self):
         return name
