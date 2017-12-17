@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.translation import pgettext_lazy
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericRelation
+from django.shortcuts import render
 
 from jsonfield import JSONField
 
@@ -61,6 +62,8 @@ class AbstractPublicKey(BaseContent):
             return self.hash
         elif context["request"].GET.get("key", None):
             return self.key
+        else:
+            return render(context["request"], "spiderkeys/key.html", context=context)
 
     def save(self, *args, **kwargs):
         if self.key and self.__original_key != self.key:

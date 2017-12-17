@@ -21,6 +21,8 @@ class AbstractBroker(BaseContent):
     brokerdata = JSONField(default={})
     url = models.URLField(max_length=300, default="")
 
+    class Meta:
+        abstract = True
 
     def __str__(self):
         return urlsplit(self.url).netloc
