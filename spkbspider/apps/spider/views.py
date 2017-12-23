@@ -219,18 +219,18 @@ class ContentIndex(UCTestMixin, ListView):
         return False
 
     def get_queryset(self):
+        # GET parameters are stronger than post
         ret = self.model.objects.filter(usercomponent=self.usercomponent)
 
         filt = models.Q()
-        for info in self.request.GET.getlist("info"):
-            filt |= models.Q(info__contains="%s;" % info)
         for info in self.request.POST.getlist("info"):
             filt |= models.Q(info__contains="%s;" % info)
+        for info in self.request.GET.getlist("info"):
+            filt |= models.Q(info__contains="%s;" % info)
         ret = ret.filter(filt)
-        if "type" in self.request.POST:
-            ret = ret.filter(info__contains="type=%s;" % self.request.POST["type"])
-        elif "type" in self.request.GET:
-            ret = ret.filter(info__contains="type=%s;" % self.request.GET["type"])
+        _type = self.request.POST.get("type", self.request.GET.get("type"))
+        if _type:
+            ret = ret.filter(info__contains="type=%s;" % _type)
         return ret
 
 
@@ -252,6 +252,12 @@ class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
             return installed_contents[self.kwargs["type"]]
         except KeyError:
             raise Http404('%s matches no available content (hint: blacklisted?)' % self.kwargs["type"])
+
+    def get_form_kwargs(self):
+        ret = super().get_form_kwargs()
+        ret["usercomponent"] = self.usercomponent
+        return ret
+
     def form_valid(self, form):
         """
         If the form is valid, save the associated model.
@@ -260,7 +266,7 @@ class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
         try:
             info = content.get_info(self.usercomponent)
             if hasattr(form, "get_info"):
-                info = "".join([info, form.get_info(self.usercomponent)])
+                info = "".join([info, form.get_info()])
             self.object = UserContent.objects.create(usercomponent=self.usercomponent, content=content, info=info)
         except Exception as exc:
             content.delete()
@@ -310,7 +316,7 @@ class ContentUpdate(UCTestMixin, UpdateView):
         self.object = content.associated
         info = content.get_info(self.usercomponent)
         if hasattr(form, "get_info"):
-            info = "".join([info, form.get_info(self.usercomponent)])
+            info = "".join([info, form.get_info()])
         if info != self.object.info:
             self.object.info = info
             self.object.save(update_fields=["info"])

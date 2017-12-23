@@ -23,6 +23,7 @@ class BaseContent(models.Model):
     # this way content could be protected to be only visible to admin, user and legitimated users (if not index)
 
     id = models.BigAutoField(primary_key=True, editable=False)
+    # if created associated is None (will be set later), use usercomponent in form instead
     associated = GenericRelation(UserContent)
     class Meta:
         abstract = True

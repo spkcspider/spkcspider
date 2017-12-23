@@ -10,7 +10,7 @@ from jsonfield import JSONField
 import hashlib
 import logging
 
-from spkbspider.apps.spider.contents import BaseContent
+from spkbspider.apps.spider.contents import BaseContent, add_content
 from .forms import KeyForm
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,8 @@ def valid_pkey_properties(val):
         raise ValidationError(_('Not a key'))
 
 # also for account recovery
-class AbstractPublicKey(BaseContent):
+@add_content
+class PublicKey(BaseContent):
     form_class = KeyForm
     # don't check for similarity as the hash check will reveal all clashes
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
@@ -44,9 +45,8 @@ class AbstractPublicKey(BaseContent):
     # needs key to mediate if clashes happen
     # don't use as primary key as algorithms could change
     # DON'T allow users to change hash
-    hash = models.CharField(max_length=settings.MAX_HASH_SIZE, unique=True, null=False, editable=False)
+    hash = models.CharField(max_length=settings.MAX_HASH_SIZE, null=False, editable=False)
     class Meta:
-        abstract = True
         indexes = [
             models.Index(fields=['hash']),
         ]
@@ -58,9 +58,9 @@ class AbstractPublicKey(BaseContent):
         return "{}: {}".format(self.hash, self.note)
 
     def render(self, **context):
-        if context["request"].GET.get("hash", None):
+        if context["request"].GET.get("returntype", None) == "hash":
             return self.hash
-        elif context["request"].GET.get("key", None):
+        elif context["request"].GET.get("returntype", None) == "key":
             return self.key
         else:
             return render(context["request"], "spiderkeys/key.html", context=context)
@@ -71,9 +71,3 @@ class AbstractPublicKey(BaseContent):
             h.update(self.key.encode("utf-8", "ignore"))
             self.hash = h.hexdigest()
         super().save(*args, **kwargs)
-
-    #def get_absolute_url(self):
-    #    return reverse("spiderpk:pk-view", kwargs={"user":self.user.username, "hash":self.hash})
-
-class PublicKey(AbstractPublicKey):
-    pass
