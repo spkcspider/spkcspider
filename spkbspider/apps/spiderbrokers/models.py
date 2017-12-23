@@ -1,23 +1,25 @@
 from django.db import models
 from django.utils.translation import pgettext_lazy
 from django.conf import settings
+from urllib.parse import urlsplit
+
 
 from jsonfield import JSONField
-
-from urllib.parse import urlsplit
 
 
 from spkbspider.apps.spider.contents import BaseContent
 
 # Create your models here.
 
-class AbstractBroker(BaseContent):
-    CHOICES = [
+
+def broker_choices():
+    return [
         ("oauth", "OAUTH"),
         ("jwt", "JWT")
-
     ]
-    brokertype = models.SlugField(max_length=10, choices=CHOICES)
+
+class Broker(BaseContent):
+    brokertype = models.SlugField(max_length=10, choices=broker_choices)
     brokerdata = JSONField(default={})
     url = models.URLField(max_length=300, default="")
 
@@ -26,19 +28,3 @@ class AbstractBroker(BaseContent):
 
     def __str__(self):
         return urlsplit(self.url).netloc
-
-    #def get_absolute_url(self):
-    #    return reverse("spiderbroker:bk-view", kwargs={"user": self.user.username, "id": self.id})
-
-class Broker(AbstractBroker):
-    pass
-class InverseBroker(AbstractBroker):
-    pass
-
-class Tag(BaseContent):
-    """ Tag from provider assuring e.g.age """
-    name = models.CharField(max_length=100)
-    content = models.TextField()
-
-    def __str__(self):
-        return name

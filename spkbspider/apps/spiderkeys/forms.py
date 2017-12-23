@@ -14,7 +14,6 @@ class KeyForm(forms.ModelForm):
         else:
             return "hash=%s;" % self.instance.hash
 
-
     def clean_key(self):
         data = self.cleaned_data['key'].strip()
         if data == "":
