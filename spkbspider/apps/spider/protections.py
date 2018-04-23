@@ -43,11 +43,10 @@ def add_protection(klass):
 # form with inner form for authentication
 class BaseProtection(forms.Form):
     active = forms.BooleanField(required=True)
-    # if False active content is rendered (auth_render)
-    # can be used as normal test
-    can_test = False
-    # can be used for interactive render
-    can_render = False
+
+    # ptype= 0: access control, 1: authentication, 2: recovery
+    # 1, 2 require render
+    ptype = 0
 
     template_name = None
     template_engine = None
@@ -98,7 +97,7 @@ class BaseProtection(forms.Form):
 @add_protection
 class AllowProtection(BaseProtection):
     name = "allow"
-    can_test = True
+    ptype = 0
 
     @classmethod
     def auth_test(cls, request, **kwargs):
@@ -114,7 +113,7 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     users = forms.ModelMultipleChoiceField(queryset=friend_query)
-    can_test = True
+    ptype = 0
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.user.id in data["users"]:
@@ -128,7 +127,7 @@ class FriendProtection(BaseProtection):
 #@add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
-    skip_render = False
+    ptype = 1
 
     @sensitive_variables("data", "request")
     @classmethod
@@ -147,7 +146,7 @@ class PasswordProtection(BaseProtection):
 #@add_protection
 class AuditPasswordProtection(BaseProtection):
     name = "auditpw"
-    skip_render = False
+    ptype = 1
 
     @sensitive_variables("data", "request")
     @classmethod
@@ -176,9 +175,9 @@ class AuditPasswordProtection(BaseProtection):
 
 if jwt:
     #@add_protection
-    class JWTProtection(object):
-        skip_render = False
+    class JWTProtection(BaseProtection):
         name = "jwt"
+        ptype = 0
         def validate(self, request, data, **kwargs):
             if request.user.username in data.get("users", []):
                 return True
