@@ -3,21 +3,21 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE|default:"en-US" }}">
   <head>
-      <title>{% block title %}{% endblock %}</title>
-      <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
-      <meta name="viewport" content="{% block viewport %}width=device-width, initial-scale=1.0{% endblock %}">
-      <meta name="description" content="{% block description %}{% endblock %}" />
-      <meta name="robots" content="{% block robots %}all{% endblock %}" />
+    <title>{% block title %}{% endblock %}</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="{% block viewport %}width=device-width, initial-scale=1.0{% endblock %}">
+    <meta name="description" content="{% block description %}{% endblock %}" />
+    <meta name="robots" content="{% block robots %}all{% endblock %}" />
 
-      {% block favicon %}
-          <link rel="shortcut icon" type="image/png" href="{% static 'spkbspider/favicon.png' %}" />
-      {% endblock %}
-      {# CSS for all pages #}
-      {% block base_styles %}{% endblock %}
-      {# CSS for page #}
-      {% block styles %}{% endblock %}
-      {# form scripts and foo #}
-      {% block extrahead %}{% endblock %}
+    {% block favicon %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'spkbspider/favicon.png' %}" />
+    {% endblock %}
+    {# CSS for all pages #}
+    {% block base_styles %}{% endblock %}
+    {# CSS for page #}
+    {% block styles %}{% endblock %}
+    {# form scripts and foo #}
+    {% block extrahead %}{% endblock %}
   </head>
 
   <body class="{% block body_class %}{% endblock %}">

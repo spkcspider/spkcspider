@@ -29,6 +29,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assignedprotection',
             name='protection',
-            field=models.ForeignKey(editable=False, limit_choices_to=spkbspider.apps.spider.models.AssignedProtection.get_limit_choices, on_delete=django.db.models.deletion.CASCADE, related_name='assigned', to='spiderucs.Protection'),
+            field=models.ForeignKey(editable=False, limit_choices_to=spkbspider.apps.spider.models.get_limit_choices_assigned_protection, on_delete=django.db.models.deletion.CASCADE, related_name='assigned', to='spiderucs.Protection'),
         ),
     ]

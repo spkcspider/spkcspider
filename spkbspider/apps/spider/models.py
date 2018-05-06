@@ -164,19 +164,19 @@ class Protection(models.Model):
     def __str__(self):
         return str(installed_protections[self.code])
 
-class AssignedProtection(models.Model):
-    def get_limit_choices(self=None):
-        # django cannot serialize static, classmethods, so cheat
-        ret = {"code__in": Protection.objects.valid(), "ptype__in": [0]}
-        if models.F("usercomponent__name") == "index":
-            ret["ptype__in"] = [1, 2]
-        return ret
+def get_limit_choices_assigned_protection():
+    # django cannot serialize static, classmethods, so cheat
+    ret = {"code__in": Protection.objects.valid(), "ptype__in": [0]}
+    if models.F("usercomponent__name") == "index":
+        ret["ptype__in"] = [1, 2]
+    return ret
 
+class AssignedProtection(models.Model):
     id = models.BigAutoField(primary_key=True)
     # fix linter warning
     objects = models.Manager()
-    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", limit_choices_to=get_limit_choices, editable=False)
-    usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False)
+    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", limit_choices_to=get_limit_choices_assigned_protection, editable=False)
+    usercomponent = models.ForeignKey(UserComponent, related_name="protected_by", on_delete=models.CASCADE, editable=False)
     # data for protection
     protectiondata = JSONField(default={}, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)

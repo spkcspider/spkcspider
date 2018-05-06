@@ -4,6 +4,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
+from django.db import models
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
@@ -63,8 +64,8 @@ class ComponentAllIndex(ListView):
 
     def get_queryset(self):
         if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
-            return self.model.all()
-        return self.model.filter(models.Q(protected_by=[])|models.Q(user=self.request.user))
+            return self.model.objects.all()
+        return self.model.objects.filter(models.Q(protected_by__isnull=True)|models.Q(user=self.request.user if self.request.user.is_authenticated else None))
 
 class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
