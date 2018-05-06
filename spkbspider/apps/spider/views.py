@@ -13,11 +13,9 @@ from django.utils import timezone
 from datetime import timedelta
 
 from .forms import UserComponentCreateForm, UserComponentUpdateForm
-
-
-
 from .models import UserComponent, UserContent
 from .contents import installed_contents
+from .protections import ProtectionType
 
 class UserTestMixin(UserPassesTestMixin):
 

@@ -4,7 +4,9 @@ namespace: spiderucs
 
 """
 
-__all__ = ["add_protection", "check_blacklisted", "installed_protections", "BaseProtection"]
+__all__ = ["add_protection", "ProtectionType", "check_blacklisted", "installed_protections", "BaseProtection"]
+
+import enum
 
 from django.http.response import HttpResponseForbidden
 from django.conf import settings
@@ -40,13 +42,18 @@ def add_protection(klass):
     installed_protections[klass.name] = klass
     return klass
 
+class ProtectionType(enum.IntEnum):
+    access_control = 0
+    authentication = 1
+    recovery = 2
+
 # form with inner form for authentication
 class BaseProtection(forms.Form):
     active = forms.BooleanField(required=True)
 
     # ptype= 0: access control, 1: authentication, 2: recovery
     # 1, 2 require render
-    ptype = 0
+    ptype = ProtectionType.access_control
 
     template_name = None
     template_engine = None
@@ -63,7 +70,7 @@ class BaseProtection(forms.Form):
     def get_data(self):
         return self.cleaned_data
 
-    def save(self)::
+    def save(self):
         self.assignedprotection.active = self.cleaned_data.pop("active")
         self.assignedprotection.protectiondata = self.get_data()
         self.assignedprotection.save(update_fields=["active","protectiondata"])
@@ -97,7 +104,7 @@ class BaseProtection(forms.Form):
 @add_protection
 class AllowProtection(BaseProtection):
     name = "allow"
-    ptype = 0
+    ptype = ProtectionType.access_control
 
     @classmethod
     def auth_test(cls, request, **kwargs):
@@ -113,7 +120,7 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     users = forms.ModelMultipleChoiceField(queryset=friend_query)
-    ptype = 0
+    ptype = ProtectionType.access_control
     @classmethod
     def auth_test(cls, request, data, **kwargs):
         if request.user.id in data["users"]:
@@ -127,7 +134,7 @@ class FriendProtection(BaseProtection):
 #@add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
-    ptype = 1
+    ptype = ProtectionType.authentication
 
     @sensitive_variables("data", "request")
     @classmethod
@@ -146,7 +153,7 @@ class PasswordProtection(BaseProtection):
 #@add_protection
 class AuditPasswordProtection(BaseProtection):
     name = "auditpw"
-    ptype = 1
+    ptype = ProtectionType.authentication
 
     @sensitive_variables("data", "request")
     @classmethod
