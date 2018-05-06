@@ -19,10 +19,14 @@ debug_requirements = [
 
 #install_requirements += debug_requirements
 
-version=0.1
+
+VERSIONING = {
+    'root': '.',
+    'version_scheme': 'guess-next-dev',
+    'local_scheme': 'dirty-tag',
+}
 
 setup(name='spkbspider',
-      version=version,
       license="MIT",
       zip_safe=False,
       platforms='Platform Independent',
@@ -30,6 +34,8 @@ setup(name='spkbspider',
       extra_requires={
         "debug": debug_requirements
       },
+      use_scm_version=VERSIONING,
+      setup_requires=['setuptools_scm'],
       data_files=[('spkbspider', ['LICENSE'])],
       packages=["spkbspider", "spkbspider.apps.spider", "spkbspider.apps.spideraccounts", "spkbspider.apps.spiderbrokers", "spkbspider.apps.spiderkeys"],
       package_data={

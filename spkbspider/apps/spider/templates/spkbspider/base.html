@@ -23,6 +23,12 @@
   <body class="{% block body_class %}{% endblock %}">
     {# Deco content, e.g.base.html  #}
     {% block layout %}
+      {% block headerbar %}
+      <header class="w3-bar w3-topnav w3-black">
+        <a href="">Home</a>
+      </header>
+      {% endblock headerbar %}
+      <main class="w3-content">
       {% block messages %}
           {% if messages %}
           <ul class="messagelist">{% for message in messages %}
@@ -32,6 +38,7 @@
       {% endblock messages %}
       {# Main content  #}
       {% block content %}{% endblock %}
+    </main>
     {% endblock %}
 
     {# Main scripts #}
