@@ -13,7 +13,7 @@ def InitProtectionsCallback(sender, **kwargs):
             ret.save()
     temp = Protection.objects.exclude(code__in=installed_protections.keys())
     if temp.exists():
-        print("Invalid protections, please update or remove them:", [t.code for t in temp.keys()])
+        print("Invalid protections, please update or remove them:", [t.code for t in temp])
 
 def InitUserComponentsCallback(sender, instance, **kwargs):
     from .models import UserComponent
