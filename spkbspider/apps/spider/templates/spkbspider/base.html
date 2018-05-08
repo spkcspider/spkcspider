@@ -27,13 +27,12 @@
     {% block layout %}
       {% block headerbar %}
       <header class="w3-bar w3-container w3-topnav w3-black">
-        <a class="w3-bar-item w3-button" href="">Home</a>
-        <a class="w3-bar-item w3-button" href="">Home</a>
+        <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'home' %}">{% trans 'Home' %}</a>
         {% url 'auth:login' as loginpath %}
         {% if request.user.is_authenticated %}
-          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:logout'%}">Logout</a>
+          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:logout'%}">{% trans 'Logout' %}</a>
         {% elif request.path != loginpath %}
-          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">Login</a>
+          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">{% trans 'Login' %}</a>
         {% endif %}
       </header>
       {% endblock headerbar %}

@@ -4,6 +4,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
+from django.conf import settings
 from django.db import models
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model

@@ -51,6 +51,7 @@ class UserComponent(models.Model):
         indexes = [
             models.Index(fields=['user']),
         ]
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -67,8 +68,8 @@ class UserComponent(models.Model):
             pall.append(p.settings(dct))
         return pall
 
-    #def get_absolute_url(self):
-    #    return reverse("spiderucs:uc-view", kwargs={"user":self.user.username, "name":self.name})
+    def get_absolute_url(self):
+        return reverse("spiderucs:ucomponent-list", kwargs={"user":self.user.username, "name":self.name})
 
     @property
     def is_protected(self):
@@ -123,6 +124,7 @@ class UserContent(models.Model):
             models.Index(fields=['usercomponent']),
             models.Index(fields=['object_id']),
         ]
+        ordering = ["usercomponent", "id"]
 
     def get_flag(self, flag):
         if "%s;" % flag in self.info:
@@ -140,7 +142,7 @@ class UserContent(models.Model):
         return info[pstart:pend]
 
     def get_absolute_url(self):
-        return reverse("spiderucs:ucontent-view", kwargs={"user":self.user.username, "name":self.name, "id": self.id})
+        return reverse("spiderucs:ucontent-view", kwargs={"id": self.id})
 
 
 class ProtectionManager(models.Manager):

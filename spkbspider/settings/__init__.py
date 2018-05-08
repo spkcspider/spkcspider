@@ -110,7 +110,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_URL="/accounts/login"
+LOGIN_URL="auth:login"
+LOGIN_REDIRECT_URL="auth:profile"
+LOGOUT_REDIRECT_URL="home"
 
 AUTH_USER_MODEL = 'spideraccounts.SpiderUser'
 KEY_HASH_ALGO = "sha512"
