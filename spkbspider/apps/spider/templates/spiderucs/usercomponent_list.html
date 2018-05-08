@@ -1,4 +1,5 @@
 {% extends "spiderucs/base.html" %}
+{% load i18n %}
 
 {% block content %}
   <h1>User Components</h1>
@@ -9,23 +10,26 @@
       <li>No User Components yet.</li>
   {% endfor %}
   </ul>
-  {% if is_paginated %}
-  <div class="pagination">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
+  <div class="page-manipulation">
+      {% if page_obj.has_previous %}
+          <a href="?page=1">&laquo; first</a>
+          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+      {% endif %}
 
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
+      {% if is_paginated %}
+      <span class="current">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+      </span>
+      {% endif %}
+      <form method="GET" action="">
+        <input type="hidden" name="page" value="{{ page_obj.number }}"/>
+        <input type="text" name="search" placeholder="{% trans 'Search' %}" />
+        <button>-&gt;</button>
+      </form>
 
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
+      {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+      {% endif %}
   </div>
-  {% endif %}
 {% endblock %}

@@ -67,9 +67,11 @@ class ComponentAllIndex(ListView):
         return super().get_context_data(**kwargs)
 
     def get_queryset(self):
-        q = models.Q(protected_by__isnull=True)
+        q = models.Q(protected_by__isnull=True)&~models.Q(name="index")
         if self.request.user.is_authenticated:
             q |= models.Q(user=self.request.user)
+        if "search" in self.request.GET:
+            q &= models.Q(name__icontains=self.request.GET["search"])
         return self.model.objects.filter(q)
 
     def get_paginate_by(self, queryset):
@@ -85,7 +87,10 @@ class ComponentIndex(UCTestMixin, ListView):
         return False
 
     def get_queryset(self):
-        return self.model.objects.filter(user=self.get_user())
+        ret = self.model.objects.filter(user=self.get_user())
+        if "search" in self.request.GET:
+            ret = ret.filter(name__icontains=self.request.GET["search"])
+        return ret
 
     def get_usercomponent(self):
         return get_object_or_404(UserComponent, user=self.get_user(), name="index")
@@ -242,6 +247,8 @@ class ContentIndex(UCTestMixin, ListView):
         _type = self.request.POST.get("type", self.request.GET.get("type"))
         if _type:
             ret = ret.filter(info__contains="type=%s;" % _type)
+        if "search" in self.request.GET:
+            ret = ret.filter(info__icontains=self.request.GET["search"])
         return ret
 
     def get_paginate_by(self, queryset):
