@@ -100,7 +100,7 @@ class ComponentIndex(UCTestMixin, ListView):
 
 class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     model = UserComponent
-    permission_required = 'add_{}'.format(model._meta.model_name)
+    permission_required = 'spiderucs.add_usercomponent'
     form_class = UserComponentCreateForm
 
 class ComponentUpdate(UserTestMixin, UpdateView):
