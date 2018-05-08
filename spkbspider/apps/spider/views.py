@@ -57,15 +57,22 @@ class UCTestMixin(UserTestMixin):
             return self.handle_no_permission()
         return super(UserTestMixin, self).dispatch(request, *args, **kwargs)
 
-
-
 class ComponentAllIndex(ListView):
     model = UserComponent
 
+    def get_context_data(self, **kwargs):
+        #kwargs
+        return super().get_context_data(**kwargs)
+
     def get_queryset(self):
-        if self.request.user.is_active and (self.request.user.is_staff or self.request.user.is_superuser):
-            return self.model.objects.all()
-        return self.model.objects.filter(models.Q(protected_by__isnull=True)|models.Q(user=self.request.user if self.request.user.is_authenticated else None))
+        q = models.Q(protected_by__isnull=True)
+        if self.request.user.is_authenticated:
+            q |= models.Q(user=self.request.user)
+        return self.model.objects.filter(q)
+
+    def get_paginate_by(self, queryset):
+        return getattr(settings, "COMPONENTS_PER_PAGE", 25)
+
 
 class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
@@ -80,6 +87,9 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def get_usercomponent(self):
         return get_object_or_404(UserComponent, user=self.get_user(), name="index")
+
+    def get_paginate_by(self, queryset):
+        return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
 class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     model = UserComponent
@@ -231,6 +241,9 @@ class ContentIndex(UCTestMixin, ListView):
         if _type:
             ret = ret.filter(info__contains="type=%s;" % _type)
         return ret
+
+    def get_paginate_by(self, queryset):
+        return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
 
 class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):

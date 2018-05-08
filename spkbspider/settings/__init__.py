@@ -117,4 +117,9 @@ KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
 
+# how many user components per page
+COMPONENTS_PER_PAGE = 25
+# how many user contents per page
+CONTENTS_PER_PAGE = 25
+
 SITE_ID = 1

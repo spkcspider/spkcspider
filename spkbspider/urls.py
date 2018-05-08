@@ -26,8 +26,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('spkbspider.apps.spideraccounts.urls', namespace="auth")),
     path('ucs/', include('spkbspider.apps.spider.urls', namespace="spiderucs")),
-    path('pages/', include('django.contrib.flatpages.urls')),
-    #path('^favicon\.ico$', favicon_view),
-    #path(r'^robots\.txt$', robots_view),
+]
 
+for app_name, app_path in getattr(settings, "SPKBPIDER_APPS", {}).items():
+    urlpatterns.append("{}/".format(app_name), include("{}.urls".format(app_path), namespace=app_name))
+
+urlpatterns += [
+    path('pages/', include('django.contrib.flatpages.urls')),
+    path('favicon.ico', favicon_view),
+    path('robots.txt', robots_view),
 ]

@@ -15,7 +15,9 @@
     {# CSS for all pages #}
     {% block base_styles %}{% endblock %}
     {# CSS for page #}
-    {% block styles %}{% endblock %}
+    {% block styles %}
+    <link rel="stylesheet" href="{% static 'w3.css' %}">
+    {% endblock %}
     {# form scripts and foo #}
     {% block extrahead %}{% endblock %}
   </head>
@@ -24,11 +26,18 @@
     {# Deco content, e.g.base.html  #}
     {% block layout %}
       {% block headerbar %}
-      <header class="w3-bar w3-topnav w3-black">
-        <a href="">Home</a>
+      <header class="w3-bar w3-container w3-topnav w3-black">
+        <a class="w3-bar-item w3-button" href="">Home</a>
+        <a class="w3-bar-item w3-button" href="">Home</a>
+        {% url 'auth:login' as loginpath %}
+        {% if request.user.is_authenticated %}
+          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:logout'%}">Logout</a>
+        {% elif request.path != loginpath %}
+          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">Login</a>
+        {% endif %}
       </header>
       {% endblock headerbar %}
-      <main class="w3-content">
+      <main class="{% block main_classes %}w3-main w3-padding{% endblock %}" id="content-main" style="margin-top: 20px">
       {% block messages %}
           {% if messages %}
           <ul class="messagelist">{% for message in messages %}

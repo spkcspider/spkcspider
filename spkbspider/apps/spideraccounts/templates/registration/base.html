@@ -5,10 +5,11 @@
 {{block.super}}
 {% endblock %}
 
-{% block layout %}
-  <div>{% if request.user.is_authenticated %}<a href="{% url 'auth:logout'%}">Logout</a>{%endif%}</div>
-  <div id="content-main">
-    {{block.super}}
-    {% include "spkbspider/form_errors.html" %}
-  </div>
+{% block main_classes %}{{block.super}} w3-content w3-card-4 w3-pale-red{% endblock %}
+
+
+
+{% block content %}
+  {% include "spkbspider/form_errors.html" %}
+  {{block.super}}
 {% endblock %}

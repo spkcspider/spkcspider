@@ -4,7 +4,7 @@
 {% block content %}
   {{form.media}}
   <h2>Login</h2>
-  <form action="{{ app_path }}" method="post">
+  <form action="{{ request.path }}" method="post">
     {% csrf_token %}
     {% for field in form %}
       <div>
