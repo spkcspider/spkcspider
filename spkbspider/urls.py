@@ -17,7 +17,7 @@ from django.urls import path, include
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.conf import settings
-
+from spkbspider.apps.spider.views import ComponentAllIndex
 
 favicon_view = RedirectView.as_view(url='{}spkbspider/favicon.png'.format(settings.STATIC_URL), permanent=True)
 robots_view = RedirectView.as_view(url='{}spkbspider/robots.txt'.format(settings.STATIC_URL), permanent=True)
@@ -35,4 +35,5 @@ urlpatterns += [
     path('pages/', include('django.contrib.flatpages.urls')),
     path('favicon.ico', favicon_view),
     path('robots.txt', robots_view),
+    path('', ComponentAllIndex.as_view(is_home=True, template_name="spkbspider/home.html"), name="home"),
 ]

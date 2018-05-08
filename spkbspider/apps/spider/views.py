@@ -59,6 +59,7 @@ class UCTestMixin(UserTestMixin):
 
 class ComponentAllIndex(ListView):
     model = UserComponent
+    is_home = False
 
     def get_context_data(self, **kwargs):
         #kwargs

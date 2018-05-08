@@ -20,5 +20,5 @@ urlpatterns = [
     path('content/update/<int:id>/', ContentUpdate.as_view(), name='ucontent-update'),
     path('content/remove-reset/<int:id>/', ContentResetRemove.as_view(), name='ucontent-resetremove'),
     path('content/remove/<int:id>/', ContentRemove.as_view(), name='ucontent-remove'),
-    path('', ComponentAllIndex.as_view()),
+    path('', ComponentAllIndex.as_view(is_home=False)),
 ]
