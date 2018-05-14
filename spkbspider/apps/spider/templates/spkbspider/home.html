@@ -1,1 +1,35 @@
 {% extends "spkbspider/base.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1>User Components</h1>
+  <ul>
+  {% for uc in object_list %}
+      <li>{% if not nouser %}{{uc.user}} - {%endif%}{{ uc }}</li>
+  {% empty %}
+      <li>No User Components yet.</li>
+  {% endfor %}
+  </ul>
+  <div class="page-manipulation">
+      <form method="GET" action="">
+        <input type="hidden" name="page" value="{% if request.GET.search %}{{ page_obj.number }}{% else %}1{% endif %}"/>
+        <input class="w3-input" type="text" name="search" placeholder="{% trans 'Search' %}" />
+        <button class="w3-button w3-gray">-&gt;</button>
+      </form>
+      {% if page_obj.has_previous %}
+          <a href="?page=1">&laquo; first</a>
+          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+      {% endif %}
+
+      {% if is_paginated %}
+      <span class="current">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+      </span>
+      {% endif %}
+
+      {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+      {% endif %}
+  </div>
+{% endblock %}

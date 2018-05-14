@@ -2,15 +2,23 @@
 {% load i18n %}
 
 {% block content %}
-  <h1>User Components</h1>
-  <ul>
+  <h1>{% trans "User Components" %}</h1>
+  {% if request.user.is_authenticated %}
+    <a href="{% url 'spiderucs:ucomponent-create' %}">Add</a>
+  {% endif %}
   {% for uc in object_list %}
-      <li>{% if not nouser %}{{uc.user}} - {%endif%}{{ uc }}</li>
+    <div>
+      <a href="{% url 'spiderucs:ucontent-list' name=uc.name %}">{% if not nouser %}{{uc.user}} - {%endif%}{{ uc }}</a>
+    </div>
   {% empty %}
-      <li>No User Components yet.</li>
+      {% trans 'No User Components yet.' %}
   {% endfor %}
-  </ul>
   <div class="page-manipulation">
+      <form method="GET" action="">
+        <input type="hidden" name="page" value="{% if request.GET.search %}{{ page_obj.number }}{% else %}1{% endif %}"/>
+        <input class="w3-input" type="text" name="search" placeholder="{% trans 'Search' %}" />
+        <button class="w3-button w3-gray">-&gt;</button>
+      </form>
       {% if page_obj.has_previous %}
           <a href="?page=1">&laquo; first</a>
           <a href="?page={{ page_obj.previous_page_number }}">previous</a>
@@ -21,11 +29,6 @@
           Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
       </span>
       {% endif %}
-      <form method="GET" action="">
-        <input type="hidden" name="page" value="{{ page_obj.number }}"/>
-        <input type="text" name="search" placeholder="{% trans 'Search' %}" />
-        <button>-&gt;</button>
-      </form>
 
       {% if page_obj.has_next %}
           <a href="?page={{ page_obj.next_page_number }}">next</a>

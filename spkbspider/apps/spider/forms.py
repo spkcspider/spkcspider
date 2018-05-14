@@ -4,9 +4,25 @@ from django.utils.translation import ugettext_lazy as _
 from .models import AssignedProtection, UserComponent
 
 class UserComponentCreateForm(forms.ModelForm):
+    protection_forms = None
     class Meta:
         model = UserComponent
-        fields = ['name', 'protections']
+        fields = ['name']
+        #widgets = {"user": forms.HiddenInput()}
+
+    def clean(self):
+        ret = super().clean()
+        #for f in self.protection_forms:
+        #    f.clean()
+        return ret
+
+    def save(self, commit=True):
+        ret = super().save(commit)
+        #for f in self.protection_forms:
+        #    f.save()
+        return ret
+
+
 
     # don't disallow creation of internal names
     #def clean_name(self):
@@ -44,8 +60,8 @@ class UserComponentUpdateForm(forms.ModelForm):
             f.clean()
         return ret
 
-    def save(self, *args, **kwargs):
-        ret = super().save(*args, **kwargs)
+    def save(self, commit=True):
+        ret = super().save(commit)
         for f in self.protection_forms:
             f.save()
         return ret

@@ -37,7 +37,12 @@ class UserTestMixin(UserPassesTestMixin):
         return False
 
     def get_user(self):
-        return get_object_or_404(get_user_model(), username=self.kwargs["user"])
+        username = None
+        if "user" in self.kwargs:
+            username = self.kwargs["user"]
+        elif self.request.user.is_authenticated:
+            username = self.request.user.username
+        return get_object_or_404(get_user_model(), username=username)
 
     def get_usercomponent(self):
         return get_object_or_404(UserComponent, user=self.get_user(), name=self.kwargs["name"])
@@ -103,9 +108,13 @@ class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     permission_required = 'spiderucs.add_usercomponent'
     form_class = UserComponentCreateForm
 
+    def get_form_kwargs(self):
+        ret = super().get_form_kwargs()
+        #ret["initial"]["user"] = self.get_user()
+        ret["instance"] = self.model(user=self.get_user())
+        return ret
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
-    fields = ['name', 'data', 'protections']
     form_class = UserComponentUpdateForm
 
     def get_form_kwargs(self, **kwargs):
@@ -127,26 +136,10 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         else:
             return get_object_or_404(self.get_queryset(), user=self.get_user(), name=self.kwargs["name"])
 
-class ComponentResetDelete(UserTestMixin, UpdateView):
-    model = UserContent
-    fields = []
-    http_method_names = ['post']
-    def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(queryset, usercomponent=self.usercomponent, id=self.kwargs["id"])
-        else:
-            return get_object_or_404(self.get_queryset(), usercomponent=self.usercomponent, id=self.kwargs["id"])
-    def form_valid(self, form):
-        """
-        If the form is valid, save the associated model.
-        """
-        self.object = form.instance
-        self.object.deletion_requested = None
-        self.object.save(update_fields=["deletion_requested"])
-        return HttpResponseRedirect(self.get_success_url())
-
 class ComponentDelete(UserTestMixin, DeleteView):
     model = UserComponent
+    fields = []
+    http_method_names = ['get', 'post', 'delete']
 
     def get_required_timedelta(self):
         _time = getattr(settings, "UC_DELETION_PERIOD", {}).get(self.object.name, None)
@@ -173,7 +166,6 @@ class ComponentDelete(UserTestMixin, DeleteView):
         # deleting them should not be possible, except by deleting user
         if self.object.is_protected:
             return self.handle_no_permission()
-        success_url = self.get_success_url()
         _time = self.get_required_timedelta()
         if _time:
             now = timezone.now()
@@ -185,7 +177,13 @@ class ComponentDelete(UserTestMixin, DeleteView):
                 self.object.save()
                 return self.get(request, *args, **kwargs)
         self.object.delete()
-        return HttpResponseRedirect(success_url)
+        return HttpResponseRedirect(self.get_success_url())
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.deletion_requested = None
+        self.object.save(update_fields=["deletion_requested"])
+        return HttpResponseRedirect(self.get_success_url())
 
     def get_object(self, queryset=None):
         if queryset:
@@ -199,7 +197,6 @@ class ComponentDelete(UserTestMixin, DeleteView):
 class ContentView(UCTestMixin, BaseDetailView):
     model = UserContent
     def get_context_data(self, **kwargs):
-        kwargs["request"] = self.request
         return super().get_context_data(**kwargs)
 
     def test_func(self):
@@ -223,6 +220,10 @@ class ContentView(UCTestMixin, BaseDetailView):
 
 class ContentIndex(UCTestMixin, ListView):
     model = UserContent
+
+    def get_context_data(self, **kwargs):
+        kwargs["uc"] = self.get_usercomponent()
+        return super().get_context_data(**kwargs)
 
     def test_func(self):
         if self.has_special_access(staff=(self.usercomponent.name!="index"), superuser=True):
@@ -362,7 +363,7 @@ class ContentResetRemove(UCTestMixin, UpdateView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class ContentRemove(UCTestMixin, DeleteView):
+class ContentRemove(ComponentDelete):
     model = UserContent
 
     def get_required_timedelta(self):
@@ -371,35 +372,8 @@ class ContentRemove(UCTestMixin, DeleteView):
             _time = getattr(settings, "DEFAULT_CONTENT_DELETION_PERIOD", None)
         return timedelta(seconds=_time)
 
-    def get_context_data(self, **kwargs):
-        self.object = self.get_object()
-        _time = self.get_required_timedelta()
-        if _time and self.object.deletion_requested:
-            now = timezone.now()
-            if self.object.deletion_requested+_time>=now:
-                kwargs["remaining"] = timedelta(seconds=0)
-            else:
-                kwargs["remaining"] = self.object.deletion_requested+_time-now
-        return super().get_context_data(**kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        success_url = self.get_success_url()
-        _time = self.get_required_timedelta()
-        if _time:
-            now = timezone.now()
-            if self.object.deletion_requested:
-                if self.object.deletion_requested+_time>=now:
-                    return self.get(request, *args, **kwargs)
-            else:
-                self.object.deletion_requested = now
-                self.object.save()
-                return self.get(request, *args, **kwargs)
-        self.object.delete()
-        return HttpResponseRedirect(success_url)
-
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, usercomponent=self.usercomponent, id=self.kwargs["id"])
+            return get_object_or_404(queryset, usercomponent=self.get_usercomponent(), id=self.kwargs["id"])
         else:
-            return get_object_or_404(self.get_queryset(), usercomponent=self.usercomponent, id=self.kwargs["id"])
+            return get_object_or_404(self.get_queryset(), usercomponent=self.get_usercomponent(), id=self.kwargs["id"])

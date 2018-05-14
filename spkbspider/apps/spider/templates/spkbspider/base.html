@@ -30,8 +30,11 @@
         <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'home' %}">{% trans 'Home' %}</a>
         {% url 'auth:login' as loginpath %}
         {% if request.user.is_authenticated %}
+          <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'spiderucs:ucomponent-create' %}">{% trans 'Add Component' %}</a>
+          <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'spiderucs:ucomponent-list' %}">{% trans 'List Own' %}</a>
           <a class="w3-bar-item w3-button w3-right w3-blue-grey" href="{% url 'auth:logout'%}">{% trans 'Logout' %}</a>
         {% elif request.path != loginpath %}
+          <a class="w3-bar-item w3-button w3-right w3-blue-grey" href="{% url   'auth:signup'%}?next={{request.path|urlencode}}">{% trans 'Register' %}</a>
           <a class="w3-bar-item w3-button w3-right w3-blue-grey" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">{% trans 'Login' %}</a>
         {% endif %}
       </header>

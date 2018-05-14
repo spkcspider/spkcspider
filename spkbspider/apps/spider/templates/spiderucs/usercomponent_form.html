@@ -3,6 +3,12 @@
 
 {% block content %}
   <h1>{% trans "User Components" %}</h1>
+  {% if object and object.name != "index" %}
+    <a href="{% url 'spiderucs:ucomponent-delete' %}">delete?</a>
+  {% endif %}
+  {% if object %}
+    <a href="{% url 'spiderucs:ucomponent-create' %}">Add Further</a>
+  {% endif %}
   <form action="{{ request.path }}" method="post">
     {% csrf_token %}
     {% for field in form %}
@@ -17,7 +23,7 @@
         {% endfor %}
       </div>
     {% endfor %}
-  {% for prot in form.protections %}
+  {% for prot in form.protection_forms %}
     {% for field in prot %}
       <div>
         {{ field.label_tag }}<br>
@@ -31,5 +37,6 @@
       </div>
     {% endfor %}
   {% endfor %}
-</form>
+  <button>Create</button>
+  </form>
 {% endblock %}

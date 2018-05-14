@@ -30,6 +30,11 @@ class SignupView(FormView):
         login(self.request, user)
         return HttpResponseRedirect(self.get_success_url())
 
+    def get_success_url(self):
+        if "next" in self.request.GET:
+            return self.request.GET["next"]
+        return self.success_url
+
 class UserLoginView(LoginView):
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:

@@ -2,12 +2,16 @@
 {% load i18n %}
 
 {% block content %}
-  <h1>Broker</h1>
-  <ul>
-  {% for broker in object_list %}
-      <li>{{ article.pub_date|date }} - {{ article.headline }}</li>
-  {% empty %}
-      <li>No Brokers yet.</li>
-  {% endfor %}
-  </ul>
+  <h1>Deletion</h1>
+  {% if not remaining or remaining == 0 %}
+  <form method="DELETE" action="{% url "ucomponent-delete" %}">
+    <button>Delete</button>
+  </form>
+  {% endif %}
+
+  {% if remaining %}
+  <form method="POST" action="{% url "ucomponent-delete" %}">
+    <button>Reset</button>
+  </form>
+  {% endif %}
 {% endblock %}

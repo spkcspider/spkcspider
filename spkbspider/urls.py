@@ -25,7 +25,7 @@ robots_view = RedirectView.as_view(url='{}spkbspider/robots.txt'.format(settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('spkbspider.apps.spideraccounts.urls', namespace="auth")),
-    path('ucs/', include('spkbspider.apps.spider.urls', namespace="spiderucs")),
+    path('spider/', include('spkbspider.apps.spider.urls', namespace="spiderucs")),
 ]
 
 for app_name, app_path in getattr(settings, "SPKBPIDER_APPS", {}).items():

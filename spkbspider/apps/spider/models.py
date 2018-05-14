@@ -69,7 +69,7 @@ class UserComponent(models.Model):
         return pall
 
     def get_absolute_url(self):
-        return reverse("spiderucs:ucomponent-list", kwargs={"user":self.user.username, "name":self.name})
+        return reverse("spiderucs:ucontent-list", kwargs={"name":self.name})
 
     @property
     def is_protected(self):
