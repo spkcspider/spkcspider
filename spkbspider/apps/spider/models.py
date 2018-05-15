@@ -62,12 +62,6 @@ class UserComponent(models.Model):
                 return True
         return False
 
-    def settings(self, dct=None):
-        pall = []
-        for p in self.assigned.all():
-            pall.append(p.settings(dct))
-        return pall
-
     def get_absolute_url(self):
         return reverse("spiderucs:ucontent-list", kwargs={"name":self.name})
 
@@ -166,6 +160,20 @@ class Protection(models.Model):
     def __str__(self):
         return str(installed_protections[self.code])
 
+    def get_form(self, data=None, files=None, auto_id='id_%s', prefix=None, *args, **kwargs):
+        if prefix:
+            protection_prefix = "{}_protections_{{}}".format(prefix)
+        else:
+            protection_prefix = "protections_{}"
+        return installed_protections[self.code](*args, protection=self, data=data, files=files, auto_id=auto_id, prefix=protection_prefix.format(self.code), **kwargs)
+
+    @classmethod
+    def get_forms(cls, *args, ptypes=None, **kwargs):
+        protections = cls.objects.valid()
+        if ptypes:
+            protections = protections.filter(code__in=ptypes)
+        return map(lambda x: x.get_form(*args, **kwargs), protections)
+
 def get_limit_choices_assigned_protection():
     # django cannot serialize static, classmethods, so cheat
     ret = {"code__in": Protection.objects.valid(), "ptype__in": [0]}
@@ -196,9 +204,3 @@ class AssignedProtection(models.Model):
 
     def auth_test(self, request, scope):
         return installed_protections[self.protection.code].auth_test(request=request, user=self.usercomponent.user, data=self.protectiondata, obj=self, scope=scope)
-
-    def settings(self, dct=None):
-        if dct:
-            return installed_protections[self.protection.code](dct, prefix=self.protection.code, assignedprotection=self)
-        else:
-            return installed_protections[self.protection.code](self.protectiondata, prefix=self.protection.code, assignedprotection=self)

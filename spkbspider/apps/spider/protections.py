@@ -60,20 +60,18 @@ class BaseProtection(forms.Form):
     response_class = TemplateResponse
     content_type = None
 
-    # auto populated
-    assignedprotection = None
+    # auto populated, instance
+    protection = None
+    assigned = None
 
-    def __init__(self, *args, **kwargs):
-        self.assignedprotection = kwargs.pop("assignedprotection")
-        super().__init__(*args, **kwargs)
-
-    def get_data(self):
-        return self.cleaned_data
-
-    def save(self):
-        self.assignedprotection.active = self.cleaned_data.pop("active")
-        self.assignedprotection.protectiondata = self.get_data()
-        self.assignedprotection.save(update_fields=["active","protectiondata"])
+    def __init__(self, *args, assigned=None, **kwargs):
+        self.protection = kwargs.pop("protection")
+        initial = None
+        if assigned:
+            initial = assigned.filter(protection=protection).first()
+        if initial:
+            initial = initial.protectiondata
+        super().__init__(*args, initial=initial, **kwargs)
 
     @classmethod
     def auth_test(cls, **kwargs):
@@ -107,29 +105,30 @@ class AllowProtection(BaseProtection):
     ptype = ProtectionType.access_control
 
     @classmethod
-    def auth_test(cls, request, **kwargs):
+    def auth_test(cls, _request, _data, **kwargs):
         return True
     def __str__(self):
         return _("Allow")
 
 
-def friend_query():
-    return get_user_model().objects.filter(active=True)
-# only friends have access
-@add_protection
-class FriendProtection(BaseProtection):
-    name = "friends"
-    users = forms.ModelMultipleChoiceField(queryset=friend_query)
-    ptype = ProtectionType.access_control
-    @classmethod
-    def auth_test(cls, request, data, **kwargs):
-        if request.user.id in data["users"]:
-            return True
-        else:
-            return False
+#def friend_query():
+#    return get_user_model().objects.filter(active=True)
 
-    def __str__(self):
-        return _("Friends")
+# only friends have access
+#@add_protection
+#class FriendProtection(BaseProtection):
+#    name = "friends"
+#    users = forms.ModelMultipleChoiceField(queryset=friend_query())
+#    ptype = ProtectionType.access_control
+#    @classmethod
+#    def auth_test(cls, request, data, **kwargs):
+#        if request.user.id in data["users"]:
+#            return True
+#        else:
+#            return False
+#
+#    def __str__(self):
+#        return _("Friends")
 
 #@add_protection
 class PasswordProtection(BaseProtection):

@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from datetime import timedelta
 
-from .forms import UserComponentCreateForm, UserComponentUpdateForm
+from .forms import UserComponentForm
 from .models import UserComponent, UserContent
 from .contents import installed_contents
 from .protections import ProtectionType
@@ -106,7 +106,7 @@ class ComponentIndex(UCTestMixin, ListView):
 class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     model = UserComponent
     permission_required = 'spiderucs.add_usercomponent'
-    form_class = UserComponentCreateForm
+    form_class = UserComponentForm
 
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()
@@ -115,15 +115,7 @@ class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
         return ret
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
-    form_class = UserComponentUpdateForm
-
-    def get_form_kwargs(self, **kwargs):
-        cargs = super().get_form_kwargs(**kwargs)
-        if self.request.method == "GET":
-            cargs["protection_forms"] = self.object.settings()
-        else:
-            cargs["protection_forms"] = self.object.settings(self.request.POST)
-        return cargs
+    form_class = UserComponentForm
 
     def get_context_data(self, **kwargs):
         kwargs["available"] = installed_contents.keys()
@@ -148,7 +140,9 @@ class ComponentDelete(UserTestMixin, DeleteView):
         if _time:
             now = timezone.now()
             _time = timedelta(seconds=_time)
-        return timedelta(seconds=_time)
+        else:
+            _time = timedelta(seconds=0)
+        return _time
 
     def get_context_data(self, **kwargs):
         self.object = self.get_object()

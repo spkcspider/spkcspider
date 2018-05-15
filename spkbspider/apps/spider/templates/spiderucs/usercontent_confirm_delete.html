@@ -4,13 +4,13 @@
 {% block content %}
   <h1>Delete Content</h1>
   {% if not remaining or remaining == 0 %}
-  <form method="DELETE" action="{% url "ucomponent-delete" %}">
+  <form method="DELETE" action="{% url "ucontent-delete" id=object.id %}">
     <button>Delete</button>
   </form>
   {% endif %}
 
   {% if remaining %}
-  <form method="POST" action="{% url "ucomponent-delete" %}">
+  <form method="POST" action="{% url "ucontent-delete" id=object.id %}">
     <button>Reset</button>
   </form>
   {% endif %}

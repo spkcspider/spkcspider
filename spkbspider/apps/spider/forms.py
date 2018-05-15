@@ -1,27 +1,38 @@
 from django import forms
 from django.utils.translation import ugettext_lazy as _
 
-from .models import AssignedProtection, UserComponent
+from .models import AssignedProtection, Protection, UserComponent
+from .protections import installed_protections
 
-class UserComponentCreateForm(forms.ModelForm):
-    protection_forms = None
+class UserComponentForm(forms.ModelForm):
     class Meta:
         model = UserComponent
         fields = ['name']
         #widgets = {"user": forms.HiddenInput()}
 
-    def clean(self):
-        ret = super().clean()
-        #for f in self.protection_forms:
-        #    f.clean()
-        return ret
+    def __init__(self, data=None, files=None, auto_id='id_%s', prefix=None, *args, **kwargs):
+        super().__init__(*args, data=data, files=files, auto_id=auto_id, prefix=prefix, **kwargs)
+        assigned = None
+        if self.instance and self.instance.id:
+            assigned = self.instance.assigned
+        self.protections = Protection.get_forms(data=data, files=files, prefix=prefix, assigned=assigned)
 
-    def save(self, commit=True):
-        ret = super().save(commit)
-        #for f in self.protection_forms:
-        #    f.save()
-        return ret
+    def is_valid(self):
+        isvalid = super().is_valid()
+        for protection in self.protections:
+            if not protection.is_valid():
+                isvalid = False
+        return isvalid
 
+    def _save_protections(self):
+        for protection in self.protections:
+            if not protection.active:
+                continue
+            AssignedProtection.objects.update_or_create(defaults={"protectiondata": protection.cleaned_data}, usercomponent=self.instance, protection=protection.protection)
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        self._save_protections()
 
 
     # don't disallow creation of internal names
@@ -33,35 +44,3 @@ class UserComponentCreateForm(forms.ModelForm):
     #    #if data.lower() in ["index", "recovery"]:
     #    #    raise forms.ValidationError(_('Internal names'))
     #    return data
-
-class UserComponentUpdateForm(forms.ModelForm):
-    protection_forms = None
-    #contents = forms.ModelMultipleChoiceField()
-
-    class Meta:
-        model = UserComponent
-        fields = ['protections']
-
-    def __init__(self, protection_forms, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.protection_forms = protection_forms
-
-    def is_valid(self):
-        isvalid = self.is_bound and not self.errors
-        for f in self.protection_forms:
-            t = f.is_valid()
-            if isvalid:
-                isvalid = t
-        return isvalid
-
-    def clean(self):
-        ret = super().clean()
-        for f in self.protection_forms:
-            f.clean()
-        return ret
-
-    def save(self, commit=True):
-        ret = super().save(commit)
-        for f in self.protection_forms:
-            f.save()
-        return ret

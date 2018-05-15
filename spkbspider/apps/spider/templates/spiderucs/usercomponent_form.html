@@ -4,7 +4,7 @@
 {% block content %}
   <h1>{% trans "User Components" %}</h1>
   {% if object and object.name != "index" %}
-    <a href="{% url 'spiderucs:ucomponent-delete' %}">delete?</a>
+    <a href="{% url 'spiderucs:ucomponent-delete' name=object.name %}">delete?</a>
   {% endif %}
   {% if object %}
     <a href="{% url 'spiderucs:ucomponent-create' %}">Add Further</a>
@@ -23,7 +23,10 @@
         {% endfor %}
       </div>
     {% endfor %}
-  {% for prot in form.protection_forms %}
+  <div class="w3-row">
+  {% for prot in form.protections %}
+    <div class="w3-card w3-col s12 m3">
+      <h1>{{prot.name}}</h1>
     {% for field in prot %}
       <div>
         {{ field.label_tag }}<br>
@@ -36,7 +39,10 @@
         {% endfor %}
       </div>
     {% endfor %}
+    </div>
   {% endfor %}
-  <button>Create</button>
+  </div>
+  <br/>
+  <button>Create Usercomponent</button>
   </form>
 {% endblock %}

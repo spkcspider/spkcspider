@@ -1,17 +1,17 @@
 {% extends "spiderucs/base.html" %}
 {% load i18n %}
-
+{% block title %}Delete: {{object.name}}{% endblock %}
 {% block content %}
-  <h1>Deletion</h1>
+  <h1>Deletion:</h1><h2>{{object.name}}</h2>
   {% if not remaining or remaining == 0 %}
-  <form method="DELETE" action="{% url "ucomponent-delete" %}">
-    <button>Delete</button>
+  <form method="delete" action=''>
+    <input type="submit" value="Delete" />
   </form>
   {% endif %}
 
   {% if remaining %}
-  <form method="POST" action="{% url "ucomponent-delete" %}">
-    <button>Reset</button>
+  <form method="post" action=''>
+    <input type="submit" value="Reset" />
   </form>
   {% endif %}
 {% endblock %}
