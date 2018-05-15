@@ -15,7 +15,13 @@ class UserComponentForm(forms.ModelForm):
         assigned = None
         if self.instance and self.instance.id:
             assigned = self.instance.assigned
-        self.protections = Protection.get_forms(data=data, files=files, prefix=prefix, assigned=assigned)
+            if self.instance.name == "index":
+                ptypes = [0]
+            else:
+                ptypes = [1,2]
+        else:
+            ptypes = [0]
+        self.protections = Protection.get_forms(data=data, files=files, prefix=prefix, assigned=assigned, ptypes=ptypes)
 
     def is_valid(self):
         isvalid = super().is_valid()
