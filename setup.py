@@ -37,7 +37,7 @@ setup(name='spkbspider',
       use_scm_version=VERSIONING,
       setup_requires=['setuptools_scm'],
       data_files=[('spkbspider', ['LICENSE'])],
-      packages=["spkbspider", "spkbspider.apps.spider", "spkbspider.apps.spideraccounts", "spkbspider.apps.spiderbrokers", "spkbspider.apps.spiderkeys"],
+      packages=["spkbspider", "spkbspider.apps.spider", "spkbspider.apps.spideraccounts", "spkbspider.apps.spidertags", "spkbspider.apps.spiderkeys"],
       package_data={
         '': ['templates/**.*'],
         '': ['static/**.*'],
