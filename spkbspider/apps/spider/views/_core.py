@@ -3,10 +3,13 @@ __all__ = ("UserTestMixin", "UCTestMixin")
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
+from django.http import HttpResponseBase
 
 from ..models import UserComponent
 
+
 class UserTestMixin(UserPassesTestMixin):
+    results_tests = None
 
     # by default only owner can access view
     def test_func(self):
@@ -32,7 +35,26 @@ class UserTestMixin(UserPassesTestMixin):
         return get_object_or_404(get_user_model(), username=username)
 
     def get_usercomponent(self):
-        return get_object_or_404(UserComponent, user=self.get_user(), name=self.kwargs["name"])
+        return get_object_or_404(
+            UserComponent, user=self.get_user(), name=self.kwargs["name"]
+        )
+
+    def handle_no_permission(self):
+        if not bool(self.results_tests):
+            return super().handle_no_permission()
+        if len(self.results_tests) == 1:
+            if isinstance(self.results_tests[0].result, HttpResponseBase):
+                return self.results_tests[0].result
+        return self.response_class(
+            request=self.request,
+            template=self.get_template_names(),
+            context=self.get_context_data(protections=self.results_tests),
+            using=self.template_engine,
+            content_type=self.content_type
+        )
+
+    def get_noperm_template_names(self):
+        return "spiderprotections/protections.html"
 
 
 class UCTestMixin(UserTestMixin):

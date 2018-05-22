@@ -16,24 +16,25 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
-from .protections import installed_protections, ProtectionType
+from .protections import (
+    installed_protections, ProtectionType, ProtectionResult
+)
 
 
 logger = logging.getLogger(__name__)
+
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # fix linter warning
     objects = models.Manager()
-    # special names:
-    # index:
-    #    protections are used for index
+    # special name: index:
+    #    protections are used for authentication
     #    attached content is only visible for admin and user
-    # recovery (optional):
-    #    protections are meaningless here (maybe later)
-    #    attached content is only visible for admin, staff and user and can be used for recovery
     name = models.SlugField(max_length=50, null=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False
+    )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     # only editable for admins
@@ -41,9 +42,12 @@ class UserComponent(models.Model):
     contents = None
     # should be used for retrieving active protections, related_name
     assigned = None
-    protections = models.ManyToManyField("spiderucs.Protection", through="spiderucs.AssignedProtection")
+    protections = models.ManyToManyField(
+        "spiderucs.Protection", through="spiderucs.AssignedProtection"
+    )
+
     class Meta:
-        unique_together = [("user", "name"),]
+        unique_together = [("user", "name")]
         indexes = [
             models.Index(fields=['user']),
         ]
@@ -52,11 +56,18 @@ class UserComponent(models.Model):
     def __str__(self):
         return self.name
 
-    def auth_test(self, request, scope, ptype=ProtectionType.access_control):
-        for p in self.assigned.filter(ptype=ptype, active=True):
-            if p.auth_test(request, scope):
+    def auth(self, request, scope, ptype=ProtectionType.access_control):
+        ret = []
+        query = self.assigned.filter(ptype=ptype, active=True)
+        if "protectionid" in request.POST:
+            query = query.filter(id=request.POST["protectionid"])
+        for p in query:
+            result = p.authenticate(request, scope)
+            if result is True:
                 return True
-        return False
+            if result is not False:  # False will be not rendered
+                ret.append(ProtectionResult(result, p))
+        return ret
 
     def get_absolute_url(self):
         return reverse("spiderucs:ucontent-list", kwargs={"name": self.name})
@@ -99,19 +110,29 @@ class UserContent(models.Model):
         related_name="contents", null=False
     )
 
-    #creator = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, null=True, on_delete=models.SET_ZERO)
+    # creator = models.ForeignKey(
+    #    settings.AUTH_USER_MODEL, editable=False, null=True,
+    #    on_delete=models.SET_ZERO
+    # )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     # only editable for admins
     deletion_requested = models.DateTimeField(null=True, default=None)
     # for extra information over content, admin only editing
     # format: flag1;flag2;foo=true;foo2=xd;...;endfoo=xy;
-    # every section must end with ; every keyword must be unique and in this format: keyword=
+    # every section must end with ; every keyword must be unique and
+    # in this format: keyword=
     # no unneccessary spaces!
-    info = models.TextField(null=False, default=";", validators=[info_field_validator])
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, editable=False)
+    info = models.TextField(
+        default=";", null=False, validators=[info_field_validator]
+    )
+    content_type = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE, editable=False
+    )
     object_id = models.BigIntegerField(editable=False)
-    content = GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
+    content = GenericForeignKey(
+        'content_type', 'object_id', for_concrete_model=False
+    )
 
     class Meta:
         unique_together = [('content_type', 'object_id')]
@@ -133,7 +154,8 @@ class UserContent(models.Model):
             return None
         pend = info.find(";", pstart+len(key)+1)
         if pend == -1:
-            raise Exception("Info field format broken (must end with ;): \"%s\"" % info)
+            raise Exception("Info field error: doesn't end with \";\": \"%s\""
+                            % info)
         return info[pstart:pend]
 
     def get_absolute_url(self):
@@ -161,7 +183,8 @@ class Protection(models.Model):
     def __str__(self):
         return str(installed_protections[self.code])
 
-    def get_form(self, data=None, files=None, auto_id='id_%s', prefix=None, *args, **kwargs):
+    def get_form(self, data=None, files=None, auto_id='id_%s', prefix=None,
+                 *args, **kwargs):
         if prefix:
             protection_prefix = "{}_protections_{{}}".format(prefix)
         else:
@@ -181,9 +204,13 @@ class Protection(models.Model):
 
 def get_limit_choices_assigned_protection():
     # django cannot serialize static, classmethods, so cheat
-    ret = {"code__in": Protection.objects.valid(), "ptype__in": [0]}
+    ret = \
+        {
+            "code__in": Protection.objects.valid(),
+            "ptype": ProtectionType.access_control
+        }
     if models.F("usercomponent__name") == "index":
-        ret["ptype__in"] = [1, 2]
+        ret["ptype"] = ProtectionType.authentication
     return ret
 
 
@@ -210,9 +237,6 @@ class AssignedProtection(models.Model):
         indexes = [
             models.Index(fields=['usercomponent']),
         ]
-
-    # def get_absolute_url(self):
-    #    return reverse("spiderucs:protection", kwargs={"user":self.usercomponent.user.username, "ucid":self.usercomponent.id, "pname": self.protection.code})
 
     def auth_test(self, request, scope):
         return installed_protections[self.protection.code].auth_test(

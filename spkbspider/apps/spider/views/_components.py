@@ -1,5 +1,8 @@
 
-__all__ = ("ComponentIndex", "ComponentAllIndex", "ComponentCreate", "ComponentUpdate", "ComponentDelete")
+__all__ = (
+    "ComponentIndex", "ComponentAllIndex", "ComponentCreate",
+    "ComponentUpdate", "ComponentDelete"
+)
 
 from datetime import timedelta
 
@@ -22,12 +25,8 @@ class ComponentAllIndex(ListView):
     model = UserComponent
     is_home = False
 
-    def get_context_data(self, **kwargs):
-        #kwargs
-        return super().get_context_data(**kwargs)
-
     def get_queryset(self):
-        q = models.Q(protected_by__isnull=True)&~models.Q(name="index")
+        q = models.Q(protected_by__isnull=True) & ~models.Q(name="index")
         if self.request.user.is_authenticated:
             q |= models.Q(user=self.request.user)
         if "search" in self.request.GET:
@@ -53,10 +52,13 @@ class ComponentIndex(UCTestMixin, ListView):
         return ret
 
     def get_usercomponent(self):
-        return get_object_or_404(UserComponent, user=self.get_user(), name="index")
+        return get_object_or_404(
+            UserComponent, user=self.get_user(), name="index"
+        )
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
+
 
 class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     model = UserComponent
@@ -65,9 +67,10 @@ class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
 
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()
-        #ret["initial"]["user"] = self.get_user()
         ret["instance"] = self.model(user=self.get_user())
         return ret
+
+
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
     form_class = UserComponentForm
@@ -79,8 +82,13 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, user=self.get_user(), name=self.kwargs["name"])
-        return get_object_or_404(self.get_queryset(), user=self.get_user(), name=self.kwargs["name"])
+            return get_object_or_404(
+                queryset, user=self.get_user(), name=self.kwargs["name"]
+            )
+        return get_object_or_404(
+            self.get_queryset(), user=self.get_user(), name=self.kwargs["name"]
+        )
+
 
 class ComponentDelete(UserTestMixin, DeleteView):
     model = UserComponent
@@ -89,7 +97,7 @@ class ComponentDelete(UserTestMixin, DeleteView):
     http_method_names = ['get', 'post', 'delete']
 
     def get_required_timedelta(self):
-        _time = getattr(settings, "COMPONENT_DELETION_PERIOD", {}).get(self.object.name, None)
+        _time = getattr(settings, "COMPONENT_DELETION_PERIOD", None)
         if not _time:
             _time = getattr(settings, "DEFAULT_DELETION_PERIOD", None)
         if _time:
@@ -118,7 +126,7 @@ class ComponentDelete(UserTestMixin, DeleteView):
         if _time:
             now = timezone.now()
             if self.object.deletion_requested:
-                if self.object.deletion_requested+_time>=now:
+                if self.object.deletion_requested+_time >= now:
                     return self.get(request, *args, **kwargs)
             else:
                 self.object.deletion_requested = now
@@ -135,6 +143,11 @@ class ComponentDelete(UserTestMixin, DeleteView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, user=self.get_user(), name=self.kwargs["name"])
+            return get_object_or_404(
+                queryset, user=self.get_user(), name=self.kwargs["name"]
+            )
         else:
-            return get_object_or_404(self.get_queryset(), user=self.get_user(), name=self.kwargs["name"])
+            return get_object_or_404(
+                self.get_queryset(), user=self.get_user(),
+                name=self.kwargs["name"]
+            )

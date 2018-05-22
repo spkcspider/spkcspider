@@ -1,7 +1,9 @@
 """ UserContent Views """
 
-__all__ = ("ContentView", "ContentIndex", "ContentAdd", "ContentUpdate",
-           "ContentRemove")
+__all__ = (
+    "ContentView", "ContentIndex", "ContentAdd", "ContentUpdate",
+    "ContentRemove"
+)
 
 from datetime import timedelta
 
@@ -30,13 +32,15 @@ class ContentView(UCTestMixin, BaseDetailView):
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_protected:
             return False
-        if self.usercomponent.auth_test(self.request, "access"):
+        self.results_tests = self.usercomponent.auth(self.request, "access")
+        if self.results_tests is True:
             return True
         return False
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, usercomponent=self.usercomponent,
+            return get_object_or_404(queryset,
+                                     usercomponent=self.usercomponent,
                                      id=self.kwargs["id"])
         else:
             return get_object_or_404(self.get_queryset(),
@@ -61,7 +65,9 @@ class ContentIndex(UCTestMixin, ListView):
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_protected:
             return False
-        if self.usercomponent.auth_test(self.request, "list"):
+
+        self.results_tests = self.usercomponent.auth(self.request, "list")
+        if self.results_tests is True:
             return True
         return False
 
@@ -134,7 +140,8 @@ class ContentUpdate(UCTestMixin, UpdateView):
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, usercomponent=self.usercomponent,
+            return get_object_or_404(queryset,
+                                     usercomponent=self.usercomponent,
                                      id=self.kwargs["id"])
         else:
             return get_object_or_404(self.get_queryset(),
@@ -144,11 +151,12 @@ class ContentUpdate(UCTestMixin, UpdateView):
     def test_func(self):
         # give user and staff the ability to update Content
         # except it is protected, in this case only the user can update
-        # reason: admins could be tricked into malicious updates; for index the same reason as for add
+        # reason: admins could be tricked into malicious updates
+        # for index the same reason as for add
         uncritically = not self.usercomponent.is_protected
         if self.has_special_access(staff=uncritically, superuser=uncritically):
             # block update if noupdate flag is set
-            # don't override for special users as the form could trigger unsafe stuff
+            # no override for special users as the form could do unsafe stuff
             # special users: do it in the admin interface
             if self.object.get_flag("noupdate"):
                 return False
@@ -219,6 +227,12 @@ class ContentRemove(ComponentDelete):
 
     def get_object(self, queryset=None):
         if queryset:
-            return get_object_or_404(queryset, usercomponent=self.get_usercomponent(), id=self.kwargs["id"])
+            return get_object_or_404(
+                queryset, usercomponent=self.get_usercomponent(),
+                id=self.kwargs["id"]
+            )
         else:
-            return get_object_or_404(self.get_queryset(), usercomponent=self.get_usercomponent(), id=self.kwargs["id"])
+            return get_object_or_404(
+                self.get_queryset(), usercomponent=self.get_usercomponent(),
+                id=self.kwargs["id"]
+            )

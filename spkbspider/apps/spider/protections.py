@@ -4,8 +4,10 @@ namespace: spiderucs
 
 """
 
-__all__ = ["add_protection", "ProtectionType", "check_blacklisted", "installed_protections", "BaseProtection"]
+__all__ = ("add_protection", "ProtectionType", "check_blacklisted",
+           "installed_protections", "BaseProtection", "ProtectionResult")
 
+from collections import namedtuple
 import enum
 
 from django.conf import settings
@@ -33,14 +35,24 @@ def add_protection(klass):
     return klass
 
 
+ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
+
+
 class ProtectionType(enum.IntEnum):
     access_control = 0
     authentication = 1
-    recovery = 2
+    # forget about recovery, every recovery method is authentication
+    # and will be misused this way
+    # The only real recovery is by staff and only if there is a secret
 
 
 # form with inner form for authentication
 class BaseProtection(forms.Form):
+    """
+        Base for Protections
+        Usage: define some configurable fields for configuration
+        use auth_test to validate
+    """
     active = forms.BooleanField(required=True)
 
     # ptype= 0: access control, 1: authentication, 2: recovery
@@ -66,12 +78,8 @@ class BaseProtection(forms.Form):
         super().__init__(*args, initial=initial, **kwargs)
 
     @classmethod
-    def auth_test(cls, **kwargs):
+    def auth(cls, **kwargs):
         return False
-
-    @classmethod
-    def render(cls, **kwargs):
-        raise NotImplementedError
 
     @classmethod
     def render_template(cls, request, context, **response_kwargs):
@@ -104,7 +112,8 @@ class AllowProtection(BaseProtection):
     def __str__(self):
         return _("Allow")
 
-#def friend_query():
+
+# def friend_query():
 #    return get_user_model().objects.filter(active=True)
 
 # only friends have access
@@ -123,7 +132,8 @@ class AllowProtection(BaseProtection):
 #    def __str__(self):
 #        return _("Friends")
 
-#@add_protection
+
+# @add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
 
