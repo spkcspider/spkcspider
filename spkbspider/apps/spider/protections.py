@@ -14,19 +14,14 @@ from django.utils.translation import ugettext_lazy as _
 from django.template.response import TemplateResponse
 from django.views.decorators.debug import sensitive_variables
 
-
-try:
-    import jwt
-except ImportError:
-    jwt = None
-
-
 installed_protections = {}
+
 
 def check_blacklisted(name):
     if name in getattr(settings, "BLACKLISTED_PROTECTIONS", {}):
         return False
     return True
+
 
 def add_protection(klass):
     if klass.name != "allow":
@@ -37,10 +32,12 @@ def add_protection(klass):
     installed_protections[klass.name] = klass
     return klass
 
+
 class ProtectionType(enum.IntEnum):
     access_control = 0
     authentication = 1
     recovery = 2
+
 
 # form with inner form for authentication
 class BaseProtection(forms.Form):
@@ -93,6 +90,7 @@ class BaseProtection(forms.Form):
         else:
             return
 
+
 # if specified with multiple protections all protections must be fullfilled
 @add_protection
 class AllowProtection(BaseProtection):
@@ -102,16 +100,16 @@ class AllowProtection(BaseProtection):
     @classmethod
     def auth_test(cls, _request, _data, **kwargs):
         return True
+
     def __str__(self):
         return _("Allow")
-
 
 #def friend_query():
 #    return get_user_model().objects.filter(active=True)
 
 # only friends have access
-#@add_protection
-#class FriendProtection(BaseProtection):
+# @add_protection
+# class FriendProtection(BaseProtection):
 #    name = "friends"
 #    users = forms.ModelMultipleChoiceField(queryset=friend_query())
 #    ptype = ProtectionType.access_control
@@ -128,7 +126,6 @@ class AllowProtection(BaseProtection):
 #@add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
-    ptype = ProtectionType.authentication
 
     @sensitive_variables("data", "request")
     @classmethod
@@ -137,6 +134,7 @@ class PasswordProtection(BaseProtection):
             return True
         else:
             return False
+
     @classmethod
     def auth_render(cls, **kwargs):
         return TemplateResponse()

@@ -59,7 +59,7 @@ class UserComponent(models.Model):
         return False
 
     def get_absolute_url(self):
-        return reverse("spiderucs:ucontent-list", kwargs={"name":self.name})
+        return reverse("spiderucs:ucontent-list", kwargs={"name": self.name})
 
     @property
     def is_protected(self):
@@ -82,18 +82,22 @@ def info_field_validator(value):
         counts = 0
         counts += prefixed_value.count(";%s;" % elem)
         counts += prefixed_value.count(";%s=" % elem)
-        assert(counts>0)
+        assert(counts > 0)
         if counts > 1:
             raise ValidationError(
                 _('multiple elements: %(element)s in %(value)s'),
                 params={'element': elem, 'value': value},
             )
 
+
 class UserContent(models.Model):
     id = models.BigAutoField(primary_key=True)
     # fix linter warning
     objects = models.Manager()
-    usercomponent = models.ForeignKey(UserComponent, on_delete=models.CASCADE, editable=False, related_name="contents", null=False)
+    usercomponent = models.ForeignKey(
+        UserComponent, on_delete=models.CASCADE, editable=False,
+        related_name="contents", null=False
+    )
 
     #creator = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, null=True, on_delete=models.SET_ZERO)
     created = models.DateTimeField(auto_now_add=True, editable=False)
@@ -108,8 +112,9 @@ class UserContent(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, editable=False)
     object_id = models.BigIntegerField(editable=False)
     content = GenericForeignKey('content_type', 'object_id', for_concrete_model=False)
+
     class Meta:
-        unique_together = [('content_type', 'object_id'),]
+        unique_together = [('content_type', 'object_id')]
         indexes = [
             models.Index(fields=['usercomponent']),
             models.Index(fields=['object_id']),
@@ -161,7 +166,10 @@ class Protection(models.Model):
             protection_prefix = "{}_protections_{{}}".format(prefix)
         else:
             protection_prefix = "protections_{}"
-        return installed_protections[self.code](*args, protection=self, data=data, files=files, auto_id=auto_id, prefix=protection_prefix.format(self.code), **kwargs)
+        return installed_protections[self.code](
+            *args, protection=self, data=data, files=files, auto_id=auto_id,
+            prefix=protection_prefix.format(self.code), **kwargs
+        )
 
     @classmethod
     def get_forms(cls, *args, ptypes=None, **kwargs):
@@ -170,6 +178,7 @@ class Protection(models.Model):
             protections = protections.filter(code__in=ptypes)
         return map(lambda x: x.get_form(*args, **kwargs), protections)
 
+
 def get_limit_choices_assigned_protection():
     # django cannot serialize static, classmethods, so cheat
     ret = {"code__in": Protection.objects.valid(), "ptype__in": [0]}
@@ -177,26 +186,36 @@ def get_limit_choices_assigned_protection():
         ret["ptype__in"] = [1, 2]
     return ret
 
+
 class AssignedProtection(models.Model):
     id = models.BigAutoField(primary_key=True)
     # fix linter warning
     objects = models.Manager()
-    protection = models.ForeignKey(Protection, on_delete=models.CASCADE, related_name="assigned", limit_choices_to=get_limit_choices_assigned_protection, editable=False)
-    usercomponent = models.ForeignKey(UserComponent, related_name="protected_by", on_delete=models.CASCADE, editable=False)
+    protection = models.ForeignKey(
+        Protection, on_delete=models.CASCADE, related_name="assigned",
+        limit_choices_to=get_limit_choices_assigned_protection, editable=False
+    )
+    usercomponent = models.ForeignKey(
+        UserComponent, related_name="protected_by",
+        on_delete=models.CASCADE, editable=False
+    )
     # data for protection
     protectiondata = JSONField(default={}, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     active = models.BooleanField(default=True)
+
     class Meta:
-        unique_together = [("protection", "usercomponent"),]
+        unique_together = [("protection", "usercomponent")]
         indexes = [
             models.Index(fields=['usercomponent']),
         ]
 
-
-    #def get_absolute_url(self):
+    # def get_absolute_url(self):
     #    return reverse("spiderucs:protection", kwargs={"user":self.usercomponent.user.username, "ucid":self.usercomponent.id, "pname": self.protection.code})
 
     def auth_test(self, request, scope):
-        return installed_protections[self.protection.code].auth_test(request=request, user=self.usercomponent.user, data=self.protectiondata, obj=self, scope=scope)
+        return installed_protections[self.protection.code].auth_test(
+            request=request, user=self.usercomponent.user,
+            data=self.protectiondata, obj=self, scope=scope
+        )

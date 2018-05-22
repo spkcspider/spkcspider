@@ -4,9 +4,11 @@ from .models import Protection, AssignedProtection, UserComponent, UserContent
 
 # Register your models here.
 
+
 class AssignedProtectionInline(admin.TabularInline):
     model = AssignedProtection
     fields = ['protectiondata', 'active', 'protection']
+
 
 class UserContentInline(admin.TabularInline):
     model = UserContent
@@ -26,6 +28,7 @@ class UserComponentAdmin(admin.ModelAdmin):
         if obj and obj.is_protected:
             return False
         return super().has_delete_permission(request, obj)
+
 
 @admin.register(Protection)
 class ProtectionAdmin(admin.ModelAdmin):

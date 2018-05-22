@@ -9,6 +9,10 @@ class SpiderUCConfig(AppConfig):
     verbose_name = 'SPKBSpider base'
 
     def ready(self):
-        from .signals import InitProtectionsCallback, InitUserComponentsCallback
-        post_migrate.connect(InitProtectionsCallback, sender=self, dispatch_uid="update_protections")
-        post_save.connect(InitUserComponentsCallback, sender=get_user_model(), dispatch_uid="initial_usercomponents")
+        from .signals import (
+            InitProtectionsCallback, InitUserComponentsCallback
+        )
+        post_migrate.connect(InitProtectionsCallback, sender=self,
+                             dispatch_uid="update_protections")
+        post_save.connect(InitUserComponentsCallback, sender=get_user_model(),
+                          dispatch_uid="initial_usercomponents")
