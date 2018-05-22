@@ -1,7 +1,8 @@
 
 __all__ = ("ComponentIndex", "ComponentAllIndex", "ComponentCreate", "ComponentUpdate", "ComponentDelete")
 
-from django.views.generic.detail import BaseDetailView
+from datetime import timedelta
+
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -14,9 +15,8 @@ from django.utils import timezone
 from ._core import UserTestMixin, UCTestMixin
 from ..forms import UserComponentForm
 from ..contents import installed_contents
-from ..models import UserComponent, UserContent
+from ..models import UserComponent
 
-from datetime import timedelta
 
 class ComponentAllIndex(ListView):
     model = UserComponent
@@ -80,20 +80,19 @@ class ComponentUpdate(UserTestMixin, UpdateView):
     def get_object(self, queryset=None):
         if queryset:
             return get_object_or_404(queryset, user=self.get_user(), name=self.kwargs["name"])
-        else:
-            return get_object_or_404(self.get_queryset(), user=self.get_user(), name=self.kwargs["name"])
+        return get_object_or_404(self.get_queryset(), user=self.get_user(), name=self.kwargs["name"])
 
 class ComponentDelete(UserTestMixin, DeleteView):
     model = UserComponent
     fields = []
+    object = None
     http_method_names = ['get', 'post', 'delete']
 
     def get_required_timedelta(self):
-        _time = getattr(settings, "UC_DELETION_PERIOD", {}).get(self.object.name, None)
+        _time = getattr(settings, "COMPONENT_DELETION_PERIOD", {}).get(self.object.name, None)
         if not _time:
             _time = getattr(settings, "DEFAULT_DELETION_PERIOD", None)
         if _time:
-            now = timezone.now()
             _time = timedelta(seconds=_time)
         else:
             _time = timedelta(seconds=0)
@@ -104,7 +103,7 @@ class ComponentDelete(UserTestMixin, DeleteView):
         _time = self.get_required_timedelta()
         if _time and self.object.deletion_requested:
             now = timezone.now()
-            if self.object.deletion_requested+_time>=now:
+            if self.object.deletion_requested + _time >= now:
                 kwargs["remaining"] = timedelta(seconds=0)
             else:
                 kwargs["remaining"] = self.object.deletion_requested+_time-now

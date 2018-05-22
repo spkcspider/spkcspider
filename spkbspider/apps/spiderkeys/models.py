@@ -1,11 +1,9 @@
 from django.db import models
 from django.conf import settings
-from django.utils.translation import pgettext_lazy
+from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from django.contrib.contenttypes.fields import GenericRelation
 from django.shortcuts import render
 
-from jsonfield import JSONField
 
 import hashlib
 import logging
@@ -24,7 +22,7 @@ _htest.update(b"test")
 if settings.MAX_HASH_SIZE > len(_htest.hexdigest()):
     raise Exception("MAX_HASH_SIZE too small to hold digest in hexadecimal")
 
-def valid_pkey_properties(val):
+def valid_pkey_properties(key):
     if "PRIVAT" in key.upper():
         raise ValidationError(_('Private Key'))
     if key.strip() != key:

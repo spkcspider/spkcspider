@@ -119,6 +119,10 @@ KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
 
+#COMPONENT_DELETION_PERIOD
+#CONTENT_DELETION_PERIOD
+#DEFAULT_DELETION_PERIOD
+
 # how many user components per page
 COMPONENTS_PER_PAGE = 25
 # how many user contents per page

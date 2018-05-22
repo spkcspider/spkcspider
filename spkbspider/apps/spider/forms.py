@@ -1,8 +1,6 @@
 from django import forms
-from django.utils.translation import ugettext_lazy as _
 
 from .models import AssignedProtection, Protection, UserComponent
-from .protections import installed_protections
 
 class UserComponentForm(forms.ModelForm):
     class Meta:

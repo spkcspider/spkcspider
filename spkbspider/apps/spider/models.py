@@ -4,24 +4,20 @@ namespace: spiderucs
 
 """
 
+import logging
+
+from jsonfield import JSONField
 
 from django.db import models
 from django.conf import settings
-from django.utils.translation import pgettext_lazy as _
-from django.urls import reverse, reverse_lazy
+from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 
-
-from jsonfield import JSONField
-
-from .signals import test_success
 from .protections import installed_protections, ProtectionType
 
-
-import logging
-import typing
 
 logger = logging.getLogger(__name__)
 

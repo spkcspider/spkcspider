@@ -1,6 +1,4 @@
 from django.db import models
-from django.utils.translation import pgettext_lazy
-from django.conf import settings
 from urllib.parse import urlsplit
 
 
@@ -14,7 +12,7 @@ from spkbspider.apps.spider.contents import BaseContent, add_content
 
 class TagType(models.Model):
     layout = JSONField(default=[])
-    default_verifier = 
+    default_verifiers = JSONField(default=[])
 
 
 
@@ -26,4 +24,3 @@ class SpiderTag(BaseContent):
 
     def __str__(self):
         return urlsplit(self.url).netloc
-

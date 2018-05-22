@@ -1,10 +1,8 @@
 __all__ = ("UserTestMixin", "UCTestMixin")
 
-from django.contrib.auth.mixins import PermissionRequiredMixin, UserPassesTestMixin
-from django.urls import reverse
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 
 from ..models import UserComponent
 
@@ -36,11 +34,6 @@ class UserTestMixin(UserPassesTestMixin):
     def get_usercomponent(self):
         return get_object_or_404(UserComponent, user=self.get_user(), name=self.kwargs["name"])
 
-    #def get_noperm_template_names(self):
-    #    return [self.noperm_template_name]
-
-    #def handle_no_permission(self):
-    #    raise PermissionDenied(self.get_permission_denied_message())
 
 class UCTestMixin(UserTestMixin):
     usercomponent = None

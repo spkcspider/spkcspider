@@ -1,5 +1,5 @@
+__all__ = ("InitProtectionsCallback", "InitUserComponentsCallback")
 from django.dispatch import Signal
-from django.conf import settings
 
 test_success = Signal(providing_args=["name", "code"])
 
