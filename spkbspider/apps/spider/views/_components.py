@@ -11,7 +11,7 @@ from django.http import HttpResponseRedirect
 from django.conf import settings
 from django.utils import timezone
 
-from .core import UserTestMixin, UCTestMixin
+from ._core import UserTestMixin, UCTestMixin
 from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import UserComponent, UserContent

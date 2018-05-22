@@ -10,8 +10,8 @@ from django.db import models
 from django.http import Http404, HttpResponseRedirect
 from django.conf import settings
 
-from .core import UserTestMixin, UCTestMixin
-from .components import ComponentDelete
+from ._core import UserTestMixin, UCTestMixin
+from ._components import ComponentDelete
 from ..contents import installed_contents
 from ..models import UserContent
 
