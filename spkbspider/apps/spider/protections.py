@@ -60,9 +60,9 @@ class BaseProtection(forms.Form):
     ptype = ProtectionType.access_control
 
     template_name = None
-    template_engine = None
-    response_class = TemplateResponse
-    content_type = None
+    form = None
+    # optional render function
+    #render = None
 
     # auto populated, instance
     protection = None
@@ -80,23 +80,6 @@ class BaseProtection(forms.Form):
     @classmethod
     def auth(cls, **kwargs):
         return False
-
-    @classmethod
-    def render_template(cls, request, context, **response_kwargs):
-        response_kwargs.setdefault('content_type', cls.content_type)
-        return cls.response_class(
-            request=request,
-            template=cls.get_template_names(),
-            context=context,
-            using=cls.template_engine,
-            **response_kwargs)
-
-    @classmethod
-    def get_template_names(cls):
-        if cls.template_name:
-            return [cls.template_name]
-        else:
-            return
 
 
 # if specified with multiple protections all protections must be fullfilled

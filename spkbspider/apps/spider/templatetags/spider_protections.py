@@ -6,6 +6,7 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def render_protection(context, protection):
+
     if callable(getattr(protection, "render", None)):
         return protection.render(context)
 
@@ -16,5 +17,8 @@ def render_protection(context, protection):
         ctx = context.copy()
         ctx["form"] = protection.form
         return render_to_string("spiderprotections/protection_form.html", ctx)
+
+    if callable(getattr(protection, "__html__", None)):
+        return protection.__html__()
 
     raise Exception("more render methods are not implemented")

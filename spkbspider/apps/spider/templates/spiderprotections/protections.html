@@ -1,5 +1,5 @@
 {% extends "spiderprotections/base.html" %}
 {% load spider_protections %}
 {% for prot in protections %}
-  {% render_protection prot %}
+  {% render_protection prot.protection %}
 {% endfor %}
