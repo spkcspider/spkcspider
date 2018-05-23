@@ -38,9 +38,12 @@ def render_protections(context, ptype, scope):
                 data={}, obj=p, scope=scope
             )
         )
+    return ret
 
 
 @register.simple_tag(takes_context=True)
 def extract_protections(context, extract_name="auth_results"):
     if hasattr(context.get("request", None), extract_name):
-        return getattr(context["request"], extract_name)
+        if getattr(context["request"], extract_name) is not True:
+            return getattr(context["request"], extract_name)
+    return []
