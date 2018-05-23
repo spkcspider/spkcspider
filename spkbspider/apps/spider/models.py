@@ -238,8 +238,8 @@ class AssignedProtection(models.Model):
             models.Index(fields=['usercomponent']),
         ]
 
-    def auth_test(self, request, scope):
-        return installed_protections[self.protection.code].auth_test(
+    def authenticate(self, request, scope):
+        return installed_protections[self.protection.code].authenticate(
             request=request, user=self.usercomponent.user,
             data=self.protectiondata, obj=self, scope=scope
         )

@@ -1,10 +1,11 @@
-from django.shortcuts import render
+__all__ = ("SignupView", "UserLoginView", "UserUpdateView")
+
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.views import LoginView
 from django.views.generic.edit import FormView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse
+from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
 import time
@@ -44,7 +45,7 @@ class UserLoginView(LoginView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        # slow down login attempts, helpfull against bruteforce attacks
+        # slow down login attempts, against bruteforce attacks
         time.sleep(1.5)
         return super().post(request, *args, **kwargs)
 
