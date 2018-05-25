@@ -1,5 +1,6 @@
 {% extends "registration/base.html" %}
-{% load i18n static %}
+{% load i18n static spider_protections %}
+{% with extract_protections "protections" as protections %}
 
 {% block content %}
   {{form.media}}
@@ -25,4 +26,11 @@
     </div>
     <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
   </form>
+
+  {% for prot in protections %}
+    <details>
+      <summary>{{prot.protection.name}}</summary>
+      {% render_protection prot %}
+    </details>
+  {% endfor %}
 {% endblock %}

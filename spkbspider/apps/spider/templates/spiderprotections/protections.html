@@ -1,5 +1,9 @@
 {% extends "spiderprotections/base.html" %}
 {% load spider_protections %}
+{% with extract_protections "protections" as protections %}
 {% for prot in protections %}
-  {% render_protection prot.protection %}
+  <details>
+    <summary>{{prot.protection.name}}</summary>
+    {% render_protection prot %}
+  </details>
 {% endfor %}

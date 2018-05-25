@@ -32,8 +32,10 @@ class ContentView(UCTestMixin, BaseDetailView):
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_protected:
             return False
-        self.results_tests = self.usercomponent.auth(self.request, "access")
-        if self.results_tests is True:
+        self.request.protections = self.usercomponent.auth(
+            request=self.request, scope="access"
+        )
+        if self.request.protections is True:
             return True
         return False
 
@@ -66,8 +68,10 @@ class ContentIndex(UCTestMixin, ListView):
         if self.usercomponent.is_protected:
             return False
 
-        self.results_tests = self.usercomponent.auth(self.request, "list")
-        if self.results_tests is True:
+        self.request.protections = self.usercomponent.auth(
+            request=self.request, scope="list"
+        )
+        if self.request.protections is True:
             return True
         return False
 

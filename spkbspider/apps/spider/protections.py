@@ -13,8 +13,6 @@ import enum
 from django.conf import settings
 from django import forms
 from django.utils.translation import ugettext_lazy as _
-from django.template.response import TemplateResponse
-from django.views.decorators.debug import sensitive_variables
 
 installed_protections = {}
 
@@ -38,20 +36,22 @@ def add_protection(klass):
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
 
 
-class ProtectionType(enum.IntEnum):
-    access_control = 0
-    authentication = 1
+class ProtectionType(enum.Enum):
+    # receives: request, scope
+    access_control = "\x00"
+    # receives: request, scope, password
+    authentication = "\x01"
     # forget about recovery, every recovery method is authentication
     # and will be misused this way
     # The only real recovery is by staff and only if there is a secret
 
 
-# form with inner form for authentication
 class BaseProtection(forms.Form):
     """
         Base for Protections
-        Usage: define some configurable fields for configuration
-        use auth_test to validate
+        Usage: use form to define some configurable fields for configuration
+        use auth to validate: in this case:
+            template_name, render, form variable are used
     """
     active = forms.BooleanField(required=True)
 
@@ -62,7 +62,7 @@ class BaseProtection(forms.Form):
     template_name = None
     form = None
     # optional render function
-    #render = None
+    # render = None
 
     # auto populated, instance
     protection = None
@@ -89,7 +89,7 @@ class AllowProtection(BaseProtection):
     ptype = ProtectionType.access_control
 
     @classmethod
-    def auth_test(cls, _request, _data, **kwargs):
+    def auth(cls, **_kwargs):
         return True
 
     def __str__(self):
@@ -119,18 +119,14 @@ class AllowProtection(BaseProtection):
 # @add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
+    ptype = ProtectionType.access_control+ProtectionType.authentication
 
-    @sensitive_variables("data", "request")
     @classmethod
-    def auth_test(cls, request, data, **kwargs):
+    def auth(cls, request, data, **kwargs):
         if request.POST.get("password", "") in data["passwords"]:
             return True
         else:
             return False
-
-    @classmethod
-    def auth_render(cls, **kwargs):
-        return TemplateResponse()
 
     def __str__(self):
         return _("Password based authentication")
