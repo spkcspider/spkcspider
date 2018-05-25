@@ -36,7 +36,7 @@ def add_protection(klass):
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
 
 
-class ProtectionType(enum.Enum):
+class ProtectionType(str, enum.Enum):
     # receives: request, scope
     access_control = "\x00"
     # receives: request, scope, password
