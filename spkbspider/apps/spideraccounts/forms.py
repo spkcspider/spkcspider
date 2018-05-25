@@ -1,24 +1,33 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm, ReadOnlyPasswordHashField
+from django.contrib.auth.forms import (
+    UserCreationForm, UserChangeForm, ReadOnlyPasswordHashField
+)
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 
 class SignupForm(UserCreationForm):
     # real: username, fake for spammers
-    name = forms.CharField(label="", max_length=100, required=False, widget=forms.HiddenInput())
+    name = forms.CharField(
+        label="", max_length=100, required=False, widget=forms.HiddenInput()
+    )
     # fake for spammers
-    email = forms.EmailField(label="", max_length=100, required=False, widget=forms.HiddenInput())
-    #email, real
-    liame = forms.EmailField(label=_('email address (optional)'), max_length=100, required=False)
-    #question = forms.CharField(max_length=100, required=True)
-    #question_answer = None
+    email = forms.EmailField(
+        label="", max_length=100, required=False, widget=forms.HiddenInput()
+    )
+    # email, real
+    liame = forms.EmailField(
+        label=_('email address (optional)'), max_length=100, required=False
+    )
+    # question = forms.CharField(max_length=100, required=True)
+    # question_answer = None
 
     class Meta:
         model = get_user_model()
-        fields = ['username', 'password1', 'password2', 'name', 'liame', 'email']
+        fields = ['username', 'password1', 'password2',
+                  'name', 'liame', 'email']
 
-    #def __init__(self, *args, **kwargs):
+    # def __init__(self, *args, **kwargs):
     #    super().__init__(*args, **kwargs)
     #    self.question_answer = ""
 
@@ -27,7 +36,7 @@ class SignupForm(UserCreationForm):
         Returns True if the form has no errors. Otherwise, False. If errors are
         being ignored, returns False.
         """
-        if self.data['email']!="" or self.data['name']:
+        if self.data['email'] != "" or self.data['name']:
             return False
         return self.is_bound and not self.errors
 
@@ -38,6 +47,7 @@ class SignupForm(UserCreationForm):
         del self.cleaned_data["liame"]
         del self.cleaned_data["name"]
 
+
 class UserUpdateForm(UserChangeForm):
     password = ReadOnlyPasswordHashField(
         label=_("Password"),
@@ -47,6 +57,7 @@ class UserUpdateForm(UserChangeForm):
             "<a href=\"../password_change/\">this form</a>."
         ),
     )
+
     class Meta:
         model = get_user_model()
         fields = ['username', 'email', 'password']

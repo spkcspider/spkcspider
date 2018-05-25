@@ -1,6 +1,6 @@
 {% extends "registration/base.html" %}
 {% load i18n static spider_protections %}
-{% with extract_protections "protections" as protections %}
+{% extract_protections "protections" as protections %}
 
 {% block content %}
   {{form.media}}

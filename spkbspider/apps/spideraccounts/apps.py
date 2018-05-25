@@ -10,4 +10,7 @@ class SpiderAccountsConfig(AppConfig):
 
     def ready(self):
         from .signals import InitialGrantsCallback
-        post_save.connect(InitialGrantsCallback, sender=get_user_model(), dispatch_uid="initial_grants_user")
+        post_save.connect(
+            InitialGrantsCallback, sender=get_user_model(),
+            dispatch_uid="initial_grants_user"
+        )
