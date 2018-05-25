@@ -19,21 +19,41 @@ from django.views.generic.base import RedirectView
 from django.conf import settings
 from spkbspider.apps.spider.views import ComponentAllIndex
 
-favicon_view = RedirectView.as_view(url='{}spkbspider/favicon.png'.format(settings.STATIC_URL), permanent=True)
-robots_view = RedirectView.as_view(url='{}spkbspider/robots.txt'.format(settings.STATIC_URL), permanent=True)
+favicon_view = RedirectView.as_view(
+    url='{}spkbspider/favicon.png'.format(settings.STATIC_URL), permanent=True
+)
+robots_view = RedirectView.as_view(
+    url='{}spkbspider/robots.txt'.format(settings.STATIC_URL), permanent=True
+)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('spkbspider.apps.spideraccounts.urls', namespace="auth")),
-    path('spider/', include('spkbspider.apps.spider.urls', namespace="spiderucs")),
+    path(
+        'accounts/',
+        include('spkbspider.apps.spideraccounts.urls', namespace="auth")
+    ),
+    path(
+        'spider/',
+        include('spkbspider.apps.spider.urls', namespace="spiderucs")
+    ),
 ]
 
 for app_name, app_path in getattr(settings, "SPKBPIDER_APPS", {}).items():
-    urlpatterns.append("{}/".format(app_name), include("{}.urls".format(app_path), namespace=app_name))
+    urlpatterns.append(
+        "{}/".format(app_name),
+        include("{}.urls".format(app_path), namespace=app_name)
+    )
 
 urlpatterns += [
     path('pages/', include('django.contrib.flatpages.urls')),
     path('favicon.ico', favicon_view),
     path('robots.txt', robots_view),
-    path('', ComponentAllIndex.as_view(is_home=True, template_name="spkbspider/home.html"), name="home"),
+    path(
+        '',
+        ComponentAllIndex.as_view(
+            is_home=True, template_name="spkbspider/home.html"
+        ),
+        name="home"
+    ),
 ]
