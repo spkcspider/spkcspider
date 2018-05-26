@@ -58,6 +58,8 @@ class ContentIndex(UCTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.get_usercomponent()
+        if kwargs["uc"].user == self.request.user:
+            kwargs["content_types"] = installed_contents.items()
         return super().get_context_data(**kwargs)
 
     def test_func(self):

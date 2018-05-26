@@ -9,6 +9,8 @@
 {% endif %}
 {% endblock %}
 
+{% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
+
 {% block content %}
   <div>
     {% if request.user.is_authenticated %}
@@ -20,17 +22,19 @@
 
   </div>
   {% for uc in object_list %}
-    <div class="w3-card" style="margin-top: 10px">
+    <div class="w3-card w3-yellow" style="margin-top: 10px">
       <div class="w3-cell w3-padding">
         {% if not component_user %}{{uc.user}} - {%endif%}{{ uc }}
       </div>
-      <div class="w3-cell">
-        <a class="w3-button w3-grey w3-cell" href="{% url 'spiderucs:ucontent-list' name=uc.name %}">{% trans "List" %}</a>
-        <a class="w3-button w3-grey w3-cell" href="{% url 'spiderucs:ucomponent-update' name=uc.name %}">{% trans "Edit" %}</a>
-      </div>
+      <div class="w3-cell" style="padding-left: 40px">
+        <a class="w3-button w3-blue" href="{% url 'spiderucs:ucontent-list' name=uc.name %}">{% trans "List" %}</a>
+        {% if uc.user == request.user %}
+          <a class="w3-button w3-blue" href="{% url 'spiderucs:ucomponent-update' name=uc.name %}">{% trans "Edit" %}</a>
+        {% endif %}
+    </div>
     </div>
   {% empty %}
-      {% trans 'No User Components yet.' %}
+      {% trans 'No User Components available.' %}
   {% endfor %}
   <div class="page-manipulation w3-padding" style="margin-top:40px">
     <div class="w3-padding">

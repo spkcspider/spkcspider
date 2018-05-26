@@ -4,7 +4,7 @@
 {% block context_actions %}
 {{block.super}}
 {% endblock context_actions %}
-{% block main_classes %}{{block.super}} w3-content w3-card-4 w3-pale-green{% endblock %}
+{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-green{% endblock %}
 
 
 {% block content %}
@@ -15,7 +15,7 @@
     <h1 class="w3-center">
       {% if form.instance.id %}
         {% blocktrans trimmed with name=form.instance.name %}
-          Update User Component: {{name}}
+          Update User Component: <em>{{name}}</em>
         {% endblocktrans %}
       {% else %}
         {% trans 'Create new User Component' %}
@@ -33,20 +33,20 @@
         </div>
         <div class="w3-cell w3-padding">
         {% if field.help_text %}
-          <small style="color: grey">{{ field.help_text|safe }}</small>
+          <small class="w3-text-grey">{{ field.help_text|safe }}</small>
         {% endif %}
         </div>
       </div>
       <div class="">
         {% for error in field.errors %}
-          <p style="color: red">{{ error|safe }}</p>
+          <p class="w3-text-red">{{ error|safe }}</p>
         {% endfor %}
       </div>
     {% endfor %}
-  <div class="w3-row">
-  {% for prot in form.protections %}
+    <div class="w3-row">
+    {% for prot in form.protections %}
       <div class="w3-card w3-col s12 m3">
-        <h1>{{prot.name}}</h1>
+        <h1 class="w3-center">{{prot.name}}</h1>
         {% for field in prot %}
         <div class="">
           <div class="w3-cell w3-padding">
@@ -55,19 +55,21 @@
           </div>
           <div class="w3-cell w3-padding">
           {% if field.help_text %}
-            <small style="color: grey">{{ field.help_text|safe }}</small>
+            <small class="w3-text-grey">{{ field.help_text|safe }}</small>
           {% endif %}
           </div>
         </div>
         <div class="">
           {% for error in field.errors %}
-            <p style="color: red">{{ error|safe }}</p>
+            <p class="w3-text-red">{{ error|safe }}</p>
           {% endfor %}
         </div>
-      {% endfor %}
+        {% endfor %}
+      </div>
+    {% endfor %}
     </div>
-  {% endfor %}
-  </div>
-  <button class="w3-button w3-grey">{% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}</button>
+    <button class="w3-button w3-grey">
+      {% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}
+    </button>
   </form>
 {% endblock %}

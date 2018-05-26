@@ -21,9 +21,6 @@
     {% endfor %}
     <input type="hidden" name="next" value="{{ next }}" />
     <button type="submit">Login</button><br/>
-    <div class="password-reset-link">
-      <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
-    </div>
     <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
   </form>
 

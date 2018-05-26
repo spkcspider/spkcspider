@@ -1,20 +1,24 @@
 
-
 <form action="" method="post">
   {% csrf_token %}
   <input type="hidden" name="protection_name" value="{{name}}" />
   {% for field in form %}
-    <div>
-      {{ field.label_tag }}<br>
-      {{ field }}
+    <div class="">
+      <div class="w3-cell w3-padding">
+        {{ field.label_tag }}</br>
+        {{ field }}
+      </div>
+      <div class="w3-cell w3-padding">
       {% if field.help_text %}
-        <small style="color: grey">{{ field.help_text }}</small>
+        <small style="color: grey">{{ field.help_text|safe }}</small>
       {% endif %}
+      </div>
+    </div>
+    <div class="">
       {% for error in field.errors %}
-        <p style="color: red">{{ error }}</p>
+        <p style="color: red">{{ error|safe }}</p>
       {% endfor %}
     </div>
   {% endfor %}
-
   <button>Confirm</button>
 </form>

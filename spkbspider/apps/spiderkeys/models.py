@@ -22,6 +22,7 @@ _htest.update(b"test")
 if settings.MAX_HASH_SIZE > len(_htest.hexdigest()):
     raise Exception("MAX_HASH_SIZE too small to hold digest in hexadecimal")
 
+
 def valid_pkey_properties(key):
     if "PRIVAT" in key.upper():
         raise ValidationError(_('Private Key'))
@@ -29,6 +30,7 @@ def valid_pkey_properties(key):
         raise ValidationError(_('Not trimmed'))
     if len(key) < 100:
         raise ValidationError(_('Not a key'))
+
 
 # also for account recovery
 @add_content
@@ -43,11 +45,15 @@ class PublicKey(BaseContent):
     # needs key to mediate if clashes happen
     # don't use as primary key as algorithms could change
     # DON'T allow users to change hash
-    hash = models.CharField(max_length=settings.MAX_HASH_SIZE, null=False, editable=False)
+    hash = models.CharField(
+        max_length=settings.MAX_HASH_SIZE, null=False, editable=False
+    )
+
     class Meta:
         indexes = [
             models.Index(fields=['hash']),
         ]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original_key = self.key
@@ -61,7 +67,9 @@ class PublicKey(BaseContent):
         elif context["request"].GET.get("returntype", None) == "key":
             return self.key
         else:
-            return render(context["request"], "spiderkeys/key.html", context=context)
+            return render(
+                context["request"], "spiderkeys/key.html", context=context
+            )
 
     def save(self, *args, **kwargs):
         if self.key and self.__original_key != self.key:

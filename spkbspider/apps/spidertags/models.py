@@ -15,7 +15,6 @@ class TagType(models.Model):
     default_verifiers = JSONField(default=[])
 
 
-
 @add_content
 class SpiderTag(BaseContent):
     tagtype = models.ForeignKey(TagType)
