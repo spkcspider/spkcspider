@@ -13,11 +13,11 @@ app_name = "spiderucs"
 # uc = UserComponent
 urlpatterns = [
     path(
-        'ucs/index/<slug:user>/',
+        'ucs/user/<slug:user>/',
         ComponentIndex.as_view(),
         name='ucomponent-list'
     ),
-    path('ucs/index/', ComponentIndex.as_view(), name='ucomponent-list'),
+    path('ucs/user/', ComponentIndex.as_view(), name='ucomponent-list'),
     path('ucs/create/', ComponentCreate.as_view(), name='ucomponent-create'),
     path(
         'ucs/update/<slug:name>/',
