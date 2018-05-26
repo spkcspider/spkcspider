@@ -1,8 +1,14 @@
 {% extends "spiderucs/base.html" %}
 {% load i18n %}
 
+{% block context_actions %}
+{{block.super}}
+{% endblock context_actions %}
+{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-green{% endblock %}
+
 {% block content %}
   <div>
+    <a class="w3-left" href="{% url 'spiderucs:ucontent-list' name=uc.name %}">{% trans 'back' %}</a>
     {% if object and object.name != "index" %}
       <span class="w3-right"><a href="{% url 'spiderucs:ucontent-delete' name=object.id %}">{% trans 'delete' %}</a>?</span>
     {% endif %}

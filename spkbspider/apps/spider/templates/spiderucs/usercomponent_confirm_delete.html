@@ -1,8 +1,14 @@
 {% extends "spiderucs/base.html" %}
 {% load i18n %}
-{% block title %}Delete: {{object.name}}{% endblock %}
+{% block title %}{% blocktrans trimmed with name=object.name %}
+  Delete: {{name}}
+{% endblocktrans %}{% endblock %}
 {% block content %}
-  <h1>Deletion:</h1><h2>{{object.name}}</h2>
+  <h1 class="w3-center">
+    {% blocktrans trimmed with name=object.name %}
+      Delete User Component: <em>{{name}}</em>
+    {% endblocktrans %}
+  </h1>
   {% if not remaining or remaining == 0 %}
   <form method="delete" action="{% url 'spiderucs:ucomponent-delete' name=object.name %}">
     <input type="submit" value="Delete" />

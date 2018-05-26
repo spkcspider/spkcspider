@@ -1,8 +1,15 @@
 {% extends "spiderucs/base.html" %}
 {% load i18n %}
+{% block title %}{% blocktrans trimmed %}
+  Delete Content
+{% endblocktrans %}{% endblock %}
 
 {% block content %}
-  <h1>Delete Content</h1>
+  <h1>
+    {% blocktrans trimmed %}
+      Delete Content
+    {% endblocktrans %}
+  </h1>
   {% if not remaining or remaining == 0 %}
   <form method="DELETE" action="{% url "ucontent-delete" id=object.id %}">
     <button>Delete</button>

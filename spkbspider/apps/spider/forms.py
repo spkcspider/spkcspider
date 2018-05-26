@@ -18,6 +18,8 @@ class UserComponentForm(forms.ModelForm):
         assigned = None
         if self.instance and self.instance.id:
             assigned = self.instance.assigned
+            if self.instance.is_protected:
+                self.fields["name"].disabled = True
             if self.instance.name == "index":
                 ptype = ProtectionType.authentication
             else:
