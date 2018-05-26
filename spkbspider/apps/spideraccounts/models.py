@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser
 
 class SpiderUser(AbstractUser):
     REQUIRED_FIELDS = []
+    SAFE_FIELDS = ['username', 'email', 'password']
 
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'

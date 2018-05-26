@@ -40,6 +40,10 @@ class ComponentAllIndex(ListView):
 class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
 
+    def get_context_data(self, **kwargs):
+        kwargs["component_user"] = self.get_user()
+        return super().get_context_data(**kwargs)
+
     def test_func(self):
         if self.has_special_access(staff=True):
             return True
@@ -65,6 +69,10 @@ class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     permission_required = 'spiderucs.add_usercomponent'
     form_class = UserComponentForm
 
+    def get_context_data(self, **kwargs):
+        kwargs["available"] = installed_contents.keys()
+        return super().get_context_data(**kwargs)
+
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()
         ret["instance"] = self.model(user=self.get_user())
@@ -77,7 +85,6 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         kwargs["available"] = installed_contents.keys()
-        kwargs["assigned"] = self.object.contents.all()
         return super().get_context_data(**kwargs)
 
     def get_object(self, queryset=None):

@@ -1,7 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import (
-    UserCreationForm, UserChangeForm, ReadOnlyPasswordHashField
-)
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
@@ -17,7 +15,7 @@ class SignupForm(UserCreationForm):
     )
     # email, real
     liame = forms.EmailField(
-        label=_('email address (optional)'), max_length=100, required=False
+        label=_('Email Address'), max_length=100, required=False
     )
     # question = forms.CharField(max_length=100, required=True)
     # question_answer = None
@@ -49,15 +47,10 @@ class SignupForm(UserCreationForm):
 
 
 class UserUpdateForm(UserChangeForm):
-    password = ReadOnlyPasswordHashField(
-        label=_("Password"),
-        help_text=_(
-            "Raw passwords are not stored, so there is no way to see this "
-            "user's password, but you can change the password using "
-            "<a href=\"../password_change/\">this form</a>."
-        ),
-    )
-
-    class Meta:
+    class Meta(UserChangeForm.Meta):
         model = get_user_model()
-        fields = ['username', 'email', 'password']
+        fields = model.SAFE_FIELDS
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].help_text += "Optional"

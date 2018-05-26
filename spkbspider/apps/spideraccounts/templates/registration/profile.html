@@ -3,20 +3,21 @@
 
 {% block content %}
   {{form.media}}
-  <h2>Change User</h2>
+  <h2 class="w3-center">{% trans 'Update User Profile' %}</h2>
   <form method="post">
     {% csrf_token %}
     {% for field in form %}
-      <p>
-        {{ field.label_tag }}<br>
+      <div>
+        {{ field.label_tag }}
+        <br>
         {{ field }}
         {% if field.help_text %}
           <small style="color: grey">{{ field.help_text|safe }}</small>
         {% endif %}
         {% for error in field.errors %}
-          <p style="color: red">{{ error|safe }}</p>
+          <p style="color: red">{{ error }}</p>
         {% endfor %}
-      </p>
+      </div>
     {% endfor %}
     <button type="submit">Confirm</button>
   </form>

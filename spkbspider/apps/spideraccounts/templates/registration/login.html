@@ -3,8 +3,8 @@
 {% extract_protections "protections" as protections %}
 
 {% block content %}
-  {{form.media}}
   <h2>Login</h2>
+  {{form.media}}
   <form action="{{ request.path }}" method="post">
     {% csrf_token %}
     {% for field in form %}

@@ -24,6 +24,13 @@ from .protections import (
 
 logger = logging.getLogger(__name__)
 
+_name_help = """
+Name of the component.<br/>
+Note: there are special named components
+with different protection types and scopes.<br/>
+Most prominent: "index" for authentication
+"""
+
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -32,7 +39,11 @@ class UserComponent(models.Model):
     # special name: index:
     #    protections are used for authentication
     #    attached content is only visible for admin and user
-    name = models.SlugField(max_length=50, null=False)
+    name = models.SlugField(
+        max_length=50,
+        null=False,
+        help_text=_name_help
+    )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False
     )
@@ -216,10 +227,10 @@ class Protection(models.Model):
         )
 
     @classmethod
-    def get_forms(cls, *args, ptypes=None, **kwargs):
+    def get_forms(cls, *args, ptype=None, **kwargs):
         protections = cls.objects.valid()
-        if ptypes:
-            protections = protections.filter(code__in=ptypes)
+        if ptype:
+            protections = protections.filter(ptype__contains=ptype)
         return map(lambda x: x.get_form(*args, **kwargs), protections)
 
 

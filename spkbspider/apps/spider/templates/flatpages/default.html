@@ -1,3 +1,5 @@
 {% extends "spkbspider/base.html" %}
-{% block title %}{{ flatpage.title }}{% endblock %}
-{% block content %}{{ flatpage.content }}{% endblock %}
+{% block content %}
+  {% block title %}{{ flatpage.title }}{% endblock %}
+  {% block content %}{{ flatpage.content }}{% endblock %}
+{% endblock %}

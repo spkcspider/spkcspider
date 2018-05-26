@@ -1,48 +1,73 @@
 {% extends "spiderucs/base.html" %}
 {% load i18n %}
 
+{% block context_actions %}
+{{block.super}}
+{% endblock context_actions %}
+{% block main_classes %}{{block.super}} w3-content w3-card-4 w3-pale-green{% endblock %}
+
+
 {% block content %}
-  <h1>{% trans "User Components" %}</h1>
-  {% if object and object.name != "index" %}
-    <a href="{% url 'spiderucs:ucomponent-delete' name=object.name %}">delete?</a>
-  {% endif %}
-  {% if object %}
-    <a href="{% url 'spiderucs:ucomponent-create' %}">Add Further</a>
-  {% endif %}
+  <div>
+    {% if object and object.name != "index" %}
+      <span class="w3-right"><a href="{% url 'spiderucs:ucomponent-delete' name=object.name %}">{% trans 'delete' %}</a>?</span>
+    {% endif %}
+    <h1 class="w3-center">
+      {% if form.instance.id %}
+        {% blocktrans trimmed with name=form.instance.name %}
+          Update User Component: {{name}}
+        {% endblocktrans %}
+      {% else %}
+        {% trans 'Create new User Component' %}
+      {% endif %}
+    </h1>
+  </div>
+  {{form.media}}
   <form action="{{ request.path }}" method="post">
     {% csrf_token %}
     {% for field in form %}
-      <div>
-        {{ field.label_tag }}<br>
-        {{ field }}
-        {% if field.help_text %}
-          <small style="color: grey">{{ field.help_text }}</small>
-        {% endif %}
-        {% for error in field.errors %}
-          <p style="color: red">{{ error }}</p>
-        {% endfor %}
-      </div>
-    {% endfor %}
-  <div class="w3-row">
-  {% for prot in form.protections %}
-    <div class="w3-card w3-col s12 m3">
-      <h1>{{prot.name}}</h1>
-    {% for field in prot %}
-      <div>
-        {{ field.label_tag }}<br>
-        {{ field }}
+      <div class="">
+        <div class="w3-cell w3-padding">
+          {{ field.label_tag }}</br>
+          {{ field }}
+        </div>
+        <div class="w3-cell w3-padding">
         {% if field.help_text %}
           <small style="color: grey">{{ field.help_text|safe }}</small>
         {% endif %}
+        </div>
+      </div>
+      <div class="">
         {% for error in field.errors %}
           <p style="color: red">{{ error|safe }}</p>
         {% endfor %}
       </div>
     {% endfor %}
+  <div class="w3-row">
+  {% for prot in form.protections %}
+      <div class="w3-card w3-col s12 m3">
+        <h1>{{prot.name}}</h1>
+        {% for field in prot %}
+        <div class="">
+          <div class="w3-cell w3-padding">
+            {{ field.label_tag }}</br>
+            {{ field }}
+          </div>
+          <div class="w3-cell w3-padding">
+          {% if field.help_text %}
+            <small style="color: grey">{{ field.help_text|safe }}</small>
+          {% endif %}
+          </div>
+        </div>
+        <div class="">
+          {% for error in field.errors %}
+            <p style="color: red">{{ error|safe }}</p>
+          {% endfor %}
+        </div>
+      {% endfor %}
     </div>
   {% endfor %}
   </div>
-  <br/>
-  <button>Create Usercomponent</button>
+  <button class="w3-button w3-grey">{% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}</button>
   </form>
 {% endblock %}
