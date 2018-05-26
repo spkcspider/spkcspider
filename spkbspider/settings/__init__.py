@@ -13,7 +13,9 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)
 
 
 # Quick-start development settings - unsuitable for production
@@ -110,18 +112,18 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-LOGIN_URL="auth:login"
-LOGIN_REDIRECT_URL="auth:profile"
-LOGOUT_REDIRECT_URL="home"
+LOGIN_URL = "auth:login"
+LOGIN_REDIRECT_URL = "auth:profile"
+LOGOUT_REDIRECT_URL = "home"
 
 AUTH_USER_MODEL = 'spideraccounts.SpiderUser'
 KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
 
-#COMPONENT_DELETION_PERIOD
-#CONTENT_DELETION_PERIOD
-#DEFAULT_DELETION_PERIOD
+# COMPONENT_DELETION_PERIOD
+# CONTENT_DELETION_PERIOD
+# DEFAULT_DELETION_PERIOD
 
 # how many user components per page
 COMPONENTS_PER_PAGE = 25

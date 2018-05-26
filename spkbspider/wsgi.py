@@ -16,7 +16,10 @@ if BASE_DIR not in sys.path:
 from django.core.wsgi import get_wsgi_application  # noqa: E402
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "spkbspider.settings.debug")
-if "SPIDER_SILENCE" not in os.environ:
+if not os.environ.get(
+    "SPIDER_SILENCE",
+    "django.core.management" in sys.modules  # is loaded by manage.py
+):
     print("USE SETTINGS:", os.environ["DJANGO_SETTINGS_MODULE"])
 
 application = get_wsgi_application()

@@ -1,14 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 install_requirements = [
     "django>=2",
-    #"swapper",
     "jsonfield",
-
-    #"pillow",
 ]
 
 debug_requirements = [
@@ -17,7 +14,7 @@ debug_requirements = [
     "django-extensions",
 ]
 
-#install_requirements += debug_requirements
+# install_requirements += debug_requirements
 
 
 VERSIONING = {
@@ -37,10 +34,12 @@ setup(name='spkbspider',
       use_scm_version=VERSIONING,
       setup_requires=['setuptools_scm'],
       data_files=[('spkbspider', ['LICENSE'])],
-      packages=["spkbspider", "spkbspider.apps.spider", "spkbspider.apps.spideraccounts", "spkbspider.apps.spidertags", "spkbspider.apps.spiderkeys"],
+      packages=[
+        "spkbspider", "spkbspider.apps.spider",
+        "spkbspider.apps.spideraccounts", "spkbspider.apps.spidertags",
+        "spkbspider.apps.spiderkeys"
+      ],
       package_data={
-        '': ['templates/**.*'],
-        '': ['static/**.*'],
+        '': ['templates/**.*', 'static/**.*'],
       },
-      #ext_modules=distributions,
       test_suite="tests")

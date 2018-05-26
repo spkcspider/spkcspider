@@ -1,4 +1,4 @@
-from spkbspider.settings import *
+from spkbspider.settings import *  # noqa: F403
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
