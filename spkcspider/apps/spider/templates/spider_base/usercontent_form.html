@@ -1,6 +1,14 @@
 {% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 
+{% block title %}{% if object %}
+  {% blocktrans trimmed %}
+    Create User Content of type: <em></em>
+  {% endblocktrans %}
+{% else %}{% blocktrans trimmed with type=object.content_type.name id=object.id %}
+  Update User Content: <em>{{type}}-{{id}}</em>
+{% endblocktrans %}{% endif %}{% endblock %}
+
 {% block context_actions %}
 {{block.super}}
 {% endblock context_actions %}

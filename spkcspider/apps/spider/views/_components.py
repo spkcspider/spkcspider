@@ -66,7 +66,7 @@ class ComponentIndex(UCTestMixin, ListView):
 
 class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     model = UserComponent
-    permission_required = 'spiderucs.add_usercomponent'
+    permission_required = 'spider_base.add_usercomponent'
     form_class = UserComponentForm
 
     def get_context_data(self, **kwargs):

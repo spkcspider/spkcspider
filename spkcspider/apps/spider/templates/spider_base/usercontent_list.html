@@ -1,5 +1,8 @@
 {% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
+{% block title %}{% blocktrans trimmed with name=uc.name %}
+    Content List of {{name}}
+  {% endblocktrans %}{% endblock %}
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
 
@@ -14,9 +17,13 @@
       {% endblocktrans %}
     </h1>
   </div>
-  <details class="w3-padding w3-green" style="margin-bottom:30px">
-    <summary class="w3-button w3-light-grey">{% trans 'Add new content' %}</summary>
-    <div class="w3-padding">
+  <details class="" style="margin-bottom:30px">
+    <summary class="w3-btn w3-grey">
+      <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
+      {% trans 'Add new content' %}
+      <i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
+    </summary>
+    <div class="w3-padding w3-green">
       {% for content in content_types %}
         <div class="w3-card w3-yellow" style="margin-top: 10px">
           <div class="w3-cell" style="padding-left: 40px">

@@ -100,7 +100,7 @@ class ContentIndex(UCTestMixin, ListView):
 
 class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
     model = UserContent
-    permission_required = 'spiderucs.add_usercontent'
+    permission_required = 'spider_base.add_usercontent'
 
     def test_func(self):
         # give user and staff the ability to add Content

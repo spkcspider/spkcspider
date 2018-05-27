@@ -1,20 +1,22 @@
 {% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
-{% block title %}
-{% if component_user %}
-  {% blocktrans trimmed %}
-    Component List of {{component_user}}
+{% block title %}{% if component_user %}
+  {% blocktrans trimmed with name=component_user %}
+    Component List of {{name}}
   {% endblocktrans %}
-{% else %}
-{% endif %}
-{% endblock %}
+{% else %}{% blocktrans trimmed %}
+  Component List
+{% endblocktrans %}{% endif %}{% endblock %}
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
 
 {% block content %}
   <div>
     {% if request.user.is_authenticated %}
-      <a class="w3-right" href="{% url 'spider_base:ucomponent-create' %}">{% trans 'Add New Component' %}</a>
+      <a class="w3-right" href="{% url 'spider_base:ucomponent-create' %}">
+        <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
+        {% trans 'Add New Component' %}
+      </a>
     {% endif %}
     <h1 class="w3-center">
       {% trans "User Components" %}
@@ -27,9 +29,9 @@
         {% if not component_user %}{{uc.user}} - {%endif%}{{ uc }}
       </div>
       <div class="w3-cell" style="padding-left: 40px">
-        <a class="w3-button w3-blue" href="{% url 'spiderucs:ucontent-list' name=uc.name %}">{% trans "List" %}</a>
+        <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-list' name=uc.name %}">{% trans "List" %}</a>
         {% if uc.user == request.user %}
-          <a class="w3-button w3-blue" href="{% url 'spiderucs:ucomponent-update' name=uc.name %}">{% trans "Edit" %}</a>
+          <a class="w3-button w3-blue" href="{% url 'spider_base:ucomponent-update' name=uc.name %}">{% trans "Edit" %}</a>
         {% endif %}
     </div>
     </div>
