@@ -19,7 +19,7 @@ from django.utils import timezone
 from ._core import UserTestMixin, UCTestMixin
 from ..forms import UserComponentForm
 from ..contents import installed_contents
-from ..models import UserComponent, Protection
+from ..models import UserComponent
 
 
 class ComponentAllIndex(ListView):
