@@ -9,13 +9,20 @@ __all__ = ["add_content", "installed_contents", "BaseContent"]
 installed_contents = {}
 
 
-def add_content(klass):
-    if klass._meta.model_name in installed_contents:
-        raise Exception("Duplicate content name")
-    if klass._meta.model_name in getattr(settings, "BLACKLISTED_CONTENTS", {}):
+class add_content(object):
+    def __init__(self, name=None):
+        self.name = name
+
+    def __call__(self, klass):
+        name = self.name
+        if not name:
+            name = klass._meta.model_name
+        if name in installed_contents:
+            raise Exception("Duplicate content name")
+        if name in getattr(settings, "BLACKLISTED_CONTENTS", {}):
+            return klass
+        installed_contents[name] = klass
         return klass
-    installed_contents[klass._meta.model_name] = klass
-    return klass
 
 
 class BaseContent(models.Model):

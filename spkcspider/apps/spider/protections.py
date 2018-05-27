@@ -12,6 +12,7 @@ import enum
 
 from django.conf import settings
 from django import forms
+from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 installed_protections = {}
@@ -91,35 +92,39 @@ class BaseProtection(forms.Form):
 class AllowProtection(BaseProtection):
     name = "allow"
     ptype = ProtectionType.access_control.value
+    passes = forms.IntegerField(
+        initial=None, required=False,
+        help_text="How many protection passes are required?"
+    )
 
     @classmethod
-    def auth(cls, obj, **_kwargs):
-        if obj and len(obj.usercomponent.assigned.filter(active=True)) > 1:
-            return False
+    def auth(cls, **_kwargs):
         return True
 
     def __str__(self):
         return _("Allow")
 
 
-# def friend_query():
-#    return get_user_model().objects.filter(active=True)
+def friend_query():
+    return get_user_model().objects.filter(active=True)
+
 
 # only friends have access
-# @add_protection
-# class FriendProtection(BaseProtection):
-#    name = "friends"
-#    users = forms.ModelMultipleChoiceField(queryset=friend_query())
-#    ptype = ProtectionType.access_control
-#    @classmethod
-#    def auth_test(cls, request, data, **kwargs):
-#        if request.user.id in data["users"]:
-#            return True
-#        else:
-#            return False
-#
-#    def __str__(self):
-#        return _("Friends")
+@add_protection
+class FriendProtection(BaseProtection):
+    name = "friends"
+    ptype = ProtectionType.access_control.value
+    #users = forms.ModelMultipleChoiceField(queryset=friend_query())
+
+    @classmethod
+    def auth(cls, request, obj, **kwargs):
+        if request.user.id in obj.data["users"]:
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return _("Friends")
 
 
 # @add_protection

@@ -72,13 +72,24 @@ class UserComponent(models.Model):
     def auth(self, request, ptype=ProtectionType.access_control.value,
              **kwargs):
         ret = []
-        query = self.assigned.filter(ptype__contains=ptype, active=True)
+        query = self.protected_by.filter(ptype__contains=ptype, active=True)
         if "protection_name" in request.POST:
             query = query.filter(code=request.POST["protection_name"])
-        for p in query.filter(active=True):
+        try:
+            # no matter if <= 0, check is enough
+            required_passes = min(
+                len(query),
+                query.get(protection__code="allow").data.get("passes", 1)
+            )
+        except models.ObjectDoesNotExist:
+            required_passes = 1
+        for p in query:
             result = p.auth(request=request, **kwargs)
             if result is True:
-                return True
+                required_passes -= 1
+                # don't require lower limit this way
+                if required_passes <= 0:
+                    return True
             if result is not False:  # False will be not rendered
                 ret.append(ProtectionResult(result, p))
         return ret
@@ -200,21 +211,28 @@ class Protection(models.Model):
 
     @sensitive_variables("kwargs")
     def auth(self, request, **kwargs):
+        if not self.active:
+            return False
         return installed_protections[self.code].auth(
             obj=None, request=request, **kwargs
         )
 
     @classmethod
-    def authall(self, request,
+    def authall(self, request, required_passes=1,
                 ptype=ProtectionType.authentication.value, **kwargs):
         ret = []
-        query = self.filter(ptype__contains=ptype, active=True)
+        # allow is here invalid, no matter what ptype
+        query = self.filter(ptype__contains=ptype).exclude(code="allow")
         if "protection_name" in request.POST:
             query = query.filter(code=request.POST["protection_name"])
+        required_passes = min(len(query), required_passes)
         for p in query:
             result = p.auth(request=request, **kwargs.copy())
             if result is True:
-                return True
+                required_passes -= 1
+                # don't require lower limit this way
+                if required_passes <= 0:
+                    return True
             if result is not False:  # False will be not rendered
                 ret.append(ProtectionResult(result, p))
         return ret
@@ -275,7 +293,7 @@ class AssignedProtection(models.Model):
 
     @sensitive_variables("kwargs")
     def auth(self, **kwargs):
-        if not self.active:
+        if not self.active:  # never ever allow authentication if not active
             return False
         return installed_protections[self.protection.code].auth(
             obj=self, **kwargs

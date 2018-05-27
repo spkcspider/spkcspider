@@ -28,7 +28,7 @@
     {% block layout %}
       {% block headerbar %}
       <header class="w3-bar w3-container w3-topnav w3-black">
-        <a class="w3-bar-item w3-button" href="{% url 'home' %}">{% trans 'Home' %}</a>
+        <a class="w3-bar-item w3-button" href="{% url 'home' %}"><i class="fa fa-home" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Home' %}</a>
         {% url 'auth:login' as loginpath %}
         {% if request.user.is_authenticated %}
           <div class="w3-dropdown-hover w3-dropdown-click">

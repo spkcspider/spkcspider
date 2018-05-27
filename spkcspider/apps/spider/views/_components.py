@@ -25,16 +25,19 @@ from ..models import UserComponent, Protection
 class ComponentAllIndex(ListView):
     model = UserComponent
     is_home = False
-    base_query = ~models.Q(name="index")
+    _base_query = ~models.Q(name="index") | models.Q(protections__code="allow")
+    _base_query2 = models.Q(len_prot=1)
 
     def get_queryset(self):
-        p = get_object_or_404(Protection, code="allow")
-        q = self.base_query & models.Q(protections=p)
+        q = self._base_query
+        q2 = self._base_query2
         if self.request.user.is_authenticated:
-            q |= models.Q(user=self.request.user)
+            q2 |= models.Q(user=self.request.user)
         if "search" in self.request.GET:
             q &= models.Q(name__icontains=self.request.GET["search"])
-        return self.model.objects.filter(q)
+        return self.model.objects.filter(q).annotate(
+            len_prot=models.Count('protections')
+        ).filter(q2)
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
