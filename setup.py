@@ -23,7 +23,7 @@ VERSIONING = {
     'local_scheme': 'dirty-tag',
 }
 
-setup(name='spkbspider',
+setup(name='spkcspider',
       license="MIT",
       zip_safe=False,
       platforms='Platform Independent',
@@ -33,11 +33,11 @@ setup(name='spkbspider',
       },
       use_scm_version=VERSIONING,
       setup_requires=['setuptools_scm'],
-      data_files=[('spkbspider', ['LICENSE'])],
+      data_files=[('spkcspider', ['LICENSE'])],
       packages=[
-        "spkbspider", "spkbspider.apps.spider",
-        "spkbspider.apps.spideraccounts", "spkbspider.apps.spidertags",
-        "spkbspider.apps.spiderkeys"
+        "spkcspider", "spkcspider.apps.spider",
+        "spkcspider.apps.spideraccounts", "spkcspider.apps.spidertags",
+        "spkcspider.apps.spiderkeys"
       ],
       package_data={
         '': ['templates/**.*', 'static/**.*'],

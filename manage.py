@@ -9,7 +9,7 @@ if __name__ == "__main__":
     if BASE_DIR not in sys.path:
         sys.path.append(BASE_DIR)
     os.environ.setdefault(
-        "DJANGO_SETTINGS_MODULE", "spkbspider.settings.debug"
+        "DJANGO_SETTINGS_MODULE", "spkcspider.settings.debug"
     )
     if not os.environ.get(
         "SPIDER_SILENCE",

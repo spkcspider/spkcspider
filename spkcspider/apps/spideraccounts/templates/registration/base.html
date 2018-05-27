@@ -1,0 +1,15 @@
+{% extends "spkcspider/base.html" %}
+
+{% block robots %}none{% endblock %}
+{% block base_style %}
+{{block.super}}
+{% endblock %}
+
+{% block main_classes %}{{block.super}} w3-content w3-card-4 w3-pale-red{% endblock %}
+
+
+
+{% block content %}
+  {% include "spkcspider/form_errors.html" %}
+  {{block.super}}
+{% endblock %}

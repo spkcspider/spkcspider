@@ -1,0 +1,88 @@
+{% load i18n %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:"en-US" }}">
+  <head>
+    <title>{% block title %}{% endblock %}</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="{% block viewport %}width=device-width, initial-scale=1.0{% endblock %}">
+    <meta name="description" content="{% block description %}{% endblock %}" />
+    <meta name="robots" content="{% block robots %}all{% endblock %}" />
+
+    {% block favicon %}
+    <link rel="shortcut icon" type="image/png" href="{% static 'spkcspider/favicon.png' %}" />
+    {% endblock %}
+    {# CSS for all pages #}
+    {% block base_styles %}{% endblock %}
+    {# CSS for page #}
+    {% block styles %}
+    <link rel="stylesheet" href="{% static 'w3.css' %}">
+    <link rel="stylesheet" href="{% static 'material-icons/material-icons.css' %}">
+    {% endblock %}
+    {# form scripts and foo #}
+    {% block extrahead %}{% endblock %}
+  </head>
+
+  <body class="{% block body_class %}{% endblock %}">
+    {# Deco content, e.g.base.html  #}
+    {% block layout %}
+      {% block headerbar %}
+      <header class="w3-bar w3-container w3-topnav w3-black">
+        <a class="w3-bar-item w3-button" href="{% url 'home' %}">{% trans 'Home' %}</a>
+        {% url 'auth:login' as loginpath %}
+        {% if request.user.is_authenticated %}
+          <div class="w3-dropdown-hover w3-dropdown-click">
+            <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button">Actions</button>
+            <div class="w3-dropdown-content w3-bar-block w3-border" id="context_actions_list">
+              {% block context_actions %}
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'spiderucs:ucomponent-create' %}">{% trans 'Add Component' %}</a>
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'spiderucs:ucomponent-list' %}">{% trans 'List Own' %}</a>
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'spiderucs:ucomponent-listall' %}">{% trans 'List All' %}</a>
+             {% endblock context_actions %}
+            </div>
+          </div>
+          <div class="w3-right w3-dropdown-hover w3-dropdown-click">
+            <button onclick='document.getElementById("user_actions_list").classList.toggle("w3-show")' class="w3-button w3-black"><small>{{request.user.username}}</small></button>
+            <div class="w3-dropdown-content w3-bar-block" style="right:0px" id="user_actions_list">
+              {% block user_actions %}
+              <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:profile' %}">{% trans 'Profile' %}</a>
+              <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:logout'%}">{% trans 'Logout' %}</a>
+              {% endblock user_actions %}
+            </div>
+          </div>
+        {% elif request.path != loginpath %}
+          <a class="w3-bar-item w3-button w3-right" href="{% url   'auth:signup'%}?next={{request.path|urlencode}}">{% trans 'Register' %}</a>
+          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">{% trans 'Login' %}</a>
+        {% endif %}
+      </header>
+      {% endblock headerbar %}
+      <main class="{% block main_classes %}w3-main w3-padding{% endblock %}" id="content-main" style="margin-top: 20px">
+      {% block messages %}
+          {% if messages %}
+          <ul class="messagelist">{% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+          {% endfor %}</ul>
+          {% endif %}
+      {% endblock messages %}
+      {# Main content  #}
+      {% block content %}{% endblock %}
+    </main>
+    {% endblock %}
+
+    {# Main scripts #}
+    {% block base_scripts %}{% endblock %}
+
+    {# Scripts #}
+    {% block scripts %}{% endblock %}
+
+    {# e.g. modals #}
+    {% block outercontent %}{% endblock %}
+
+    {# Block for body onload functions #}
+    <script type="text/javascript">
+      $(function() {
+          {% block onbodyload %}{% endblock %}
+      });
+    </script>
+  </body>
+</html>
