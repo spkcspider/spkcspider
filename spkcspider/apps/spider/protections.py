@@ -1,6 +1,6 @@
 """
 installed_protections, add_protection
-namespace: spiderucs
+namespace: spider_base
 
 """
 

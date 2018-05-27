@@ -1,6 +1,6 @@
 """
 User Components, (Base)Contents and Protections
-namespace: spiderucs
+namespace: spider_base
 
 """
 
@@ -55,7 +55,7 @@ class UserComponent(models.Model):
     # should be used for retrieving active protections, related_name
     assigned = None
     protections = models.ManyToManyField(
-        "spiderucs.Protection", through="spiderucs.AssignedProtection"
+        "spider_base.Protection", through="spider_base.AssignedProtection"
     )
 
     class Meta:
@@ -82,7 +82,7 @@ class UserComponent(models.Model):
         return ret
 
     def get_absolute_url(self):
-        return reverse("spiderucs:ucontent-list", kwargs={"name": self.name})
+        return reverse("spider_base:ucontent-list", kwargs={"name": self.name})
 
     @property
     def is_protected(self):
@@ -171,7 +171,7 @@ class UserContent(models.Model):
         return info[pstart:pend]
 
     def get_absolute_url(self):
-        return reverse("spiderucs:ucontent-view", kwargs={"id": self.id})
+        return reverse("spider_base:ucontent-view", kwargs={"id": self.id})
 
 
 class ProtectionManager(models.Manager):
