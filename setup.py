@@ -36,8 +36,8 @@ setup(name='spkcspider',
       data_files=[('spkcspider', ['LICENSE'])],
       packages=[
         "spkcspider", "spkcspider.apps.spider",
-        "spkcspider.apps.spideraccounts", "spkcspider.apps.spidertags",
-        "spkcspider.apps.spiderkeys"
+        "spkcspider.apps.spider_accounts", "spkcspider.apps.spider_tags",
+        "spkcspider.apps.spider_keys"
       ],
       package_data={
         '': ['templates/**.*', 'static/**'],

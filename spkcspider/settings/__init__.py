@@ -28,7 +28,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'spkcspider.apps.spideraccounts',
+    'spkcspider.apps.spider_accounts',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -116,7 +116,7 @@ LOGIN_URL = "auth:login"
 LOGIN_REDIRECT_URL = "auth:profile"
 LOGOUT_REDIRECT_URL = "home"
 
-AUTH_USER_MODEL = 'spideraccounts.SpiderUser'
+AUTH_USER_MODEL = 'spider_accounts.SpiderUser'
 KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128

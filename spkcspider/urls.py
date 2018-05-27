@@ -31,7 +31,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path(
         'accounts/',
-        include('spkcspider.apps.spideraccounts.urls', namespace="auth")
+        include('spkcspider.apps.spider_accounts.urls', namespace="auth")
     ),
     path(
         'spider/',
