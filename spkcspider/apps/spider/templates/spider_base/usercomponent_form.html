@@ -17,7 +17,7 @@
 
 {% block content %}
   <div>
-    <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'back' %}</a>
+    <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'index' %}</a>
     {% if object and object.name != "index" %}
       <span class="w3-right"><a href="{% url 'spider_base:ucomponent-delete' name=object.name %}">{% trans 'delete' %}</a>?</span>
     {% endif %}
@@ -52,9 +52,9 @@
         {% endfor %}
       </div>
     {% endfor %}
-    <div class="w3-row">
+    <div class="w3-row w3-margin">
     {% for prot in form.protections %}
-      <div class="w3-card w3-col s12 m3">
+      <div class="w3-white w3-card w3-col s12 m3">
         <h1 class="w3-center">{{prot.name}}</h1>
         {% for field in prot %}
         <div class="">
@@ -75,6 +75,8 @@
         </div>
         {% endfor %}
       </div>
+    {% empty%}
+      <div class="w3-orange w3-padding"> No protections: create component first </div>
     {% endfor %}
     </div>
     <button class="w3-button w3-grey">

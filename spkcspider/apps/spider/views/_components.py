@@ -13,20 +13,23 @@ from django.shortcuts import get_object_or_404
 from django.db import models
 from django.http import HttpResponseRedirect
 from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
 
 from ._core import UserTestMixin, UCTestMixin
 from ..forms import UserComponentForm
 from ..contents import installed_contents
-from ..models import UserComponent
+from ..models import UserComponent, Protection
 
 
 class ComponentAllIndex(ListView):
     model = UserComponent
     is_home = False
+    base_query = ~models.Q(name="index")
 
     def get_queryset(self):
-        q = models.Q(protected_by__isnull=True) & ~models.Q(name="index")
+        p = get_object_or_404(Protection, code="allow")
+        q = self.base_query & models.Q(protections=p)
         if self.request.user.is_authenticated:
             q |= models.Q(user=self.request.user)
         if "search" in self.request.GET:
@@ -69,6 +72,11 @@ class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     permission_required = 'spider_base.add_usercomponent'
     form_class = UserComponentForm
 
+    def get_success_url(self):
+        return reverse(
+            "spider_base:ucomponent-update", kwargs={"name": self.object.name}
+        )
+
     def get_context_data(self, **kwargs):
         kwargs["available"] = installed_contents.keys()
         return super().get_context_data(**kwargs)
@@ -88,12 +96,16 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         return super().get_context_data(**kwargs)
 
     def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(
-                queryset, user=self.get_user(), name=self.kwargs["name"]
-            )
+        if not queryset:
+            queryset = self.get_queryset()
         return get_object_or_404(
-            self.get_queryset(), user=self.get_user(), name=self.kwargs["name"]
+            queryset, user=self.get_user(), name=self.kwargs["name"]
+        )
+
+    def form_valid(self, form):
+        self.object = form.save()
+        return self.render_to_response(
+            self.get_context_data(form=self.get_form())
         )
 
 

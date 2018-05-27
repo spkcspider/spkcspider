@@ -138,7 +138,7 @@ class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
         except Exception as exc:
             content.delete()
             raise exc
-        return HttpResponseRedirect(self.get_success_url())
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class ContentUpdate(UCTestMixin, UpdateView):
@@ -193,7 +193,8 @@ class ContentUpdate(UCTestMixin, UpdateView):
         if info != self.object.info:
             self.object.info = info
             self.object.save(update_fields=["info"])
-        return HttpResponseRedirect(self.get_success_url())
+
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class ContentResetRemove(UCTestMixin, UpdateView):

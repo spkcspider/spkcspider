@@ -5,7 +5,7 @@ from .protections import ProtectionType
 
 def set_generic_protections(request):
     request.protections = Protection.authall(
-        request, scope="auth", ptype=ProtectionType.authentication
+        request, scope="auth", ptype=ProtectionType.authentication.value
     )
 
 

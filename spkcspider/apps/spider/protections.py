@@ -53,11 +53,11 @@ class BaseProtection(forms.Form):
         use auth to validate: in this case:
             template_name, render, form variable are used
     """
-    active = forms.BooleanField(required=True)
+    active = forms.BooleanField(required=False)
 
     # ptype= 0: access control, 1: authentication, 2: recovery
     # 1, 2 require render
-    ptype = ProtectionType.access_control
+    ptype = ProtectionType.access_control.value
 
     template_name = None
     form = None
@@ -66,16 +66,20 @@ class BaseProtection(forms.Form):
 
     # auto populated, instance
     protection = None
-    assigned = None
+    instance = None
 
-    def __init__(self, *args, assigned=None, **kwargs):
-        self.protection = kwargs.pop("protection")
-        initial = None
+    # initial values
+    initial = {}
+
+    def __init__(self, protection, assigned=None, **kwargs):
+        self.protection = protection
+        initial = self.initial.copy()
         if assigned:
-            initial = assigned.filter(protection=self.protection).first()
-        if initial:
-            initial = initial.protectiondata
-        super().__init__(*args, initial=initial, **kwargs)
+            self.instance = assigned.filter(protection=self.protection).first()
+            # does assigned protection exist?
+            if self.instance:
+                initial["active"] = self.instance.active
+        super().__init__(initial=initial, **kwargs)
 
     @classmethod
     def auth(cls, **kwargs):
@@ -86,7 +90,7 @@ class BaseProtection(forms.Form):
 @add_protection
 class AllowProtection(BaseProtection):
     name = "allow"
-    ptype = ProtectionType.access_control
+    ptype = ProtectionType.access_control.value
 
     @classmethod
     def auth(cls, **_kwargs):
@@ -119,7 +123,8 @@ class AllowProtection(BaseProtection):
 # @add_protection
 class PasswordProtection(BaseProtection):
     name = "pw"
-    ptype = ProtectionType.access_control+ProtectionType.authentication
+    ptype = ProtectionType.access_control.value
+    ptype += ProtectionType.authentication.value
 
     @classmethod
     def auth(cls, request, data, **kwargs):
