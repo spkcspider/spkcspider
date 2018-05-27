@@ -14,6 +14,9 @@ saved in a spider component which you provide the online shop. This has followin
 * Signing of Data possible.
 
 
+# Help Wanted
+
+I am currently just a single developer. I could really use some help and together we will finish earlier
 
 # Installation
 
