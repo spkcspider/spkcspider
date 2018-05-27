@@ -8,7 +8,7 @@ from .views import (
     ContentView, ContentIndex, ContentAdd, ContentUpdate, ContentRemove
 )
 
-app_name = "spiderucs"
+app_name = "spider_base"
 
 # uc = UserComponent
 urlpatterns = [

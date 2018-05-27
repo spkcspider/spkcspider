@@ -1,4 +1,4 @@
-{% extends "spiderucs/base.html" %}
+{% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 {% block title %}{% blocktrans trimmed with name=object.name %}
   Delete: {{name}}
@@ -10,13 +10,13 @@
     {% endblocktrans %}
   </h1>
   {% if not remaining or remaining == 0 %}
-  <form method="delete" action="{% url 'spiderucs:ucomponent-delete' name=object.name %}">
+  <form method="delete" action="{% url 'spider_base:ucomponent-delete' name=object.name %}">
     <input type="submit" value="Delete" />
   </form>
   {% endif %}
 
   {% if remaining %}
-  <form method="post" action="{% url 'spiderucs:ucomponent-delete' name=object.name %}">
+  <form method="post" action="{% url 'spider_base:ucomponent-delete' name=object.name %}">
     <input type="submit" value="Reset" />
   </form>
   {% endif %}

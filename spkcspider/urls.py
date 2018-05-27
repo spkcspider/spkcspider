@@ -20,10 +20,10 @@ from django.conf import settings
 from spkcspider.apps.spider.views import ComponentAllIndex
 
 favicon_view = RedirectView.as_view(
-    url='{}spkcspider/favicon.png'.format(settings.STATIC_URL), permanent=True
+    url='{}spider_base/favicon.png'.format(settings.STATIC_URL), permanent=True
 )
 robots_view = RedirectView.as_view(
-    url='{}spkcspider/robots.txt'.format(settings.STATIC_URL), permanent=True
+    url='{}spider_base/robots.txt'.format(settings.STATIC_URL), permanent=True
 )
 
 
@@ -35,7 +35,7 @@ urlpatterns = [
     ),
     path(
         'spider/',
-        include('spkcspider.apps.spider.urls', namespace="spiderucs")
+        include('spkcspider.apps.spider.urls', namespace="spider_base")
     ),
 ]
 
@@ -52,7 +52,7 @@ urlpatterns += [
     path(
         '',
         ComponentAllIndex.as_view(
-            is_home=True, template_name="spkcspider/home.html"
+            is_home=True, template_name="spider_base/home.html"
         ),
         name="home"
     ),

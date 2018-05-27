@@ -1,4 +1,4 @@
-{% extends "spiderucs/base.html" %}
+{% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 {% block title %}
 {% if component_user %}
@@ -14,7 +14,7 @@
 {% block content %}
   <div>
     {% if request.user.is_authenticated %}
-      <a class="w3-right" href="{% url 'spiderucs:ucomponent-create' %}">{% trans 'Add New Component' %}</a>
+      <a class="w3-right" href="{% url 'spider_base:ucomponent-create' %}">{% trans 'Add New Component' %}</a>
     {% endif %}
     <h1 class="w3-center">
       {% trans "User Components" %}

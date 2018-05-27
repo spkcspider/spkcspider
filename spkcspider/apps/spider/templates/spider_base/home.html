@@ -1,4 +1,4 @@
-{% extends "spkcspider/base.html" %}
+{% extends "spkcspider/ucs_base.html" %}
 {% load i18n %}
 
 {% block content %}
@@ -10,9 +10,9 @@
         {% if not component_user %}{{uc.user}} - {%endif%}{{ uc }}
       </div>
       <div class="w3-cell" style="padding-left: 40px">
-        <a class="w3-button w3-blue" href="{% url 'spiderucs:ucontent-list' name=uc.name %}">{% trans "List" %}</a>
+        <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-list' name=uc.name %}">{% trans "List" %}</a>
         {% if uc.user == request.user %}
-          <a class="w3-button w3-blue" href="{% url 'spiderucs:ucomponent-update' name=uc.name %}">{% trans "Edit" %}</a>
+          <a class="w3-button w3-blue" href="{% url 'spider_base:ucomponent-update' name=uc.name %}">{% trans "Edit" %}</a>
         {% endif %}
     </div>
     </div>

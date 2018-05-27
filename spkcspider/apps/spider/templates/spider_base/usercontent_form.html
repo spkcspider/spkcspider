@@ -1,4 +1,4 @@
-{% extends "spiderucs/base.html" %}
+{% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 
 {% block context_actions %}
@@ -8,9 +8,9 @@
 
 {% block content %}
   <div>
-    <a class="w3-left" href="{% url 'spiderucs:ucontent-list' name=uc.name %}">{% trans 'back' %}</a>
+    <a class="w3-left" href="{% url 'spider_base:ucontent-list' name=uc.name %}">{% trans 'back' %}</a>
     {% if object and object.name != "index" %}
-      <span class="w3-right"><a href="{% url 'spiderucs:ucontent-delete' name=object.id %}">{% trans 'delete' %}</a>?</span>
+      <span class="w3-right"><a href="{% url 'spider_base:ucontent-delete' name=object.id %}">{% trans 'delete' %}</a>?</span>
     {% endif %}
     <h1 class="w3-center">
       {% if form.instance.id %}

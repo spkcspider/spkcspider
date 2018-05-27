@@ -1,4 +1,4 @@
-{% extends "spiderucs/base.html" %}
+{% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
@@ -6,7 +6,7 @@
 {% block content %}
   <div>
     {# if request.user == uc.user #}
-      <a class="w3-right" href="{% url 'spiderucs:ucomponent-update' name=uc.name %}">Update</a>
+      <a class="w3-right" href="{% url 'spider_base:ucomponent-update' name=uc.name %}">Update</a>
     {# endif #}
     <h1 class="w3-center">
       {% blocktrans trimmed with name=uc.name %}
@@ -21,7 +21,7 @@
         <div class="w3-card w3-yellow" style="margin-top: 10px">
           <div class="w3-cell" style="padding-left: 40px">
             {% if uc.user == request.user %}
-              <a class="w3-button w3-blue" href="{% url 'spiderucs:uconent-update' id=content.id %}">{% trans "Edit" %}</a>
+              <a class="w3-button w3-blue" href="{% url 'spider_base:uconent-update' id=content.id %}">{% trans "Edit" %}</a>
             {% endif %}
         </div>
         </div>
@@ -34,7 +34,7 @@
     <div class="w3-card w3-yellow" style="margin-top: 10px">
       <div class="w3-cell" style="padding-left: 40px">
         {% if uc.user == request.user %}
-          <a class="w3-button w3-blue" href="{% url 'spiderucs:uconent-update' id=content.id %}">{% trans "Edit" %}</a>
+          <a class="w3-button w3-blue" href="{% url 'spider_base:uconent-update' id=content.id %}">{% trans "Edit" %}</a>
         {% endif %}
     </div>
     </div>
