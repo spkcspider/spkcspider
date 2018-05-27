@@ -17,6 +17,7 @@
     {# CSS for page #}
     {% block styles %}
     <link rel="stylesheet" href="{% static 'w3.css' %}">
+    <link rel="stylesheet" href="{% static 'material-icons/material-icons.css' %}">
     {% endblock %}
     {# form scripts and foo #}
     {% block extrahead %}{% endblock %}
@@ -27,31 +28,31 @@
     {% block layout %}
       {% block headerbar %}
       <header class="w3-bar w3-container w3-topnav w3-black">
-        <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'home' %}">{% trans 'Home' %}</a>
+        <a class="w3-bar-item w3-button" href="{% url 'home' %}">{% trans 'Home' %}</a>
         {% url 'auth:login' as loginpath %}
         {% if request.user.is_authenticated %}
           <div class="w3-dropdown-hover w3-dropdown-click">
-            <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button w3-blue-grey">Actions</button>
+            <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button">Actions</button>
             <div class="w3-dropdown-content w3-bar-block w3-border" id="context_actions_list">
               {% block context_actions %}
-                <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'spiderucs:ucomponent-create' %}">{% trans 'Add Component' %}</a>
-                <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'spiderucs:ucomponent-list' %}">{% trans 'List Own' %}</a>
-                <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'spiderucs:ucomponent-listall' %}">{% trans 'List All' %}</a>
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'spiderucs:ucomponent-create' %}">{% trans 'Add Component' %}</a>
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'spiderucs:ucomponent-list' %}">{% trans 'List Own' %}</a>
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'spiderucs:ucomponent-listall' %}">{% trans 'List All' %}</a>
              {% endblock context_actions %}
             </div>
           </div>
           <div class="w3-right w3-dropdown-hover w3-dropdown-click">
-            <button onclick='document.getElementById("user_actions_list").classList.toggle("w3-show")' class="w3-button w3-blue-grey"><small>{{request.user.username}}</small></button>
+            <button onclick='document.getElementById("user_actions_list").classList.toggle("w3-show")' class="w3-button w3-black"><small>{{request.user.username}}</small></button>
             <div class="w3-dropdown-content w3-bar-block" style="right:0px" id="user_actions_list">
               {% block user_actions %}
-              <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'auth:profile' %}">{% trans 'Profile' %}</a>
-              <a class="w3-bar-item w3-button w3-blue-grey" href="{% url 'auth:logout'%}">{% trans 'Logout' %}</a>
+              <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:profile' %}">{% trans 'Profile' %}</a>
+              <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:logout'%}">{% trans 'Logout' %}</a>
               {% endblock user_actions %}
             </div>
           </div>
         {% elif request.path != loginpath %}
-          <a class="w3-bar-item w3-button w3-right w3-blue-grey" href="{% url   'auth:signup'%}?next={{request.path|urlencode}}">{% trans 'Register' %}</a>
-          <a class="w3-bar-item w3-button w3-right w3-blue-grey" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">{% trans 'Login' %}</a>
+          <a class="w3-bar-item w3-button w3-right" href="{% url   'auth:signup'%}?next={{request.path|urlencode}}">{% trans 'Register' %}</a>
+          <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">{% trans 'Login' %}</a>
         {% endif %}
       </header>
       {% endblock headerbar %}
