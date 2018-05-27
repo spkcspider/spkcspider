@@ -16,6 +16,7 @@ saved in a spider component which you provide the online shop. This has followin
 
 # Help Wanted
 
+The tool is not ready yet. An ugly prototype exists.
 I am currently just a single developer. I could really use some help and together we will finish earlier
 
 # Installation
