@@ -93,7 +93,9 @@ class AllowProtection(BaseProtection):
     ptype = ProtectionType.access_control.value
 
     @classmethod
-    def auth(cls, **_kwargs):
+    def auth(cls, obj, **_kwargs):
+        if obj and len(obj.usercomponent.assigned.filter(active=True)) > 1:
+            return False
         return True
 
     def __str__(self):

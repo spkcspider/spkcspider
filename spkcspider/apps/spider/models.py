@@ -75,7 +75,7 @@ class UserComponent(models.Model):
         query = self.assigned.filter(ptype__contains=ptype, active=True)
         if "protection_name" in request.POST:
             query = query.filter(code=request.POST["protection_name"])
-        for p in query:
+        for p in query.filter(active=True):
             result = p.auth(request=request, **kwargs)
             if result is True:
                 return True
@@ -275,6 +275,8 @@ class AssignedProtection(models.Model):
 
     @sensitive_variables("kwargs")
     def auth(self, **kwargs):
+        if not self.active:
+            return False
         return installed_protections[self.protection.code].auth(
             obj=self, **kwargs
         )
