@@ -40,6 +40,6 @@ setup(name='spkcspider',
         "spkcspider.apps.spiderkeys"
       ],
       package_data={
-        '': ['templates/**.*', 'static/**.*'],
+        '': ['templates/**.*', 'static/**'],
       },
       test_suite="tests")
