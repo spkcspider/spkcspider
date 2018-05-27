@@ -37,12 +37,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.flatpages',
-    'django_extensions',
     # 'django.contrib.sites',
     'spkcspider.apps.spider',
     # 'spkcspider.apps.spiderbrokers',
     # 'spkcspider.apps.spiderkeys',
 ]
+try:
+    import django_extensions  # noqa: F401
+except ImportError:
+    INSTALLED_APPS.append('django_extensions')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

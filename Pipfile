@@ -10,9 +10,9 @@ python_version = '3'
 
 django = '>=2'
 jsonfield = '*'
-django-extensions = '*'
 
 [dev-packages]
 
+django-extensions = '*'
 Werkzeug = '*'
 pyOpenSSL = '*'
