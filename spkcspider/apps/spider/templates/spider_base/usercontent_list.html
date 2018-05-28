@@ -37,17 +37,24 @@
       {% endfor %}
     </div>
   </details>
-  {% for content in object_list %}
-    <div class="w3-card w3-yellow" style="margin-top: 10px">
-      <div class="w3-cell" style="padding-left: 40px">
-        {% if uc.user == request.user %}
-          <a class="w3-button w3-blue" href="{% url 'spider_base:uconent-update' id=content.id %}">{% trans "Edit" %}</a>
-        {% endif %}
-    </div>
-    </div>
-  {% empty %}
-      {% trans 'No User Content available.' %}
-  {% endfor %}
+  <table class="w3-table w3-striped w3-bordered w3-hoverable w3-margin">
+    {% for content in object_list %}
+      <tr>
+        <td class="">
+          {{ content.content }}
+        </td>
+        <td>
+          {% if uc.user == request.user %}
+            <a class="w3-button w3-blue" href="{% url 'spider_base:uconent-update' id=content.id %}">
+              {% trans "Edit" %}
+            </a>
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td>{% trans 'No User Content available.' %}</td></tr>
+    {% endfor %}
+  </ul>
   <div class="page-manipulation w3-padding" style="margin-top:40px">
     <div class="w3-padding">
       <form class="w3-cell-row w3-black" style="max-width:400px" method="GET" action="">

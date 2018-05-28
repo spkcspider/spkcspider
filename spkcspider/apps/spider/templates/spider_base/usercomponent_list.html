@@ -21,23 +21,32 @@
     <h1 class="w3-center">
       {% trans "User Components" %}
     </h1>
-
   </div>
-  {% for uc in object_list %}
-    <div class="w3-card w3-yellow" style="margin-top: 10px">
-      <div class="w3-cell w3-padding">
-        {% if not component_user %}{{uc.user}} - {%endif%}{{ uc }}
-      </div>
-      <div class="w3-cell" style="padding-left: 40px">
-        <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-list' name=uc.name %}">{% trans "List" %}</a>
-        {% if uc.user == request.user %}
-          <a class="w3-button w3-blue" href="{% url 'spider_base:ucomponent-update' name=uc.name %}">{% trans "Edit" %}</a>
-        {% endif %}
-    </div>
-    </div>
-  {% empty %}
-      {% trans 'No User Components available.' %}
-  {% endfor %}
+  <div class="w3-margin">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable">
+      {% for uc in object_list %}
+        <tr>
+          <td class="">
+            {% if not component_user %}{{uc.user}} - {%endif%}{{ uc }}
+          </td>
+          <td class="w3-show-inline-block">
+            <div class="w3-bar w3-round-large w3-tiny w3-blue">
+              <a class="w3-hover-black w3-button w3-bar-item" href="{% url 'spider_base:ucontent-list' name=uc.name %}">
+                {% trans "List" %}
+              </a>
+              {% if uc.user == request.user %}
+                <a class="w3-hover-black w3-button w3-bar-item" href="{% url 'spider_base:ucomponent-update' name=uc.name %}">
+                  {% trans "Edit" %}
+                </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+          <tr><td>{% trans 'No User Components available.' %}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
   <div class="page-manipulation w3-padding" style="margin-top:40px">
     <div class="w3-padding">
       <form class="w3-cell-row w3-black" style="max-width:400px" method="GET" action="">
