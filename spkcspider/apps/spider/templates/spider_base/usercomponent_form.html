@@ -54,26 +54,28 @@
     {% endfor %}
     <div class="w3-row w3-margin">
     {% for prot in form.protections %}
-      <div class="w3-white w3-card w3-col s12 m3">
-        <h1 class="w3-center">{{prot.name}}</h1>
-        {% for field in prot %}
-        <div class="">
-          <div class="w3-cell w3-padding">
-            {{ field.label_tag }}</br>
-            {{ field }}
+      <div class="w3-col s12 l6 w3-padding">
+        <div class="w3-white w3-card w3-padding">
+          <h1 class="w3-center">{{prot.name}}</h1>
+          {% for field in prot %}
+          <div class="">
+            <div class="w3-cell w3-mobile w3-padding">
+              {{ field.label_tag }}</br>
+              {{ field }}
+            </div>
+            <div class="w3-cell w3-mobile w3-padding">
+            {% if field.help_text %}
+              <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+            {% endif %}
+            </div>
           </div>
-          <div class="w3-cell w3-padding">
-          {% if field.help_text %}
-            <small class="w3-text-grey">{{ field.help_text|safe }}</small>
-          {% endif %}
+          <div class="">
+            {% for error in field.errors %}
+              <p class="w3-text-red">{{ error|safe }}</p>
+            {% endfor %}
           </div>
-        </div>
-        <div class="">
-          {% for error in field.errors %}
-            <p class="w3-text-red">{{ error|safe }}</p>
           {% endfor %}
         </div>
-        {% endfor %}
       </div>
     {% empty%}
       <div class="w3-orange w3-padding"> No protections: create component first </div>

@@ -106,7 +106,7 @@ class AllowProtection(BaseProtection):
 
 
 def friend_query():
-    return get_user_model().objects.filter(active=True)
+    return get_user_model().objects.filter(is_active=True)
 
 
 # only friends have access
@@ -114,8 +114,11 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
-    #users = forms.ModelMultipleChoiceField(queryset=friend_query())
+    users = forms.ModelMultipleChoiceField(queryset=friend_query())
 
+    media = {
+        'js': 'admin/js/vendor/select2/select2.full.min.js'
+    }
     @classmethod
     def auth(cls, request, obj, **kwargs):
         if request.user.id in obj.data["users"]:
