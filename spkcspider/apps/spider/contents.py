@@ -1,12 +1,23 @@
+
+import enum
+
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 
-from .models import UserContent
-
-__all__ = ["add_content", "installed_contents", "BaseContent"]
+__all__ = (
+    "add_content", "installed_contents", "BaseContent", "UserContentType"
+)
 
 installed_contents = {}
+
+
+class UserContentType(str, enum.Enum):
+    # not only private (index)
+    public = "\x00"
+    # has a seperate update, scope=update
+    has_update = "\x01"
+    # receives: request, scope, password
 
 
 class add_content(object):
@@ -25,6 +36,23 @@ class add_content(object):
         return klass
 
 
+def initialize_protection_models():
+    from .models import UserContentVariant
+    for code, val in installed_contents.items():
+        ret = UserContentVariant.objects.get_or_create(
+            defaults={"ctype": val.ctype}, code=code
+        )[0]
+        if ret.ctype != val.ctype:
+            ret.ctype = val.ctype
+            ret.save()
+    temp = UserContentVariant.objects.exclude(
+        code__in=installed_contents.keys()
+    )
+    if temp.exists():
+        print("Invalid content, please update or remove them:",
+              [t.code for t in temp])
+
+
 class BaseContent(models.Model):
     # for setup
     form_class = None
@@ -36,7 +64,7 @@ class BaseContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # if created associated is None (will be set later)
     # use usercomponent in form instead
-    associated = GenericRelation(UserContent)
+    associated = GenericRelation("spider_base.UserContent")
 
     class Meta:
         abstract = True

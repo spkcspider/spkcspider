@@ -18,8 +18,8 @@ from django.conf import settings
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
-from ..contents import installed_contents
-from ..models import UserContent
+from ..contents import installed_contents, UserContentType
+from ..models import UserContent, UserContentVariant
 
 
 class ContentView(UCTestMixin, BaseDetailView):
@@ -59,7 +59,11 @@ class ContentIndex(UCTestMixin, ListView):
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.get_usercomponent()
         if kwargs["uc"].user == self.request.user:
-            kwargs["content_types"] = installed_contents.items()
+            kwargs["content_types"] = UserContentVariant.objects.all()
+            if kwargs["uc"].name != "index":
+                kwargs["content_types"] = kwargs["content_types"].filter(
+                    ctype__contains=UserContentType.public.value
+                )
         return super().get_context_data(**kwargs)
 
     def test_func(self):

@@ -16,7 +16,18 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
+
 installed_protections = {}
+
+
+class ProtectionType(str, enum.Enum):
+    # receives: request, scope
+    access_control = "\x00"
+    # receives: request, scope, password
+    authentication = "\x01"
+    # forget about recovery, every recovery method is authentication
+    # and will be misused this way
+    # The only real recovery is by staff and only if there is a secret
 
 
 def check_blacklisted(name):
@@ -53,16 +64,6 @@ def initialize_protection_models():
 
 
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
-
-
-class ProtectionType(bytes, enum.Enum):
-    # receives: request, scope
-    access_control = b"\x00"
-    # receives: request, scope, password
-    authentication = b"\x01"
-    # forget about recovery, every recovery method is authentication
-    # and will be misused this way
-    # The only real recovery is by staff and only if there is a secret
 
 
 class BaseProtection(forms.Form):

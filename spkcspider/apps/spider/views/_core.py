@@ -5,11 +5,18 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http.response import HttpResponseBase
 
+from ..contents import UserContentType
+from ..protections import ProtectionType
 from ..models import UserComponent
 
 
 class UserTestMixin(UserPassesTestMixin):
     results_tests = None
+
+    def get_context_data(self, **kwargs):
+        kwargs["UserContentType"] = UserContentType
+        kwargs["ProtectionType"] = ProtectionType
+        return super().get_context_data(**kwargs)
 
     # by default only owner can access view
     def test_func(self):
