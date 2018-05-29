@@ -1,0 +1,27 @@
+{% load i18n %}
+<div class="w3-padding">
+  <form class="w3-cell-row w3-black" style="max-width:400px" method="GET" action="">
+    <input type="hidden" name="page" value="{% if request.GET.search %}{{ page_obj.number }}{% else %}1{% endif %}"/>
+    <div class="w3-cell">
+      <input class="w3-input" type="text" name="search" placeholder="{% trans 'Search' %}" />
+    </div>
+    <div class="w3-cell">
+      <button class="w3-button w3-input w3-gray"><i class="fa fa-search" aria-hidden="true"></i></button>
+    </div>
+  </form>
+</div>
+<div class="w3-padding w3-center">
+  {% if page_obj.has_previous %}
+      <a href="?page=1">&laquo; first</a>
+      <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+  {% endif %}
+
+  <span class="current">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+  </span>
+
+  {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}">next</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+  {% endif %}
+</div>
