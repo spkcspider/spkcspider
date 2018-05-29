@@ -12,7 +12,7 @@
 {% block context_actions %}
 {{block.super}}
 {% endblock context_actions %}
-{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-green{% endblock %}
+{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-green{% if not object %} w3-animate-bottom{% endif %}{% endblock %}
 
 
 {% block content %}

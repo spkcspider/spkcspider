@@ -28,47 +28,55 @@
     {% block layout %}
       {% block headerbar %}
       <header class="w3-bar w3-container w3-topnav w3-black">
-        <a class="w3-bar-item w3-button" href="{% url 'home' %}"><i class="fa fa-home" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Home' %}</a>
+        <a class="w3-bar-item w3-button" href="{% url 'home' %}">
+          <i class="fa fa-home" style="margin-right:10px" aria-hidden="true"></i>
+          <span class="w3-hide-small">{% trans 'Home' %}</span>
+        </a>
+        <div class="w3-hide-medium w3-hide-large w3-bar-item w3-show" style="width:100%"></div>
         {% url 'auth:login' as loginpath %}
         {% if request.user.is_authenticated %}
           <div class="w3-dropdown-hover w3-dropdown-click">
             <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button">
               Actions<i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
             </button>
-            <div class="w3-dropdown-content w3-bar-block w3-border" id="context_actions_list">
-              {% block context_actions %}
-                <a class="w3-bar-item w3-button w3-black" href="{% url 'spider_base:ucomponent-create' %}">
-                  <i class="fa fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>
-                  {% trans 'Add Component' %}
-                </a>
-                <a class="w3-bar-item w3-button w3-black" href="{% url 'spider_base:ucomponent-list' %}">
-                  <i class="fa fa-list" style="margin-right:10px" aria-hidden="true"></i>
-                  {% trans 'List Own' %}
-                </a>
-                <a class="w3-bar-item w3-button w3-black" href="{% url 'spider_base:ucomponent-listall' %}">
-                  <i class="fa fa-list" style="margin-right:10px" aria-hidden="true"></i>
-                  {% trans 'List All' %}
-                </a>
-             {% endblock context_actions %}
+            <div class="w3-dropdown-content w3-bar-block w3-border w3-black" id="context_actions_list">
+              <div class="w3-animate-opacity w3-black">
+                {% block context_actions %}
+                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-create' %}">
+                    <i class="fa fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'Add Component' %}
+                  </a>
+                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-list' %}">
+                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'List Own' %}
+                  </a>
+                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-listall' %}">
+                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'List All' %}
+                  </a>
+                {% endblock context_actions %}
+              </div>
             </div>
           </div>
-          <div class="w3-right w3-dropdown-hover w3-dropdown-click">
+          <div class="w3-right w3-dropdown-hover w3-dropdown-click w3-black">
             <button onclick='document.getElementById("user_actions_list").classList.toggle("w3-show")' class="w3-button w3-black">
               <i class="fa fa-user" style="margin-right:10px" aria-hidden="true"></i>
               <small>{{request.user.username}}</small>
               <i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
             </button>
-            <div class="w3-dropdown-content w3-bar-block" style="right:0px" id="user_actions_list">
-              {% block user_actions %}
-              <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:profile' %}">
-                <i class="fa fa-user-edit" style="margin-right:10px" aria-hidden="true"></i>
-                {% trans 'Profile' %}
-              </a>
-              <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:logout'%}">
-                <i class="fa fa-sign-out-alt" style="margin-right:10px" aria-hidden="true"></i>
-                {% trans 'Logout' %}
-              </a>
-              {% endblock user_actions %}
+            <div class="w3-dropdown-content w3-bar-block w3-black" style="right:0px" id="user_actions_list">
+              <div class="w3-animate-opacity w3-black">
+                {% block user_actions %}
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:profile' %}">
+                  <i class="fa fa-user-edit" style="margin-right:10px" aria-hidden="true"></i>
+                  {% trans 'Profile' %}
+                </a>
+                <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:logout'%}">
+                  <i class="fa fa-sign-out-alt" style="margin-right:10px" aria-hidden="true"></i>
+                  {% trans 'Logout' %}
+                </a>
+                {% endblock user_actions %}
+              </div>
             </div>
           </div>
         {% elif request.path != loginpath %}
@@ -83,7 +91,7 @@
         {% endif %}
       </header>
       {% endblock headerbar %}
-      <main class="{% block main_classes %}w3-main w3-padding{% endblock %}" id="content-main" style="margin-top: 20px">
+      <main class="{% block main_classes %}w3-padding{% endblock %}" id="content-main" style="margin-top: 20px">
       {% block messages %}
           {% if messages %}
           <ul class="messagelist">{% for message in messages %}

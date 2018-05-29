@@ -45,7 +45,7 @@
         </td>
         <td>
           {% if uc.user == request.user %}
-            <a class="w3-button w3-blue" href="{% url 'spider_base:uconent-update' id=content.id %}">
+            <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-update' id=content.id %}">
               {% trans "Edit" %}
             </a>
           {% endif %}

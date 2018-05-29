@@ -1,6 +1,6 @@
 {% extends "registration/base.html" %}
 {% load i18n static %}
-
+{% block main_classes %}{{block.super}} w3-animate-bottom{% endblock %}
 {% block content %}
   <h2>Sign up</h2>
   <form action="{{ app_path }}" method="post">
