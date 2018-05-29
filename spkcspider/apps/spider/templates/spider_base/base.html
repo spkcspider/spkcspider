@@ -29,8 +29,8 @@
       {% block headerbar %}
       <header class="w3-bar w3-container w3-topnav w3-black">
         <a class="w3-bar-item w3-button" href="{% url 'home' %}">
-          <i class="fa fa-home" style="margin-right:10px" aria-hidden="true"></i>
-          <span class="w3-hide-small">{% trans 'Home' %}</span>
+          <i class="fa fa-home" aria-hidden="true"></i>
+          <span class="w3-hide-small" style="margin-left:10px">{% trans 'Home' %}</span>
         </a>
         <div class="w3-hide-medium w3-hide-large w3-bar-item w3-show" style="width:100%"></div>
         {% url 'auth:login' as loginpath %}
