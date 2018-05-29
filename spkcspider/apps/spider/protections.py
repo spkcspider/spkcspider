@@ -5,7 +5,8 @@ namespace: spider_base
 """
 
 __all__ = ("add_protection", "ProtectionType", "check_blacklisted",
-           "installed_protections", "BaseProtection", "ProtectionResult")
+           "installed_protections", "BaseProtection", "ProtectionResult",
+           "initialize_protection_models")
 
 from collections import namedtuple
 import enum
@@ -34,14 +35,31 @@ def add_protection(klass):
     return klass
 
 
+def initialize_protection_models():
+    from .models import Protection as ProtectionModel
+    for code, val in installed_protections.items():
+        ret = ProtectionModel.objects.get_or_create(
+            defaults={"ptype": val.ptype}, code=code
+        )[0]
+        if ret.ptype != val.ptype:
+            ret.ptype = val.ptype
+            ret.save()
+    temp = ProtectionModel.objects.exclude(
+        code__in=installed_protections.keys()
+    )
+    if temp.exists():
+        print("Invalid protections, please update or remove them:",
+              [t.code for t in temp])
+
+
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
 
 
-class ProtectionType(str, enum.Enum):
+class ProtectionType(bytes, enum.Enum):
     # receives: request, scope
-    access_control = "\x00"
+    access_control = b"\x00"
     # receives: request, scope, password
-    authentication = "\x01"
+    authentication = b"\x01"
     # forget about recovery, every recovery method is authentication
     # and will be misused this way
     # The only real recovery is by staff and only if there is a secret
@@ -119,6 +137,7 @@ class FriendProtection(BaseProtection):
     media = {
         'js': 'admin/js/vendor/select2/select2.full.min.js'
     }
+
     @classmethod
     def auth(cls, request, obj, **kwargs):
         if request.user.id in obj.data["users"]:
