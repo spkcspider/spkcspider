@@ -65,8 +65,22 @@ class BaseContent(models.Model):
     # use usercomponent in form instead
     associated = GenericRelation("spider_base.UserContent")
 
+    # if static_create is used and class not saved yet
+    kwargs = None
+
     class Meta:
         abstract = True
+
+    @classmethod
+    def static_create(cls, **kwargs):
+        self = cls()
+        self.kwargs = kwargs
+        return self
+
+    def __str__(self):
+        if not self.id:
+            return "%s: -" % self.kwargs["code"]
+        return "%s: %i" % (self.associated.ctype, self.id)
 
     # for viewing
     def render(self, **kwargs):

@@ -112,9 +112,10 @@ class ContentAdd(PermissionRequiredMixin, ContentUpdate):
         return get_object_or_404(queryset, **q_dict)
 
     def render_to_response(self, context):
-        rendered = self.object.installed_class.render_static(
+        ob = self.object.installed_class.static_create(
             code=self.object.code, **context
         )
+        rendered = ob.render(**ob.kwargs)
         if UserContentType.raw_update.value in self.object.ctype:
             return rendered
         context["content"] = rendered

@@ -145,7 +145,7 @@ class UserContentVariant(models.Model):
         return installed_contents[self.code]
 
     def __str__(self):
-        return _(self.installed_class)
+        return _(self.installed_class.create_static(code=self.code))
 
 
 class UserContent(models.Model):
