@@ -58,13 +58,13 @@ class ContentBase(UCTestMixin, BaseDetailView):
 
 class ContentView(ContentBase):
     scope = "view"
-    raw = False
 
     def render_to_response(self, context):
+        raw = self.request.GET.get("raw") == "true"
         rendered = self.object.content.render(
-            code=self.object.ctype.code, **context
+            raw=raw, code=self.object.ctype.code, **context
         )
-        if self.raw or self.request.GET.get("raw") == "true":
+        if raw:
             return rendered
         context["content"] = rendered
         return super().render_to_response(context)
