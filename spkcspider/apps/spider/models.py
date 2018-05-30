@@ -75,16 +75,21 @@ class UserComponent(models.Model):
              **kwargs):
         ret = []
         query = self.protected_by.filter(ptype__contains=ptype, active=True)
-        if "protection_name" in request.POST:
-            query = query.filter(code=request.POST["protection_name"])
+        # before protection_name check, for not allowing users
+        # to manipulate required passes
         try:
-            # no matter if <= 0, check is enough
             required_passes = min(
-                len(query),
-                query.get(protection__code="allow").data.get("passes", 1)
+                len(query),  # if too many passes are required, lower
+                query.get(protection__code="allow").data.get("passes", 1) + 1
             )
         except models.ObjectDoesNotExist:
             required_passes = 1
+        # after required_passes, for not allowing users
+        # to manipulate required passes
+        if "protection_name" in request.POST:
+            query = query.filter(
+                code__in=request.POST.getlist("protection_name")
+            )
         for p in query:
             result = p.auth(request=request, **kwargs)
             if result is True:
@@ -133,13 +138,14 @@ class UserContentVariant(models.Model):
         max_length=10
     )
     code = models.SlugField(max_length=15, primary_key=True)
+    raw = models.BooleanField(default=False)
 
     @property
     def installed_class(self):
         return installed_contents[self.code]
 
     def __str__(self):
-        return _(self.code)
+        return _(self.installed_class)
 
 
 class UserContent(models.Model):
@@ -245,12 +251,20 @@ class Protection(models.Model):
     @classmethod
     def authall(self, request, required_passes=1,
                 ptype=ProtectionType.authentication.value, **kwargs):
+        """
+            Usage: e.g. prerendering for login fields, because
+            no assigned object is available there is no config
+        """
         ret = []
         # allow is here invalid, no matter what ptype
         query = self.filter(ptype__contains=ptype).exclude(code="allow")
-        if "protection_name" in request.POST:
-            query = query.filter(code=request.POST["protection_name"])
+        # before protection_name check, for not allowing users
+        # to manipulate required passes
         required_passes = min(len(query), required_passes)
+        if "protection_name" in request.POST:
+            query = query.filter(
+                code__in=request.POST.getlist("protection_name")
+            )
         for p in query:
             result = p.auth(request=request, **kwargs.copy())
             if result is True:

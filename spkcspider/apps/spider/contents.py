@@ -17,7 +17,7 @@ class UserContentType(str, enum.Enum):
     public = "\x00"
     # has a seperate update, scope=update
     has_update = "\x01"
-    # receives: request, scope, password
+    raw_update = "\x02"
 
 
 class add_content(object):
@@ -39,12 +39,14 @@ class add_content(object):
 def initialize_protection_models():
     from .models import UserContentVariant
     for code, val in installed_contents.items():
-        ret = UserContentVariant.objects.get_or_create(
-            defaults={"ctype": val.ctype}, code=code
+        variant = UserContentVariant.objects.get_or_create(
+            defaults={"ctype": val.ctype, "raw": val.raw}, code=code
         )[0]
-        if ret.ctype != val.ctype:
-            ret.ctype = val.ctype
-            ret.save()
+        if variant.ctype != val.ctype:
+            variant.ctype = val.ctype
+        if variant.raw != val.raw:
+            variant.raw = val.raw
+        variant.save()
     temp = UserContentVariant.objects.exclude(
         code__in=installed_contents.keys()
     )
@@ -54,9 +56,6 @@ def initialize_protection_models():
 
 
 class BaseContent(models.Model):
-    # for setup
-    form_class = None
-
     # consider not writing admin wrapper for (sensitive) inherited content
     # this way content could be protected to be only visible to admin, user
     # and legitimated users (if not index)

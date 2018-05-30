@@ -48,8 +48,13 @@ urlpatterns = [
 
     path(
         'content/view/<int:id>/',
-        ContentView.as_view(),
+        ContentView.as_view(raw=False),
         name='ucontent-view'
+    ),
+    path(
+        'content/view/<int:id>/raw/',
+        ContentView.as_view(raw=True),
+        name='ucontent-raw-view'
     ),
     path(
         'content/update/<int:id>/',

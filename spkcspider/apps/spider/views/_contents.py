@@ -9,21 +9,30 @@ from datetime import timedelta
 
 from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db import models
-from django.http import Http404, HttpResponseRedirect
 from django.conf import settings
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
-from ..contents import installed_contents, UserContentType
+from ..contents import UserContentType
 from ..models import UserContent, UserContentVariant
 
 
-class ContentView(UCTestMixin, BaseDetailView):
+class ContentBase(UCTestMixin, BaseDetailView):
     model = UserContent
+    # Views should use one template to render usercontent (whatever it is)
+    template_name = 'spider_base/usercontent_view.html'
+    scope = None
+
+    post = BaseDetailView.get
+    put = BaseDetailView.get
+
+    def get_context_data(self, **kwargs):
+        kwargs["request"] = self.request
+        kwargs["scope"] = self.scope
+        return super().get_context_data(**kwargs)
 
     def test_func(self):
         if self.has_special_access(staff=(self.usercomponent.name != "index"),
@@ -33,24 +42,83 @@ class ContentView(UCTestMixin, BaseDetailView):
         if self.usercomponent.is_protected:
             return False
         self.request.protections = self.usercomponent.auth(
-            request=self.request, scope="access"
+            request=self.request, scope=self.scope
         )
         if self.request.protections is True:
             return True
         return False
 
     def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(queryset,
-                                     usercomponent=self.usercomponent,
-                                     id=self.kwargs["id"])
-        else:
-            return get_object_or_404(self.get_queryset(),
-                                     usercomponent=self.usercomponent,
-                                     id=self.kwargs["id"])
+        if not queryset:
+            queryset = self.get_queryset()
+        return get_object_or_404(queryset,
+                                 usercomponent=self.usercomponent,
+                                 id=self.kwargs["id"])
+
+
+class ContentView(ContentBase):
+    scope = "view"
+    raw = False
 
     def render_to_response(self, context):
-        return self.object.render(**context)
+        rendered = self.object.content.render(
+            code=self.object.ctype.code, **context
+        )
+        if self.raw or self.request.GET.get("raw") == "true":
+            return rendered
+        context["content"] = rendered
+        return super().render_to_response(context)
+
+
+class ContentUpdate(ContentBase):
+    scope = "update"
+
+    def test_func(self):
+        # give user and staff the ability to update Content
+        # except it is protected, in this case only the user can update
+        # reason: admins could be tricked into malicious updates
+        # for index the same reason as for add
+        uncritically = not self.usercomponent.is_protected
+        if self.has_special_access(staff=uncritically, superuser=uncritically):
+            # block update if noupdate flag is set
+            # no override for special users as the form could do unsafe stuff
+            # special users: do it in the admin interface
+            if self.object.id and self.object.get_flag("noupdate"):
+                return False
+            return True
+        return False
+
+    def render_to_response(self, context):
+        rendered = self.object.content.render(
+            code=self.object.ctype.code, **context
+        )
+        if UserContentType.raw_update.value in self.object.ctype.ctype:
+            return rendered
+        context["content"] = rendered
+        return super().render_to_response(context)
+
+
+class ContentAdd(PermissionRequiredMixin, ContentUpdate):
+    permission_required = 'spider_base.add_usercontent'
+    scope = "create"
+    model = UserContentVariant
+
+    def get_object(self, queryset=None):
+        if not queryset:
+            queryset = self.get_queryset()
+        q_dict = {"code": self.kwargs["type"]}
+        if self.usercomponent.name != "index":
+            q_dict["ctype__contains"] = UserContentType.public.value
+        return get_object_or_404(queryset, **q_dict)
+
+    def render_to_response(self, context):
+        rendered = self.object.installed_class.render_static(
+            code=self.object.code, **context
+        )
+        if UserContentType.raw_update.value in self.object.ctype:
+            return rendered
+        context["content"] = rendered
+        return super().render_to_response(context)
 
 
 class ContentIndex(UCTestMixin, ListView):
@@ -102,148 +170,23 @@ class ContentIndex(UCTestMixin, ListView):
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
 
-class ContentAdd(PermissionRequiredMixin, UCTestMixin, CreateView):
-    model = UserContent
-    permission_required = 'spider_base.add_usercontent'
-
-    def test_func(self):
-        # give user and staff the ability to add Content
-        # except it is protected, in this case only the user can add
-        # reason: rogue admins could insert false evidence
-        uncritically = (self.usercomponent.name not in ["index"])
-        if self.has_special_access(staff=uncritically, superuser=uncritically):
-            return True
-        return False
-
-    def get_form_class(self):
-        try:
-            return installed_contents[self.kwargs["type"]]
-        except KeyError:
-            raise Http404('%s matches no available content (blacklisted?)' %
-                          self.kwargs["type"])
-
-    def get_form_kwargs(self):
-        ret = super().get_form_kwargs()
-        ret["usercomponent"] = self.usercomponent
-        return ret
-
-    def form_valid(self, form):
-        """
-        If the form is valid, save the associated model.
-        """
-        content = form.save()
-        try:
-            info = content.get_info(self.usercomponent)
-            if hasattr(form, "get_info"):
-                info = "".join([info, form.get_info()])
-            self.object = \
-                UserContent.objects.create(usercomponent=self.usercomponent,
-                                           content=content, info=info)
-        except Exception as exc:
-            content.delete()
-            raise exc
-        return self.render_to_response(self.get_context_data(form=form))
-
-
-class ContentUpdate(UCTestMixin, UpdateView):
-    model = UserContent
-
-    def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(queryset,
-                                     usercomponent=self.usercomponent,
-                                     id=self.kwargs["id"])
-        else:
-            return get_object_or_404(self.get_queryset(),
-                                     usercomponent=self.usercomponent,
-                                     id=self.kwargs["id"])
-
-    def test_func(self):
-        # give user and staff the ability to update Content
-        # except it is protected, in this case only the user can update
-        # reason: admins could be tricked into malicious updates
-        # for index the same reason as for add
-        uncritically = not self.usercomponent.is_protected
-        if self.has_special_access(staff=uncritically, superuser=uncritically):
-            # block update if noupdate flag is set
-            # no override for special users as the form could do unsafe stuff
-            # special users: do it in the admin interface
-            if self.object.get_flag("noupdate"):
-                return False
-            return True
-        return False
-
-    def get_form_class(self):
-        return self.object.content.form_class
-
-    def get_form_kwargs(self):
-        """
-        Returns the keyword arguments for instantiating the form.
-        """
-        kwargs = super().get_form_kwargs()
-        if hasattr(self, 'object'):
-            kwargs.update({'instance': self.object.content})
-        return kwargs
-
-    def form_valid(self, form):
-        """
-        If the form is valid, save the associated model.
-        """
-        content = form.save()
-        self.object = content.associated
-        info = content.get_info(self.usercomponent)
-        if hasattr(form, "get_info"):
-            info = "".join([info, form.get_info()])
-        if info != self.object.info:
-            self.object.info = info
-            self.object.save(update_fields=["info"])
-
-        return self.render_to_response(self.get_context_data(form=form))
-
-
-class ContentResetRemove(UCTestMixin, UpdateView):
-    model = UserContent
-    fields = []
-    http_method_names = ['post']
-
-    def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(queryset,
-                                     usercomponent=self.usercomponent,
-                                     id=self.kwargs["id"])
-        return get_object_or_404(self.get_queryset(),
-                                 usercomponent=self.usercomponent,
-                                 id=self.kwargs["id"])
-
-    def form_valid(self, form):
-        """
-        If the form is valid, save the associated model.
-        """
-        self.object = form.instance
-        self.object.deletion_requested = None
-        self.object.save(update_fields=["deletion_requested"])
-        return HttpResponseRedirect(self.get_success_url())
-
-
 class ContentRemove(ComponentDelete):
     model = UserContent
 
     def get_required_timedelta(self):
-        _time = self.object.get_value("protected_for")
-        if not _time:
-            _time = getattr(settings, "CONTENT_DELETION_PERIOD", None)
+        _time = getattr(settings, "CONTENT_DELETION_PERIOD", None)
         if not _time:
             _time = getattr(settings, "DEFAULT_DELETION_PERIOD", None)
-        return timedelta(seconds=_time)
+        if _time:
+            _time = timedelta(seconds=_time)
+        else:
+            _time = timedelta(seconds=0)
+        return _time
 
     def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(
-                queryset, usercomponent=self.get_usercomponent(),
-                id=self.kwargs["id"]
-            )
-        else:
-            return get_object_or_404(
-                self.get_queryset(), usercomponent=self.get_usercomponent(),
-                id=self.kwargs["id"]
-            )
+        if not queryset:
+            queryset = self.get_queryset()
+        return get_object_or_404(
+            queryset, usercomponent=self.get_usercomponent(),
+            id=self.kwargs["id"]
+        )

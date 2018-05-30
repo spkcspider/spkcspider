@@ -43,12 +43,17 @@
         <td class="">
           {{ content.content }}
         </td>
-        <td>
-          {% if uc.user == request.user %}
-            <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-update' id=content.id %}">
-              {% trans "Edit" %}
+        <td class="w3-show-inline-block">
+          <div class="w3-bar w3-round-large w3-tiny w3-blue">
+            <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-view' id=content.id %}">
+              {% trans "view" %}
             </a>
-          {% endif %}
+            {% if uc.user == request.user and UserContentType.has_update in content.ctype.ctype %}
+              <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-update' id=content.id %}">
+                {% trans "Edit" %}
+              </a>
+            {% endif %}
+          </div>
         </td>
       </tr>
     {% empty %}
