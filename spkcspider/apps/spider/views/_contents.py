@@ -106,17 +106,17 @@ class ContentAdd(PermissionRequiredMixin, ContentUpdate):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        # FIXME: nil or owner
-        q_dict = {
-            "name": self.kwargs["type"], "owner"=self.usercomponent.owner
-        }
+        queryset = queryset.filter(
+            models.Q(owner=self.usercomponent) | models.Q(owner__isnull=True)
+        )
+        q_dict = {"name": self.kwargs["type"]}
         if self.usercomponent.name != "index":
             q_dict["ctype__contains"] = UserContentType.public.value
         return get_object_or_404(queryset, **q_dict)
 
     def render_to_response(self, context):
         ob = self.object.installed_class.static_create(
-            code=self.object.code, **context
+            ctype=self.object, **context
         )
         rendered = ob.render(**ob.kwargs)
         if UserContentType.raw_update.value in self.object.ctype:

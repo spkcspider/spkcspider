@@ -73,8 +73,12 @@ class BaseContent(models.Model):
 
     def __str__(self):
         if not self.id:
-            return "%s: -" % self.kwargs["code"]
-        return "%s: %i" % (self.associated.ctype, self.id)
+            ctype = self.kwargs["ctype"]
+            _id = "-"
+        else:
+            ctype = self.associated.ctype
+            _id = self.id
+        return "%s: %s" % (ctype.name, _id)
 
     # for viewing
     def render(self, **kwargs):
