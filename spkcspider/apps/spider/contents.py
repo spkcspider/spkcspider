@@ -20,20 +20,14 @@ class UserContentType(str, enum.Enum):
     raw_update = "\x02"
 
 
-class add_content(object):
-    def __init__(self, name=None):
-        self.name = name
-
-    def __call__(self, klass):
-        name = self.name
-        if not name:
-            name = klass._meta.model_name
-        if name in installed_contents:
-            raise Exception("Duplicate content name")
-        if name in getattr(settings, "BLACKLISTED_CONTENTS", {}):
-            return klass
-        installed_contents[name] = klass
+def add_content(klass):
+    name = klass._meta.model_name
+    if name in installed_contents:
+        raise Exception("Duplicate content name")
+    if name in getattr(settings, "BLACKLISTED_CONTENTS", {}):
         return klass
+    installed_contents[name] = klass
+    return klass
 
 
 def initialize_protection_models():

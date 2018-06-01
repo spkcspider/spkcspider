@@ -134,10 +134,15 @@ def info_field_validator(value):
 
 
 class UserContentVariant(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
     ctype = models.CharField(
         max_length=10
     )
-    code = models.SlugField(max_length=15, primary_key=True)
+    code = models.SlugField(max_length=255)
+    name = models.SlugField(max_length=255)
+    owner = models.ForeignKey(
+        "settings.AUTH_USER_MODEL", related_name="+", null=True
+    )
     raw = models.BooleanField(default=False)
 
     @property

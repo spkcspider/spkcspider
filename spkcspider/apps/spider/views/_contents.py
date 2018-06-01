@@ -106,7 +106,10 @@ class ContentAdd(PermissionRequiredMixin, ContentUpdate):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        q_dict = {"code": self.kwargs["type"]}
+        # FIXME: nil or owner
+        q_dict = {
+            "name": self.kwargs["type"], "owner"=self.usercomponent.owner
+        }
         if self.usercomponent.name != "index":
             q_dict["ctype__contains"] = UserContentType.public.value
         return get_object_or_404(queryset, **q_dict)
