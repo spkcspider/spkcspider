@@ -106,8 +106,10 @@ class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
         if UserContentType.raw_update.value not in self.object.ctype.ctype or \
            self.scope not in ["update", "add"]:
             rendered = self.object.content.render(
-                code=self.object.ctype.code, **context
+                **context
             )
+            if UserContentType.raw_update.value in self.object.ctype.ctype:
+                return rendered
             context["content"] = rendered
         return super().render_to_response(context)
 
@@ -136,12 +138,14 @@ class ContentAdd(PermissionRequiredMixin, ContentAccess):
 
     def render_to_response(self, context):
         ob = self.object.installed_class.static_create(
-            ctype=self.object, **context
+            associated=self.object, **context
         )
-        rendered = ob.render(**ob.kwargs)
-        if UserContentType.raw_update.value in self.object.ctype:
-            return rendered
-        context["content"] = rendered
+        if UserContentType.raw_update.value not in self.object.ctype or \
+           self.scope not in ["update", "add"]:
+                rendered = ob.render(**ob.kwargs)
+                if UserContentType.raw_update.value in self.object.ctype:
+                    return rendered
+                context["content"] = rendered
         return super().render_to_response(context)
 
 

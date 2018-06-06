@@ -66,19 +66,17 @@ class BaseContent(models.Model):
         abstract = True
 
     @classmethod
-    def static_create(cls, **kwargs):
-        self = cls()
+    def static_create(cls, associated=None, **kwargs):
+        self = cls(associated=associated)
         self.kwargs = kwargs
         return self
 
     def __str__(self):
         if not self.id:
-            ctype = self.kwargs["ctype"]
             _id = "-"
         else:
-            ctype = self.associated.ctype
             _id = self.id
-        return "%s: %s" % (ctype.name, _id)
+        return "%s: %s" % (self.associated.ctype.name, _id)
 
     # for viewing
     def render(self, **kwargs):
