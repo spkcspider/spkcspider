@@ -57,6 +57,8 @@ class BaseContent(models.Model):
     # and legitimated users (if not index)
 
     id = models.BigAutoField(primary_key=True, editable=False)
+    # every content can specify its own deletion period
+    deletion_period = getattr(settings, "DELETION_PERIOD_CONTENT", None)
     # if created associated is None (will be set later)
     # use usercomponent in form instead
     associated = GenericRelation("spider_base.UserContent")

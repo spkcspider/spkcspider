@@ -224,9 +224,7 @@ class ContentRemove(ComponentDelete):
     model = UserContent
 
     def get_required_timedelta(self):
-        _time = getattr(settings, "CONTENT_DELETION_PERIOD", None)
-        if not _time:
-            _time = getattr(settings, "DEFAULT_DELETION_PERIOD", None)
+        _time = self.object.deletion_period
         if _time:
             _time = timedelta(seconds=_time)
         else:

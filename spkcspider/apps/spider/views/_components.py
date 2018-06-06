@@ -138,9 +138,9 @@ class ComponentDelete(UserTestMixin, DeleteView):
     http_method_names = ['get', 'post', 'delete']
 
     def get_required_timedelta(self):
-        _time = getattr(settings, "COMPONENT_DELETION_PERIOD", None)
-        if not _time:
-            _time = getattr(settings, "DEFAULT_DELETION_PERIOD", None)
+        _time = getattr(
+            settings, "DELETION_PERIODS_COMPONENTS", {}
+        ).get(self.object.name, None)
         if _time:
             _time = timedelta(seconds=_time)
         else:
