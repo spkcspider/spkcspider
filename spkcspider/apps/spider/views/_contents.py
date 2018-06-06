@@ -78,20 +78,22 @@ class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = {"form": None}
-        if self.scope in ["update"]:
+        if self.scope == "update":
             context["form"] = self.get_form()
         return self.render_to_response(self.get_context_data(context))
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = {"form": None}
-        if self.scope in ["update"]:
-            context["form"] = self.get_form()
-            if context["form"].is_valid():
-                self.object = context["form"].save()
-                context["form"] = self.get_form_class()(
-                    **self.get_form_success_kwargs()
-                )
+        if self.scope in ["update", "add"]:
+            if self.scope == "update" or \
+               UserContentType.raw_add.value not in self.object.ctype:
+                context["form"] = self.get_form()
+        if context["form"] and context["form"].is_valid():
+            self.object = context["form"].save()
+            context["form"] = self.get_form_class()(
+                **self.get_form_success_kwargs()
+            )
         return self.render_to_response(self.get_context_data(context))
 
     def get_form_kwargs(self):
@@ -114,12 +116,13 @@ class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
         return self.has_write_perm
 
     def render_to_response(self, context):
-        if UserContentType.raw_update.value not in self.object.ctype.ctype or \
-           self.scope not in ["update", "add"]:
+        if UserContentType.raw_update.value in self.object.ctype.ctype or \
+           self.scope != "update":
             rendered = self.object.content.render(
                 **context
             )
-            if UserContentType.raw_update.value in self.object.ctype.ctype:
+            if UserContentType.raw_update.value in \
+               self.object.associated.ctype.ctype:
                 return rendered
 
             context["content"] = rendered
@@ -137,6 +140,13 @@ class ContentAdd(PermissionRequiredMixin, ContentAccess):
     scope = "add"
     model = UserContentVariant
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = {"form": None}
+        if UserContentType.raw_add.value not in self.object.ctype:
+            context["form"] = self.get_form()
+        return self.render_to_response(self.get_context_data(context))
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
@@ -152,12 +162,10 @@ class ContentAdd(PermissionRequiredMixin, ContentAccess):
         ob = self.object.installed_class.static_create(
             associated=self.object, **context
         )
-        if UserContentType.raw_update.value not in self.object.ctype or \
-           self.scope not in ["update", "add"]:
-                rendered = ob.render(**ob.kwargs)
-                if UserContentType.raw_update.value in self.object.ctype:
-                    return rendered
-                context["content"] = rendered
+        if UserContentType.raw_add.value in self.object.ctype:
+            return ob.render(**ob.kwargs)
+        if UserContentType.raw_update.value not in self.object.ctype.ctype:
+            context["content"] = ob.render(**ob.kwargs)
         return super().render_to_response(context)
 
 
