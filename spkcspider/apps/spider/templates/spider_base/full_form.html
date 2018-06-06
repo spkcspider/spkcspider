@@ -1,0 +1,11 @@
+{{form.media}}
+<form action="{{ request.path }}" method="post">
+  {% csrf_token %}
+  <fieldset>
+    <legend><h1>{{legend}}</h1></legend>
+    {% include "spider_base/base_form.html" with form=form %}
+  </fieldset>
+  <button class="w3-button w3-grey">
+    {{confirm}}
+  </button>
+</form>

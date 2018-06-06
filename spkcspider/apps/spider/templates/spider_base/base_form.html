@@ -1,0 +1,22 @@
+<ul class="w3-ul">
+  {% for field in form %}
+  <li>
+    <div class="">
+      <div class="w3-cell w3-padding">
+        {{ field.label_tag }}</br>
+        {{ field }}
+      </div>
+      <div class="w3-cell w3-padding">
+      {% if field.help_text %}
+        <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+      {% endif %}
+      </div>
+    </div>
+    <div class="">
+      {% for error in field.errors %}
+        <p class="w3-text-red">{{ error|safe }}</p>
+      {% endfor %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
