@@ -34,12 +34,13 @@ class UserTestMixin(UserPassesTestMixin):
         return False
 
     def get_user(self):
-        username = None
+        model = get_user_model()
+        margs = {model.USERNAME_FIELD: None}
         if "user" in self.kwargs:
-            username = self.kwargs["user"]
+            margs[model.USERNAME_FIELD] = self.kwargs["user"]
         elif self.request.user.is_authenticated:
             return self.request.user
-        return get_object_or_404(get_user_model(), username=username)
+        return get_object_or_404(model, **margs)
 
     def get_usercomponent(self):
         query = {"name": self.kwargs["name"]}

@@ -122,8 +122,14 @@ class UserComponent(models.Model):
     def get_absolute_url(self):
         return reverse(
             "spider_base:ucontent-list",
-            kwargs={"name": self.name, "nonce": self.nonce}
+            kwargs={
+                "user": self.username, "name": self.name, "nonce": self.nonce
+            }
         )
+
+    @property
+    def username(self):
+        return getattr(self.user, self.user.USERNAME_FIELD)
 
     @property
     def is_protected(self):
