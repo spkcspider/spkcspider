@@ -258,7 +258,7 @@ class UserContent(models.Model):
     def get_absolute_url(self):
         return reverse(
             "spider_base:ucontent-access",
-            kwargs={"id": self.id, "nonce": self.nonce}
+            kwargs={"id": self.id, "nonce": self.nonce, "access": "view"}
         )
 
 

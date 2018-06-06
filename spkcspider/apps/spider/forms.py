@@ -1,14 +1,27 @@
+
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import (
     AssignedProtection, Protection, UserComponent, UserContent, token_nonce
 )
 from .protections import ProtectionType
 
+_help_text = """Generate new nonce<br/>
+Nonces protect against bruteforce and attackers<br/>
+If you have problems with attackers (because they now the nonce),
+you can invalidate it with this option<br/>
+<span style="color:red;">
+Warning: this removes also access for all services you gave the
+<em>%s</em> link</span>"""
+
 
 class UserComponentForm(forms.ModelForm):
     protections = None
-    new_nonce = forms.BooleanField(required=False)
+    new_nonce = forms.BooleanField(
+        label=_("New Nonce"), help_text=_(_help_text % 'User Component'),
+        required=False, initial=False
+    )
 
     class Meta:
         model = UserComponent
@@ -34,6 +47,7 @@ class UserComponentForm(forms.ModelForm):
                                                     ptype=ptype)
             self.protections = list(self.protections)
         else:
+            self.fields["new_nonce"].disabled = True
             self.protections = []
 
     def clean_name(self):
@@ -88,7 +102,10 @@ class UserComponentForm(forms.ModelForm):
 
 
 class UserContentForm(forms.ModelForm):
-    new_nonce = forms.BooleanField(required=False)
+    new_nonce = forms.BooleanField(
+        label=_("New Nonce"), help_text=_(_help_text % 'User Content'),
+        required=False, initial=False
+    )
 
     class Meta:
         model = UserContent

@@ -27,7 +27,7 @@
     <h1 class="w3-center">
       {% if form.instance.id %}
         {% blocktrans trimmed with name=form.instance.name %}
-          Update User Content: {{name}}
+          User Content: {{name}}
         {% endblocktrans %}
       {% else %}
         {% trans 'Create new User Content' %}
@@ -36,29 +36,35 @@
   </div>
 {% if form %}
   {{form.media}}
-  <form action="{{ request.path }}" method="post">
-    {% csrf_token %}
-    <input type="hidden" name="protection_name" value="{{name}}" />
-    {% for field in form %}
-      <div class="">
-        <div class="w3-cell w3-padding">
-          {{ field.label_tag }}</br>
-          {{ field }}
-        </div>
-        <div class="w3-cell w3-padding">
-        {% if field.help_text %}
-          <small style="color: grey">{{ field.help_text|safe }}</small>
-        {% endif %}
-        </div>
-      </div>
-      <div class="">
-        {% for error in field.errors %}
-          <p style="color: red">{{ error|safe }}</p>
-        {% endfor %}
-      </div>
-    {% endfor %}
-    <button>Confirm</button>
-  </form>
+  <details>
+    <summary><h1>{% trans 'Content Settings' %}</h1></summary>
+    <form action="{{ request.path }}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="protection_name" value="{{name}}" />
+      <fieldset>
+        <legend><h1>{% trans 'Content Settings' %}</h1></legend>
+          {% for field in form %}
+            <div class="">
+              <div class="w3-cell w3-padding">
+                {{ field.label_tag }}</br>
+                {{ field }}
+              </div>
+              <div class="w3-cell w3-padding">
+              {% if field.help_text %}
+                <small style="color: grey">{{ field.help_text|safe }}</small>
+              {% endif %}
+              </div>
+            </div>
+            <div class="">
+              {% for error in field.errors %}
+                <p style="color: red">{{ error|safe }}</p>
+              {% endfor %}
+            </div>
+          {% endfor %}
+        </fieldset>
+      <button>Confirm</button>
+    </form>
+  </details>
 {% endif %}
 {% if object.id and UserContentType.raw_update in associated.ctype %}
   <div>

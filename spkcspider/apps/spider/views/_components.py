@@ -115,10 +115,19 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             queryset, user=self.get_user(), name=self.kwargs["name"]
         )
 
+    def get_form_success_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        return {
+            'initial': self.get_initial(),
+            'prefix': self.get_prefix(),
+        }
+
     def form_valid(self, form):
         self.object = form.save()
         return self.render_to_response(
-            self.get_context_data(form=self.get_form())
+            self.get_context_data(
+                form=self.get_form_class()(**self.get_form_success_kwargs())
+            )
         )
 
 

@@ -89,12 +89,23 @@ class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
             context["form"] = self.get_form()
             if context["form"].is_valid():
                 self.object = context["form"].save()
+                context["form"] = self.get_form_class()(
+                    **self.get_form_success_kwargs()
+                )
         return self.render_to_response(self.get_context_data(context))
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["disabled"] = not self.check_write_permission()
         return kwargs
+
+    def get_form_success_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        return {
+            'initial': self.get_initial(),
+            'prefix': self.get_prefix(),
+            'disabled': not self.check_write_permission()
+        }
 
     def test_func(self):
         if self.scope not in ["update", "raw_update", "add"]:

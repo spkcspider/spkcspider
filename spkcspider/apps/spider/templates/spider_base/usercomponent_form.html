@@ -3,10 +3,10 @@
 
 {% block title %}{% if object %}
   {% blocktrans trimmed %}
-    Create User Component
+    Update User Component
   {% endblocktrans %}
 {% else %}{% blocktrans trimmed %}
-  Update User Component
+  Create User Component
 {% endblocktrans %}{% endif %}{% endblock %}
 
 {% block context_actions %}
@@ -34,37 +34,34 @@
   {{form.media}}
   <form class="" action="{{ request.path }}" method="post">
     {% csrf_token %}
-    <ul class="w3-ul">
-      {% for field in form %}
-      <li>
-        <div class="">
-          <div class="w3-cell w3-padding">
-            {{ field.label_tag }}</br>
-            {{ field }}
+    <fieldset>
+      <legend><h1>{% trans 'User Component' %}</h1></legend>
+      <ul class="w3-ul">
+        {% for field in form %}
+        <li>
+          <div class="">
+            <div class="w3-cell w3-padding">
+              {{ field.label_tag }}</br>
+              {{ field }}
+            </div>
+            <div class="w3-cell w3-padding">
+            {% if field.help_text %}
+              <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+            {% endif %}
+            </div>
           </div>
-          <div class="w3-cell w3-padding">
-          {% if field.help_text %}
-            <small class="w3-text-grey">{{ field.help_text|safe }}</small>
-          {% endif %}
+          <div class="">
+            {% for error in field.errors %}
+              <p class="w3-text-red">{{ error|safe }}</p>
+            {% endfor %}
           </div>
-        </div>
-        <div class="">
-          {% for error in field.errors %}
-            <p class="w3-text-red">{{ error|safe }}</p>
-          {% endfor %}
-        </div>
-      </li>
-      {% endfor %}
-    </ul>
-    <div class="w3-margin">
+        </li>
+        {% endfor %}
+      </ul>
+    </fieldset>
+    <fieldset>
+      <legend><h1>{% trans 'Protections' %}</h1></legend>
       <table class="w3-table">
-        <thead>
-          <tr>
-            <th colspan="2">
-              <h1>{% trans 'Protections' %}</h1>
-            </th>
-          </tr>
-        </thead>
         <tbody>
         {% for prot in form.protections %}
           {% if forloop.counter0|divisibleby:"2" %}
@@ -105,7 +102,7 @@
         {% endfor %}
         </tbody>
       </table>
-    </div>
+    </fieldset>
     <button class="w3-button w3-grey">
       {% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}
     </button>
