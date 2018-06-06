@@ -20,7 +20,7 @@
       </div>
     {% endfor %}
     <input type="hidden" name="next" value="{{ next }}" />
-    <button type="submit">Login</button><br/>
+    <button class="w3-button w3-grey" type="submit">Login</button>
     <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
   </form>
 

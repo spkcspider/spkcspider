@@ -12,9 +12,7 @@ class SpiderBaseConfig(AppConfig):
         from .signals import (
             InitProtectionsCallback, InitUserComponentsCallback
         )
-        from .protections import initialize_protection_models
         post_save.connect(InitUserComponentsCallback, sender=get_user_model(),
                           dispatch_uid="initial_usercomponents")
         post_migrate.connect(InitProtectionsCallback,
                              dispatch_uid="update_protections")
-        initialize_protection_models()
