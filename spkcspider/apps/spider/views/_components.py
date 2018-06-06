@@ -31,21 +31,20 @@ class ComponentAllIndex(ListView):
     def get_queryset(self):
         q = self._base_query
         q2 = self._base_query2
+
+        if "search" in self.request.GET:
+            searchq = models.Q(name__icontains=self.request.GET["search"])
+        else:
+            searchq = models.Q()
         if self.request.user.is_authenticated:
-            quser = self.request.user.usercomponent_set.all()
+            quser = self.request.user.usercomponent_set.filter(searchq)
         else:
             quser = UserComponent.objects.none()
         quser = quser.annotate(len_prot=models.Count('protections'))
 
-        if "search" in self.request.GET:
-            q &= models.Q(name__icontains=self.request.GET["search"])
-        main_query = self.model.objects.filter(q).annotate(
+        main_query = self.model.objects.filter(q & searchq).annotate(
             len_prot=models.Count('protections')
         ).filter(q2).union(quser)
-        if "search" in self.request.GET:
-            main_query = main_query.filter(
-                name__icontains=self.request.GET["search"]
-            )
         return main_query.order_by(
             "user", "name"
         ).distinct("user", "name")
