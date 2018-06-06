@@ -38,24 +38,27 @@ class UserTestMixin(UserPassesTestMixin):
         if "user" in self.kwargs:
             username = self.kwargs["user"]
         elif self.request.user.is_authenticated:
-            username = self.request.user.username
+            return self.request.user
         return get_object_or_404(get_user_model(), username=username)
 
     def get_usercomponent(self):
-        return get_object_or_404(
-            UserComponent, user=self.get_user(), name=self.kwargs["name"]
-        )
+        query = {"name": self.kwargs["name"]}
+        query["user"] = self.get_user()
+        if query["user"] != self.request.user:
+            query["nonce"] = self.kwargs["nonce"]
+        return get_object_or_404(UserComponent, **query)
 
     def handle_no_permission(self):
-        if not bool(self.results_tests):
+        p = self.request.protections
+        if not bool(p):
             return super().handle_no_permission()
-        if len(self.results_tests) == 1:
-            if isinstance(self.results_tests[0].result, HttpResponseBase):
-                return self.results_tests[0].result
+        if len(p) == 1:
+            if isinstance(p[0].result, HttpResponseBase):
+                return p[0].result
         return self.response_class(
             request=self.request,
             template=self.get_template_names(),
-            context=self.get_context_data(protections=self.results_tests),
+            context=self.get_context_data(protections=p),
             using=self.template_engine,
             content_type=self.content_type
         )

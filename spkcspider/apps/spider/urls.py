@@ -31,12 +31,7 @@ urlpatterns = [
     ),
 
     path(
-        'ucs/list/<slug:user>/<slug:name>/',
-        ContentIndex.as_view(),
-        name='ucontent-list'
-    ),
-    path(
-        'ucs/list/<slug:name>/',
+        'ucs/list/<slug:user>/<slug:name>/<slug:nonce>/',
         ContentIndex.as_view(),
         name='ucontent-list'
     ),
@@ -46,7 +41,7 @@ urlpatterns = [
         name='ucontent-add'
     ),
     path(
-        'content/access/<int:id>/<slug:access>/',
+        'content/access/<int:id>/<slug:nonce>/<slug:access>/',
         ContentAccess.as_view(),
         name='ucontent-access'
     ),

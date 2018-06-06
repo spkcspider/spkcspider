@@ -24,6 +24,23 @@ from .protections import (
 )
 
 
+NONCE_SIZE = 10
+
+try:
+    from secrets import token_hex
+
+    def token_nonce():
+        return token_hex(NONCE_SIZE)
+except ImportError:
+    import binascii
+    import os
+
+    def token_nonce():
+        return binascii.hexlify(
+            os.urandom(NONCE_SIZE)
+        ).decode('ascii')
+
+
 logger = logging.getLogger(__name__)
 
 _name_help = """
@@ -36,6 +53,8 @@ Most prominent: "index" for authentication
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
+    # brute force protection
+    nonce = models.SlugField(default=token_nonce, max_length=NONCE_SIZE*2)
     # fix linter warning
     objects = models.Manager()
     # special name: index:
@@ -101,7 +120,10 @@ class UserComponent(models.Model):
         return ret
 
     def get_absolute_url(self):
-        return reverse("spider_base:ucontent-list", kwargs={"name": self.name})
+        return reverse(
+            "spider_base:ucontent-list",
+            kwargs={"name": self.name, "nonce": self.nonce}
+        )
 
     @property
     def is_protected(self):
@@ -137,26 +159,36 @@ class UserContentVariant(models.Model):
     ctype = models.CharField(
         max_length=10
     )
-    code = models.SlugField(max_length=255)
+    code = models.CharField(max_length=255)
     name = models.SlugField(max_length=255)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, related_name="+", null=True,
         on_delete=models.SET_NULL
     )
-    raw = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = [
+            ('owner', 'name')
+        ]
 
     @property
     def installed_class(self):
         return installed_contents[self.code]
 
+    @property
+    def localized_name(self):
+        if self.owner:
+            return self.name
+        return _(self.name)
+
     def __str__(self):
-        return _(self.installed_class.create_static(code=self.code))
+        return self.localized_name
 
 
 class UserContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
-    # another id for access, changeable
-    accessid = models.BigIntegerField(default=models.F("id"))
+    # brute force protection
+    nonce = models.SlugField(default=token_nonce, max_length=NONCE_SIZE*2)
     # fix linter warning
     objects = models.Manager()
     usercomponent = models.ForeignKey(
@@ -194,13 +226,12 @@ class UserContent(models.Model):
 
     class Meta:
         unique_together = [
-            ('content_type', 'object_id'), ("usercomponent", "accessid")
+            ('content_type', 'object_id')
         ]
         indexes = [
             models.Index(fields=['usercomponent']),
             models.Index(fields=['object_id']),
         ]
-        ordering = ["usercomponent", "id"]
 
     def get_flag(self, flag):
         if "%s;" % flag in self.info:
@@ -219,7 +250,10 @@ class UserContent(models.Model):
         return info[pstart:pend]
 
     def get_absolute_url(self):
-        return reverse("spider_base:ucontent-view", kwargs={"id": self.id})
+        return reverse(
+            "spider_base:ucontent-access",
+            kwargs={"id": self.id, "nonce": self.nonce}
+        )
 
 
 class ProtectionManager(models.Manager):

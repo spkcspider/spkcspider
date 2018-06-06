@@ -34,6 +34,7 @@
       {% endif %}
     </h1>
   </div>
+{% if form %}
   {{form.media}}
   <form action="{{ request.path }}" method="post">
     {% csrf_token %}
@@ -58,4 +59,14 @@
     {% endfor %}
     <button>Confirm</button>
   </form>
+{% endif %}
+{% if object.id and UserContentType.raw_update in associated.ctype %}
+  <div>
+    <a class="w3-button" href="{% url 'ucontent-access' id=object.id nonce=object.nonce access='raw_update' %}">
+      <i class="fa fa-settings" aria-hidden="true"></i>
+      {% trans 'Update Raw Content' %}
+    </a>
+  </div>
+{% endif %}
+{{content}}
 {% endblock %}

@@ -12,7 +12,7 @@ class AssignedProtectionInline(admin.TabularInline):
 
 class UserContentInline(admin.TabularInline):
     model = UserContent
-    fields = ['info', 'deletion_requested']
+    fields = ['info', 'deletion_requested', 'nonce']
     # content is not visible
 
 
@@ -22,7 +22,7 @@ class UserComponentAdmin(admin.ModelAdmin):
         UserContentInline,
         AssignedProtectionInline,
     ]
-    fields = ['name']
+    fields = ['name', 'deletion_requested', 'nonce']
 
     def has_delete_permission(self, request, obj=None):
         if obj and obj.is_protected:

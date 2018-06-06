@@ -1,23 +1,14 @@
 from django import forms
 
-from .models import AssignedProtection, Protection, UserComponent, UserContent
+from .models import (
+    AssignedProtection, Protection, UserComponent, UserContent, token_nonce
+)
 from .protections import ProtectionType
-
-
-class UserContentForm(forms.ModelForm):
-
-    class Meta:
-        fields = ['accessid', 'usercomponent']
-
-    def __init__(self, *args, disabled=True, **kwargs):
-        super().__init__(*args, **kwargs)
-        if disabled:
-            self.fields["accessid"].disabled = True
-            self.fields["usercomponent"].disabled = True
 
 
 class UserComponentForm(forms.ModelForm):
     protections = None
+    new_nonce = forms.BooleanField(required=False)
 
     class Meta:
         model = UserComponent
@@ -85,3 +76,35 @@ class UserComponentForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self._save_protections()
+
+    def save(self, commit=True):
+        if self.cleaned_data["new_nonce"]:
+            print(
+                "Old nonce for Component id:", self.instance.id,
+                "is", self.instance.nonce
+            )
+            self.instance.nonce = token_nonce()
+        return super().save(commit=commit)
+
+
+class UserContentForm(forms.ModelForm):
+    new_nonce = forms.BooleanField(required=False)
+
+    class Meta:
+        model = UserContent
+        fields = ['usercomponent']
+
+    def __init__(self, *args, disabled=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        if disabled:
+            self.fields["new_nonce"].disabled = True
+            self.fields["usercomponent"].disabled = True
+
+    def save(self, commit=True):
+        if self.cleaned_data["new_nonce"]:
+            print(
+                "Old nonce for Content id:", self.instance.id,
+                "is", self.instance.nonce
+            )
+            self.instance.nonce = token_nonce()
+        return super().save(commit=commit)

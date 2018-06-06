@@ -24,13 +24,13 @@
       <i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
     </summary>
     <div class="w3-padding w3-green">
-      {% for content in content_types %}
+      {% for contentt in content_types %}
         <div class="w3-card w3-yellow" style="margin-top: 10px">
           <div class="w3-cell" style="padding-left: 40px">
             {% if uc.user == request.user %}
-              <a class="w3-button w3-blue" href="{% url 'spider_base:uconent-update' id=content.id %}">{% trans "Edit" %}</a>
+              <a class="w3-button w3-blue" href="{% url 'spider_base:ucontent-add'  %}">{{contentt.name}}</a>
             {% endif %}
-        </div>
+          </div>
         </div>
       {% empty %}
           {% trans 'No User Content Types available.' %}

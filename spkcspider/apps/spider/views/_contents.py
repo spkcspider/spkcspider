@@ -24,7 +24,7 @@ from ..forms import UserContentForm
 class ContentBase(UCTestMixin):
     model = UserContent
     # Views should use one template to render usercontent (whatever it is)
-    template_name = 'spider_base/usercontent_view.html'
+    template_name = 'spider_base/usercontent_access.html'
     scope = None
 
     def dispatch(self, request, *args, **kwargs):
@@ -110,6 +110,7 @@ class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
             )
             if UserContentType.raw_update.value in self.object.ctype.ctype:
                 return rendered
+
             context["content"] = rendered
         return super().render_to_response(context)
 
@@ -152,6 +153,7 @@ class ContentAdd(PermissionRequiredMixin, ContentAccess):
 class ContentIndex(UCTestMixin, ListView):
     model = UserContent
     scope = "list"
+    ordering = ("associated__ctype__name", "id")
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.get_usercomponent()

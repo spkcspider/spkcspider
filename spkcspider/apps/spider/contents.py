@@ -4,6 +4,7 @@ import enum
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
+from django.utils.text import slugify
 
 __all__ = (
     "add_content", "installed_contents", "BaseContent", "UserContentType"
@@ -15,9 +16,8 @@ installed_contents = {}
 class UserContentType(str, enum.Enum):
     # not only private (index)
     public = "\x00"
-    # has a seperate update, scope=update
-    has_update = "\x01"
-    raw_update = "\x02"
+    # update is raw; without form
+    raw_update = "\x01"
 
 
 def add_content(klass):
@@ -30,16 +30,16 @@ def add_content(klass):
     return klass
 
 
-def initialize_protection_models():
+def initialize_content_models():
     from .models import UserContentVariant
     for code, val in installed_contents.items():
         variant = UserContentVariant.objects.get_or_create(
-            defaults={"ctype": val.ctype, "raw": val.raw}, code=code
+            defaults={"ctype": val.ctype, "name": slugify(str(val))}, code=code
         )[0]
         if variant.ctype != val.ctype:
             variant.ctype = val.ctype
-        if variant.raw != val.raw:
-            variant.raw = val.raw
+        if variant.name != slugify(str(val)):
+            variant.name = slugify(str(val))
         variant.save()
     temp = UserContentVariant.objects.exclude(
         code__in=installed_contents.keys()
@@ -83,4 +83,8 @@ class BaseContent(models.Model):
         raise NotImplementedError
 
     def get_info(self, usercomponent):
-        return "type=%s;" % self._meta.model_name
+        return "ctype=%s;code=%s;name=%s;" % \
+            (
+                self.associated.ctype.ctype, self._meta.model_name,
+                self.associated.ctype.name
+            )
