@@ -66,7 +66,6 @@ class UserComponent(models.Model):
         indexes = [
             models.Index(fields=['user']),
         ]
-        ordering = ["name"]
 
     def __str__(self):
         return self.name
@@ -141,7 +140,8 @@ class UserContentVariant(models.Model):
     code = models.SlugField(max_length=255)
     name = models.SlugField(max_length=255)
     owner = models.ForeignKey(
-        "settings.AUTH_USER_MODEL", related_name="+", null=True
+        settings.AUTH_USER_MODEL, related_name="+", null=True,
+        on_delete=models.SET_NULL
     )
     raw = models.BooleanField(default=False)
 
@@ -154,11 +154,13 @@ class UserContentVariant(models.Model):
 
 
 class UserContent(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    id = models.BigAutoField(primary_key=True, editable=False)
+    # another id for access, changeable
+    accessid = models.BigIntegerField(default=models.F("id"))
     # fix linter warning
     objects = models.Manager()
     usercomponent = models.ForeignKey(
-        UserComponent, on_delete=models.CASCADE, editable=False,
+        UserComponent, on_delete=models.CASCADE,
         related_name="contents", null=False
     )
     ctype = models.ForeignKey(
@@ -191,7 +193,9 @@ class UserContent(models.Model):
     )
 
     class Meta:
-        unique_together = [('content_type', 'object_id')]
+        unique_together = [
+            ('content_type', 'object_id'), ("usercomponent", "accessid")
+        ]
         indexes = [
             models.Index(fields=['usercomponent']),
             models.Index(fields=['object_id']),

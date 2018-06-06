@@ -133,7 +133,9 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
-    users = forms.ModelMultipleChoiceField(queryset=friend_query())
+    users = forms.ModelMultipleChoiceField(
+        queryset=friend_query(), required=False
+    )
 
     media = {
         'js': 'admin/js/vendor/select2/select2.full.min.js'

@@ -5,7 +5,7 @@ from .views import (
     ComponentUpdate, ComponentDelete
 )
 from .views import (
-    ContentView, ContentIndex, ContentAdd, ContentUpdate, ContentRemove
+    ContentAdd, ContentIndex, ContentAccess, ContentRemove
 )
 
 app_name = "spider_base"
@@ -41,23 +41,17 @@ urlpatterns = [
         name='ucontent-list'
     ),
     path(
-        'ucs/add/<slug:type>/<slug:name>/',
+        'ucs/add/<slug:user>/<slug:name>/<slug:type>/',
         ContentAdd.as_view(),
         name='ucontent-add'
     ),
-
     path(
-        'content/view/<int:id>/',
-        ContentView.as_view(),
-        name='ucontent-view'
+        'content/access/<int:id>/<slug:access>/',
+        ContentAccess.as_view(),
+        name='ucontent-access'
     ),
     path(
-        'content/update/<int:id>/',
-        ContentUpdate.as_view(),
-        name='ucontent-update'
-    ),
-    path(
-        'content/remove/<int:id>/',
+        'content/remove/<slug:user>/<slug:name>/<int:id>/',
         ContentRemove.as_view(),
         name='ucontent-remove'
     ),

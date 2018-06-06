@@ -1,38 +1,59 @@
 """ UserContent Views """
 
 __all__ = (
-    "ContentView", "ContentIndex", "ContentAdd", "ContentUpdate",
-    "ContentRemove"
+    "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
 )
 
 from datetime import timedelta
 
-from django.views.generic.detail import BaseDetailView
+from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from django.views.generic.list import ListView
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
 from ..contents import UserContentType
 from ..models import UserContent, UserContentVariant
+from ..forms import UserContentForm
 
 
-class ContentBase(UCTestMixin, BaseDetailView):
+class ContentBase(UCTestMixin):
     model = UserContent
     # Views should use one template to render usercontent (whatever it is)
     template_name = 'spider_base/usercontent_view.html'
     scope = None
 
-    post = BaseDetailView.get
-    put = BaseDetailView.get
+    def dispatch(self, request, *args, **kwargs):
+        _scope = kwargs.get("access", None)
+        if self.scope == "access":
+            if _scope in ["update", "add", "list"]:
+                raise PermissionDenied("Deceptive scopes")
+            self.scope = _scope
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         kwargs["request"] = self.request
         kwargs["scope"] = self.scope
         return super().get_context_data(**kwargs)
+
+    def check_write_permission(self):
+        # give user and staff the ability to update Content
+        # except it is protected, in this case only the user can update
+        # reason: admins could be tricked into malicious updates
+        # for index the same reason as for add
+        uncritically = not self.usercomponent.is_protected
+        if self.has_special_access(staff=uncritically, superuser=uncritically):
+            # block update if noupdate flag is set
+            # no override for special users as the form could do unsafe stuff
+            # special users: do it in the admin interface
+            if self.object.id and self.object.get_flag("noupdate"):
+                return False
+            return True
+        return False
 
     def test_func(self):
         if self.has_special_access(staff=(self.usercomponent.name != "index"),
@@ -48,59 +69,58 @@ class ContentBase(UCTestMixin, BaseDetailView):
             return True
         return False
 
+
+class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
+    scope = "access"
+    form_class = UserContentForm
+    has_write_perm = False
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = {"form": None}
+        if self.scope in ["update"]:
+            context["form"] = self.get_form()
+        return self.render_to_response(self.get_context_data(context))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = {"form": None}
+        if self.scope in ["update"]:
+            context["form"] = self.get_form()
+            if context["form"].is_valid():
+                self.object = context["form"].save()
+        return self.render_to_response(self.get_context_data(context))
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["disabled"] = not self.check_write_permission()
+        return kwargs
+
+    def test_func(self):
+        if self.scope not in ["update", "raw_update", "add"]:
+            return super().test_func()
+        self.has_write_perm = self.check_write_permission()
+        return self.has_write_perm
+
+    def render_to_response(self, context):
+        if UserContentType.raw_update.value not in self.object.ctype.ctype or \
+           self.scope not in ["update", "add"]:
+            rendered = self.object.content.render(
+                code=self.object.ctype.code, **context
+            )
+            context["content"] = rendered
+        return super().render_to_response(context)
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(queryset,
-                                 usercomponent=self.usercomponent,
-                                 id=self.kwargs["id"])
+                                 accessid=self.kwargs["id"])
 
 
-class ContentView(ContentBase):
-    scope = "view"
-
-    def render_to_response(self, context):
-        raw = self.request.GET.get("raw") == "true"
-        rendered = self.object.content.render(
-            raw=raw, code=self.object.ctype.code, **context
-        )
-        if raw:
-            return rendered
-        context["content"] = rendered
-        return super().render_to_response(context)
-
-
-class ContentUpdate(ContentBase):
-    scope = "update"
-
-    def test_func(self):
-        # give user and staff the ability to update Content
-        # except it is protected, in this case only the user can update
-        # reason: admins could be tricked into malicious updates
-        # for index the same reason as for add
-        uncritically = not self.usercomponent.is_protected
-        if self.has_special_access(staff=uncritically, superuser=uncritically):
-            # block update if noupdate flag is set
-            # no override for special users as the form could do unsafe stuff
-            # special users: do it in the admin interface
-            if self.object.id and self.object.get_flag("noupdate"):
-                return False
-            return True
-        return False
-
-    def render_to_response(self, context):
-        rendered = self.object.content.render(
-            code=self.object.ctype.code, **context
-        )
-        if UserContentType.raw_update.value in self.object.ctype.ctype:
-            return rendered
-        context["content"] = rendered
-        return super().render_to_response(context)
-
-
-class ContentAdd(PermissionRequiredMixin, ContentUpdate):
+class ContentAdd(PermissionRequiredMixin, ContentAccess):
     permission_required = 'spider_base.add_usercontent'
-    scope = "create"
+    scope = "add"
     model = UserContentVariant
 
     def get_object(self, queryset=None):
@@ -127,6 +147,7 @@ class ContentAdd(PermissionRequiredMixin, ContentUpdate):
 
 class ContentIndex(UCTestMixin, ListView):
     model = UserContent
+    scope = "list"
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.get_usercomponent()
@@ -192,5 +213,5 @@ class ContentRemove(ComponentDelete):
             queryset = self.get_queryset()
         return get_object_or_404(
             queryset, usercomponent=self.get_usercomponent(),
-            id=self.kwargs["id"]
+            findid=self.kwargs["id"]
         )

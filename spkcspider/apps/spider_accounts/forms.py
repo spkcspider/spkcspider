@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
+from django.urls import reverse
 
 
 class SignupForm(UserCreationForm):
@@ -52,5 +53,12 @@ class UserUpdateForm(UserChangeForm):
         fields = model.SAFE_FIELDS
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(UserChangeForm, self).__init__(*args, **kwargs)
+        self.fields['password'].help_text = \
+            self.fields['password'].help_text.format(
+                reverse('auth:password_change')
+            )
+        f = self.fields.get('user_permissions')
+        if f is not None:
+            f.queryset = f.queryset.select_related('content_type')
         self.fields['email'].help_text += "Optional"

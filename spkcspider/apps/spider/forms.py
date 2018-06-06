@@ -1,7 +1,19 @@
 from django import forms
 
-from .models import AssignedProtection, Protection, UserComponent
+from .models import AssignedProtection, Protection, UserComponent, UserContent
 from .protections import ProtectionType
+
+
+class UserContentForm(forms.ModelForm):
+
+    class Meta:
+        fields = ['accessid', 'usercomponent']
+
+    def __init__(self, *args, disabled=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        if disabled:
+            self.fields["accessid"].disabled = True
+            self.fields["usercomponent"].disabled = True
 
 
 class UserComponentForm(forms.ModelForm):
