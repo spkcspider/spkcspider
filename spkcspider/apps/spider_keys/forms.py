@@ -14,8 +14,8 @@ class KeyForm(forms.ModelForm):
         model = PublicKey
         fields = ['key', 'note']
 
-    def __init__(self, *args, **kwargs):
-        self.usercomponent = kwargs.pop("usercomponent")
+    def __init__(self, *args, uc=None, **kwargs):
+        self.usercomponent = uc
         super().__init__(*args, **kwargs)
 
     def is_valid(self):
@@ -34,15 +34,6 @@ class KeyForm(forms.ModelForm):
         ).exclude(
             associated__usercomponent__user=self.usercomponent.user
         ).exists()
-
-    def get_info(self):
-        if self.usercomponent.name == "recovery":
-            return "hash=%s;protected_for=%s;" % (
-                self.instance.hash,
-                getattr(settings, "RECOVERY_DELETION_PERIOD", 24*60*60)
-            )
-        else:
-            return "hash=%s;" % self.instance.hash
 
     def clean_key(self):
         data = self.cleaned_data['key'].strip()

@@ -10,9 +10,16 @@ class SpiderBaseConfig(AppConfig):
 
     def ready(self):
         from .signals import (
-            InitProtectionsCallback, InitUserComponentsCallback
+            InitProtectionsCallback, InitUserComponentsCallback,
+            InitContentsCallback
         )
-        post_save.connect(InitUserComponentsCallback, sender=get_user_model(),
-                          dispatch_uid="initial_usercomponents")
-        post_migrate.connect(InitProtectionsCallback,
-                             dispatch_uid="update_protections")
+        post_save.connect(
+            InitUserComponentsCallback, sender=get_user_model(),
+            dispatch_uid="initial_usercomponents"
+        )
+        post_migrate.connect(
+            InitProtectionsCallback, dispatch_uid="update_protections"
+        )
+        post_migrate.connect(
+            InitContentsCallback, dispatch_uid="update_contents"
+        )

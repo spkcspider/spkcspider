@@ -2,25 +2,7 @@
 {% load i18n static %}
 
 {% block content %}
-  {{form.media}}
-  <form method="post">
-    {% csrf_token %}
-    <fieldset>
-      <legend><h1>{% trans 'Update User Profile' %}</h1></legend>
-      {% for field in form %}
-        <div class="w3-margin">
-          {{ field.label_tag }}
-          <br>
-          {{ field }}
-          {% if field.help_text %}
-            <small style="color: grey">{{ field.help_text|safe }}</small>
-          {% endif %}
-          {% for error in field.errors %}
-            <p style="color: red">{{ error }}</p>
-          {% endfor %}
-        </div>
-      {% endfor %}
-    </fieldset>
-    <button class="w3-button w3-grey" type="submit">Confirm</button>
-  </form>
+  {% trans 'Update User Profile' as legend %}
+  {% trans 'Update' as confirm %}
+  {% include "spider_base/full_form.html" form=form legend=legend confirm=confirm %}
 {% endblock %}

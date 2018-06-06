@@ -1,7 +1,15 @@
-__all__ = ("InitProtectionsCallback", "InitUserComponentsCallback")
+__all__ = (
+    "InitProtectionsCallback", "InitUserComponentsCallback",
+    "InitContentsCallback"
+)
 from django.dispatch import Signal
 
 test_success = Signal(providing_args=["name", "code"])
+
+
+def InitContentsCallback(sender, **kwargs):
+    from .contents import initialize_content_models
+    initialize_content_models()
 
 
 def InitProtectionsCallback(sender, **kwargs):

@@ -102,6 +102,7 @@ class UserComponentForm(forms.ModelForm):
 
 
 class UserContentForm(forms.ModelForm):
+    prefix = "content_control"
     new_nonce = forms.BooleanField(
         label=_("New Nonce"), help_text=_(_help_text % 'User Content'),
         required=False, initial=False

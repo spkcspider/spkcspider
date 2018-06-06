@@ -4,7 +4,6 @@ import enum
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
-from django.utils.text import slugify
 
 __all__ = (
     "add_content", "installed_contents", "BaseContent", "UserContentType"
@@ -35,13 +34,16 @@ def add_content(klass):
 def initialize_content_models():
     from .models import UserContentVariant
     for code, val in installed_contents.items():
+        n = val.content_name
+        if not n:
+            n = val.__name__
         variant = UserContentVariant.objects.get_or_create(
-            defaults={"ctype": val.ctype, "name": slugify(str(val))}, code=code
+            defaults={"ctype": val.ctype, "name": n}, code=code
         )[0]
         if variant.ctype != val.ctype:
             variant.ctype = val.ctype
-        if variant.name != slugify(str(val)):
-            variant.name = slugify(str(val))
+        if variant.name != n:
+            variant.name = n
         variant.save()
     temp = UserContentVariant.objects.exclude(
         code__in=installed_contents.keys()
@@ -55,6 +57,8 @@ class BaseContent(models.Model):
     # consider not writing admin wrapper for (sensitive) inherited content
     # this way content could be protected to be only visible to admin, user
     # and legitimated users (if not index)
+    content_name = None
+    ctype = ""
 
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
@@ -86,9 +90,23 @@ class BaseContent(models.Model):
     def render(self, **kwargs):
         raise NotImplementedError
 
+    def get_form_kwargs(self, request, initial=None, prefix=None):
+        """Return the keyword arguments for instantiating the form."""
+        kwargs = {
+            'initial': initial if initial else {},
+            'prefix': prefix,
+        }
+
+        if request.method in ('POST', 'PUT'):
+            kwargs.update({
+                'data': request.POST,
+                'files': request.FILES,
+            })
+        return kwargs
+
     def get_info(self, usercomponent):
-        return "ctype=%s;code=%s;name=%s;" % \
+        return "code=%s;name=%s;" % \
             (
-                self.associated.ctype.ctype, self._meta.model_name,
+                self._meta.model_name,
                 self.associated.ctype.name
             )

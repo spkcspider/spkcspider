@@ -8,7 +8,9 @@ from django.shortcuts import render
 import hashlib
 import logging
 
-from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.apps.spider.contents import (
+    BaseContent, add_content, UserContentType
+)
 from .forms import KeyForm
 
 logger = logging.getLogger(__name__)
@@ -32,27 +34,16 @@ def valid_pkey_properties(key):
         raise ValidationError(_('Not a key'))
 
 
-# also for account recovery
 @add_content
 class PublicKey(BaseContent):
-    form_class = KeyForm
-    # don't check for similarity as the hash check will reveal all clashes
+    content_name = "PublicKey"
+    ctype = UserContentType.public.value
+
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
-    note = models.TextField(max_length=400, null=False)
-    # can only be retrieved by hash or if it is the user
-    # every hash has to be unique
-    # TODO: people could steal public keys and block people from using service
-    # needs key to mediate if clashes happen
-    # don't use as primary key as algorithms could change
-    # DON'T allow users to change hash
+    note = models.TextField(max_length=100, default="", null=False)
     hash = models.CharField(
         max_length=settings.MAX_HASH_SIZE, null=False, editable=False
     )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=['hash']),
-        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -61,19 +52,30 @@ class PublicKey(BaseContent):
     def __str__(self):
         return "{}: {}".format(self.hash, self.note)
 
-    def render(self, **context):
-        if context["request"].GET.get("returntype", None) == "hash":
+    def render(self, **kwargs):
+        if kwargs["scope"] == "hash":
             return self.hash
-        elif context["request"].GET.get("returntype", None) == "key":
+        elif kwargs["scope"] == "key":
             return self.key
-        else:
+        elif kwargs["scope"] in ["update", "add"]:
+            kwargs["form"] = KeyForm(
+                uc=kwargs["uc"],
+                **self.get_form_kwargs(kwargs["request"])
+            )
+            if self.id:
+                kwargs["legend"] = _("Update Public Key")
+                kwargs["confirm"] = _("Update")
+            else:
+                kwargs["legend"] = _("Create Public Key")
+                kwargs["confirm"] = _("Create")
             return render(
-                context["request"], "spiderkeys/key.html", context=context
+                kwargs["request"], "spider_base/full_form.html",
+                context=kwargs
             )
 
     def save(self, *args, **kwargs):
         if self.key and self.__original_key != self.key:
             h = hashlib.new(settings.KEY_HASH_ALGO)
-            h.update(self.key.encode("utf-8", "ignore"))
+            h.update(self.key.encode("ascii", "ignore"))
             self.hash = h.hexdigest()
         super().save(*args, **kwargs)

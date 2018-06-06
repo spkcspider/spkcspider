@@ -38,6 +38,7 @@ class ContentBase(UCTestMixin):
     def get_context_data(self, **kwargs):
         kwargs["request"] = self.request
         kwargs["scope"] = self.scope
+        kwargs["uc"] = self.usercomponent
         return super().get_context_data(**kwargs)
 
     def check_write_permission(self):

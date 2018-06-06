@@ -36,28 +36,7 @@
     {% csrf_token %}
     <fieldset>
       <legend><h1>{% trans 'User Component' %}</h1></legend>
-      <ul class="w3-ul">
-        {% for field in form %}
-        <li>
-          <div class="">
-            <div class="w3-cell w3-padding">
-              {{ field.label_tag }}</br>
-              {{ field }}
-            </div>
-            <div class="w3-cell w3-padding">
-            {% if field.help_text %}
-              <small class="w3-text-grey">{{ field.help_text|safe }}</small>
-            {% endif %}
-            </div>
-          </div>
-          <div class="">
-            {% for error in field.errors %}
-              <p class="w3-text-red">{{ error|safe }}</p>
-            {% endfor %}
-          </div>
-        </li>
-        {% endfor %}
-      </ul>
+      {% include "spider_base/base_form.html" with form=form %}
     </fieldset>
     <fieldset>
       <legend><h1>{% trans 'Protections' %}</h1></legend>
@@ -70,26 +49,7 @@
           <td class="w3-half">
             <div class="w3-white w3-card w3-padding">
               <h1 class="w3-center">{{prot.name}}</h1>
-              <ul class="w3-ul">
-              {% for field in prot %}
-              <li class="w3-margin">
-                <div class="">
-                  {{ field.label_tag }}</br>
-                  {{ field }}
-                </div>
-                <div class="">
-                {% if field.help_text %}
-                  <small class="w3-text-grey">{{ field.help_text|safe }}</small>
-                {% endif %}
-                </div>
-                <div class="">
-                  {% for error in field.errors %}
-                    <p class="w3-text-red">{{ error|safe }}</p>
-                  {% endfor %}
-                </div>
-              </li>
-              {% endfor %}
-            </ul>
+              {% include "spider_base/base_form.html" with form=prot %}
             </div>
           </td>
           {% if forloop.counter|divisibleby:"2" or forloop.last %}
