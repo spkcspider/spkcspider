@@ -32,32 +32,8 @@
           <i class="fa fa-home" aria-hidden="true"></i>
           <span class="w3-hide-small" style="margin-left:10px">{% trans 'Home' %}</span>
         </a>
-        <div class="w3-hide-medium w3-hide-large w3-bar-item w3-show" style="width:100%"></div>
         {% url 'auth:login' as loginpath %}
         {% if request.user.is_authenticated %}
-          <div class="w3-dropdown-hover w3-dropdown-click">
-            <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button">
-              Actions<i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
-            </button>
-            <div class="w3-dropdown-content w3-bar-block w3-border w3-black" id="context_actions_list">
-              <div class="w3-animate-opacity w3-black">
-                {% block context_actions %}
-                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-create' %}">
-                    <i class="fa fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'Add Component' %}
-                  </a>
-                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-list' %}">
-                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'List Own' %}
-                  </a>
-                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-listall' %}">
-                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'List All' %}
-                  </a>
-                {% endblock context_actions %}
-              </div>
-            </div>
-          </div>
           <div class="w3-right w3-dropdown-hover w3-dropdown-click w3-black">
             <button onclick='document.getElementById("user_actions_list").classList.toggle("w3-show")' class="w3-button w3-black">
               <i class="fa fa-user" style="margin-right:10px" aria-hidden="true"></i>
@@ -76,6 +52,29 @@
                   {% trans 'Logout' %}
                 </a>
                 {% endblock user_actions %}
+              </div>
+            </div>
+          </div>
+          <div class="w3-dropdown-hover w3-dropdown-click w3-left">
+            <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button w3-left">
+              Actions<i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
+            </button>
+            <div class="w3-dropdown-content w3-bar-block w3-border w3-black" id="context_actions_list">
+              <div class="w3-animate-opacity w3-black">
+                {% block context_actions %}
+                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-create' %}">
+                    <i class="fa fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'Add Component' %}
+                  </a>
+                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-list' %}">
+                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'List Own' %}
+                  </a>
+                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-listall' %}">
+                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'List All' %}
+                  </a>
+                {% endblock context_actions %}
               </div>
             </div>
           </div>

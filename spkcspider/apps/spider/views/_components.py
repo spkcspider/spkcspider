@@ -41,8 +41,12 @@ class ComponentAllIndex(ListView):
             q &= models.Q(name__icontains=self.request.GET["search"])
         main_query = self.model.objects.filter(q).annotate(
             len_prot=models.Count('protections')
-        ).filter(q2)
-        return main_query.union(quser).order_by(
+        ).filter(q2).union(quser)
+        if "search" in self.request.GET:
+            main_query = main_query.filter(
+                name__icontains=self.request.GET["search"]
+            )
+        return main_query.order_by(
             "user", "name"
         ).distinct("user", "name")
 
