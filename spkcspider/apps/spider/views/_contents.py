@@ -8,6 +8,7 @@ from datetime import timedelta
 
 from django.views.generic.edit import ProcessFormView, ModelFormMixin
 from django.views.generic.list import ListView
+from django.views.generic.base import TemplateResponseMixin
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db import models
@@ -26,6 +27,7 @@ class ContentBase(UCTestMixin):
     # Views should use one template to render usercontent (whatever it is)
     template_name = 'spider_base/usercontent_access.html'
     scope = None
+    object = None
 
     def dispatch(self, request, *args, **kwargs):
         _scope = kwargs.get("access", None)
@@ -51,7 +53,8 @@ class ContentBase(UCTestMixin):
             # block update if noupdate flag is set
             # no override for special users as the form could do unsafe stuff
             # special users: do it in the admin interface
-            if self.object.id and self.object.get_flag("noupdate"):
+            if isinstance(self.object, UserContent) and \
+               self.object.associated.get_flag("noupdate"):
                 return False
             return True
         return False
@@ -71,7 +74,8 @@ class ContentBase(UCTestMixin):
         return False
 
 
-class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
+class ContentAccess(ContentBase, ModelFormMixin, ProcessFormView,
+                    TemplateResponseMixin):
     scope = "access"
     form_class = UserContentForm
     has_write_perm = False
@@ -81,7 +85,7 @@ class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
         context = {"form": None}
         if self.scope == "update":
             context["form"] = self.get_form()
-        return self.render_to_response(self.get_context_data(context))
+        return self.render_to_response(self.get_context_data(**context))
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -95,7 +99,7 @@ class ContentAccess(ModelFormMixin, ProcessFormView, ContentBase):
             context["form"] = self.get_form_class()(
                 **self.get_form_success_kwargs()
             )
-        return self.render_to_response(self.get_context_data(context))
+        return self.render_to_response(self.get_context_data(**context))
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -146,14 +150,14 @@ class ContentAdd(PermissionRequiredMixin, ContentAccess):
         context = {"form": None}
         if UserContentType.raw_add.value not in self.object.ctype:
             context["form"] = self.get_form()
-        return self.render_to_response(self.get_context_data(context))
+        return self.render_to_response(self.get_context_data(**context))
 
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        queryset = queryset.filter(
-            models.Q(owner=self.usercomponent) | models.Q(owner__isnull=True)
-        )
+        q = models.Q(owner=self.usercomponent.user)
+        q |= models.Q(owner__isnull=True)
+        queryset = queryset.filter(q)
         q_dict = {"name": self.kwargs["type"]}
         if self.usercomponent.name != "index":
             q_dict["ctype__contains"] = UserContentType.public.value
@@ -165,9 +169,9 @@ class ContentAdd(PermissionRequiredMixin, ContentAccess):
         )
         if UserContentType.raw_add.value in self.object.ctype:
             return ob.render(**ob.kwargs)
-        if UserContentType.raw_update.value not in self.object.ctype.ctype:
+        if UserContentType.raw_update.value not in self.object.ctype:
             context["content"] = ob.render(**ob.kwargs)
-        return super().render_to_response(context)
+        return super(ContentAccess, self).render_to_response(context)
 
 
 class ContentIndex(UCTestMixin, ListView):

@@ -2,7 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from django.shortcuts import render
+from django.template.loader import render_to_string
 
 
 import hashlib
@@ -11,7 +11,6 @@ import logging
 from spkcspider.apps.spider.contents import (
     BaseContent, add_content, UserContentType
 )
-from .forms import KeyForm
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +52,7 @@ class PublicKey(BaseContent):
         return "{}: {}".format(self.hash, self.note)
 
     def render(self, **kwargs):
+        from .forms import KeyForm
         if kwargs["scope"] == "hash":
             return self.hash
         elif kwargs["scope"] == "key":
@@ -68,8 +68,8 @@ class PublicKey(BaseContent):
             else:
                 kwargs["legend"] = _("Create Public Key")
                 kwargs["confirm"] = _("Create")
-            return render(
-                kwargs["request"], "spider_base/full_form.html",
+            return render_to_string(
+                "spider_base/full_form.html", request=kwargs["request"],
                 context=kwargs
             )
 

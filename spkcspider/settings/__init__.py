@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     # 'django.contrib.sites',
     'spkcspider.apps.spider',
     # 'spkcspider.apps.spiderbrokers',
-    # 'spkcspider.apps.spiderkeys',
+    'spkcspider.apps.spider_keys',
 ]
 try:
     import django_extensions  # noqa: F401

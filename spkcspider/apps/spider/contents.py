@@ -75,9 +75,10 @@ class BaseContent(models.Model):
 
     @classmethod
     def static_create(cls, associated=None, **kwargs):
-        self = cls(associated=associated)
-        self.kwargs = kwargs
-        return self
+        ob = cls()
+        ob.__dict__["associated"] = associated
+        ob.kwargs = kwargs
+        return ob
 
     def __str__(self):
         if not self.id:

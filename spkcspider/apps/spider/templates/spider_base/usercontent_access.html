@@ -1,12 +1,12 @@
 {% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 
-{% block title %}{% if object %}
+{% block title %}{% if scope != "add" %}
   {% blocktrans trimmed %}
-    Create User Content of type: <em></em>
+    User Content
   {% endblocktrans %}
-{% else %}{% blocktrans trimmed with type=object.content_type.name id=object.id %}
-  Update User Content: <em>{{type}}-{{id}}</em>
+{% else %}{% blocktrans trimmed with type=object.name %}
+  Create User Content: <em>{{type}}</em>
 {% endblocktrans %}{% endif %}{% endblock %}
 
 {% block context_actions %}
@@ -16,16 +16,16 @@
 
 {% block content %}
   <div>
-    <a class="w3-left" href="{% url 'spider_base:ucontent-list' name=uc.name %}">{% trans 'index' %}</a>
-    {% if object and object.name != "index" %}
+    <a class="w3-left" href="{% url 'spider_base:ucontent-list' user=uc.username name=uc.name nonce=uc.nonce %}">{% trans 'index' %}</a>
+    {% if scope != "add" %}
       <span class="w3-right">
-        <a href="{% url 'spider_base:ucontent-delete' name=object.id %}">
+        <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name id=object.id %}">
           {% trans 'delete' %}
         </a>?
       </span>
     {% endif %}
     <h1 class="w3-center">
-      {% if form.instance.id %}
+      {% if scope != "add" %}
         {% blocktrans trimmed with name=form.instance.name %}
           User Content: {{name}}
         {% endblocktrans %}
