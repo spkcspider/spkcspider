@@ -9,7 +9,7 @@ from .protections import ProtectionType
 
 _help_text = """Generate new nonce<br/>
 Nonces protect against bruteforce and attackers<br/>
-If you have problems with attackers (because they now the nonce),
+If you have problems with attackers (because they know the nonce),
 you can invalidate it with this option<br/>
 <span style="color:red;">
 Warning: this removes also access for all services you gave the
