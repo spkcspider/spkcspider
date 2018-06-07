@@ -11,6 +11,7 @@ from django.views.generic.list import ListView
 from django.views.generic.base import TemplateResponseMixin, View
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
+from django.http.response import HttpResponseBase
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -127,6 +128,10 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
             if UserContentType.raw_update.value in \
                self.object.ctype.ctype:
                 return rendered
+            # return response if content returned response
+            # useful for redirects
+            if isinstance(rendered, HttpResponseBase):
+                return rendered
 
             context["content"] = rendered
         return super().render_to_response(context)
@@ -189,6 +194,9 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
         rendered = ob.render(**ob.kwargs)
 
         if UserContentType.raw_add.value in self.object.ctype:
+            return rendered
+        # return response if content returned response
+        if isinstance(rendered, HttpResponseBase):
             return rendered
         # show framed output
         context["content"] = rendered
