@@ -1,4 +1,5 @@
 {{form.media}}
+{% include "spider_base/form_errors.html" with form=form %}
 <form action="{{ request.path }}" method="post">
   {% csrf_token %}
   <fieldset>

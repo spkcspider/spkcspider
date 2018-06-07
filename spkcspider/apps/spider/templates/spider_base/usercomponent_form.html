@@ -31,6 +31,7 @@
       {% endif %}
     </h1>
   </div>
+  {% include "spider_base/form_errors.html" with form=form %}
   {{form.media}}
   <form class="" action="{{ request.path }}" method="post">
     {% csrf_token %}

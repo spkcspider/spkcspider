@@ -65,7 +65,14 @@ class BaseContent(models.Model):
     deletion_period = getattr(settings, "DELETION_PERIOD_CONTENT", None)
     # if created associated is None (will be set later)
     # use usercomponent in form instead
-    associated = GenericRelation("spider_base.UserContent")
+    _associated = GenericRelation("spider_base.UserContent")
+    _associated2 = None
+
+    @property
+    def associated(self):
+        if self._associated:
+            return self._associated
+        return self._associated2
 
     # if static_create is used and class not saved yet
     kwargs = None
@@ -76,7 +83,8 @@ class BaseContent(models.Model):
     @classmethod
     def static_create(cls, associated=None, **kwargs):
         ob = cls()
-        ob.__dict__["associated"] = associated
+        if associated:
+            ob._associated2 = associated
         ob.kwargs = kwargs
         return ob
 
@@ -91,12 +99,9 @@ class BaseContent(models.Model):
     def render(self, **kwargs):
         raise NotImplementedError
 
-    def get_form_kwargs(self, request, initial=None, prefix=None):
+    def get_form_kwargs(self, request):
         """Return the keyword arguments for instantiating the form."""
-        kwargs = {
-            'initial': initial if initial else {},
-            'prefix': prefix,
-        }
+        kwargs = {"instance": self}
 
         if request.method in ('POST', 'PUT'):
             kwargs.update({
@@ -111,3 +116,9 @@ class BaseContent(models.Model):
                 self._meta.model_name,
                 self.associated.ctype.name
             )
+
+    def save(self, *args, **kwargs):
+        ret = super().save(*args, **kwargs)
+        self._associated2.content = self
+        self._associated2.save()
+        return ret

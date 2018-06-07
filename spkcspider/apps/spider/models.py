@@ -87,7 +87,7 @@ class UserComponent(models.Model):
         ]
 
     def __str__(self):
-        return self.name
+        return "%s: %s" % (self.username, self.name)
 
     def auth(self, request, ptype=ProtectionType.access_control.value,
              **kwargs):
@@ -199,7 +199,7 @@ class UserContent(models.Model):
     objects = models.Manager()
     usercomponent = models.ForeignKey(
         UserComponent, on_delete=models.CASCADE,
-        related_name="contents", null=False
+        related_name="contents", null=False, blank=False
     )
     ctype = models.ForeignKey(
         UserContentVariant, editable=False, null=True,

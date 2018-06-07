@@ -23,7 +23,7 @@ class KeyForm(forms.ModelForm):
             return False
         # shortcut if key matches
         if hasattr(self, "instance") and self.instance:
-            if self.object.key == self.cleaned_data["key"]:
+            if self.instance.key == self.cleaned_data["key"]:
                 return True
         h = hashlib.new(settings.KEY_HASH_ALGO)
         h.update(self.cleaned_data["key"].encode("utf-8", "ignore"))

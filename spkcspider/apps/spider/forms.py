@@ -114,6 +114,9 @@ class UserContentForm(forms.ModelForm):
 
     def __init__(self, *args, disabled=True, **kwargs):
         super().__init__(*args, **kwargs)
+        user = self.instance.usercomponent.user
+        query = UserComponent.objects.filter(user=user)
+        self.fields["usercomponent"].queryset = query
         if disabled:
             self.fields["new_nonce"].disabled = True
             self.fields["usercomponent"].disabled = True

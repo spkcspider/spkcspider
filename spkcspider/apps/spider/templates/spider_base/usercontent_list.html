@@ -39,7 +39,7 @@
     {% for content in object_list %}
       <tr>
         <td class="">
-          {{ content }}
+          {{ content.content|truncatechars:50 }}
         </td>
         <td class="w3-show-inline-block">
           <div class="w3-bar w3-round-large w3-tiny w3-blue">
@@ -48,7 +48,7 @@
               <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "View" %}</span></span>
             </a>
             {% if uc.user == request.user  %}
-            <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-access' name=uc.name access='update' %}">
+            <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}">
               <i class="fa fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i>
               <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "Edit" %}</span></span>
             </a>

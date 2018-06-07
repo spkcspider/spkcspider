@@ -6,11 +6,11 @@ __all__ = (
 
 from datetime import timedelta
 
-from django.views.generic.edit import ProcessFormView, ModelFormMixin
+from django.views.generic.edit import ModelFormMixin
 from django.views.generic.list import ListView
-from django.views.generic.base import TemplateResponseMixin
+from django.views.generic.base import TemplateResponseMixin, View
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -32,7 +32,7 @@ class ContentBase(UCTestMixin):
     def dispatch(self, request, *args, **kwargs):
         _scope = kwargs.get("access", None)
         if self.scope == "access":
-            if _scope in ["update", "add", "list"]:
+            if _scope in ["add", "list"]:
                 raise PermissionDenied("Deceptive scopes")
             self.scope = _scope
         return super().dispatch(request, *args, **kwargs)
@@ -54,7 +54,7 @@ class ContentBase(UCTestMixin):
             # no override for special users as the form could do unsafe stuff
             # special users: do it in the admin interface
             if isinstance(self.object, UserContent) and \
-               self.object.associated.get_flag("noupdate"):
+               self.object.get_flag("noupdate"):
                 return False
             return True
         return False
@@ -74,10 +74,10 @@ class ContentBase(UCTestMixin):
         return False
 
 
-class ContentAccess(ContentBase, ModelFormMixin, ProcessFormView,
-                    TemplateResponseMixin):
+class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     scope = "access"
     form_class = UserContentForm
+    model = UserContent
     has_write_perm = False
 
     def get(self, request, *args, **kwargs):
@@ -90,15 +90,13 @@ class ContentAccess(ContentBase, ModelFormMixin, ProcessFormView,
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = {"form": None}
-        if self.scope in ["update", "add"]:
-            if self.scope == "update" or \
-               UserContentType.raw_add.value not in self.object.ctype:
-                context["form"] = self.get_form()
-        if context["form"] and context["form"].is_valid():
-            self.object = context["form"].save()
-            context["form"] = self.get_form_class()(
-                **self.get_form_success_kwargs()
-            )
+        # add has no form
+        if self.scope == "update":
+            if context["form"].is_valid():
+                self.object = context["form"].save()
+                context["form"] = self.get_form_class()(
+                    **self.get_form_success_kwargs()
+                )
         return self.render_to_response(self.get_context_data(**context))
 
     def get_form_kwargs(self):
@@ -115,7 +113,7 @@ class ContentAccess(ContentBase, ModelFormMixin, ProcessFormView,
         }
 
     def test_func(self):
-        if self.scope not in ["update", "raw_update", "add"]:
+        if self.scope not in ["update", "raw_update"]:
             return super().test_func()
         self.has_write_perm = self.check_write_permission()
         return self.has_write_perm
@@ -127,30 +125,47 @@ class ContentAccess(ContentBase, ModelFormMixin, ProcessFormView,
                 **context
             )
             if UserContentType.raw_update.value in \
-               self.object.associated.ctype.ctype:
+               self.object.ctype.ctype:
                 return rendered
 
             context["content"] = rendered
         return super().render_to_response(context)
 
+    def get_usercomponent(self):
+        if self.object:
+            return self.object.usercomponent
+        return self.get_object().usercomponent
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        return get_object_or_404(queryset,
-                                 accessid=self.kwargs["id"])
+        return get_object_or_404(
+            queryset,
+            id=self.kwargs["id"],
+            nonce=self.kwargs["nonce"]
+        )
 
 
-class ContentAdd(PermissionRequiredMixin, ContentAccess):
+class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
+                 TemplateResponseMixin, View):
     permission_required = 'spider_base.add_usercontent'
     scope = "add"
     model = UserContentVariant
 
+    def get_initial(self):
+        return {"usercomponent": self.usercomponent}
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        context = {"form": None}
-        if UserContentType.raw_add.value not in self.object.ctype:
-            context["form"] = self.get_form()
-        return self.render_to_response(self.get_context_data(**context))
+        return self.render_to_response(self.get_context_data(form=None))
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_to_response(self.get_context_data())
+
+    def test_func(self):
+        self.has_write_perm = self.check_write_permission()
+        return self.has_write_perm
 
     def get_object(self, queryset=None):
         if not queryset:
@@ -164,14 +179,25 @@ class ContentAdd(PermissionRequiredMixin, ContentAccess):
         return get_object_or_404(queryset, **q_dict)
 
     def render_to_response(self, context):
-        ob = self.object.installed_class.static_create(
-            associated=self.object, **context
+        ucontent = UserContent(
+            usercomponent=self.usercomponent,
+            ctype=self.object
         )
+        ob = self.object.installed_class.static_create(
+            associated=ucontent, **context
+        )
+        rendered = ob.render(**ob.kwargs)
+
         if UserContentType.raw_add.value in self.object.ctype:
-            return ob.render(**ob.kwargs)
-        if UserContentType.raw_update.value not in self.object.ctype:
-            context["content"] = ob.render(**ob.kwargs)
-        return super(ContentAccess, self).render_to_response(context)
+            return rendered
+        # show framed output
+        context["content"] = rendered
+        if getattr(ob, "id", None):
+            return redirect(
+                'spider_base:ucontent-access', id=ucontent.id,
+                nonce=ucontent.nonce, access="update"
+            )
+        return super().render_to_response(context)
 
 
 class ContentIndex(UCTestMixin, ListView):

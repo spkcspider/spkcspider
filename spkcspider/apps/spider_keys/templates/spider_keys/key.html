@@ -1,6 +1,10 @@
-{% extends "spkcspider/base.html" %}
-{% block content %}
-  <h1>Key & hash</h1>
-  {{object.content.key}}<br/>
-  {{object.content.hash}}
-{% endblock %}
+<h1>Key & hash</h1>
+<table>
+  <tr>
+    <td>Hash</td>
+    <td>{{object.hash}}</td>
+  </tr>
+  <tr>
+    <td>key</td>
+    <td>{{object.key}}</td>
+  </tr>

@@ -37,7 +37,11 @@
 {% if form %}
   {{form.media}}
   <details>
-    <summary><h1>{% trans 'Content Settings' %}</h1></summary>
+    <summary class="w3-btn w3-grey">
+      <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
+      {% trans 'Content Settings' %}
+      <i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
+    </summary>
     {% trans 'Content Settings' as legend %}
     {% trans 'Update' as confirm %}
     {% include "spider_base/full_form.html" with legend=legend confirm=confirm form=form %}

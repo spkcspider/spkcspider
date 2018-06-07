@@ -39,7 +39,7 @@ class PublicKey(BaseContent):
     ctype = UserContentType.public.value
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
-    note = models.TextField(max_length=100, default="", null=False)
+    note = models.TextField(max_length=100, default="", null=False, blank=True)
     hash = models.CharField(
         max_length=settings.MAX_HASH_SIZE, null=False, editable=False
     )
@@ -49,7 +49,7 @@ class PublicKey(BaseContent):
         self.__original_key = self.key
 
     def __str__(self):
-        return "{}: {}".format(self.hash, self.note)
+        return "{}: {}".format(self.note, self.hash)
 
     def render(self, **kwargs):
         from .forms import KeyForm
@@ -58,18 +58,28 @@ class PublicKey(BaseContent):
         elif kwargs["scope"] == "key":
             return self.key
         elif kwargs["scope"] in ["update", "add"]:
-            kwargs["form"] = KeyForm(
-                uc=kwargs["uc"],
-                **self.get_form_kwargs(kwargs["request"])
-            )
             if self.id:
                 kwargs["legend"] = _("Update Public Key")
                 kwargs["confirm"] = _("Update")
             else:
                 kwargs["legend"] = _("Create Public Key")
                 kwargs["confirm"] = _("Create")
+            kwargs["form"] = KeyForm(
+                uc=kwargs["uc"],
+                **self.get_form_kwargs(kwargs["request"])
+            )
+            if kwargs["form"].is_valid():
+                instance = kwargs["form"].save()
+                kwargs["form"] = KeyForm(
+                    uc=kwargs["uc"], instance=instance
+                )
             return render_to_string(
                 "spider_base/full_form.html", request=kwargs["request"],
+                context=kwargs
+            )
+        else:
+            return render_to_string(
+                "spider_keys/key.html", request=kwargs["request"],
                 context=kwargs
             )
 
