@@ -145,8 +145,9 @@ class SpiderAuthForm(AuthenticationForm):
             self.request, scope="auth",
             ptype=ProtectionType.authentication.value,
         )
-        if len(self.request.protections) == 0:
-            raise RuntimeError("No Auth Protections found, that is very bad")
+        # here is not even a username available
+        # if this works, something is wrong
+        assert(self.request.protections is not True)
 
     def clean(self):
         username = self.cleaned_data.get('username')
