@@ -91,37 +91,10 @@ class UserComponent(models.Model):
 
     def auth(self, request, ptype=ProtectionType.access_control.value,
              protection_codes=None, **kwargs):
-        ret = []
-        query = self.protected_by.filter(ptype__contains=ptype, active=True)
-        # before protection_name check, for not allowing users
-        # to manipulate required passes
-        try:
-            required_passes = min(
-                len(query),  # if too many passes are required, lower
-                query.get(protection__code="allow").data.get("passes", 1) + 1
-            )
-        except models.ObjectDoesNotExist:
-            required_passes = 1
-        # after required_passes, for not allowing users
-        # to manipulate required passes
-        if protection_codes:
-            query = query.filter(
-                code__in=protection_codes
-            )
-        # against timing attacks
-        success = False
-        for p in query:
-            result = p.auth(request=request, **kwargs)
-            if result is True:
-                required_passes -= 1
-                # don't require lower limit this way
-                if required_passes <= 0:
-                    success = True
-            if result is not False:  # False will be not rendered
-                ret.append(ProtectionResult(result, p))
-        if success:
-            return True
-        return ret
+        return AssignedProtection.authall(
+            request, self, ptype=ptype, protection_codes=protection_codes,
+            **kwargs
+        )
 
     def get_absolute_url(self):
         return reverse(
@@ -294,12 +267,35 @@ class Protection(models.Model):
         return str(self.installed_class)
 
     @sensitive_variables("kwargs")
-    def auth(self, request, **kwargs):
-        if not self.active:
+    def auth(self, request, obj=None, **kwargs):
+        # never ever allow authentication if not active
+        if obj and not obj.active:
             return False
+        # obj=None is for allow the sign to return False
         return self.installed_class.auth(
-            obj=None, request=request, **kwargs
+            obj=obj, request=request, **kwargs.copy()
         )
+
+    @classmethod
+    def authall_query(cls, request, query, required_passes=1,
+                      **kwargs):
+        ret = []
+        for item in query:
+            obj = None
+            if hasattr(item, "protection"):  # is AssignedProtection
+                item, obj = item.protection, item
+            result = item.auth(
+                request=request, obj=obj, **kwargs
+            )
+            if result is True:
+                required_passes -= 1
+            if result is not False:  # False will be not rendered
+                ret.append(ProtectionResult(result, item))
+        # don't require lower limit this way and
+        # against timing attacks
+        if required_passes <= 0:
+            return True
+        return ret
 
     @classmethod
     def authall(cls, request, required_passes=1,
@@ -309,31 +305,15 @@ class Protection(models.Model):
             Usage: e.g. prerendering for login fields, because
             no assigned object is available there is no config
         """
-        ret = []
         # allow is here invalid, no matter what ptype
+        # allow has absolute no information in this case
         query = cls.objects.filter(ptype__contains=ptype).exclude(code="allow")
-        # before protection_name check, for not allowing users
-        # to manipulate required passes
-        required_passes = min(len(query), required_passes)
         if protection_codes:
             query = query.filter(
                 code__in=protection_codes
             )
-
-        # against timing attacks
-        success = False
-        for p in query:
-            result = p.auth(request=request, obj=None, **kwargs.copy())
-            if result is True:
-                required_passes -= 1
-                # don't require lower limit this way
-                if required_passes <= 0:
-                    success = True
-            if result is not False:  # False will be not rendered
-                ret.append(ProtectionResult(result, p))
-        if success:
-            return True
-        return ret
+        passes = min(required_passes, len(query))
+        return cls.auth_query(request, query, required_passed=passes)
 
     def get_form(self, prefix=None, **kwargs):
         if prefix:
@@ -391,12 +371,25 @@ class AssignedProtection(models.Model):
             models.Index(fields=['usercomponent']),
         ]
 
-    @sensitive_variables("kwargs")
-    def auth(self, **kwargs):
-        if not self.active:  # never ever allow authentication if not active
-            return False
-        return installed_protections[self.protection.code].auth(
-            obj=self, **kwargs
+    @classmethod
+    def authall(cls, request, usercomponent,
+                ptype=ProtectionType.access_control.value,
+                protection_codes=None, **kwargs):
+        query = cls.objects.filter(
+            protection__ptype__contains=ptype, active=True,
+            usercomponent=usercomponent
+        )
+        # before protection_name check, for not allowing users
+        # to manipulate required passes
+        try:
+            required_passes = min(
+                len(query),  # if too many passes are required, lower
+                query.get(protection__code="allow").data.get("passes", 1) + 1
+            )
+        except models.ObjectDoesNotExist:
+            required_passes = 1
+        return Protection.auth_query(
+            request, query, required_passes=required_passes
         )
 
     @property
