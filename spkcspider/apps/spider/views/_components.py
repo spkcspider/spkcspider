@@ -46,7 +46,8 @@ class ComponentAllIndex(ListView):
         main_query = self.model.objects.filter(q & searchq).annotate(
             len_prot=models.Count('protections')
         ).filter(q2).union(quser)
-        return main_query.distinct("user", "name")
+        order = self.get_ordering()
+        return main_query.distinct("user", "name").order_by(*order)
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
@@ -54,7 +55,7 @@ class ComponentAllIndex(ListView):
 
 class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
-    ordering = ("name")
+    ordering = ("name",)
 
     def get_context_data(self, **kwargs):
         kwargs["component_user"] = self.get_user()
@@ -66,7 +67,7 @@ class ComponentIndex(UCTestMixin, ListView):
         return False
 
     def get_queryset(self):
-        ret = self.model.objects.filter(user=self.get_user())
+        ret = super().get_queryset().filter(user=self.get_user())
         if "search" in self.request.GET:
             ret = ret.filter(name__icontains=self.request.GET["search"])
         return ret

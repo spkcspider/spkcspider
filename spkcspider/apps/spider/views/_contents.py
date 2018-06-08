@@ -241,7 +241,7 @@ class ContentIndex(UCTestMixin, ListView):
 
     def get_queryset(self):
         # GET parameters are stronger than post
-        ret = self.model.objects.filter(usercomponent=self.usercomponent)
+        ret = super().get_queryset().filter(usercomponent=self.usercomponent)
 
         filt = models.Q()
         for info in self.request.POST.getlist("info"):
