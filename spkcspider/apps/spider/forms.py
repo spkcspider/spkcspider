@@ -151,14 +151,14 @@ class SpiderAuthForm(AuthenticationForm):
     def clean(self):
         username = self.cleaned_data.get('username')
         protection_codes = None
-        if self.request.method != "GET" and "protection_codes" in self.request.POST:
+        if self.request.method != "GET" and \
+           "protection_codes" in self.request.POST:
             protection_codes = self.request.POST.getlist("protection_codes")
 
         if username is not None:
-            self.user_cache = self.auth_backend(
+            self.user_cache = self.auth_backend.authenticate(
                 self.request, username=username,
-                protection_codes=protection_codes,
-                ptype=ProtectionType.authentication.value
+                protection_codes=protection_codes
             )
             if self.user_cache is None:
                 raise forms.ValidationError(

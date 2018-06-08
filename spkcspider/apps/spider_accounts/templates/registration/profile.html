@@ -4,5 +4,5 @@
 {% block content %}
   {% trans 'Update User Profile' as legend %}
   {% trans 'Update' as confirm %}
-  {% include "spider_base/full_form.html" form=form legend=legend confirm=confirm %}
+  {% include "spider_base/full_form.html" with form=form legend=legend confirm=confirm %}
 {% endblock %}

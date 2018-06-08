@@ -1,5 +1,6 @@
 from django import template
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 
 
 register = template.Library()
@@ -8,25 +9,29 @@ register = template.Library()
 @register.simple_tag(takes_context=True)
 def render_protection(context, protectiontup):
     result, protection = protectiontup
-    ctx = context.copy()
+    protection = protection.installed_class
+    ctx = {}
+    ctx["parent_ctx"] = context
     ctx["data"] = result
-    ctx["name"] = protection.name
-    form = getattr(protection, "form", None)
+    ctx["name"] = _(protection.name)
+
+    if callable(getattr(protection, "render", None)):
+        return protection.render(ctx)
+    form = getattr(protection, "auth_form", None)
     if form:
-        kwargs = {
+        kwargs = {}
+        if context["request"].method not in ["GET", "HEAD"]:
+            kwargs = {
                 'data': context["request"].POST,
                 'files': context["request"].FILES,
             }
         ctx["form"] = form(**kwargs)
-
-    if callable(getattr(protection, "render", None)):
-        return protection.render(ctx)
+    template_name = getattr(protection, "template_name")
+    if not template_name:
+        template_name = "spider_protections/protection_form.html"
 
     return render_to_string(
-        getattr(
-            protection, "template_name",
-            "spiderprotections/protection_form.html"
-        ), ctx
+        template_name, context=ctx, request=context["request"]
     )
 
 

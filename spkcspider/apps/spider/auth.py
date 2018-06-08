@@ -26,7 +26,7 @@ class SpiderAuthBackend(ModelBackend):
             request.protections = uc.auth(
                 request, scope="auth",
                 ptype=ProtectionType.authentication.value,
-                protection_codes=protection_codes, **kwargs
+                protection_codes=protection_codes
             )
             if request.protections is True:
                 return uc.user

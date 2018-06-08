@@ -172,7 +172,7 @@ class LoginProtection(BaseProtection):
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
 
-    class form(forms.Form):
+    class auth_form(forms.Form):
         password = forms.CharField(
             label=_("Password"),
             strip=False,

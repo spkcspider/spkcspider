@@ -264,7 +264,7 @@ class Protection(models.Model):
         return installed_protections[self.code]
 
     def __str__(self):
-        return self.code
+        return _(self.code)
 
     def __repr__(self):
         return "<Protection: %s>" % self.code
