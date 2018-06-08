@@ -157,7 +157,7 @@ class FriendProtection(BaseProtection):
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
-        if request.user.id in obj.data["users"]:
+        if request.user.pk in obj.data["users"]:
             return True
         else:
             return False
