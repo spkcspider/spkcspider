@@ -131,7 +131,7 @@ class AllowProtection(BaseProtection):
     )
 
     @classmethod
-    def auth(cls, request, obj, **_kwargs):
+    def auth(cls, **_kwargs):
         return True
 
     def __str__(self):

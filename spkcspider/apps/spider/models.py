@@ -271,14 +271,12 @@ class Protection(models.Model):
         # never ever allow authentication if not active
         if obj and not obj.active:
             return False
-        # obj=None is for allow the sign to return False
         return self.installed_class.auth(
             obj=obj, request=request, **kwargs.copy()
         )
 
     @classmethod
-    def authall_query(cls, request, query, required_passes=1,
-                      **kwargs):
+    def auth_query(cls, request, query, required_passes=1, **kwargs):
         ret = []
         for item in query:
             obj = None
@@ -305,15 +303,21 @@ class Protection(models.Model):
             Usage: e.g. prerendering for login fields, because
             no assigned object is available there is no config
         """
-        # allow is here invalid, no matter what ptype
+        # allow crashes required_passes check
+        # it is bad no matter what ptype
         # allow has absolute no information in this case
         query = cls.objects.filter(ptype__contains=ptype).exclude(code="allow")
+
+        # before protection_name check, for not allowing users
+        # to manipulate required passes
+        passes = min(required_passes, len(query))
         if protection_codes:
             query = query.filter(
                 code__in=protection_codes
             )
-        passes = min(required_passes, len(query))
-        return cls.auth_query(request, query, required_passed=passes)
+        return cls.auth_query(
+            request, query.order_by("code"), required_passed=passes
+        )
 
     def get_form(self, prefix=None, **kwargs):
         if prefix:
@@ -388,8 +392,14 @@ class AssignedProtection(models.Model):
             )
         except models.ObjectDoesNotExist:
             required_passes = 1
+
+        if protection_codes:
+            query = query.filter(
+                protection__code__in=protection_codes
+            )
         return Protection.auth_query(
-            request, query, required_passes=required_passes
+            request, query.order_by("protection__code"),
+            required_passes=required_passes
         )
 
     @property
