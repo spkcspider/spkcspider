@@ -48,6 +48,7 @@ def add_protection(klass):
 
 
 def initialize_protection_models():
+    from .models import UserComponent, AssignedProtection
     from .models import Protection as ProtectionModel
     for code, val in installed_protections.items():
         ret = ProtectionModel.objects.get_or_create(
@@ -59,6 +60,17 @@ def initialize_protection_models():
     temp = ProtectionModel.objects.exclude(
         code__in=installed_protections.keys()
     )
+
+    login = ProtectionModel.objects.filter(code="login").first()
+    if login:
+        for uc in UserComponent.objects.filter(name="index"):
+            asuc = AssignedProtection.objects.get_or_create(
+                defaults={"active": True},
+                usercomponent=uc, protection=login
+            )[0]
+            if not asuc.active:
+                asuc.active = True
+                asuc.save()
     if temp.exists():
         print("Invalid protections, please update or remove them:",
               [t.code for t in temp])
@@ -176,7 +188,7 @@ class LoginProtection(BaseProtection):
     @classmethod
     def auth(cls, request, obj, **kwargs):
         if not obj:
-            return False
+            return None
         username = obj.usercomponent.username
         if username != request.POST.get("username", ""):
             username = None
@@ -187,10 +199,10 @@ class LoginProtection(BaseProtection):
         ):
             return True
         else:
-            return False
+            return None
 
     def __str__(self):
-        return _("Login based authentication")
+        return _("Login authentication")
 
 
 # @add_protection
@@ -204,7 +216,7 @@ class PasswordProtection(BaseProtection):
         if request.POST.get("password", "") in data["passwords"]:
             return True
         else:
-            return False
+            return None
 
     def __str__(self):
         return _("Password based authentication")

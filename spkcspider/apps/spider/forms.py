@@ -1,13 +1,13 @@
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
     AssignedProtection, Protection, UserComponent, UserContent, token_nonce
 )
 from .protections import ProtectionType
+from .auth import SpiderAuthBackend
 
 _help_text = """Generate new nonce<br/>
 Nonces protect against bruteforce and attackers<br/>
@@ -135,6 +135,9 @@ class UserContentForm(forms.ModelForm):
 
 class SpiderAuthForm(AuthenticationForm):
     password = None
+    # can authenticate only with SpiderAuthBackend
+    # or descendants, so ignore others
+    auth_backend = SpiderAuthBackend()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -147,9 +150,9 @@ class SpiderAuthForm(AuthenticationForm):
         username = self.cleaned_data.get('username')
 
         if username is not None:
-            self.user_cache = authenticate(
+            self.user_cache = self.auth_backend(
                 self.request, username=username,
-                protection_codes=self.request.POST.get_list("protection_codes")
+                protection_codes=self.request.POST.getlist("protection_codes")
             )
             if self.user_cache is None:
                 raise forms.ValidationError(

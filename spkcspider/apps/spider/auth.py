@@ -4,17 +4,11 @@ from .models import UserComponent, Protection
 from .protections import ProtectionType
 
 
-def set_generic_protections(request, protection_codes):
-    request.protections = Protection.authall(
-        request, scope="auth", ptype=ProtectionType.authentication.value,
-        protection_codes=protection_codes
-    )
-
-
 class SpiderAuthBackend(ModelBackend):
 
     def authenticate(self, request, username=None,
-                     protection_codes=None, nospider=False, **kwargs):
+                     protection_codes=None, nospider=False,
+                     autocreate_login=True, **kwargs):
         """ Use protections for authentication"""
         # disable SpiderAuthBackend backend (against recursion)
         if nospider:
@@ -23,7 +17,11 @@ class SpiderAuthBackend(ModelBackend):
             user__username=username, name="index"
         ).first()
         if not uc:
-            set_generic_protections(request, protection_codes)
+            request.protections = Protection.authall(
+                request, scope="auth",
+                ptype=ProtectionType.authentication.value,
+                protection_codes=protection_codes
+            )
         else:
             request.protections = uc.auth(
                 request, scope="auth",
