@@ -14,11 +14,11 @@ installed_contents = {}
 
 class UserContentType(str, enum.Enum):
     # not only private (index)
-    public = "\x00"
+    public = "a"
     # update is without form/for form updates it is not rendered
-    raw_update = "\x01"
+    raw_update = "b"
     # adding renders no form, only content
-    raw_add = "\x02"
+    raw_add = "c"
 
 
 def add_content(klass):

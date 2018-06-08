@@ -264,7 +264,10 @@ class Protection(models.Model):
         return installed_protections[self.code]
 
     def __str__(self):
-        return str(self.installed_class)
+        return self.code
+
+    def __repr__(self):
+        return "<Protection: %s>" % self.code
 
     @sensitive_variables("kwargs")
     def auth(self, request, obj=None, **kwargs):
@@ -303,7 +306,6 @@ class Protection(models.Model):
             Usage: e.g. prerendering for login fields, because
             no assigned object is available there is no config
         """
-        # allow crashes required_passes check
         # it is bad no matter what ptype
         # allow has absolute no information in this case
         query = cls.objects.filter(ptype__contains=ptype).exclude(code="allow")
@@ -340,7 +342,7 @@ class Protection(models.Model):
 
 
 def get_limit_choices_assigned_protection():
-    # django cannot serialize static, classmethods, so cheat
+    # django cannot serialize static, classmethods
     ret = \
         {
             "code__in": Protection.objects.valid(),

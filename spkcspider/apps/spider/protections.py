@@ -23,9 +23,9 @@ installed_protections = {}
 
 class ProtectionType(str, enum.Enum):
     # receives: request, scope
-    access_control = "\x00"
+    access_control = "a"
     # receives: request, scope, password
-    authentication = "\x01"
+    authentication = "b"
     # forget about recovery, every recovery method is authentication
     # and will be misused this way
     # The only real recovery is by staff and only if there is a secret
