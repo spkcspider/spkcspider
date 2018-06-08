@@ -93,6 +93,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         context = {"form": None}
         # add has no form
         if self.scope == "update":
+            context["form"] = self.get_form()
             if context["form"].is_valid():
                 self.object = context["form"].save()
                 context["form"] = self.get_form_class()(

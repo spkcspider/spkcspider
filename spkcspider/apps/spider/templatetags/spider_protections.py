@@ -11,7 +11,13 @@ def render_protection(context, protectiontup):
     ctx = context.copy()
     ctx["data"] = result
     ctx["name"] = protection.name
-    ctx["form"] = getattr(protection, "form", None)
+    form = getattr(protection, "form", None)
+    if form:
+        kwargs = {
+                'data': context["request"].POST,
+                'files': context["request"].FILES,
+            }
+        ctx["form"] = form(**kwargs)
 
     if callable(getattr(protection, "render", None)):
         return protection.render(ctx)

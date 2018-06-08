@@ -7,27 +7,32 @@
   {{form.media}}
   <form action="{{ request.path }}" method="post">
     {% csrf_token %}
-    {% for field in form %}
-      <div>
-        {{ field.label_tag }}<br>
-        {{ field }}
-        {% if field.help_text %}
-          <small style="color: grey">{{ field.help_text|safe }}</small>
-        {% endif %}
-        {% for error in field.errors %}
-          <p style="color: red">{{ error|safe }}</p>
-        {% endfor %}
-      </div>
-    {% endfor %}
     <input type="hidden" name="next" value="{{ next }}" />
+    {% include "spider_base/base_form.html" with form=form %}
+
+    <fieldset>
+      <legend><h1>{% trans 'Authenticate with' %}</h1></legend>
+      <table class="w3-table">
+        <tbody>
+        {% for prot in request.protections %}
+          {% if forloop.counter0|divisibleby:"2" %}
+          <tr>
+          {% endif %}
+          <td class="w3-half">
+            <div class="w3-white w3-card w3-padding">
+              <h1 class="w3-center">{{prot.name}}</h1>
+              {% render_protection prot %}
+            </div>
+          </td>
+          {% if forloop.counter|divisibleby:"2" or forloop.last %}
+          </tr>
+          {% endif %}
+        {% endfor %}
+        </tbody>
+      </table>
+    </fieldset>
     <button class="w3-button w3-grey" type="submit">Login</button><br/>
     <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
   </form>
 
-  {% for prot in protections %}
-    <details>
-      <summary>{{prot.protection.name}}</summary>
-      {% render_protection prot %}
-    </details>
-  {% endfor %}
 {% endblock %}

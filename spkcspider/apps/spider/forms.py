@@ -1,5 +1,7 @@
 
 from django import forms
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth import authenticate
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
@@ -129,3 +131,32 @@ class UserContentForm(forms.ModelForm):
             )
             self.instance.nonce = token_nonce()
         return super().save(commit=commit)
+
+
+class SpiderAuthForm(AuthenticationForm):
+    password = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request.protections = Protection.authall(
+            self.request, scope="auth",
+            ptype=ProtectionType.authentication.value,
+        )
+
+    def clean(self):
+        username = self.cleaned_data.get('username')
+
+        if username is not None:
+            self.user_cache = authenticate(
+                self.request, username=username,
+                protection_codes=self.request.POST.get_list("protection_codes")
+            )
+            if self.user_cache is None:
+                raise forms.ValidationError(
+                    self.error_messages['invalid_login'],
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+            else:
+                self.confirm_login_allowed(self.user_cache)
+        return self.cleaned_data

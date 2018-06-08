@@ -18,5 +18,14 @@ def InitProtectionsCallback(sender, **kwargs):
 
 
 def InitUserComponentsCallback(sender, instance, **kwargs):
-    from .models import UserComponent
-    UserComponent.objects.get_or_create(name="index", user=instance)
+    from .models import UserComponent, Protection, AssignedProtection
+    uc = UserComponent.objects.get_or_create(name="index", user=instance)[0]
+    login = Protection.objects.filter(code="login").first()
+    if login:
+        asuc = AssignedProtection.objects.get_or_create(
+            defaults={"active": True},
+            usercomponent=uc, protection=login
+        )[0]
+        if not asuc.active:
+            asuc.active = True
+            asuc.save()

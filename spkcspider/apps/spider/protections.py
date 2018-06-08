@@ -15,6 +15,7 @@ from django.conf import settings
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.auth import authenticate
 
 
 installed_protections = {}
@@ -75,11 +76,11 @@ class BaseProtection(forms.Form):
     """
     active = forms.BooleanField(required=False)
 
-    # ptype= 0: access control, 1: authentication, 2: recovery
-    # 1, 2 require render
+    # ptype valid for, is overwritten with current ptype
     ptype = ProtectionType.access_control.value
 
     template_name = None
+    # form for authentication
     form = None
     # optional render function
     # render = None
@@ -91,8 +92,9 @@ class BaseProtection(forms.Form):
     # initial values
     initial = {}
 
-    def __init__(self, protection, assigned=None, **kwargs):
+    def __init__(self, protection, ptype, assigned=None, **kwargs):
         self.protection = protection
+        self.ptype = ptype
         initial = self.initial.copy()
         if assigned:
             self.instance = assigned.filter(protection=self.protection).first()
@@ -150,6 +152,45 @@ class FriendProtection(BaseProtection):
 
     def __str__(self):
         return _("Friends")
+
+
+@add_protection
+class LoginProtection(BaseProtection):
+    name = "login"
+    ptype = ProtectionType.access_control.value
+    ptype += ProtectionType.authentication.value
+
+    class form(forms.Form):
+        password = forms.CharField(
+            label=_("Password"),
+            strip=False,
+            widget=forms.PasswordInput,
+        )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if ProtectionType.authentication.value in self.ptype:
+            self.fields["active"].initial = True
+            self.fields["active"].disabled = True
+
+    @classmethod
+    def auth(cls, request, obj, **kwargs):
+        if not obj:
+            return False
+        username = obj.usercomponent.username
+        if username != request.POST.get("username", ""):
+            username = None
+        password = request.POST.get("password", None)
+        if authenticate(
+            request, username=username, password=password,
+            nospider=True
+        ):
+            return True
+        else:
+            return False
+
+    def __str__(self):
+        return _("Login based authentication")
 
 
 # @add_protection

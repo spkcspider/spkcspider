@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 
 import time
 from .forms import SignupForm, UserUpdateForm
+from spkcspider.apps.spider.forms import SpiderAuthForm
 
 # Create your views here.
 
@@ -39,6 +40,8 @@ class SignupView(FormView):
 
 
 class UserLoginView(LoginView):
+    form_class = SpiderAuthForm
+
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             return HttpResponseRedirect(self.get_success_url())

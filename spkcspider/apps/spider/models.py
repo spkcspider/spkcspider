@@ -90,7 +90,7 @@ class UserComponent(models.Model):
         return "%s: %s" % (self.username, self.name)
 
     def auth(self, request, ptype=ProtectionType.access_control.value,
-             **kwargs):
+             protection_codes=None, **kwargs):
         ret = []
         query = self.protected_by.filter(ptype__contains=ptype, active=True)
         # before protection_name check, for not allowing users
@@ -104,19 +104,23 @@ class UserComponent(models.Model):
             required_passes = 1
         # after required_passes, for not allowing users
         # to manipulate required passes
-        if "protection_name" in request.POST:
+        if protection_codes:
             query = query.filter(
-                code__in=request.POST.getlist("protection_name")
+                code__in=protection_codes
             )
+        # against timing attacks
+        success = False
         for p in query:
             result = p.auth(request=request, **kwargs)
             if result is True:
                 required_passes -= 1
                 # don't require lower limit this way
                 if required_passes <= 0:
-                    return True
+                    success = True
             if result is not False:  # False will be not rendered
                 ret.append(ProtectionResult(result, p))
+        if success:
+            return True
         return ret
 
     def get_absolute_url(self):
@@ -298,31 +302,37 @@ class Protection(models.Model):
         )
 
     @classmethod
-    def authall(self, request, required_passes=1,
-                ptype=ProtectionType.authentication.value, **kwargs):
+    def authall(cls, request, required_passes=1,
+                ptype=ProtectionType.authentication.value,
+                protection_codes=None, **kwargs):
         """
             Usage: e.g. prerendering for login fields, because
             no assigned object is available there is no config
         """
         ret = []
         # allow is here invalid, no matter what ptype
-        query = self.filter(ptype__contains=ptype).exclude(code="allow")
+        query = cls.objects.filter(ptype__contains=ptype).exclude(code="allow")
         # before protection_name check, for not allowing users
         # to manipulate required passes
         required_passes = min(len(query), required_passes)
-        if "protection_name" in request.POST:
+        if protection_codes:
             query = query.filter(
-                code__in=request.POST.getlist("protection_name")
+                code__in=protection_codes
             )
+
+        # against timing attacks
+        success = False
         for p in query:
-            result = p.auth(request=request, **kwargs.copy())
+            result = p.auth(request=request, obj=None, **kwargs.copy())
             if result is True:
                 required_passes -= 1
                 # don't require lower limit this way
                 if required_passes <= 0:
-                    return True
+                    success = True
             if result is not False:  # False will be not rendered
                 ret.append(ProtectionResult(result, p))
+        if success:
+            return True
         return ret
 
     def get_form(self, prefix=None, **kwargs):
@@ -340,7 +350,9 @@ class Protection(models.Model):
         protections = cls.objects.valid()
         if ptype:
             protections = protections.filter(ptype__contains=ptype)
-        return map(lambda x: x.get_form(**kwargs), protections)
+        else:
+            ptype = ""
+        return map(lambda x: x.get_form(ptype=ptype, **kwargs), protections)
 
 
 def get_limit_choices_assigned_protection():

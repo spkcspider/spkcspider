@@ -1,24 +1,4 @@
 
-<form action="" method="post">
-  {% csrf_token %}
-  <input type="hidden" name="protection_name" value="{{name}}" />
-  {% for field in form %}
-    <div class="">
-      <div class="w3-cell w3-padding">
-        {{ field.label_tag }}</br>
-        {{ field }}
-      </div>
-      <div class="w3-cell w3-padding">
-      {% if field.help_text %}
-        <small style="color: grey">{{ field.help_text|safe }}</small>
-      {% endif %}
-      </div>
-    </div>
-    <div class="">
-      {% for error in field.errors %}
-        <p style="color: red">{{ error|safe }}</p>
-      {% endfor %}
-    </div>
-  {% endfor %}
-  <button>Confirm</button>
-</form>
+{% csrf_token %}
+<input type="hidden" name="protection_codes" value="{{name}}" />
+{% include "spider_base/base_form.html" with form=form %}
