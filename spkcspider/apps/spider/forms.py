@@ -145,8 +145,10 @@ class SpiderAuthForm(AuthenticationForm):
             self.request, scope="auth",
             ptype=ProtectionType.authentication.value,
         )
-        # here is not even a username available
+        # here is not even a usercomponent available
         # if this works, something is wrong
+        # protections should match username from POST with the ones of the
+        # usercomponent (which is available in clean)
         assert(self.request.protections is not True)
 
     def clean(self):
