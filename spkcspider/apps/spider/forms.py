@@ -145,14 +145,20 @@ class SpiderAuthForm(AuthenticationForm):
             self.request, scope="auth",
             ptype=ProtectionType.authentication.value,
         )
+        if len(self.request.protections) == 0:
+            raise RuntimeError("No Auth Protections found, that is very bad")
 
     def clean(self):
         username = self.cleaned_data.get('username')
+        protection_codes = None
+        if self.request.method != "GET" and "protection_codes" in self.request.POST:
+            protection_codes = self.request.POST.getlist("protection_codes")
 
         if username is not None:
             self.user_cache = self.auth_backend(
                 self.request, username=username,
-                protection_codes=self.request.POST.getlist("protection_codes")
+                protection_codes=protection_codes,
+                ptype=ProtectionType.authentication.value
             )
             if self.user_cache is None:
                 raise forms.ValidationError(
