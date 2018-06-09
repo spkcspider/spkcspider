@@ -36,7 +36,7 @@ def valid_pkey_properties(key):
 
 @add_content
 class PublicKey(BaseContent):
-    names = ["public_key"]
+    names = ["PublicKey"]
     ctype = UserContentType.public.value
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])

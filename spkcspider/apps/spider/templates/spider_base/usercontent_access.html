@@ -1,12 +1,12 @@
 {% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 
-{% block title %}{% if scope != "add" %}
-  {% blocktrans trimmed %}
-    Content
-  {% endblocktrans %}
-{% else %}{% blocktrans trimmed with type=object.name %}
+{% block title %}{% if scope == "add" %}{% blocktrans trimmed with type=object %}
   Create Content: {{type}}
+{% endblocktrans %}{% elif scope == "update" %}{% blocktrans trimmed with name=form.instance.name %}
+  Update Content: {{name}}
+{% endblocktrans %}{% else %}{% blocktrans trimmed with name=form.instance.name %}
+  Content: {{name}}
 {% endblocktrans %}{% endif %}{% endblock %}
 
 {% block context_actions %}
@@ -26,7 +26,7 @@
     {% endif %}
     <h1 class="w3-center">
       {% if scope == "add" %}
-        {% blocktrans trimmed with type=object.name %}
+        {% blocktrans trimmed with type=object %}
           Create Content: <em>{{type}}</em>
         {% endblocktrans %}
       {% elif scope == "update" %}
@@ -35,7 +35,7 @@
         {% endblocktrans %}
       {% else %}
         {% blocktrans trimmed with name=form.instance.name %}
-          Content: {{name}}
+          Content: <em>{{name}}</em>
         {% endblocktrans %}
       {% endif %}
     </h1>
