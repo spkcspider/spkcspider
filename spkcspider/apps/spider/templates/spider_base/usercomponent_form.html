@@ -21,7 +21,7 @@
     {% if object %}
       <span class="w3-right">
         {% if object.name != "index" %}
-          <a href="{% url 'spider_base:ucomponent-delete' name=object.name %}">{% trans 'delete' %}</a>?
+          <a href="{% url 'spider_base:ucomponent-delete' name=object.name nonce=object.nonce %}">{% trans 'delete' %}</a>?
           <hr/>
         {% endif %}
         <a class="" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
@@ -76,9 +76,8 @@
       {% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}
     </button>
     {% if object %}
-      <a class="w3-button w3-right w3-grey" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
+      <a class="w3-right" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
         {% trans "Contents" %}
-        <i class="fa fa-arrow-alt-circle-right" aria-hidden="true"></i>
       </a>
     {% endif %}
   </form>

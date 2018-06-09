@@ -11,6 +11,7 @@ from django.views.generic.list import ListView
 from django.views.generic.base import TemplateResponseMixin, View
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 from django.http.response import HttpResponseBase
 from django.db import models
 from django.conf import settings
@@ -110,6 +111,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         """Return the keyword arguments for instantiating the form."""
         return {
             'initial': self.get_initial(),
+            'instance': self.object,
             'prefix': self.get_prefix(),
             'disabled': not self.check_write_permission()
         }
@@ -121,8 +123,8 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         return self.has_write_perm
 
     def render_to_response(self, context):
-        if UserContentType.raw_update.value in self.object.ctype.ctype or \
-           self.scope != "update":
+        if self.scope != "update" or \
+           UserContentType.raw_update.value not in self.object.ctype.ctype:
             rendered = self.object.content.render(
                 **context
             )
@@ -206,6 +208,7 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
         # show framed output
         context["content"] = rendered
         if getattr(ob, "id", None):
+            assert(hasattr(ucontent, "id") and ucontent.usercomponent)
             return redirect(
                 'spider_base:ucontent-access', id=ucontent.id,
                 nonce=ucontent.nonce, access="update"
@@ -267,8 +270,18 @@ class ContentIndex(UCTestMixin, ListView):
 class ContentRemove(ComponentDelete):
     model = UserContent
 
+    def get_success_url(self):
+        usercomponent = self.get_usercomponent()
+        return reverse(
+            "spider_base:ucontent-list", kwargs={
+                "user": usercomponent.username,
+                "name": usercomponent.name,
+                "nonce": usercomponent.nonce
+            }
+        )
+
     def get_required_timedelta(self):
-        _time = self.object.deletion_period
+        _time = self.object.content.deletion_period
         if _time:
             _time = timedelta(seconds=_time)
         else:
@@ -280,5 +293,5 @@ class ContentRemove(ComponentDelete):
             queryset = self.get_queryset()
         return get_object_or_404(
             queryset, usercomponent=self.get_usercomponent(),
-            findid=self.kwargs["id"]
+            id=self.kwargs["id"], nonce=self.kwargs["nonce"]
         )

@@ -1,11 +1,11 @@
 {% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 
-{% block title %}{% if scope == "add" %}{% blocktrans trimmed with type=object %}
-  Create Content: {{type}}
-{% endblocktrans %}{% elif scope == "update" %}{% blocktrans trimmed with name=form.instance.name %}
+{% block title %}{% if scope == "add" %}{% blocktrans trimmed with name=object %}
+  Create Content: {{name}}
+{% endblocktrans %}{% elif scope == "update" %}{% blocktrans trimmed with name=object %}
   Update Content: {{name}}
-{% endblocktrans %}{% else %}{% blocktrans trimmed with name=form.instance.name %}
+{% endblocktrans %}{% else %}{% blocktrans trimmed with name=object %}
   Content: {{name}}
 {% endblocktrans %}{% endif %}{% endblock %}
 
@@ -19,22 +19,22 @@
     <a class="w3-left" href="{% url 'spider_base:ucontent-list' user=uc.username name=uc.name nonce=uc.nonce %}">{% trans 'index' %}</a>
     {% if scope != "add" %}
       <span class="w3-right">
-        <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name id=object.id %}">
+        <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
           {% trans 'delete' %}
         </a>?
       </span>
     {% endif %}
     <h1 class="w3-center">
       {% if scope == "add" %}
-        {% blocktrans trimmed with type=object %}
-          Create Content: <em>{{type}}</em>
+        {% blocktrans trimmed with name=object %}
+          Create Content: <em>{{name}}</em>
         {% endblocktrans %}
       {% elif scope == "update" %}
-        {% blocktrans trimmed with name=form.instance.name %}
+        {% blocktrans trimmed with name=object %}
           Update Content: <em>{{name}}</em>
         {% endblocktrans %}
       {% else %}
-        {% blocktrans trimmed with name=form.instance.name %}
+        {% blocktrans trimmed with name=object %}
           Content: <em>{{name}}</em>
         {% endblocktrans %}
       {% endif %}
@@ -42,16 +42,35 @@
   </div>
 {% if form %}
   {{form.media}}
+  {% if scope != "update" %}
   <details>
     <summary class="w3-btn w3-grey">
       <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
       {% trans 'Content Settings' %}
       <i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
     </summary>
-    {% trans 'Content Settings' as legend %}
-    {% trans 'Update' as confirm %}
-    {% include "spider_base/full_form.html" with legend=legend confirm=confirm form=form %}
+    {% endif %}
+    {{form.media}}
+    {% include "spider_base/form_errors.html" with form=form %}
+    <form action="{{ request.path }}" method="post">
+      {% csrf_token %}
+      <fieldset>
+        <legend><h2>{% trans 'Content Settings' %}</h2></legend>
+        {% include "spider_base/base_form.html" with form=form %}
+      </fieldset>
+      {% if content and scope == "update" %}
+        <fieldset>
+          <legend><h2>{% trans 'Other Settings' %}</h2></legend>
+          {{content|safe}}
+        </fieldset>
+      {% endif %}
+      <button class="w3-button w3-grey">
+        {% trans 'Update' %}
+      </button>
+    </form>
+  {% if scope != "update" %}
   </details>
+  {% endif %}
 {% endif %}
 {% if object.id and UserContentType.raw_update in associated.ctype %}
   <div>
@@ -61,5 +80,5 @@
     </a>
   </div>
 {% endif %}
-{{content}}
+{% if scope != "update" %}{{content|safe}}{% endif %}
 {% endblock %}

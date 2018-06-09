@@ -25,7 +25,7 @@ urlpatterns = [
         name='ucomponent-update'
     ),
     path(
-        'ucs/delete/<slug:name>/',
+        'ucs/delete/<slug:name>/<slug:nonce>/',
         ComponentDelete.as_view(),
         name='ucomponent-delete'
     ),
@@ -46,7 +46,7 @@ urlpatterns = [
         name='ucontent-access'
     ),
     path(
-        'content/remove/<slug:user>/<slug:name>/<int:id>/',
+        'content/remove/<slug:user>/<slug:name>/<int:id>/<slug:nonce>/',
         ContentRemove.as_view(),
         name='ucontent-remove'
     ),

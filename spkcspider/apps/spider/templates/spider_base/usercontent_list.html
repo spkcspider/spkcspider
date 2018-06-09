@@ -46,13 +46,17 @@
         <td class="w3-show-inline-block">
           <div class="w3-bar w3-round-large w3-tiny w3-blue">
             <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}">
-              <i class="fa fa-edit" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i>
+              <i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i>
               <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "View" %}</span></span>
             </a>
             {% if uc.user == request.user  %}
             <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}">
               <i class="fa fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i>
               <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "Edit" %}</span></span>
+            </a>
+            <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=object.nonce %}">
+              <i class="fa fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i>
+              <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "Del" %}</span></span>
             </a>
             {% endif %}
           </div>

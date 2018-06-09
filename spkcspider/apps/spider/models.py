@@ -241,6 +241,10 @@ class UserContent(models.Model):
             kwargs={"id": self.id, "nonce": self.nonce, "access": "view"}
         )
 
+    @property
+    def is_protected(self):
+        return self.content.is_protected
+
 
 class ProtectionManager(models.Manager):
     def invalid(self):

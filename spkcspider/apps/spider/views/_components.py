@@ -121,6 +121,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         return {
             'initial': self.get_initial(),
             'prefix': self.get_prefix(),
+            'instance': self.object
         }
 
     def form_valid(self, form):
@@ -137,6 +138,15 @@ class ComponentDelete(UserTestMixin, DeleteView):
     fields = []
     object = None
     http_method_names = ['get', 'post', 'delete']
+
+    def get_success_url(self):
+        user = self.get_user()
+        user = getattr(user, user.USERNAME_FIELD)
+        return reverse(
+            "spider_base:ucomponent-list", kwargs={
+                "user": user
+            }
+        )
 
     def get_required_timedelta(self):
         _time = getattr(
@@ -160,8 +170,8 @@ class ComponentDelete(UserTestMixin, DeleteView):
         return super().get_context_data(**kwargs)
 
     def delete(self, request, *args, **kwargs):
+        # deletion should be only possible for owning user
         self.object = self.get_object()
-        # deleting them should not be possible, except by deleting user
         if self.object.is_protected:
             return self.handle_no_permission()
         _time = self.get_required_timedelta()
@@ -178,18 +188,23 @@ class ComponentDelete(UserTestMixin, DeleteView):
         return HttpResponseRedirect(self.get_success_url())
 
     def post(self, request, *args, **kwargs):
+        # because forms are screwed (delete not possible)
+        if request.POST.get("action") == "reset":
+            return self.reset(request, *args, **kwargs)
+        elif request.POST.get("action") == "delete":
+            return self.delete(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
+
+    def reset(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.object.deletion_requested = None
         self.object.save(update_fields=["deletion_requested"])
         return HttpResponseRedirect(self.get_success_url())
 
     def get_object(self, queryset=None):
-        if queryset:
-            return get_object_or_404(
-                queryset, user=self.get_user(), name=self.kwargs["name"]
-            )
-        else:
-            return get_object_or_404(
-                self.get_queryset(), user=self.get_user(),
-                name=self.kwargs["name"]
-            )
+        if not queryset:
+            queryset = self.get_queryset()
+        return get_object_or_404(
+            queryset, user=self.get_user(), name=self.kwargs["name"],
+            nonce=self.kwargs["nonce"]
+        )

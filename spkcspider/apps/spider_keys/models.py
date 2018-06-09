@@ -54,7 +54,13 @@ class PublicKey(BaseContent):
         self.__original_key = self.key
 
     def __str__(self):
-        return "{}: {}".format(self.note, self.hash)
+        st = "{}...".format(self.hash[:10])
+        split = self.key.rsplit(" ", 1)
+        if len(split) == 2 and "@" in split[1]:
+            st = split[1]
+        if len(self.note) > 0:
+            st = "{}: {}".format(st, self.note[:20])
+        return st
 
     def render(self, **kwargs):
         from .forms import KeyForm
@@ -78,8 +84,11 @@ class PublicKey(BaseContent):
                 kwargs["form"] = KeyForm(
                     uc=kwargs["uc"], instance=instance
                 )
+            template_name = "spider_base/full_form.html"
+            if kwargs["scope"] == "update":
+                template_name = "spider_base/base_form.html"
             return render_to_string(
-                "spider_base/full_form.html", request=kwargs["request"],
+                template_name, request=kwargs["request"],
                 context=kwargs
             )
         else:

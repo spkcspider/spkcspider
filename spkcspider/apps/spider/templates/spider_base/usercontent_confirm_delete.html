@@ -10,15 +10,31 @@
       Delete Content
     {% endblocktrans %}
   </h1>
-  {% if not remaining or remaining == 0 %}
-  <form method="DELETE" action="{% url "ucontent-delete" id=object.id %}">
-    <button>Delete</button>
-  </form>
-  {% endif %}
 
-  {% if remaining %}
-  <form method="POST" action="{% url "ucontent-delete" id=object.id %}">
-    <button>Reset</button>
-  </form>
-  {% endif %}
+  <div class="w3-padding w3-content w3-center w3-red w3-xlarge">
+    {% blocktrans trimmed with name=object.name %}
+      Warning this deletes the content
+      Go back if you don't want to this and you didn't hit delete.
+      You can abort the deletion process with reset if it is shown.
+      It is always shown except no deletion is in progress.
+    {% endblocktrans %}
+  </div>
+
+  <div class="w3-bar w3-black w3-container w3-margin">
+    {% if not remaining or remaining == 0 %}
+    <form method="post" action="{{request.path}}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete" />
+      <button>{% trans 'Delete' %}</button>
+    </form>
+    {% endif %}
+
+    {% if remaining %}
+    <form method="post" action="{{request.path}}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="reset" />
+      <button>{% trans 'Reset' %}</button>
+    </form>
+    {% endif %}
+  </div>
 {% endblock %}

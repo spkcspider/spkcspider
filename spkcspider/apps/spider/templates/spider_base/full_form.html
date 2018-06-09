@@ -3,7 +3,7 @@
 <form action="{{ request.path }}" method="post">
   {% csrf_token %}
   <fieldset>
-    <legend><h1>{{legend|safe}}</h1></legend>
+    <legend><h2>{{legend|safe}}</h2></legend>
     {% include "spider_base/base_form.html" with form=form %}
   </fieldset>
   <button class="w3-button w3-grey">

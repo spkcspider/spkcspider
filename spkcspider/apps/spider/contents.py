@@ -86,6 +86,11 @@ class BaseContent(models.Model):
             return self.associated_rel
         return self._associated2
 
+    @property
+    def is_protected(self):
+        # TODO: add good logic, this way is_protected is unsafe to use
+        return False
+
     # if static_create is used and class not saved yet
     kwargs = None
 
@@ -138,6 +143,7 @@ class BaseContent(models.Model):
 
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
-        self._associated2.content = self
-        self._associated2.save()
+        if self._associated2:
+            self._associated2.content = self
+            self._associated2.save()
         return ret

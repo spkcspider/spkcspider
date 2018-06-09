@@ -27,7 +27,7 @@
       {% for uc in object_list %}
         <tr>
           <td class="">
-            {% if not component_user %}{{uc.user}} - {%endif%}{{ uc }}
+            {% if not component_user %}{{uc.user}} - {% endif %}{{ uc.name }}
           </td>
           <td class="w3-show-inline-block">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
