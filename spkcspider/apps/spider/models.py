@@ -407,14 +407,18 @@ class AssignedProtection(models.Model):
             required_passed = query.get(
                 protection__code="allow"
             ).data.get("passes", None)
-            # if allow has None, clean it up
-            # appears to happen
-            if not required_passed:
-                required_passes = 0
+            # if allow has None, float, etc clean it up
+            # None appears to happen
+            # fix negative values
+            if not(required_passed, int) or required_passed <= 0:
+                required_passes = 1
             required_passes = min(
                 required_passes+1,
                 len(query)  # if too many passes are required, lower
             )
+            # required_passes >=1, if only allow
+            # required_passes >=2, if allow+other
+            # required because of allow in set
         except models.ObjectDoesNotExist:
             required_passes = 1
 

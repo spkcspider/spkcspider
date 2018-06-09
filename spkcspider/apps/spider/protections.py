@@ -137,7 +137,8 @@ class AllowProtection(BaseProtection):
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
     passes = forms.IntegerField(
-        initial=None, required=False,
+        label=_("Passes"),
+        initial=1, required=False, min_value=1,
         help_text="How many protection passes are required?"
     )
 
