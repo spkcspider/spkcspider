@@ -317,7 +317,7 @@ class Protection(models.Model):
         # allow has absolute no information in this case
         query = cls.objects.filter(ptype__contains=ptype).exclude(code="allow")
 
-        # before protection_name check, for not allowing users
+        # before protection_codes, for not allowing users
         # to manipulate required passes
         passes = min(required_passes, len(query))
         if protection_codes:
@@ -401,7 +401,7 @@ class AssignedProtection(models.Model):
             protection__ptype__contains=ptype, active=True,
             usercomponent=usercomponent
         )
-        # before protection_name check, for not allowing users
+        # before protection_codes, for not allowing users
         # to manipulate required passes
         try:
             required_passed = query.get(
