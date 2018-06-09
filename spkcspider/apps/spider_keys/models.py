@@ -92,6 +92,7 @@ class PublicKey(BaseContent):
                 context=kwargs
             )
         else:
+            kwargs["object"] = self
             return render_to_string(
                 "spider_keys/key.html", request=kwargs["request"],
                 context=kwargs

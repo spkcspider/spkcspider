@@ -144,6 +144,9 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
             return self.object.usercomponent
         return self.get_object().usercomponent
 
+    def get_user(self):
+        return self.usercomponent.user
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()

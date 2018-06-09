@@ -404,9 +404,16 @@ class AssignedProtection(models.Model):
         # before protection_name check, for not allowing users
         # to manipulate required passes
         try:
+            required_passed = query.get(
+                protection__code="allow"
+            ).data.get("passes", None)
+            # if allow has None, clean it up
+            # appears to happen
+            if not required_passed:
+                required_passes = 0
             required_passes = min(
-                len(query),  # if too many passes are required, lower
-                query.get(protection__code="allow").data.get("passes", 1) + 1
+                required_passes+1,
+                len(query)  # if too many passes are required, lower
             )
         except models.ObjectDoesNotExist:
             required_passes = 1
