@@ -3,10 +3,10 @@
 
 {% block title %}{% if scope != "add" %}
   {% blocktrans trimmed %}
-    User Content
+    Content
   {% endblocktrans %}
 {% else %}{% blocktrans trimmed with type=object.name %}
-  Create User Content: <em>{{type}}</em>
+  Create Content: {{type}}
 {% endblocktrans %}{% endif %}{% endblock %}
 
 {% block context_actions %}
@@ -25,12 +25,18 @@
       </span>
     {% endif %}
     <h1 class="w3-center">
-      {% if scope != "add" %}
+      {% if scope == "add" %}
+        {% blocktrans trimmed with type=object.name %}
+          Create Content: <em>{{type}}</em>
+        {% endblocktrans %}
+      {% elif scope == "update" %}
         {% blocktrans trimmed with name=form.instance.name %}
-          User Content: {{name}}
+          Update Content: <em>{{name}}</em>
         {% endblocktrans %}
       {% else %}
-        {% trans 'Create new User Content' %}
+        {% blocktrans trimmed with name=form.instance.name %}
+          Content: {{name}}
+        {% endblocktrans %}
       {% endif %}
     </h1>
   </div>

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
+from django.utils.translation import pgettext
 
 
 import hashlib
@@ -35,7 +36,7 @@ def valid_pkey_properties(key):
 
 @add_content
 class PublicKey(BaseContent):
-    content_name = "PublicKey"
+    names = ["public_key"]
     ctype = UserContentType.public.value
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
@@ -43,6 +44,10 @@ class PublicKey(BaseContent):
     hash = models.CharField(
         max_length=settings.MAX_HASH_SIZE, null=False, editable=False
     )
+
+    @classmethod
+    def localize_name(cls, name):
+        return pgettext("content name", "Public Key")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

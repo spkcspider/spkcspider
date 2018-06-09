@@ -4,6 +4,7 @@ import enum
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
+from django.utils.translation import pgettext
 
 __all__ = (
     "add_content", "installed_contents", "BaseContent", "UserContentType"
@@ -33,21 +34,31 @@ def add_content(klass):
 
 def initialize_content_models():
     from .models import UserContentVariant
+    all_content = models.Q()
     for code, val in installed_contents.items():
-        n = val.content_name
-        if not n:
-            n = val.__name__
-        variant = UserContentVariant.objects.get_or_create(
-            defaults={"ctype": val.ctype, "name": n}, code=code
-        )[0]
-        if variant.ctype != val.ctype:
-            variant.ctype = val.ctype
-        if variant.name != n:
-            variant.name = n
-        variant.save()
-    temp = UserContentVariant.objects.exclude(
-        code__in=installed_contents.keys()
-    )
+        names = val.names
+        if callable(names):
+            names = names()
+
+        update = False
+        if len(names) == 1:
+            update = True
+        for n in names:
+            if update:
+                variant = UserContentVariant.objects.get_or_create(
+                    defaults={"ctype": val.ctype, "name": n}, code=code
+                )[0]
+            else:
+                variant = UserContentVariant.objects.get_or_create(
+                    defaults={"ctype": val.ctype}, code=code, name=n
+                )[0]
+            if variant.ctype != val.ctype:
+                variant.ctype = val.ctype
+            if variant.name != n:
+                variant.name = n
+            variant.save()
+            all_content |= models.Q(name=n, code=code)
+    temp = UserContentVariant.objects.exclude(all_content)
     if temp.exists():
         print("Invalid content, please update or remove them:",
               [t.code for t in temp])
@@ -57,7 +68,8 @@ class BaseContent(models.Model):
     # consider not writing admin wrapper for (sensitive) inherited content
     # this way content could be protected to be only visible to admin, user
     # and legitimated users (if not index)
-    content_name = None
+    # iterable or callable with names under which content should appear
+    names = None
     ctype = ""
 
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -65,13 +77,13 @@ class BaseContent(models.Model):
     deletion_period = getattr(settings, "DELETION_PERIOD_CONTENT", None)
     # if created associated is None (will be set later)
     # use usercomponent in form instead
-    _associated = GenericRelation("spider_base.UserContent")
+    associated_rel = GenericRelation("spider_base.UserContent")
     _associated2 = None
 
     @property
     def associated(self):
-        if self._associated:
-            return self._associated
+        if self.associated_rel:
+            return self.associated_rel
         return self._associated2
 
     # if static_create is used and class not saved yet
@@ -88,12 +100,19 @@ class BaseContent(models.Model):
         ob.kwargs = kwargs
         return ob
 
+    @classmethod
+    def localize_name(cls, name):
+        return pgettext("content name", name)
+
     def __str__(self):
         if not self.id:
             _id = "-"
         else:
             _id = self.id
-        return "%s: %s" % (self.associated.ctype.name, _id)
+        return "%s: %s" % (self.localize_name(self.associated.ctype.name), _id)
+
+    def __repr__(self):
+        return "<Content: %s>" % self.__str__()
 
     # for viewing
     def render(self, **kwargs):

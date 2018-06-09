@@ -1,6 +1,7 @@
+{% load i18n %}
 <ul class="w3-ul">
   {% for field in form %}
-  <li>
+  <li class="{% if field.errors %}w3-pale-red{% endif %}">
     <div class="">
       <div class="w3-cell w3-padding">
         {{ field.label_tag }}</br>
@@ -12,11 +13,17 @@
       {% endif %}
       </div>
     </div>
-    <div class="">
-      {% for error in field.errors %}
-        <p class="w3-text-red">{{ error|safe }}</p>
-      {% endfor %}
-    </div>
+    {% if field.errors %}
+      <div class="w3-text-red">
+        <ul>
+          {% for error in field.errors %}
+          <li class="">
+            {{ error }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
   </li>
   {% endfor %}
 </ul>

@@ -173,6 +173,10 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
         self.has_write_perm = self.check_write_permission()
         return self.has_write_perm
 
+    def get_form(self):
+        # Overwrite, we have no form here
+        return None
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
@@ -212,7 +216,7 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
 class ContentIndex(UCTestMixin, ListView):
     model = UserContent
     scope = "list"
-    ordering = ("associated__ctype__name", "id")
+    ordering = ("ctype__name", "id")
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.get_usercomponent()

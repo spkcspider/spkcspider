@@ -15,6 +15,7 @@ from django.conf import settings
 from django import forms
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
 
 
@@ -119,6 +120,15 @@ class BaseProtection(forms.Form):
     def auth(cls, **kwargs):
         return False
 
+    @classmethod
+    def localize_name(cls, name=None):
+        if not name:
+            name = cls.name.title()
+        return pgettext("protection name", name)
+
+    def __str__(self):
+        return self.localize_name(self.name)
+
 
 # if specified with multiple protections all protections must be fullfilled
 @add_protection
@@ -133,9 +143,6 @@ class AllowProtection(BaseProtection):
     @classmethod
     def auth(cls, **_kwargs):
         return True
-
-    def __str__(self):
-        return _("Allow")
 
 
 def friend_query():
@@ -161,9 +168,6 @@ class FriendProtection(BaseProtection):
             return True
         else:
             return False
-
-    def __str__(self):
-        return _("Friends")
 
 
 @add_protection
@@ -201,13 +205,10 @@ class LoginProtection(BaseProtection):
         else:
             return None
 
-    def __str__(self):
-        return _("Login authentication")
-
 
 # @add_protection
 class PasswordProtection(BaseProtection):
-    name = "pw"
+    name = "password"
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
 
@@ -217,6 +218,3 @@ class PasswordProtection(BaseProtection):
             return True
         else:
             return None
-
-    def __str__(self):
-        return _("Password based authentication")

@@ -158,14 +158,11 @@ class UserContentVariant(models.Model):
     def installed_class(self):
         return installed_contents[self.code]
 
-    @property
-    def localized_name(self):
-        if self.owner:
-            return self.name
-        return _(self.name)
-
     def __str__(self):
-        return self.localized_name
+        return self.installed_class.localize_name(self.name)
+
+    def __repr__(self):
+        return "<ContentVariant: %s>" % self.__str__()
 
 
 class UserContent(models.Model):
@@ -216,6 +213,12 @@ class UserContent(models.Model):
             models.Index(fields=['object_id']),
         ]
 
+    def __str__(self):
+        return self.content.__str__()
+
+    def __repr__(self):
+        return self.content.__repr__()
+
     def get_flag(self, flag):
         if "%s;" % flag in self.info:
             return True
@@ -264,10 +267,10 @@ class Protection(models.Model):
         return installed_protections[self.code]
 
     def __str__(self):
-        return _(self.code)
+        return self.installed_class.localize_name()
 
     def __repr__(self):
-        return "<Protection: %s>" % self.code
+        return "<Protection: %s>" % self.__str__()
 
     @sensitive_variables("kwargs")
     def auth(self, request, obj=None, **kwargs):
@@ -376,6 +379,15 @@ class AssignedProtection(models.Model):
         indexes = [
             models.Index(fields=['usercomponent']),
         ]
+
+    def __str__(self):
+        return "%s -> %s" % (self.usercomponent, self.protection)
+
+    def __repr__(self):
+        return "<Assigned: %s -> %s>" % (
+            self.usercomponent,
+            self.installed_class.localize_name()
+        )
 
     @classmethod
     def authall(cls, request, usercomponent,

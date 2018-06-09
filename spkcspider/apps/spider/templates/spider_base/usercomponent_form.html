@@ -3,10 +3,10 @@
 
 {% block title %}{% if object %}
   {% blocktrans trimmed %}
-    Update User Component
+    Update Component
   {% endblocktrans %}
 {% else %}{% blocktrans trimmed %}
-  Create User Component
+  Create Component
 {% endblocktrans %}{% endif %}{% endblock %}
 
 {% block context_actions %}
@@ -18,16 +18,24 @@
 {% block content %}
   <div>
     <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'index' %}</a>
-    {% if object and object.name != "index" %}
-      <span class="w3-right"><a href="{% url 'spider_base:ucomponent-delete' name=object.name %}">{% trans 'delete' %}</a>?</span>
+    {% if object %}
+      <span class="w3-right">
+        {% if object.name != "index" %}
+          <a href="{% url 'spider_base:ucomponent-delete' name=object.name %}">{% trans 'delete' %}</a>?
+          <hr/>
+        {% endif %}
+        <a class="" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
+          {% trans "Contents" %}
+        </a>
+      </span>
     {% endif %}
     <h1 class="w3-center">
       {% if form.instance.id %}
         {% blocktrans trimmed with name=form.instance.name %}
-          Update User Component: <em>{{name}}</em>
+          Update Component: <em>{{name}}</em>
         {% endblocktrans %}
       {% else %}
-        {% trans 'Create new User Component' %}
+        {% trans 'Create new Component' %}
       {% endif %}
     </h1>
   </div>
@@ -67,5 +75,11 @@
     <button class="w3-button w3-grey">
       {% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}
     </button>
+    {% if object %}
+      <a class="w3-button w3-right w3-grey" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
+        {% trans "Contents" %}
+        <i class="fa fa-arrow-alt-circle-right" aria-hidden="true"></i>
+      </a>
+    {% endif %}
   </form>
 {% endblock %}
