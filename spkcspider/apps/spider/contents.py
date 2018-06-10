@@ -5,6 +5,8 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 from django.utils.translation import pgettext
+from django.utils.translation import gettext as _
+from django.core.exceptions import ValidationError
 
 __all__ = (
     "add_content", "installed_contents", "BaseContent", "UserContentType"
@@ -153,13 +155,20 @@ class BaseContent(models.Model):
                 )
 
     def clean(self):
+        from .models import UserContent
         if self._associated2:
             self._associated2.content = self
         a = self.associated
         a.info = self.get_info(a.usercomponent)
-        # a.full_clean(exclude=[
-        #    "nonce", "associated_rel", "deletion_requested", "ctype"
-        # ])
+        try:
+            if UserContent.objects.get(info=a.info).id != a.id:
+                raise ValidationError(
+                        message=_('Duplicate content per component (content '
+                                  'type allows only single content)'),
+                        code='duplicate content',
+                    )
+        except UserContent.DoesNotExist:
+            pass
 
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
