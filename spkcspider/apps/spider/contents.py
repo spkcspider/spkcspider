@@ -71,6 +71,8 @@ class BaseContent(models.Model):
     # iterable or callable with names under which content should appear
     names = None
     ctype = ""
+    # is info unique
+    is_unique = False
 
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
@@ -135,11 +137,20 @@ class BaseContent(models.Model):
         return kwargs
 
     def get_info(self, usercomponent):
-        return "code=%s;name=%s;" % \
-            (
-                self._meta.model_name,
-                self.associated.ctype.name
-            )
+        # id is the same as content
+        if not self.is_unique:
+            return "code=%s;name=%s;id=%s;" % \
+                (
+                    self._meta.model_name,
+                    self.associated.ctype.name,
+                    self.associated.id
+                )
+        else:
+            return "code=%s;name=%s;" % \
+                (
+                    self._meta.model_name,
+                    self.associated.ctype.name
+                )
 
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)

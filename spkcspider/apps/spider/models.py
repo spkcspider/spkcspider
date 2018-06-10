@@ -194,7 +194,8 @@ class UserContent(models.Model):
     # in this format: keyword=
     # no unneccessary spaces!
     info = models.TextField(
-        default=";", null=False, validators=[info_field_validator]
+        null=False, blank=False, unique=True,
+        validators=[info_field_validator]
     )
     content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, editable=False
@@ -206,7 +207,7 @@ class UserContent(models.Model):
 
     class Meta:
         unique_together = [
-            ('content_type', 'object_id')
+            ('content_type', 'object_id'),
         ]
         indexes = [
             models.Index(fields=['usercomponent']),
@@ -240,6 +241,16 @@ class UserContent(models.Model):
             "spider_base:ucontent-access",
             kwargs={"id": self.id, "nonce": self.nonce, "access": "view"}
         )
+
+    def validate_unique(self, exclude=None):
+        if exclude:
+            if not getattr(self.content, "is_unique"):
+                exclude = list(exclude)
+                exclude.append("info")
+
+        elif not getattr(self.content, "is_unique"):
+            exclude = ["info"]
+        super().validate_unique(exclude)
 
     @property
     def is_protected(self):

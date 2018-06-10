@@ -38,6 +38,7 @@ def valid_pkey_properties(key):
 class PublicKey(BaseContent):
     names = ["PublicKey"]
     ctype = UserContentType.public.value
+    is_unique = True
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
     note = models.TextField(max_length=100, default="", null=False, blank=True)
@@ -51,13 +52,27 @@ class PublicKey(BaseContent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_key = self.key
+        self.__original_key = self.get_key_name()[0]
 
-    def __str__(self):
-        st = "{}...".format(self.hash[:10])
+    def get_key_name(self):
+        h = hashlib.new(settings.KEY_HASH_ALGO)
+        if len(self.key.split("\n")) > 1:
+            h.update(self.key.encode("ascii", "ignore"))
+            return (h.hexdigest(), None)
+
         split = self.key.rsplit(" ", 1)
         if len(split) == 2 and "@" in split[1]:
-            st = split[1]
+            h.update(split[0].encode("ascii", "ignore"))
+            return (h.hexdigest(), split[1])
+        h.update(self.key.encode("ascii", "ignore"))
+        return (h.hexdigest(), None)
+
+    def __str__(self):
+        st = self.get_key_name()
+        if st[1]:
+            st = st[1]
+        else:
+            st = "{}...".format(self.hash[:10])
         if len(self.note) > 0:
             st = "{}: {}".format(st, self.note[:20])
         return st
@@ -99,8 +114,9 @@ class PublicKey(BaseContent):
             )
 
     def save(self, *args, **kwargs):
-        if self.key and self.__original_key != self.key:
+        key = self.get_key_name()[0]
+        if self.__original_key != key:
             h = hashlib.new(settings.KEY_HASH_ALGO)
-            h.update(self.key.encode("ascii", "ignore"))
+            h.update(key.encode("ascii", "ignore"))
             self.hash = h.hexdigest()
         super().save(*args, **kwargs)
