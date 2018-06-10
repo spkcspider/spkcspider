@@ -187,14 +187,16 @@ class UserContent(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     # only editable for admins
-    deletion_requested = models.DateTimeField(null=True, default=None)
+    deletion_requested = models.DateTimeField(
+        null=True, blank=True, default=None
+    )
     # for extra information over content, admin only editing
     # format: flag1;flag2;foo=true;foo2=xd;...;endfoo=xy;
     # every section must end with ; every keyword must be unique and
     # in this format: keyword=
     # no unneccessary spaces!
     info = models.TextField(
-        null=False, blank=False, unique=True,
+        null=False, editable=False, unique=True,
         validators=[info_field_validator]
     )
     content_type = models.ForeignKey(
@@ -221,7 +223,7 @@ class UserContent(models.Model):
         return self.content.__repr__()
 
     def get_flag(self, flag):
-        if "%s;" % flag in self.info:
+        if self.info and "%s;" % flag in self.info:
             return True
         return False
 
@@ -241,16 +243,6 @@ class UserContent(models.Model):
             "spider_base:ucontent-access",
             kwargs={"id": self.id, "nonce": self.nonce, "access": "view"}
         )
-
-    def validate_unique(self, exclude=None):
-        if exclude:
-            if not getattr(self.content, "is_unique"):
-                exclude = list(exclude)
-                exclude.append("info")
-
-        elif not getattr(self.content, "is_unique"):
-            exclude = ["info"]
-        super().validate_unique(exclude)
 
     @property
     def is_protected(self):

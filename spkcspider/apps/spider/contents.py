@@ -71,7 +71,7 @@ class BaseContent(models.Model):
     # iterable or callable with names under which content should appear
     names = None
     ctype = ""
-    # is info unique
+    # is info unique for usercomponent
     is_unique = False
 
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -84,9 +84,9 @@ class BaseContent(models.Model):
 
     @property
     def associated(self):
-        if self.associated_rel:
-            return self.associated_rel
-        return self._associated2
+        if self._associated2:
+            return self._associated2
+        return self.associated_rel.first()
 
     @property
     def is_protected(self):
@@ -152,8 +152,19 @@ class BaseContent(models.Model):
                     self.associated.ctype.name
                 )
 
+    def clean(self):
+        if self._associated2:
+            self._associated2.content = self
+        a = self.associated
+        a.info = self.get_info(a.usercomponent)
+        # a.full_clean(exclude=[
+        #    "nonce", "associated_rel", "deletion_requested", "ctype"
+        # ])
+
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
+        a = self.associated
+        a.info = self.get_info(a.usercomponent)
         if self._associated2:
             self._associated2.content = self
             self._associated2.save()

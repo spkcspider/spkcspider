@@ -95,9 +95,8 @@ class PublicKey(BaseContent):
                 **self.get_form_kwargs(kwargs["request"])
             )
             if kwargs["form"].is_valid():
-                instance = kwargs["form"].save()
                 kwargs["form"] = KeyForm(
-                    uc=kwargs["uc"], instance=instance
+                    uc=kwargs["uc"], instance=kwargs["form"].save()
                 )
             template_name = "spider_base/full_form.html"
             if kwargs["scope"] == "update":
