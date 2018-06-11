@@ -3,9 +3,19 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from django.urls import reverse
+from captcha.fields import CaptchaField
+from spkcspider.apps.spider.forms import SpiderAuthForm
+
+
+class AuthForm(SpiderAuthForm):
+    # add captcha, disguised name
+    fingerfood = CaptchaField(label=_("Captcha"))
 
 
 class SignupForm(UserCreationForm):
+    # add captcha, disguised name
+    filler = CaptchaField(label=_("Captcha"))
+
     # real: username, fake for spammers
     name = forms.CharField(
         label="", max_length=100, required=False, widget=forms.HiddenInput()

@@ -9,7 +9,8 @@ python_version = '3'
 [packages]
 
 django = '>=2'
-jsonfield = '*'
+django-simple-jsonfield = '*'
+django-simple-captcha = '*'
 
 [dev-packages]
 

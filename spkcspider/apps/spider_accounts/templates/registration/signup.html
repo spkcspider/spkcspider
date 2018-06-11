@@ -2,22 +2,15 @@
 {% load i18n static %}
 {% block main_classes %}{{block.super}} w3-animate-bottom{% endblock %}
 {% block content %}
-  <h2>Sign up</h2>
+  <h2>{% trans 'Sign up' %}</h2>
   <form action="{{ app_path }}" method="post">
     {% csrf_token %}
-    {% for field in form %}
-      <div>
-        {{ field.label_tag }}<br>
-        {{ field }}
-        {% if field.help_text %}
-          <small style="color: grey">{{ field.help_text|safe }}</small>
-        {% endif %}
-        {% for error in field.errors %}
-          <p style="color: red">{{ error|safe }}</p>
-        {% endfor %}
-      </div>
-    {% endfor %}
-    <button  class="w3-button w3-grey" type="submit">{% trans 'Sign up' %}</button><br/>
+    <fieldset>
+      {% include "spider_base/base_form.html" with form=form %}
+    </fieldset>
+    <button class="w3-button w3-grey" type="submit">{% trans 'Sign up' %}</button><br/>
     <a href="{% url 'auth:login' %}">{% trans 'Already an account? Login?' %}</a>
   </form>
+
+
 {% endblock %}

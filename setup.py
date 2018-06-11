@@ -5,7 +5,7 @@ from setuptools import setup
 
 install_requirements = [
     "django>=2",
-    "jsonfield",
+    "django-simple-jsonfield",
 ]
 
 debug_requirements = [

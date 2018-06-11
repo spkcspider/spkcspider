@@ -1,29 +1,32 @@
 {% load i18n %}
+{% for hidden in form.hidden_fields %}
+{{ hidden }}
+{% endfor %}
 <ul class="w3-ul">
-  {% for field in form %}
-  <li class="{% if field.errors %}w3-pale-red{% endif %}">
-    <div class="">
-      <div class="w3-cell w3-padding">
-        {{ field.label_tag }}</br>
-        {{ field }}
+  {% for field in form.visible_fields %}
+    <li class="{% if field.errors %}w3-pale-red{% endif %}">
+      <div class="">
+        <div class="w3-cell w3-padding">
+          {{ field.label_tag }}</br>
+          {{ field }}
+        </div>
+        <div class="w3-cell w3-padding">
+        {% if field.help_text %}
+          <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+        {% endif %}
+        </div>
       </div>
-      <div class="w3-cell w3-padding">
-      {% if field.help_text %}
-        <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+      {% if field.errors %}
+        <div class="w3-text-red">
+          <ul>
+            {% for error in field.errors %}
+            <li class="">
+              {{ error }}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
       {% endif %}
-      </div>
-    </div>
-    {% if field.errors %}
-      <div class="w3-text-red">
-        <ul>
-          {% for error in field.errors %}
-          <li class="">
-            {{ error }}
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
-  </li>
+    </li>
   {% endfor %}
 </ul>

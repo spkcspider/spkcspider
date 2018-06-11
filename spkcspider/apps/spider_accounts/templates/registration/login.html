@@ -8,7 +8,9 @@
   <form action="{{ request.path }}" method="post">
     {% csrf_token %}
     <input type="hidden" name="next" value="{{ next }}" />
-    {% include "spider_base/base_form.html" with form=form %}
+    <fieldset>
+      {% include "spider_base/base_form.html" with form=form %}
+    </fieldset>
 
     <fieldset>
       <legend><h1>{% trans 'Authenticate with' %}</h1></legend>

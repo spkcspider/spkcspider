@@ -31,7 +31,7 @@ spkcspider.apps.spidertags: verified information tags and
 
 spkcspider.apps.spiderkeys: store public keys
 
-spkcspider.spkcspider: only required for standalone project
+spkcspider: only required for standalone project
 
 # Thanks
 

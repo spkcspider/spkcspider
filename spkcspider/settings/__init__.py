@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.flatpages',
+    'captcha',
     # 'django.contrib.sites',
     'spkcspider.apps.spider',
     # 'spkcspider.apps.spiderbrokers',
@@ -115,6 +116,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.math_challenge'
+CAPTCHA_FONT_SIZE = 40
 
 LOGIN_URL = "auth:login"
 LOGIN_REDIRECT_URL = "auth:profile"

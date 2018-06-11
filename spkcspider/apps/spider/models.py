@@ -328,7 +328,7 @@ class Protection(models.Model):
                 code__in=protection_codes
             )
         return cls.auth_query(
-            request, query.order_by("code"), required_passed=passes
+            request, query.order_by("code"), required_passes=passes
         )
 
     def get_form(self, prefix=None, **kwargs):
@@ -407,13 +407,13 @@ class AssignedProtection(models.Model):
         # before protection_codes, for not allowing users
         # to manipulate required passes
         try:
-            required_passed = query.get(
+            required_passes = query.get(
                 protection__code="allow"
             ).data.get("passes", None)
             # if allow has None, float, etc clean it up
             # None appears to happen
             # fix negative values
-            if not(required_passed, int) or required_passed <= 0:
+            if not(required_passes, int) or required_passes <= 0:
                 required_passes = 1
             required_passes = min(
                 required_passes+1,

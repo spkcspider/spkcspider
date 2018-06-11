@@ -8,9 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
-import time
-from .forms import SignupForm, UserUpdateForm
-from spkcspider.apps.spider.forms import SpiderAuthForm
+from .forms import SignupForm, UserUpdateForm, AuthForm
 
 # Create your views here.
 
@@ -19,11 +17,6 @@ class SignupView(FormView):
     template_name = 'registration/signup.html'
     form_class = SignupForm
     success_url = reverse_lazy("auth:signup_thanks")
-
-    def post(self, request, *args, **kwargs):
-        # slow down signups, helpfull against bots
-        time.sleep(3)
-        return super().post(request, *args, **kwargs)
 
     def form_valid(self, form):
         form.save()
@@ -40,7 +33,7 @@ class SignupView(FormView):
 
 
 class UserLoginView(LoginView):
-    form_class = SpiderAuthForm
+    form_class = AuthForm
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -48,8 +41,6 @@ class UserLoginView(LoginView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        # slow down login attempts, against bruteforce attacks
-        time.sleep(1.5)
         return super().post(request, *args, **kwargs)
 
 

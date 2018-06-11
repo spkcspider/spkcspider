@@ -8,9 +8,9 @@
 
 {% block content %}
   <div>
-    {# if request.user == uc.user #}
+    {% if request.user == uc.user %}
       <a class="w3-right" href="{% url 'spider_base:ucomponent-update' name=uc.name %}">Update</a>
-    {# endif #}
+    {% endif %}
     <h1 class="w3-center">
       {% blocktrans trimmed with name=uc.name %}
         Content of Component: <em>{{name}}</em>
