@@ -51,7 +51,9 @@ class UserTestMixin(UserPassesTestMixin):
 
     def handle_no_permission(self):
         p = self.request.protections
-        if not bool(p):
+        if bool(p):
+            # should be never true here
+            assert(p is False)
             return super().handle_no_permission()
         if len(p) == 1:
             if isinstance(p[0].result, HttpResponseBase):
