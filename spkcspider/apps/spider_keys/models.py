@@ -63,7 +63,7 @@ class PublicKey(BaseContent):
             h.update(key.encode("ascii", "ignore"))
             self.hash = h.hexdigest()
             self._former_key = key
-        return "%s;hash=%s;" % (ret, self.hash)
+        return "%shash=%s;" % (ret, self.hash)
 
     def get_key_name(self):
         h = hashlib.new(settings.KEY_HASH_ALGO)

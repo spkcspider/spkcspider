@@ -26,28 +26,30 @@ class ComponentAllIndex(ListView):
     model = UserComponent
     is_home = False
     _base_query = ~models.Q(name="index") & models.Q(protections__code="allow")
-    _base_query2 = models.Q(len_prot=1)
     ordering = ("user", "name")
 
     def get_queryset(self):
-        q = self._base_query
-        q2 = self._base_query2
 
-        if "search" in self.request.GET:
-            searchq = models.Q(name__icontains=self.request.GET["search"])
-        else:
-            searchq = models.Q()
-        if self.request.user.is_authenticated:
-            quser = self.request.user.usercomponent_set.filter(searchq)
-        else:
-            quser = UserComponent.objects.none()
-        quser = quser.annotate(len_prot=models.Count('protections'))
+        searchq = models.Q()
+        for info in self.request.POST.get("search", "").split(" "):
+            if len(info) > 0:
+                searchq |= models.Q(contents__info__icontains="%s" % info)
+        for info in self.request.GET.get("search", "").split(" "):
+            if len(info) > 0:
+                searchq |= models.Q(contents__info__icontains="%s" % info)
 
-        main_query = self.model.objects.filter(q & searchq).annotate(
+        for info in self.request.POST.getlist("info"):
+            searchq |= models.Q(contents__info__contains="%s;" % info)
+        for info in self.request.GET.getlist("info"):
+            searchq |= models.Q(contents__info__contains="%s;" % info)
+
+        main_query = self.model.objects.filter(
+            self._base_query & searchq
+        ).annotate(
             len_prot=models.Count('protections')
-        ).filter(q2).union(quser)
+        ).filter(len_prot=1)
         order = self.get_ordering()
-        return main_query.distinct("user", "name").order_by(*order)
+        return main_query.order_by(*order)
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)

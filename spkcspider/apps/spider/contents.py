@@ -166,15 +166,17 @@ class BaseContent(models.Model):
     def get_info(self, usercomponent):
         # id is the same as content
         if not self.is_unique:
-            return "code=%s;name=%s;id=%s;" % \
+            return "uc=%s;code=%s;name=%s;id=%s;" % \
                 (
+                    usercomponent.name,
                     self._meta.model_name,
                     self.associated.ctype.name,
                     self.associated.id
                 )
         else:
-            return "code=%s;name=%s;" % \
+            return "uc=%s;code=%s;name=%s;" % \
                 (
+                    usercomponent.name,
                     self._meta.model_name,
                     self.associated.ctype.name
                 )
@@ -200,6 +202,7 @@ class BaseContent(models.Model):
         a = self.associated
         a.info = self.get_info(a.usercomponent)
         if self._associated2:
-            self._associated2.content = self
-            self._associated2.save()
+            a.content = self
+        # update info and set content
+        a.save()
         return ret
