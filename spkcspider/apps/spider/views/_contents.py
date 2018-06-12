@@ -5,7 +5,6 @@ __all__ = (
 )
 
 from datetime import timedelta
-import time
 
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.list import ListView
@@ -21,7 +20,7 @@ from django.http import Http404
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
-from ..contents import UserContentType
+from ..contents import UserContentType, rate_limit_func
 from ..models import UserContent, UserContentVariant
 from ..forms import UserContentForm
 
@@ -87,9 +86,8 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     def dispatch(self, request, *args, **kwargs):
         try:
             return super().dispatch(request, *args, **kwargs)
-        except Http404 as e:
-            time.sleep(2)
-            raise e
+        except Http404:
+            return rate_limit_func(self, request)
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -175,9 +173,8 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
     def dispatch(self, request, *args, **kwargs):
         try:
             return super().dispatch(request, *args, **kwargs)
-        except Http404 as e:
-            time.sleep(2)
-            raise e
+        except Http404:
+            return rate_limit_func(self, request)
 
     def get_initial(self):
         return {"usercomponent": self.usercomponent}

@@ -1,5 +1,7 @@
 
 import enum
+import time
+from importlib import import_module
 
 from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
@@ -7,12 +9,22 @@ from django.conf import settings
 from django.utils.translation import pgettext
 from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError
+from django.http import Http404
 
 __all__ = (
-    "add_content", "installed_contents", "BaseContent", "UserContentType"
+    "add_content", "installed_contents", "BaseContent", "UserContentType",
+    "rate_limit_func", "initialize_ratelimit"
 )
 
 installed_contents = {}
+
+
+def rate_limit_default(view, request):
+    time.sleep(2)
+    raise Http404()
+
+
+rate_limit_func = None
 
 
 class UserContentType(str, enum.Enum):
@@ -32,6 +44,19 @@ def add_content(klass):
         return klass
     installed_contents[name] = klass
     return klass
+
+
+def initialize_ratelimit():
+    global rate_limit_func
+    func = getattr(settings, "RATELIMIT_FUNC_CONTENTS", None)
+    if callable(func):
+        rate_limit_func = func
+    elif isinstance(func, str):
+        func = func.rsplit(".", 1)
+        func = getattr(import_module(func[0]), func[1])
+        rate_limit_func = func
+    else:
+        rate_limit_func = rate_limit_default
 
 
 def initialize_content_models():

@@ -13,6 +13,9 @@ class SpiderBaseConfig(AppConfig):
             InitProtectionsCallback, InitUserComponentsCallback,
             InitContentsCallback
         )
+        from .contents import initialize_ratelimit
+        initialize_ratelimit()
+
         post_save.connect(
             InitUserComponentsCallback, sender=get_user_model(),
             dispatch_uid="initial_usercomponents"
