@@ -49,28 +49,17 @@
     </fieldset>
     <fieldset>
       <legend><h1>{% trans 'Protections' %}</h1></legend>
-      <table class="w3-table">
-        <tbody>
+      <div class="w3-white responsive-columns">
         {% for prot in form.protections %}
-          {% if forloop.counter0|divisibleby:"2" %}
-          <tr>
-          {% endif %}
-          <td class="w3-half">
-            <div class="w3-white w3-card w3-padding">
-              <h1 class="w3-center">{{prot.name}}</h1>
-              {% include "spider_base/base_form.html" with form=prot %}
-            </div>
-          </td>
-          {% if forloop.counter|divisibleby:"2" or forloop.last %}
-          </tr>
-          {% endif %}
+          <div class="w3-padding w3-border">
+            <h1 class="w3-center">{{prot}}</h1>
+            {% include "spider_base/base_form.html" with form=prot %}
+          </div>
         {% empty%}
-          <tr><td class="w3-padding" colspan="2">
+          <div class="w3-padding w3-border">
             <div class="w3-orange w3-padding"> No protections: create component first </div>
-          </td></tr>
+          </div>
         {% endfor %}
-        </tbody>
-      </table>
     </fieldset>
     <button class="w3-button w3-grey">
       {% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}

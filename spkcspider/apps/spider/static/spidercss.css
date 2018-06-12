@@ -1,0 +1,9 @@
+.responsive-columns {
+  column-count: 1;
+}
+@media (min-width:601px){
+  .responsive-columns {
+    column-count: 2;
+    column-rule: 4px double black;
+  }
+}

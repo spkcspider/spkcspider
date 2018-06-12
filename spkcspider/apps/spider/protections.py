@@ -10,9 +10,11 @@ __all__ = ("add_protection", "ProtectionType", "check_blacklisted",
 
 from collections import namedtuple
 import enum
+from random import SystemRandom
 
 from django.conf import settings
 from django import forms
+from django.http import Http404
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext
@@ -20,6 +22,7 @@ from django.contrib.auth import authenticate
 
 
 installed_protections = {}
+_sysrand = SystemRandom()
 
 
 class ProtectionType(str, enum.Enum):
@@ -108,13 +111,20 @@ class BaseProtection(forms.Form):
     def __init__(self, protection, ptype, assigned=None, **kwargs):
         self.protection = protection
         self.ptype = ptype
-        initial = self.initial.copy()
         if assigned:
             self.instance = assigned.filter(protection=self.protection).first()
-            # does assigned protection exist?
-            if self.instance:
-                initial["active"] = self.instance.active
+        initial = self.get_initial()
+        # does assigned protection exist?
+        if self.instance:
+            # if yes force instance.active information
+            initial["active"] = self.instance.active
         super().__init__(initial=initial, **kwargs)
+
+    def get_initial(self):
+        initial = self.initial.copy()
+        if self.instance:
+            initial.update(self.instance.data)
+        return initial
 
     @classmethod
     def auth(cls, **kwargs):
@@ -123,8 +133,8 @@ class BaseProtection(forms.Form):
     @classmethod
     def localize_name(cls, name=None):
         if not name:
-            name = cls.name.title()
-        return pgettext("protection name", name)
+            name = cls.name
+        return pgettext("protection name", name.title())
 
     def __str__(self):
         return self.localize_name(self.name)
@@ -138,7 +148,7 @@ class AllowProtection(BaseProtection):
     ptype += ProtectionType.authentication.value
     passes = forms.IntegerField(
         label=_("Passes"),
-        initial=1, required=False, min_value=1,
+        initial=1, min_value=1,
         help_text="How many protection passes are required?"
     )
 
@@ -157,19 +167,47 @@ class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
     users = forms.ModelMultipleChoiceField(
-        queryset=friend_query(), required=False
+        label=_("Users"), queryset=friend_query(), required=False
     )
 
     media = {
         'js': 'admin/js/vendor/select2/select2.full.min.js'
     }
 
+    def clean_users(self):
+        return [i.pk for i in self.cleaned_data["users"]]
+
     @classmethod
     def auth(cls, request, obj, **kwargs):
-        if request.user.pk in obj.data["users"]:
+        if obj and request.user.pk in obj.data["users"]:
             return True
         else:
             return False
+
+
+@add_protection
+class RandomFailProtection(BaseProtection):
+    name = "randomfail"
+    ptype = ProtectionType.access_control.value
+    ptype += ProtectionType.authentication.value
+    success_rate = forms.IntegerField(
+        label=_("Success Rate"), min_value=20, max_value=100, initial=100,
+        widget=forms.NumberInput(attrs={'type': 'range'}),
+        help_text=_("Fail randomly with 404 error, to disguise correct access")
+    )
+
+    @classmethod
+    def localize_name(cls, name=None):
+        return pgettext("protection name", "Random Fail")
+
+    @classmethod
+    def auth(cls, request, obj, **kwargs):
+        if obj and obj.data.get("success_rate", None):
+            if obj.data["success_rate"] <= _sysrand.randrange(101):
+                return True
+            else:
+                raise Http404()
+        return False
 
 
 @add_protection

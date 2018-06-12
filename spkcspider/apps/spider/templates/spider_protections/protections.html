@@ -1,9 +1,14 @@
 {% extends "spider_protections/base.html" %}
 {% load spider_protections %}
-{% extract_protections "protections" as protections %}
-{% for prot in protections %}
-  <details>
-    <summary>{{prot.protection.name}}</summary>
-    {% render_protection prot %}
-  </details>
+<fieldset>
+  <legend><h1>{% trans 'Protections' %}</h1></legend>
+  <div class="w3-white responsive-columns">
+    {% extract_protections "protections" as protections %}
+    {% for prot in protections %}
+      <details class="w3-padding" open="open">
+        <summary>{{prot.1}}</summary>
+        {% render_protection prot %}
+      </details>
+    {% endfor %}
+</fieldset>
 {% endfor %}
