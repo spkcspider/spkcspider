@@ -52,7 +52,17 @@ class PublicKey(BaseContent):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_key = self.get_key_name()[0]
+        self._former_key = self.get_key_name()[0]
+
+    def get_info(self, usercomponent):
+        ret = super().get_info(usercomponent)
+        key = self.get_key_name()[0]
+        if self._former_key != key:
+            h = hashlib.new(settings.KEY_HASH_ALGO)
+            h.update(key.encode("ascii", "ignore"))
+            self.hash = h.hexdigest()
+            self._former_key = key
+        return "%s;hash=%s;" % (ret, self.hash)
 
     def get_key_name(self):
         h = hashlib.new(settings.KEY_HASH_ALGO)
@@ -114,7 +124,7 @@ class PublicKey(BaseContent):
 
     def save(self, *args, **kwargs):
         key = self.get_key_name()[0]
-        if self.__original_key != key:
+        if self._former_key != key:
             h = hashlib.new(settings.KEY_HASH_ALGO)
             h.update(key.encode("ascii", "ignore"))
             self.hash = h.hexdigest()

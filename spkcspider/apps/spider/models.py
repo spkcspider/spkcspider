@@ -196,7 +196,7 @@ class UserContent(models.Model):
     # in this format: keyword=
     # no unneccessary spaces!
     info = models.TextField(
-        null=False, editable=False, unique=True,
+        null=False, editable=False,
         validators=[info_field_validator]
     )
     content_type = models.ForeignKey(
@@ -210,6 +210,7 @@ class UserContent(models.Model):
     class Meta:
         unique_together = [
             ('content_type', 'object_id'),
+            ('usercomponent', 'info'),
         ]
         indexes = [
             models.Index(fields=['usercomponent']),

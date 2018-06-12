@@ -5,6 +5,7 @@ __all__ = (
 )
 
 from datetime import timedelta
+import time
 
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.list import ListView
@@ -16,6 +17,7 @@ from django.http.response import HttpResponseBase
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.http import Http404
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
@@ -81,6 +83,13 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     form_class = UserContentForm
     model = UserContent
     has_write_perm = False
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404 as e:
+            time.sleep(2)
+            raise e
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -162,6 +171,13 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
     permission_required = 'spider_base.add_usercontent'
     scope = "add"
     model = UserContentVariant
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404 as e:
+            time.sleep(2)
+            raise e
 
     def get_initial(self):
         return {"usercomponent": self.usercomponent}
