@@ -170,12 +170,6 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
     scope = "add"
     model = UserContentVariant
 
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            return super().dispatch(request, *args, **kwargs)
-        except Http404:
-            return rate_limit_func(self, request)
-
     def get_initial(self):
         return {"usercomponent": self.usercomponent}
 
@@ -237,6 +231,12 @@ class ContentIndex(UCTestMixin, ListView):
     model = UserContent
     scope = "list"
     ordering = ("ctype__name", "id")
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return rate_limit_func(self, request)
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.get_usercomponent()

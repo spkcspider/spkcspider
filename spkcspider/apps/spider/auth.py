@@ -1,4 +1,5 @@
 from django.contrib.auth.backends import ModelBackend
+from django.http import Http404
 
 from .models import UserComponent, Protection
 from .protections import ProtectionType
@@ -16,17 +17,23 @@ class SpiderAuthBackend(ModelBackend):
         uc = UserComponent.objects.filter(
             user__username=username, name="index"
         ).first()
-        if not uc:
-            request.protections = Protection.authall(
-                request, scope="auth",
-                ptype=ProtectionType.authentication.value,
-                protection_codes=protection_codes
-            )
-        else:
-            request.protections = uc.auth(
-                request, scope="auth",
-                ptype=ProtectionType.authentication.value,
-                protection_codes=protection_codes
-            )
-            if request.protections is True:
-                return uc.user
+        try:
+            if not uc:
+                request.protections = Protection.authall(
+                    request, scope="auth",
+                    ptype=ProtectionType.authentication.value,
+                    protection_codes=protection_codes
+                )
+                if request.protections is True:  # should never happen
+                    return None
+            else:
+                request.protections = uc.auth(
+                    request, scope="auth",
+                    ptype=ProtectionType.authentication.value,
+                    protection_codes=protection_codes
+                )
+                if request.protections is True:
+                    return uc.user
+        except Http404:
+            # for Http404 auth abort by protections (e.g. Random Fail)
+            pass
