@@ -20,7 +20,7 @@ installed_contents = {}
 
 
 def rate_limit_default(view, request):
-    time.sleep(2)
+    time.sleep(1)
     raise Http404()
 
 
