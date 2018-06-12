@@ -211,6 +211,30 @@ class RandomFailProtection(BaseProtection):
 
 
 @add_protection
+class RandomRefuseProtection(BaseProtection):
+    name = "randomrefuse"
+    ptype = ProtectionType.access_control.value
+    ptype += ProtectionType.authentication.value
+    success_rate = forms.IntegerField(
+        label=_("Success Rate"), min_value=20, max_value=100, initial=100,
+        widget=forms.NumberInput(attrs={'type': 'range'}),
+        help_text=_("Refuse randomly, not so strong like Random Fail, can "
+                    "be overvoted by other protection")
+    )
+
+    @classmethod
+    def localize_name(cls, name=None):
+        return pgettext("protection name", "Random Refuse")
+
+    @classmethod
+    def auth(cls, request, obj, **kwargs):
+        if obj and obj.data.get("success_rate", None):
+            if _sysrand.randrange(1, 101) <= obj.data["success_rate"]:
+                return True
+        return False
+
+
+@add_protection
 class LoginProtection(BaseProtection):
     name = "login"
     ptype = ProtectionType.access_control.value
