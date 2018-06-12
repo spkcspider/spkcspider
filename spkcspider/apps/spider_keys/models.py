@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from django.utils.translation import pgettext
@@ -78,6 +79,8 @@ class PublicKey(BaseContent):
         return (h.hexdigest(), None)
 
     def __str__(self):
+        if not self.id:
+            return gettext("Public Key")
         st = self.get_key_name()
         if st[1]:
             st = st[1]
