@@ -164,7 +164,7 @@ class BaseContent(models.Model):
         return kwargs
 
     def get_info(self, usercomponent):
-        # id is the same as content
+        # id is from UserContent
         if not self.is_unique:
             return "uc=%s;code=%s;name=%s;id=%s;" % \
                 (
