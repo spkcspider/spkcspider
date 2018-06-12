@@ -90,10 +90,13 @@ class BaseProtection(forms.Form):
         use auth to validate: in this case:
             template_name, render, form variable are used
     """
-    active = forms.BooleanField(required=False)
+    active = forms.BooleanField(label=_("Active"), required=False)
 
     # ptype valid for, is overwritten with current ptype
     ptype = ProtectionType.access_control.value
+
+    # description of Protection
+    description = None
 
     template_name = None
     # form for authentication
@@ -119,6 +122,7 @@ class BaseProtection(forms.Form):
             # if yes force instance.active information
             initial["active"] = self.instance.active
         super().__init__(initial=initial, **kwargs)
+        self.fields["active"].help_text = self.description
 
     def get_initial(self):
         initial = self.initial.copy()
@@ -151,6 +155,8 @@ class AllowProtection(BaseProtection):
         initial=1, min_value=1,
         help_text="How many protection passes are required?"
     )
+    description = _("Simply allow everyone access or in combination with"
+                    "other protections, set required passes")
 
     @classmethod
     def auth(cls, **_kwargs):
@@ -169,6 +175,7 @@ class FriendProtection(BaseProtection):
     users = forms.ModelMultipleChoiceField(
         label=_("Users"), queryset=friend_query(), required=False
     )
+    description = _("Allow logged in users access to usercomponent")
 
     media = {
         'js': 'admin/js/vendor/select2/select2.full.min.js'
@@ -193,8 +200,9 @@ class RandomFailProtection(BaseProtection):
     success_rate = forms.IntegerField(
         label=_("Success Rate"), min_value=20, max_value=100, initial=100,
         widget=forms.NumberInput(attrs={'type': 'range'}),
-        help_text=_("Fail randomly with 404 error, to disguise correct access")
+        help_text=_("Set success rate")
     )
+    description = _("Fail randomly with 404 error, to disguise correct access")
 
     @classmethod
     def localize_name(cls, name=None):
@@ -218,9 +226,11 @@ class RandomRefuseProtection(BaseProtection):
     success_rate = forms.IntegerField(
         label=_("Success Rate"), min_value=20, max_value=100, initial=100,
         widget=forms.NumberInput(attrs={'type': 'range'}),
-        help_text=_("Refuse randomly, not so strong like Random Fail, can "
-                    "be overvoted by other protection")
+        help_text=_("Set success rate")
     )
+
+    description = "Refuse randomly, not so strong like Random Fail, can " + \
+                  "be overvoted by other protection"
 
     @classmethod
     def localize_name(cls, name=None):
@@ -239,6 +249,8 @@ class LoginProtection(BaseProtection):
     name = "login"
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
+
+    description = _("Login as owner")
 
     class auth_form(forms.Form):
         password = forms.CharField(
@@ -275,6 +287,9 @@ class PasswordProtection(BaseProtection):
     name = "password"
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
+
+    # should have hashing and salt? To be secure
+    description = _("Use arbitary password")
 
     @classmethod
     def auth(cls, request, data, **kwargs):
