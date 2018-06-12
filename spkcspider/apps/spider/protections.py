@@ -203,7 +203,7 @@ class RandomFailProtection(BaseProtection):
     @classmethod
     def auth(cls, request, obj, **kwargs):
         if obj and obj.data.get("success_rate", None):
-            if _sysrand.randrange(101) <= obj.data["success_rate"]:
+            if _sysrand.randrange(1, 101) <= obj.data["success_rate"]:
                 return True
             else:
                 raise Http404()
