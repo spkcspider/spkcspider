@@ -5,6 +5,7 @@ from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from django.utils.translation import pgettext
+from django.http import HttpResponse
 
 
 import hashlib
@@ -93,9 +94,9 @@ class PublicKey(BaseContent):
     def render(self, **kwargs):
         from .forms import KeyForm
         if kwargs["scope"] == "hash":
-            return self.hash
+            return HttpResponse(self.hash, content_type="text/plain")
         elif kwargs["scope"] == "key":
-            return self.key
+            return HttpResponse(self.key, content_type="text/plain")
         elif kwargs["scope"] in ["update", "add"]:
             if self.id:
                 kwargs["legend"] = _("Update Public Key")
