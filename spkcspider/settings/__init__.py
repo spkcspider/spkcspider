@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'captcha',
     # 'django.contrib.sites',
     'spkcspider.apps.spider',
-    # 'spkcspider.apps.spiderbrokers',
+    'spkcspider.apps.spider_filets',
     'spkcspider.apps.spider_keys',
 ]
 try:

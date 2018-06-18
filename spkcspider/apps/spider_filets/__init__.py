@@ -1,1 +1,1 @@
-default_app_config = 'spkcspider.apps.spider_keys.apps.SpiderKeysConfig'
+default_app_config = 'spkcspider.apps.spider_filets.apps.SpiderFiletsConfig'
