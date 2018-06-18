@@ -59,8 +59,10 @@ def initialize_ratelimit():
         rate_limit_func = rate_limit_default
 
 
-def initialize_content_models():
-    from .models import UserContentVariant
+def initialize_content_models(apps=None):
+    if not apps:
+        from django.apps import apps
+    UserContentVariant = apps.get_model("spider_base", "UserContentVariant")
     all_content = models.Q()
     for code, val in installed_contents.items():
         names = val.names

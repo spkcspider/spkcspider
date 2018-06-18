@@ -23,9 +23,6 @@ logger = logging.getLogger(__name__)
 _htest = hashlib.new(settings.KEY_HASH_ALGO)
 _htest.update(b"test")
 
-if settings.MAX_HASH_SIZE > len(_htest.hexdigest()):
-    raise Exception("MAX_HASH_SIZE too small to hold digest in hexadecimal")
-
 
 def valid_pkey_properties(key):
     if "PRIVAT" in key.upper():
@@ -44,40 +41,32 @@ class PublicKey(BaseContent):
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
     note = models.TextField(max_length=100, default="", null=False, blank=True)
-    hash = models.CharField(
-        max_length=settings.MAX_HASH_SIZE, null=False, editable=False
-    )
 
     @classmethod
     def localize_name(cls, name):
         return pgettext("content name", "Public Key")
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._former_key = self.get_key_name()[0]
-
     def get_info(self, usercomponent):
         ret = super().get_info(usercomponent)
         key = self.get_key_name()[0]
-        if self._former_key != key:
-            h = hashlib.new(settings.KEY_HASH_ALGO)
-            h.update(key.encode("ascii", "ignore"))
-            self.hash = h.hexdigest()
-            self._former_key = key
-        return "%shash=%s;" % (ret, self.hash)
+        h = hashlib.new(settings.KEY_HASH_ALGO)
+        h.update(key.encode("ascii", "ignore"))
+        return "%shash:%s=%s;" % (
+            ret, settings.KEY_HASH_ALGO, h.hexdigest()
+        )
 
     def get_key_name(self):
-        h = hashlib.new(settings.KEY_HASH_ALGO)
-        if len(self.key.split("\n")) > 1:
-            h.update(self.key.encode("ascii", "ignore"))
-            return (h.hexdigest(), None)
+        # PEM key
+        split = self.key.split("\n")
+        if len(split) > 1:
+            return (self.key, None)
 
+        # ssh key
         split = self.key.rsplit(" ", 1)
         if len(split) == 2 and "@" in split[1]:
-            h.update(split[0].encode("ascii", "ignore"))
-            return (h.hexdigest(), split[1])
-        h.update(self.key.encode("ascii", "ignore"))
-        return (h.hexdigest(), None)
+            return split
+        # other key
+        return (self.key, None)
 
     def __str__(self):
         if not self.id:
@@ -86,16 +75,14 @@ class PublicKey(BaseContent):
         if st[1]:
             st = st[1]
         else:
-            st = "{}...".format(self.hash[:10])
+            st = "{}...".format(st[0][:10])
         if len(self.note) > 0:
             st = "{}: {}".format(st, self.note[:20])
         return st
 
     def render(self, **kwargs):
         from .forms import KeyForm
-        if kwargs["scope"] == "hash":
-            return HttpResponse(self.hash, content_type="text/plain")
-        elif kwargs["scope"] == "key":
+        if kwargs["scope"] == "key":
             return HttpResponse(self.key, content_type="text/plain")
         elif kwargs["scope"] in ["update", "add"]:
             if self.id:
@@ -121,6 +108,10 @@ class PublicKey(BaseContent):
             )
         else:
             kwargs["object"] = self
+            kwargs["algo"] = settings.KEY_HASH_ALGO
+            kwargs["hash"] = self.associated.get_value(
+                "hash:%s" % settings.KEY_HASH_ALGO
+            )
             return render_to_string(
                 "spider_keys/key.html", request=kwargs["request"],
                 context=kwargs

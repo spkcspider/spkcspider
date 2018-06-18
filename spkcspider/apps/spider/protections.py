@@ -51,9 +51,12 @@ def add_protection(klass):
     return klass
 
 
-def initialize_protection_models():
-    from .models import UserComponent, AssignedProtection
-    from .models import Protection as ProtectionModel
+def initialize_protection_models(apps=None):
+    if not apps:
+        from django.apps import apps
+    UserComponent = apps.get_model("spider_base", "UserComponent")
+    AssignedProtection = apps.get_model("spider_base", "AssignedProtection")
+    ProtectionModel = apps.get_model("spider_base", "Protection")
     for code, val in installed_protections.items():
         ret = ProtectionModel.objects.get_or_create(
             defaults={"ptype": val.ptype}, code=code
