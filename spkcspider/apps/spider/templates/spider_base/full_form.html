@@ -1,12 +1,14 @@
 {{form.media}}
 {% include "spider_base/form_errors.html" with form=form %}
-<form action="{{ request.path }}" method="post">
+<form action="{{ request.path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}
   <fieldset>
     <legend><h2>{{legend|safe}}</h2></legend>
     {% include "spider_base/base_form.html" with form=form %}
   </fieldset>
-  <button class="w3-button w3-grey">
-    {{confirm}}
-  </button>
+  {% if not no_button %}
+    <button class="w3-button w3-grey">
+      {{confirm}}
+    </button>
+  {% endif %}
 </form>

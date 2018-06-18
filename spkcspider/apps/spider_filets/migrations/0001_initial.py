@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
                 ('add', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(editable=False, max_length=255)),
+                ('name', models.CharField(max_length=255)),
                 ('file', models.FileField(upload_to='', verbose_name=spkcspider.apps.spider_filets.models.get_file_path)),
             ],
             options={
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             name='TextFilet',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('name', models.CharField(editable=False, max_length=255)),
+                ('name', models.CharField(max_length=255)),
                 ('text', models.TextField(default='')),
                 ('edit_allowed', models.ManyToManyField(related_name='_textfilet_edit_allowed_+', to=settings.AUTH_USER_MODEL)),
             ],

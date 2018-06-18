@@ -43,6 +43,10 @@ class UserLoginView(LoginView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
+    def form_invalid(self, form):
+        form.reset_protections()
+        return super().form_invalid(form)
+
 
 class UserUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('auth:profile')

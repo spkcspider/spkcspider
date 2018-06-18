@@ -141,6 +141,9 @@ class SpiderAuthForm(AuthenticationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.reset_protections()
+
+    def reset_protections(self):
         self.request.protections = Protection.authall(
             self.request, scope="auth",
             ptype=ProtectionType.authentication.value,

@@ -150,6 +150,9 @@ class BaseContent(models.Model):
     def __repr__(self):
         return "<Content: %s>" % self.__str__()
 
+    def is_owner(self, user):
+        return user == self.associated.usercomponent.user
+
     # for viewing
     def render(self, **kwargs):
         raise NotImplementedError

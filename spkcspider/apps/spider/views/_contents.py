@@ -205,8 +205,8 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
             usercomponent=self.usercomponent,
             ctype=self.object
         )
-        context["object"] = self.object.installed_class
-        ob = context["object"].static_create(
+        context["content_type"] = self.object.installed_class
+        ob = context["content_type"].static_create(
             associated=ucontent, **context
         )
         rendered = ob.render(**ob.kwargs)

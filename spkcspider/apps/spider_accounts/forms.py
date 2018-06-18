@@ -9,10 +9,11 @@ from spkcspider.apps.spider.forms import SpiderAuthForm
 
 class AuthForm(SpiderAuthForm):
     # add captcha, disguised name
-    fingerfood = CaptchaField(label=_("Captcha"))
+    fingerfood = CaptchaField(label=_("Captcha"), required=True)
 
 
 class SignupForm(UserCreationForm):
+    use_required_attribute = False
     # add captcha, disguised name
     filler = CaptchaField(label=_("Captcha"))
 
@@ -26,7 +27,8 @@ class SignupForm(UserCreationForm):
     )
     # email, real
     liame = forms.EmailField(
-        label=_('Email Address'), max_length=100, required=False
+        label=_('Email Address'), max_length=100, required=False,
+        help_text=_("(optional)")
     )
     # question = forms.CharField(max_length=100, required=True)
     # question_answer = None

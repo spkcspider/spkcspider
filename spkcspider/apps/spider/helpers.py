@@ -16,7 +16,7 @@ if MAX_NONCE_SIZE % 3 != 0:
 
 # @lru_cache(maxsize=1)
 def get_nonce_size():
-    nonce_len = getattr(settings, "SPIDER_NONCE_SIZE", 30)
+    nonce_len = getattr(settings, "SPIDER_NONCE_SIZE", 21)
     if nonce_len <= MAX_NONCE_SIZE:
         logging.warning("Nonce too big")
 

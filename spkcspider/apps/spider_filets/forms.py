@@ -12,7 +12,7 @@ class FileForm(forms.ModelForm):
 class TextForm(forms.ModelForm):
     class Meta:
         model = TextFilet
-        fields = ['text', 'name']
+        fields = ['text', 'name', 'edit_allowed']
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

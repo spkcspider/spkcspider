@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # Create your models here.
 
 def get_file_path(instance, filename):
-    ret = getattr(settings, "FILET_FILE_DIR", "/")
+    ret = getattr(settings, "FILET_FILE_DIR", "")
     split = filename.rsplit(".", 1)
     ret = posixpath.join(ret, token_nonce())
     if len(split) > 1:
@@ -42,9 +42,15 @@ class FileFilet(BaseContent):
     add = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
 
-    name = models.CharField(max_length=255, null=False, editable=False)
+    name = models.CharField(max_length=255, null=False)
 
-    file = models.FileField(get_file_path)
+    file = models.FileField(upload_to=get_file_path)
+
+    def __str__(self):
+        if not self.id:
+            return self.localize_name(self.associated.ctype.name)
+        _i = self.name
+        return "%s: %s" % (self.localize_name(self.associated.ctype.name), _i)
 
     def get_info(self, usercomponent):
         ret = super().get_info(usercomponent)
@@ -52,15 +58,21 @@ class FileFilet(BaseContent):
 
     def render(self, **kwargs):
         from .forms import FileForm
-        if kwargs["scope"] == "download":
+        if kwargs["scope"] == "view":
             response = FileResponse(
                 self.file.file,
                 content_type='application/force-download'
             )
+            name = self.name
+            if "." not in name:
+                ext = self.file.name.rsplit(".", 1)
+                if len(ext) > 1:
+                    name = "%s.%s" % (name, ext[1])
             response['Content-Disposition'] = \
-                'attachment; filename=%s' % html.escape(self.name)
+                'attachment; filename=%s' % html.escape(name)
             return response
         elif kwargs["scope"] in ["update", "add"]:
+            kwargs["enctype"] = "multipart/form-data"
             if self.id:
                 kwargs["legend"] = _("Update File")
                 kwargs["confirm"] = _("Update")
@@ -102,9 +114,9 @@ class TextFilet(BaseContent):
     ctype = UserContentType.public.value
     is_unique = False
 
-    name = models.CharField(max_length=255, null=False, editable=False)
+    name = models.CharField(max_length=255, null=False)
     edit_allowed = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="+"
+        settings.AUTH_USER_MODEL, related_name="+", blank=True
     )
 
     text = models.TextField(default="")
@@ -113,25 +125,34 @@ class TextFilet(BaseContent):
         ret = super().get_info(usercomponent)
         return "%sname=%s;" % (ret, self.name)
 
+    def __str__(self):
+        if not self.id:
+            return self.localize_name(self.associated.ctype.name)
+        _i = self.name
+        return "%s: %s" % (self.localize_name(self.associated.ctype.name), _i)
+
     def render(self, **kwargs):
         from .forms import TextForm
         if self.id:
-            if self.request.user in self.edit_allowed:
+            is_owner = self.is_owner(kwargs["request"].user)
+            if is_owner or self.edit_allowed.filter(
+                pk=kwargs["request"].user.pk
+            ).first():
                 kwargs["legend"] = _("Update")
                 kwargs["confirm"] = _("Update")
             else:
                 kwargs["legend"] = _("View")
-                kwargs["confirm"] = _("")
+                kwargs["no_button"] = True
         else:
             kwargs["legend"] = _("Create")
             kwargs["confirm"] = _("Create")
         kwargs["form"] = TextForm(
-            user=self.request.user,
+            user=kwargs["request"].user,
             **self.get_form_kwargs(kwargs["request"])
         )
         if kwargs["form"].is_valid():
             kwargs["form"] = TextForm(
-                user=self.request.user, instance=kwargs["form"].save()
+                user=kwargs["request"].user, instance=kwargs["form"].save()
             )
         template_name = "spider_base/full_form.html"
         if kwargs["scope"] == "update":
