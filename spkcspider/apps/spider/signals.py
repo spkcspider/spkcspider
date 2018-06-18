@@ -1,5 +1,5 @@
 __all__ = (
-    "UpdateProtectionsCallback", "UpdateUserComponentsCallback",
+    "UpdateProtectionsCallback", "InitUserComponentsCallback",
     "UpdateContentsCallback"
 )
 from django.dispatch import Signal
@@ -32,7 +32,7 @@ def UpdateProtectionsCallback(sender, **kwargs):
     initialize_protection_models()
 
 
-def UpdateUserComponentsCallback(sender, instance, **kwargs):
+def InitUserComponentsCallback(sender, instance, **kwargs):
     from .models import UserComponent, Protection, AssignedProtection
     uc = UserComponent.objects.get_or_create(name="index", user=instance)[0]
     login = Protection.objects.filter(code="login").first()

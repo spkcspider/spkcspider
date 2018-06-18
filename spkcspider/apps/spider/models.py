@@ -23,22 +23,7 @@ from .protections import (
     installed_protections, ProtectionType, ProtectionResult
 )
 
-
-NONCE_SIZE = 10
-
-try:
-    from secrets import token_hex
-
-    def token_nonce():
-        return token_hex(NONCE_SIZE)
-except ImportError:
-    import binascii
-    import os
-
-    def token_nonce():
-        return binascii.hexlify(
-            os.urandom(NONCE_SIZE)
-        ).decode('ascii')
+from .helpers import token_nonce, MAX_NONCE_SIZE
 
 
 logger = logging.getLogger(__name__)
@@ -54,7 +39,9 @@ Most prominent: "index" for authentication
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
-    nonce = models.SlugField(default=token_nonce, max_length=NONCE_SIZE*2)
+    nonce = models.SlugField(
+        default=token_nonce, max_length=MAX_NONCE_SIZE*3
+    )
     # fix linter warning
     objects = models.Manager()
     # special name: index:
@@ -168,7 +155,9 @@ class UserContentVariant(models.Model):
 class UserContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
-    nonce = models.SlugField(default=token_nonce, max_length=NONCE_SIZE*2)
+    nonce = models.SlugField(
+        default=token_nonce, max_length=MAX_NONCE_SIZE*3
+    )
     # fix linter warning
     objects = models.Manager()
     usercomponent = models.ForeignKey(
