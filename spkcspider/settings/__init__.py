@@ -69,6 +69,8 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'spkcspider.apps.spider_accounts.context_processors.'
+                'is_registration_open',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -131,10 +133,14 @@ AUTH_USER_MODEL = 'spider_accounts.SpiderUser'
 KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
+# OPEN_FOR_REGISTRATION = True
+
 
 # DELETION_PERIODS_COMPONENTS
 # DELETION_PERIOD_CONTENT
 # CONTENT_RATE_LIMIT_FUNC
+# FILET_FILE_DIR
+#
 
 # how many user components per page
 COMPONENTS_PER_PAGE = 25

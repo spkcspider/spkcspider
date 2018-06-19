@@ -1,12 +1,18 @@
+
+from django.conf import settings
 from django.urls import path, reverse_lazy
 
-from .views import SignupView, UserUpdateView, UserLoginView
 from django.contrib.auth.views import (
     LogoutView, PasswordChangeView, PasswordChangeDoneView
 )
 from django.views.generic.base import RedirectView, TemplateView
 
-app_name = "spideraccounts"
+from .views import SignupView, UserUpdateView, UserLoginView
+
+
+app_name = "spider_accounts"
+
+# forget recovery, only authentication
 
 urlpatterns = [
     path('login/', UserLoginView.as_view(), name='login'),
@@ -21,8 +27,6 @@ urlpatterns = [
         'password_change/done/',
         PasswordChangeDoneView.as_view(), name='password_change_done'
     ),
-    # forget recovery, only authentication
-    path('signup/', SignupView.as_view(), name="signup"),
     path(
         'thanks/',
         TemplateView.as_view(template_name='registration/thanks.html'),
@@ -36,4 +40,8 @@ urlpatterns = [
             permanent=True
         )
     ),
-    ]
+]
+if getattr(settings, "OPEN_FOR_REGISTRATION", False):
+    urlpatterns.append(
+        path('signup/', SignupView.as_view(), name="signup")
+    )
