@@ -34,7 +34,9 @@
       </table>
     </fieldset>
     <button class="w3-button w3-grey" type="submit">Login</button><br/>
-    <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
+    {% if OPEN_FOR_REGISTRATION %}
+      <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
+    {% endif %}
   </form>
 
 {% endblock %}

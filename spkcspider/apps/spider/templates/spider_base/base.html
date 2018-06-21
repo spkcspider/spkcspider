@@ -33,7 +33,9 @@
           <i class="fa fa-home" aria-hidden="true"></i>
         </a>
         {% url 'auth:login' as loginpath %}
-        {% url 'auth:signup' as registerpath %}
+        {% if OPEN_FOR_REGISTRATION %}
+          {% url 'auth:signup' as registerpath %}
+        {% endif %}
         {% if request.user.is_authenticated %}
           <div style="margin-left:15px" class="w3-dropdown-hover w3-dropdown-click">
             <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button">
