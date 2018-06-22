@@ -25,9 +25,9 @@ logger = logging.getLogger(__name__)
 # Create your models here.
 
 def get_file_path(instance, filename):
-    ret = getattr(settings, "FILET_FILE_DIR", "")
+    ret = getattr(settings, "FILET_FILE_DIR", "file_filet")
     return posixpath.join(
-        "file_filet", ret, str(instance.id), token_nonce(), filename
+        ret, str(instance.id), token_nonce(), filename
     )
 
 
