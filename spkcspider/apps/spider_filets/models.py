@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 def get_file_path(instance, filename):
     ret = getattr(settings, "FILET_FILE_DIR", "")
     split = filename.rsplit(".", 1)
-    ret = posixpath.join(ret, token_nonce())
+    ret = posixpath.join("file_filet", ret, str(instance.id), token_nonce())
     if len(split) > 1:
         ret = "%s.%s" % (ret, split[1])
     return ret
@@ -82,6 +82,7 @@ class FileFilet(BaseContent):
             kwargs["form"] = FileForm(
                 **self.get_form_kwargs(kwargs["request"])
             )
+
             if kwargs["form"].is_valid():
                 kwargs["form"] = FileForm(
                     instance=kwargs["form"].save()
@@ -104,7 +105,7 @@ class FileFilet(BaseContent):
         if self.pk is not None:
             orig = FileFilet.objects.get(pk=self.pk)
             if orig.file != self.file:
-                orig.file.delete()
+                orig.file.delete(False)
         super().save(*args, **kw)
 
 

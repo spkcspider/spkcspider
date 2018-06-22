@@ -41,7 +41,7 @@
   </div>
   {% include "spider_base/form_errors.html" with form=form %}
   {{form.media}}
-  <form class="" action="{{ request.path }}" method="post">
+  <form class="" action="{{ request.path }}" encdata="multipart/form-data" method="post">
     {% csrf_token %}
     <fieldset>
       <legend><h1>{% trans 'User Component' %}</h1></legend>

@@ -51,7 +51,7 @@
     </summary>
     {% endif %}
     {% include "spider_base/form_errors.html" with form=form %}
-    <form action="{{ request.path }}" method="post">
+    <form action="{{ request.path }}" enctype="{{enctype}}" method="post">
       {% csrf_token %}
       <fieldset>
         <legend><h2>{% trans 'Content Settings' %}</h2></legend>
