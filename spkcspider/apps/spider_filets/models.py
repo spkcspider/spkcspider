@@ -47,8 +47,15 @@ class FileFilet(BaseContent):
     def __str__(self):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
-        _i = self.name
-        return "%s: %s" % (self.localize_name(self.associated.ctype.name), _i)
+        name = self.name
+        if "." not in name:  # use saved ending
+            ext = self.file.name.rsplit(".", 1)
+            if len(ext) > 1:
+                name = "%s.%s" % (name, ext[1])
+        return "%s: %s" % (
+            self.localize_name(self.associated.ctype.name),
+            name
+        )
 
     def get_info(self, usercomponent):
         ret = super().get_info(usercomponent)
