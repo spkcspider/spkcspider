@@ -17,12 +17,21 @@ you can invalidate it with this option<br/>
 Warning: this removes also access for all services you gave the
 <em>%s</em> link</span>"""
 
+NONCE_CHOICES = [
+    ("", ""),
+    ("3", _("low (3 Bytes)")),
+    ("12", _("medium (12 Bytes)")),
+    ("30", _("high (30 Bytes)")),
+]
+
+INITIAL_NONCE_SIZE = "12"
+
 
 class UserComponentForm(forms.ModelForm):
     protections = None
-    new_nonce = forms.BooleanField(
+    new_nonce = forms.ChoiceField(
         label=_("New Nonce"), help_text=_(_help_text % 'User Component'),
-        required=False, initial=False
+        required=False, initial="", choices=NONCE_CHOICES
     )
 
     class Meta:
@@ -49,7 +58,8 @@ class UserComponentForm(forms.ModelForm):
                                                     ptype=ptype)
             self.protections = list(self.protections)
         else:
-            self.fields["new_nonce"].disabled = True
+            self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
+            self.fields["new_nonce"].choices = NONCE_CHOICES[1:]
             self.protections = []
 
     def clean_name(self):
@@ -94,42 +104,47 @@ class UserComponentForm(forms.ModelForm):
         self._save_protections()
 
     def save(self, commit=True):
-        if self.cleaned_data["new_nonce"]:
+        if self.cleaned_data["new_nonce"] != "":
             print(
                 "Old nonce for Component id:", self.instance.id,
                 "is", self.instance.nonce
             )
-            self.instance.nonce = token_nonce()
+            self.instance.nonce = token_nonce(
+                int(self.cleaned_data["new_nonce"])
+            )
         return super().save(commit=commit)
 
 
 class UserContentForm(forms.ModelForm):
     prefix = "content_control"
-    new_nonce = forms.BooleanField(
+    new_nonce = forms.ChoiceField(
         label=_("New Nonce"), help_text=_(_help_text % 'User Content'),
-        required=False, initial=False
+        required=False, initial="", choices=NONCE_CHOICES
     )
 
     class Meta:
         model = UserContent
         fields = ['usercomponent']
 
-    def __init__(self, *args, disabled=True, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         user = self.instance.usercomponent.user
         query = UserComponent.objects.filter(user=user)
         self.fields["usercomponent"].queryset = query
-        if disabled:
-            self.fields["new_nonce"].disabled = True
-            self.fields["usercomponent"].disabled = True
+
+        if not self.instance.id and self.has_write_perm:
+            self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
+            self.fields["new_nonce"].choices = NONCE_CHOICES[1:]
 
     def save(self, commit=True):
-        if self.cleaned_data["new_nonce"]:
+        if self.cleaned_data["new_nonce"] != "":
             print(
                 "Old nonce for Content id:", self.instance.id,
                 "is", self.instance.nonce
             )
-            self.instance.nonce = token_nonce()
+            self.instance.nonce = token_nonce(
+                int(self.cleaned_data["new_nonce"])
+            )
         return super().save(commit=commit)
 
 

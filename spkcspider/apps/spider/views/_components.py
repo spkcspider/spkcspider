@@ -12,6 +12,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db import models
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -128,6 +129,13 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        # nonce changed => path has changed
+        if self.object.nonce != self.kwargs["nonce"]:
+            return redirect(
+                'spider_base:ucontent-access',
+                id=self.object.id,
+                nonce=self.object.nonce, access="update"
+            )
         return self.render_to_response(
             self.get_context_data(
                 form=self.get_form_class()(**self.get_form_success_kwargs())

@@ -53,12 +53,6 @@ class ContentBase(UCTestMixin):
         # for index the same reason as for add
         uncritically = not self.usercomponent.is_protected
         if self.has_special_access(staff=uncritically, superuser=uncritically):
-            # block update if noupdate flag is set
-            # no override for special users as the form could do unsafe stuff
-            # special users: do it in the admin interface
-            if isinstance(self.object, UserContent) and \
-               self.object.get_flag("noupdate"):
-                return False
             return True
         return False
 
@@ -104,6 +98,13 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
             context["form"] = self.get_form()
             if context["form"].is_valid():
                 self.object = context["form"].save()
+                # nonce changed => path has changed
+                if self.object.nonce != self.kwargs["nonce"]:
+                    return redirect(
+                        'spider_base:ucontent-access',
+                        id=self.object.id,
+                        nonce=self.object.nonce, access="update"
+                    )
                 context["form"] = self.get_form_class()(
                     **self.get_form_success_kwargs()
                 )
@@ -111,7 +112,6 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        kwargs["disabled"] = not self.check_write_permission()
         return kwargs
 
     def get_form_success_kwargs(self):
@@ -119,15 +119,13 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         return {
             'initial': self.get_initial(),
             'instance': self.object,
-            'prefix': self.get_prefix(),
-            'disabled': not self.check_write_permission()
+            'prefix': self.get_prefix()
         }
 
     def test_func(self):
         if self.scope not in ["update", "raw_update"]:
             return super().test_func()
-        self.has_write_perm = self.check_write_permission()
-        return self.has_write_perm
+        return self.check_write_permission()
 
     def render_to_response(self, context):
         if self.scope != "update" or \
