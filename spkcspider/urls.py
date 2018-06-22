@@ -59,6 +59,6 @@ urlpatterns += [
 ]
 try:
     import captcha  # noqa: F401
-    path(r'captcha/', include('captcha.urls')),
+    urlpatterns.append(path(r'captcha/', include('captcha.urls')))
 except ImportError:
     pass

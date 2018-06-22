@@ -46,9 +46,8 @@ class UserComponent(models.Model):
         default=False,
         help_text="Is public findable?"
     )
-    required_passes = models.IntegerField(
-        label=_("Passes"),
-        initial=1, min_value=0,
+    required_passes = models.PositiveIntegerField(
+        default=1,
         help_text="How many protection passes are required?"
                   "Set to zero to allow everyone access"
     )
@@ -288,6 +287,8 @@ class Protection(models.Model):
     def auth(self, request, obj=None, **kwargs):
         # never ever allow authentication if not active
         if obj and not obj.active:
+            return False
+        if self.code not in installed_protections:
             return False
         return self.installed_class.auth(
             obj=obj, request=request, **kwargs.copy()

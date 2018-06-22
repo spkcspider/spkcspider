@@ -42,8 +42,11 @@ class ComponentAllIndex(ListView):
         for info in self.request.GET.getlist("info"):
             searchq |= models.Q(contents__info__contains="%s;" % info)
 
+        q = self._base_query
+        if self.request.user.is_authenticated:
+            q |= models.Q(user=self.request.user)
         main_query = self.model.objects.filter(
-            (self._base_query | models.Q(user=self.request.user)) & searchq
+            q & searchq
         )
         order = self.get_ordering()
         return main_query.order_by(*order)
