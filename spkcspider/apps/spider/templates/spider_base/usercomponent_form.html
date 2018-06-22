@@ -22,7 +22,7 @@
       <span class="w3-right">
         {% if object.name != "index" %}
           <div style="margin-bottom:5px">
-            <a href="{% url 'spider_base:ucomponent-delete' name=object.name nonce=object.nonce %}">{% trans 'delete' %}</a>?
+            <a href="{% url 'spider_base:ucomponent-delete' name=object.name nonce=object.nonce %}">{% trans 'Delete' %}</a>?
           </div>
         {% endif %}
         <div>
