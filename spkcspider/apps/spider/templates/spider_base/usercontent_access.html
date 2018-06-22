@@ -17,11 +17,18 @@
 {% block content %}
   <div>
     <a class="w3-left" href="{% url 'spider_base:ucontent-list' user=uc.username name=uc.name nonce=uc.nonce %}">{% trans 'index' %}</a>
-    {% if scope != "add" and request.user == uc.user %}
+    {% if scope != "add" %}
       <span class="w3-right">
-        <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
-          {% trans 'delete' %}
-        </a>?
+        <div style="margin-bottom:10px">
+          <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
+            {% trans 'delete' %}
+          </a>?
+        </div>
+        <div>
+          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}">
+            {% trans "View" %}
+          </a>
+        </div>
       </span>
     {% endif %}
     <h1 class="w3-center">
@@ -70,6 +77,12 @@
           {% trans 'Update' %}
         {% endif %}
       </button>
+
+      {% if scope != "add" %}
+        <a class="w3-right" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}">
+          {% trans "View" %}
+        </a>
+      {% endif %}
     </form>
   {% if not render_in_form %}
   </details>

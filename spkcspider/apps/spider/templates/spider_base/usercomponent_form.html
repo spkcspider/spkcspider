@@ -21,12 +21,15 @@
     {% if object %}
       <span class="w3-right">
         {% if object.name != "index" %}
-          <a href="{% url 'spider_base:ucomponent-delete' name=object.name nonce=object.nonce %}">{% trans 'delete' %}</a>?
-          <hr/>
+          <div style="margin-bottom:5px">
+            <a href="{% url 'spider_base:ucomponent-delete' name=object.name nonce=object.nonce %}">{% trans 'delete' %}</a>?
+          </div>
         {% endif %}
-        <a class="" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
-          {% trans "Contents" %}
-        </a>
+        <div>
+          <a class="" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
+            {% trans "Contents" %}
+          </a>
+        </div>
       </span>
     {% endif %}
     <h1 class="w3-center">

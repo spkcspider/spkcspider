@@ -26,11 +26,9 @@ logger = logging.getLogger(__name__)
 
 def get_file_path(instance, filename):
     ret = getattr(settings, "FILET_FILE_DIR", "")
-    split = filename.rsplit(".", 1)
-    ret = posixpath.join("file_filet", ret, str(instance.id), token_nonce())
-    if len(split) > 1:
-        ret = "%s.%s" % (ret, split[1])
-    return ret
+    return posixpath.join(
+        "file_filet", ret, str(instance.id), token_nonce(), filename
+    )
 
 
 @add_content
@@ -64,7 +62,7 @@ class FileFilet(BaseContent):
                 content_type='application/force-download'
             )
             name = self.name
-            if "." not in name:
+            if "." not in name:  # use saved ending
                 ext = self.file.name.rsplit(".", 1)
                 if len(ext) > 1:
                     name = "%s.%s" % (name, ext[1])
