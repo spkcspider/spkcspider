@@ -49,7 +49,6 @@ urlpatterns += [
     path('pages/', include('django.contrib.flatpages.urls')),
     path('favicon.ico', favicon_view),
     path('robots.txt', robots_view),
-    path(r'captcha/', include('captcha.urls')),
     path(
         '',
         ComponentAllIndex.as_view(
@@ -58,3 +57,8 @@ urlpatterns += [
         name="home"
     ),
 ]
+try:
+    import captcha  # noqa: F401
+    path(r'captcha/', include('captcha.urls')),
+except ImportError:
+    pass

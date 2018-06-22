@@ -12,7 +12,6 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.db import models
 from django.http import HttpResponseRedirect
-from django.shortcuts import redirect
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -26,11 +25,10 @@ from ..models import UserComponent
 class ComponentAllIndex(ListView):
     model = UserComponent
     is_home = False
-    _base_query = ~models.Q(name="index") & models.Q(protections__code="allow")
+    _base_query = models.Q(public=True)
     ordering = ("user", "name")
 
     def get_queryset(self):
-
         searchq = models.Q()
         for info in self.request.POST.get("search", "").split(" "):
             if len(info) > 0:
@@ -45,10 +43,8 @@ class ComponentAllIndex(ListView):
             searchq |= models.Q(contents__info__contains="%s;" % info)
 
         main_query = self.model.objects.filter(
-            self._base_query & searchq
-        ).annotate(
-            len_prot=models.Count('protections')
-        ).filter(len_prot=1)
+            (self._base_query | models.Q(user=self.request.user)) & searchq
+        )
         order = self.get_ordering()
         return main_query.order_by(*order)
 
@@ -129,13 +125,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
-        # nonce changed => path has changed
-        if self.object.nonce != self.kwargs["nonce"]:
-            return redirect(
-                'spider_base:ucontent-access',
-                id=self.object.id,
-                nonce=self.object.nonce, access="update"
-            )
+        # no nonce here so no redirect required
         return self.render_to_response(
             self.get_context_data(
                 form=self.get_form_class()(**self.get_form_success_kwargs())

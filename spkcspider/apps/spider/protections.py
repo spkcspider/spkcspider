@@ -147,25 +147,6 @@ class BaseProtection(forms.Form):
         return self.localize_name(self.name)
 
 
-# if specified with multiple protections all protections must be fullfilled
-@add_protection
-class AllowProtection(BaseProtection):
-    name = "allow"
-    ptype = ProtectionType.access_control.value
-    ptype += ProtectionType.authentication.value
-    passes = forms.IntegerField(
-        label=_("Passes"),
-        initial=1, min_value=1,
-        help_text="How many protection passes are required?"
-    )
-    description = _("Simply allow everyone access or in combination with"
-                    "other protections, set required passes")
-
-    @classmethod
-    def auth(cls, **_kwargs):
-        return True
-
-
 def friend_query():
     return get_user_model().objects.filter(is_active=True)
 
@@ -300,3 +281,41 @@ class PasswordProtection(BaseProtection):
             return True
         else:
             return None
+
+
+try:
+    from captcha.fields import CaptchaField
+
+    # @add_protection
+    class CaptchaProtection(BaseProtection):
+        # FIXME: broken for unknown reason, captcha is always invalid
+        name = "captcha"
+        ptype = ProtectionType.access_control.value
+        description = _("Require captcha")
+
+        class auth_form(forms.Form):
+            prefix = "protection_captcha"
+            sunglasses = CaptchaField(
+                label=_("Captcha")
+            )
+
+        @classmethod
+        def localize_name(cls, name=None):
+            return pgettext("protection name", "Captcha Protection")
+
+        @classmethod
+        def auth(cls, request, obj, **kwargs):
+            if not obj:
+                return False
+            form_kwargs = {}
+
+            if request.method in ('POST', 'PUT'):
+                form_kwargs.update({
+                    'data': request.POST,
+                })
+            form = cls.auth_form(**form_kwargs)
+            if form.is_valid():
+                return True
+            return None
+except ImportError:
+    pass

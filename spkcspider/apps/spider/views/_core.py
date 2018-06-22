@@ -61,14 +61,16 @@ class UserTestMixin(UserPassesTestMixin):
                 return p[0].result
         return self.response_class(
             request=self.request,
-            template=self.get_template_names(),
-            context=self.get_context_data(protections=p),
+            template=self.get_noperm_template_names(),
+            # render with own context; get_context_data may breaks stuff or
+            # disclose informations
+            context={},
             using=self.template_engine,
             content_type=self.content_type
         )
 
     def get_noperm_template_names(self):
-        return "spiderprotections/protections.html"
+        return "spider_protections/protections.html"
 
 
 class UCTestMixin(UserTestMixin):

@@ -36,7 +36,7 @@ class UserComponentForm(forms.ModelForm):
 
     class Meta:
         model = UserComponent
-        fields = ['name']
+        fields = ['name', 'public', 'required_passes']
 
     def __init__(self, data=None, files=None, auto_id='id_%s',
                  prefix=None, *args, **kwargs):
@@ -49,6 +49,7 @@ class UserComponentForm(forms.ModelForm):
             if self.instance.is_protected:
                 self.fields["name"].disabled = True
             if self.instance.name == "index":
+                self.fields["public"].disabled = True
                 ptype = ProtectionType.authentication.value
             else:
                 ptype = ProtectionType.access_control.value

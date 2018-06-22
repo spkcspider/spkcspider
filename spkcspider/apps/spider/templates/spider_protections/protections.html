@@ -1,14 +1,20 @@
 {% extends "spider_protections/base.html" %}
-{% load spider_protections %}
-<fieldset>
-  <legend><h1>{% trans 'Protections' %}</h1></legend>
-  <div class="w3-white responsive-columns">
-    {% extract_protections "protections" as protections %}
-    {% for prot in protections %}
-      <details class="w3-padding" open="open">
-        <summary>{{prot.1}}</summary>
-        {% render_protection prot %}
-      </details>
-    {% endfor %}
-</fieldset>
-{% endfor %}
+{% load spider_protections i18n %}
+{% block content %}
+<form action="{{ request.path }}" method="post">
+  <fieldset>
+    <legend><h1>{% trans 'Protections' %}</h1></legend>
+    <div class="w3-white responsive-columns">
+      {% extract_protections "protections" as protections %}
+      {% for prot in protections %}
+        <details class="w3-padding" open="open">
+          <summary>{{prot.1}}</summary>
+          {% render_protection prot %}
+        </details>
+      {% endfor %}
+  </fieldset>
+  <button class="w3-button w3-grey">
+    {% trans 'Send' %}
+  </button>
+</form>
+{% endblock %}

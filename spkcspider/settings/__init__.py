@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.flatpages',
-    'captcha',
     # 'django.contrib.sites',
     'spkcspider.apps.spider',
     'spkcspider.apps.spider_filets',
@@ -46,6 +45,12 @@ INSTALLED_APPS = [
 try:
     import django_extensions  # noqa: F401
     INSTALLED_APPS.append('django_extensions')
+except ImportError:
+    pass
+
+try:
+    import captcha  # noqa: F401
+    INSTALLED_APPS.append('captcha')
 except ImportError:
     pass
 

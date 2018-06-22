@@ -42,6 +42,16 @@ class UserComponent(models.Model):
     nonce = models.SlugField(
         default=token_nonce, max_length=MAX_NONCE_SIZE*4//3
     )
+    public = models.BooleanField(
+        default=False,
+        help_text="Is public findable?"
+    )
+    required_passes = models.IntegerField(
+        label=_("Passes"),
+        initial=1, min_value=0,
+        help_text="How many protection passes are required?"
+                  "Set to zero to allow everyone access"
+    )
     # fix linter warning
     objects = models.Manager()
     # special name: index:
@@ -98,6 +108,11 @@ class UserComponent(models.Model):
     @property
     def is_protected(self):
         return self.name in ["index"]
+
+    def save(self, *args, **kwargs):
+        if self.name == "index" and self.public:
+            self.public = False
+        super().save(*args, **kwargs)
 
 
 def info_field_validator(value):
@@ -306,13 +321,13 @@ class Protection(models.Model):
             Usage: e.g. prerendering for login fields, because
             no assigned object is available there is no config
         """
-        # it is bad no matter what ptype
-        # allow has absolute no information in this case
-        query = cls.objects.filter(ptype__contains=ptype).exclude(code="allow")
+        query = cls.objects.filter(ptype__contains=ptype)
 
         # before protection_codes, for not allowing users
         # to manipulate required passes
-        passes = min(required_passes, len(query))
+        if required_passes > 0:
+            passes = max(min(required_passes, len(query)), 1)
+
         if protection_codes:
             query = query.filter(
                 code__in=protection_codes
@@ -396,24 +411,12 @@ class AssignedProtection(models.Model):
         )
         # before protection_codes, for not allowing users
         # to manipulate required passes
-        try:
-            required_passes = query.get(
-                protection__code="allow"
-            ).data.get("passes", None)
-            # if allow has None, float, etc clean it up
-            # None appears to happen
-            # fix negative values
-            if not(required_passes, int) or required_passes <= 0:
-                required_passes = 1
-            required_passes = min(
-                required_passes+1,
-                len(query)  # if too many passes are required, lower
+        if usercomponent.required_passes > 0:
+            required_passes = max(
+                min(usercomponent.required_passes, len(query)), 1
             )
-            # required_passes >=1, if only allow
-            # required_passes >=2, if allow+other
-            # required because of allow in set
-        except models.ObjectDoesNotExist:
-            required_passes = 1
+        else:
+            required_passes = 0
 
         if protection_codes:
             query = query.filter(
