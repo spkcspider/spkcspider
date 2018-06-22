@@ -93,7 +93,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = {"form": None}
-        # add has no form
+        # other than update have no form
         if self.scope == "update":
             context["form"] = self.get_form()
             if context["form"].is_valid():
@@ -142,6 +142,8 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
                 return rendered
 
             context["content"] = rendered
+        if self.scope == "update":
+            context["render_in_form"] = True
         return super().render_to_response(context)
 
     def get_usercomponent(self):
@@ -168,12 +170,9 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
     scope = "add"
     model = UserContentVariant
 
-    def get_initial(self):
-        return {"usercomponent": self.usercomponent}
-
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.render_to_response(self.get_context_data(form=None))
+        return self.render_to_response(self.get_context_data())
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -183,9 +182,29 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
         self.has_write_perm = self.check_write_permission()
         return self.has_write_perm
 
+    def get_context_data(self, **kwargs):
+        kwargs["user_content"] = UserContent(
+            usercomponent=self.usercomponent,
+            ctype=self.object
+        )
+        kwargs["content_type"] = self.object.installed_class
+        form_kwargs = {
+            "instance": kwargs["user_content"],
+            "initial": {
+                "usercomponent": self.usercomponent
+            }
+        }
+        if self.request.method in ('POST', 'PUT'):
+            form_kwargs.update({
+                'data': self.request.POST,
+                # 'files': self.request.FILES,
+            })
+        kwargs["form"] = UserContentForm(**form_kwargs)
+        return super().get_context_data(**kwargs)
+
     def get_form(self):
-        # Overwrite, we have no form here
-        return None
+        # should never be called
+        raise NotImplementedError
 
     def get_object(self, queryset=None):
         if not queryset:
@@ -199,14 +218,11 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
         return get_object_or_404(queryset, **q_dict)
 
     def render_to_response(self, context):
-        ucontent = UserContent(
-            usercomponent=self.usercomponent,
-            ctype=self.object
-        )
-        context["content_type"] = self.object.installed_class
+        ucontent = context.pop("user_content")
         ob = context["content_type"].static_create(
             associated=ucontent, **context
         )
+        context["render_in_form"] = True
         rendered = ob.render(**ob.kwargs)
 
         if UserContentType.raw_add.value in self.object.ctype:

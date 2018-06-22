@@ -16,8 +16,11 @@ class TextForm(forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance and \
-           user != self.instance.associated.usercomponent.user:
-            if user not in self.instance.edit_allowed:
-                self.fields["text"].editable = False
-                self.fields["name"].editable = False
+        if self.instance and self.instance.is_owner(user):
+            return
+        if not user.is_authenticated or \
+           not self.instance.edit_allowed.filter(pk=user.pk).exists():
+            self.fields["text"].editable = False
+            self.fields["name"].editable = False
+            self.fields["edit_allowed"].disabled = True
+            self.fields["edit_allowed"].widget = forms.HiddenInput()

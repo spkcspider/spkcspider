@@ -99,9 +99,7 @@ class PublicKey(BaseContent):
                 kwargs["form"] = KeyForm(
                     uc=kwargs["uc"], instance=kwargs["form"].save()
                 )
-            template_name = "spider_base/full_form.html"
-            if kwargs["scope"] == "update":
-                template_name = "spider_base/base_form.html"
+            template_name = "spider_base/base_form.html"
             return render_to_string(
                 template_name, request=kwargs["request"],
                 context=kwargs

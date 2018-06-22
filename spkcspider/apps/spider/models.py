@@ -40,7 +40,7 @@ class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
     nonce = models.SlugField(
-        default=token_nonce, max_length=MAX_NONCE_SIZE*3
+        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3
     )
     # fix linter warning
     objects = models.Manager()
@@ -156,7 +156,7 @@ class UserContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
     nonce = models.SlugField(
-        default=token_nonce, max_length=MAX_NONCE_SIZE*3
+        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3
     )
     # fix linter warning
     objects = models.Manager()

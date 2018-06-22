@@ -87,7 +87,7 @@ class FileFilet(BaseContent):
                     instance=kwargs["form"].save()
                 )
             template_name = "spider_base/full_form.html"
-            if kwargs["scope"] == "update":
+            if kwargs["scope"] in ["add", "update"]:
                 template_name = "spider_base/base_form.html"
             return render_to_string(
                 template_name, request=kwargs["request"],
@@ -155,7 +155,7 @@ class TextFilet(BaseContent):
                 user=kwargs["request"].user, instance=kwargs["form"].save()
             )
         template_name = "spider_base/full_form.html"
-        if kwargs["scope"] == "update":
+        if kwargs["scope"] in ["add", "update"]:
             template_name = "spider_base/base_form.html"
         return render_to_string(
             template_name, request=kwargs["request"],

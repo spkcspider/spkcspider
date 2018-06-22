@@ -50,11 +50,12 @@ class UserTestMixin(UserPassesTestMixin):
         return get_object_or_404(UserComponent, **query)
 
     def handle_no_permission(self):
-        p = self.request.protections
-        if bool(p):
-            # should be never true here
-            assert(p is False)
+        # in case no protections are used (e.g. add content)
+        p = getattr(self.request, "protections", False)
+        if not bool(p):
             return super().handle_no_permission()
+        # should be never true here
+        assert(p is not True)
         if len(p) == 1:
             if isinstance(p[0].result, HttpResponseBase):
                 return p[0].result

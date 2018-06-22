@@ -42,15 +42,14 @@
   </div>
 {% if form %}
   {{form.media}}
-  {% if scope != "update" %}
+  {% if not render_in_form %}
   <details>
     <summary class="w3-btn w3-grey">
       <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
-      {% trans 'Content Settings' %}
+      {% trans 'Base Settings' %}
       <i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
     </summary>
     {% endif %}
-    {{form.media}}
     {% include "spider_base/form_errors.html" with form=form %}
     <form action="{{ request.path }}" method="post">
       {% csrf_token %}
@@ -58,17 +57,21 @@
         <legend><h2>{% trans 'Content Settings' %}</h2></legend>
         {% include "spider_base/base_form.html" with form=form %}
       </fieldset>
-      {% if content and scope == "update" %}
+      {% if content and render_in_form %}
         <fieldset>
-          <legend><h2>{% trans 'Other Settings' %}</h2></legend>
+          <legend><h2>{% if scope == "add" %}{{object}}{% else %}{{object.associated.ctype}}{% endif %}</h2></legend>
           {{content|safe}}
         </fieldset>
       {% endif %}
       <button class="w3-button w3-grey">
-        {% trans 'Update' %}
+        {% if scope == "add" %}
+          {% trans 'Create' %}
+        {% else %}
+          {% trans 'Update' %}
+        {% endif %}
       </button>
     </form>
-  {% if scope != "update" %}
+  {% if not render_in_form %}
   </details>
   {% endif %}
 {% endif %}
@@ -80,5 +83,5 @@
     </a>
   </div>
 {% endif %}
-{% if scope != "update" %}{{content|safe}}{% endif %}
+{% if not render_in_form %}{{content|safe}}{% endif %}
 {% endblock %}

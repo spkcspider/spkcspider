@@ -9,7 +9,7 @@ from .models import (
 from .protections import ProtectionType
 from .auth import SpiderAuthBackend
 
-_help_text = """Generate new nonce<br/>
+_help_text = """Generate new nonce with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
 If you have problems with attackers (because they know the nonce),
 you can invalidate it with this option<br/>
@@ -132,7 +132,7 @@ class UserContentForm(forms.ModelForm):
         query = UserComponent.objects.filter(user=user)
         self.fields["usercomponent"].queryset = query
 
-        if not self.instance.id and self.has_write_perm:
+        if not self.instance.id:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
             self.fields["new_nonce"].choices = NONCE_CHOICES[1:]
 

@@ -134,6 +134,7 @@ class BaseContent(models.Model):
         if associated:
             ob._associated2 = associated
         ob.kwargs = kwargs
+        ob.kwargs["parent_form"] = ob.kwargs.pop("form")
         return ob
 
     @classmethod
