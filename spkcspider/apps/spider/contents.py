@@ -197,7 +197,7 @@ class BaseContent(models.Model):
             if UserContent.objects.get(info=a.info).id != a.id:
                 raise ValidationError(
                         message=_('Duplicate content per component (content '
-                                  'type allows only single content)'),
+                                  'type allows only unique content)'),
                         code='duplicate content',
                     )
         except UserContent.DoesNotExist:
