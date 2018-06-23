@@ -20,7 +20,7 @@ from django.conf import settings
 from spkcspider.apps.spider.views import ComponentAllIndex
 
 favicon_view = RedirectView.as_view(
-    url='{}spider_base/favicon.png'.format(settings.STATIC_URL), permanent=True
+    url='{}spider_base/favicon.svg'.format(settings.STATIC_URL), permanent=True
 )
 robots_view = RedirectView.as_view(
     url='{}spider_base/robots.txt'.format(settings.STATIC_URL), permanent=True
