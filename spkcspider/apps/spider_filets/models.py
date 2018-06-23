@@ -26,8 +26,9 @@ logger = logging.getLogger(__name__)
 
 def get_file_path(instance, filename):
     ret = getattr(settings, "FILET_FILE_DIR", "file_filet")
+    size = getattr(settings, "FILE_NONCE_SIZE", 45)
     return posixpath.join(
-        ret, str(instance.id), token_nonce(), filename
+        ret, str(instance.id), token_nonce(size), filename
     )
 
 
