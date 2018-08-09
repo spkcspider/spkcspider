@@ -28,21 +28,23 @@ rate_limit_func = None
 
 
 class UserContentType(str, enum.Enum):
-    # not only private (index)
-    public = "a"
+    # can only be added to protected "index" usercomponent
+    confidential = "a"
+    # allow public attribute, incompatible with confidential
+    public = "b"
     # update is without form/for form updates it is not rendered
-    raw_update = "b"
+    raw_update = "c"
     # adding renders no form, only content
-    raw_add = "c"
+    raw_add = "d"
 
 
 def add_content(klass):
-    name = klass._meta.model_name
-    if name in installed_contents:
-        raise Exception("Duplicate content name")
-    if name in getattr(settings, "BLACKLISTED_CONTENTS", {}):
+    code = klass._meta.model_name
+    if code in installed_contents:
+        raise Exception("Duplicate content")
+    if code in getattr(settings, "BLACKLISTED_CONTENTS", {}):
         return klass
-    installed_contents[name] = klass
+    installed_contents[code] = klass
     return klass
 
 
@@ -65,41 +67,46 @@ def initialize_content_models(apps=None):
     UserContentVariant = apps.get_model("spider_base", "UserContentVariant")
     all_content = models.Q()
     for code, val in installed_contents.items():
-        names = val.names
-        if callable(names):
-            names = names()
+        appearances = val.appearances
+        if callable(appearances):
+            appearances = appearances()
 
+        # update name if only one name exists
         update = False
-        if len(names) == 1:
+        if len(appearances) == 1:
             update = True
-        for n in names:
+        for (n, ctype) in appearances:
             if update:
                 variant = UserContentVariant.objects.get_or_create(
-                    defaults={"ctype": val.ctype, "name": n}, code=code
+                    defaults={"ctype": ctype, "name": n}, code=code
                 )[0]
             else:
                 variant = UserContentVariant.objects.get_or_create(
-                    defaults={"ctype": val.ctype}, code=code, name=n
+                    defaults={"ctype": ctype}, code=code, name=n
                 )[0]
-            if variant.ctype != val.ctype:
-                variant.ctype = val.ctype
+            if variant.ctype != ctype:
+                variant.ctype = ctype
             if variant.name != n:
                 variant.name = n
             variant.save()
             all_content |= models.Q(name=n, code=code)
-    temp = UserContentVariant.objects.exclude(all_content)
-    if temp.exists():
+    invalid_models = UserContentVariant.objects.exclude(all_content)
+    if invalid_models.exists():
         print("Invalid content, please update or remove them:",
-              [t.code for t in temp])
+              ["{}:{}".format(t.code, t.name) for t in invalid_models])
 
 
 class BaseContent(models.Model):
     # consider not writing admin wrapper for (sensitive) inherited content
     # this way content could be protected to be only visible to admin, user
     # and legitimated users (if not index)
-    # iterable or callable with names under which content should appear
-    names = None
-    ctype = ""
+
+    # iterable or callable with (unique name, ctype) tuples
+    # max name length is 20 chars.
+
+    # use case: addons for usercontent, e.g. dependencies on external libraries
+    # use case: model with different abilities
+    appearances = None
     # is info unique for usercomponent
     is_unique = False
 
@@ -117,16 +124,12 @@ class BaseContent(models.Model):
             return self._associated2
         return self.associated_rel.first()
 
-    @property
-    def is_protected(self):
-        # TODO: add good logic, this way is_protected is unsafe to use
-        return False
-
     # if static_create is used and class not saved yet
     kwargs = None
 
     class Meta:
         abstract = True
+        default_permissions = ["add"]
 
     @classmethod
     def static_create(cls, associated=None, **kwargs):
@@ -170,21 +173,26 @@ class BaseContent(models.Model):
         return kwargs
 
     def get_info(self, usercomponent):
+        no_public = ""
+        if UserContentType.public.value not in self.associated.ctype.ctype:
+            no_public = "no_public;"
         # id is from UserContent
         if not self.is_unique:
-            return "uc=%s;code=%s;name=%s;id=%s;" % \
+            return "uc=%s;code=%s;name=%s;%sid=%s;" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,
                     self.associated.ctype.name,
+                    no_public,
                     self.associated.id
                 )
         else:
-            return "uc=%s;code=%s;name=%s;" % \
+            return "uc=%s;code=%s;name=%s;%s" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,
-                    self.associated.ctype.name
+                    self.associated.ctype.name,
+                    no_public
                 )
 
     def clean(self):

@@ -1,4 +1,13 @@
+# flake8: noqa
+
 from spkcspider.settings import *  # noqa: F403
+
+INSTALLED_APPS += [
+    'spkcspider.apps.spider_filets',
+    'spkcspider.apps.spider_keys',
+    'spkcspider.apps.spider_tags',
+]
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

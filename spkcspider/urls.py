@@ -17,6 +17,7 @@ from django.urls import path, include
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.conf import settings
+from django.apps import apps
 from spkcspider.apps.spider.views import ComponentAllIndex
 
 favicon_view = RedirectView.as_view(
@@ -30,20 +31,22 @@ robots_view = RedirectView.as_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path(
-        'accounts/',
-        include('spkcspider.apps.spider_accounts.urls', namespace="auth")
-    ),
-    path(
         'spider/',
         include('spkcspider.apps.spider.urls', namespace="spider_base")
     ),
 ]
 
-for app_name, app_path in getattr(settings, "SPKBPIDER_APPS", {}).items():
-    urlpatterns.append(
-        "{}/".format(app_name),
-        include("{}.urls".format(app_path), namespace=app_name)
-    )
+for app in apps.get_models():
+    url_namespace = getattr(app, "url_namespace", None)
+    if url_namespace:
+        url_path = getattr(
+            app, "url_path",
+            url_namespace.replace("spider_", "")+"/"
+        )
+        urlpatterns.append(
+            url_path,
+            include("{}.urls".format(app.name), namespace=url_namespace)
+        )
 
 urlpatterns += [
     path('pages/', include('django.contrib.flatpages.urls')),
@@ -57,8 +60,6 @@ urlpatterns += [
         name="home"
     ),
 ]
-try:
-    import captcha  # noqa: F401
+
+if getattr(settings, "USE_CAPTCHAS", False):
     urlpatterns.append(path(r'captcha/', include('captcha.urls')))
-except ImportError:
-    pass

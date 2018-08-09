@@ -1,5 +1,6 @@
 
 from django import forms
+from django.core.exceptions import NON_FIELD_ERRORS
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 
@@ -12,10 +13,14 @@ from .auth import SpiderAuthBackend
 _help_text = """Generate new nonce with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
 If you have problems with attackers (because they know the nonce),
-you can invalidate it with this option<br/>
+you can invalidate it with this option and/or add protections<br/>
 <span style="color:red;">
 Warning: this removes also access for all services you gave the
-<em>%s</em> link</span>"""
+<em>%s</em> link</span>
+<span style="color:red;">
+Warning: if you rely on nonces make sure user component has <em>public</em>
+not set
+"""
 
 NONCE_CHOICES = [
     ("", ""),
@@ -30,13 +35,18 @@ INITIAL_NONCE_SIZE = "12"
 class UserComponentForm(forms.ModelForm):
     protections = None
     new_nonce = forms.ChoiceField(
-        label=_("New Nonce"), help_text=_(_help_text % 'User Component'),
+        label=_("New Nonce"), help_text=_(_help_text),
         required=False, initial="", choices=NONCE_CHOICES
     )
 
     class Meta:
         model = UserComponent
         fields = ['name', 'public', 'required_passes']
+        error_messages = {
+            NON_FIELD_ERRORS: {
+                'unique_together': _('UserComponent name already exists')
+            }
+        }
 
     def __init__(self, data=None, files=None, auto_id='id_%s',
                  prefix=None, *args, **kwargs):
@@ -46,9 +56,9 @@ class UserComponentForm(forms.ModelForm):
         )
         if self.instance and self.instance.id:
             assigned = self.instance.protected_by
-            if self.instance.is_protected:
+            if self.instance.name_protected:
                 self.fields["name"].disabled = True
-            if self.instance.name == "index":
+            if self.instance.no_public:
                 self.fields["public"].disabled = True
                 ptype = ProtectionType.authentication.value
             else:
@@ -62,19 +72,6 @@ class UserComponentForm(forms.ModelForm):
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
             self.fields["new_nonce"].choices = NONCE_CHOICES[1:]
             self.protections = []
-
-    def clean_name(self):
-        name = self.cleaned_data['name']
-        if self.instance.id:
-            if self.instance.is_protected and name != self.instance.name:
-                raise forms.ValidationError('Name is protected')
-
-        if name != self.instance.name and UserComponent.objects.filter(
-            name=name,
-            user=self.instance.user
-        ).exists():
-            raise forms.ValidationError('Name already exists')
-        return name
 
     def is_valid(self):
         isvalid = super().is_valid()
@@ -97,6 +94,7 @@ class UserComponentForm(forms.ModelForm):
                     protection=protection.protection
                 )
             t.active = cleaned_data.pop("active")
+            t.instant_fail = cleaned_data.pop("instant_fail")
             t.data = cleaned_data
             t.save()
 
@@ -119,7 +117,7 @@ class UserComponentForm(forms.ModelForm):
 class UserContentForm(forms.ModelForm):
     prefix = "content_control"
     new_nonce = forms.ChoiceField(
-        label=_("New Nonce"), help_text=_(_help_text % 'User Content'),
+        label=_("New Nonce"), help_text=_(_help_text),
         required=False, initial="", choices=NONCE_CHOICES
     )
 
@@ -157,7 +155,8 @@ class SpiderAuthForm(AuthenticationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.reset_protections()
+        if not self.is_bound:
+            self.reset_protections()
 
     def reset_protections(self):
         self.request.protections = Protection.authall(

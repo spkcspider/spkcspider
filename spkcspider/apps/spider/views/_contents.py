@@ -52,7 +52,7 @@ class ContentBase(UCTestMixin):
         # except it is protected, in this case only the user can update
         # reason: admins could be tricked into malicious updates
         # for index the same reason as for add
-        uncritically = not self.usercomponent.is_protected
+        uncritically = self.usercomponent.name != "index"
         if self.has_special_access(staff=uncritically, superuser=uncritically):
             return True
         return False
@@ -62,7 +62,7 @@ class ContentBase(UCTestMixin):
                                    superuser=True):
             return True
         # block view on special objects for non user and non superusers
-        if self.usercomponent.is_protected:
+        if self.usercomponent.name == "index":
             return False
         self.request.protections = self.usercomponent.auth(
             request=self.request, scope=self.scope
@@ -210,9 +210,6 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        q = models.Q(owner=self.usercomponent.user)
-        q |= models.Q(owner__isnull=True)
-        queryset = queryset.filter(q)
         q_dict = {"name": self.kwargs["type"]}
         if self.usercomponent.name != "index":
             q_dict["ctype__contains"] = UserContentType.public.value
@@ -258,6 +255,10 @@ class ContentIndex(UCTestMixin, ListView):
         if kwargs["uc"].user == self.request.user:
             kwargs["content_types"] = UserContentVariant.objects.all()
             if kwargs["uc"].name != "index":
+                kwargs["content_types"] = kwargs["content_types"].exclude(
+                    ctype__contains=UserContentType.confidential.value
+                )
+            if kwargs["uc"].public:
                 kwargs["content_types"] = kwargs["content_types"].filter(
                     ctype__contains=UserContentType.public.value
                 )
@@ -268,7 +269,7 @@ class ContentIndex(UCTestMixin, ListView):
                                    superuser=True):
             return True
         # block view on special objects for non user and non superusers
-        if self.usercomponent.is_protected:
+        if self.usercomponent.name == "index":
             return False
 
         self.request.protections = self.usercomponent.auth(

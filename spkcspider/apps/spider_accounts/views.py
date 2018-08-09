@@ -8,7 +8,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
-from .forms import SignupForm, UserUpdateForm, AuthForm
+from .forms import SignupForm, UserUpdateForm
+from spkcspider.apps.spider.forms import SpiderAuthForm
 
 # Create your views here.
 
@@ -33,7 +34,7 @@ class SignupView(FormView):
 
 
 class UserLoginView(LoginView):
-    form_class = AuthForm
+    form_class = SpiderAuthForm
 
     def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:

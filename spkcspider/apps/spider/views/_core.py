@@ -78,7 +78,17 @@ class UCTestMixin(UserTestMixin):
 
     def dispatch(self, request, *args, **kwargs):
         self.usercomponent = self.get_usercomponent()
-        user_test_result = self.get_test_func()()
-        if not user_test_result:
-            return self.handle_no_permission()
+        # get_test_func executed later
+        # if required: check, that function is called only once
+        # user_test_result = self.get_test_func()()
+        # if not user_test_result:
+        #     return self.handle_no_permission()
         return super(UCTestMixin, self).dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        # for protections
+        return self.get(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        # for protections
+        return self.get(request, *args, **kwargs)

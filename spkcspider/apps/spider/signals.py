@@ -14,10 +14,7 @@ def UpdateContentsCallback(sender, plan=None, **kwargs):
     from .contents import initialize_content_models
     initialize_content_models(apps)
 
-    # regenerate info (migrate with >0 migrations)
-    if not plan or len(plan) == 0:
-        return
-
+    # regenerate info field
     UserContent = apps.get_model("spider_base", "UserContent")
     for row in UserContent.objects.all():
         # works only with django.apps.apps

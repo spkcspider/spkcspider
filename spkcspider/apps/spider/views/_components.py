@@ -175,7 +175,7 @@ class ComponentDelete(UserTestMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         # deletion should be only possible for owning user
         self.object = self.get_object()
-        if self.object.is_protected:
+        if self.object.name in "index":
             return self.handle_no_permission()
         _time = self.get_required_timedelta()
         if _time:

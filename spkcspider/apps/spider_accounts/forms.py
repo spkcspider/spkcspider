@@ -3,25 +3,20 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 from django.urls import reverse
-from spkcspider.apps.spider.forms import SpiderAuthForm
+from django.conf import settings
 
-try:
+
+if getattr(settings, "USE_CAPTCHAS", False):
     from captcha.fields import CaptchaField
-except ImportError:
+else:
     CaptchaField = None
-
-
-class AuthForm(SpiderAuthForm):
-    if CaptchaField:
-        # add captcha, disguised name
-        fingerfood = CaptchaField(label=_("Captcha"), required=True)
 
 
 class SignupForm(UserCreationForm):
     use_required_attribute = False
     if CaptchaField:
         # add captcha, disguised name
-        filler = CaptchaField(label=_("Captcha"))
+        search = CaptchaField(label=_("Captcha"))
 
     # real: username, fake for spammers
     name = forms.CharField(
@@ -43,10 +38,6 @@ class SignupForm(UserCreationForm):
         model = get_user_model()
         fields = ['username', 'password1', 'password2',
                   'name', 'liame', 'email']
-
-    # def __init__(self, *args, **kwargs):
-    #    super().__init__(*args, **kwargs)
-    #    self.question_answer = ""
 
     def is_valid(self):
         """

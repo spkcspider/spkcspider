@@ -14,11 +14,6 @@ saved in a spider component which you provide the online shop. This has followin
 * Signing of Data possible.
 
 
-# Help Wanted
-
-The tool is not ready yet. An ugly prototype exists.
-I am currently just a single developer. I could really use some help and together we will finish earlier
-
 # Installation
 
 This project can either be used as a standalone project (clone) or as a set of reusable apps (setup.py installation).
@@ -32,6 +27,16 @@ spkcspider.apps.spidertags: verified information tags and
 spkcspider.apps.spiderkeys: store public keys
 
 spkcspider: only required for standalone project
+
+# External usage
+
+If you are a webshop, you can add "reliable" to the GET parameters to use only protections
+which rely on data contained by the url and you.
+In short you get only machine friendly protections (but are more often blocked).
+
+verified_by urls should return hashname:hash_hexdigest
+
+
 
 # Thanks
 

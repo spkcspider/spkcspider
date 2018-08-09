@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "SPKCSpider"
+description = ""
+version = "0.1"
+authors = []
+
+[tool.poetry.dependencies]
+django = '>=2'
+django-simple-jsonfield = '*'
+django-simple-captcha = '*'
+
+[tool.poetry.dev-dependencies]
+
+django-extensions = '*'
+Werkzeug = '*'
+pyOpenSSL = '*'

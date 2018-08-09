@@ -1,1 +1,1 @@
-default_app_config = 'spkcspider.apps.spider_tags.apps.SpiderBrokersConfig'
+default_app_config = 'spkcspider.apps.spider_tags.apps.SpiderTagsConfig'

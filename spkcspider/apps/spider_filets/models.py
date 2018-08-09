@@ -8,6 +8,8 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.template.loader import render_to_string
 from django.http import FileResponse
+from django.http import HttpResponseRedirect
+from django.core.files.storage import default_storage
 
 
 from spkcspider.apps.spider.contents import (
@@ -27,15 +29,23 @@ logger = logging.getLogger(__name__)
 def get_file_path(instance, filename):
     ret = getattr(settings, "FILET_FILE_DIR", "file_filet")
     size = getattr(settings, "FILE_NONCE_SIZE", 45)
-    return posixpath.join(
-        ret, str(instance.id), token_nonce(size), filename
-    )
+    # try 100 times to find free filename
+    # but should not take more than 1 try
+    for _i in range(0, 100):
+        ret_path = posixpath.join(
+            ret, str(instance.associated.usercomponent.user.pk),
+            token_nonce(size), filename
+        )
+        if not default_storage.exists(ret_path):
+            break
+    else:
+        raise Exception("Unlikely event: no free filename")
+    return ret_path
 
 
 @add_content
 class FileFilet(BaseContent):
-    names = ["File"]
-    ctype = UserContentType.public.value
+    appearances = [("File", UserContentType.public.value)]
     is_unique = False
 
     add = models.DateTimeField(auto_now_add=True)
@@ -65,10 +75,15 @@ class FileFilet(BaseContent):
     def render(self, **kwargs):
         from .forms import FileForm
         if kwargs["scope"] == "view":
-            response = FileResponse(
-                self.file.file,
-                content_type='application/force-download'
-            )
+            if getattr(settings, "FILET_DIRECT_DOWNLOAD", False):
+                response = HttpResponseRedirect(
+                    self.file.url,
+                )
+            else:
+                response = FileResponse(
+                    self.file.file,
+                    content_type='application/force-download'
+                )
             name = self.name
             if "." not in name:  # use saved ending
                 ext = self.file.name.rsplit(".", 1)
@@ -117,14 +132,10 @@ class FileFilet(BaseContent):
 
 @add_content
 class TextFilet(BaseContent):
-    names = ["Text"]
-    ctype = UserContentType.public.value
+    appearances = [("Text", UserContentType.public.value)]
     is_unique = False
 
     name = models.CharField(max_length=255, null=False)
-    edit_allowed = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, related_name="+", blank=True
-    )
 
     text = models.TextField(default="")
 

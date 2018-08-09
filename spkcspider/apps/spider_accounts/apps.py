@@ -6,7 +6,9 @@ from django.contrib.auth import get_user_model
 class SpiderAccountsConfig(AppConfig):
     name = 'spkcspider.apps.spider_accounts'
     label = 'spider_accounts'
-    verbose_name = 'User and authentication implementation suitable for spkcspider'
+    verbose_name = 'User/authentication implementation suitable for spkcspider'
+    url_namespace = "auth"
+    url_path = "accounts/"
 
     def ready(self):
         from .signals import InitialGrantsCallback

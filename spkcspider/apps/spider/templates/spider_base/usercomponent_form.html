@@ -52,15 +52,17 @@
     </fieldset>
     <fieldset>
       <legend><h1>{% trans 'Protections' %}</h1></legend>
-      <div class="w3-white responsive-columns">
+      <div class="">
         {% for prot in form.protections %}
-          <div class="w3-padding w3-border">
-            <h1 class="w3-center">{{prot}}</h1>
-            {% include "spider_base/base_form.html" with form=prot %}
+          <div class="w3-padding">
+            <div class="w3-padding w3-card w3-white">
+              <h1 class="w3-center">{{prot}}</h1>
+              {% include "spider_base/base_form.html" with form=prot %}
+            </div>
           </div>
         {% empty%}
-          <div class="w3-padding w3-border">
-            <div class="w3-orange w3-padding"> No protections: create component first </div>
+          <div class="w3-padding">
+            <div class="w3-padding w3-card w3-orange"> No protections: create component first </div>
           </div>
         {% endfor %}
     </fieldset>

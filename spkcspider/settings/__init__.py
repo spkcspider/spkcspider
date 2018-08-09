@@ -39,8 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.flatpages',
     # 'django.contrib.sites',
     'spkcspider.apps.spider',
-    'spkcspider.apps.spider_filets',
-    'spkcspider.apps.spider_keys',
 ]
 try:
     import django_extensions  # noqa: F401
@@ -51,8 +49,9 @@ except ImportError:
 try:
     import captcha  # noqa: F401
     INSTALLED_APPS.append('captcha')
+    USE_CAPTCHAS = True
 except ImportError:
-    pass
+    USE_CAPTCHAS = False
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

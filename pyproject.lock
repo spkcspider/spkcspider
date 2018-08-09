@@ -1,0 +1,238 @@
+[[package]]
+category = "dev"
+description = "Fast ASN.1 parser and serializer with definitions for private keys, public keys, certificates, CRL, OCSP, CMS, PKCS#3, PKCS#7, PKCS#8, PKCS#12, PKCS#5, X.509 and TSP"
+name = "asn1crypto"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "0.24.0"
+
+[[package]]
+category = "dev"
+description = "Foreign Function Interface for Python calling C code."
+name = "cffi"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "1.11.5"
+
+[package.dependencies]
+pycparser = "*"
+
+[[package]]
+category = "dev"
+description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
+name = "cryptography"
+optional = false
+platform = "*"
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+version = "2.3"
+
+[package.dependencies]
+asn1crypto = ">=0.21.0"
+cffi = ">=1.7,<1.11.3 || >1.11.3"
+idna = ">=2.1"
+six = ">=1.4.1"
+
+[package.dependencies.enum34]
+python = "<3"
+version = "*"
+
+[package.dependencies.ipaddress]
+python = "<3"
+version = "*"
+
+[[package]]
+category = "main"
+description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
+name = "django"
+optional = false
+platform = "*"
+python-versions = ">=3.5"
+version = "2.1"
+
+[package.dependencies]
+pytz = "*"
+
+[[package]]
+category = "dev"
+description = "Extensions for Django"
+name = "django-extensions"
+optional = false
+platform = "any"
+python-versions = "*"
+version = "2.1.0"
+
+[package.dependencies]
+six = ">=1.2"
+
+[package.dependencies.typing]
+python = "<3.5"
+version = "*"
+
+[[package]]
+category = "main"
+description = "Modified Django FileResponse that adds Content-Range headers."
+name = "django-ranged-response"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "0.2.0"
+
+[package.dependencies]
+django = "*"
+
+[[package]]
+category = "main"
+description = "A very simple, yet powerful, Django captcha application"
+name = "django-simple-captcha"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "0.5.9"
+
+[package.dependencies]
+Django = ">=1.8"
+Pillow = ">=2.2.2,<5.1.0 || >5.1.0"
+django-ranged-response = "0.2.0"
+six = ">=1.2.0"
+
+[[package]]
+category = "main"
+description = ""
+name = "django-simple-jsonfield"
+optional = false
+platform = "Platform Independent"
+python-versions = "*"
+version = "0.2.1"
+
+[package.dependencies]
+django = "*"
+
+[[package]]
+category = "dev"
+description = "Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4"
+name = "enum34"
+optional = false
+platform = "UNKNOWN"
+python-versions = "*"
+version = "1.1.6"
+
+[package.requirements]
+python = "<3"
+
+[[package]]
+category = "dev"
+description = "Internationalized Domain Names in Applications (IDNA)"
+name = "idna"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "2.7"
+
+[[package]]
+category = "dev"
+description = "IPv4/IPv6 manipulation library"
+name = "ipaddress"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "1.0.22"
+
+[package.requirements]
+python = "<3"
+
+[[package]]
+category = "main"
+description = "Python Imaging Library (Fork)"
+name = "pillow"
+optional = false
+platform = "*"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "5.2.0"
+
+[[package]]
+category = "dev"
+description = "C parser in Python"
+name = "pycparser"
+optional = false
+platform = "Cross Platform"
+python-versions = "*"
+version = "2.18"
+
+[[package]]
+category = "dev"
+description = "Python wrapper module around the OpenSSL library"
+name = "pyopenssl"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "18.0.0"
+
+[package.dependencies]
+cryptography = ">=2.2.1"
+six = ">=1.5.2"
+
+[[package]]
+category = "main"
+description = "World timezone definitions, modern and historical"
+name = "pytz"
+optional = false
+platform = "Independent"
+python-versions = "*"
+version = "2018.5"
+
+[[package]]
+category = "main"
+description = "Python 2 and 3 compatibility utilities"
+name = "six"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "1.11.0"
+
+[[package]]
+category = "dev"
+description = "Type Hints for Python"
+name = "typing"
+optional = false
+platform = "*"
+python-versions = "*"
+version = "3.6.4"
+
+[package.requirements]
+python = "<3.5"
+
+[[package]]
+category = "dev"
+description = "The comprehensive WSGI web application library."
+name = "werkzeug"
+optional = false
+platform = "any"
+python-versions = "*"
+version = "0.14.1"
+
+[metadata]
+content-hash = "2f7cd955148ec8e7c8824cb5bafc150cc803f5cd81c7463e7c400e7c2c1b74b5"
+platform = "*"
+python-versions = "*"
+
+[metadata.hashes]
+asn1crypto = ["2f1adbb7546ed199e3c90ef23ec95c5cf3585bac7d11fb7eb562a3fe89c64e87", "9d5c20441baf0cb60a4ac34cc447c6c189024b6b4c6cd7877034f4965c464e49"]
+cffi = ["151b7eefd035c56b2b2e1eb9963c90c6302dc15fbd8c1c0a83a163ff2c7d7743", "1553d1e99f035ace1c0544050622b7bc963374a00c467edafac50ad7bd276aef", "1b0493c091a1898f1136e3f4f991a784437fac3673780ff9de3bcf46c80b6b50", "2ba8a45822b7aee805ab49abfe7eec16b90587f7f26df20c71dd89e45a97076f", "3bb6bd7266598f318063e584378b8e27c67de998a43362e8fce664c54ee52d30", "3c85641778460581c42924384f5e68076d724ceac0f267d66c757f7535069c93", "3eb6434197633b7748cea30bf0ba9f66727cdce45117a712b29a443943733257", "495c5c2d43bf6cebe0178eb3e88f9c4aa48d8934aa6e3cddb865c058da76756b", "4c91af6e967c2015729d3e69c2e51d92f9898c330d6a851bf8f121236f3defd3", "57b2533356cb2d8fac1555815929f7f5f14d68ac77b085d2326b571310f34f6e", "770f3782b31f50b68627e22f91cb182c48c47c02eb405fd689472aa7b7aa16dc", "79f9b6f7c46ae1f8ded75f68cf8ad50e5729ed4d590c74840471fc2823457d04", "7a33145e04d44ce95bcd71e522b478d282ad0eafaf34fe1ec5bbd73e662f22b6", "857959354ae3a6fa3da6651b966d13b0a8bed6bbc87a0de7b38a549db1d2a359", "87f37fe5130574ff76c17cab61e7d2538a16f843bb7bca8ebbc4b12de3078596", "95d5251e4b5ca00061f9d9f3d6fe537247e145a8524ae9fd30a2f8fbce993b5b", "9d1d3e63a4afdc29bd76ce6aa9d58c771cd1599fbba8cf5057e7860b203710dd", "a36c5c154f9d42ec176e6e620cb0dd275744aa1d804786a71ac37dc3661a5e95", "a6a5cb8809091ec9ac03edde9304b3ad82ad4466333432b16d78ef40e0cce0d5", "ae5e35a2c189d397b91034642cb0eab0e346f776ec2eb44a49a459e6615d6e2e", "b0f7d4a3df8f06cf49f9f121bead236e328074de6449866515cea4907bbc63d6", "b75110fb114fa366b29a027d0c9be3709579602ae111ff61674d28c93606acca", "ba5e697569f84b13640c9e193170e89c13c6244c24400fc57e88724ef610cd31", "be2a9b390f77fd7676d80bc3cdc4f8edb940d8c198ed2d8c0be1319018c778e1", "ca1bd81f40adc59011f58159e4aa6445fc585a32bb8ac9badf7a2c1aa23822f2", "d5d8555d9bfc3f02385c1c37e9f998e2011f0db4f90e250e5bc0c0a85a813085", "e55e22ac0a30023426564b1059b035973ec82186ddddbac867078435801c7801", "e90f17980e6ab0f3c2f3730e56d1fe9bcba1891eeea58966e89d352492cc74f4", "ecbb7b01409e9b782df5ded849c178a0aa7c906cf8c5a67368047daab282b184", "ed01918d545a38998bfa5902c7c00e0fee90e957ce036a4000a88e3fe2264917", "edabd457cd23a02965166026fd9bfd196f4324fe6032e866d0f3bd0301cd486f", "fdf1c1dc5bafc32bc5d08b054f94d659422b05aba244d6be4ddc1c72d9aa70fb"]
+cryptography = ["21af753934f2f6d1a10fe8f4c0a64315af209ef6adeaee63ca349797d747d687", "27bb401a20a838d6d0ea380f08c6ead3ccd8c9d8a0232dc9adcc0e4994576a66", "29720c4253263cff9aea64585adbbe85013ba647f6e98367efff9db2d7193ded", "2a35b7570d8f247889784010aac8b384fd2e4a47b33e15c4a60b45a7c1944120", "42c531a6a354407f42ee07fda5c2c0dc822cf6d52744949c182f2b295fbd4183", "5eb86f03f9c4f0ac2336ac5431271072ddf7ecc76b338e26366732cfac58aa19", "67f7f57eae8dede577f3f7775957f5bec93edd6bdb6ce597bb5b28e1bdf3d4fb", "6ec84edcbc966ae460560a51a90046503ff0b5b66157a9efc61515c68059f6c8", "7ba834564daef87557e7fcd35c3c3183a4147b0b3a57314e53317360b9b201b3", "7d7f084cbe1fdb82be5a0545062b59b1ad3637bc5a48612ac2eb428ff31b31ea", "82409f5150e529d699e5c33fa8fd85e965104db03bc564f5f4b6a9199e591f7c", "87d092a7c2a44e5f7414ab02fb4145723ebba411425e1a99773531dd4c0e9b8d", "8c56ef989342e42b9fcaba7c74b446f0cc9bed546dd00034fa7ad66fc00307ef", "9449f5d4d7c516a6118fa9210c4a00f34384cb1d2028672100ee0c6cce49d7f6", "bc2301170986ad82d9349a91eb8884e0e191209c45f5541b16aa7c0cfb135978", "c132bab45d4bd0fff1d3fe294d92b0a6eb8404e93337b3127bdec9f21de117e6", "c3d945b7b577f07a477700f618f46cbc287af3a9222cd73035c6ef527ef2c363", "cee18beb4c807b5c0b178f4fa2fae03cef9d51821a358c6890f8b23465b7e5d2", "d01dfc5c2b3495184f683574e03c70022674ca9a7be88589c5aba130d835ea90"]
+django = ["7f246078d5a546f63c28fc03ce71f4d7a23677ce42109219c24c9ffb28416137", "ea50d85709708621d956187c6b61d9f9ce155007b496dd914fdb35db8d790aec"]
+django-extensions = ["c3c8524056ab1174c6fc769b0599e60f7e7797ce34f38db2effc48885a0a982c", "e279344c6d825adb27694755aa924702d3cc401f8fad5ad9ef2d577948778a5f"]
+django-ranged-response = ["f71fff352a37316b9bead717fc76e4ddd6c9b99c4680cdf4783b9755af1cf985"]
+django-simple-captcha = ["0c30a14f02502119fd1a4d308dd5d2b899d0f4284825a396bbb010afd904754a", "45fbd67b2f2530b4807254dbfdf73e88087694c16fafa9050dafa9d8d5845c88"]
+django-simple-jsonfield = ["03ae0bc048ca9efedd13101d317a3c97e937f4853b096f5bc5f01f68cc5abce5"]
+enum34 = ["2d81cbbe0e73112bdfe6ef8576f2238f2ba27dd0d55752a776c41d38b7da2850", "644837f692e5f550741432dd3f223bbb9852018674981b1664e5dc339387588a", "6bd0f6ad48ec2aa117d3d141940d484deccda84d4fcd884f5c3d93c23ecd8c79", "8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1"]
+idna = ["156a6814fb5ac1fc6850fb002e0852d56c0c8d2531923a51032d1b70760e186e", "684a38a6f903c1d71d6d5fac066b58d7768af4de2b832e426ec79c30daa94a16"]
+ipaddress = ["64b28eec5e78e7510698f6d4da08800a5c575caa4a286c93d651c5d3ff7b6794", "b146c751ea45cad6188dd6cf2d9b757f6f4f8d6ffb96a023e6f2e26eea02a72c"]
+pillow = ["00def5b638994f888d1058e4d17c86dec8e1113c3741a0a8a659039aec59a83a", "026449b64e559226cdb8e6d8c931b5965d8fc90ec18ebbb0baa04c5b36503c72", "03dbb224ee196ef30ed2156d41b579143e1efeb422974719a5392fc035e4f574", "03eb0e04f929c102ae24bc436bf1c0c60a4e63b07ebd388e84d8b219df3e6acd", "087b0551ce2d19b3f092f2b5f071a065f7379e748867d070b29999cc83db15e3", "091a0656688d85fd6e10f49a73fa3ab9b37dbfcb2151f5a3ab17f8b879f467ee", "0f3e2d0a9966161b7dfd06d147f901d72c3a88ea1a833359b92193b8e1f68e1c", "114398d0e073b93e1d7da5b5ab92ff4b83c0180625c8031911425e51f4365d2e", "1be66b9a89e367e7d20d6cae419794997921fe105090fafd86ef39e20a3baab2", "1c5e93c40d4ce8cb133d3b105a869be6fa767e703f6eb1003eb4b90583e08a59", "1e977a3ed998a599bda5021fb2c2889060617627d3ae228297a529a082a3cd5c", "22cf3406d135cfcc13ec6228ade774c8461e125c940e80455f500638429be273", "24adccf1e834f82718c7fc8e3ec1093738da95144b8b1e44c99d5fc7d3e9c554", "2a3e362c97a5e6a259ee9cd66553292a1f8928a5bdfa3622fdb1501570834612", "3518f9fc666cbc58a5c1f48a6a23e9e6ceef69665eab43cdad5144de9383e72c", "3709339f4619e8c9b00f53079e40b964f43c5af61fb89a923fe24437167298bb", "3832e26ecbc9d8a500821e3a1d3765bda99d04ae29ffbb2efba49f5f788dc934", "452d159024faf37cc080537df308e8fa0026076eb38eb75185d96ed9642bd6d7", "4fd1f0c2dc02aaec729d91c92cd85a2df0289d88e9f68d1e8faba750bb9c4786", "4fda62030f2c515b6e2e673c57caa55cb04026a81968f3128aae10fc28e5cc27", "5044d75a68b49ce36a813c82d8201384207112d5d81643937fc758c05302f05b", "522184556921512ec484cb93bd84e0bab915d0ac5a372d49571c241a7f73db62", "5914cff11f3e920626da48e564be6818831713a3087586302444b9c70e8552d9", "653d48fe46378f40e3c2b892be88d8440efbb2c9df78559da44c63ad5ecb4142", "6661a7908d68c4a133e03dac8178287aa20a99f841ea90beeb98a233ae3fd710", "6735a7e560df6f0deb78246a6fe056cf2ae392ba2dc060ea8a6f2535aec924f1", "6d26a475a19cb294225738f5c974b3a24599438a67a30ed2d25638f012668026", "791f07fe13937e65285f9ef30664ddf0e10a0230bdb236751fa0ca67725740dd", "79258a8df3e309a54c7ef2ef4a59bb8e28f7e4a8992a3ad17c24b1889ced44f3", "7d74c20b8f1c3e99d3f781d3b8ff5abfefdd7363d61e23bdeba9992ff32cc4b4", "81918afeafc16ba5d9d0d4e9445905f21aac969a4ebb6f2bff4b9886da100f4b", "8194d913ca1f459377c8a4ed8f9b7ad750068b8e0e3f3f9c6963fcc87a84515f", "84d5d31200b11b3c76fab853b89ac898bf2d05c8b3da07c1fcc23feb06359d6e", "989981db57abffb52026b114c9a1f114c7142860a6d30a352d28f8cbf186500b", "a3d7511d3fad1618a82299aab71a5fceee5c015653a77ffea75ced9ef917e71a", "a4a6ac01b8c2f9d2d83719f193e6dea493e18445ce5bfd743d739174daa974d9", "acb90eb6c7ed6526551a78211d84c81e33082a35642ff5fe57489abc14e6bf6e", "b3ef168d4d6fd4fa6685aef7c91400f59f7ab1c0da734541f7031699741fb23f", "c1c5792b6e74bbf2af0f8e892272c2a6c48efa895903211f11b8342e03129fea", "c5dcb5a56aebb8a8f2585042b2f5c496d7624f0bcfe248f0cc33ceb2fd8d39e7", "d16f90810106822833a19bdb24c7cb766959acf791ca0edf5edfec674d55c8ee", "dcdc9cd9880027688007ff8f7c8e7ae6f24e81fae33bfd18d1e691e7bda4855f", "e2807aad4565d8de15391a9548f97818a14ef32624015c7bf3095171e314445e", "e2bed4a04e2ca1050bb5f00865cf2f83c0b92fd62454d9244f690fcd842e27a4", "e87a527c06319428007e8c30511e1f0ce035cb7f14bb4793b003ed532c3b9333", "ebcfc33a6c34984086451e230253bc33727bd17b4cdc4b39ec03032c3a6fc9e9", "f63e420180cbe22ff6e32558b612e75f50616fc111c5e095a4631946c782e109", "f7717eb360d40e7598c30cc44b33d98f79c468d9279379b66c1e28c568e0bf47", "f8582e1ab155302ea9ef1235441a0214919f4f79c4c7c21833ce9eec58181781", "f8b3d413c5a8f84b12cd4c5df1d8e211777c9852c6be3ee9c094b626644d3eab"]
+pycparser = ["99a8ca03e29851d96616ad0404b4aad7d9ee16f25c9f9708a11faf2810f7b226"]
+pyopenssl = ["26ff56a6b5ecaf3a2a59f132681e2a80afcc76b4f902f612f518f92c2a1bf854", "6488f1423b00f73b7ad5167885312bb0ce410d3312eb212393795b53c8caa580"]
+pytz = ["a061aa0a9e06881eb8b3b2b43f05b9439d6583c206d0a6c340ff72a7b6669053", "ffb9ef1de172603304d9d2819af6f5ece76f2e85ec10692a524dd876e72bf277"]
+six = ["70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9", "832dc0e10feb1aa2c68dcc57dbb658f1c7e65b9b61af69048abc87a2db00a0eb"]
+typing = ["3a887b021a77b292e151afb75323dea88a7bc1b3dfa92176cff8e44c8b68bddf", "b2c689d54e1144bbcfd191b0832980a21c2dbcf7b5ff7a66248a60c90e951eb8", "d400a9344254803a2368533e4533a4200d21eb7b6b729c173bc38201a74db3f2"]
+werkzeug = ["c3fd7a7d41976d9f44db327260e263132466836cef6f91512889ed60ad26557c", "d5da73735293558eb1651ee2fddc4d0dedcfa06538b8813a2e20011583c9e49b"]

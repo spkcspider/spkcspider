@@ -1,4 +1,5 @@
 from django import template
+from django import forms
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 
@@ -17,15 +18,10 @@ def render_protection(context, protectiontup):
 
     if callable(getattr(protection, "render", None)):
         return protection.render(ctx)
-    form = getattr(protection, "auth_form", None)
-    if form:
-        kwargs = {}
-        if context["request"].method not in ["GET", "HEAD"]:
-            kwargs = {
-                'data': context["request"].POST,
-                'files': context["request"].FILES,
-            }
-        ctx["form"] = form(**kwargs)
+    if isinstance(ctx["data"], forms.Form):
+        ctx["form"] = ctx["data"]
+    elif hasattr(protection, "auth_form"):
+        ctx["form"] = protection.auth_form(**ctx["data"])
     template_name = getattr(protection, "template_name")
     if not template_name:
         template_name = "spider_protections/protection_form.html"

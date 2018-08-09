@@ -4,14 +4,17 @@
 <form action="{{ request.path }}" method="post">
   <fieldset>
     <legend><h1>{% trans 'Protections' %}</h1></legend>
-    <div class="w3-white responsive-columns">
-      {% extract_protections "protections" as protections %}
+    {% extract_protections "protections" as protections %}
+    <div>
       {% for prot in protections %}
-        <details class="w3-padding" open="open">
-          <summary>{{prot.1}}</summary>
-          {% render_protection prot %}
-        </details>
+        <div class="w3-padding">
+          <div class="w3-padding w3-card w3-white">
+            <h1 class="w3-center">{{prot.1.auth_localize_name}}</h1>
+            {% render_protection prot %}
+          </div>
+        </div>
       {% endfor %}
+    </div>
   </fieldset>
   <button class="w3-button w3-grey">
     {% trans 'Send' %}
