@@ -1,3 +1,7 @@
+__all__ = [
+    "LinkForm", "UserComponentForm", "UserContentForm", "SpiderAuthForm"
+]
+
 
 from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS
@@ -5,9 +9,10 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
-    AssignedProtection, Protection, UserComponent, UserContent, token_nonce
+    AssignedProtection, Protection, UserComponent, UserContent, token_nonce,
+    LinkContent
 )
-from .protections import ProtectionType
+from .constants import ProtectionType, UserContentType
 from .auth import SpiderAuthBackend
 
 _help_text = """Generate new nonce with variable strength<br/>
@@ -30,6 +35,25 @@ NONCE_CHOICES = [
 ]
 
 INITIAL_NONCE_SIZE = "12"
+
+
+class LinkForm(forms.ModelForm):
+
+    class Meta:
+        model = LinkContent
+        fields = ['content']
+
+    def __init__(self, uc, **kwargs):
+        super().__init__(**kwargs)
+        q = self.fields["content"].queryset
+        if uc.public:
+            self.fields["content"].queryset = q.filter(
+                ctype__ctype__contains=UserContentType.link_public.value
+            )
+        else:
+            self.fields["content"].queryset = q.filter(
+                ctype__ctype__contains=UserContentType.link_private.value
+            )
 
 
 class UserComponentForm(forms.ModelForm):
@@ -124,6 +148,13 @@ class UserContentForm(forms.ModelForm):
     class Meta:
         model = UserContent
         fields = ['usercomponent']
+        error_messages = {
+            NON_FIELD_ERRORS: {
+                'unique_together': _(
+                    'UserContent type can only exist once by usercomponent'
+                )
+            }
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -17,7 +17,7 @@ from .models import TagLayout, SpiderTag
 class TagLayoutForm(forms.ModelForm):
     class Meta:
         model = TagLayout
-        fields = ["layout", "owner", "default_verifiers"]
+        fields = ["name", "layout", "owner", "default_verifiers"]
 
     def __init__(self, user=None, **kwargs):
         if "instance" not in kwargs:
@@ -34,8 +34,8 @@ class SpiderTagForm(forms.ModelForm):
     def __init__(self, uc=None, **kwargs):
         super().__init__(**kwargs)
         self.fields["layout"].queryset = self.fields["layout"].queryset.filter(
-            Q(owner=None) | Q(owner=uc.user)
-        )
+            Q(usertag=None) | Q(usertag__usercomponent=uc)
+        ).order_by("")
 
 
 def generate_form(name, layout, verified_by):

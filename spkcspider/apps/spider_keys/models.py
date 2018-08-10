@@ -11,9 +11,8 @@ from django.http import HttpResponse
 import hashlib
 import logging
 
-from spkcspider.apps.spider.contents import (
-    BaseContent, add_content, UserContentType
-)
+from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.apps.spider.constants import UserContentType
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +34,10 @@ def valid_pkey_properties(key):
 
 @add_content
 class PublicKey(BaseContent):
-    appearances = [("PublicKey", UserContentType.public.value)]
-    is_unique = True
+    appearances = [(
+        "PublicKey",
+        UserContentType.public.value+UserContentType.unique.value
+    )]
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
     note = models.TextField(max_length=100, default="", null=False, blank=True)
@@ -91,6 +92,7 @@ class PublicKey(BaseContent):
                 kwargs["legend"] = _("Create Public Key")
                 kwargs["confirm"] = _("Create")
             kwargs["form"] = KeyForm(
+                instance=self,
                 **self.get_form_kwargs(kwargs["request"])
             )
             if kwargs["form"].is_valid():

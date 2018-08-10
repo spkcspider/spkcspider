@@ -20,7 +20,8 @@ from django.http import Http404
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
-from ..contents import UserContentType, rate_limit_func
+from ..contents import rate_limit_func
+from ..constants import UserContentType
 from ..models import UserContent, UserContentVariant
 from ..forms import UserContentForm
 

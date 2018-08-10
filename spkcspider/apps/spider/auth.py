@@ -2,7 +2,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
 
 from .models import UserComponent, Protection
-from .protections import ProtectionType
+from .constants import ProtectionType
 
 
 class SpiderAuthBackend(ModelBackend):

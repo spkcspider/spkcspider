@@ -4,12 +4,10 @@ namespace: spider_base
 
 """
 
-__all__ = ("add_protection", "ProtectionType", "check_blacklisted",
+__all__ = ("add_protection", "check_blacklisted",
            "installed_protections", "BaseProtection", "ProtectionResult",
            "initialize_protection_models")
 
-from collections import namedtuple
-import enum
 from random import SystemRandom
 
 from django.conf import settings
@@ -21,24 +19,11 @@ from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
 
 from .helpers import cmp_pw
+from .constants import ProtectionType, ProtectionResult
 
 
 installed_protections = {}
 _sysrand = SystemRandom()
-
-
-class ProtectionType(str, enum.Enum):
-    # receives: request, scope
-    access_control = "a"
-    # receives: request, scope, password
-    authentication = "b"
-    # protections which can be used for reliable access (from machines)
-    reliable = "c"
-    # protections which does not contribute to required_passes (404 only)
-    no_count = "d"
-    # forget about recovery, every recovery method is authentication
-    # and will be misused this way
-    # The only real recovery is by staff and only if there is a secret
 
 
 def check_blacklisted(name):
@@ -88,9 +73,6 @@ def initialize_protection_models(apps=None):
     if invalid_models.exists():
         print("Invalid protections, please update or remove them:",
               [t.code for t in invalid_models])
-
-
-ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
 
 
 class BaseProtection(forms.Form):

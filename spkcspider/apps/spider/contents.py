@@ -1,5 +1,3 @@
-
-import enum
 import time
 from importlib import import_module
 
@@ -11,8 +9,10 @@ from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError
 from django.http import Http404
 
+from .constants import UserContentType
+
 __all__ = (
-    "add_content", "installed_contents", "BaseContent", "UserContentType",
+    "add_content", "installed_contents", "BaseContent",
     "rate_limit_func", "initialize_ratelimit"
 )
 
@@ -25,17 +25,6 @@ def rate_limit_default(view, request):
 
 
 rate_limit_func = None
-
-
-class UserContentType(str, enum.Enum):
-    # can only be added to protected "index" usercomponent
-    confidential = "a"
-    # allow public attribute, incompatible with confidential
-    public = "b"
-    # update is without form/for form updates it is not rendered
-    raw_update = "c"
-    # adding renders no form, only content
-    raw_add = "d"
 
 
 def add_content(klass):
@@ -107,8 +96,6 @@ class BaseContent(models.Model):
     # use case: addons for usercontent, e.g. dependencies on external libraries
     # use case: model with different abilities
     appearances = None
-    # is info unique for usercomponent
-    is_unique = False
 
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
@@ -176,9 +163,10 @@ class BaseContent(models.Model):
         no_public = ""
         if UserContentType.public.value not in self.associated.ctype.ctype:
             no_public = "no_public;"
+        # simulates beeing not unique, by adding id
         # id is from UserContent
-        if not self.is_unique:
-            return "uc=%s;code=%s;name=%s;%sid=%s;" % \
+        if UserContentType.unique.value not in self.associated.ctype.ctype:
+            return "uc=%s;code=%s;type=%s;%sid=%s;" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,
@@ -187,7 +175,7 @@ class BaseContent(models.Model):
                     self.associated.id
                 )
         else:
-            return "uc=%s;code=%s;name=%s;%s" % \
+            return "uc=%s;code=%s;type=%s;%sprimary;" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,

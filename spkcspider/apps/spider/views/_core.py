@@ -5,8 +5,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http.response import HttpResponseBase
 
-from ..contents import UserContentType
-from ..protections import ProtectionType
+from ..constants import ProtectionType, UserContentType
 from ..models import UserComponent
 
 

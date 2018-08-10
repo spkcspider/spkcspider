@@ -15,15 +15,14 @@ from django.urls import reverse
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
 from django.views.decorators.debug import sensitive_variables
 
-from .contents import installed_contents
-
-from .protections import (
-    installed_protections, ProtectionType, ProtectionResult
-)
+from .contents import installed_contents, BaseContent, add_content
+from .protections import installed_protections
 
 from .helpers import token_nonce, MAX_NONCE_SIZE
+from .constants import ProtectionType, UserContentType, ProtectionResult
 
 try:
     from captcha.fields import CaptchaField  # noqa: F401
@@ -220,6 +219,9 @@ class UserContent(models.Model):
     # every section must end with ; every keyword must be unique and
     # in this format: keyword=
     # no unneccessary spaces!
+    # keywords:
+    #  no_public: cannot switch usercomponent public
+    #  primary: primary content of type for usercomponent
     info = models.TextField(
         null=False, editable=False,
         validators=[info_field_validator]
@@ -505,3 +507,47 @@ class AssignedProtection(models.Model):
     @property
     def user(self):
         return self.usercomponent.user
+
+###############################################################################
+
+
+@add_content
+class LinkContent(BaseContent):
+    # links are not linkable
+    appearances = [("Link", UserContentType.public.value)]
+
+    content = models.ForeignKey(
+        "spider_base.UserContent", related_name="+",
+        on_delete=models.CASCADE
+    )
+
+    def get_info(self, usercomponent):
+        ret = super().get_info(usercomponent)
+        return "%starget=%s;link;" % (
+            ret, self.content.associated.pk
+        )
+
+    def render(self, **kwargs):
+        from .forms import LinkForm
+        if kwargs["scope"] in ["update", "add"]:
+            if self.id:
+                kwargs["legend"] = _("Update Content Link")
+                kwargs["confirm"] = _("Update")
+            else:
+                kwargs["legend"] = _("Create Content Link")
+                kwargs["confirm"] = _("Create")
+            kwargs["form"] = LinkForm(
+                **self.get_form_kwargs(kwargs["request"])
+            )
+            if kwargs["form"].is_valid():
+                kwargs["form"] = LinkForm(
+                    instance=kwargs["form"].save()
+                )
+            template_name = "spider_base/base_form.html"
+            return render_to_string(
+                template_name, request=kwargs["request"],
+                context=kwargs
+            )
+        else:
+            kwargs["source"] = self
+            return self.content.render(**kwargs)
