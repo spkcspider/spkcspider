@@ -166,7 +166,7 @@ class BaseContent(models.Model):
         # simulates beeing not unique, by adding id
         # id is from UserContent
         if UserContentType.unique.value not in self.associated.ctype.ctype:
-            return "uc=%s;code=%s;type=%s;%sid=%s;" % \
+            return ";uc=%s;code=%s;type=%s;%sid=%s;" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,
@@ -175,7 +175,7 @@ class BaseContent(models.Model):
                     self.associated.id
                 )
         else:
-            return "uc=%s;code=%s;type=%s;%sprimary;" % \
+            return ";uc=%s;code=%s;type=%s;%sprimary;" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,

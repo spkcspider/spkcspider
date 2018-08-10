@@ -11,7 +11,7 @@ class SpiderTagsConfig(AppConfig):
     def ready(self):
         from django.apps import apps
         from .fields import valid_fields
-        for app in apps.get_models():
+        for app in apps.get_app_configs():
             tags = getattr(app, "spider_tag_fields", {})
             valid_fields.update(tags)
         post_migrate.connect(

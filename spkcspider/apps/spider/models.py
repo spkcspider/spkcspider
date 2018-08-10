@@ -137,30 +137,6 @@ class UserComponent(models.Model):
         super().save(*args, **kwargs)
 
 
-def info_field_validator(value):
-    prefixed_value = ";%s" % value
-    if value[-1] != ";":
-        raise ValidationError(
-            _('%(value)s ends not with ;'),
-            params={'value': value},
-        )
-    # check elements
-    for elem in value[:-1].split(";"):
-        f = elem.find("=")
-        # flag
-        if f != -1:
-            elem = elem[:f]
-        counts = 0
-        counts += prefixed_value.count(";%s;" % elem)
-        counts += prefixed_value.count(";%s=" % elem)
-        assert(counts > 0)
-        if counts > 1:
-            raise ValidationError(
-                _('multiple elements: %(element)s in %(value)s'),
-                params={'element': elem, 'value': value},
-            )
-
-
 class UserContentVariant(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # usercontent abilities/requirements
@@ -184,6 +160,35 @@ class UserContentVariant(models.Model):
 
     def __repr__(self):
         return "<ContentVariant: %s>" % self.__str__()
+
+
+def info_field_validator(value):
+    prefixed_value = ";%s" % value
+    if value[-1] != ";":
+        raise ValidationError(
+            _('%(value)s ends not with ;'),
+            params={'value': value},
+        )
+    if value[0] != ";":
+        raise ValidationError(
+            _('%(value)s starts not with ;'),
+            params={'value': value},
+        )
+    # check elements
+    for elem in value[:-1].split(";"):
+        f = elem.find("=")
+        # flag
+        if f != -1:
+            elem = elem[:f]
+        counts = 0
+        counts += prefixed_value.count(";%s;" % elem)
+        counts += prefixed_value.count(";%s=" % elem)
+        assert(counts > 0)
+        if counts > 1:
+            raise ValidationError(
+                _('multiple elements: %(element)s in %(value)s'),
+                params={'element': elem, 'value': value},
+            )
 
 
 class UserContent(models.Model):
@@ -215,11 +220,11 @@ class UserContent(models.Model):
         null=True, blank=True, default=None
     )
     # for extra information over content, admin only editing
-    # format: flag1;flag2;foo=true;foo2=xd;...;endfoo=xy;
-    # every section must end with ; every keyword must be unique and
+    # format: ;flag1;flag2;foo=true;foo2=xd;...;endfoo=xy;
+    # every section must start and end with ; every keyword must be unique and
     # in this format: keyword=
     # no unneccessary spaces!
-    # keywords:
+    # flags:
     #  no_public: cannot switch usercomponent public
     #  primary: primary content of type for usercomponent
     info = models.TextField(
@@ -251,13 +256,13 @@ class UserContent(models.Model):
         return self.content.__repr__()
 
     def get_flag(self, flag):
-        if self.info and "%s;" % flag in self.info:
+        if self.info and ";%s;" % flag in self.info:
             return True
         return False
 
     def get_value(self, key):
         info = self.info
-        pstart = info.find("%s=" % key)
+        pstart = info.find(";%s=" % key)
         if pstart == -1:
             return None
         pend = info.find(";", pstart+len(key)+1)

@@ -285,17 +285,17 @@ class ContentIndex(UCTestMixin, ListView):
         ret = super().get_queryset().filter(usercomponent=self.usercomponent)
 
         filt = models.Q()
-        for info in self.request.POST.get("search", "").split(" "):
+        for info in self.request.POST.get("search", "").split(";"):
             if len(info) > 0:
                 filt |= models.Q(info__icontains="%s" % info)
-        for info in self.request.GET.get("search", "").split(" "):
+        for info in self.request.GET.get("search", "").split(";"):
             if len(info) > 0:
                 filt |= models.Q(info__icontains="%s" % info)
 
         for info in self.request.POST.getlist("info"):
-            filt |= models.Q(info__contains="%s;" % info)
+            filt |= models.Q(info__contains=";%s;" % info)
         for info in self.request.GET.getlist("info"):
-            filt |= models.Q(info__contains="%s;" % info)
+            filt |= models.Q(info__contains=";%s;" % info)
         return ret.filter(filt)
 
     def get_paginate_by(self, queryset):

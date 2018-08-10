@@ -30,17 +30,17 @@ class ComponentAllIndex(ListView):
 
     def get_queryset(self):
         searchq = models.Q()
-        for info in self.request.POST.get("search", "").split(" "):
+        for info in self.request.POST.get("search", "").split(";"):
             if len(info) > 0:
                 searchq |= models.Q(contents__info__icontains="%s" % info)
-        for info in self.request.GET.get("search", "").split(" "):
+        for info in self.request.GET.get("search", "").split(";"):
             if len(info) > 0:
                 searchq |= models.Q(contents__info__icontains="%s" % info)
 
         for info in self.request.POST.getlist("info"):
-            searchq |= models.Q(contents__info__contains="%s;" % info)
+            searchq |= models.Q(contents__info__contains=";%s;" % info)
         for info in self.request.GET.getlist("info"):
-            searchq |= models.Q(contents__info__contains="%s;" % info)
+            searchq |= models.Q(contents__info__contains=";%s;" % info)
 
         q = self._base_query
         if self.request.user.is_authenticated:

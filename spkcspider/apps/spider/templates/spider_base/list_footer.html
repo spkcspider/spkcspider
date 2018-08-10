@@ -3,7 +3,7 @@
   <form class="w3-cell-row w3-black" style="max-width:400px" method="GET" action="">
     <input type="hidden" name="page" value="{% if request.GET.search %}{{ page_obj.number }}{% else %}1{% endif %}"/>
     <div class="w3-cell">
-      <input class="w3-input" type="text" name="search" value="{{request.GET.search}}" placeholder="{% trans 'Search' %}" />
+      <input class="w3-input" type="text" name="search" value="{{request.GET.search}}" placeholder="{% trans 'Search (seperate with ;)' %}" />
     </div>
     <div class="w3-cell">
       <button class="w3-button w3-input w3-gray"><i class="fa fa-search" aria-hidden="true"></i></button>

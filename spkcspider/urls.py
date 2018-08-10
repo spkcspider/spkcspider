@@ -30,13 +30,9 @@ robots_view = RedirectView.as_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(
-        'spider/',
-        include('spkcspider.apps.spider.urls', namespace="spider_base")
-    ),
 ]
 
-for app in apps.get_models():
+for app in apps.get_app_configs():
     url_namespace = getattr(app, "url_namespace", None)
     if url_namespace:
         url_path = getattr(
@@ -44,8 +40,10 @@ for app in apps.get_models():
             url_namespace.replace("spider_", "")+"/"
         )
         urlpatterns.append(
-            url_path,
-            include("{}.urls".format(app.name), namespace=url_namespace)
+            path(
+                url_path,
+                include("{}.urls".format(app.name), namespace=url_namespace)
+            )
         )
 
 urlpatterns += [
