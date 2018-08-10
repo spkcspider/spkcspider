@@ -16,19 +16,21 @@
 
 {% block content %}
   <div>
-    <a class="w3-left" href="{% url 'spider_base:ucontent-list' user=uc.username name=uc.name nonce=uc.nonce %}">{% trans 'index' %}</a>
-    {% if scope != "add" %}
+    <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}">{% trans 'index' %}</a>
+    {% if scope != "add" and request.user == uc.user %}
       <span class="w3-right">
         <div style="margin-bottom:10px">
           <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
             {% trans 'Delete' %}
           </a>?
         </div>
+        {% if scope != "view" %}
         <div>
           <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}">
             {% trans "View" %}
           </a>
         </div>
+        {% endif %}
       </span>
     {% endif %}
     <h1 class="w3-center">

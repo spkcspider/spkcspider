@@ -3,8 +3,11 @@ import base64
 import json
 from django.db import models
 from django.http import HttpResponse
+from django.core.exceptions import NON_FIELD_ERRORS
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
+
+from django.core.exceptions import ValidationError
 
 from jsonfield import JSONField
 
@@ -20,7 +23,7 @@ CACHE_FORMS = {}
 class TagLayout(models.Model):
     name = models.SlugField(max_length=255, null=False)
     layout = JSONField(default=[])
-    default_verifiers = JSONField(default=[])
+    default_verifiers = JSONField(default=[], blank=True)
     usertag = models.OneToOneField(
         "spider_tags.UserTagLayout", on_delete=models.CASCADE,
         related_name="layout", null=True, blank=True
@@ -31,16 +34,30 @@ class TagLayout(models.Model):
             ("name", "usertag")
         ]
 
+    def clean(self):
+        if TagLayout.objects.filter(usertag=None, name=self.name).exists():
+            raise ValidationError(
+                _("Layout exists already"),
+                code="unique"  # TODO:correct code
+            )
+
     def get_form(self):
         from .forms import generate_form
-        form = CACHE_FORMS.get((self.variant.owner, self.variant.name))
+        id = self.usertag.pk if self.usertag else None
+        form = CACHE_FORMS.get((self.name, id))
         if not form:
-            form = generate_form(self.layout)
-            CACHE_FORMS[self.variant.owner, self.variant.name] = form
+            form = generate_form("LayoutForm", self.layout)
+            CACHE_FORMS[self.name, id] = form
         return form
 
+    def __repr__(self):
+        return "<TagLayout: %s>" % self.name
 
-# @add_content
+    def __str__(self):
+        return "<TagLayout: %s>" % self.name
+
+
+@add_content
 class UserTagLayout(BaseContent):
     appearances = [
         (
@@ -51,6 +68,12 @@ class UserTagLayout(BaseContent):
         )
     ]
 
+    def get_info(self, usercomponent):
+        return "%slayout=%s;" % (
+            super().get_info(usercomponent),
+            self.layout.name
+        )
+
     def render(self, **kwargs):
         from .forms import TagLayoutForm
         if kwargs["scope"] in ["update", "add"]:
@@ -60,13 +83,14 @@ class UserTagLayout(BaseContent):
             else:
                 kwargs["legend"] = _("Create Tag Layout")
                 kwargs["confirm"] = _("Create")
-            if not self.layout:
+            if not hasattr(self, "layout"):
                 self.layout = TagLayout(usertag=self)
             kwargs["form"] = TagLayoutForm(
                 instance=self.layout,
-                **self.get_form_kwargs(kwargs["request"])
+                **self.get_form_kwargs(kwargs["request"], instance=False)
             )
-            if kwargs["form"].is_valid():
+            if kwargs["form"].is_valid() and self.full_clean():
+                self.save()
                 kwargs["form"] = TagLayoutForm(
                     instance=kwargs["form"].save()
                 )
@@ -96,39 +120,62 @@ class SpiderTag(BaseContent):
 
     )
     tagdata = JSONField(default={})
-    verfied_by = JSONField(default=[])
+    verified_by = JSONField(default=[])
     primary = models.BooleanField(default=False)
 
-    class Meta(BaseContent.Meta):
-        unique_together = [
-            ("primary", "layout")
-        ]
+    def __str__(self):
+        if not self.id:
+            return self.localize_name(self.associated.ctype.name)
+        return "%s: %s (%s)" % (
+            self.localize_name("Tag"),
+            self.layout.name,
+            self.id
+        )
 
     def render(self, **kwargs):
         from .forms import SpiderTagForm
+        parent_form = kwargs.pop("form", None)
         if kwargs["scope"] == "add":
-            kwargs["form"] = SpiderTagForm(
-                uc=kwargs["uc"],
-                **self.get_form_kwargs(kwargs["request"])
-            )
             kwargs["legend"] = _("Create Tag")
             kwargs["confirm"] = _("Create")
-        else:
-            kwargs["form"] = self.layout.get_form(
-                uc=self.associated.usercomponent,
+            kwargs["form"] = SpiderTagForm(
+                user=kwargs["uc"].user,
                 **self.get_form_kwargs(kwargs["request"])
             )
-        if kwargs["scope"] == "update":
+            if kwargs["form"].is_valid():
+                kwargs["form"].save()
+                kwargs["form"] = self.layout.get_form()(
+                    initial=self.tagdata,
+                    uc=self.associated.usercomponent
+                )
+        elif kwargs["scope"] == "update":
             kwargs["legend"] = _("Update Tag")
             kwargs["confirm"] = _("Update")
-
+            kwargs["form"] = self.layout.get_form()(
+                initial=self.tagdata,
+                uc=self.associated.usercomponent,
+                **self.get_form_kwargs(kwargs["request"], False)
+            )
             if kwargs["form"].is_valid() and kwargs["form"].has_changed():
                 self.tagdata = kwargs["form"].encoded_data
+                self.primary = kwargs["form"].cleaned_data["primary"]
                 self.verfied_by = []
+                self.full_clean()
                 self.save()
                 kwargs["form"] = self.tagtype.get_form()(
-                    initial=self.tagdata
+                    initial=self.tagdata,
+                    uc=self.associated.usercomponent,
                 )
+        else:
+            kwargs["form"] = self.layout.get_form()(
+                initial=self.tagdata,
+                uc=self.associated.usercomponent,
+            )
+        if parent_form and len(kwargs["form"].errors) > 0:
+            parent_form.errors.setdefault(NON_FIELD_ERRORS, []).extend(
+                kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
+            )
+
         if kwargs["scope"] in ["add", "update"]:
             template_name = "spider_base/base_form.html"
             return render_to_string(
@@ -141,8 +188,9 @@ class SpiderTag(BaseContent):
                 content_type="text/json"
             )
         else:
+            template_name = "spider_base/base_form.html"
             return render_to_string(
-                "spider_keys/tag_view.html", request=kwargs["request"],
+                template_name, request=kwargs["request"],
                 context=kwargs
             )
 
@@ -150,17 +198,13 @@ class SpiderTag(BaseContent):
         return ",".join(
             map(
                 lambda x: base64.b64_urlencode(x),
-                self.instance.verfied_by
+                self.verified_by
             )
         )
 
     def get_info(self, usercomponent):
-        primary = ""
-        if self.primary:
-            primary = "primary;"
-        return "%s%sverified_by=%s;tag=%s;" % (
-            super().get_info(usercomponent),
-            primary,
+        return "%sverified_by=%s;tag=%s;" % (
+            super().get_info(usercomponent, unique=self.primary),
             self.encode_verifiers(),
-            self.cleaned_data["tagtype"]
+            self.layout.name
         )

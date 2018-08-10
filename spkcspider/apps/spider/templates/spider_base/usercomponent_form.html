@@ -1,11 +1,10 @@
 {% extends "spider_base/ucs_base.html" %}
 {% load i18n %}
 
-{% block title %}{% if object %}
-  {% blocktrans trimmed %}
-    Update Component
-  {% endblocktrans %}
-{% else %}{% blocktrans trimmed %}
+{% block title %}{% if object %}{% if object.name == "index" %}{% blocktrans trimmed %}
+Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
+    Change Component
+  {% endblocktrans %}{% endif %}{% else %}{% blocktrans trimmed %}
   Create Component
 {% endblocktrans %}{% endif %}{% endblock %}
 
@@ -22,32 +21,52 @@
       <span class="w3-right">
         {% if object.name != "index" %}
           <div style="margin-bottom:5px">
-            <a href="{% url 'spider_base:ucomponent-delete' name=object.name nonce=object.nonce %}">{% trans 'Delete' %}</a>?
+            <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name nonce=object.nonce %}">{% trans 'Delete' %}</a>?
           </div>
         {% endif %}
         <div>
-          <a class="" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
-            {% trans "Contents" %}
+          <a class="" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
+            {% trans "View" %}
           </a>
         </div>
       </span>
     {% endif %}
     <h1 class="w3-center">
-      {% if form.instance.id %}
+      {% if form.instance.id and form.instance.name == "index" %}
+        {% trans 'Change Login Protection' %}
+      {% elif form.instance.id %}
         {% blocktrans trimmed with name=form.instance.name %}
-          Update Component: <em>{{name}}</em>
+          Change Component: <em>{{name}}</em>
         {% endblocktrans %}
       {% else %}
         {% trans 'Create new Component' %}
       {% endif %}
     </h1>
   </div>
+
+  {% if form.instance.id %}
+  <div>
+    {% trans "Link to Component:" %}
+    <a class="" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
+      {{request.scheme}}://{{request.get_host}}{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}
+    </a>
+
+  </div>
+  {% endif %}
   {% include "spider_base/form_errors.html" with form=form %}
   {{form.media}}
   <form class="" action="{{ request.path }}" encdata="multipart/form-data" method="post">
     {% csrf_token %}
     <fieldset>
-      <legend><h1>{% trans 'User Component' %}</h1></legend>
+      <legend>
+        <h1>
+        {% if form.instance.id and form.instance.name == "index" %}
+          {% trans 'Login Protection' %}
+        {% else %}
+          {% trans 'User Component' %}
+        {% endif %}
+        </h1>
+      </legend>
       {% include "spider_base/base_form.html" with form=form %}
     </fieldset>
     <fieldset>
@@ -67,10 +86,10 @@
         {% endfor %}
     </fieldset>
     <button class="w3-button w3-grey">
-      {% if form.instance.id %}{% trans "Update" %}{% else %}{% trans "Create" %}{% endif %}
+      {% if form.instance.id %}{% trans "Change" %}{% else %}{% trans "Create" %}{% endif %}
     </button>
     {% if object %}
-      <a class="w3-right" href="{% url 'spider_base:ucontent-list' user=object.username name=object.name nonce=object.nonce %}">
+      <a class="w3-right" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
         {% trans "Contents" %}
       </a>
     {% endif %}

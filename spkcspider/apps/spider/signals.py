@@ -1,8 +1,10 @@
 __all__ = (
     "UpdateProtectionsCallback", "InitUserComponentsCallback",
-    "UpdateContentsCallback"
+    "UpdateContentsCallback", "test_success"
 )
 from django.dispatch import Signal
+
+from django.conf import settings
 
 test_success = Signal(providing_args=["name", "code"])
 
@@ -32,12 +34,25 @@ def UpdateProtectionsCallback(sender, **kwargs):
 def InitUserComponentsCallback(sender, instance, **kwargs):
     from .models import UserComponent, Protection, AssignedProtection
     uc = UserComponent.objects.get_or_create(name="index", user=instance)[0]
+    require_save = False
     login = Protection.objects.filter(code="login").first()
     if login:
-        asuc = AssignedProtection.objects.get_or_create(
+        asp = AssignedProtection.objects.get_or_create(
             defaults={"active": True},
             usercomponent=uc, protection=login
         )[0]
-        if not asuc.active:
-            asuc.active = True
-            asuc.save()
+        if not asp.active:
+            asp.active = True
+            require_save = True
+
+    if getattr(settings, "USE_CAPTCHAS", False):
+        captcha = Protection.objects.filter(code="captcha").first()
+        asp = AssignedProtection.objects.get_or_create(
+            defaults={"active": True},
+            usercomponent=uc, protection=captcha
+        )[0]
+        if not asp.active:
+            asp.active = True
+            require_save = True
+    if require_save:
+        asp.save()

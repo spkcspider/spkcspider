@@ -4,6 +4,7 @@ __all__ = [
 
 
 from django import forms
+from django.conf import settings
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
@@ -20,40 +21,21 @@ Nonces protect against bruteforce and attackers<br/>
 If you have problems with attackers (because they know the nonce),
 you can invalidate it with this option and/or add protections<br/>
 <span style="color:red;">
-Warning: this removes also access for all services you gave the
-<em>%s</em> link</span>
-<span style="color:red;">
+Warning: this removes also access for all services you gave the link<br/>
 Warning: if you rely on nonces make sure user component has <em>public</em>
 not set
+</span>
 """
+
+INITIAL_NONCE_SIZE = str(getattr(settings, "INITIAL_NONCE_SIZE", 12))
 
 NONCE_CHOICES = [
     ("", ""),
-    ("3", _("low (3 Bytes)")),
-    ("12", _("medium (12 Bytes)")),
-    ("30", _("high (30 Bytes)")),
+    (INITIAL_NONCE_SIZE, _("default ({} Bytes)")),
+    ("3", _("low ({} Bytes)")),
+    ("12", _("medium ({} Bytes)")),
+    ("30", _("high ({} Bytes)")),
 ]
-
-INITIAL_NONCE_SIZE = "12"
-
-
-class LinkForm(forms.ModelForm):
-
-    class Meta:
-        model = LinkContent
-        fields = ['content']
-
-    def __init__(self, uc, **kwargs):
-        super().__init__(**kwargs)
-        q = self.fields["content"].queryset
-        if uc.public:
-            self.fields["content"].queryset = q.filter(
-                ctype__ctype__contains=UserContentType.link_public.value
-            )
-        else:
-            self.fields["content"].queryset = q.filter(
-                ctype__ctype__contains=UserContentType.link_private.value
-            )
 
 
 class UserComponentForm(forms.ModelForm):
@@ -65,7 +47,7 @@ class UserComponentForm(forms.ModelForm):
 
     class Meta:
         model = UserComponent
-        fields = ['name', 'public', 'required_passes']
+        fields = ['name', 'public', 'required_passes', 'token_duration']
         error_messages = {
             NON_FIELD_ERRORS: {
                 'unique_together': _('UserComponent name already exists')
@@ -78,14 +60,25 @@ class UserComponentForm(forms.ModelForm):
             *args, data=data, files=files, auto_id=auto_id,
             prefix=prefix, **kwargs
         )
+        self.fields["new_nonce"].choices = map(
+            lambda c: (c[0], c[1].format(c[0])),
+            self.fields["new_nonce"].choices
+        )
+
         if self.instance and self.instance.id:
-            assigned = self.instance.protected_by
+            assigned = self.instance.protections
             if self.instance.name_protected:
                 self.fields["name"].disabled = True
             if self.instance.no_public:
                 self.fields["public"].disabled = True
+            if self.instance.name == "index":
+                self.fields["required_passes"].help_text = _(
+                    "How many protections must be passed to login?"
+                    "Minimum is 1, no matter what selected"
+                )
                 ptype = ProtectionType.authentication.value
             else:
+
                 ptype = ProtectionType.access_control.value
             self.protections = Protection.get_forms(data=data, files=files,
                                                     prefix=prefix,
@@ -94,7 +87,8 @@ class UserComponentForm(forms.ModelForm):
             self.protections = list(self.protections)
         else:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
-            self.fields["new_nonce"].choices = NONCE_CHOICES[1:]
+            self.fields["new_nonce"].choices = \
+                self.fields["new_nonce"].choices[1:]
             self.protections = []
 
     def is_valid(self):
@@ -151,7 +145,8 @@ class UserContentForm(forms.ModelForm):
         error_messages = {
             NON_FIELD_ERRORS: {
                 'unique_together': _(
-                    'UserContent type can only exist once by usercomponent'
+                    'UserContent type/configuration can '
+                    'only exist once by usercomponent'
                 )
             }
         }
@@ -162,9 +157,15 @@ class UserContentForm(forms.ModelForm):
         query = UserComponent.objects.filter(user=user)
         self.fields["usercomponent"].queryset = query
 
+        self.fields["new_nonce"].choices = map(
+            lambda c: (c[0], c[1].format(c[0])),
+            self.fields["new_nonce"].choices
+        )
+
         if not self.instance.id:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
-            self.fields["new_nonce"].choices = NONCE_CHOICES[1:]
+            self.fields["new_nonce"].choices = \
+                self.fields["new_nonce"].choices[1:]
 
     def save(self, commit=True):
         if self.cleaned_data["new_nonce"] != "":
@@ -221,3 +222,22 @@ class SpiderAuthForm(AuthenticationForm):
             else:
                 self.confirm_login_allowed(self.user_cache)
         return self.cleaned_data
+
+
+class LinkForm(forms.ModelForm):
+
+    class Meta:
+        model = LinkContent
+        fields = ['content']
+
+    def __init__(self, uc, **kwargs):
+        super().__init__(**kwargs)
+        q = self.fields["content"].queryset
+        if uc.public:
+            self.fields["content"].queryset = q.filter(
+                ctype__ctype__contains=UserContentType.link_public.value
+            )
+        else:
+            self.fields["content"].queryset = q.filter(
+                ctype__ctype__contains=UserContentType.link_private.value
+            )

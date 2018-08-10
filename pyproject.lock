@@ -104,7 +104,7 @@ name = "django-simple-jsonfield"
 optional = false
 platform = "Platform Independent"
 python-versions = "*"
-version = "0.2.1"
+version = "0.2.2"
 
 [package.dependencies]
 django = "*"
@@ -225,7 +225,7 @@ django = ["7f246078d5a546f63c28fc03ce71f4d7a23677ce42109219c24c9ffb28416137", "e
 django-extensions = ["c3c8524056ab1174c6fc769b0599e60f7e7797ce34f38db2effc48885a0a982c", "e279344c6d825adb27694755aa924702d3cc401f8fad5ad9ef2d577948778a5f"]
 django-ranged-response = ["f71fff352a37316b9bead717fc76e4ddd6c9b99c4680cdf4783b9755af1cf985"]
 django-simple-captcha = ["0c30a14f02502119fd1a4d308dd5d2b899d0f4284825a396bbb010afd904754a", "45fbd67b2f2530b4807254dbfdf73e88087694c16fafa9050dafa9d8d5845c88"]
-django-simple-jsonfield = ["03ae0bc048ca9efedd13101d317a3c97e937f4853b096f5bc5f01f68cc5abce5"]
+django-simple-jsonfield = ["2e28aac273d7ec3317c1b4e4b88e3fb299708b2bb01c0ab735f1a2cfd6e6e43d"]
 enum34 = ["2d81cbbe0e73112bdfe6ef8576f2238f2ba27dd0d55752a776c41d38b7da2850", "644837f692e5f550741432dd3f223bbb9852018674981b1664e5dc339387588a", "6bd0f6ad48ec2aa117d3d141940d484deccda84d4fcd884f5c3d93c23ecd8c79", "8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1"]
 idna = ["156a6814fb5ac1fc6850fb002e0852d56c0c8d2531923a51032d1b70760e186e", "684a38a6f903c1d71d6d5fac066b58d7768af4de2b832e426ec79c30daa94a16"]
 ipaddress = ["64b28eec5e78e7510698f6d4da08800a5c575caa4a286c93d651c5d3ff7b6794", "b146c751ea45cad6188dd6cf2d9b757f6f4f8d6ffb96a023e6f2e26eea02a72c"]

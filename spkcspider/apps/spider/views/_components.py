@@ -9,7 +9,7 @@ from datetime import timedelta
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.db import models
 from django.http import HttpResponseRedirect
 from django.conf import settings
@@ -58,9 +58,16 @@ class ComponentAllIndex(ListView):
 class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
     ordering = ("name",)
+    also_authenticated_users = True
+
+    user = None
+
+    def dispatch(self, request, *args, **kwargs):
+        self.user = self.get_user()
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        kwargs["component_user"] = self.get_user()
+        kwargs["component_user"] = self.user
         return super().get_context_data(**kwargs)
 
     def test_func(self):
@@ -69,14 +76,14 @@ class ComponentIndex(UCTestMixin, ListView):
         return False
 
     def get_queryset(self):
-        ret = super().get_queryset().filter(user=self.get_user())
+        ret = super().get_queryset().filter(user=self.user)
         if "search" in self.request.GET:
             ret = ret.filter(name__icontains=self.request.GET["search"])
         return ret
 
     def get_usercomponent(self):
         return get_object_or_404(
-            UserComponent, user=self.get_user(), name="index"
+            UserComponent, user=self.user, name="index"
         )
 
     def get_paginate_by(self, queryset):
@@ -87,10 +94,14 @@ class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
     model = UserComponent
     permission_required = 'spider_base.add_usercomponent'
     form_class = UserComponentForm
+    also_authenticated_users = True
 
     def get_success_url(self):
         return reverse(
-            "spider_base:ucomponent-update", kwargs={"name": self.object.name}
+            "spider_base:ucomponent-update", kwargs={
+                "name": self.object.name,
+                "nonce": self.object.nonce
+            }
         )
 
     def get_context_data(self, **kwargs):
@@ -106,6 +117,7 @@ class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
     form_class = UserComponentForm
+    also_authenticated_users = True
 
     def get_context_data(self, **kwargs):
         kwargs["available"] = installed_contents.keys()
@@ -115,7 +127,8 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(
-            queryset, user=self.get_user(), name=self.kwargs["name"]
+            queryset, user=self.get_user(), name=self.kwargs["name"],
+            nonce=self.kwargs["nonce"]
         )
 
     def get_form_success_kwargs(self):
@@ -128,7 +141,13 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
-        # no nonce here so no redirect required
+        if self.kwargs["nonce"] != self.object.nonce:
+            return redirect(
+                "spider_base:ucomponent-update", kwargs={
+                    "name": self.object.name,
+                    "nonce": self.object.nonce
+                }
+            )
         return self.render_to_response(
             self.get_context_data(
                 form=self.get_form_class()(**self.get_form_success_kwargs())
@@ -142,12 +161,16 @@ class ComponentDelete(UserTestMixin, DeleteView):
     object = None
     http_method_names = ['get', 'post', 'delete']
 
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.user = self.get_user()
+        return super().dispatch(request, *args, **kwargs)
+
     def get_success_url(self):
-        user = self.get_user()
-        user = getattr(user, user.USERNAME_FIELD)
+        username = getattr(self.user, self.user.USERNAME_FIELD)
         return reverse(
             "spider_base:ucomponent-list", kwargs={
-                "user": user
+                "user": username
             }
         )
 
@@ -162,7 +185,6 @@ class ComponentDelete(UserTestMixin, DeleteView):
         return _time
 
     def get_context_data(self, **kwargs):
-        self.object = self.get_object()
         _time = self.get_required_timedelta()
         if _time and self.object.deletion_requested:
             now = timezone.now()
@@ -173,9 +195,8 @@ class ComponentDelete(UserTestMixin, DeleteView):
         return super().get_context_data(**kwargs)
 
     def delete(self, request, *args, **kwargs):
-        # deletion should be only possible for owning user
-        self.object = self.get_object()
-        if self.object.name in "index":
+        # hack for compatibility to ContentRemove
+        if getattr(self.object, "name", "") == "index":
             return self.handle_no_permission()
         _time = self.get_required_timedelta()
         if _time:
@@ -199,7 +220,6 @@ class ComponentDelete(UserTestMixin, DeleteView):
         return super().get(request, *args, **kwargs)
 
     def reset(self, request, *args, **kwargs):
-        self.object = self.get_object()
         self.object.deletion_requested = None
         self.object.save(update_fields=["deletion_requested"])
         return HttpResponseRedirect(self.get_success_url())
@@ -208,6 +228,6 @@ class ComponentDelete(UserTestMixin, DeleteView):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(
-            queryset, user=self.get_user(), name=self.kwargs["name"],
+            queryset, user=self.user, name=self.kwargs["name"],
             nonce=self.kwargs["nonce"]
         )

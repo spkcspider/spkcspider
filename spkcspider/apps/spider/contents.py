@@ -5,8 +5,6 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 from django.utils.translation import pgettext
-from django.utils.translation import gettext as _
-from django.core.exceptions import ValidationError
 from django.http import Http404
 
 from .constants import UserContentType
@@ -105,6 +103,8 @@ class BaseContent(models.Model):
     associated_rel = GenericRelation("spider_base.UserContent")
     _associated2 = None
 
+    _content_is_cleaned = False
+
     @property
     def associated(self):
         if self._associated2:
@@ -148,9 +148,11 @@ class BaseContent(models.Model):
     def render(self, **kwargs):
         raise NotImplementedError
 
-    def get_form_kwargs(self, request):
+    def get_form_kwargs(self, request, instance=True):
         """Return the keyword arguments for instantiating the form."""
-        kwargs = {"instance": self}
+        kwargs = {}
+        if instance:
+            kwargs["instance"] = self
 
         if request.method in ('POST', 'PUT'):
             kwargs.update({
@@ -159,22 +161,20 @@ class BaseContent(models.Model):
             })
         return kwargs
 
-    def get_info(self, usercomponent):
-        no_public = ""
-        if UserContentType.public.value not in self.associated.ctype.ctype:
-            no_public = "no_public;"
-        # simulates beeing not unique, by adding id
-        # id is from UserContent
-        if UserContentType.unique.value not in self.associated.ctype.ctype:
-            return ";uc=%s;code=%s;type=%s;%sid=%s;" % \
-                (
-                    usercomponent.name,
-                    self._meta.model_name,
-                    self.associated.ctype.name,
-                    no_public,
-                    self.associated.id
-                )
-        else:
+    def get_info(self, usercomponent, no_public=False, unique=False):
+        # no_public=False, unique=False shortcuts for get_info overwrites
+        # passing down these parameters not neccessary
+        no_public_var = ""
+        if (
+            no_public or
+            UserContentType.public.value not in self.associated.ctype.ctype
+           ):
+            no_public_var = "no_public;"
+        if not unique:
+            unique = (
+                UserContentType.unique.value not in self.associated.ctype.ctype
+            )
+        if unique:
             return ";uc=%s;code=%s;type=%s;%sprimary;" % \
                 (
                     usercomponent.name,
@@ -182,29 +182,40 @@ class BaseContent(models.Model):
                     self.associated.ctype.name,
                     no_public
                 )
+        else:
+            # simulates beeing not unique, by adding id
+            # id is from UserContent
+            return ";uc=%s;code=%s;type=%s;%sid=%s;" % \
+                (
+                    usercomponent.name,
+                    self._meta.model_name,
+                    self.associated.ctype.name,
+                    no_public_var,
+                    self.associated.id
+                )
+
+    def full_clean(self, **kwargs):
+        # checked with clean
+        kwargs.setdefault("exclude", []).append("associated_rel")
+        return super().full_clean(**kwargs)
 
     def clean(self):
-        from .models import UserContent
         if self._associated2:
             self._associated2.content = self
         a = self.associated
         a.info = self.get_info(a.usercomponent)
-        try:
-            if UserContent.objects.get(info=a.info).id != a.id:
-                raise ValidationError(
-                        message=_('Duplicate content per component (content '
-                                  'type allows only unique content)'),
-                        code='duplicate content',
-                    )
-        except UserContent.DoesNotExist:
-            pass
+        a.full_clean(exclude=["content"])
+        self._content_is_cleaned = True
 
     def save(self, *args, **kwargs):
         ret = super().save(*args, **kwargs)
         a = self.associated
-        a.info = self.get_info(a.usercomponent)
+        if settings.DEBUG:
+            assert self._content_is_cleaned, "Uncleaned content committed"
         if self._associated2:
             a.content = self
         # update info and set content
         a.save()
+        # require again cleaning
+        self._content_is_cleaned = False
         return ret

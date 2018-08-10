@@ -26,16 +26,27 @@ class FileForm(forms.ModelForm):
 class TextForm(forms.ModelForm):
     class Meta:
         model = TextFilet
-        fields = ['text', 'name', 'edit_allowed']
+        fields = ['text', 'name', 'non_public_edit']
 
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, user=None, source=None, **kwargs):
+        super().__init__(**kwargs)
         if self.instance and self.instance.is_owner(user):
             return
 
         self.fields["name"].editable = False
-        del self.fields["edit_allowed"]
+        del self.fields["non_public_edit"]
 
-        if not user.is_authenticated or \
-           not self.instance.edit_allowed.filter(pk=user.pk).exists():
-            self.fields["text"].editable = False
+        self.fields["text"].editable = False
+
+        if self.instance.non_public_edit:
+            allow_edit = False
+            if source and not source.associated.usercomponent.public:
+                allow_edit = True
+            elif (
+                    not source and
+                    not self.instance.associated.usercomponent.public
+                 ):
+                allow_edit = True
+
+            if allow_edit:
+                self.fields["text"].editable = True

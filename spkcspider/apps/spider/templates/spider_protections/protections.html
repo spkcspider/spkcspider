@@ -1,7 +1,7 @@
 {% extends "spider_protections/base.html" %}
 {% load spider_protections i18n %}
 {% block content %}
-<form action="{{ request.path }}" method="post">
+<form action="{{ request.get_full_path }}" method="post">
   <fieldset>
     <legend><h1>{% trans 'Protections' %}</h1></legend>
     {% extract_protections "protections" as protections %}

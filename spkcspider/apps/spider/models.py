@@ -5,12 +5,14 @@ namespace: spider_base
 """
 
 import logging
+import datetime
 
 from jsonfield import JSONField
 
 from django.db import models
 from django.conf import settings
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 from django.urls import reverse
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -35,20 +37,35 @@ logger = logging.getLogger(__name__)
 
 protected_names = ["index"]
 
+hex_size_of_bigid = 16
+
+default_uctoken_duration = getattr(
+    settings, "DEFAULT_UCTOKEN_DURATION",
+    datetime.timedelta(days=7)
+)
+
 
 def _get_default_amount():
     if models.F("name") == "index" and force_captcha:
         return 2
-    else:
+    elif models.F("name") == "index":
         return 1
+    else:
+        return 0  # protections are optional
 
 
-_name_help = """
+_name_help = _("""
 Name of the component.<br/>
 Note: there are special named components
 with different protection types and scopes.<br/>
 Most prominent: "index" for authentication
-"""
+""")
+
+
+_required_passes_help = _(
+    "How many protection must be passed? "
+    "Set greater 0 to enable protection based access"
+)
 
 
 class UserComponent(models.Model):
@@ -63,8 +80,7 @@ class UserComponent(models.Model):
     )
     required_passes = models.PositiveIntegerField(
         default=_get_default_amount,
-        help_text=_("How many protection passes are required?"
-                    "Set to zero to allow everyone access")
+        help_text=_required_passes_help
     )
     # fix linter warning
     objects = models.Manager()
@@ -77,19 +93,20 @@ class UserComponent(models.Model):
         help_text=_name_help
     )
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
     )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
+
+    token_duration = models.DurationField(
+        default=default_uctoken_duration,
+        null=False
+    )
     # only editable for admins
     deletion_requested = models.DateTimeField(null=True, default=None)
     contents = None
     # should be used for retrieving active protections, related_name
-    protected_by = None
-    protections = models.ManyToManyField(
-        "spider_base.Protection", through="spider_base.AssignedProtection",
-        related_name="usercomponents"
-    )
+    protections = None
 
     class Meta:
         unique_together = [("user", "name")]
@@ -97,8 +114,11 @@ class UserComponent(models.Model):
             models.Index(fields=['user']),
         ]
 
+    def __repr__(self):
+        return "<UserComponent: %s: %s>" % (self.username, self.name)
+
     def __str__(self):
-        return "%s: %s" % (self.username, self.name)
+        return self.__repr__()
 
     def auth(self, request, ptype=ProtectionType.access_control.value,
              protection_codes=None, **kwargs):
@@ -111,7 +131,7 @@ class UserComponent(models.Model):
         return reverse(
             "spider_base:ucontent-list",
             kwargs={
-                "user": self.username, "name": self.name, "nonce": self.nonce
+                "id": self.id, "nonce": self.nonce
             }
         )
 
@@ -134,6 +154,44 @@ class UserComponent(models.Model):
     def save(self, *args, **kwargs):
         if self.name == "index" and self.public:
             self.public = False
+        super().save(*args, **kwargs)
+
+
+class AuthToken(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
+    usercomponent = models.ForeignKey(
+        UserComponent, on_delete=models.CASCADE,
+        related_name="authtokens"
+    )
+    session_key = models.CharField(max_length=40, null=True)
+    # brute force protection
+    #  16 = usercomponent.id in hexadecimal
+    token = models.SlugField(
+        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid
+    )
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+
+    class Meta:
+        unique_together = [
+            ("usercomponent", "token")
+        ]
+
+    def create_auth_token(self):
+        self.token = "{}_{}".format(
+            hex(self.usercomponent.id)[2:],
+            token_nonce()
+        )
+
+    def save(self, *args, **kwargs):
+        for i in range(0, 1000):
+            if i >= 999:
+                raise SystemExit('A possible infinite loop was detected')
+            self.create_auth_token()
+            try:
+                self.validate_unique()
+                break
+            except ValidationError:
+                pass
         super().save(*args, **kwargs)
 
 
@@ -163,6 +221,7 @@ class UserContentVariant(models.Model):
 
 
 def info_field_validator(value):
+    _ = gettext
     prefixed_value = ";%s" % value
     if value[-1] != ";":
         raise ValidationError(
@@ -272,12 +331,13 @@ class UserContent(models.Model):
         return info[pstart:pend]
 
     def clean(self):
-        if ContentType.confidential.value in self.ctype.ctype and \
+        _ = gettext
+        if UserContentType.confidential.value in self.ctype.ctype and \
            self.usercomponent.name != "index":
             raise ValidationError(
                 _('Confidential usercontent is only allowed for index')
             )
-        if ContentType.public.value not in self.ctype.ctype and \
+        if UserContentType.public.value not in self.ctype.ctype and \
            self.usercomponent.public:
             raise ValidationError(
                 _(
@@ -383,6 +443,7 @@ class Protection(models.Model):
         # before protection_codes, for not allowing users
         # to manipulate required passes
         if required_passes > 0:
+            # required_passes 1 and no protection means: login only
             required_passes = max(min(required_passes, len(query)), 1)
 
         if protection_codes:
@@ -394,7 +455,8 @@ class Protection(models.Model):
                 ptype__contains=ProtectionType.reliable.value
             )
         return cls.auth_query(
-            request, query.order_by("code"), required_passes=required_passes
+            request, query.order_by("code"), required_passes=required_passes,
+            ptype=ptype
         )
 
     def get_form(self, prefix=None, **kwargs):
@@ -438,7 +500,7 @@ class AssignedProtection(models.Model):
         limit_choices_to=get_limit_choices_assigned_protection, editable=False
     )
     usercomponent = models.ForeignKey(
-        UserComponent, related_name="protected_by",
+        UserComponent, related_name="protections",
         on_delete=models.CASCADE, editable=False
     )
     # data for protection
@@ -506,7 +568,7 @@ class AssignedProtection(models.Model):
 
         return Protection.auth_query(
             request, query.order_by("protection__code"),
-            required_passes=required_passes
+            required_passes=required_passes, ptype=ptype
         )
 
     @property
@@ -526,14 +588,21 @@ class LinkContent(BaseContent):
         on_delete=models.CASCADE
     )
 
+    def __str__(self):
+        return "Link: <%s>" % self.content
+
+    def __repr__(self):
+        return "<Link: %r>" % self.content
+
     def get_info(self, usercomponent):
         ret = super().get_info(usercomponent)
-        return "%starget=%s;link;" % (
-            ret, self.content.associated.pk
+        return "%ssource=%s;link;" % (
+            ret, self.associated.pk
         )
 
     def render(self, **kwargs):
         from .forms import LinkForm
+        _ = gettext
         if kwargs["scope"] in ["update", "add"]:
             if self.id:
                 kwargs["legend"] = _("Update Content Link")
@@ -542,10 +611,12 @@ class LinkContent(BaseContent):
                 kwargs["legend"] = _("Create Content Link")
                 kwargs["confirm"] = _("Create")
             kwargs["form"] = LinkForm(
+                uc=self.associated.usercomponent,
                 **self.get_form_kwargs(kwargs["request"])
             )
             if kwargs["form"].is_valid():
                 kwargs["form"] = LinkForm(
+                    uc=self.associated.usercomponent,
                     instance=kwargs["form"].save()
                 )
             template_name = "spider_base/base_form.html"
@@ -555,4 +626,4 @@ class LinkContent(BaseContent):
             )
         else:
             kwargs["source"] = self
-            return self.content.render(**kwargs)
+            return self.content.content.render(**kwargs)

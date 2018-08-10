@@ -36,7 +36,9 @@ In short you get only machine friendly protections (but are more often blocked).
 
 verified_by urls should return hashname:hash_hexdigest
 
+# TODO
 
+* shortcut to test if requester was public
 
 # Thanks
 

@@ -17,9 +17,9 @@ for i in safe_default_fields:
     valid_fields[i] = getattr(forms, i)
 
 
-class TextAreaField(forms.CharField):
+class TextareaField(forms.CharField):
     widget = forms.Textarea
-valid_fields["TextAreaField"] = TextAreaField  # noqa: E305
+valid_fields["TextareaField"] = TextareaField  # noqa: E305
 
 # extra attributes for fields:
 # limit_to_usercomponent = "<fieldname">: limit field name to associated uc
@@ -29,16 +29,16 @@ valid_fields["TextAreaField"] = TextAreaField  # noqa: E305
 class LayoutRefField(forms.ModelChoiceField):
     limit_to_usercomponent = "associated_rel__usercomponent"
 
-    def __init__(self, **kwargs):
+    def __init__(self, valid_layouts, **kwargs):
         kwargs["queryset"] = apps.get_model(
             "spider_tags.SpiderTag"
         ).objects.all()
-        if isinstance(kwargs.get("valid_layouts", None), []):
+        if isinstance(valid_layouts, list):
             kwargs["queryset"] = kwargs["queryset"].filter(
-                layout__name__in=kwargs["valid_layouts"]
+                layout__name__in=valid_layouts
             )
         kwargs.pop("limit_choices_to", None)
-        super().___init__(**kwargs)
+        super().__init__(**kwargs)
 valid_fields["LayoutRefField"] = LayoutRefField  # noqa: E305
 
 
@@ -66,12 +66,13 @@ def generate_fields(layout, prefix="", base=None):
             continue
         if isinstance(field, list):
             new_prefix = "{}:{}".format(prefix, key)
-            generate_fields(field, new_prefix, base)
+            generate_fields(field, new_prefix, base=base)
         elif isinstance(field, str):
             new_field = valid_fields.get(field)
             if not new_field:
                 logging.warning("Invalid field specified: %s", field)
-            base.append(("{}:{}".format(prefix, key), new_field(**item)))
+            else:
+                base.append(("{}:{}".format(prefix, key), new_field(**item)))
         else:
             logging.warning("Invalid item", i)
     return base

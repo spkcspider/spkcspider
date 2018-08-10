@@ -13,6 +13,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.http.response import HttpResponseBase
+from django.http import JsonResponse
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -22,7 +23,7 @@ from ._core import UCTestMixin
 from ._components import ComponentDelete
 from ..contents import rate_limit_func
 from ..constants import UserContentType
-from ..models import UserContent, UserContentVariant
+from ..models import UserContent, UserContentVariant, UserComponent
 from ..forms import UserContentForm
 
 
@@ -32,10 +33,12 @@ class ContentBase(UCTestMixin):
     template_name = 'spider_base/usercontent_access.html'
     scope = None
     object = None
+    no_nonce_usercomponent = True
 
     def dispatch(self, request, *args, **kwargs):
         _scope = kwargs.get("access", None)
         if self.scope == "access":
+            # special scopes which should be not available as url parameter
             if _scope in ["add", "list"]:
                 raise PermissionDenied("Deceptive scopes")
             self.scope = _scope
@@ -65,12 +68,7 @@ class ContentBase(UCTestMixin):
         # block view on special objects for non user and non superusers
         if self.usercomponent.name == "index":
             return False
-        self.request.protections = self.usercomponent.auth(
-            request=self.request, scope=self.scope
-        )
-        if self.request.protections is True:
-            return True
-        return False
+        return self.test_token()
 
 
 class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
@@ -171,6 +169,7 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
     permission_required = 'spider_base.add_usercontent'
     scope = "add"
     model = UserContentVariant
+    also_authenticated_users = True
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -231,6 +230,7 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
             return rendered
         # show framed output
         context["content"] = rendered
+        # redirect if saving worked
         if getattr(ob, "id", None):
             assert(hasattr(ucontent, "id") and ucontent.usercomponent)
             return redirect(
@@ -244,6 +244,8 @@ class ContentIndex(UCTestMixin, ListView):
     model = UserContent
     scope = "list"
     ordering = ("ctype__name", "id")
+    raw = False
+    no_nonce_usercomponent = False
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -251,8 +253,13 @@ class ContentIndex(UCTestMixin, ListView):
         except Http404:
             return rate_limit_func(self, request)
 
+    def get_usercomponent(self):
+        query = {"id": self.kwargs["id"]}
+        query["nonce"] = self.kwargs["nonce"]
+        return get_object_or_404(UserComponent, **query)
+
     def get_context_data(self, **kwargs):
-        kwargs["uc"] = self.get_usercomponent()
+        kwargs["uc"] = self.usercomponent
         if kwargs["uc"].user == self.request.user:
             kwargs["content_types"] = UserContentVariant.objects.all()
             if kwargs["uc"].name != "index":
@@ -273,12 +280,7 @@ class ContentIndex(UCTestMixin, ListView):
         if self.usercomponent.name == "index":
             return False
 
-        self.request.protections = self.usercomponent.auth(
-            request=self.request, scope="list"
-        )
-        if self.request.protections is True:
-            return True
-        return False
+        return self.test_token()
 
     def get_queryset(self):
         # GET parameters are stronger than post
@@ -301,17 +303,41 @@ class ContentIndex(UCTestMixin, ListView):
     def get_paginate_by(self, queryset):
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
+    def render_to_response(self, context):
+        if not self.raw:
+            return super().render_to_response(context)
+
+        ret = {
+            "name": self.usercomponent.name,
+            "content": [
+                {
+                    "info": c.info,
+                    "link": reverse(
+                        "spider_base:ucontent-access",
+                        kwargs={
+                            "id": c.id, "nonce": c.nonce, "access": "raw"
+                        }
+                    )
+                } for c in context["object_list"]
+            ]
+        }
+        return JsonResponse(ret)
+
 
 class ContentRemove(ComponentDelete):
     model = UserContent
+    usercomponent = None
+    no_nonce_usercomponent = True
+
+    def dispatch(self, request, *args, **kwargs):
+        self.usercomponent = self.get_usercomponent()
+        return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
-        usercomponent = self.get_usercomponent()
         return reverse(
             "spider_base:ucontent-list", kwargs={
-                "user": usercomponent.username,
-                "name": usercomponent.name,
-                "nonce": usercomponent.nonce
+                "id": self.usercomponent.id,
+                "nonce":  self.usercomponent.nonce
             }
         )
 
@@ -327,6 +353,6 @@ class ContentRemove(ComponentDelete):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(
-            queryset, usercomponent=self.get_usercomponent(),
+            queryset, usercomponent=self.usercomponent,
             id=self.kwargs["id"], nonce=self.kwargs["nonce"]
         )

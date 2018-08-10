@@ -244,7 +244,7 @@ class LoginProtection(BaseProtection):
     ptype += ProtectionType.authentication.value
     # NEVER allow for computer access only to generate token
 
-    description = _("Login as owner")
+    description = _("Require login as owner")
 
     class auth_form(forms.Form):
         use_required_attribute = False
@@ -267,8 +267,6 @@ class LoginProtection(BaseProtection):
             return cls.auth_form()
 
         username = obj.usercomponent.username
-        if username != request.POST.get("username", ""):
-            username = None
         password = request.POST.get("password", None)
         if authenticate(
             request, username=username, password=password,
@@ -291,12 +289,22 @@ class PasswordProtection(BaseProtection):
     ptype += ProtectionType.reliable.value
 
     description = _("Protect with passwords")
+    prefix = "protection_passwords"
+
+    class auth_form(forms.Form):
+        use_required_attribute = False
+        password2 = forms.CharField(
+            label=_("Password 2"),
+            strip=False,
+            widget=forms.PasswordInput,
+        )
 
     passwords = forms.CharField(
         label=_("Passwords"),
         help_text=_("One password per line. Every password is stripped."),
         widget=forms.Textarea,
-        strip=True
+        strip=True, required=False,
+        initial=""
     )
 
     def clean_passwords(self):
@@ -315,18 +323,20 @@ class PasswordProtection(BaseProtection):
         return ret
 
     @classmethod
-    def auth(cls, request, obj, query, **kwargs):
-        if query.filter(code="login").exists():
-            retfalse = False
-        else:
-            retfalse = LoginProtection.auth_form()
+    def auth(cls, request, obj, **kwargs):
+        retfalse = cls.auth_form()
         if not obj:
+            retfalse.fields["password2"].label = _("Password 2 (if required)")
             return retfalse
         password = request.POST.get("password", "")
+        password2 = request.POST.get("password2", "")
         success = False
         for pw in obj.data["passwords"].split("\n"):
             if cmp_pw(pw, password):
                 success = True
+            if cmp_pw(pw, password2):
+                success = True
+
         if success:
             return True
         return retfalse
@@ -352,14 +362,18 @@ if getattr(settings, "USE_CAPTCHAS", False):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
             if ProtectionType.authentication.value in self.ptype:
-                # login should not be possible alone with it
-                self.fields["instant_fail"].initial = True
+                # login should not be possible with captcha alone
                 self.initial["instant_fail"] = True
+                self.fields["instant_fail"].initial = True
                 self.fields["instant_fail"].disabled = True
+                self.fields["instant_fail"].help_text = \
+                    _("instant_fail is for login required")
+
                 if getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False):
-                    self.fields["active"].initial = True
                     self.initial["active"] = True
                     self.fields["active"].disabled = True
+                    self.fields["instant_fail"].help_text = \
+                        _("captcha is for login required")
 
         @classmethod
         def localize_name(cls, name=None):

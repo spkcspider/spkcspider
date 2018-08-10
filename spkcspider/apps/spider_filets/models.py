@@ -126,9 +126,18 @@ class FileFilet(BaseContent):
 
 @add_content
 class TextFilet(BaseContent):
-    appearances = [("Text", UserContentType.public.value)]
+    appearances = [
+        (
+            "Text", UserContentType.public.value +
+            UserContentType.link.value
+        )
+    ]
 
     name = models.CharField(max_length=255, null=False)
+    non_public_edit = models.BooleanField(
+        default=False,
+        help_text=_("Allow others to edit text file if not public")
+    )
 
     text = models.TextField(default="")
 
@@ -145,24 +154,32 @@ class TextFilet(BaseContent):
     def render(self, **kwargs):
         from .forms import TextForm
         if self.id:
-            is_owner = self.is_owner(kwargs["request"].user)
-            if is_owner or self.edit_allowed.filter(
-                pk=kwargs["request"].user.pk
-            ).first():
-                kwargs["legend"] = _("Update")
-                kwargs["confirm"] = _("Update")
-            else:
-                kwargs["legend"] = _("View")
-                kwargs["no_button"] = True
+            kwargs["legend"] = _("Update")
+            kwargs["confirm"] = _("Update")
         else:
             kwargs["legend"] = _("Create")
             kwargs["confirm"] = _("Create")
+
+        is_owner = self.is_owner(kwargs["request"].user)
+        source = kwargs.get("source", None)
+        allow_edit = False
+        if self.non_public_edit:
+            if source and not source.associated.usercomponent.public:
+                allow_edit = True
+            elif not source and not self.associated.usercomponent.public:
+                allow_edit = True
+
+        if not is_owner and not allow_edit:
+            kwargs["legend"] = _("View")
+            kwargs["no_button"] = True
         kwargs["form"] = TextForm(
             user=kwargs["request"].user,
+            source=kwargs.get("source", None),
             **self.get_form_kwargs(kwargs["request"])
         )
-        if kwargs["form"].is_valid():
+        if kwargs["form"].is_valid() and kwargs["form"].has_changed():
             kwargs["form"] = TextForm(
+                source=kwargs.get("source", None),
                 user=kwargs["request"].user, instance=kwargs["form"].save()
             )
         template_name = "spider_base/full_form.html"

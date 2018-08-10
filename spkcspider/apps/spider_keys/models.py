@@ -92,7 +92,6 @@ class PublicKey(BaseContent):
                 kwargs["legend"] = _("Create Public Key")
                 kwargs["confirm"] = _("Create")
             kwargs["form"] = KeyForm(
-                instance=self,
                 **self.get_form_kwargs(kwargs["request"])
             )
             if kwargs["form"].is_valid():

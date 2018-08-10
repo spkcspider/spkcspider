@@ -1,5 +1,5 @@
 {% load i18n %}
-{% load staticfiles %}
+{% load staticfiles spider_base %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE|default:"en-US" }}">
   <head>
@@ -50,13 +50,17 @@
                     <i class="fa fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>
                     {% trans 'Add Component' %}
                   </a>
-                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-list' %}">
-                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'List Own' %}
-                  </a>
                   <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-listall' %}">
                     <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'List All' %}
+                    {% trans 'List all Components' %}
+                  </a>
+                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-list' %}">
+                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'List owned Components' %}
+                  </a>
+                  <a class="w3-bar-item w3-button" href="{% list_own_content %}">
+                    <i class="fa fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'List private Content' %}
                   </a>
                 {% endblock context_actions %}
               </div>
@@ -75,6 +79,10 @@
                 <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:profile' %}">
                   <i class="fa fa-user-edit" style="margin-right:10px" aria-hidden="true"></i>
                   {% trans 'Profile' %}
+                </a>
+                <a class="w3-bar-item w3-button" href="{% update_user_protection %}">
+                  <i class="fa fa-user-edit" style="margin-right:10px" aria-hidden="true"></i>
+                  {% trans 'Change User Protection' %}
                 </a>
                 <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:logout'%}">
                   <i class="fa fa-sign-out-alt" style="margin-right:10px" aria-hidden="true"></i>

@@ -9,6 +9,8 @@ from django import forms
 
 # from django.apps import apps
 from django.db.models import Q
+from django.core.exceptions import NON_FIELD_ERRORS
+from django.utils.translation import gettext_lazy as _
 
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
@@ -17,13 +19,12 @@ from .models import TagLayout, SpiderTag
 class TagLayoutForm(forms.ModelForm):
     class Meta:
         model = TagLayout
-        fields = ["name", "layout", "owner", "default_verifiers"]
+        fields = ["name", "layout", "default_verifiers"]
 
-    def __init__(self, user=None, **kwargs):
+    def __init__(self, uc=None, **kwargs):
         if "instance" not in kwargs:
-            kwargs["instance"] = self._meta.model(owner=user)
+            kwargs["instance"] = self._meta.model(usertag=uc)
         super().__init__(**kwargs)
-        self.fields["owner"].disabled = True
 
 
 class SpiderTagForm(forms.ModelForm):
@@ -31,20 +32,35 @@ class SpiderTagForm(forms.ModelForm):
         model = SpiderTag
         fields = ["layout"]
 
-    def __init__(self, uc=None, **kwargs):
+    def __init__(self, user=None, **kwargs):
         super().__init__(**kwargs)
+        index = user.usercomponent_set.get(name="index")
         self.fields["layout"].queryset = self.fields["layout"].queryset.filter(
-            Q(usertag=None) | Q(usertag__usercomponent=uc)
-        ).order_by("")
+            Q(usertag__isnull=True) |
+            Q(usertag__associated_rel__usercomponent=index)
+        ).order_by("name")
 
 
-def generate_form(name, layout, verified_by):
-    _declared_fields = OrderedDict(generate_fields(layout, "tag"))
+def generate_form(name, layout):
+    _gen_fields = generate_fields(layout, "tag")
+    _gen_fields.insert(0, (
+        "primary",
+        forms.BooleanField(required=False)
+    ))
 
-    class _form(forms.Form):
+    class _form(forms.BaseForm):
         __name__ = name
-        declared_fields = _declared_fields
-        base_fields = _declared_fields
+        declared_fields = OrderedDict(_gen_fields)
+        base_fields = declared_fields
+
+        class Meta:
+            error_messages = {
+                NON_FIELD_ERRORS: {
+                    'unique_together': _(
+                        'Primary layout for "%s" exists already'
+                    ) % name
+                }
+            }
 
         def __init__(self, *, uc=None, initial=None, **kwargs):
             if not initial:
