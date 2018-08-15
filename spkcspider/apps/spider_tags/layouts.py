@@ -98,7 +98,9 @@ default_layouts["emergency"] = (
         },
         {
             "key": "contacts",
+            "initial": "",
             "field": "TextareaField",
+            "required": False
         },
         {
             "key": "bgender",
