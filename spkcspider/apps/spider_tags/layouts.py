@@ -107,10 +107,9 @@ default_layouts["emergency"] = (
             "label": _("Biologic Gender"),
             "field": "ChoiceField",
             "choices": [
+                ("", _("")),
                 ("male", _("male")),
                 ("female", _("female")),
-                ("both", _("both")),
-                ("none", _("none")),
             ],
             "required": False
         },
@@ -119,6 +118,7 @@ default_layouts["emergency"] = (
             "label": _("Blood Group"),
             "field": "ChoiceField",
             "choices": [
+                ("", ""),
                 ("A", "A"),
                 ("B", "B"),
                 ("AB", "AB"),
@@ -131,6 +131,7 @@ default_layouts["emergency"] = (
             "label": _("Rhesus Factor"),
             "field": "ChoiceField",
             "choices": [
+                ("", ""),
                 ("rh+", "Rh+"),
                 ("rh-", "Rh-"),
             ],
@@ -155,6 +156,7 @@ default_layouts["emergency"] = (
             "label": _("Organ donations in case of death"),
             "field": "SelectMultiple",
             "choices": [
+                ("", ""),
                 ("all", _("All organs")),
                 ("special", _("Special Organs")),
                 ("contacts", _("Contacts can decide")),

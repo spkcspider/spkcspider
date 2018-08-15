@@ -46,7 +46,7 @@ class UserTestMixin(AccessMixin):
 
             # only valid tokens here yeah
             tokenstring = self.request.GET.get("token", None)
-            if tokenstring:
+            if tokenstring or not self.request.session.session_key:
                 # find by tokenstring
                 token = self.usercomponent.authtokens.filter(
                     token=tokenstring
@@ -74,7 +74,8 @@ class UserTestMixin(AccessMixin):
             GET = self.request.GET.copy()
             if (
                     self.request.GET.get("prefer_get", "") == "true" or
-                    "token" in self.request.GET
+                    "token" in self.request.GET or
+                    not self.request.session.session_key
                ):
                 GET["token"] = token.token
             return "?".join((self.request.path, GET.urlencode()))

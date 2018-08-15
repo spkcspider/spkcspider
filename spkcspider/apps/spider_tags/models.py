@@ -171,6 +171,9 @@ class SpiderTag(BaseContent):
                 initial=self.tagdata,
                 uc=self.associated.usercomponent,
             )
+            del kwargs["form"].fields["primary"]
+            for field in kwargs["form"].fields.values():
+                field.disabled = True
         if parent_form and len(kwargs["form"].errors) > 0:
             parent_form.errors.setdefault(NON_FIELD_ERRORS, []).extend(
                 kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
