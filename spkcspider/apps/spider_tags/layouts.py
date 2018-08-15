@@ -53,8 +53,11 @@ default_layouts["person1"] = (
     [
         {
             "key": "address",
-            "field": "LayoutRefField",
-            "valid_layouts": ["address"]
+            "field": "UserContentRefField",
+            "modelname": "spider_tags.SpiderTag",
+            "limit_choices_to": {
+                "layout__name__in": ["address"]
+            },
         },
         {
             "key": "title",
@@ -86,8 +89,11 @@ default_layouts["emergency"] = (
     [
         {
             "key": "address",
-            "field": "LayoutRefField",
-            "valid_layouts": ["address"],
+            "field": "UserContentRefField",
+            "modelname": "spider_tags.SpiderTag",
+            "limit_choices_to": {
+                "layout__name__in": ["address"]
+            },
             "required": False
         },
         {
@@ -131,7 +137,7 @@ default_layouts["emergency"] = (
         {
             "key": "health_problems",
             "label": _("Health Problems"),
-            "field": "SelectMultiple",
+            "field": "MultipleChoiceField",
             "choices": [
                 ("heart", _("Heart")),
                 ("diabetes", _("Diabetes")),

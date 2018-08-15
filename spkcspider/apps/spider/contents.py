@@ -172,7 +172,7 @@ class BaseContent(models.Model):
             no_public_var = "no_public;"
         if not unique:
             unique = (
-                UserContentType.unique.value not in self.associated.ctype.ctype
+                UserContentType.unique.value in self.associated.ctype.ctype
             )
         if unique:
             return ";uc=%s;code=%s;type=%s;%sprimary;" % \
@@ -180,7 +180,7 @@ class BaseContent(models.Model):
                     usercomponent.name,
                     self._meta.model_name,
                     self.associated.ctype.name,
-                    no_public
+                    no_public_var
                 )
         else:
             # simulates beeing not unique, by adding id

@@ -8,10 +8,11 @@ from django.apps import apps
 valid_fields = {}
 
 safe_default_fields = [
-    "BooleanField", "CharField", "ChoiceField", "DateField", "DateTimeField",
-    "DecimalField", "DurationField", "EmailField", "FilePathField",
-    "FloatField", "GenericIPAddressField", "Select", "SelectMultiple",
-    "SlugField", "TimeField", "URLField"
+    "BooleanField", "CharField", "ChoiceField", "MultipleChoiceField",
+    "DateField", "DateTimeField", "DecimalField", "DurationField",
+    "EmailField", "FilePathField", "FloatField", "GenericIPAddressField",
+    "ModelChoiceField", "ModelMultipleChoiceField", "SlugField", "TimeField",
+    "URLField"
 ]
 for i in safe_default_fields:
     valid_fields[i] = getattr(forms, i)
@@ -26,20 +27,46 @@ valid_fields["TextareaField"] = TextareaField  # noqa: E305
 # limit_to_user = "<fieldname">: limit field name to user of associated uc
 
 
-class LayoutRefField(forms.ModelChoiceField):
-    limit_to_usercomponent = "associated_rel__usercomponent"
+class UserContentRefField(forms.ModelChoiceField):
+    def __init__(self, modelname, limit_to_uc=False, **kwargs):
+        from spkcspider.apps.spider.contents import BaseContent
+        if limit_to_uc:
+            self.limit_to_usercomponent = "associated_rel__usercomponent"
+        else:
+            self.limit_to_user = "associated_rel__usercomponent__user"
 
-    def __init__(self, valid_layouts, **kwargs):
-        kwargs["queryset"] = apps.get_model(
-            "spider_tags.SpiderTag"
-        ).objects.all()
-        if isinstance(valid_layouts, list):
-            kwargs["queryset"] = kwargs["queryset"].filter(
-                layout__name__in=valid_layouts
-            )
-        kwargs.pop("limit_choices_to", None)
+        model = apps.get_model(
+            modelname
+        )
+        if not issubclass(model, BaseContent):
+            raise
+
+        kwargs["queryset"] = model.objects.filter(
+            **kwargs.pop("limit_choices_to", {})
+        )
         super().__init__(**kwargs)
-valid_fields["LayoutRefField"] = LayoutRefField  # noqa: E305
+valid_fields["UserContentRefField"] = UserContentRefField  # noqa: E305
+
+
+class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
+    def __init__(self, modelname, limit_to_uc=False, **kwargs):
+        from spkcspider.apps.spider.contents import BaseContent
+        if limit_to_uc:
+            self.limit_to_usercomponent = "associated_rel__usercomponent"
+        else:
+            self.limit_to_user = "associated_rel__usercomponent__user"
+
+        model = apps.get_model(
+            modelname
+        )
+        if not isinstance(model, BaseContent):
+            raise
+
+        kwargs["queryset"] = model.objects.filter(
+            **kwargs.pop("limit_choices_to", {})
+        )
+        super().__init__(**kwargs)
+valid_fields["UserContentMultipleRefField"] = UserContentMultipleRefField  # noqa: E305, E501
 
 
 if "spkcspider.apps.spider_filets" in settings.INSTALLED_APPS:
@@ -55,24 +82,40 @@ if "spkcspider.apps.spider_filets" in settings.INSTALLED_APPS:
     valid_fields["FileFiletField"] = FileRefField
 
 
-def generate_fields(layout, prefix="", base=None):
-    if not base:
-        base = []
+def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
+    if not _base:
+        _base = []
+        _mainprefix = prefix
     for i in layout:
         item = i.copy()
         key, field = item.pop("key", None), item.pop("field", None)
+        if "label" not in item:
+            item["label"] = key.replace(_mainprefix, "", 1).replace(":", ": ")
+        else:
+            item["label"] = ": ".join(
+                [
+                    prefix.replace(
+                        _mainprefix, "", 1
+                    ).replace(
+                        ":", ": "
+                    ),
+                    item["label"]
+                ]
+            )
         if not key or ":" in key:
             logging.warning("Invalid item (no key/contains :)", i)
             continue
         if isinstance(field, list):
             new_prefix = "{}:{}".format(prefix, key)
-            generate_fields(field, new_prefix, base=base)
+            generate_fields(
+                field, new_prefix, _base=_base, _mainprefix=_mainprefix
+            )
         elif isinstance(field, str):
             new_field = valid_fields.get(field)
             if not new_field:
                 logging.warning("Invalid field specified: %s", field)
             else:
-                base.append(("{}:{}".format(prefix, key), new_field(**item)))
+                _base.append(("{}:{}".format(prefix, key), new_field(**item)))
         else:
             logging.warning("Invalid item", i)
-    return base
+    return _base

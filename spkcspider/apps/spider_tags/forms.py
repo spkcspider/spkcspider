@@ -45,7 +45,7 @@ def generate_form(name, layout):
     _gen_fields = generate_fields(layout, "tag")
     _gen_fields.insert(0, (
         "primary",
-        forms.BooleanField(required=False)
+        forms.BooleanField(required=False, initial=False)
     ))
 
     class _form(forms.BaseForm):
@@ -91,7 +91,6 @@ def generate_form(name, layout):
                     base["{}:{}".format(prefix, i[0])] = i[1]
             return base
 
-        @property
         def encoded_data(self):
             ret = OrderedDict()
             for i in self.cleaned_data.items():

@@ -119,9 +119,9 @@ class SpiderTag(BaseContent):
         TagLayout, related_name="tags", on_delete=models.PROTECT,
 
     )
-    tagdata = JSONField(default={})
-    verified_by = JSONField(default=[])
-    primary = models.BooleanField(default=False)
+    tagdata = JSONField(default={}, blank=True)
+    verified_by = JSONField(default=[], blank=True)
+    primary = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         if not self.id:
@@ -156,13 +156,13 @@ class SpiderTag(BaseContent):
                 uc=self.associated.usercomponent,
                 **self.get_form_kwargs(kwargs["request"], False)
             )
-            if kwargs["form"].is_valid() and kwargs["form"].has_changed():
-                self.tagdata = kwargs["form"].encoded_data
+            if kwargs["form"].is_valid():
+                self.tagdata = kwargs["form"].encoded_data()
                 self.primary = kwargs["form"].cleaned_data["primary"]
                 self.verfied_by = []
                 self.full_clean()
                 self.save()
-                kwargs["form"] = self.tagtype.get_form()(
+                kwargs["form"] = self.layout.get_form()(
                     initial=self.tagdata,
                     uc=self.associated.usercomponent,
                 )
