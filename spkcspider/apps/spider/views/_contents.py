@@ -321,7 +321,7 @@ class ContentIndex(UCTestMixin, ListView):
                                     "access": "raw"
                                 }
                             ),
-                            self.request.GET.urlencode()
+                            context["spider_GET"].urlencode()
                         ]
                     )
                 } for c in context["object_list"]

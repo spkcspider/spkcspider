@@ -22,9 +22,17 @@ class UserTestMixin(AccessMixin):
             return HttpResponseRedirect(redirect_to=user_test_result)
         return super().dispatch(request, *args, **kwargs)
 
+    def sanitize_GET(self):
+        GET = self.request.GET.copy()
+        for key in list(GET.keys()):
+            if key not in ["prefer_get", "token"]:
+                GET.pop(key, None)
+        return GET
+
     def get_context_data(self, **kwargs):
         kwargs["UserContentType"] = UserContentType
         kwargs["ProtectionType"] = ProtectionType
+        kwargs["spider_GET"] = self.sanitize_GET()
         return super().get_context_data(**kwargs)
 
     # by default only owner can access view

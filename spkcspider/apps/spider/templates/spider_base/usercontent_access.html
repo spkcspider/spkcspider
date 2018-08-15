@@ -26,7 +26,7 @@
         </div>
         {% if scope != "view" %}
         <div>
-          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{request.GET.urlencode}}">
+          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{spider_GET.urlencode}}">
             {% trans "View" %}
           </a>
         </div>
