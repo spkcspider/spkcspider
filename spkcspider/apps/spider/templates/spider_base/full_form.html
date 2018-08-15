@@ -1,6 +1,6 @@
 {{form.media}}
 {% include "spider_base/form_errors.html" with form=form %}
-<form action="{{ request.path }}" enctype="{{enctype}}" method="post">
+<form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}
   <fieldset>
     <legend><h2>{{legend|safe}}</h2></legend>

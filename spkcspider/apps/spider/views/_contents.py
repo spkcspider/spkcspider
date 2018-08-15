@@ -312,11 +312,17 @@ class ContentIndex(UCTestMixin, ListView):
             "content": [
                 {
                     "info": c.info,
-                    "link": reverse(
-                        "spider_base:ucontent-access",
-                        kwargs={
-                            "id": c.id, "nonce": c.nonce, "access": "raw"
-                        }
+                    "link": "?".join(
+                        [
+                            reverse(
+                                "spider_base:ucontent-access",
+                                kwargs={
+                                    "id": c.id, "nonce": c.nonce,
+                                    "access": "raw"
+                                }
+                            ),
+                            self.request.GET.urlencode()
+                        ]
                     )
                 } for c in context["object_list"]
             ]

@@ -71,11 +71,13 @@ class UserTestMixin(AccessMixin):
                 session_key=self.request.session.session_key
             )
             token.save()
-            url = self.request.get_full_path()
-            if self.request.GET.get("prefer_get", None):
-                # get parameters are sure available (prefer_get) so append
-                url = "{}&token={}".format(url, token.token)
-            return url
+            GET = self.request.GET.copy()
+            if (
+                    self.request.GET.get("prefer_get", "") == "true" or
+                    "token" in self.request.GET
+               ):
+                GET["token"] = token.token
+            return "?".join((self.request.path, GET.urlencode()))
         return False
 
     def has_special_access(self, staff=False, superuser=True):
