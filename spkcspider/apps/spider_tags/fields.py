@@ -64,7 +64,7 @@ class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
             modelname
         )
         if not isinstance(model, BaseContent):
-            raise
+            raise Exception("Not a content (inherit from BaseContent)")
 
         kwargs["queryset"] = model.objects.filter(
             **kwargs.pop("limit_choices_to", {})
