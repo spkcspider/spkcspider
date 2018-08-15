@@ -28,7 +28,9 @@ valid_fields["TextareaField"] = TextareaField  # noqa: E305
 
 
 class UserContentRefField(forms.ModelChoiceField):
-    def __init__(self, modelname, limit_to_uc=False, **kwargs):
+
+    # limit_to_uc: limit to usercomponent, if False to user
+    def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
         if limit_to_uc:
             self.limit_to_usercomponent = "associated_rel__usercomponent"
@@ -49,7 +51,9 @@ valid_fields["UserContentRefField"] = UserContentRefField  # noqa: E305
 
 
 class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
-    def __init__(self, modelname, limit_to_uc=False, **kwargs):
+
+    # limit_to_uc: limit to usercomponent, if False to user
+    def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
         if limit_to_uc:
             self.limit_to_usercomponent = "associated_rel__usercomponent"
