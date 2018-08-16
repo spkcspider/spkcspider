@@ -25,7 +25,7 @@ class UserTestMixin(AccessMixin):
     def sanitize_GET(self):
         GET = self.request.GET.copy()
         for key in list(GET.keys()):
-            if key not in ["prefer_get", "token", "raw", "no_protection"]:
+            if key not in ["prefer_get", "token", "raw", "protection"]:
                 GET.pop(key, None)
         return GET
 
@@ -67,9 +67,14 @@ class UserTestMixin(AccessMixin):
                 ).first()
             if token:
                 return True
+
+        protection_codes = None
+        if "protection" in self.request.GET:
+            protection_codes = self.request.GET.getlist("protection")
         # execute protections for side effects even no_token
         self.request.protections = self.usercomponent.auth(
-            request=self.request, scope=self.scope
+            request=self.request, scope=self.scope,
+            protection_codes=protection_codes
         )
         if self.request.protections is True:
             # token not required

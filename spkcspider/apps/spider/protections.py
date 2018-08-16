@@ -33,9 +33,11 @@ def check_blacklisted(name):
 
 
 def add_protection(klass):
-    if klass.name != "allow":
-        if klass.name in getattr(settings, "BLACKLISTED_PROTECTIONS", {}):
-            return klass
+    if klass.name == "false":
+        raise Exception("Invalid protection name")
+    if klass.name in getattr(settings, "BLACKLISTED_PROTECTIONS", []):
+        return klass
+
     if klass.name in installed_protections:
         raise Exception("Duplicate protection name")
     installed_protections[klass.name] = klass

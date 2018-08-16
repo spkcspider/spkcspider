@@ -34,8 +34,8 @@ There are some special GET parameters for services with special requirements:
 * prefer_get=true: retrieve token as GET parameter
 , token=xy: token as GET parameter, if invalid refresh token
 * raw=true: optimize output for machines
-* no_protection=true: fail if protections are required
-
+* protection=false: fail if protections are required
+* protection=xy&protection=yx...: protections to use
 
 verified_by urls should return hashname:hash_hexdigest
 

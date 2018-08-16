@@ -432,7 +432,7 @@ class Protection(models.Model):
                 ret.append(ProtectionResult(result, item))
         # after side effects like raise Http404
         if (
-                request.GET.get("no_protection", "") == "true" and
+                request.GET.get("protection", "") == "false" and
                 initial_required_passes > 0
            ):
             return False
@@ -571,11 +571,6 @@ class AssignedProtection(models.Model):
         if protection_codes:
             query = query.filter(
                 protection__code__in=protection_codes
-            )
-
-        if "reliable" in request.GET:
-            query = query.filter(
-                ptype__contains=ProtectionType.reliable.value
             )
 
         return Protection.auth_query(
