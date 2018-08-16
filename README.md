@@ -30,9 +30,12 @@ spkcspider: only required for standalone project
 
 # External usage
 
-If you are a webshop, you can add "reliable" to the GET parameters to use only protections
-which rely on data contained by the url and you.
-In short you get only machine friendly protections (but are more often blocked).
+There are some special GET parameters for services with special requirements:
+* prefer_get=true: retrieve token as GET parameter
+, token=xy: token as GET parameter, if invalid refresh token
+* raw=true: optimize output for machines
+* no_protection=true: fail if protections are required
+
 
 verified_by urls should return hashname:hash_hexdigest
 

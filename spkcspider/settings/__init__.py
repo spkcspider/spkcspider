@@ -137,7 +137,8 @@ AUTH_USER_MODEL = 'spider_accounts.SpiderUser'
 KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
-# OPEN_FOR_REGISTRATION = True
+# OPEN_FOR_REGISTRATION = True # allow registration
+# ALLOW_USERNAME_CHANGE = True # allow users changing their username
 
 
 # DELETION_PERIODS_COMPONENTS
@@ -145,6 +146,7 @@ MAX_HASH_SIZE = 128
 # RATELIMIT_FUNC_CONTENTS
 # FILET_FILE_DIR
 # FILE_NONCE_SIZE
+# TAG_LAYOUT_PATHES
 
 # how many user components per page
 COMPONENTS_PER_PAGE = 25

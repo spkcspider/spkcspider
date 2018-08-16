@@ -41,6 +41,8 @@ class ComponentAllIndex(ListView):
             searchq |= models.Q(contents__info__contains=";%s;" % info)
         for info in self.request.GET.getlist("info"):
             searchq |= models.Q(contents__info__contains=";%s;" % info)
+        if self.request.GET.get("no_protection", "") == "true":
+            searchq &= models.Q(required_passes=0)
 
         q = self._base_query
         if self.request.user.is_authenticated:

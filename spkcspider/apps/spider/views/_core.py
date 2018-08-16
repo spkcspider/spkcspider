@@ -25,7 +25,7 @@ class UserTestMixin(AccessMixin):
     def sanitize_GET(self):
         GET = self.request.GET.copy()
         for key in list(GET.keys()):
-            if key not in ["prefer_get", "token"]:
+            if key not in ["prefer_get", "token", "raw", "no_protection"]:
                 GET.pop(key, None)
         return GET
 
@@ -86,6 +86,8 @@ class UserTestMixin(AccessMixin):
                     not self.request.session.session_key
                ):
                 GET["token"] = token.token
+                # not required anymore, token does the same + authorizes
+                GET.pop("prefer_get", None)
             return "?".join((self.request.path, GET.urlencode()))
         return False
 

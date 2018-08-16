@@ -406,6 +406,7 @@ class Protection(models.Model):
 
     @classmethod
     def auth_query(cls, request, query, required_passes=1, **kwargs):
+        initial_required_passes = required_passes
         ret = []
         for item in query:
             obj = None
@@ -413,8 +414,13 @@ class Protection(models.Model):
             if hasattr(item, "protection"):  # is AssignedProtection
                 item, obj = item.protection, item
                 _instant_fail = obj.instant_fail
+            # would be surprising if auth fails with required_passes == 0
+            # achievable by required_passes = amount of protections
+            if initial_required_passes == 0:
+                _instant_fail = False
             result = item.auth(
-                request=request, obj=obj, query=query, **kwargs
+                request=request, obj=obj, query=query,
+                required_passes=initial_required_passes, **kwargs
             )
             if _instant_fail:  # instant_fail does not reduce required_passes
                 if result is not True:  # False or form
@@ -424,6 +430,12 @@ class Protection(models.Model):
                 required_passes -= 1
             if result is not False:  # False will be not rendered
                 ret.append(ProtectionResult(result, item))
+        # after side effects like raise Http404
+        if (
+                request.GET.get("no_protection", "") == "true" and
+                initial_required_passes > 0
+           ):
+            return False
         # don't require lower limit this way and
         # against timing attacks
         if required_passes <= 0:
@@ -445,14 +457,12 @@ class Protection(models.Model):
         if required_passes > 0:
             # required_passes 1 and no protection means: login only
             required_passes = max(min(required_passes, len(query)), 1)
+        else:
+            query.filter(ptype__contains=ProtectionType.side_effects.value)
 
         if protection_codes:
             query = query.filter(
                 code__in=protection_codes
-            )
-        if "reliable" in request.GET:
-            query = query.filter(
-                ptype__contains=ProtectionType.reliable.value
             )
         return cls.auth_query(
             request, query.order_by("code"), required_passes=required_passes,
@@ -555,6 +565,8 @@ class AssignedProtection(models.Model):
             required_passes = 1
         else:
             required_passes = 0
+            # only protections with side effects
+            query.filter(ptype__contains=ProtectionType.side_effects.value)
 
         if protection_codes:
             query = query.filter(

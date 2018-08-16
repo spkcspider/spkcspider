@@ -13,10 +13,11 @@ class ProtectionType(str, enum.Enum):
     access_control = "a"
     # receives: request, scope, password
     authentication = "b"
-    # protections which can be used for reliable access (from machines)
-    reliable = "c"
+    # c: former reliable, no meaning
     # protections which does not contribute to required_passes (404 only)
     no_count = "d"
+    # protections which have side effects
+    side_effects = "e"
     # forget about recovery, every recovery method is authentication
     # and will be misused this way
     # The only real recovery is by staff and only if there is a secret

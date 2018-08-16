@@ -1,3 +1,5 @@
+
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import UserManager as CoreUserManager
 
@@ -13,7 +15,9 @@ class UserManager(CoreUserManager):
 
 class SpiderUser(AbstractUser):
     REQUIRED_FIELDS = []
-    SAFE_FIELDS = ['username', 'email', 'password']
+    SAFE_FIELDS = ['email', 'password']
+    if getattr(settings, 'ALLOW_USERNAME_CHANGE', False):
+        SAFE_FIELDS.insert(0, 'username')
 
     objects = UserManager()
 

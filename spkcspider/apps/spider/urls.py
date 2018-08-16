@@ -49,11 +49,6 @@ urlpatterns = [
     ),
 
     path(
-        'ucs/list/<int:id>/<slug:nonce>/raw/',
-        ContentIndex.as_view(raw=True),
-        name='ucontent-list'
-    ),
-    path(
         'ucs/list/<int:id>/<slug:nonce>/',
         ContentIndex.as_view(),
         name='ucontent-list'

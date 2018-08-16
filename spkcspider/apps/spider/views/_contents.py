@@ -244,7 +244,6 @@ class ContentIndex(UCTestMixin, ListView):
     model = UserContent
     scope = "list"
     ordering = ("ctype__name", "id")
-    raw = False
     no_nonce_usercomponent = False
 
     def dispatch(self, request, *args, **kwargs):
@@ -304,7 +303,7 @@ class ContentIndex(UCTestMixin, ListView):
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
     def render_to_response(self, context):
-        if not self.raw:
+        if self.request.GET.get("raw", "") != "true":
             return super().render_to_response(context)
 
         ret = {
@@ -318,7 +317,7 @@ class ContentIndex(UCTestMixin, ListView):
                                 "spider_base:ucontent-access",
                                 kwargs={
                                     "id": c.id, "nonce": c.nonce,
-                                    "access": "raw"
+                                    "access": "view"
                                 }
                             ),
                             context["spider_GET"].urlencode()

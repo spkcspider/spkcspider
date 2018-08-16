@@ -174,7 +174,6 @@ def friend_query():
 class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
-    ptype += ProtectionType.reliable.value
 
     users = forms.ModelMultipleChoiceField(
         label=_("Users"), queryset=friend_query(), required=False
@@ -201,6 +200,7 @@ class RandomFailProtection(BaseProtection):
     name = "randomfail"
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
+    ptype += ProtectionType.side_effects.value
 
     success_rate = forms.IntegerField(
         label=_("Success Rate"), min_value=20, max_value=100, initial=100,
@@ -286,7 +286,6 @@ class PasswordProtection(BaseProtection):
     name = "password"
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
-    ptype += ProtectionType.reliable.value
 
     description = _("Protect with passwords")
     prefix = "protection_passwords"
@@ -373,7 +372,7 @@ if getattr(settings, "USE_CAPTCHAS", False):
                     self.initial["active"] = True
                     self.fields["active"].disabled = True
                     self.fields["instant_fail"].help_text = \
-                        _("captcha is for login required")
+                        _("captcha is for login required (admin setting)")
 
         @classmethod
         def localize_name(cls, name=None):
