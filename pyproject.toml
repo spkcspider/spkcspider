@@ -10,7 +10,7 @@ django-simple-jsonfield = '*'
 django-simple-captcha = '*'
 
 [tool.poetry.dev-dependencies]
-
+nuitka = "*"
 django-extensions = '*'
 Werkzeug = '*'
 pyOpenSSL = '*'
