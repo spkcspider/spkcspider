@@ -185,7 +185,7 @@ class SpiderTag(BaseContent):
                 template_name, request=kwargs["request"],
                 context=kwargs
             )
-        elif kwargs["scope"] in "raw":
+        elif kwargs["raw"]:
             return HttpResponse(
                 json.dumps(self.tagdata),
                 content_type="text/json"

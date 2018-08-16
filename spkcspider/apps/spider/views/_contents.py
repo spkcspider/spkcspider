@@ -303,7 +303,7 @@ class ContentIndex(UCTestMixin, ListView):
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
     def render_to_response(self, context):
-        if self.request.GET.get("raw", "") != "true":
+        if not context["raw"]:
             return super().render_to_response(context)
 
         ret = {

@@ -82,7 +82,7 @@ class PublicKey(BaseContent):
 
     def render(self, **kwargs):
         from .forms import KeyForm
-        if kwargs["scope"] == "key":
+        if kwargs["scope"] == "key" or kwargs["raw"]:
             return HttpResponse(self.key, content_type="text/plain")
         elif kwargs["scope"] in ["update", "add"]:
             if self.id:

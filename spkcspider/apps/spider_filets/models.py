@@ -68,25 +68,7 @@ class FileFilet(BaseContent):
 
     def render(self, **kwargs):
         from .forms import FileForm
-        if kwargs["scope"] == "view":
-            if getattr(settings, "FILET_DIRECT_DOWNLOAD", False):
-                response = HttpResponseRedirect(
-                    self.file.url,
-                )
-            else:
-                response = FileResponse(
-                    self.file.file,
-                    content_type='application/force-download'
-                )
-            name = self.name
-            if "." not in name:  # use saved ending
-                ext = self.file.name.rsplit(".", 1)
-                if len(ext) > 1:
-                    name = "%s.%s" % (name, ext[1])
-            response['Content-Disposition'] = \
-                'attachment; filename=%s' % html.escape(name)
-            return response
-        elif kwargs["scope"] in ["update", "add"]:
+        if kwargs["scope"] in ["update", "add"]:
             kwargs["enctype"] = "multipart/form-data"
             if self.id:
                 kwargs["legend"] = _("Update File")
@@ -110,11 +92,23 @@ class FileFilet(BaseContent):
                 context=kwargs
             )
         else:
-            kwargs["object"] = self
-            return render_to_string(
-                "spider_keys/file.html", request=kwargs["request"],
-                context=kwargs
-            )
+            if getattr(settings, "FILET_DIRECT_DOWNLOAD", False):
+                response = HttpResponseRedirect(
+                    self.file.url,
+                )
+            else:
+                response = FileResponse(
+                    self.file.file,
+                    content_type='application/force-download'
+                )
+            name = self.name
+            if "." not in name:  # use saved ending
+                ext = self.file.name.rsplit(".", 1)
+                if len(ext) > 1:
+                    name = "%s.%s" % (name, ext[1])
+            response['Content-Disposition'] = \
+                'attachment; filename=%s' % html.escape(name)
+            return response
 
     def save(self, *args, **kw):
         if self.pk is not None:
