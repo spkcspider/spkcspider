@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
-                'default_permissions': ['add'],
+                'default_permissions': [],
             },
         ),
     ]
