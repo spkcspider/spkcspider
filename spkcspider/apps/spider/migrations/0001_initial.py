@@ -6,7 +6,9 @@ import django.db.models.deletion
 import jsonfield.fields
 import spkcspider.apps.spider.helpers
 import spkcspider.apps.spider.models
-
+from spkcspider.apps.spider.models import user
+from spkcspider.apps.spider.models import contents
+from spkcspider.apps.spider.models import protections
 
 class Migration(migrations.Migration):
 
@@ -42,7 +44,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
                 ('nonce', models.SlugField(default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
                 ('public', models.BooleanField(default=False, help_text='Is public findable?')),
-                ('required_passes', models.PositiveIntegerField(default=spkcspider.apps.spider.models._get_default_amount, help_text='How many protection passes are required?Set to zero to allow everyone access')),
+                ('required_passes', models.PositiveIntegerField(default=user._get_default_amount, help_text='How many protection passes are required?Set to zero to allow everyone access')),
                 ('name', models.SlugField(help_text='\nName of the component.<br/>\nNote: there are special named components\nwith different protection types and scopes.<br/>\nMost prominent: "index" for authentication\n')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
@@ -59,7 +61,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('deletion_requested', models.DateTimeField(blank=True, default=None, null=True)),
-                ('info', models.TextField(editable=False, validators=[spkcspider.apps.spider.models.info_field_validator])),
+                ('info', models.TextField(editable=False, validators=[contents.info_field_validator])),
                 ('object_id', models.BigIntegerField(editable=False)),
                 ('content_type', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
             ],
@@ -86,7 +88,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='assignedprotection',
             name='protection',
-            field=models.ForeignKey(editable=False, limit_choices_to=spkcspider.apps.spider.models.get_limit_choices_assigned_protection, on_delete=django.db.models.deletion.CASCADE, related_name='assigned', to='spider_base.Protection'),
+            field=models.ForeignKey(editable=False, limit_choices_to=protections.get_limit_choices_assigned_protection, on_delete=django.db.models.deletion.CASCADE, related_name='assigned', to='spider_base.Protection'),
         ),
         migrations.AddField(
             model_name='assignedprotection',

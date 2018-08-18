@@ -10,9 +10,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
-    AssignedProtection, Protection, UserComponent, UserContent, token_nonce,
-    LinkContent
+    AssignedProtection, Protection, UserComponent, UserContent, LinkContent
 )
+from .helpers import token_nonce
 from .constants import ProtectionType, UserContentType
 from .auth import SpiderAuthBackend
 

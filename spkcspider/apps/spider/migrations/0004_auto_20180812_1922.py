@@ -2,6 +2,7 @@
 
 from django.db import migrations, models
 import spkcspider.apps.spider.models
+from spkcspider.apps.spider.models import user
 
 
 class Migration(migrations.Migration):
@@ -14,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='usercomponent',
             name='required_passes',
-            field=models.PositiveIntegerField(default=spkcspider.apps.spider.models._get_default_amount, help_text='How many protection must be passed? Set greater 0 to enable protection based access'),
+            field=models.PositiveIntegerField(default=user._get_default_amount, help_text='How many protection must be passed? Set greater 0 to enable protection based access'),
         ),
     ]

@@ -4,6 +4,7 @@ import datetime
 from django.db import migrations, models
 import django.db.models.deletion
 import spkcspider.apps.spider.models
+from spkcspider.apps.spider.models import user
 
 
 class Migration(migrations.Migration):
@@ -39,7 +40,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='usercomponent',
             name='required_passes',
-            field=models.PositiveIntegerField(default=spkcspider.apps.spider.models._get_default_amount),
+            field=models.PositiveIntegerField(default=user._get_default_amount),
         ),
         migrations.AddField(
             model_name='authtoken',
