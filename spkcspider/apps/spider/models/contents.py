@@ -4,7 +4,7 @@ namespace: spider_base
 
 """
 
-__all__ = ["UserContentVariant", "UserContent", "LinkContent"]
+__all__ = ["UserContentVariant", "AssignedContent", "LinkContent"]
 
 import logging
 
@@ -80,7 +80,7 @@ def info_field_validator(value):
             )
 
 
-class UserContent(models.Model):
+class AssignedContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
     nonce = models.SlugField(
@@ -133,10 +133,10 @@ class UserContent(models.Model):
             ('content_type', 'object_id'),
             ('usercomponent', 'info'),
         ]
-        indexes = [
-            models.Index(fields=['usercomponent']),
-            models.Index(fields=['object_id']),
-        ]
+        # indexes = [
+        #     models.Index(fields=['usercomponent']),
+        #     models.Index(fields=['object_id']),
+        # ]
 
     def __str__(self):
         return self.content.__str__()
@@ -191,7 +191,7 @@ class LinkContent(BaseContent):
     appearances = [("Link", UserContentType.public.value)]
 
     content = models.ForeignKey(
-        "spider_base.UserContent", related_name="+",
+        "spider_base.AssignedContent", related_name="+",
         on_delete=models.CASCADE
     )
 

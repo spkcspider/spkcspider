@@ -10,7 +10,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
-    AssignedProtection, Protection, UserComponent, UserContent, LinkContent
+    AssignedProtection, Protection, UserComponent, AssignedContent, LinkContent
 )
 from .helpers import token_nonce
 from .constants import ProtectionType, UserContentType
@@ -140,12 +140,12 @@ class UserContentForm(forms.ModelForm):
     )
 
     class Meta:
-        model = UserContent
+        model = AssignedContent
         fields = ['usercomponent']
         error_messages = {
             NON_FIELD_ERRORS: {
                 'unique_together': _(
-                    'UserContent type/configuration can '
+                    'AssignedContent type/configuration can '
                     'only exist once by usercomponent'
                 )
             }

@@ -1,4 +1,4 @@
-""" UserContent Views """
+""" Content Views """
 
 __all__ = (
     "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
@@ -23,12 +23,12 @@ from ._core import UCTestMixin
 from ._components import ComponentDelete
 from ..contents import rate_limit_func
 from ..constants import UserContentType
-from ..models import UserContent, UserContentVariant, UserComponent
+from ..models import AssignedContent, UserContentVariant, UserComponent
 from ..forms import UserContentForm
 
 
 class ContentBase(UCTestMixin):
-    model = UserContent
+    model = AssignedContent
     # Views should use one template to render usercontent (whatever it is)
     template_name = 'spider_base/usercontent_access.html'
     scope = None
@@ -74,7 +74,7 @@ class ContentBase(UCTestMixin):
 class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     scope = "access"
     form_class = UserContentForm
-    model = UserContent
+    model = AssignedContent
     has_write_perm = False
 
     def dispatch(self, request, *args, **kwargs):
@@ -184,7 +184,7 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
         return self.has_write_perm
 
     def get_context_data(self, **kwargs):
-        kwargs["user_content"] = UserContent(
+        kwargs["user_content"] = AssignedContent(
             usercomponent=self.usercomponent,
             ctype=self.object
         )
@@ -241,7 +241,7 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
 
 
 class ContentIndex(UCTestMixin, ListView):
-    model = UserContent
+    model = AssignedContent
     scope = "list"
     ordering = ("ctype__name", "id")
     no_nonce_usercomponent = False
@@ -330,7 +330,7 @@ class ContentIndex(UCTestMixin, ListView):
 
 
 class ContentRemove(ComponentDelete):
-    model = UserContent
+    model = AssignedContent
     usercomponent = None
     no_nonce_usercomponent = True
 

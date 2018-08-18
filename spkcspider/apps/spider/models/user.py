@@ -135,6 +135,10 @@ class UserComponent(models.Model):
         return getattr(self.user, self.user.USERNAME_FIELD)
 
     @property
+    def user_info(self):
+        return self.user.spider_info.get_or_create()[0]
+
+    @property
     def name_protected(self):
         """ Is it allowed to change the name """
         return self.name in protected_names
@@ -188,3 +192,14 @@ class AuthToken(models.Model):
             except ValidationError:
                 pass
         super().save(*args, **kwargs)
+
+
+# class UserInfo(models.Model):
+#    id = models.BigAutoField(primary_key=True, editable=False)
+#    user = models.OneToOneField(
+#        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
+#        related_name="spider_info"
+#    )
+#
+#    class Meta:
+#        default_permissions = []

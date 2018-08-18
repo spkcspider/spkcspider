@@ -100,7 +100,7 @@ class BaseContent(models.Model):
     deletion_period = getattr(settings, "DELETION_PERIOD_CONTENTS", None)
     # if created associated is None (will be set later)
     # use usercomponent in form instead
-    associated_rel = GenericRelation("spider_base.UserContent")
+    associated_rel = GenericRelation("spider_base.AssignedContent")
     _associated2 = None
 
     _content_is_cleaned = False
@@ -184,7 +184,7 @@ class BaseContent(models.Model):
                 )
         else:
             # simulates beeing not unique, by adding id
-            # id is from UserContent
+            # id is from AssignedContent
             return ";uc=%s;code=%s;type=%s;%sid=%s;" % \
                 (
                     usercomponent.name,

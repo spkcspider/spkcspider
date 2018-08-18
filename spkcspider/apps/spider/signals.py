@@ -17,8 +17,8 @@ def UpdateContentsCallback(sender, plan=None, **kwargs):
     initialize_content_models(apps)
 
     # regenerate info field
-    UserContent = apps.get_model("spider_base", "UserContent")
-    for row in UserContent.objects.all():
+    AssignedContent = apps.get_model("spider_base", "AssignedContent")
+    for row in AssignedContent.objects.all():
         # works only with django.apps.apps
         row.info = row.content.get_info(row.usercomponent)
         row.save(update_fields=['info'])

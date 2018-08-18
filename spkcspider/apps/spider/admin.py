@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Protection, AssignedProtection, UserComponent, UserContent
+from .models import Protection, AssignedProtection, UserComponent, AssignedContent
 
 # Register your models here.
 
@@ -28,7 +28,7 @@ class AssignedProtectionInline(admin.TabularInline):
 
 
 class UserContentInline(admin.TabularInline):
-    model = UserContent
+    model = AssignedContent
     fields = ['info', 'deletion_requested', 'nonce']
     # content is not visible
 
