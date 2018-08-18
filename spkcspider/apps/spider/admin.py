@@ -1,6 +1,9 @@
 from django.contrib import admin
 
-from .models import Protection, AssignedProtection, UserComponent, AssignedContent
+from .models import (
+    Protection, AssignedProtection, UserComponent, AssignedContent,
+    ContentVariant
+)
 
 # Register your models here.
 
@@ -108,3 +111,8 @@ class ProtectionAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser or request.user.is_staff
+
+
+@admin.register(ContentVariant)
+class ContentVariantAdmin(ProtectionAdmin):
+    fields = ['name']

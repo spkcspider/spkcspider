@@ -51,7 +51,7 @@ def initialize_ratelimit():
 def initialize_content_models(apps=None):
     if not apps:
         from django.apps import apps
-    UserContentVariant = apps.get_model("spider_base", "UserContentVariant")
+    ContentVariant = apps.get_model("spider_base", "ContentVariant")
     all_content = models.Q()
     for code, val in installed_contents.items():
         appearances = val.appearances
@@ -64,11 +64,11 @@ def initialize_content_models(apps=None):
             update = True
         for (n, ctype) in appearances:
             if update:
-                variant = UserContentVariant.objects.get_or_create(
+                variant = ContentVariant.objects.get_or_create(
                     defaults={"ctype": ctype, "name": n}, code=code
                 )[0]
             else:
-                variant = UserContentVariant.objects.get_or_create(
+                variant = ContentVariant.objects.get_or_create(
                     defaults={"ctype": ctype}, code=code, name=n
                 )[0]
             if variant.ctype != ctype:
@@ -77,7 +77,7 @@ def initialize_content_models(apps=None):
                 variant.name = n
             variant.save()
             all_content |= models.Q(name=n, code=code)
-    invalid_models = UserContentVariant.objects.exclude(all_content)
+    invalid_models = ContentVariant.objects.exclude(all_content)
     if invalid_models.exists():
         print("Invalid content, please update or remove them:",
               ["{}:{}".format(t.code, t.name) for t in invalid_models])

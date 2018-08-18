@@ -4,7 +4,7 @@ namespace: spider_base
 
 """
 
-__all__ = ["UserContentVariant", "AssignedContent", "LinkContent"]
+__all__ = ["ContentVariant", "AssignedContent", "LinkContent"]
 
 import logging
 
@@ -25,7 +25,8 @@ from ..constants import UserContentType
 logger = logging.getLogger(__name__)
 
 
-class UserContentVariant(models.Model):
+# ContentType is already oocupied
+class ContentVariant(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # usercontent abilities/requirements
     ctype = models.CharField(
@@ -94,7 +95,7 @@ class AssignedContent(models.Model):
     )
     # ctype is here extended: VariantObject with abilities, name, model_name
     ctype = models.ForeignKey(
-        UserContentVariant, editable=False, null=True,
+        ContentVariant, editable=False, null=True,
         on_delete=models.SET_NULL
     )
 

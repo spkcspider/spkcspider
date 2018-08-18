@@ -1,5 +1,7 @@
 __all__ = ("UserTestMixin", "UCTestMixin")
 
+import logging
+
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -7,7 +9,7 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 
 from ..constants import ProtectionType, UserContentType
-from ..models import UserComponent, AuthToken
+from ..models import UserComponent, AuthToken, TokenCreationError
 
 
 class UserTestMixin(AccessMixin):
@@ -84,7 +86,11 @@ class UserTestMixin(AccessMixin):
                 usercomponent=self.usercomponent,
                 session_key=self.request.session.session_key
             )
-            token.save()
+            try:
+                token.save()
+            except TokenCreationError as e:
+                logging.exception(e)
+                return True
             GET = self.request.GET.copy()
             if (
                     self.request.GET.get("prefer_get", "") == "true" or

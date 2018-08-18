@@ -4,7 +4,9 @@ namespace: spider_base
 
 """
 
-__all__ = ["UserComponent", "AuthToken", "protected_names"]
+__all__ = [
+    "UserComponent", "TokenCreationError", "AuthToken", "protected_names"
+]
 
 import logging
 import datetime
@@ -60,6 +62,10 @@ _required_passes_help = _(
     "How many protection must be passed? "
     "Set greater 0 to enable protection based access"
 )
+
+
+class TokenCreationError(Exception):
+    pass
 
 
 class UserComponent(models.Model):
@@ -184,7 +190,9 @@ class AuthToken(models.Model):
     def save(self, *args, **kwargs):
         for i in range(0, 1000):
             if i >= 999:
-                raise ValidationError('A possible infinite loop was detected')
+                raise TokenCreationError(
+                    'A possible infinite loop was detected'
+                )
             self.create_auth_token()
             try:
                 self.validate_unique()
@@ -200,6 +208,8 @@ class AuthToken(models.Model):
 #        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
 #        related_name="spider_info"
 #    )
+
+
 #
 #    class Meta:
 #        default_permissions = []

@@ -23,7 +23,7 @@ from ._core import UCTestMixin
 from ._components import ComponentDelete
 from ..contents import rate_limit_func
 from ..constants import UserContentType
-from ..models import AssignedContent, UserContentVariant, UserComponent
+from ..models import AssignedContent, ContentVariant, UserComponent
 from ..forms import UserContentForm
 
 
@@ -168,7 +168,7 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
                  TemplateResponseMixin, View):
     permission_required = 'spider_base.add_usercontent'
     scope = "add"
-    model = UserContentVariant
+    model = ContentVariant
     also_authenticated_users = True
 
     def get(self, request, *args, **kwargs):
@@ -260,7 +260,7 @@ class ContentIndex(UCTestMixin, ListView):
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
         if kwargs["uc"].user == self.request.user:
-            kwargs["content_types"] = UserContentVariant.objects.all()
+            kwargs["content_types"] = ContentVariant.objects.all()
             if kwargs["uc"].name != "index":
                 kwargs["content_types"] = kwargs["content_types"].exclude(
                     ctype__contains=UserContentType.confidential.value
