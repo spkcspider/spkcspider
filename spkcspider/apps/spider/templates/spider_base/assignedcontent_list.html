@@ -27,11 +27,11 @@
       <div class="w3-padding w3-border">
         <div class="w3-row">
           {% for contentt in content_types %}
-            <a class="w3-button w3-col s12 m3 w3-grey" href="{% url 'spider_base:ucontent-add' user=uc.user name=uc.name type=contentt.name %}">
+            <a class="w3-button w3-col s12 m3 w3-grey" href="{% url 'spider_base:ucontent-add' name=uc.name type=contentt.name %}">
               <b style="margin-right:5px" aria-hidden="true">+</b>{{contentt}}
             </a>
           {% empty %}
-              {% trans 'No User Content Types available.' %}
+              {% trans 'No Content Variants available.' %}
           {% endfor %}
         </div>
       </div>

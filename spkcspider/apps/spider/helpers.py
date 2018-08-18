@@ -1,14 +1,37 @@
-__all__ = ("token_nonce", "MAX_NONCE_SIZE", "cmp_pw")
+__all__ = (
+    "token_nonce", "MAX_NONCE_SIZE", "ALLOW_ALL_FILTER_FUNC", "cmp_pw",
+    "get_filterfunc"
+)
 
 
 import os
 import base64
 import logging
+from functools import lru_cache
+from importlib import import_module
+from django.conf import settings
 
 MAX_NONCE_SIZE = 90
 
 if MAX_NONCE_SIZE % 3 != 0:
     raise Exception("MAX_NONCE_SIZE must be multiple of 3")
+
+
+def ALLOW_ALL_FILTER_FUNC(*args, **kwargs):
+    return True
+
+
+@lru_cache()
+def get_filterfunc(name):
+    filterpath = getattr(
+        settings, name,
+        "spkcspider.apps.spider.helpers.ALLOW_ALL_FILTER_FUNC"
+    )
+    if callable(filterpath):
+        return filterpath
+    else:
+        module, name = filterpath.rsplit(".", 1)
+        return getattr(import_module(module), name)
 
 
 def token_nonce(size=None):

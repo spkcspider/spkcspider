@@ -172,8 +172,16 @@ class AssignedContent(models.Model):
            self.usercomponent.public:
             raise ValidationError(
                 _(
-                    'Non-Public usercontent is only allowed for ' +
+                    'Non-Public usercontent is only allowed for '
                     'usercomponents with "public = False"'
+                )
+            )
+        if not self.usercomponent.user_info.allowed_content.filter(
+            name=self.ctype.name
+        ).exists():
+            raise ValidationError(
+                _(
+                    'Not an allowed ContentVariant for this user'
                 )
             )
 

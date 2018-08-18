@@ -8,7 +8,6 @@ from datetime import timedelta
 
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.db import models
 from django.http import HttpResponseRedirect
@@ -47,7 +46,7 @@ class ComponentAllIndex(ListView):
         q = self._base_query
         if self.request.user.is_authenticated:
             q |= models.Q(user=self.request.user)
-        main_query = self.model.objects.filter(
+        main_query = self.model.objects.select_related('contents').filter(
             q & searchq
         )
         order = self.get_ordering()
@@ -92,9 +91,8 @@ class ComponentIndex(UCTestMixin, ListView):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
 
-class ComponentCreate(PermissionRequiredMixin, UserTestMixin, CreateView):
+class ComponentCreate(UserTestMixin, CreateView):
     model = UserComponent
-    permission_required = 'spider_base.add_usercomponent'
     form_class = UserComponentForm
     also_authenticated_users = True
 

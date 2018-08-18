@@ -6,27 +6,22 @@ from django.contrib.auth import get_user_model
 class SpiderBaseConfig(AppConfig):
     name = 'spkcspider.apps.spider'
     label = 'spider_base'
-    url_path= 'spider'
+    url_path = 'spider'
     url_namespace = 'spider_base'
     verbose_name = 'spkcspider base'
 
     def ready(self):
         from .signals import (
-            UpdateProtectionsCallback, InitUserComponentsCallback,
-            UpdateContentsCallback
+            UpdateSpiderCallback, InitUserCallback
         )
         from .contents import initialize_ratelimit
         initialize_ratelimit()
 
         post_save.connect(
-            InitUserComponentsCallback, sender=get_user_model(),
-            dispatch_uid="initial_usercomponents"
+            InitUserCallback, sender=get_user_model(),
+            dispatch_uid="initial_user"
         )
         post_migrate.connect(
-            UpdateProtectionsCallback, sender=self,
-            dispatch_uid="update_protections"
-        )
-        post_migrate.connect(
-            UpdateContentsCallback, sender=self,
-            dispatch_uid="update_contents"
+            UpdateSpiderCallback, sender=self,
+            dispatch_uid="update_spkcspider"
         )

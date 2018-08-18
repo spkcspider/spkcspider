@@ -5,12 +5,12 @@ namespace: spider_base
 """
 
 __all__ = [
-    "UserComponent", "TokenCreationError", "AuthToken", "protected_names"
+    "UserComponent", "TokenCreationError", "AuthToken", "protected_names",
+    "UserInfo"
 ]
 
 import logging
 import datetime
-
 
 from django.db import models
 from django.conf import settings
@@ -19,7 +19,7 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 
-from ..helpers import token_nonce, MAX_NONCE_SIZE
+from ..helpers import token_nonce, MAX_NONCE_SIZE, get_filterfunc
 from ..constants import ProtectionType
 
 try:
@@ -142,7 +142,7 @@ class UserComponent(models.Model):
 
     @property
     def user_info(self):
-        return self.user.spider_info.get_or_create()[0]
+        return self.user.spider_info
 
     @property
     def name_protected(self):
@@ -202,14 +202,25 @@ class AuthToken(models.Model):
         super().save(*args, **kwargs)
 
 
-# class UserInfo(models.Model):
-#    id = models.BigAutoField(primary_key=True, editable=False)
-#    user = models.OneToOneField(
-#        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
-#        related_name="spider_info"
-#    )
+class UserInfo(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
+        related_name="spider_info",
+    )
+    allowed_content = models.ManyToManyField(
+        "spider_base.ContentVariant", related_name="+", editable=False
+    )
+    used_space = models.BigIntegerField(default=0, editable=False)
 
+    class Meta:
+        default_permissions = []
 
-#
-#    class Meta:
-#        default_permissions = []
+    def calculate_allowed_content(self):
+        ContentVariant = apps.get_model("spider_base.ContentVariant")
+        allowed = []
+        cfilterfunc = get_filterfunc("ALLOWED_CONTENT_FILTER")
+        for variant in ContentVariant.objects.all():
+            if cfilterfunc(self.user, variant):
+                allowed.append(variant)
+        self.allowed_content.set(allowed)

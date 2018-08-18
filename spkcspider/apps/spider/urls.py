@@ -22,11 +22,11 @@ urlpatterns = [
         ComponentIndex.as_view(no_nonce_usercomponent=True),
         name='ucomponent-list'
     ),
-    path(
-        'ucs/create/<slug:user>/',
-        ComponentCreate.as_view(),
-        name='ucomponent-create'
-    ),
+    # path(
+    #     'ucs/create/<slug:user>/',
+    #     ComponentCreate.as_view(),
+    #     name='ucomponent-create'
+    # ),
     path(
         'ucs/create/',
         ComponentCreate.as_view(),
@@ -53,11 +53,11 @@ urlpatterns = [
         ContentIndex.as_view(),
         name='ucontent-list'
     ),
-    path(
-        'ucs/add/<slug:user>/<slug:name>/<slug:type>/',
-        ContentAdd.as_view(),
-        name='ucontent-add'
-    ),
+    # path(
+    #     'ucs/add/<slug:user>/<slug:name>/<slug:type>/',
+    #     ContentAdd.as_view(),
+    #     name='ucontent-add'
+    # ),
     path(
         'ucs/add/<slug:name>/<slug:type>/',
         ContentAdd.as_view(),

@@ -1,6 +1,5 @@
 __all__ = (
-    "UpdateProtectionsCallback", "InitUserComponentsCallback",
-    "UpdateContentsCallback", "test_success"
+    "UpdateSpiderCallback", "InitUserCallback", "test_success"
 )
 from django.dispatch import Signal
 
@@ -9,30 +8,30 @@ from django.conf import settings
 test_success = Signal(providing_args=["name", "code"])
 
 
-def UpdateContentsCallback(sender, plan=None, **kwargs):
+def UpdateSpiderCallback(sender, plan=None, **kwargs):
     # provided apps argument lacks model function support
     # so use this
     from django.apps import apps
     from .contents import initialize_content_models
+    from .protections import initialize_protection_models
     initialize_content_models(apps)
+    initialize_protection_models(apps)
 
     # regenerate info field
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
+    UserInfo = apps.get_model("spider_base", "UserInfo")
     for row in AssignedContent.objects.all():
         # works only with django.apps.apps
         row.info = row.content.get_info(row.usercomponent)
         row.save(update_fields=['info'])
 
-
-def UpdateProtectionsCallback(sender, **kwargs):
-    # provided apps argument lacks model function support
-    # so use global apps
-    from .protections import initialize_protection_models
-    initialize_protection_models()
+    for row in UserInfo.objects.all():
+        row.calculate_allowed_content()
 
 
-def InitUserComponentsCallback(sender, instance, **kwargs):
-    from .models import UserComponent, Protection, AssignedProtection
+def InitUserCallback(sender, instance, **kwargs):
+    from .models import UserComponent, Protection, AssignedProtection, UserInfo
+
     uc = UserComponent.objects.get_or_create(name="index", user=instance)[0]
     require_save = False
     login = Protection.objects.filter(code="login").first()
@@ -54,5 +53,9 @@ def InitUserComponentsCallback(sender, instance, **kwargs):
         if not asp.active:
             asp.active = True
             require_save = True
+    uinfo = UserInfo.objects.get_or_create(
+        user=instance
+    )[0]
+    uinfo.calculate_allowed_content()
     if require_save:
         asp.save()

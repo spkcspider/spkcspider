@@ -1,11 +1,12 @@
-from django.contrib.auth.models import Permission
+from spkcspider.apps.spider.models import UserInfo
 
 
-def InitialGrantsCallback(sender, instance, **kwargs):
+def SetupUserCallback(sender, instance, **kwargs):
     if kwargs.get("created", False):
         return
     if kwargs.get("raw", False):
         return
-    for t in ["add_usercomponent", "add_usercontent"]:
-        model = Permission.objects.get(codename=t)
-        instance.user_permissions.add(model)
+    if not hasattr(instance, "spider_info"):
+        instance.spider_info = UserInfo.objects.create(
+            user=instance
+        )

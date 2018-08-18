@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Protection, AssignedProtection, UserComponent, AssignedContent,
-    ContentVariant
+    ContentVariant, UserInfo
 )
 
 # Register your models here.
@@ -116,3 +116,20 @@ class ProtectionAdmin(admin.ModelAdmin):
 @admin.register(ContentVariant)
 class ContentVariantAdmin(ProtectionAdmin):
     fields = ['name']
+
+
+@admin.register(UserInfo)
+class UserInfoAdmin(admin.ModelAdmin):
+    fields = []
+
+    def has_view_permission(self, request, obj=None):
+        return True
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser or request.user.is_staff
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

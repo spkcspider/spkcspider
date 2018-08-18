@@ -103,7 +103,7 @@ class UserTestMixin(AccessMixin):
             return "?".join((self.request.path, GET.urlencode()))
         return False
 
-    def has_special_access(self, staff=False, superuser=True):
+    def has_special_access(self, user=True, staff=False, superuser=True):
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
         if self.request.user == self.usercomponent.user:

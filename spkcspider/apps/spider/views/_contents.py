@@ -9,7 +9,6 @@ from datetime import timedelta
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.list import ListView
 from django.views.generic.base import TemplateResponseMixin, View
-from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.http.response import HttpResponseBase
@@ -30,7 +29,7 @@ from ..forms import UserContentForm
 class ContentBase(UCTestMixin):
     model = AssignedContent
     # Views should use one template to render usercontent (whatever it is)
-    template_name = 'spider_base/usercontent_access.html'
+    template_name = 'spider_base/assignedcontent_access.html'
     scope = None
     object = None
     no_nonce_usercomponent = True
@@ -51,16 +50,6 @@ class ContentBase(UCTestMixin):
         kwargs["enctype"] = "multipart/form-data"
         return super().get_context_data(**kwargs)
 
-    def check_write_permission(self):
-        # give user and staff the ability to update Content
-        # except it is protected, in this case only the user can update
-        # reason: admins could be tricked into malicious updates
-        # for index the same reason as for add
-        uncritically = self.usercomponent.name != "index"
-        if self.has_special_access(staff=uncritically, superuser=uncritically):
-            return True
-        return False
-
     def test_func(self):
         if self.has_special_access(staff=(self.usercomponent.name != "index"),
                                    superuser=True):
@@ -75,7 +64,6 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     scope = "access"
     form_class = UserContentForm
     model = AssignedContent
-    has_write_perm = False
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -125,7 +113,14 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     def test_func(self):
         if self.scope not in ["update", "raw_update"]:
             return super().test_func()
-        return self.check_write_permission()
+        # give user and staff the ability to update Content
+        # except it is protected, in this case only the user can update
+        # reason: admins could be tricked into malicious updates
+        # for index the same reason as for add
+        uncritically = self.usercomponent.name != "index"
+        if self.has_special_access(staff=uncritically, superuser=uncritically):
+            return True
+        return False
 
     def render_to_response(self, context):
         if self.scope != "update" or \
@@ -164,9 +159,8 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         )
 
 
-class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
+class ContentAdd(ContentBase, ModelFormMixin,
                  TemplateResponseMixin, View):
-    permission_required = 'spider_base.add_usercontent'
     scope = "add"
     model = ContentVariant
     also_authenticated_users = True
@@ -180,8 +174,15 @@ class ContentAdd(PermissionRequiredMixin, ContentBase, ModelFormMixin,
         return self.render_to_response(self.get_context_data())
 
     def test_func(self):
-        self.has_write_perm = self.check_write_permission()
-        return self.has_write_perm
+        # test if user and check if user is allowed to create content
+        if (
+            self.request.user == self.usercomponent.user and
+            self.usercomponent.user_info.allowed_content.filter(
+                name=self.kwargs["type"]
+            ).exists()
+        ):
+            return True
+        return False
 
     def get_context_data(self, **kwargs):
         kwargs["user_content"] = AssignedContent(
@@ -260,7 +261,10 @@ class ContentIndex(UCTestMixin, ListView):
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
         if kwargs["uc"].user == self.request.user:
-            kwargs["content_types"] = ContentVariant.objects.all()
+            kwargs["content_types"] = (
+                                        kwargs["uc"].user_info.
+                                        allowed_content.all()
+                                      )
             if kwargs["uc"].name != "index":
                 kwargs["content_types"] = kwargs["content_types"].exclude(
                     ctype__contains=UserContentType.confidential.value

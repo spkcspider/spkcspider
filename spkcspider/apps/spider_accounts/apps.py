@@ -11,8 +11,8 @@ class SpiderAccountsConfig(AppConfig):
     url_path = "accounts/"
 
     def ready(self):
-        from .signals import InitialGrantsCallback
+        from .signals import SetupUserCallback
         post_save.connect(
-            InitialGrantsCallback, sender=get_user_model(),
-            dispatch_uid="initial_grants_user"
+            SetupUserCallback, sender=get_user_model(),
+            dispatch_uid="initial_setup_user"
         )
