@@ -17,6 +17,7 @@ class UserTestMixin(AccessMixin):
     also_authenticated_users = False
 
     def dispatch(self, request, *args, **kwargs):
+        self.request.is_priv_requester = False
         user_test_result = self.test_func()
         if not user_test_result:
             return self.handle_no_permission()
@@ -68,6 +69,7 @@ class UserTestMixin(AccessMixin):
                     session_key=self.request.session.session_key
                 ).first()
             if token:
+                # self.request.is_priv_requester = True
                 return True
 
         protection_codes = None
@@ -82,6 +84,7 @@ class UserTestMixin(AccessMixin):
             # token not required
             if no_token:
                 return True
+            # self.request.is_priv_requester = True
             token = AuthToken(
                 usercomponent=self.usercomponent,
                 session_key=self.request.session.session_key
@@ -106,11 +109,16 @@ class UserTestMixin(AccessMixin):
     def has_special_access(self, user=True, staff=False, superuser=True):
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
+        if not self.usercomponent.public:
+            self.request.is_priv_requester = True
         if self.request.user == self.usercomponent.user:
+            self.request.is_priv_requester = True
             return True
         if superuser and self.request.user.is_superuser:
+            self.request.is_priv_requester = True
             return True
         if staff and self.request.user.is_staff:
+            self.request.is_priv_requester = True
             return True
         return False
 

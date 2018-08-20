@@ -128,9 +128,10 @@ class TextFilet(BaseContent):
     ]
 
     name = models.CharField(max_length=255, null=False)
-    non_public_edit = models.BooleanField(
-        default=False,
-        help_text=_("Allow others to edit text file if not public")
+    editable_from = models.ManyToManyField(
+        "spider_base.UserComponent", related_name="+",
+        help_text=_("Allow editing from selected components"
+                    "by privileged users.")
     )
 
     text = models.TextField(default="")
@@ -154,16 +155,13 @@ class TextFilet(BaseContent):
             kwargs["legend"] = _("Create")
             kwargs["confirm"] = _("Create")
 
-        is_owner = self.is_owner(kwargs["request"].user)
-        source = kwargs.get("source", None)
+        source = kwargs.get("source", kwargs["uc"])
         allow_edit = False
-        if self.non_public_edit:
-            if source and not source.associated.usercomponent.public:
-                allow_edit = True
-            elif not source and not self.associated.usercomponent.public:
+        if self.editable_from.filter(pk=source.pk).exists():
+            if kwargs["request"].is_priv_requester:
                 allow_edit = True
 
-        if not is_owner and not allow_edit:
+        if not allow_edit:
             kwargs["legend"] = _("View")
             kwargs["no_button"] = True
         kwargs["form"] = TextForm(

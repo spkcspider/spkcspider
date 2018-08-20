@@ -12,11 +12,14 @@ saved in a spider component which you provide the online shop. This has followin
 * Address Data have to changed only on one place if you move. This is especially useful if you move a lot
   Also if you travel and want to buy something on the way.
 * Signing of Data possible.
+* Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
+* Travelling: don't expose your life to untrusted thirdparty,
+  no client side storage except sessions and "recently used"-feature of browser
 
 
 # Installation
 
-This project can either be used as a standalone project (clone) or as a set of reusable apps (setup.py installation).
+This project can either be used as a standalone project (clone repo) or as a set of reusable apps (setup.py installation).
 
 spkcspider.apps.spideraccounts: user implementation suitable for the spiders, you may want to use your own user model
 
@@ -26,7 +29,14 @@ spkcspider.apps.spidertags: verified information tags and
 
 spkcspider.apps.spiderkeys: store public keys
 
-spkcspider: only required for standalone project
+spkcspider: contains spkcspider url detection and wsgi handler
+
+# Internals
+* request.is_priv_requester: is private/privileged access. Fullfilled if:
+  * is privileged: user, staff, admin
+  * non public
+  * protections were fullfilled? Maybe later, needs design
+* request.protections: True: enough protections were fullfilled, list: protections which failed, False: no access
 
 # External usage
 
@@ -41,7 +51,16 @@ verified_by urls should return hashname:hash_hexdigest
 
 # TODO
 
-* shortcut to test if requester was public
+* textfilet: limit write access to specific components
+* textfilet: add what you see is what you get js stuff
+* layout: verifiers+examples
+* layout: cleanup defaults
+* export/import from usercomponents+user profiles => zip
+* spider_keys: login stuff, oauth? secrets? compatible to dns name changes?
+
+Later:
+* travelmode: disable cache and "recently used" completely, needs design
+* tags, nonces: may add to tag data a secret nonce, but it has to be portable
 
 # Thanks
 
