@@ -29,17 +29,17 @@ class ComponentAllIndex(ListView):
 
     def get_queryset(self):
         searchq = models.Q()
-        for info in self.request.POST.get("search", "").split(";"):
+        for info in self.request.POST.getlist("search"):
             if len(info) > 0:
                 searchq |= models.Q(contents__info__icontains="%s" % info)
-        for info in self.request.GET.get("search", "").split(";"):
+        for info in self.request.GET.getlist("search"):
             if len(info) > 0:
                 searchq |= models.Q(contents__info__icontains="%s" % info)
 
         for info in self.request.POST.getlist("info"):
-            searchq |= models.Q(contents__info__contains=";%s;" % info)
+            searchq |= models.Q(contents__info__contains="\n%s\n" % info)
         for info in self.request.GET.getlist("info"):
-            searchq |= models.Q(contents__info__contains=";%s;" % info)
+            searchq |= models.Q(contents__info__contains="\n%s\n" % info)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
@@ -88,6 +88,8 @@ class ComponentIndex(UCTestMixin, ListView):
         )
 
     def get_paginate_by(self, queryset):
+        if "export" in self.request.GET:
+            return False
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
 

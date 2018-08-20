@@ -3,8 +3,6 @@ import base64
 import json
 from django.db import models
 from django.http import HttpResponse
-from django.core.exceptions import NON_FIELD_ERRORS
-from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 
 from django.core.exceptions import ValidationError
@@ -69,45 +67,29 @@ class UserTagLayout(BaseContent):
     ]
 
     def get_info(self, usercomponent):
-        return "%slayout=%s;" % (
+        return "%slayout=%s\n" % (
             super().get_info(usercomponent),
             self.layout.name
         )
 
-    def render(self, **kwargs):
-        from .forms import TagLayoutForm
-        if kwargs["scope"] in ["update", "add"]:
-            if self.id:
-                kwargs["legend"] = _("Update Tag Layout")
-                kwargs["confirm"] = _("Update")
-            else:
-                kwargs["legend"] = _("Create Tag Layout")
-                kwargs["confirm"] = _("Create")
-            if not hasattr(self, "layout"):
-                self.layout = TagLayout(usertag=self)
-            kwargs["form"] = TagLayoutForm(
-                instance=self.layout,
-                **self.get_form_kwargs(kwargs["request"], instance=False)
-            )
-            if kwargs["form"].is_valid() and self.full_clean():
-                self.save()
-                kwargs["form"] = TagLayoutForm(
-                    instance=kwargs["form"].save()
-                )
-            template_name = "spider_base/base_form.html"
-            return render_to_string(
-                template_name, request=kwargs["request"],
-                context=kwargs
-            )
+    def get_form(self, scope):
+        if scope == "add":
+            from .forms import TagLayoutForm
+            return TagLayoutForm
         else:
-            kwargs["form"] = TagLayoutForm(instance=self.layout)
-            for i in kwargs["form"].fields:
-                i.disabled = True
-            template_name = "spider_base/base_form.html"
-            return render_to_string(
-                template_name, request=kwargs["request"],
-                context=kwargs
-            )
+            ret = self.layout.get_form()
+            if scope not in ["update", "update_raw"]:
+                for i in ret.fields:
+                    i.disabled = True
+            return ret
+
+    def render_add(self, **kwargs):
+        if not hasattr(self, "layout"):
+            self.layout = TagLayout(usertag=self)
+
+    def get_form_kwargs(self, **kwargs):
+        kwargs["instance"] = self.layout
+        return super().get_form_kwargs(**kwargs)
 
 
 @add_content
@@ -132,70 +114,24 @@ class SpiderTag(BaseContent):
             self.id
         )
 
-    def render(self, **kwargs):
+    def get_form(self, scope):
         from .forms import SpiderTagForm
-        parent_form = kwargs.pop("form", None)
-        if kwargs["scope"] == "add":
-            kwargs["legend"] = _("Create Tag")
-            kwargs["confirm"] = _("Create")
-            kwargs["form"] = SpiderTagForm(
-                user=kwargs["uc"].user,
-                **self.get_form_kwargs(kwargs["request"])
-            )
-            if kwargs["form"].is_valid():
-                kwargs["form"].save()
-                kwargs["form"] = self.layout.get_form()(
-                    initial=self.tagdata,
-                    uc=self.associated.usercomponent
-                )
-        elif kwargs["scope"] == "update":
-            kwargs["legend"] = _("Update Tag")
-            kwargs["confirm"] = _("Update")
-            kwargs["form"] = self.layout.get_form()(
-                initial=self.tagdata,
-                uc=self.associated.usercomponent,
-                **self.get_form_kwargs(kwargs["request"], False)
-            )
-            if kwargs["form"].is_valid():
-                self.tagdata = kwargs["form"].encoded_data()
-                self.primary = kwargs["form"].cleaned_data["primary"]
-                self.verfied_by = []
-                self.full_clean()
-                self.save()
-                kwargs["form"] = self.layout.get_form()(
-                    initial=self.tagdata,
-                    uc=self.associated.usercomponent,
-                )
-        else:
-            kwargs["form"] = self.layout.get_form()(
-                initial=self.tagdata,
-                uc=self.associated.usercomponent,
-            )
-            del kwargs["form"].fields["primary"]
-            for field in kwargs["form"].fields.values():
-                field.disabled = True
-        if parent_form and len(kwargs["form"].errors) > 0:
-            parent_form.errors.setdefault(NON_FIELD_ERRORS, []).extend(
-                kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
-            )
+        return SpiderTagForm
 
-        if kwargs["scope"] in ["add", "update"]:
-            template_name = "spider_base/base_form.html"
-            return render_to_string(
-                template_name, request=kwargs["request"],
-                context=kwargs
-            )
-        elif kwargs["raw"]:
+    def get_form_kwargs(self, **kwargs):
+        ret = super().get_form_kwargs(**kwargs)
+        ret["request"] = kwargs["request"]
+        ret["user"] = kwargs["uc"].user,
+        ret["uc"] = self.associated.usercomponent
+        return ret
+
+    def render(self, **kwargs):
+        if kwargs["raw"]:
             return HttpResponse(
                 json.dumps(self.tagdata),
                 content_type="text/json"
             )
-        else:
-            template_name = "spider_base/base_form.html"
-            return render_to_string(
-                template_name, request=kwargs["request"],
-                context=kwargs
-            )
+        return super().render(**kwargs)
 
     def encode_verifiers(self):
         return ",".join(
@@ -206,7 +142,7 @@ class SpiderTag(BaseContent):
         )
 
     def get_info(self, usercomponent):
-        return "%sverified_by=%s;tag=%s;" % (
+        return "%sverified_by=%s\ntag=%s\n" % (
             super().get_info(usercomponent, unique=self.primary),
             self.encode_verifiers(),
             self.layout.name

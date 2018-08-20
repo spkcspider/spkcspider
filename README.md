@@ -31,12 +31,23 @@ spkcspider.apps.spiderkeys: store public keys
 
 spkcspider: contains spkcspider url detection and wsgi handler
 
-# Internals
+# API
+
+## authentication/privileges
 * request.is_priv_requester: is private/privileged access. Fullfilled if:
   * is privileged: user, staff, admin
   * non public
   * protections were fullfilled? Maybe later, needs design
+* request.is_owner: requesting user owns the components
 * request.protections: True: enough protections were fullfilled, list: protections which failed, False: no access
+
+## Special Scopes
+* add: create usercomponent/Cpntent, with AssignedContent form
+* add_raw: create usercomponent/Content, without AssignedContent form
+* update: update Content
+* update_raw: update Content without, without AssignedContent form
+* export: later, not finished
+* view: present usercontent to untrusted parties
 
 # External usage
 
@@ -54,8 +65,8 @@ verified_by urls should return hashname:hash_hexdigest
 * textfilet: add what you see is what you get js stuff
 * layout: verifiers+examples
 * layout: cleanup defaults
-* export/import from usercomponents+user profiles => zip
-* spider_keys: login stuff, oauth? secrets? compatible to dns name changes?
+* export/import from usercomponents+user profiles => zip, security
+* spider_keys: login stuff, oauth? PublicKey ident? secrets? survives dns name changes?
 
 Later:
 * travelmode: disable cache and "recently used" completely, needs design

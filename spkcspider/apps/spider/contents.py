@@ -2,6 +2,9 @@ import time
 from importlib import import_module
 
 from django.db import models
+from django.utils.translation import gettext
+from django.core.exceptions import NON_FIELD_ERRORS
+from django.template.loader import render_to_string
 from django.contrib.contenttypes.fields import GenericRelation
 from django.conf import settings
 from django.utils.translation import pgettext
@@ -133,33 +136,108 @@ class BaseContent(models.Model):
 
     def __str__(self):
         if not self.id:
-            _id = "-"
+            return self.localize_name(self.associated.ctype.name)
         else:
-            _id = self.id
-        return "%s: %s" % (self.localize_name(self.associated.ctype.name), _id)
+            return "%s: %s" % (
+                self.localize_name(self.associated.ctype.name),
+                self.id
+            )
 
     def __repr__(self):
         return "<Content: %s>" % self.__str__()
 
-    def is_owner(self, user):
-        return user == self.associated.usercomponent.user
-
-    # for viewing
-    def render(self, **kwargs):
-        raise NotImplementedError
-
-    def get_form_kwargs(self, request, instance=True):
+    def get_form_kwargs(self, request, instance=None, **kwargs):
         """Return the keyword arguments for instantiating the form."""
-        kwargs = {}
-        if instance:
-            kwargs["instance"] = self
+        fkwargs = {}
+        if not instance:
+            fkwargs["instance"] = self
+        else:
+            fkwargs["instance"] = instance
 
         if request.method in ('POST', 'PUT'):
-            kwargs.update({
+            fkwargs.update({
                 'data': request.POST,
                 'files': request.FILES,
             })
-        return kwargs
+        return fkwargs
+
+    def get_form(self, scope):
+        raise NotImplementedError
+
+    def render_form(self, scope, **kwargs):
+        parent_form = kwargs.get("form", None)
+        kwargs["form"] = self.get_form(scope)(
+            **self.get_form_kwargs(
+                **kwargs
+            )
+        )
+        if kwargs["form"].is_valid():
+            kwargs["form"] = self.get_form(scope)(
+                **self.get_form_kwargs(
+                    instance=kwargs["form"].save(),
+                    **kwargs
+                )
+            )
+        else:
+            if parent_form and len(kwargs["form"].errors) > 0:
+                parent_form.errors.setdefault(NON_FIELD_ERRORS, []).extend(
+                    kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
+                )
+        template_name = "spider_base/base_form.html"
+        return render_to_string(
+            template_name, request=kwargs["request"],
+            context=kwargs
+        )
+
+    @classmethod
+    def create_from_import(cls, data):
+        raise NotImplementedError
+
+    def render_add(self, **kwargs):
+        _ = gettext
+        kwargs.setdefault(
+            "legend",
+            _("Add \"%s\"") % self.__str__()
+        )
+        kwargs.setdefault("confirm", _("Create"))
+        return self.render_form(**kwargs)
+
+    def render_update(self, **kwargs):
+        _ = gettext
+        kwargs.setdefault(
+            "legend",
+            _("Update \"%s\"") % self.__str__()
+        )
+        kwargs.setdefault("confirm", _("Update"))
+        return self.render_form(**kwargs)
+
+    def render_export(self, **kwargs):
+        kwargs["form"] = self.get_form("export")(
+            instance=self
+        )
+        # FIXME: just stub
+        raise NotImplementedError
+
+    def render_view(self, **kwargs):
+        kwargs["form"] = self.get_form()(
+            instance=self
+        )
+        kwargs.setdefault("no_button", True)
+        template_name = "spider_base/full_form.html"
+        return render_to_string(
+            template_name, request=kwargs["request"],
+            context=kwargs
+        )
+
+    def render(self, **kwargs):
+        if kwargs["scope"] == "add":
+            return self.render_add(**kwargs)
+        elif kwargs["scope"] == "update":
+            return self.render_update(**kwargs)
+        elif kwargs["scope"] == "export":
+            return self.render_export(**kwargs)
+        else:
+            return self.render_view(**kwargs)
 
     def get_info(self, usercomponent, no_public=False, unique=False):
         # no_public=False, unique=False shortcuts for get_info overwrites
@@ -169,13 +247,13 @@ class BaseContent(models.Model):
             no_public or
             UserContentType.public.value not in self.associated.ctype.ctype
            ):
-            no_public_var = "no_public;"
+            no_public_var = "no_public\n"
         if not unique:
             unique = (
                 UserContentType.unique.value in self.associated.ctype.ctype
             )
         if unique:
-            return ";uc=%s;code=%s;type=%s;%sprimary;" % \
+            return "\nuc=%s\ncode=%s\ntype=%s\n%sprimary\n" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,
@@ -185,7 +263,7 @@ class BaseContent(models.Model):
         else:
             # simulates beeing not unique, by adding id
             # id is from AssignedContent
-            return ";uc=%s;code=%s;type=%s;%sid=%s;" % \
+            return "\nuc=%s\ncode=%s\ntype=%s\n%sid=%s\n" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,

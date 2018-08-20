@@ -153,7 +153,7 @@ class UserComponent(models.Model):
     def no_public(self):
         """ Can the usercomponent be turned public """
         return self.name == "index" or self.contents.filter(
-            info__contains="no_public;"
+            info__contains="\nno_public\n"
         )
 
     def save(self, *args, **kwargs):

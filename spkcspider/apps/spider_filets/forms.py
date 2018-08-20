@@ -24,6 +24,9 @@ class FileForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        print(ret, "llllllllllllllllllllllllllll")
+        if "file" not in ret:
+            return ret
         if not ret["name"] or ret["name"].strip() == "":
             ret["name"] = ret["file"].name
         func = get_filterfunc("UPLOAD_FILTER_FUNC")

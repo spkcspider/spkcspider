@@ -111,7 +111,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         }
 
     def test_func(self):
-        if self.scope not in ["update", "raw_update"]:
+        if self.scope not in ["update", "raw_update", "export"]:
             return super().test_func()
         # give user and staff the ability to update Content
         # except it is protected, in this case only the user can update
@@ -290,17 +290,17 @@ class ContentIndex(UCTestMixin, ListView):
         ret = super().get_queryset().filter(usercomponent=self.usercomponent)
 
         filt = models.Q()
-        for info in self.request.POST.get("search", "").split(";"):
+        for info in self.request.POST.getlist("search"):
             if len(info) > 0:
                 filt |= models.Q(info__icontains="%s" % info)
-        for info in self.request.GET.get("search", "").split(";"):
+        for info in self.request.GET.getlist("search"):
             if len(info) > 0:
                 filt |= models.Q(info__icontains="%s" % info)
 
         for info in self.request.POST.getlist("info"):
-            filt |= models.Q(info__contains=";%s;" % info)
+            filt |= models.Q(info__contains="\n%s\n" % info)
         for info in self.request.GET.getlist("info"):
-            filt |= models.Q(info__contains=";%s;" % info)
+            filt |= models.Q(info__contains="\n%s\n" % info)
         return ret.filter(filt)
 
     def get_paginate_by(self, queryset):

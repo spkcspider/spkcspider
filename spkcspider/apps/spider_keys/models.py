@@ -51,7 +51,7 @@ class PublicKey(BaseContent):
         key = self.get_key_name()[0]
         h = hashlib.new(settings.KEY_HASH_ALGO)
         h.update(key.encode("ascii", "ignore"))
-        return "%shash:%s=%s;" % (
+        return "%shash:%s=%s\n" % (
             ret, settings.KEY_HASH_ALGO, h.hexdigest()
         )
 
@@ -80,39 +80,25 @@ class PublicKey(BaseContent):
             st = "{}: {}".format(st, self.note[:20])
         return st
 
-    def render(self, **kwargs):
+    def get_form(self, scope):
         from .forms import KeyForm
+        return KeyForm
+
+    def render_view(self, **kwargs):
+        kwargs["object"] = self
+        kwargs["algo"] = settings.KEY_HASH_ALGO
+        kwargs["hash"] = self.associated.get_value(
+            "hash:%s" % settings.KEY_HASH_ALGO
+        )
+        return render_to_string(
+            "spider_keys/key.html", request=kwargs["request"],
+            context=kwargs
+        )
+
+    def render(self, **kwargs):
         if kwargs["scope"] == "key" or kwargs["raw"]:
             return HttpResponse(self.key, content_type="text/plain")
-        elif kwargs["scope"] in ["update", "add"]:
-            if self.id:
-                kwargs["legend"] = _("Update Public Key")
-                kwargs["confirm"] = _("Update")
-            else:
-                kwargs["legend"] = _("Create Public Key")
-                kwargs["confirm"] = _("Create")
-            kwargs["form"] = KeyForm(
-                **self.get_form_kwargs(kwargs["request"])
-            )
-            if kwargs["form"].is_valid():
-                kwargs["form"] = KeyForm(
-                    instance=kwargs["form"].save()
-                )
-            template_name = "spider_base/base_form.html"
-            return render_to_string(
-                template_name, request=kwargs["request"],
-                context=kwargs
-            )
-        else:
-            kwargs["object"] = self
-            kwargs["algo"] = settings.KEY_HASH_ALGO
-            kwargs["hash"] = self.associated.get_value(
-                "hash:%s" % settings.KEY_HASH_ALGO
-            )
-            return render_to_string(
-                "spider_keys/key.html", request=kwargs["request"],
-                context=kwargs
-            )
+        return super().render(**kwargs)
 
     def save(self, *args, **kwargs):
         key = self.get_key_name()[0]

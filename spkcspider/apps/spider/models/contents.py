@@ -14,7 +14,6 @@ from django.urls import reverse
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-from django.template.loader import render_to_string
 
 from ..contents import installed_contents, BaseContent, add_content
 from ..protections import installed_protections
@@ -53,26 +52,26 @@ class ContentVariant(models.Model):
 
 def info_field_validator(value):
     _ = gettext
-    prefixed_value = ";%s" % value
-    if value[-1] != ";":
+    prefixed_value = "\n%s" % value
+    if value[-1] != "\n":
         raise ValidationError(
-            _('%(value)s ends not with ;'),
+            _('%(value)s ends not with "\\n"'),
             params={'value': value},
         )
-    if value[0] != ";":
+    if value[0] != "\n":
         raise ValidationError(
-            _('%(value)s starts not with ;'),
+            _('%(value)s starts not with "\\n"'),
             params={'value': value},
         )
     # check elements
-    for elem in value[:-1].split(";"):
+    for elem in value[:-1].split("\n"):
         f = elem.find("=")
         # flag
         if f != -1:
             elem = elem[:f]
         counts = 0
-        counts += prefixed_value.count(";%s;" % elem)
-        counts += prefixed_value.count(";%s=" % elem)
+        counts += prefixed_value.count("\n%s\n" % elem)
+        counts += prefixed_value.count("\n%s=" % elem)
         assert(counts > 0)
         if counts > 1:
             raise ValidationError(
@@ -110,8 +109,8 @@ class AssignedContent(models.Model):
         null=True, blank=True, default=None
     )
     # for extra information over content, admin only editing
-    # format: ;flag1;flag2;foo=true;foo2=xd;...;endfoo=xy;
-    # every section must start and end with ; every keyword must be unique and
+    # format: \nflag1\nflag2\nfoo=true\nfoo2=xd\n...\nendfoo=xy\n
+    # every section must start and end with \n every keyword must be unique and
     # in this format: keyword=
     # no unneccessary spaces!
     # flags:
@@ -146,19 +145,21 @@ class AssignedContent(models.Model):
         return self.content.__repr__()
 
     def get_flag(self, flag):
-        if self.info and ";%s;" % flag in self.info:
+        if self.info and "\n%s\n" % flag in self.info:
             return True
         return False
 
     def get_value(self, key):
         info = self.info
-        pstart = info.find(";%s=" % key)
+        pstart = info.find("\n%s=" % key)
         if pstart == -1:
             return None
-        pend = info.find(";", pstart+len(key)+1)
+        pend = info.find("\n", pstart+len(key)+1)
         if pend == -1:
-            raise Exception("Info field error: doesn't end with \";\": \"%s\""
-                            % info)
+            raise Exception(
+                "Info field error: doesn't end with \"\\n\": \"%s\"" %
+                info
+            )
         return info[pstart:pend]
 
     def clean(self):
@@ -212,34 +213,25 @@ class LinkContent(BaseContent):
 
     def get_info(self, usercomponent):
         ret = super().get_info(usercomponent)
-        return "%ssource=%s;link;" % (
+        return "%ssource=%s\nlink\n" % (
             ret, self.associated.pk
         )
 
-    def render(self, **kwargs):
+    def get_form(self):
         from .forms import LinkForm
+        return LinkForm
+
+    def render_add(self, **kwargs):
         _ = gettext
-        if kwargs["scope"] in ["update", "add"]:
-            if self.id:
-                kwargs["legend"] = _("Update Content Link")
-                kwargs["confirm"] = _("Update")
-            else:
-                kwargs["legend"] = _("Create Content Link")
-                kwargs["confirm"] = _("Create")
-            kwargs["form"] = LinkForm(
-                uc=self.associated.usercomponent,
-                **self.get_form_kwargs(kwargs["request"])
-            )
-            if kwargs["form"].is_valid():
-                kwargs["form"] = LinkForm(
-                    uc=self.associated.usercomponent,
-                    instance=kwargs["form"].save()
-                )
-            template_name = "spider_base/base_form.html"
-            return render_to_string(
-                template_name, request=kwargs["request"],
-                context=kwargs
-            )
-        else:
-            kwargs["source"] = self
-            return self.content.content.render(**kwargs)
+        kwargs["legend"] = _("Create Content Link")
+        return super().render_add(**kwargs)
+
+    def render_update(self, **kwargs):
+        _ = gettext
+        kwargs["legend"] = _("Update Content Link")
+        return super().render_update(**kwargs)
+
+    def render_view(self, **kwargs):
+        kwargs["source"] = self
+        kwargs["uc"] = self.content.usercomponent
+        return self.content.content.render(**kwargs)
