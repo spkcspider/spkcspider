@@ -46,7 +46,7 @@ class ComponentAllIndex(ListView):
         q = self._base_query
         if self.request.user.is_authenticated:
             q |= models.Q(user=self.request.user)
-        main_query = self.model.objects.select_related('contents').filter(
+        main_query = self.model.objects.prefetch_related('contents').filter(
             q & searchq
         )
         order = self.get_ordering()

@@ -51,7 +51,6 @@ verified_by urls should return hashname:hash_hexdigest
 
 # TODO
 
-* textfilet: limit write access to specific components
 * textfilet: add what you see is what you get js stuff
 * layout: verifiers+examples
 * layout: cleanup defaults
@@ -61,6 +60,7 @@ verified_by urls should return hashname:hash_hexdigest
 Later:
 * travelmode: disable cache and "recently used" completely, needs design
 * tags, nonces: may add to tag data a secret nonce, but it has to be portable
+* log changes
 
 # Thanks
 

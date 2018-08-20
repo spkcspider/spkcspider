@@ -176,7 +176,7 @@ class ContentAdd(ContentBase, ModelFormMixin,
     def test_func(self):
         # test if user and check if user is allowed to create content
         if (
-            self.request.user == self.usercomponent.user and
+            self.has_special_access(user=True, superuser=False) and
             self.usercomponent.user_info.allowed_content.filter(
                 name=self.kwargs["type"]
             ).exists()

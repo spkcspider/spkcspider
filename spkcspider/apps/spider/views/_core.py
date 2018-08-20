@@ -18,6 +18,7 @@ class UserTestMixin(AccessMixin):
 
     def dispatch(self, request, *args, **kwargs):
         self.request.is_priv_requester = False
+        self.request.is_owner = False
         user_test_result = self.test_func()
         if not user_test_result:
             return self.handle_no_permission()
@@ -113,6 +114,7 @@ class UserTestMixin(AccessMixin):
             self.request.is_priv_requester = True
         if self.request.user == self.usercomponent.user:
             self.request.is_priv_requester = True
+            self.request.is_owner = True
             return True
         if superuser and self.request.user.is_superuser:
             self.request.is_priv_requester = True

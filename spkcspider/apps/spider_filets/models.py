@@ -47,7 +47,7 @@ class FileFilet(BaseContent):
 
     name = models.CharField(max_length=255, null=False)
 
-    file = models.FileField(upload_to=get_file_path)
+    file = models.FileField(upload_to=get_file_path, null=False, blank=False)
 
     def __str__(self):
         if not self.id:
@@ -77,11 +77,13 @@ class FileFilet(BaseContent):
                 kwargs["legend"] = _("Upload File")
                 kwargs["confirm"] = _("Upload")
             kwargs["form"] = FileForm(
+                request=kwargs["request"],
                 **self.get_form_kwargs(kwargs["request"])
             )
 
             if kwargs["form"].is_valid():
                 kwargs["form"] = FileForm(
+                    request=kwargs["request"],
                     instance=kwargs["form"].save()
                 )
             template_name = "spider_base/full_form.html"
@@ -165,14 +167,14 @@ class TextFilet(BaseContent):
             kwargs["legend"] = _("View")
             kwargs["no_button"] = True
         kwargs["form"] = TextForm(
-            user=kwargs["request"].user,
+            request=kwargs["request"],
             source=kwargs.get("source", None),
             **self.get_form_kwargs(kwargs["request"])
         )
         if kwargs["form"].is_valid() and kwargs["form"].has_changed():
             kwargs["form"] = TextForm(
-                source=kwargs.get("source", None),
-                user=kwargs["request"].user, instance=kwargs["form"].save()
+                source=source, request=kwargs["request"],
+                instance=kwargs["form"].save()
             )
         template_name = "spider_base/full_form.html"
         if kwargs["scope"] in ["add", "update"]:

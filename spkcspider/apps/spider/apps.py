@@ -1,5 +1,5 @@
 from django.apps import AppConfig
-from django.db.models.signals import post_migrate, post_save
+from django.db.models.signals import post_migrate, post_save, post_delete
 from django.contrib.auth import get_user_model
 
 
@@ -12,10 +12,18 @@ class SpiderBaseConfig(AppConfig):
 
     def ready(self):
         from .signals import (
-            UpdateSpiderCallback, InitUserCallback
+            UpdateSpiderCallback, InitUserCallback, DeleteContentCallback
+        )
+        from .models import (
+            AssignedContent
         )
         from .contents import initialize_ratelimit
         initialize_ratelimit()
+
+        post_delete.connect(
+            DeleteContentCallback, sender=AssignedContent,
+            dispatch_uid="delete_content"
+        )
 
         post_save.connect(
             InitUserCallback, sender=get_user_model(),

@@ -1,11 +1,16 @@
 __all__ = (
-    "UpdateSpiderCallback", "InitUserCallback", "test_success"
+    "UpdateSpiderCallback", "InitUserCallback", "DeleteContentCallback",
+    "test_success"
 )
 from django.dispatch import Signal
 
 from django.conf import settings
 
 test_success = Signal(providing_args=["name", "code"])
+
+
+def DeleteContentCallback(sender, instance, **kwargs):
+    instance.content.delete(False)
 
 
 def UpdateSpiderCallback(sender, plan=None, **kwargs):

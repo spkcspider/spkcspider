@@ -13,11 +13,11 @@ class FileForm(forms.ModelForm):
         model = FileFilet
         fields = ['file', 'name']
 
-    def __init__(self, *args, user=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user = user
+    def __init__(self, request, **kwargs):
+        super().__init__(**kwargs)
         self.fields['name'].required = False
-        if self.instance and self.instance.is_owner(user):
+        if request.is_owner:
+            self.user = request.user
             return
         self.fields["file"].editable = False
         self.fields["name"].editable = False
@@ -33,9 +33,9 @@ class FileForm(forms.ModelForm):
                 code='upload_filter',
                 params={'name': ret["file"].name},
             )
-        size_diff = ret["file"].size()
+        size_diff = ret["file"].size
         if self.instance.file:
-            size_diff -= self.instance.file.size()
+            size_diff -= self.instance.file.size
         quota = getattr(settings, "FIELDNAME_QUOTA", None)
         if quota:
             quota = getattr(self.user, quota, None)
@@ -45,7 +45,7 @@ class FileForm(forms.ModelForm):
             raise forms.ValidationError(
                 _("%(name)s exceeded quota by %(size)s Bytes"),
                 code='quota_exceeded',
-                params={'name': self.name, 'size': size_diff},
+                params={'name': ret["name"], 'size': size_diff},
             )
         else:
             self.user.spider_info.used_space += size_diff
@@ -56,27 +56,18 @@ class FileForm(forms.ModelForm):
 class TextForm(forms.ModelForm):
     class Meta:
         model = TextFilet
-        fields = ['text', 'name', 'non_public_edit']
+        fields = ['text', 'name', 'editable_from']
 
-    def __init__(self, user=None, source=None, **kwargs):
+    def __init__(self, request, source=None, **kwargs):
         super().__init__(**kwargs)
-        if self.instance and self.instance.is_owner(user):
+        if request.is_owner:
             return
 
         self.fields["name"].editable = False
-        del self.fields["non_public_edit"]
-
-        self.fields["text"].editable = False
-
-        if self.instance.non_public_edit:
-            allow_edit = False
-            if source and not source.associated.usercomponent.public:
-                allow_edit = True
-            elif (
-                    not source and
-                    not self.instance.associated.usercomponent.public
-                 ):
+        del self.fields["editable_from"]
+        allow_edit = False
+        if self.instance.editable_from.filter(pk=source.pk).exists():
+            if kwargs["request"].is_priv_requester:
                 allow_edit = True
 
-            if allow_edit:
-                self.fields["text"].editable = True
+        self.fields["text"].editable = allow_edit
