@@ -217,8 +217,10 @@ class LinkContent(BaseContent):
             ret, self.associated.pk
         )
 
-    def get_form(self):
+    def get_form(self, scope):
         from .forms import LinkForm
+        if scope not in ["add", "update"]:
+            return self.content.content.get_form(scope)
         return LinkForm
 
     def render_add(self, **kwargs):

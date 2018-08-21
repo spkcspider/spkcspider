@@ -1,8 +1,6 @@
 
 import base64
-import json
 from django.db import models
-from django.http import HttpResponse
 from django.utils.translation import gettext_lazy as _
 
 from django.core.exceptions import ValidationError
@@ -116,22 +114,38 @@ class SpiderTag(BaseContent):
 
     def get_form(self, scope):
         from .forms import SpiderTagForm
-        return SpiderTagForm
+        if scope == "add":
+            return SpiderTagForm
+        else:
+            return self.layout.get_form()
 
     def get_form_kwargs(self, **kwargs):
-        ret = super().get_form_kwargs(**kwargs)
-        ret["request"] = kwargs["request"]
-        ret["user"] = kwargs["uc"].user,
-        ret["uc"] = self.associated.usercomponent
+        if kwargs["scope"] == "add":
+            ret = super().get_form_kwargs(
+                **kwargs
+            )
+            ret["user"] = kwargs["uc"].user
+        else:
+            ret = super().get_form_kwargs(
+                instance=False,
+                **kwargs
+            )
+            ret["initial"] = self.tagdate,
+            ret["uc"] = kwargs["uc"]
         return ret
 
-    def render(self, **kwargs):
-        if kwargs["raw"]:
-            return HttpResponse(
-                json.dumps(self.tagdata),
-                content_type="text/json"
+    def generate_raw(self, **kwargs):
+        form = self.get_form("raw")(
+            initial=self.tagdata
+        )
+        return form.encoded_data(
+            external=True,
+            embed=(
+                kwargs["request"].GET.get(
+                    "embed_tag", ""
+                ) == "true"
             )
-        return super().render(**kwargs)
+        )
 
     def encode_verifiers(self):
         return ",".join(

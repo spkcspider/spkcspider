@@ -91,7 +91,7 @@ def generate_form(name, layout):
                     base["{}:{}".format(prefix, i[0])] = i[1]
             return base
 
-        def encoded_data(self):
+        def encoded_data(self, external=False, embed=False):
             ret = OrderedDict()
             for i in self.cleaned_data.items():
                 selected_dict = ret
@@ -103,7 +103,14 @@ def generate_form(name, layout):
                     if key not in selected_dict:
                         selected_dict[key] = OrderedDict()
                     selected_dict = selected_dict[key]
-                selected_dict[splitted[-1]] = i[1]
+                if external:
+                    rendered = getattr(self.fields[i[0]], "render_tag", None)
+                    if rendered:
+                        rendered = rendered(embed)
+                    else:
+                        rendered = i[1]
+                    selected_dict[splitted[-1]] = rendered
+                else:
+                    selected_dict[splitted[-1]] = i[1]
             return ret
-
     return _form

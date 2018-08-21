@@ -43,3 +43,5 @@ class UserContentType(str, enum.Enum):
     # is content unique for usercomponent
     # together with confidential: unique for user
     unique = "h"
+    # can be used as anchor, hash is automatically embedded
+    anchor = "i"

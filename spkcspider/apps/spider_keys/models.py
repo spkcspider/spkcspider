@@ -23,6 +23,15 @@ _htest = hashlib.new(settings.KEY_HASH_ALGO)
 _htest.update(b"test")
 
 
+ID_VARIANTS = [
+    ("", "")
+]
+
+ID_VERIFIERS = {
+
+}
+
+
 def valid_pkey_properties(key):
     if "PRIVAT" in key.upper():
         raise ValidationError(_('Private Key'))
@@ -36,7 +45,7 @@ def valid_pkey_properties(key):
 class PublicKey(BaseContent):
     appearances = [(
         "PublicKey",
-        UserContentType.public.value+UserContentType.unique.value
+        UserContentType.public+UserContentType.unique
     )]
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
@@ -95,15 +104,98 @@ class PublicKey(BaseContent):
             context=kwargs
         )
 
+
+###############################
+# not implemented yet, stubs, TODO: design multiple user one domain
+
+# @add_content
+class AnchorServer(object):  # BaseContent):
+    """ identify by server """
+    appearances = [(
+        "AnchorUrl",
+        UserContentType.unique+UserContentType.anchor
+    )]
+
+    def clean(self):
+        pass
+
+    def get_identifier(self, request):
+        return "{}@{}".format(
+            self.associated.usercomponent.username,
+            getattr(settings, "ANCHOR_HOST", request.get_host())
+        )
+
+    def generate_raw(self, **kwargs):
+        ident = self.get_identifier(kwargs["request"])
+        return {
+            "anchor": "server_{}".format(ident),
+            "type": "server",
+            "identifier": ident,
+        }
+
+
+# @add_content
+class AnchorKey(AnchorServer):
+    """ domain name of pc, signed """
+    key = models.ForeignKey(
+        PublicKey, on_delete=models.CASCADE, related_name="+"
+    )
+    anchor = models.CharField(max_length=300, null=False, editable=False)
+
+    signature = models.CharField(max_length=1024)
+
+    appearances = [(
+        "AnchorKey",
+        UserContentType.unique+UserContentType.anchor
+    )]
+
+    def generate_raw(self, **kwargs):
+        return {
+            "anchor": self.anchor,
+            "type": "key",
+            "identifier": self.get_identifier(kwargs["request"]),
+            "signature": self.signature,
+            "key": self.key.get_key_name()[0]
+        }
+
+    def clean(self):
+        key = self.key.get_key_name()[0]
+        h = hashlib.new(settings.KEY_HASH_ALGO)
+        h.update(key.encode("ascii", "ignore"))
+        self.anchor = "key_{}".format(
+            h.hexdigest()
+        )
+
     def render(self, **kwargs):
-        if kwargs["scope"] == "key" or kwargs["raw"]:
-            return HttpResponse(self.key, content_type="text/plain")
+        if kwargs["scope"] == "idtype" or kwargs["raw"]:
+            # raw must be escaped, render_raw is used for anchor
+            return HttpResponse(self.idtype, content_type="text/plain")
         return super().render(**kwargs)
 
-    def save(self, *args, **kwargs):
-        key = self.get_key_name()[0]
-        if self._former_key != key:
-            h = hashlib.new(settings.KEY_HASH_ALGO)
-            h.update(key.encode("ascii", "ignore"))
-            self.hash = h.hexdigest()
-        super().save(*args, **kwargs)
+
+# @add_content
+class AnchorGov(AnchorServer):
+    """
+        Anchor by Organisation, e.g. government,
+        verifier returns token pointing to url
+    """
+    idtype = models.CharField(max_length=10, null=False, choices=ID_VARIANTS)
+    token = models.CharField(max_length=100, null=False)
+
+    appearances = [(
+        "AnchorGov",
+        UserContentType.unique+UserContentType.anchor
+    )]
+
+    def render_raw(self, **kwargs):
+        return {
+            "anchor": "gov_{}".format(
+                self.token
+            ),
+            "type": "gov",
+            "identifier": self.get_identifier(kwargs["request"]),
+            "verifier": ID_VERIFIERS[self.idtype],
+        }
+
+    def clean(self):
+        pass

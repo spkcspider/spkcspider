@@ -152,14 +152,13 @@ class TextFilet(BaseContent):
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
         ret["request"] = kwargs["request"]
-        ret["source"] = kwargs["source_joint"]
         return ret
 
     def render(self, **kwargs):
-        kwargs["source_joint"] = kwargs.get("source", kwargs["uc"])
+        kwargs["source"] = kwargs.get("source", kwargs["uc"])
         if kwargs["scope"] == "view":
             if self.editable_from.filter(
-                pk=kwargs["source_joint"].pk
+                pk=kwargs["source"].pk
             ).exists():
                 if kwargs["request"].is_priv_requester:
                     return self.render_update(**kwargs)

@@ -13,8 +13,8 @@ saved in a spider component which you provide the online shop. This has followin
   Also if you travel and want to buy something on the way.
 * Signing of Data possible.
 * Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
-* Travelling: don't expose your life to untrusted thirdparty,
-  no client side storage except sessions and "recently used"-feature of browser
+* Travelling: don't expose your life to untrusted thirdparty, don't have it on your device
+  Note: traces could be still existent (like "recently-used" feature or cache)
 
 
 # Installation
@@ -55,6 +55,11 @@ There are some special GET parameters for services with special requirements:
 * prefer_get=true: retrieve token as GET parameter
 , token=xy: token as GET parameter, if invalid refresh token
 * raw=true: optimize output for machines
+* raw=embed: embed content, for ContentList only
+* id=id&id=id: limit tp ids, for ContentList only
+* search=foo: search case insensitive for string in info for lists only
+* info=foo: search info tag in info for list only
+* embed_tag=true: dereference tag references
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
 
@@ -66,12 +71,21 @@ verified_by urls should return hashname:hash_hexdigest
 * layout: verifiers+examples
 * layout: cleanup defaults
 * export/import from usercomponents+user profiles => zip, security
-* spider_keys: login stuff, oauth? PublicKey ident? secrets? survives dns name changes?
 
 Later:
-* travelmode: disable cache and "recently used" completely, needs design
-* tags, nonces: may add to tag data a secret nonce, but it has to be portable
+* travelling protection: disable access till a timepoint
+* travelmode: disable cache and "recently used" completely,
+  maybe: limit components, needs design
+  => extra app
 * log changes
+* calculate protection strength
+
+* anchors: epic feature!!!!
+  * see spider_keys for design
+  * allows login
+  * either the verified hash of unique identifying information
+  * or public keys with signed proofs (with private key)
+* layout: anchors: ids which ensure user is unique, and allow roaming between dns names
 
 # Thanks
 

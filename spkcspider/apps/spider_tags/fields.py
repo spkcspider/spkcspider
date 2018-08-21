@@ -2,7 +2,6 @@ __all__ = ["valid_fields", "generate_fields"]
 
 import logging
 from django import forms
-from django.conf import settings
 from django.apps import apps
 
 valid_fields = {}
@@ -28,10 +27,12 @@ valid_fields["TextareaField"] = TextareaField  # noqa: E305
 
 
 class UserContentRefField(forms.ModelChoiceField):
+    embed_content = None
 
     # limit_to_uc: limit to usercomponent, if False to user
-    def __init__(self, modelname, limit_to_uc=True, **kwargs):
+    def __init__(self, modelname, limit_to_uc=True, embed=False, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
+        self.embed_content = embed
         if limit_to_uc:
             self.limit_to_usercomponent = "associated_rel__usercomponent"
         else:
@@ -47,14 +48,22 @@ class UserContentRefField(forms.ModelChoiceField):
             **kwargs.pop("limit_choices_to", {})
         )
         super().__init__(**kwargs)
+
+    def render_tag(self, embed):
+        if self.embed_content or embed:
+            return self.initial.render_raw()
+        else:
+            return self.data
 valid_fields["UserContentRefField"] = UserContentRefField  # noqa: E305
 
 
 class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
+    embed_content = None
 
     # limit_to_uc: limit to usercomponent, if False to user
-    def __init__(self, modelname, limit_to_uc=True, **kwargs):
+    def __init__(self, modelname, limit_to_uc=True, embed=False, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
+        self.embed_content = embed
         if limit_to_uc:
             self.limit_to_usercomponent = "associated_rel__usercomponent"
         else:
@@ -70,20 +79,13 @@ class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
             **kwargs.pop("limit_choices_to", {})
         )
         super().__init__(**kwargs)
+
+    def render_tag(self, embed):
+        if self.embed_content or embed:
+            return self.initial.render_raw()
+        else:
+            return self.data
 valid_fields["UserContentMultipleRefField"] = UserContentMultipleRefField  # noqa: E305, E501
-
-
-if "spkcspider.apps.spider_filets" in settings.INSTALLED_APPS:
-    class FileRefField(forms.ModelChoiceField):
-        limit_to_usercomponent = "associated_rel__usercomponent"
-
-        def __init__(self, **kwargs):
-            kwargs["queryset"] = apps.get_model(
-                "spider_filets.FileFilet"
-            ).objects.all()
-            kwargs.pop("limit_choices_to", None)
-            super().___init__(**kwargs)
-    valid_fields["FileFiletField"] = FileRefField
 
 
 def generate_fields(layout, prefix="", _base=None, _mainprefix=None):

@@ -3,7 +3,10 @@
 __all__ = (
     "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
 )
-
+import zipfile
+import tempfile
+import json
+from collections import OrderedDict
 from datetime import timedelta
 
 from django.views.generic.edit import ModelFormMixin
@@ -12,7 +15,8 @@ from django.views.generic.base import TemplateResponseMixin, View
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.http.response import HttpResponseBase
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
+from django.core.files.base import File
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -97,10 +101,6 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
                     **self.get_form_success_kwargs()
                 )
         return self.render_to_response(self.get_context_data(**context))
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        return kwargs
 
     def get_form_success_kwargs(self):
         """Return the keyword arguments for instantiating the form."""
@@ -262,9 +262,8 @@ class ContentIndex(UCTestMixin, ListView):
         kwargs["uc"] = self.usercomponent
         if kwargs["uc"].user == self.request.user:
             kwargs["content_types"] = (
-                                        kwargs["uc"].user_info.
-                                        allowed_content.all()
-                                      )
+                kwargs["uc"].user_info.allowed_content.all()
+            )
             if kwargs["uc"].name != "index":
                 kwargs["content_types"] = kwargs["content_types"].exclude(
                     ctype__contains=UserContentType.confidential.value
@@ -301,36 +300,71 @@ class ContentIndex(UCTestMixin, ListView):
             filt |= models.Q(info__contains="\n%s\n" % info)
         for info in self.request.GET.getlist("info"):
             filt |= models.Q(info__contains="\n%s\n" % info)
+
+        if "id" in self.request.GET:
+            ids = map(lambda x: int(x), self.request.GET.getlist("id"))
+            filt &= models.Q(id__in=ids)
         return ret.filter(filt)
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
+    def render_item(self, item):
+        return
+
     def render_to_response(self, context):
-        if not context["raw"]:
+        if "raw" not in self.request.GET:
             return super().render_to_response(context)
 
-        ret = {
+        if self.request.GET.get("raw", "") == "embed":
+            fil = tempfile.SpooledTemporaryFile(max_size=2048)
+            with zipfile.ZipFile(fil, "w") as zip:
+                llist = OrderedDict(name=self.usercomponent.name)
+                zip.writestr("data.json", json.dumps(llist))
+                for n, content in enumerate(context["object_list"]):
+                    llist = OrderedDict(name=self.usercomponent.name)
+                    form = content.content.get_form("raw")(
+                        **content.content.get_form_kwargs(
+                            request=self.request,
+                            **context
+                        )
+                    )
+                    for field in form.initial.items():
+                        if isinstance(field[1], File):
+                            zip.write(field[1], "{}/{}".format(n, field[0]))
+                        else:
+                            llist[field[0]] = field[1]
+                    zip.writestr(
+                        "{}/data.json".format(n), json.dumps(llist)
+                    )
+
+            fil.seek(0, 0)
+            ret = FileResponse(
+                fil,
+                content_type='application/force-download'
+            )
+            ret['Content-Disposition'] = 'attachment; filename=result.zip'
+            return ret
+
+        return JsonResponse({
             "name": self.usercomponent.name,
             "content": [
                 {
-                    "info": c.info,
-                    "link": "?".join(
-                        [
-                            reverse(
-                                "spider_base:ucontent-access",
-                                kwargs={
-                                    "id": c.id, "nonce": c.nonce,
-                                    "access": "view"
-                                }
-                            ),
-                            context["spider_GET"].urlencode()
-                        ]
+                    "info": item.info,
+                    "link": "{}?{}".format(
+                        reverse(
+                            "spider_base:ucontent-access",
+                            kwargs={
+                                "id": item.id, "nonce": item.nonce,
+                                "access": "view"
+                            }
+                        ),
+                        context["spider_GET"].urlencode()
                     )
-                } for c in context["object_list"]
+                }
+                for item in context["object_list"]
             ]
-        }
-        return JsonResponse(ret)
+        })
 
 
 class ContentRemove(ComponentDelete):

@@ -140,6 +140,8 @@ MAX_HASH_SIZE = 128
 # OPEN_FOR_REGISTRATION = True # allow registration
 # ALLOW_USERNAME_CHANGE = True # allow users changing their username
 
+# ANCHOR_HOST
+
 # ALLOWED_CONTENT_FILTER
 
 # DELETION_PERIODS_COMPONENTS

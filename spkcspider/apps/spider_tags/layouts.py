@@ -48,7 +48,7 @@ default_layouts["address"] = (
         }
     ]
 )
-default_layouts["person1"] = (
+default_layouts["person_official"] = (
     [],
     [
         {
@@ -78,6 +78,12 @@ default_layouts["person1"] = (
         },
         {
             "key": "last_name",
+            "field": "CharField",
+            "max_length": 255,
+            "required": False
+        },
+        {
+            "key": "ids",
             "field": "CharField",
             "max_length": 255,
             "required": False

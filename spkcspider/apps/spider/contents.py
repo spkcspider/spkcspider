@@ -1,11 +1,18 @@
 import time
+import zipfile
+import tempfile
+import json
+from collections import OrderedDict
 from importlib import import_module
 
 from django.db import models
 from django.utils.translation import gettext
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.template.loader import render_to_string
+from django.core.files.base import File
+
 from django.contrib.contenttypes.fields import GenericRelation
+from django.http import FileResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 from django.http import Http404
@@ -146,12 +153,15 @@ class BaseContent(models.Model):
     def __repr__(self):
         return "<Content: %s>" % self.__str__()
 
+    def get_instance_form(self, context):
+        return self
+
     def get_form_kwargs(self, request, instance=None, **kwargs):
         """Return the keyword arguments for instantiating the form."""
         fkwargs = {}
-        if not instance:
-            fkwargs["instance"] = self
-        else:
+        if instance is None:
+            fkwargs["instance"] = self.get_instance_form(kwargs)
+        elif instance:
             fkwargs["instance"] = instance
 
         if request.method in ('POST', 'PUT'):
@@ -211,17 +221,36 @@ class BaseContent(models.Model):
         kwargs.setdefault("confirm", _("Update"))
         return self.render_form(**kwargs)
 
-    def render_export(self, **kwargs):
-        kwargs["form"] = self.get_form("export")(
-            instance=self
+    def render_serialize(self, **kwargs):
+        kwargs["form"] = self.get_form(kwargs["scope"])(
+            **self.get_form_kwargs(**kwargs)
         )
-        # FIXME: just stub
-        raise NotImplementedError
+        fil = tempfile.SpooledTemporaryFile(max_size=2048)
+        with zipfile.ZipFile(fil, "w") as zip:
+            llist = OrderedDict()
+            for field in kwargs["form"].initial.items():
+                if isinstance(field[1], File):
+                    zip.write(field[1].path, field[0])
+                else:
+                    llist[field[0]] = field[1]
+            zip.writestr("data.json", json.dumps(llist))
+            # zip.close()
+        fil.seek(0, 0)
+        ret = FileResponse(
+            fil,
+            content_type='application/force-download',
+        )
+        ret['Content-Disposition'] = 'attachment; filename=result.zip'
+        return ret
 
     def render_view(self, **kwargs):
-        kwargs["form"] = self.get_form()(
-            instance=self
+        kwargs["form"] = self.get_form("view")(
+            **self.get_form_kwargs(**kwargs)
         )
+        if "raw" in kwargs["request"].GET:
+            k = kwargs.copy()
+            k["scope"] = "raw"
+            return self.render_serialize(**k)
         kwargs.setdefault("no_button", True)
         template_name = "spider_base/full_form.html"
         return render_to_string(
@@ -235,7 +264,7 @@ class BaseContent(models.Model):
         elif kwargs["scope"] == "update":
             return self.render_update(**kwargs)
         elif kwargs["scope"] == "export":
-            return self.render_export(**kwargs)
+            return self.render_serialize(**kwargs)
         else:
             return self.render_view(**kwargs)
 
