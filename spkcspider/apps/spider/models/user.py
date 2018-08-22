@@ -145,6 +145,10 @@ class UserComponent(models.Model):
         return self.user.spider_info
 
     @property
+    def index(self):
+        return UserComponent.objects.get(user=self.user, name="index")
+
+    @property
     def name_protected(self):
         """ Is it allowed to change the name """
         return self.name in protected_names

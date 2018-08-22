@@ -106,7 +106,8 @@ class PublicKey(BaseContent):
 
 
 ###############################
-# not implemented yet, stubs, TODO: design multiple user one domain
+# not implemented yet, stubs
+# TODO: forms, render
 
 # @add_content
 class AnchorServer(object):  # BaseContent):
@@ -120,8 +121,10 @@ class AnchorServer(object):  # BaseContent):
         pass
 
     def get_identifier(self, request):
+        """ returns id of index, server """
+        # rational: id of user can maybe misused for account recovery
         return "{}@{}".format(
-            self.associated.usercomponent.username,
+            self.associated.usercomponent.index.id,
             getattr(settings, "ANCHOR_HOST", request.get_host())
         )
 
