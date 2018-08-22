@@ -352,7 +352,7 @@ class ContentIndex(UCTestMixin, ListView):
             "content": [
                 {
                     "info": item.info,
-                    "link": "{}?{}".format(
+                    "link": "{}{}?{}".format(
                         hostpart,
                         reverse(
                             "spider_base:ucontent-access",
