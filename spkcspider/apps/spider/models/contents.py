@@ -206,10 +206,16 @@ class LinkContent(BaseContent):
     )
 
     def __str__(self):
-        return "Link: <%s>" % self.content
+        if getattr(self, "content", None):
+            return "Link: <%s>" % self.content
+        else:
+            return "Link"
 
     def __repr__(self):
-        return "<Link: %r>" % self.content
+        if getattr(self, "content", None):
+            return "<Link: %r>" % self.content
+        else:
+            return "<Link>"
 
     def get_info(self, usercomponent):
         ret = super().get_info(usercomponent)
@@ -218,10 +224,18 @@ class LinkContent(BaseContent):
         )
 
     def get_form(self, scope):
-        from .forms import LinkForm
-        if scope not in ["add", "update"]:
-            return self.content.content.get_form(scope)
-        return LinkForm
+        from ..forms import LinkForm
+        if scope in ["add", "update"]:
+            return LinkForm
+        return self.content.content.get_form(scope)
+
+    def get_form_kwargs(self, **kwargs):
+        if kwargs["scope"] in ["add", "update"]:
+            ret = super().get_form_kwargs(**kwargs)
+            ret["uc"] = kwargs["uc"]
+        else:
+            ret = self.content.content.get_form_kwargs(**kwargs)
+        return ret
 
     def render_add(self, **kwargs):
         _ = gettext

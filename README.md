@@ -59,7 +59,6 @@ There are some special GET parameters for services with special requirements:
 * id=id&id=id: limit tp ids, for ContentList only
 * search=foo: search case insensitive for string in info for lists only
 * info=foo: search info tag in info for list only
-* embed_tag=true: dereference tag references
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
 
@@ -73,6 +72,7 @@ verified_by urls should return hashname:hash_hexdigest
 * export/import from usercomponents+user profiles => zip, security
 
 Later:
+* deref=true: dereference tags/links MAYBE: can cause much trouble
 * travelling protection: disable access till a timepoint
 * travelmode: disable cache and "recently used" completely,
   maybe: limit components, needs design

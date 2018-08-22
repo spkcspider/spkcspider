@@ -127,10 +127,10 @@ class UserTestMixin(AccessMixin):
         """ Get user from user field or request """
         if (
                 self.also_authenticated_users and
-                not self.kwargs.get("user", None) and
+                "user" not in self.kwargs and
                 self.request.user.is_authenticated
            ):
-            return self.request.user.is_authenticated
+            return self.request.user
 
         model = get_user_model()
         margs = {model.USERNAME_FIELD: None}

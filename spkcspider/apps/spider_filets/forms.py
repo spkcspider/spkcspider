@@ -24,7 +24,6 @@ class FileForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
-        print(ret, "llllllllllllllllllllllllllll")
         if "file" not in ret:
             return ret
         if not ret["name"] or ret["name"].strip() == "":

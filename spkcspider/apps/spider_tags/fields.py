@@ -48,12 +48,6 @@ class UserContentRefField(forms.ModelChoiceField):
             **kwargs.pop("limit_choices_to", {})
         )
         super().__init__(**kwargs)
-
-    def render_tag(self, embed):
-        if self.embed_content or embed:
-            return self.initial.render_raw()
-        else:
-            return self.data
 valid_fields["UserContentRefField"] = UserContentRefField  # noqa: E305
 
 
@@ -79,12 +73,6 @@ class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
             **kwargs.pop("limit_choices_to", {})
         )
         super().__init__(**kwargs)
-
-    def render_tag(self, embed):
-        if self.embed_content or embed:
-            return self.initial.render_raw()
-        else:
-            return self.data
 valid_fields["UserContentMultipleRefField"] = UserContentMultipleRefField  # noqa: E305, E501
 
 

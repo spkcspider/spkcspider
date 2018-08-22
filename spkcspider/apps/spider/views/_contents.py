@@ -5,6 +5,7 @@ __all__ = (
 )
 import zipfile
 import tempfile
+import os
 import json
 from collections import OrderedDict
 from datetime import timedelta
@@ -326,12 +327,15 @@ class ContentIndex(UCTestMixin, ListView):
                     form = content.content.get_form("raw")(
                         **content.content.get_form_kwargs(
                             request=self.request,
+                            scope="raw",
                             **context
                         )
                     )
                     for field in form.initial.items():
                         if isinstance(field[1], File):
-                            zip.write(field[1], "{}/{}".format(n, field[0]))
+                            zip.write(field[1].path, "{}/{}/{}".format(
+                                n, field[0], os.path.basename(field[1].name)
+                            ))
                         else:
                             llist[field[0]] = field[1]
                     zip.writestr(

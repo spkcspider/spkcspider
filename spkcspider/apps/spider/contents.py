@@ -1,4 +1,5 @@
 import time
+import os
 import zipfile
 import tempfile
 import json
@@ -178,12 +179,14 @@ class BaseContent(models.Model):
         parent_form = kwargs.get("form", None)
         kwargs["form"] = self.get_form(scope)(
             **self.get_form_kwargs(
+                scope=scope,
                 **kwargs
             )
         )
         if kwargs["form"].is_valid():
             kwargs["form"] = self.get_form(scope)(
                 **self.get_form_kwargs(
+                    scope=scope,
                     instance=kwargs["form"].save(),
                     **kwargs
                 )
@@ -221,19 +224,45 @@ class BaseContent(models.Model):
         kwargs.setdefault("confirm", _("Update"))
         return self.render_form(**kwargs)
 
+    def analyse_form(
+        self, form, context, datadic, zipf=None, deref=False, name=None,
+    ):
+        prefix = ""
+        if name:
+            prefix = "{}/".format(name)
+        for field in form.initial.items():
+            if not deref and isinstance(
+                field[1],
+                BaseContent
+            ):
+                form = field[1].get_form(context["scope"])(
+                    **field[1].get_form_kwargs(**context)
+                )
+                datadic[field[0]] = self.analyse_form(
+                    form, context, datadic, name=field[0],
+                    zipf=zipf, deref=False
+                )
+            elif isinstance(field[1], File):
+                if zipf:
+                    zipf.write(field[1].path, "{}{}/{}".format(
+                        prefix, field[0], os.path.basename(field[1].name)
+                    ))
+            else:
+                datadic[field[0]] = field[1]
+
     def render_serialize(self, **kwargs):
         kwargs["form"] = self.get_form(kwargs["scope"])(
             **self.get_form_kwargs(**kwargs)
         )
+        dereference = kwargs["request"].GET.get("deref", "") == "true"
         if kwargs["request"].GET.get("raw", "") == "embed":
             fil = tempfile.SpooledTemporaryFile(max_size=2048)
             with zipfile.ZipFile(fil, "w") as zip:
                 llist = OrderedDict()
-                for field in kwargs["form"].initial.items():
-                    if isinstance(field[1], File):
-                        zip.write(field[1].path, field[0])
-                    else:
-                        llist[field[0]] = field[1]
+                self.analyse_form(
+                    kwargs["form"], kwargs, llist, zip,
+                    deref=dereference
+                )
                 zip.writestr("data.json", json.dumps(llist))
                 # zip.close()
             fil.seek(0, 0)
@@ -244,9 +273,10 @@ class BaseContent(models.Model):
             ret['Content-Disposition'] = 'attachment; filename=result.zip'
             return ret
         llist = OrderedDict()
-        for field in kwargs["form"].initial.items():
-            if not isinstance(field[1], File):
-                llist[field[0]] = field[1]
+        self.analyse_form(
+            kwargs["form"], kwargs, llist,
+            deref=dereference
+        )
         return JsonResponse(llist)
 
     def render_view(self, **kwargs):

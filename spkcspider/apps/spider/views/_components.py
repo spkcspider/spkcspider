@@ -97,6 +97,7 @@ class ComponentCreate(UserTestMixin, CreateView):
     model = UserComponent
     form_class = UserComponentForm
     also_authenticated_users = True
+    no_nonce_usercomponent = True
 
     def get_success_url(self):
         return reverse(
@@ -105,6 +106,11 @@ class ComponentCreate(UserTestMixin, CreateView):
                 "nonce": self.object.nonce
             }
         )
+
+    def get_usercomponent(self):
+        query = {"name": "index"}
+        query["user"] = self.get_user()
+        return get_object_or_404(UserComponent, **query)
 
     def get_context_data(self, **kwargs):
         kwargs["available"] = installed_contents.keys()
