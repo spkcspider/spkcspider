@@ -80,6 +80,10 @@ class FileFilet(BaseContent):
         return super().render_form(**kwargs)
 
     def render_view(self, **kwargs):
+        if "raw" in kwargs["request"].GET:
+            k = kwargs.copy()
+            k["scope"] = "raw"
+            return self.render_serialize(**k)
         if getattr(settings, "FILET_DIRECT_DOWNLOAD", False):
             response = HttpResponseRedirect(
                 self.file.url,

@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 from django.core.files.base import File
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 from django.http import Http404
@@ -225,23 +225,29 @@ class BaseContent(models.Model):
         kwargs["form"] = self.get_form(kwargs["scope"])(
             **self.get_form_kwargs(**kwargs)
         )
-        fil = tempfile.SpooledTemporaryFile(max_size=2048)
-        with zipfile.ZipFile(fil, "w") as zip:
-            llist = OrderedDict()
-            for field in kwargs["form"].initial.items():
-                if isinstance(field[1], File):
-                    zip.write(field[1].path, field[0])
-                else:
-                    llist[field[0]] = field[1]
-            zip.writestr("data.json", json.dumps(llist))
-            # zip.close()
-        fil.seek(0, 0)
-        ret = FileResponse(
-            fil,
-            content_type='application/force-download',
-        )
-        ret['Content-Disposition'] = 'attachment; filename=result.zip'
-        return ret
+        if kwargs["request"].GET.get("raw", "") == "embed":
+            fil = tempfile.SpooledTemporaryFile(max_size=2048)
+            with zipfile.ZipFile(fil, "w") as zip:
+                llist = OrderedDict()
+                for field in kwargs["form"].initial.items():
+                    if isinstance(field[1], File):
+                        zip.write(field[1].path, field[0])
+                    else:
+                        llist[field[0]] = field[1]
+                zip.writestr("data.json", json.dumps(llist))
+                # zip.close()
+            fil.seek(0, 0)
+            ret = FileResponse(
+                fil,
+                content_type='application/force-download',
+            )
+            ret['Content-Disposition'] = 'attachment; filename=result.zip'
+            return ret
+        llist = OrderedDict()
+        for field in kwargs["form"].initial.items():
+            if not isinstance(field[1], File):
+                llist[field[0]] = field[1]
+        return JsonResponse(llist)
 
     def render_view(self, **kwargs):
         kwargs["form"] = self.get_form("view")(
