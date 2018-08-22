@@ -334,14 +334,14 @@ class BaseContent(models.Model):
                 )
         else:
             # simulates beeing not unique, by adding id
-            # id is from AssignedContent
+            # id is from this model, because assigned maybe not ready
             return "\nuc=%s\ncode=%s\ntype=%s\n%sid=%s\n" % \
                 (
                     usercomponent.name,
                     self._meta.model_name,
                     self.associated.ctype.name,
                     no_public_var,
-                    self.associated.id
+                    self.id if self.id else "None"  # placeholder
                 )
 
     def full_clean(self, **kwargs):
@@ -364,6 +364,11 @@ class BaseContent(models.Model):
             assert self._content_is_cleaned, "Uncleaned content committed"
         if self._associated2:
             a.content = self
+            # add id to info
+            if "\nunique\n" not in a.info:
+                a.info = a.info.replace(
+                    "\nid=None\n", "\nid={}\n".format(self.id), 1
+                )
         # update info and set content
         a.save()
         # require again cleaning
