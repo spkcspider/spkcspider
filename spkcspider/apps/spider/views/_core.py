@@ -29,7 +29,9 @@ class UserTestMixin(AccessMixin):
     def sanitize_GET(self):
         GET = self.request.GET.copy()
         for key in list(GET.keys()):
-            if key not in ["prefer_get", "token", "raw", "protection"]:
+            if key not in [
+                "prefer_get", "token", "deref", "raw", "protection"
+            ]:
                 GET.pop(key, None)
         return GET
 

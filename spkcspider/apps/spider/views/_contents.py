@@ -5,7 +5,6 @@ __all__ = (
 )
 import zipfile
 import tempfile
-import os
 import json
 from collections import OrderedDict
 from datetime import timedelta
@@ -17,7 +16,6 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.http.response import HttpResponseBase
 from django.http import JsonResponse, FileResponse
-from django.core.files.base import File
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -317,6 +315,11 @@ class ContentIndex(UCTestMixin, ListView):
         if "raw" not in self.request.GET:
             return super().render_to_response(context)
 
+        dereference = self.request.GET.get("deref", "") == "true"
+
+        context["scope"] = "raw"
+        context["request"] = self.request
+
         if self.request.GET.get("raw", "") == "embed":
             fil = tempfile.SpooledTemporaryFile(max_size=2048)
             with zipfile.ZipFile(fil, "w") as zip:
@@ -324,20 +327,10 @@ class ContentIndex(UCTestMixin, ListView):
                 zip.writestr("data.json", json.dumps(llist))
                 for n, content in enumerate(context["object_list"]):
                     llist = OrderedDict(name=self.usercomponent.name)
-                    form = content.content.get_form("raw")(
-                        **content.content.get_form_kwargs(
-                            request=self.request,
-                            scope="raw",
-                            **context
-                        )
+                    content.content.extract_form(
+                        context, llist, zip, deref=dereference,
+                        prefix="{}/".format(n)
                     )
-                    for field in form.initial.items():
-                        if isinstance(field[1], File):
-                            zip.write(field[1].path, "{}/{}/{}".format(
-                                n, field[0], os.path.basename(field[1].name)
-                            ))
-                        else:
-                            llist[field[0]] = field[1]
                     zip.writestr(
                         "{}/data.json".format(n), json.dumps(llist)
                     )
@@ -350,12 +343,17 @@ class ContentIndex(UCTestMixin, ListView):
             ret['Content-Disposition'] = 'attachment; filename=result.zip'
             return ret
 
+        hostpart = "{}://{}".format(
+            self.request.scheme, self.request.get_host()
+        )
+        enc_get = context["spider_GET"].urlencode()
         return JsonResponse({
             "name": self.usercomponent.name,
             "content": [
                 {
                     "info": item.info,
                     "link": "{}?{}".format(
+                        hostpart,
                         reverse(
                             "spider_base:ucontent-access",
                             kwargs={
@@ -363,7 +361,7 @@ class ContentIndex(UCTestMixin, ListView):
                                 "access": "view"
                             }
                         ),
-                        context["spider_GET"].urlencode()
+                        enc_get
                     )
                 }
                 for item in context["object_list"]

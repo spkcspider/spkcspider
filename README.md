@@ -61,6 +61,7 @@ There are some special GET parameters for services with special requirements:
 * info=foo: search info tag in info for list only
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
+* deref=true: dereference references to BaseContent
 
 verified_by urls should return hashname:hash_hexdigest
 
@@ -72,7 +73,7 @@ verified_by urls should return hashname:hash_hexdigest
 * export/import from usercomponents+user profiles => zip, security
 
 Later:
-* deref=true: dereference tags/links MAYBE: can cause much trouble
+* maybe: save/cache raw=embed files
 * travelling protection: disable access till a timepoint
 * travelmode: disable cache and "recently used" completely,
   maybe: limit components, needs design

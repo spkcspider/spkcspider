@@ -1,3 +1,9 @@
+
+__all__ = (
+    "add_content", "installed_contents", "BaseContent",
+    "rate_limit_func", "initialize_ratelimit"
+)
+
 import time
 import os
 import zipfile
@@ -6,6 +12,7 @@ import json
 from collections import OrderedDict
 from importlib import import_module
 
+from django.apps import apps as django_apps
 from django.db import models
 from django.utils.translation import gettext
 from django.core.exceptions import NON_FIELD_ERRORS
@@ -20,10 +27,6 @@ from django.http import Http404
 
 from .constants import UserContentType
 
-__all__ = (
-    "add_content", "installed_contents", "BaseContent",
-    "rate_limit_func", "initialize_ratelimit"
-)
 
 installed_contents = {}
 
@@ -61,7 +64,7 @@ def initialize_ratelimit():
 
 def initialize_content_models(apps=None):
     if not apps:
-        from django.apps import apps
+        apps = django_apps
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
     all_content = models.Q()
     for code, val in installed_contents.items():
@@ -224,24 +227,32 @@ class BaseContent(models.Model):
         kwargs.setdefault("confirm", _("Update"))
         return self.render_form(**kwargs)
 
-    def analyse_form(
-        self, form, context, datadic, zipf=None, deref=False, name=None,
+    def extract_form(
+        self, context, datadic, zipf=None, deref=False, prefix="", form=None
     ):
-        prefix = ""
-        if name:
-            prefix = "{}/".format(name)
+        if not form:
+            form = self.get_form(context["scope"])(
+                **self.get_form_kwargs(**context)
+            )
+        AssignedContent = django_apps.get_model(
+            "spider_base", "AssignedContent"
+        )
         for field in form.initial.items():
-            if not deref and isinstance(
+            if isinstance(
                 field[1],
-                BaseContent
+                AssignedContent
             ):
-                form = field[1].get_form(context["scope"])(
-                    **field[1].get_form_kwargs(**context)
-                )
-                datadic[field[0]] = self.analyse_form(
-                    form, context, datadic, name=field[0],
-                    zipf=zipf, deref=False
-                )
+                if deref:
+                    form2 = field[1].get_form(context["scope"])(
+                        **field[1].get_form_kwargs(**context)
+                    )
+                    pref = "{}{}/".format(prefix, field[0])
+                    datadic[field[0]] = self.analyse_form(
+                        context, datadic, prefix=pref,
+                        zipf=zipf, deref=False, form=form2
+                    )
+                else:
+                    datadic[field[0]] = field[1].info
             elif isinstance(field[1], File):
                 if zipf:
                     zipf.write(field[1].path, "{}{}/{}".format(
@@ -251,16 +262,13 @@ class BaseContent(models.Model):
                 datadic[field[0]] = field[1]
 
     def render_serialize(self, **kwargs):
-        kwargs["form"] = self.get_form(kwargs["scope"])(
-            **self.get_form_kwargs(**kwargs)
-        )
         dereference = kwargs["request"].GET.get("deref", "") == "true"
         if kwargs["request"].GET.get("raw", "") == "embed":
             fil = tempfile.SpooledTemporaryFile(max_size=2048)
             with zipfile.ZipFile(fil, "w") as zip:
                 llist = OrderedDict()
-                self.analyse_form(
-                    kwargs["form"], kwargs, llist, zip,
+                self.extract_form(
+                    kwargs, llist, zip,
                     deref=dereference
                 )
                 zip.writestr("data.json", json.dumps(llist))
@@ -273,9 +281,8 @@ class BaseContent(models.Model):
             ret['Content-Disposition'] = 'attachment; filename=result.zip'
             return ret
         llist = OrderedDict()
-        self.analyse_form(
-            kwargs["form"], kwargs, llist,
-            deref=dereference
+        self.extract_form(
+            kwargs, llist, deref=dereference
         )
         return JsonResponse(llist)
 
