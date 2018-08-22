@@ -106,8 +106,10 @@ class PublicKey(BaseContent):
 
 
 ###############################
-# not implemented yet, stubs
-# TODO: forms, render
+# not implemented yet, stubs, needs Design, forms and rendering
+# anchors are designed to be unique usernames.
+# the returned url should be used for authentication/validation of user
+#    needs design
 
 # @add_content
 class AnchorServer(object):  # BaseContent):
@@ -130,8 +132,9 @@ class AnchorServer(object):  # BaseContent):
 
     def generate_raw(self, **kwargs):
         ident = self.get_identifier(kwargs["request"])
+        # anchors must be generated on client
+        # anchor_format = server_<identifier>
         return {
-            "anchor": "server_{}".format(ident),
             "type": "server",
             "identifier": ident,
         }
@@ -143,7 +146,6 @@ class AnchorKey(AnchorServer):
     key = models.ForeignKey(
         PublicKey, on_delete=models.CASCADE, related_name="+"
     )
-    anchor = models.CharField(max_length=300, null=False, editable=False)
 
     signature = models.CharField(max_length=1024)
 
@@ -153,21 +155,14 @@ class AnchorKey(AnchorServer):
     )]
 
     def generate_raw(self, **kwargs):
+        # anchors must be generated on client
+        # anchor_format = key_<hash of key>
         return {
-            "anchor": self.anchor,
             "type": "key",
             "identifier": self.get_identifier(kwargs["request"]),
             "signature": self.signature,
             "key": self.key.get_key_name()[0]
         }
-
-    def clean(self):
-        key = self.key.get_key_name()[0]
-        h = hashlib.new(settings.KEY_HASH_ALGO)
-        h.update(key.encode("ascii", "ignore"))
-        self.anchor = "key_{}".format(
-            h.hexdigest()
-        )
 
     def render(self, **kwargs):
         if kwargs["scope"] == "idtype" or kwargs["raw"]:
@@ -191,10 +186,10 @@ class AnchorGov(AnchorServer):
     )]
 
     def render_raw(self, **kwargs):
+        # anchors must be generated on client
+        # anchor_format = gov_<token>,
+        # check that returned url is the url providing this anchor
         return {
-            "anchor": "gov_{}".format(
-                self.token
-            ),
             "type": "gov",
             "identifier": self.get_identifier(kwargs["request"]),
             "verifier": ID_VERIFIERS[self.idtype],
