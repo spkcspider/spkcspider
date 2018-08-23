@@ -344,7 +344,7 @@ class BaseContent(models.Model):
         else:
             return self.render_view(**kwargs)
 
-    def get_info(self, usercomponent, no_public=False, unique=False):
+    def get_info(self, no_public=False, unique=False):
         # no_public=False, unique=False shortcuts for get_info overwrites
         # passing down these parameters not neccessary
         no_public_var = ""
@@ -384,7 +384,7 @@ class BaseContent(models.Model):
         if self._associated2:
             self._associated2.content = self
         a = self.associated
-        a.info = self.get_info(a.usercomponent)
+        a.info = self.get_info()
         a.full_clean(exclude=["content"])
         self._content_is_cleaned = True
 

@@ -217,8 +217,8 @@ class LinkContent(BaseContent):
         else:
             return "<Link>"
 
-    def get_info(self, usercomponent):
-        ret = super().get_info(usercomponent)
+    def get_info(self):
+        ret = super().get_info()
         return "%ssource=%s\nlink\n" % (
             ret, self.associated.pk
         )

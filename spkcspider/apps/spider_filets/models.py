@@ -62,8 +62,8 @@ class FileFilet(BaseContent):
             name
         )
 
-    def get_info(self, usercomponent):
-        ret = super().get_info(usercomponent)
+    def get_info(self):
+        ret = super().get_info()
         return "%sname=%s\n" % (ret, self.name)
 
     def get_form(self, scope):
@@ -139,8 +139,8 @@ class TextFilet(BaseContent):
 
     text = models.TextField(default="")
 
-    def get_info(self, usercomponent):
-        ret = super().get_info(usercomponent)
+    def get_info(self):
+        ret = super().get_info()
         return "%sname=%s\n" % (ret, self.name)
 
     def __str__(self):

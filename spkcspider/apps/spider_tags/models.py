@@ -64,9 +64,9 @@ class UserTagLayout(BaseContent):
         )
     ]
 
-    def get_info(self, usercomponent):
+    def get_info(self):
         return "%slayout=%s\n" % (
-            super().get_info(usercomponent),
+            super().get_info(),
             self.layout.name
         )
 
@@ -93,7 +93,7 @@ class UserTagLayout(BaseContent):
 @add_content
 class SpiderTag(BaseContent):
     appearances = [
-        ("SpiderTag", UserContentType.public.value),
+        ("SpiderTag", UserContentType.public+UserContentType.link),
     ]
     layout = models.ForeignKey(
         TagLayout, related_name="tags", on_delete=models.PROTECT,
@@ -155,9 +155,9 @@ class SpiderTag(BaseContent):
             )
         )
 
-    def get_info(self, usercomponent):
+    def get_info(self):
         return "%sverified_by=%s\ntag=%s\n" % (
-            super().get_info(usercomponent, unique=self.primary),
+            super().get_info(unique=self.primary),
             self.encode_verifiers(),
             self.layout.name
         )

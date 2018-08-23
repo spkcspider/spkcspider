@@ -55,8 +55,8 @@ class PublicKey(BaseContent):
     def localize_name(cls, name):
         return pgettext("content name", "Public Key")
 
-    def get_info(self, usercomponent):
-        ret = super().get_info(usercomponent)
+    def get_info(self):
+        ret = super().get_info()
         key = self.get_key_name()[0]
         h = hashlib.new(settings.KEY_HASH_ALGO)
         h.update(key.encode("ascii", "ignore"))
@@ -115,18 +115,17 @@ class PublicKey(BaseContent):
 class AnchorServer(object):  # BaseContent):
     """ identify by server """
     appearances = [(
-        "AnchorUrl",
-        UserContentType.unique+UserContentType.anchor
+        "AnchorServer",
+        UserContentType.link_private+UserContentType.anchor
     )]
 
     def clean(self):
         pass
 
     def get_identifier(self, request):
-        """ returns id of index, server """
-        # rational: id of user can maybe misused for account recovery
+        """ returns id of content, server """
         return "{}@{}".format(
-            self.associated.usercomponent.index.id,
+            self.associated.id,
             getattr(settings, "ANCHOR_HOST", request.get_host())
         )
 
@@ -151,7 +150,8 @@ class AnchorKey(AnchorServer):
 
     appearances = [(
         "AnchorKey",
-        UserContentType.unique+UserContentType.anchor
+        UserContentType.unique+UserContentType.link_private +
+        UserContentType.anchor
     )]
 
     def generate_raw(self, **kwargs):
@@ -182,7 +182,8 @@ class AnchorGov(AnchorServer):
 
     appearances = [(
         "AnchorGov",
-        UserContentType.unique+UserContentType.anchor
+        UserContentType.unique+UserContentType.link_private +
+        UserContentType.anchor
     )]
 
     def render_raw(self, **kwargs):

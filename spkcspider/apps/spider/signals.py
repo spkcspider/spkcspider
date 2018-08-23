@@ -27,7 +27,7 @@ def UpdateSpiderCallback(sender, plan=None, **kwargs):
     UserInfo = apps.get_model("spider_base", "UserInfo")
     for row in AssignedContent.objects.all():
         # works only with django.apps.apps
-        row.info = row.content.get_info(row.usercomponent)
+        row.info = row.content.get_info()
         row.save(update_fields=['info'])
 
     for row in UserInfo.objects.all():
