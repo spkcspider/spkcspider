@@ -259,6 +259,11 @@ class ContentIndex(UCTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
+        if self.scope != "export" and "raw" in self.request.GET:
+            kwargs["scope"] = "raw"
+        else:
+            kwargs["scope"] = self.scope
+
         if kwargs["uc"].user == self.request.user:
             kwargs["content_types"] = (
                 kwargs["uc"].user_info.allowed_content.all()
@@ -280,45 +285,67 @@ class ContentIndex(UCTestMixin, ListView):
         # block view on special objects for non user and non superusers
         if self.usercomponent.name == "index":
             return False
+        # export is only available for user and superuser
+        if self.scope == "export":
+            # if self.request.user.is_staff:
+            #     return True
+            return False
 
         return self.test_token()
 
     def get_queryset(self):
-        # GET parameters are stronger than post
         ret = super().get_queryset().filter(usercomponent=self.usercomponent)
 
-        filt = models.Q()
-        for info in self.request.POST.getlist("search"):
-            if len(info) > 0:
-                filt |= models.Q(info__icontains="%s" % info)
-        for info in self.request.GET.getlist("search"):
-            if len(info) > 0:
-                filt |= models.Q(info__icontains="%s" % info)
+        searchq = models.Q()
 
-        for info in self.request.POST.getlist("info"):
-            filt |= models.Q(info__contains="\n%s\n" % info)
-        for info in self.request.GET.getlist("info"):
-            filt |= models.Q(info__contains="\n%s\n" % info)
+        counter = 0
+        max_counter = 30  # against ddos
+
+        if "search" in self.request.POST or "info" in self.request.POST:
+            for info in self.request.POST.getlist("search"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                if len(info) > 0:
+                    searchq |= models.Q(info__icontains="%s" % info)
+
+            for info in self.request.POST.getlist("info"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                searchq |= models.Q(info__contains="\n%s\n" % info)
+        else:
+            for info in self.request.GET.getlist("search"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                if len(info) > 0:
+                    searchq |= models.Q(info__icontains="%s" % info)
+
+            for info in self.request.GET.getlist("info"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                searchq |= models.Q(info__contains="\n%s\n" % info)
 
         if "id" in self.request.GET:
             ids = map(lambda x: int(x), self.request.GET.getlist("id"))
-            filt &= models.Q(id__in=ids)
-        return ret.filter(filt)
+            searchq &= models.Q(id__in=ids)
+        return ret.filter(searchq)
 
     def get_paginate_by(self, queryset):
+        if self.scope == "export":
+            return None
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
-    def render_item(self, item):
-        return
-
     def render_to_response(self, context):
-        if "raw" not in self.request.GET:
+        if context["scope"] not in ["export", "raw"]:
             return super().render_to_response(context)
 
-        dereference = self.request.GET.get("deref", "") == "true"
-
-        context["scope"] = "raw"
         context["request"] = self.request
+        deref_level = 1
+        if self.request.GET.get("deref", "") == "true":
+            deref_level = 2
 
         if self.request.GET.get("raw", "") == "embed":
             fil = tempfile.SpooledTemporaryFile(max_size=2048)
@@ -326,9 +353,12 @@ class ContentIndex(UCTestMixin, ListView):
                 llist = OrderedDict(name=self.usercomponent.name)
                 zip.writestr("data.json", json.dumps(llist))
                 for n, content in enumerate(context["object_list"]):
-                    llist = OrderedDict(name=self.usercomponent.name)
+                    llist = OrderedDict(
+                        pk=content.pk,
+                        ctype=content.ctype.name
+                    )
                     content.content.extract_form(
-                        context, llist, zip, deref=dereference,
+                        context, llist, zip, level=deref_level,
                         prefix="{}/".format(n)
                     )
                     zip.writestr(

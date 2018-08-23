@@ -76,6 +76,10 @@ class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
 valid_fields["UserContentMultipleRefField"] = UserContentMultipleRefField  # noqa: E305, E501
 
 
+class AnchorField(UserContentRefField):
+    pass
+
+
 def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
     if not _base:
         _base = []

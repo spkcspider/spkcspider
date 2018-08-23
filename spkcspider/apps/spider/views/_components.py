@@ -5,12 +5,16 @@ __all__ = (
 )
 
 from datetime import timedelta
+import zipfile
+import tempfile
+import json
+from collections import OrderedDict
 
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.db import models
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, FileResponse
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -29,17 +33,34 @@ class ComponentAllIndex(ListView):
 
     def get_queryset(self):
         searchq = models.Q()
-        for info in self.request.POST.getlist("search"):
-            if len(info) > 0:
-                searchq |= models.Q(contents__info__icontains="%s" % info)
-        for info in self.request.GET.getlist("search"):
-            if len(info) > 0:
-                searchq |= models.Q(contents__info__icontains="%s" % info)
+        counter = 0
+        max_counter = 30  # against ddos
+        if "search" in self.request.POST or "info" in self.request.POST:
+            for info in self.request.POST.getlist("search"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                if len(info) > 0:
+                    searchq |= models.Q(contents__info__icontains="%s" % info)
 
-        for info in self.request.POST.getlist("info"):
-            searchq |= models.Q(contents__info__contains="\n%s\n" % info)
-        for info in self.request.GET.getlist("info"):
-            searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+            for info in self.request.POST.getlist("info"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+        else:
+            for info in self.request.GET.getlist("search"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                if len(info) > 0:
+                    searchq |= models.Q(contents__info__icontains="%s" % info)
+
+            for info in self.request.GET.getlist("info"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
@@ -58,8 +79,8 @@ class ComponentAllIndex(ListView):
 
 class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
-    ordering = ("name",)
     also_authenticated_users = True
+    scope = "list"
 
     user = None
 
@@ -69,6 +90,7 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         kwargs["component_user"] = self.user
+        kwargs["scope"] = self.scope
         return super().get_context_data(**kwargs)
 
     def test_func(self):
@@ -77,10 +99,41 @@ class ComponentIndex(UCTestMixin, ListView):
         return False
 
     def get_queryset(self):
-        ret = super().get_queryset().filter(user=self.user)
-        if "search" in self.request.GET:
-            ret = ret.filter(name__icontains=self.request.GET["search"])
-        return ret
+        searchq = models.Q()
+        counter = 0
+        max_counter = 30  # against ddos
+
+        if "search" in self.request.POST or "info" in self.request.POST:
+            for info in self.request.POST.getlist("search"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                if len(info) > 0:
+                    searchq |= models.Q(contents__info__icontains="%s" % info)
+
+            for info in self.request.POST.getlist("info"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+        else:
+            for info in self.request.GET.getlist("search"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                if len(info) > 0:
+                    searchq |= models.Q(contents__info__icontains="%s" % info)
+
+            for info in self.request.GET.getlist("info"):
+                if counter > max_counter:
+                    break
+                counter += 1
+                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+        if self.request.GET.get("protection", "") == "false":
+            searchq &= models.Q(required_passes=0)
+        searchq &= models.Q(user=self.user)
+
+        return super().get_queryset().filter(searchq).distinct()
 
     def get_usercomponent(self):
         return get_object_or_404(
@@ -88,9 +141,48 @@ class ComponentIndex(UCTestMixin, ListView):
         )
 
     def get_paginate_by(self, queryset):
-        if "export" in self.request.GET:
-            return False
+        if self.scope == "export":
+            return None
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
+
+    def render_to_response(self, context):
+        if self.scope != "export":
+            return super().render_to_response(context)
+
+        context["request"] = self.request
+        deref_level = 1
+
+        fil = tempfile.SpooledTemporaryFile(max_size=2048)
+        with zipfile.ZipFile(fil, "w") as zip:
+            for component in context["object_list"]:
+                cname = component.name
+                llist = OrderedDict(name=self.usercomponent.name)
+                zip.writestr(
+                    "{}/data.json".format(cname), json.dumps(llist)
+                )
+                for n, content in enumerate(
+                    component.contents.order_by("ctype__name", "id")
+                ):
+                    llist = OrderedDict(
+                        pk=content.pk,
+                        ctype=content.ctype.name
+                    )
+                    context["uc"] = self.usercomponent
+                    content.content.extract_form(
+                        context, llist, zip, level=deref_level,
+                        prefix="{}/{}/".format(cname, n)
+                    )
+                    zip.writestr(
+                        "{}/{}/data.json".format(cname, n), json.dumps(llist)
+                    )
+
+        fil.seek(0, 0)
+        ret = FileResponse(
+            fil,
+            content_type='application/force-download'
+        )
+        ret['Content-Disposition'] = 'attachment; filename=result.zip'
+        return ret
 
 
 class ComponentCreate(UserTestMixin, CreateView):

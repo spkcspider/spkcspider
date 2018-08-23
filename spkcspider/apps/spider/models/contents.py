@@ -225,12 +225,12 @@ class LinkContent(BaseContent):
 
     def get_form(self, scope):
         from ..forms import LinkForm
-        if scope in ["add", "update"]:
+        if scope in ["add", "update", "export", "raw"]:
             return LinkForm
         return self.content.content.get_form(scope)
 
     def get_form_kwargs(self, **kwargs):
-        if kwargs["scope"] in ["add", "update"]:
+        if kwargs["scope"] in ["add", "update", "export", "raw"]:
             ret = super().get_form_kwargs(**kwargs)
             ret["uc"] = kwargs["uc"]
         else:

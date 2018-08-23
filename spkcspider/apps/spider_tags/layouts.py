@@ -4,9 +4,8 @@ from django.utils.translation import gettext as _
 from django.conf import settings
 
 default_layouts = {}
-default_layouts["address"] = (
-    [],
-    [
+default_layouts["address"] = {
+    "layout": [
         {
             "key": "name",
             "field": "CharField",
@@ -47,10 +46,10 @@ default_layouts["address"] = (
             "max_length": 3
         }
     ]
-)
-default_layouts["person_official"] = (
-    [],
-    [
+}
+
+default_layouts["person_official"] = {
+    "layout": [
         {
             "key": "address",
             "field": "UserContentRefField",
@@ -89,10 +88,10 @@ default_layouts["person_official"] = (
             "required": False
         }
     ]
-)
-default_layouts["emergency"] = (
-    [],
-    [
+}
+
+default_layouts["emergency"] = {
+    "layout": [
         {
             "key": "address",
             "field": "UserContentRefField",
@@ -177,7 +176,7 @@ default_layouts["emergency"] = (
             "required": False
         }
     ]
-)
+}
 
 
 def initialize_layouts(apps=None):
@@ -189,16 +188,16 @@ def initialize_layouts(apps=None):
         module, name = l.rsplit(".", 1)
         layouts.update(getattr(__import__(module), name))
     for name, val in layouts.items():
-        verifiers, layout = val
         tag_layout = TagLayout.objects.get_or_create(
-            defaults={
-                "layout": layout, "default_verifiers": verifiers
-            }, name=name
+            defaults=val, name=name
         )[0]
-        if tag_layout.layout != layout or \
-           tag_layout.default_verifiers != verifiers:
-            tag_layout.layout = layout
-            tag_layout.default_verifiers = verifiers
+        has_changed = False
+        for attr, v in val.items():
+            if getattr(tag_layout, attr) != v:
+                setattr(tag_layout, attr, v)
+                has_changed = True
+
+        if has_changed:
             tag_layout.save()
     invalid_models = TagLayout.objects.exclude(
         name__in=layouts.keys(), usertag=None

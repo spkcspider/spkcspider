@@ -13,6 +13,11 @@ app_name = "spider_base"
 # uc = UserComponent
 urlpatterns = [
     path(
+        'ucs/user/<slug:user>/export/',
+        ComponentIndex.as_view(scope="export"),
+        name='ucomponent-export'
+    ),
+    path(
         'ucs/user/<slug:user>/',
         ComponentIndex.as_view(),
         name='ucomponent-list'
@@ -52,6 +57,11 @@ urlpatterns = [
         'ucs/list/<int:id>/<slug:nonce>/',
         ContentIndex.as_view(),
         name='ucontent-list'
+    ),
+    path(
+        'ucs/export/<int:id>/<slug:nonce>/',
+        ContentIndex.as_view(scope="export"),
+        name='ucontent-export'
     ),
     # path(
     #     'ucs/add/<slug:user>/<slug:name>/<slug:type>/',

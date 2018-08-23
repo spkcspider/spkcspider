@@ -160,7 +160,9 @@ class BaseContent(models.Model):
     def get_instance_form(self, context):
         return self
 
-    def get_form_kwargs(self, request, instance=None, **kwargs):
+    def get_form_kwargs(
+        self, request, instance=None, disable_data=False, **kwargs
+    ):
         """Return the keyword arguments for instantiating the form."""
         fkwargs = {}
         if instance is None:
@@ -168,7 +170,7 @@ class BaseContent(models.Model):
         elif instance:
             fkwargs["instance"] = instance
 
-        if request.method in ('POST', 'PUT'):
+        if not disable_data and request.method in ('POST', 'PUT'):
             fkwargs.update({
                 'data': request.POST,
                 'files': request.FILES,
@@ -228,51 +230,83 @@ class BaseContent(models.Model):
         return self.render_form(**kwargs)
 
     def extract_form(
-        self, context, datadic, zipf=None, deref=False, prefix="", form=None
+        self, context, datadic, zipf=None, level=1, prefix="", form=None,
+        _was_embed=False
     ):
+        if level <= 0:
+            return
         if not form:
             form = self.get_form(context["scope"])(
-                **self.get_form_kwargs(**context)
+                **self.get_form_kwargs(disable_data=True, **context)
             )
         AssignedContent = django_apps.get_model(
             "spider_base", "AssignedContent"
         )
-        for field in form.initial.items():
-            if isinstance(
-                field[1],
-                AssignedContent
-            ):
-                if deref:
-                    form2 = field[1].get_form(context["scope"])(
-                        **field[1].get_form_kwargs(**context)
+        for name, field in form.fields.items():
+            raw_value = form.initial[name]
+            value = field.to_python(raw_value)
+            if isinstance(value, AssignedContent):
+                _level = level-1
+                if (
+                        hasattr(form.fields[name], "embed_content") and
+                        not _was_embed and
+                        # dereferencing would break stuff
+                        context["scope"] != "export"
+                   ):
+                    _level += 1
+                    _was_embed = True
+                if _level > 0:
+                    form2 = value.get_form(context["scope"])(
+                        **value.get_form_kwargs(
+                            disable_data=True, **context
+                        )
                     )
-                    pref = "{}{}/".format(prefix, field[0])
-                    datadic[field[0]] = self.analyse_form(
-                        context, datadic, prefix=pref,
-                        zipf=zipf, deref=False, form=form2
+                    pref = "{}{}/".format(prefix, name)
+                    datadic[name] = OrderedDict(
+                        pk=self.associated.pk,
+                        ctype=self.associated.ctype.name
+                    )
+                    self.extract_form(
+                        context, datadic[name], prefix=pref,
+                        zipf=zipf, level=_level, form=form2,
+                        _was_embed=_was_embed
                     )
                 else:
-                    datadic[field[0]] = field[1].info
-            elif isinstance(field[1], File):
+                    datadic[name] = {
+                        "pk": value.pk,
+                        "ctype": value.ctype.name,
+                        "info": value.info
+                    }
+
+            elif isinstance(value, File):
+                path = "{}{}/{}".format(
+                    prefix, name, os.path.basename(value.name)
+                )
                 if zipf:
-                    zipf.write(field[1].path, "{}{}/{}".format(
-                        prefix, field[0], os.path.basename(field[1].name)
-                    ))
+                    zipf.write(value.path, path)
+                datadic[name] = {"file": path}
             else:
-                datadic[field[0]] = field[1]
+                datadic[name] = raw_value
 
     def render_serialize(self, **kwargs):
-        dereference = kwargs["request"].GET.get("deref", "") == "true"
-        if kwargs["request"].GET.get("raw", "") == "embed":
+        deref_level = 1
+        if kwargs["request"].GET.get("deref", "") == "true":
+            deref_level = 2
+        llist = OrderedDict(
+            pk=self.associated.pk,
+            ctype=self.associated.ctype.name
+        )
+        if (
+                kwargs["scope"] == "export" or
+                kwargs["request"].GET.get("raw", "") == "embed"
+           ):
             fil = tempfile.SpooledTemporaryFile(max_size=2048)
             with zipfile.ZipFile(fil, "w") as zip:
-                llist = OrderedDict()
                 self.extract_form(
                     kwargs, llist, zip,
-                    deref=dereference
+                    level=deref_level
                 )
                 zip.writestr("data.json", json.dumps(llist))
-                # zip.close()
             fil.seek(0, 0)
             ret = FileResponse(
                 fil,
@@ -280,9 +314,8 @@ class BaseContent(models.Model):
             )
             ret['Content-Disposition'] = 'attachment; filename=result.zip'
             return ret
-        llist = OrderedDict()
         self.extract_form(
-            kwargs, llist, deref=dereference
+            kwargs, llist, level=deref_level
         )
         return JsonResponse(llist)
 
@@ -325,9 +358,8 @@ class BaseContent(models.Model):
                 UserContentType.unique.value in self.associated.ctype.ctype
             )
         if unique:
-            return "\nuc=%s\ncode=%s\ntype=%s\n%sprimary\n" % \
+            return "\ncode=%s\ntype=%s\n%sprimary\n" % \
                 (
-                    usercomponent.name,
                     self._meta.model_name,
                     self.associated.ctype.name,
                     no_public_var
@@ -335,9 +367,8 @@ class BaseContent(models.Model):
         else:
             # simulates beeing not unique, by adding id
             # id is from this model, because assigned maybe not ready
-            return "\nuc=%s\ncode=%s\ntype=%s\n%sid=%s\n" % \
+            return "\ncode=%s\ntype=%s\n%sid=%s\n" % \
                 (
-                    usercomponent.name,
                     self._meta.model_name,
                     self.associated.ctype.name,
                     no_public_var,
