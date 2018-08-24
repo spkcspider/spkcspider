@@ -355,23 +355,27 @@ class ContentIndex(UCTestMixin, ListView):
         if self.request.GET.get("deref", "") == "true":
             deref_level = 2
 
+        maindic = OrderedDict(
+            name=self.usercomponent.name,
+        )
+        if context["scope"] == "export":
+            maindic["public"] = self.usercomponent.public,
+            maindic["required_passes"] = \
+                self.usercomponent.required_passes
+            maindic["token_duration"] = duration_string(
+                self.usercomponent.token_duration
+            )
+        elif hasattr(self.request, "remaining_tokentime"):
+            maindic["remaining_tokentime"] = \
+                duration_string(self.request.remaining_tokentime)
+
         if (
             context["scope"] == "export" or
             self.request.GET.get("raw", "") == "embed"
         ):
             fil = tempfile.SpooledTemporaryFile(max_size=2048)
             with zipfile.ZipFile(fil, "w") as zip:
-                llist = OrderedDict(
-                    name=self.usercomponent.name,
-                )
-                if context["scope"] == "export":
-                    llist["public"] = self.usercomponent.public,
-                    llist["required_passes"] = \
-                        self.usercomponent.required_passes
-                    llist["token_duration"] = duration_string(
-                        self.usercomponent.token_duration
-                    )
-                zip.writestr("data.json", json.dumps(llist))
+                zip.writestr("data.json", json.dumps(maindic))
                 for n, content in enumerate(context["object_list"]):
                     llist = OrderedDict(
                         pk=content.pk,
@@ -398,7 +402,6 @@ class ContentIndex(UCTestMixin, ListView):
         )
         enc_get = context["spider_GET"].urlencode()
         return JsonResponse({
-            "name": self.usercomponent.name,
             "content": [
                 {
                     "info": item.info,
@@ -415,7 +418,8 @@ class ContentIndex(UCTestMixin, ListView):
                     )
                 }
                 for item in context["object_list"]
-            ]
+            ],
+            **maindic
         })
 
 

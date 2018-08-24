@@ -156,6 +156,7 @@ class TextFilet(BaseContent):
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
         ret["request"] = kwargs["request"]
+        ret["source"] = kwargs.get("source", self.associated.usercomponent)
         return ret
 
     def render_view(self, **kwargs):

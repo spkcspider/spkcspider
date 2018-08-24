@@ -169,6 +169,10 @@ class ComponentIndex(UCTestMixin, ListView):
                         component.required_passes
                     llist["token_duration"] = \
                         duration_string(component.token_duration)
+
+                if hasattr(self.request, "remaining_tokentime"):
+                    llist["remaining_tokentime"] = \
+                        duration_string(self.request.remaining_tokentime)
                 zip.writestr(
                     "{}/data.json".format(cname), json.dumps(llist)
                 )

@@ -18,6 +18,7 @@ from django.utils.translation import gettext
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.template.loader import render_to_string
 from django.core.files.base import File
+from django.utils.duration import duration_string
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.http import FileResponse, JsonResponse
@@ -293,6 +294,7 @@ class BaseContent(models.Model):
                 datadic[name] = raw_value
 
     def render_serialize(self, **kwargs):
+        # ** creates copy of dict, so it is safe to overwrite kwargs here
         deref_level = 1
         if kwargs["request"].GET.get("deref", "") == "true":
             deref_level = 2
@@ -300,6 +302,9 @@ class BaseContent(models.Model):
             pk=self.associated.pk,
             ctype=self.associated.ctype.name
         )
+        if hasattr(kwargs["request"], "remaining_tokentime"):
+            llist["remaining_tokentime"] = \
+                duration_string(kwargs["request"].remaining_tokentime)
         if (
                 kwargs["scope"] == "export" or
                 kwargs["request"].GET.get("raw", "") == "embed"
