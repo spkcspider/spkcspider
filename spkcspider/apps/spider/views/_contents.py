@@ -363,12 +363,14 @@ class ContentIndex(UCTestMixin, ListView):
             with zipfile.ZipFile(fil, "w") as zip:
                 llist = OrderedDict(
                     name=self.usercomponent.name,
-                    public=self.usercomponent.public,
-                    required_passes=self.usercomponent.required_passes,
-                    token_duration=duration_string(
+                )
+                if context["scope"] == "export":
+                    llist["public"] = self.usercomponent.public,
+                    llist["required_passes"] = \
+                        self.usercomponent.required_passes
+                    llist["token_duration"] = duration_string(
                         self.usercomponent.token_duration
                     )
-                )
                 zip.writestr("data.json", json.dumps(llist))
                 for n, content in enumerate(context["object_list"]):
                     llist = OrderedDict(
