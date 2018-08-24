@@ -13,6 +13,7 @@ from collections import OrderedDict
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.duration import duration_string
 from django.db import models
 from django.http import HttpResponseRedirect, FileResponse
 from django.conf import settings
@@ -156,7 +157,15 @@ class ComponentIndex(UCTestMixin, ListView):
         with zipfile.ZipFile(fil, "w") as zip:
             for component in context["object_list"]:
                 cname = component.name
-                llist = OrderedDict(name=self.usercomponent.name)
+                # serialized_obj = protections=serializers.serialize(
+                #     'json', component.protections.all()
+                # )
+                llist = OrderedDict(
+                    name=cname,
+                    public=component.public,
+                    required_passes=component.required_passes,
+                    token_duration=duration_string(component.token_duration)
+                )
                 zip.writestr(
                     "{}/data.json".format(cname), json.dumps(llist)
                 )

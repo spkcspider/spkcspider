@@ -234,7 +234,7 @@ class BaseContent(models.Model):
 
     def extract_form(
         self, context, datadic, zipf=None, level=1, prefix="", form=None,
-        _was_embed=False
+        _was_embed=False  # field tag which increases level of embedding
     ):
         if level <= 0:
             return
@@ -246,7 +246,7 @@ class BaseContent(models.Model):
             "spider_base", "AssignedContent"
         )
         for name, field in form.fields.items():
-            raw_value = form.initial[name]
+            raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
             if isinstance(value, AssignedContent):
                 _level = level-1
@@ -259,6 +259,7 @@ class BaseContent(models.Model):
                     _level += 1
                     _was_embed = True
                 if _level > 0:
+                    context["uc"] = self.associated.usercomponent
                     form2 = value.get_form(context["scope"])(
                         **value.get_form_kwargs(
                             disable_data=True, **context

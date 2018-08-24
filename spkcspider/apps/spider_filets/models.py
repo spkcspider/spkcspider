@@ -158,12 +158,18 @@ class TextFilet(BaseContent):
         ret["request"] = kwargs["request"]
         return ret
 
-    def render(self, **kwargs):
-        kwargs["source"] = kwargs.get("source", kwargs["uc"])
-        if kwargs["scope"] == "view":
+    def render_view(self, **kwargs):
+        if kwargs["request"].is_owner:
+            kwargs["no_button"] = None
+            kwargs["legend"] = _("Update \"%s\"") % self.__str__()
+            kwargs["confirm"] = _("Update")
+        else:
+            source = kwargs.get("source", self.associated.usercomponent)
             if self.editable_from.filter(
-                pk=kwargs["source"].pk
+                pk=source.pk
             ).exists():
                 if kwargs["request"].is_priv_requester:
-                    return self.render_update(**kwargs)
-        return super().render(**kwargs)
+                    kwargs["no_button"] = None
+                    kwargs["legend"] = _("Update \"%s\"") % self.__str__()
+                    kwargs["confirm"] = _("Update")
+        return super().render_view(**kwargs)

@@ -1,4 +1,6 @@
 
+from collections import OrderedDict
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -123,15 +125,36 @@ class SpiderTag(BaseContent):
             ret = super().get_form_kwargs(
                 **kwargs
             )
-            ret["user"] = kwargs["uc"].user
+            ret["user"] = self.associated.usercomponent.user
         else:
             ret = super().get_form_kwargs(
                 instance=False,
                 **kwargs
             )
-            ret["initial"] = self.tagdata
-            ret["uc"] = kwargs["uc"]
+            ret["initial"] = self.tagdata.copy()
+            ret["uc"] = self.associated.usercomponent
+            ret["usertag"] = self
         return ret
+
+    def extract_form(
+        self, context, datadic, zipf=None, level=1, prefix="", form=None,
+        _was_embed=False
+    ):
+        if not form:
+            form = self.get_form(context["scope"])(
+                **self.get_form_kwargs(disable_data=True, **context)
+            )
+        if getattr(form, "layout_generating_form", False):
+            _datadic = OrderedDict()
+        else:
+            _datadic = datadic
+        super().extract_form(
+            context, _datadic, zipf=zipf, level=level, prefix=prefix,
+            form=form, _was_embed=_was_embed
+        )
+        if getattr(form, "layout_generating_form", False):
+            datadic["primary"] = _datadic["primary"]
+            datadic["tagdata"] = form.encode_data(_datadic)
 
     def encode_verifiers(self):
         return "".join(

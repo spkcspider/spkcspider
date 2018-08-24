@@ -206,17 +206,21 @@ def initialize_layouts(apps=None):
         from django.apps import apps
     TagLayout = apps.get_model("spider_tags", "TagLayout")
     layouts = default_layouts.copy()
+    # create union from all layouts
     for l in getattr(settings, "TAG_LAYOUT_PATHES", []):
         module, name = l.rsplit(".", 1)
         layouts.update(getattr(__import__(module), name))
-    for name, val in layouts.items():
+    # iterate over unionized layouts
+    for name, layout_dic in layouts.items():
         tag_layout = TagLayout.objects.get_or_create(
-            defaults=val, name=name
+            defaults=layout_dic, name=name
         )[0]
         has_changed = False
-        for attr, v in val.items():
-            if getattr(tag_layout, attr) != v:
-                setattr(tag_layout, attr, v)
+        # check attributes of model
+        for layout_attr, value in layout_dic.items():
+            if getattr(tag_layout, layout_attr) != value:
+                # layout change detected, update and mark for saving
+                setattr(tag_layout, layout_attr, value)
                 has_changed = True
 
         if has_changed:

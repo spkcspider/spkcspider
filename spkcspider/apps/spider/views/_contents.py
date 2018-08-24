@@ -20,6 +20,7 @@ from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
+from django.utils.duration import duration_string
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
@@ -354,10 +355,20 @@ class ContentIndex(UCTestMixin, ListView):
         if self.request.GET.get("deref", "") == "true":
             deref_level = 2
 
-        if self.request.GET.get("raw", "") == "embed":
+        if (
+            context["scope"] == "export" or
+            self.request.GET.get("raw", "") == "embed"
+        ):
             fil = tempfile.SpooledTemporaryFile(max_size=2048)
             with zipfile.ZipFile(fil, "w") as zip:
-                llist = OrderedDict(name=self.usercomponent.name)
+                llist = OrderedDict(
+                    name=self.usercomponent.name,
+                    public=self.usercomponent.public,
+                    required_passes=self.usercomponent.required_passes,
+                    token_duration=duration_string(
+                        self.usercomponent.token_duration
+                    )
+                )
                 zip.writestr("data.json", json.dumps(llist))
                 for n, content in enumerate(context["object_list"]):
                     llist = OrderedDict(

@@ -70,10 +70,11 @@ verified_by urls should return hashname:hash_hexdigest
 * textfilet: add what you see is what you get js stuff
 * layout: verifiers+examples
 * layout: cleanup defaults
-* export/import from usercomponents+user profiles => zip, security
 
 Later:
-* maybe: save/cache raw=embed files
+* export protections and protection settings, Maybe?
+* performance: cache raw zip and json responses => cache decorators
+* import user content, usercomonents and usercontent
 * travelling protection: disable access till a timepoint
 * travelmode: disable cache and "recently used" completely,
   maybe: limit components, needs design

@@ -1,5 +1,5 @@
 __all__ = [
-    "TagLayoutForm", "SpiderTagForm", "generate_form"
+    "TagLayoutForm", "SpiderTagForm", "generate_form",
 ]
 
 
@@ -52,6 +52,8 @@ def generate_form(name, layout):
         __name__ = name
         declared_fields = OrderedDict(_gen_fields)
         base_fields = declared_fields
+        # used in models
+        layout_generating_form = True
 
         class Meta:
             error_messages = {
@@ -62,13 +64,14 @@ def generate_form(name, layout):
                 }
             }
 
-        def __init__(self, *, uc=None, initial=None, **kwargs):
+        def __init__(self, *, uc=None, initial=None, usertag=None, **kwargs):
             if not initial:
                 initial = {}
-            else:
-                initial = self.encoded_initial(initial)
+            _initial = self.encode_initial(initial)
+            _initial["primary"] = getattr(usertag, "primary", False)
+            self.usertag = usertag
             super().__init__(
-                initial=initial, **kwargs
+                initial=_initial, **kwargs
             )
             for field in self.fields:
                 if hasattr(field, "queryset"):
@@ -81,37 +84,39 @@ def generate_form(name, layout):
                         filters[attr] = uc.user
                     field.queryset = field.queryset.filter(**filters)
 
-        def encoded_initial(self, initial, prefix="tag", base=None):
+        @classmethod
+        def encode_initial(cls, initial, prefix="tag", base=None):
             if not base:
                 base = {}
             for i in initial.items():
                 if isinstance(i[1], dict):
                     new_prefix = "{}:{}".format(prefix, i[0])
-                    self.encoded_initial(i[i], prefix=new_prefix, base=base)
+                    cls.encode_initial(i[i], prefix=new_prefix, base=base)
                 else:
                     base["{}:{}".format(prefix, i[0])] = i[1]
             return base
 
-        def encoded_data(self, external=False, embed=False):
+        @staticmethod
+        def encode_data(cleaned_data, embed=False, prefix="tag"):
             ret = OrderedDict()
-            for i in self.cleaned_data.items():
+            for i in cleaned_data.items():
                 selected_dict = ret
                 splitted = i[0].split(":")
-                if splitted[0] != "tag":  # unrelated data
+                if splitted[0] != prefix:  # unrelated data
                     continue
                 # last key is item key, first is "tag"
                 for key in splitted[1:-1]:
                     if key not in selected_dict:
                         selected_dict[key] = OrderedDict()
                     selected_dict = selected_dict[key]
-                if external:
-                    rendered = getattr(self.fields[i[0]], "render_tag", None)
-                    if rendered:
-                        rendered = rendered(embed)
-                    else:
-                        rendered = i[1]
-                    selected_dict[splitted[-1]] = rendered
-                else:
-                    selected_dict[splitted[-1]] = i[1]
+                selected_dict[splitted[-1]] = i[1]
             return ret
+
+        def save(self):
+            if self.usertag:
+                self.usertag.primary = self.cleaned_data["primary"]
+                self.usertag.tagdata = self.encode_data(self.cleaned_data)
+                self.usertag.save()
+
+            return self.usertag
     return _form
