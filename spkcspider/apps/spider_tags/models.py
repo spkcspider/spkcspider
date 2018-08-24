@@ -1,5 +1,4 @@
 
-import base64
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -134,29 +133,18 @@ class SpiderTag(BaseContent):
             ret["uc"] = kwargs["uc"]
         return ret
 
-    def generate_raw(self, **kwargs):
-        form = self.get_form("raw")(
-            initial=self.tagdata
-        )
-        return form.encoded_data(
-            external=True,
-            embed=(
-                kwargs["request"].GET.get(
-                    "embed_tag", ""
-                ) == "true"
-            )
-        )
-
     def encode_verifiers(self):
-        return ",".join(
+        return "".join(
             map(
-                lambda x: base64.b64_urlencode(x),
+                lambda x: "\nverified_by={}".format(
+                    x.replace("\n", "%0A")
+                ),
                 self.verified_by
             )
         )
 
     def get_info(self):
-        return "%sverified_by=%s\ntag=%s\n" % (
+        return "{}{}\ntag={}\n".format(
             super().get_info(unique=self.primary),
             self.encode_verifiers(),
             self.layout.name

@@ -66,16 +66,17 @@ def info_field_validator(value):
     # check elements
     for elem in value[:-1].split("\n"):
         f = elem.find("=")
-        # flag
+        # no flag => allow multiple instances
         if f != -1:
-            elem = elem[:f]
+            continue
         counts = 0
         counts += prefixed_value.count("\n%s\n" % elem)
+        # check: is flag used as key in key, value storage
         counts += prefixed_value.count("\n%s=" % elem)
         assert(counts > 0)
         if counts > 1:
             raise ValidationError(
-                _('multiple elements: %(element)s in %(value)s'),
+                _('flag not unique: %(element)s in %(value)s'),
                 params={'element': elem, 'value': value},
             )
 
@@ -149,18 +150,20 @@ class AssignedContent(models.Model):
             return True
         return False
 
-    def get_value(self, key):
+    def getlist(self, key):
         info = self.info
+        ret = []
         pstart = info.find("\n%s=" % key)
-        if pstart == -1:
-            return None
-        pend = info.find("\n", pstart+len(key)+1)
-        if pend == -1:
-            raise Exception(
-                "Info field error: doesn't end with \"\\n\": \"%s\"" %
-                info
-            )
-        return info[pstart:pend]
+        while pstart != -1:
+            pend = info.find("\n", pstart+len(key)+1)
+            if pend == -1:
+                raise Exception(
+                    "Info field error: doesn't end with \"\\n\": \"%s\"" %
+                    info
+                )
+            ret.append(info[pstart:pend])
+            pstart = info.find("\n%s=" % key, pend)
+        return ret
 
     def clean(self):
         _ = gettext

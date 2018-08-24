@@ -5,7 +5,6 @@ from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from django.utils.translation import pgettext
-from django.http import HttpResponse
 
 
 import hashlib
@@ -96,9 +95,9 @@ class PublicKey(BaseContent):
     def render_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["algo"] = settings.KEY_HASH_ALGO
-        kwargs["hash"] = self.associated.get_value(
+        kwargs["hash"] = self.associated.getlist(
             "hash:%s" % settings.KEY_HASH_ALGO
-        )
+        )[0]
         return render_to_string(
             "spider_keys/key.html", request=kwargs["request"],
             context=kwargs
@@ -119,24 +118,18 @@ class AnchorServer(object):  # BaseContent):
         UserContentType.link_private+UserContentType.anchor
     )]
 
-    def clean(self):
-        pass
+    def get_form(self):
+        from .forms import AnchorServerForm
+        return AnchorServerForm
 
     def get_identifier(self, request):
         """ returns id of content, server """
+        # security: can only be faked by own server
+        # so that's no risk
         return "{}@{}".format(
-            self.associated.id,
+            getattr(self.associated, "id", None),
             getattr(settings, "ANCHOR_HOST", request.get_host())
         )
-
-    def generate_raw(self, **kwargs):
-        ident = self.get_identifier(kwargs["request"])
-        # anchors must be generated on client
-        # anchor_format = server_<identifier>
-        return {
-            "type": "server",
-            "identifier": ident,
-        }
 
 
 # @add_content
@@ -164,15 +157,9 @@ class AnchorKey(AnchorServer):
             "key": self.key.get_key_name()[0]
         }
 
-    def render(self, **kwargs):
-        if kwargs["scope"] == "idtype" or kwargs["raw"]:
-            # raw must be escaped, render_raw is used for anchor
-            return HttpResponse(self.idtype, content_type="text/plain")
-        return super().render(**kwargs)
-
 
 # @add_content
-class AnchorGov(AnchorServer):
+class AnchorGov(object):
     """
         Anchor by Organisation, e.g. government,
         verifier returns token pointing to url
@@ -185,16 +172,3 @@ class AnchorGov(AnchorServer):
         UserContentType.unique+UserContentType.link_private +
         UserContentType.anchor
     )]
-
-    def render_raw(self, **kwargs):
-        # anchors must be generated on client
-        # anchor_format = gov_<token>,
-        # check that returned url is the url providing this anchor
-        return {
-            "type": "gov",
-            "identifier": self.get_identifier(kwargs["request"]),
-            "verifier": ID_VERIFIERS[self.idtype],
-        }
-
-    def clean(self):
-        pass
