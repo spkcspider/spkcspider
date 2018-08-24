@@ -108,12 +108,6 @@ class PublicKey(BaseContent):
         )
 
 
-###############################
-# not implemented yet, stubs, needs Design, forms and rendering
-# anchors are designed to be unique usernames.
-# the returned url should be used for authentication/validation of user
-#    needs design
-
 @add_content
 class AnchorServer(BaseContent):
     """ identify by server """
@@ -137,11 +131,11 @@ class AnchorServer(BaseContent):
 
     def get_identifier(self, request):
         """ returns id of content, server """
-        # security: can only be faked by own server
-        # so that's no risk
+        # security: id can only be faked by own server
+        # this should never happen, except with access to server
         return "{}@{}".format(
             getattr(self.associated, "id", None),
-            getattr(settings, "ANCHOR_HOST", request.get_host())
+            request.get_host()
         )
 
 
