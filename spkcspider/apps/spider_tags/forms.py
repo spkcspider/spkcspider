@@ -65,9 +65,10 @@ def generate_form(name, layout):
         def __init__(self, *, uc=None, initial=None, **kwargs):
             if not initial:
                 initial = {}
+            else:
+                initial = self.encoded_initial(initial)
             super().__init__(
-                initial=self.encoded_initial(initial),
-                **kwargs
+                initial=initial, **kwargs
             )
             for field in self.fields:
                 if hasattr(field, "queryset"):

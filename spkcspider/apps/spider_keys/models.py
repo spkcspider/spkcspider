@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 _htest = hashlib.new(settings.KEY_HASH_ALGO)
 _htest.update(b"test")
 
+_help_text_sig = _(""" Signed identifier """)
+
+_help_text_key = _(""" Public Key-Content """)
 
 ID_VARIANTS = [
     ("", "")
@@ -32,6 +35,7 @@ ID_VERIFIERS = {
 
 
 def valid_pkey_properties(key):
+    _ = gettext
     if "PRIVAT" in key.upper():
         raise ValidationError(_('Private Key'))
     if key.strip() != key:
@@ -78,7 +82,7 @@ class PublicKey(BaseContent):
 
     def __str__(self):
         if not self.id:
-            return gettext("Public Key")
+            return super().__str__()
         st = self.get_key_name()
         if st[1]:
             st = st[1]
@@ -86,7 +90,7 @@ class PublicKey(BaseContent):
             st = "{}...".format(st[0][:10])
         if len(self.note) > 0:
             st = "{}: {}".format(st, self.note[:20])
-        return st
+        return "Key: {}".format(st)
 
     def get_form(self, scope):
         from .forms import KeyForm
@@ -97,7 +101,7 @@ class PublicKey(BaseContent):
         kwargs["algo"] = settings.KEY_HASH_ALGO
         kwargs["hash"] = self.associated.getlist(
             "hash:%s" % settings.KEY_HASH_ALGO
-        )[0]
+        )[0].split("=", 1)[1]
         return render_to_string(
             "spider_keys/key.html", request=kwargs["request"],
             context=kwargs
@@ -110,17 +114,26 @@ class PublicKey(BaseContent):
 # the returned url should be used for authentication/validation of user
 #    needs design
 
-# @add_content
-class AnchorServer(object):  # BaseContent):
+@add_content
+class AnchorServer(BaseContent):
     """ identify by server """
     appearances = [(
         "AnchorServer",
         UserContentType.link_private+UserContentType.anchor
     )]
 
-    def get_form(self):
+    def get_form(self, scope):
         from .forms import AnchorServerForm
         return AnchorServerForm
+
+    def get_form_kwargs(self, **kwargs):
+        ret = super().get_form_kwargs(**kwargs)
+        ret.setdefault("initial", {})
+        ret["initial"]["identifier"] = self.get_identifier(
+            kwargs["request"]
+        )
+        ret["scope"] = kwargs["scope"]
+        return ret
 
     def get_identifier(self, request):
         """ returns id of content, server """
@@ -132,14 +145,15 @@ class AnchorServer(object):  # BaseContent):
         )
 
 
-# @add_content
+@add_content
 class AnchorKey(AnchorServer):
     """ domain name of pc, signed """
     key = models.ForeignKey(
-        PublicKey, on_delete=models.CASCADE, related_name="+"
+        PublicKey, on_delete=models.CASCADE, related_name="+",
+        help_text=_help_text_key
     )
 
-    signature = models.CharField(max_length=1024)
+    signature = models.CharField(max_length=1024, help_text=_help_text_sig)
 
     appearances = [(
         "AnchorKey",
@@ -147,15 +161,9 @@ class AnchorKey(AnchorServer):
         UserContentType.anchor
     )]
 
-    def generate_raw(self, **kwargs):
-        # anchors must be generated on client
-        # anchor_format = key_<hash of key>
-        return {
-            "type": "key",
-            "identifier": self.get_identifier(kwargs["request"]),
-            "signature": self.signature,
-            "key": self.key.get_key_name()[0]
-        }
+    def get_form(self, scope):
+        from .forms import AnchorKeyForm
+        return AnchorKeyForm
 
 
 # @add_content
@@ -172,3 +180,15 @@ class AnchorGov(object):
         UserContentType.unique+UserContentType.link_private +
         UserContentType.anchor
     )]
+
+    def get_form(self, scope):
+        raise NotImplementedError
+
+    def get_form_kwargs(self, **kwargs):
+        ret = super().get_form_kwargs(**kwargs)
+        ret.setdefault("initial", {})
+        ret["initial"]["identifier"] = self.get_identifier(
+            kwargs["request"]
+        )
+        ret["scope"] = kwargs["scope"]
+        return ret

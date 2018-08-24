@@ -125,7 +125,9 @@ class Protection(models.Model):
             # required_passes 1 and no protection means: login only
             required_passes = max(min(required_passes, len(query)), 1)
         else:
-            query.filter(ptype__contains=ProtectionType.side_effects.value)
+            query = query.filter(
+                ptype__contains=ProtectionType.side_effects.value
+            )
 
         if protection_codes:
             query = query.filter(
@@ -233,7 +235,9 @@ class AssignedProtection(models.Model):
         else:
             required_passes = 0
             # only protections with side effects
-            query.filter(ptype__contains=ProtectionType.side_effects.value)
+            query = query.filter(
+                protection__ptype__contains=ProtectionType.side_effects.value
+            )
 
         if protection_codes:
             query = query.filter(

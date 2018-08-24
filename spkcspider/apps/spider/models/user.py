@@ -76,7 +76,8 @@ class UserComponent(models.Model):
     )
     public = models.BooleanField(
         default=False,
-        help_text="Is public findable?"
+        help_text="Is public? Can be searched?<br/>"
+                  "Note: Field is maybe blocked by assigned content"
     )
     required_passes = models.PositiveIntegerField(
         default=_get_default_amount,

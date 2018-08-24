@@ -3,6 +3,9 @@ __all__ = ["valid_fields", "generate_fields"]
 import logging
 from django import forms
 from django.apps import apps
+from django.utils.translation import gettext
+
+from spkcspider.apps.spider.constants import UserContentType
 
 valid_fields = {}
 
@@ -26,6 +29,20 @@ valid_fields["TextareaField"] = TextareaField  # noqa: E305
 # limit_to_user = "<fieldname">: limit field name to user of associated uc
 
 
+def localized_choices(obj):
+    def func(*, choices=(), **kwargs):
+        choices = map(lambda x: (x[0], gettext(x[1])), choices)
+        return obj(choices=choices, **kwargs)
+    return func
+
+
+valid_fields["LocalizedChoiceField"] = localized_choices(forms.ChoiceField)
+
+
+valid_fields["MultipleLocalizedChoiceField"] = \
+    localized_choices(forms.MultipleChoiceField)
+
+
 class UserContentRefField(forms.ModelChoiceField):
     embed_content = None
 
@@ -42,7 +59,7 @@ class UserContentRefField(forms.ModelChoiceField):
             modelname
         )
         if not issubclass(model, BaseContent):
-            raise
+            raise Exception("Not a content (inherit from BaseContent)")
 
         kwargs["queryset"] = model.objects.filter(
             **kwargs.pop("limit_choices_to", {})
@@ -51,7 +68,7 @@ class UserContentRefField(forms.ModelChoiceField):
 valid_fields["UserContentRefField"] = UserContentRefField  # noqa: E305
 
 
-class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
+class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
     embed_content = None
 
     # limit_to_uc: limit to usercomponent, if False to user
@@ -66,18 +83,48 @@ class UserContentMultipleRefField(forms.ModelMultipleChoiceField):
         model = apps.get_model(
             modelname
         )
-        if not isinstance(model, BaseContent):
+        if not issubclass(model, BaseContent):
             raise Exception("Not a content (inherit from BaseContent)")
 
         kwargs["queryset"] = model.objects.filter(
             **kwargs.pop("limit_choices_to", {})
         )
         super().__init__(**kwargs)
-valid_fields["UserContentMultipleRefField"] = UserContentMultipleRefField  # noqa: E305, E501
+valid_fields["MultipleUserContentRefField"] = MultipleUserContentRefField  # noqa: E305, E501
 
 
-class AnchorField(UserContentRefField):
-    pass
+class AnchorField(forms.ModelChoiceField):
+    embed_content = True
+
+    # limit_to_uc: limit to usercomponent, if False to user
+    def __init__(self, limit_to_uc=True, **kwargs):
+        from spkcspider.apps.spider.models import AssignedContent
+        if limit_to_uc:
+            self.limit_to_usercomponent = "usercomponent"
+        else:
+            self.limit_to_user = "usercomponent__user"
+
+        kwargs["queryset"] = AssignedContent.objects.filter(
+            ctype__ctype__contains=UserContentType.anchor.value,
+            **kwargs.pop("limit_choices_to", {})
+        )
+        super().__init__(**kwargs)
+
+    def label_from_instance(self, obj):
+        return str(obj.content)
+
+    def to_python(self, value):
+        if value in self.empty_values:
+            return None
+        try:
+            key = self.to_field_name or 'pk'
+            value = self.queryset.get(**{key: value}).content
+        except (ValueError, TypeError, self.queryset.model.DoesNotExist):
+            raise forms.ValidationError(
+                self.error_messages['invalid_choice'], code='invalid_choice'
+            )
+        return value
+valid_fields["AnchorField"] = AnchorField  # noqa: E305, E501
 
 
 def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
@@ -87,17 +134,22 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
     for i in layout:
         item = i.copy()
         key, field = item.pop("key", None), item.pop("field", None)
+        localize = item.pop("localize", False)
         if "label" not in item:
-            item["label"] = key.replace(_mainprefix, "", 1).replace(":", ": ")
-        else:
-            item["label"] = ": ".join(
+            item["label"] = key.replace(_mainprefix, "", 1)
+
+        if localize:
+            item["label"] = gettext(item["label"])
+            if "help_text" in item:
+                item["help_text"] = gettext(item["help_text"])
+        # readd prefix to label:
+        item["label"] = "".join(
                 [
-                    prefix.replace(
+                    # remove mainprefix
+                    *prefix.replace(
                         _mainprefix, "", 1
-                    ).replace(
-                        ":", ": "
-                    ),
-                    item["label"]
+                    ).replace(":", ": "),  # beautify :
+                    item["label"],
                 ]
             )
         if not key or ":" in key:

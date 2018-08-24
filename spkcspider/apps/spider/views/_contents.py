@@ -210,10 +210,17 @@ class ContentAdd(ContentBase, ModelFormMixin,
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        q_dict = {"name": self.kwargs["type"]}
+        qquery = models.Q(name=self.kwargs["type"])
         if self.usercomponent.name != "index":
-            q_dict["ctype__contains"] = UserContentType.public.value
-        return get_object_or_404(queryset, **q_dict)
+            qquery &= ~models.Q(
+                ctype__contains=UserContentType.confidential.value
+            )
+
+        if self.usercomponent.public:
+            qquery &= models.Q(
+                ctype__contains=UserContentType.public.value
+            )
+        return get_object_or_404(queryset, qquery)
 
     def render_to_response(self, context):
         ucontent = context.pop("user_content")

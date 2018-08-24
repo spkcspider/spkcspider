@@ -181,6 +181,9 @@ class BaseContent(models.Model):
         raise NotImplementedError
 
     def render_form(self, scope, **kwargs):
+        _ = gettext
+        if scope == "add":
+            kwargs["form_empty_message"] = _("<b>No User Input required</b>")
         parent_form = kwargs.get("form", None)
         kwargs["form"] = self.get_form(scope)(
             **self.get_form_kwargs(

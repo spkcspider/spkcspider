@@ -16,7 +16,9 @@
 
 {% block content %}
   <div>
-    <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">{% trans 'index' %}</a>
+    {% if request.user == uc.user or uc.public %}
+      <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">{% trans 'index' %}</a>
+    {% endif %}
     {% if scope != "add" and request.user == uc.user %}
       <span class="w3-right">
         <div style="margin-bottom:10px">

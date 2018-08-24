@@ -1,6 +1,6 @@
 __all__ = ("default_layouts", "initialize_layouts")
 
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_noop as _
 from django.conf import settings
 
 default_layouts = {}
@@ -52,6 +52,8 @@ default_layouts["person_official"] = {
     "layout": [
         {
             "key": "address",
+            "label": _("Address"),
+            "localize": True,
             "field": "UserContentRefField",
             "modelname": "spider_tags.SpiderTag",
             "limit_choices_to": {
@@ -60,31 +62,46 @@ default_layouts["person_official"] = {
         },
         {
             "key": "title",
+            "label": _("Titles"),
+            "localize": True,
             "field": "CharField",
-            "max_length": 10,
+            "max_length": 20,
             "required": False
         },
         {
             "key": "first_name",
+            "label": _("First Name"),
+            "localize": True,
             "field": "CharField",
             "max_length": 255
         },
         {
             "key": "extra_names",
+            "label": _("Extra Name"),
+            "localize": True,
             "field": "CharField",
             "max_length": 255,
             "required": False
         },
         {
             "key": "last_name",
+            "label": _("Last Name"),
+            "localize": True,
             "field": "CharField",
             "max_length": 255,
             "required": False
         },
         {
-            "key": "ids",
-            "field": "CharField",
-            "max_length": 255,
+            "key": "iddocs",
+            "label": _("ID Documents"),
+            "localize": True,
+            "field": "MultipleUserContentRefField",
+            "modelname": "spider_filets.FileFilet",
+            "required": False
+        },
+        {
+            "key": "anchor",
+            "field": "AnchorField",
             "required": False
         }
     ]
@@ -110,7 +127,8 @@ default_layouts["emergency"] = {
         {
             "key": "bgender",
             "label": _("Biologic Gender"),
-            "field": "ChoiceField",
+            "localize": True,
+            "field": "LocalizedChoiceField",
             "choices": [
                 ("", _("")),
                 ("male", _("male")),
@@ -121,6 +139,7 @@ default_layouts["emergency"] = {
         {
             "key": "bloodgroup",
             "label": _("Blood Group"),
+            "localize": True,
             "field": "ChoiceField",
             "choices": [
                 ("", ""),
@@ -134,6 +153,7 @@ default_layouts["emergency"] = {
         {
             "key": "rhesus_factor",
             "label": _("Rhesus Factor"),
+            "localize": True,
             "field": "ChoiceField",
             "choices": [
                 ("", ""),
@@ -145,7 +165,8 @@ default_layouts["emergency"] = {
         {
             "key": "health_problems",
             "label": _("Health Problems"),
-            "field": "MultipleChoiceField",
+            "localize": True,
+            "field": "LocalizedMultipleChoiceField",
             "choices": [
                 ("heart", _("Heart")),
                 ("diabetes", _("Diabetes")),
@@ -159,7 +180,8 @@ default_layouts["emergency"] = {
         {
             "key": "organ_donations",
             "label": _("Organ donations in case of death"),
-            "field": "SelectMultiple",
+            "localize": True,
+            "field": "LocalizedChoiceField",
             "choices": [
                 ("", ""),
                 ("all", _("All organs")),

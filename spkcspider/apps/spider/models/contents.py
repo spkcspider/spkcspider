@@ -40,8 +40,8 @@ class ContentVariant(models.Model):
 
     def localize_name(self):
         if self.code not in installed_protections:
-            return self.code
-        return self.installed_class.localize_name(self.code)
+            return self.name
+        return self.installed_class.localize_name(self.name)
 
     def __str__(self):
         return self.localize_name()

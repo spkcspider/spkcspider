@@ -129,14 +129,14 @@ class SpiderTag(BaseContent):
                 instance=False,
                 **kwargs
             )
-            ret["initial"] = self.tagdate,
+            ret["initial"] = self.tagdata
             ret["uc"] = kwargs["uc"]
         return ret
 
     def encode_verifiers(self):
         return "".join(
             map(
-                lambda x: "\nverified_by={}".format(
+                lambda x: "verified_by={}\n".format(
                     x.replace("\n", "%0A")
                 ),
                 self.verified_by
@@ -144,7 +144,7 @@ class SpiderTag(BaseContent):
         )
 
     def get_info(self):
-        return "{}{}\ntag={}\n".format(
+        return "{}{}tag={}\n".format(
             super().get_info(unique=self.primary),
             self.encode_verifiers(),
             self.layout.name
