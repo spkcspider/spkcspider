@@ -1,15 +1,21 @@
+
+import hashlib
+import logging
+import requests
+
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
+from django.utils.duration import duration_string
 from django.utils.translation import pgettext
+from django.http import HttpResponseRedirect
+from collections import OrderedDict
 
 
-import hashlib
-import logging
-
+from spkcspider.apps.spider.models import AuthToken, TokenCreationError
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.constants import UserContentType
 
@@ -107,6 +113,25 @@ class PublicKey(BaseContent):
             context=kwargs
         )
 
+# Anchors can ONLY be used for server content.
+# Clients have to be verified seperately
+# 1 To verify client use this trick:
+# requesting party redirects user to server, with a return address in GET
+# the server generates a secret
+# the user authenticates and redirects to the url plus hash of secret
+# the server sends secret via post to requesting party
+# the requesting party can verify that both: client and server are connected
+# this means: anchors are valid for this client
+# or 2: generate a token
+# or 3: use oauth
+
+# advantage of 1,2: simple
+# implementation: if requester in GET, create token and
+# redirect after auth to requester with hash of token
+# post token to requester
+
+# TODO: make hash algorithm configurable
+
 
 @add_content
 class AnchorServer(BaseContent):
@@ -136,6 +161,61 @@ class AnchorServer(BaseContent):
         return "{}@{}".format(
             getattr(self.associated, "id", None),
             request.get_host()
+        )
+
+    def render_view(self, **kwargs):
+        if "requester" in kwargs["request"].GET:
+            k = kwargs.copy()
+            k["scope"] = "raw"
+            token = AuthToken(
+                usercomponent=self.associated.usercomponent,
+                session_key=kwargs["request"].session.session_key
+            )
+            try:
+                token.save()
+            except TokenCreationError as e:
+                logging.exception(e)
+                raise
+            llist = OrderedDict(
+                token=token.token,
+                remaining_tokentime=duration_string(
+                        self.associated.usercomponent.token_duration
+                    )
+            )
+
+            self.extract_form(
+                k, llist, level=1
+            )
+            requester = "https://".format(kwargs["request"].GET["requester"])
+            ret = requests.post(requester, data=llist)
+            if ret.status != 200:
+                token.delete()
+            h = hashlib.new(settings.KEY_HASH_ALGO)
+            h.update(token.token.encode("ascii", "ignore"))
+            if "?" not in requester:
+                requester = "{}?algo={}&hash={}".format(
+                    requester, settings.KEY_HASH_ALGO, h.hexdigest()
+                )
+            else:
+                requester = "{}?algo={}&hash={}".format(
+                    requester, settings.KEY_HASH_ALGO, h.hexdigest()
+                )
+            return HttpResponseRedirect(requester)
+
+        if "raw" in kwargs["request"].GET:
+            k = kwargs.copy()
+            k["scope"] = "raw"
+            return self.render_serialize(**k)
+
+        # not important
+        kwargs["form"] = self.get_form("view")(
+            **self.get_form_kwargs(**kwargs)
+        )
+        kwargs.setdefault("no_button", True)
+        template_name = "spider_base/full_form.html"
+        return render_to_string(
+            template_name, request=kwargs["request"],
+            context=kwargs
         )
 
 

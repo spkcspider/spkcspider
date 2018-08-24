@@ -329,13 +329,14 @@ class BaseContent(models.Model):
         return JsonResponse(llist)
 
     def render_view(self, **kwargs):
-        kwargs["form"] = self.get_form("view")(
-            **self.get_form_kwargs(**kwargs)
-        )
         if "raw" in kwargs["request"].GET:
             k = kwargs.copy()
             k["scope"] = "raw"
             return self.render_serialize(**k)
+
+        kwargs["form"] = self.get_form("view")(
+            **self.get_form_kwargs(**kwargs)
+        )
         kwargs.setdefault("no_button", True)
         template_name = "spider_base/full_form.html"
         return render_to_string(
