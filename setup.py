@@ -6,6 +6,8 @@ from setuptools import setup
 install_requirements = [
     "django>=2",
     "django-simple-jsonfield",
+    'certifi',
+    'urllib3'
 ]
 
 debug_requirements = [

@@ -2,7 +2,6 @@
 import hashlib
 import logging
 import json
-from urllib import request as urlrequest
 
 from django.db import models
 from django.conf import settings
@@ -19,6 +18,7 @@ from collections import OrderedDict
 from spkcspider.apps.spider.models import AuthToken, TokenCreationError
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.constants import UserContentType
+from spkcspider.apps.spider.helpers import url3
 
 logger = logging.getLogger(__name__)
 
@@ -188,15 +188,13 @@ class AnchorServer(BaseContent):
                 k, llist, level=1
             )
             requester = "https://".format(kwargs["request"].GET["requester"])
-            req = urlrequest.Request(
-                requester,
+            ret = url3.request(
+                "POST", requester,
                 data=json.dumps(llist).encode("ascii", errors="ignore"),
-                method="POST",
                 headers={
                     "Content-Type": "application/json"
                 }
             )
-            ret = urlrequest.urlopen(req)
             if ret.status != 200:
                 token.delete()
             h = hashlib.new(settings.KEY_HASH_ALGO)

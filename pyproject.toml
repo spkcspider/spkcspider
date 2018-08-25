@@ -8,6 +8,8 @@ authors = []
 django = '>=2'
 django-simple-jsonfield = '*'
 django-simple-captcha = '*'
+urllib3 = '*'
+certifi = '*'
 
 [tool.poetry.dev-dependencies]
 django-extensions = '*'

@@ -1,6 +1,6 @@
 __all__ = (
     "token_nonce", "MAX_NONCE_SIZE", "ALLOW_ALL_FILTER_FUNC", "cmp_pw",
-    "get_filterfunc"
+    "get_filterfunc", "url3"
 )
 
 
@@ -9,6 +9,8 @@ import base64
 import logging
 from functools import lru_cache
 from importlib import import_module
+import certifi
+import urllib3
 from django.conf import settings
 
 MAX_NONCE_SIZE = 90
@@ -32,6 +34,12 @@ def get_filterfunc(name):
     else:
         module, name = filterpath.rsplit(".", 1)
         return getattr(import_module(module), name)
+
+
+url3 = urllib3.PoolManager(
+    cert_reqs='CERT_REQUIRED',
+    ca_certs=certifi.where()
+)
 
 
 def token_nonce(size=None):
