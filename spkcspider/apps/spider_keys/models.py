@@ -1,7 +1,8 @@
 
 import hashlib
 import logging
-import requests
+import json
+from urllib import request as urlrequest
 
 from django.db import models
 from django.conf import settings
@@ -187,7 +188,15 @@ class AnchorServer(BaseContent):
                 k, llist, level=1
             )
             requester = "https://".format(kwargs["request"].GET["requester"])
-            ret = requests.post(requester, data=llist)
+            req = urlrequest.Request(
+                requester,
+                data=json.dumps(llist).encode("ascii", errors="ignore"),
+                method="POST",
+                headers={
+                    "Content-Type": "application/json"
+                }
+            )
+            ret = urlrequest.urlopen(req)
             if ret.status != 200:
                 token.delete()
             h = hashlib.new(settings.KEY_HASH_ALGO)
