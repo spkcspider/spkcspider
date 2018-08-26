@@ -4,8 +4,8 @@
     Content of: {{name}}
   {% endblocktrans %}{% endblock %}
 
-{% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
-{% block body_class %}w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
+{% block main_classes %}w3-padding {{block.super}} w3-content w3-card-4{% endblock %}
+{% block body_class %}{% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
 
 {% block content %}
   <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
