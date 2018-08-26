@@ -17,7 +17,7 @@
 
 
 {% block content %}
-  <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}">
+  <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
     {% if request.user == uc.user or uc.public %}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">{% trans 'index' %}</a>
     {% endif %}
@@ -52,6 +52,11 @@
         {% endblocktrans %}
       {% endif %}
     </h1>
+    {% if request.remaining_tokenlifetime %}
+    <div>
+      {% include 'spider_base/remaining_tokenlifetime.html' with rtime=request.remaining_tokenlifetime %}
+    </div>
+    {% endif %}
   </div>
 {% if form %}
   {{form.media}}
@@ -94,7 +99,7 @@
   </details>
   {% endif %}
 {% endif %}
-{% if object.id and UserContentType.raw_update in associated.ctype %}
+{% if scope == "update" and UserContentType.raw_update in associated.ctype %}
   <div>
     <a class="w3-button" href="{% url 'ucontent-access' id=object.id nonce=object.nonce access='raw_update' %}">
       <i class="fa fa-settings" aria-hidden="true"></i>

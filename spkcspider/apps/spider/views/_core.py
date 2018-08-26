@@ -71,7 +71,7 @@ class UserTestMixin(AccessMixin):
                     session_key=self.request.session.session_key
                 ).first()
             if token:
-                self.request.remaining_tokentime = token.created-expire
+                self.request.remaining_tokenlifetime = token.created-expire
                 # self.request.is_priv_requester = True
                 return True
 
@@ -97,7 +97,7 @@ class UserTestMixin(AccessMixin):
             except TokenCreationError as e:
                 logging.exception(e)
                 return True
-            self.request.remaining_tokentime = token.created-expire
+            self.request.remaining_tokenlifetime = token.created-expire
             GET = self.request.GET.copy()
             if (
                     self.request.GET.get("prefer_get", "") == "true" or

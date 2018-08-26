@@ -365,9 +365,9 @@ class ContentIndex(UCTestMixin, ListView):
             maindic["token_duration"] = duration_string(
                 self.usercomponent.token_duration
             )
-        elif hasattr(self.request, "remaining_tokentime"):
-            maindic["remaining_tokentime"] = \
-                duration_string(self.request.remaining_tokentime)
+        elif hasattr(self.request, "remaining_tokenlifetime"):
+            maindic["token_time_to_live"] = \
+                duration_string(self.request.remaining_tokenlifetime)
 
         if (
             context["scope"] == "export" or

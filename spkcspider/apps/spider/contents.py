@@ -302,9 +302,9 @@ class BaseContent(models.Model):
             pk=self.associated.pk,
             ctype=self.associated.ctype.name
         )
-        if hasattr(kwargs["request"], "remaining_tokentime"):
-            llist["remaining_tokentime"] = \
-                duration_string(kwargs["request"].remaining_tokentime)
+        if hasattr(kwargs["request"], "remaining_tokenlifetime"):
+            llist["token_time_to_live"] = \
+                duration_string(kwargs["request"].remaining_tokenlifetime)
         if (
                 kwargs["scope"] == "export" or
                 kwargs["request"].GET.get("raw", "") == "embed"

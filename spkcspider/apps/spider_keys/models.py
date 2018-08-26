@@ -181,7 +181,7 @@ class AnchorServer(BaseContent):
                 raise
             llist = OrderedDict(
                 token=token.token,
-                remaining_tokentime=duration_string(
+                token_time_to_live=duration_string(
                         self.associated.usercomponent.token_duration
                     )
             )

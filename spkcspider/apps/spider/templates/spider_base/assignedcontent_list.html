@@ -5,10 +5,10 @@
   {% endblocktrans %}{% endblock %}
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
-{% block body_class %}{% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
+{% block body_class %}w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
 
 {% block content %}
-  <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}">
+  <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
     {% if request.user == uc.user %}
       <a class="w3-right" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">Update</a>
     {% endif %}
@@ -17,6 +17,11 @@
         Content of Component: <em>{{name}}</em>
       {% endblocktrans %}
     </h1>
+    {% if request.remaining_tokenlifetime %}
+    <div>
+      {% include 'spider_base/remaining_tokenlifetime.html' with rtime=request.remaining_tokenlifetime %}
+    </div>
+    {% endif %}
   </div>
   {% if uc.user == request.user %}
     <details class="" style="margin-bottom:30px" {% if object_list|length < 2 %}open="open"{% endif %}>
