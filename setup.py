@@ -7,7 +7,7 @@ install_requirements = [
     "django>=2",
     "django-simple-jsonfield",
     'certifi',
-    'urllib3'
+    'requests'
 ]
 
 debug_requirements = [

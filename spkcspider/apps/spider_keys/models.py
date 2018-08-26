@@ -3,6 +3,9 @@ import hashlib
 import logging
 import json
 
+import requests
+import certifi
+
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -18,7 +21,6 @@ from collections import OrderedDict
 from spkcspider.apps.spider.models import AuthToken, TokenCreationError
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.constants import UserContentType
-from spkcspider.apps.spider.helpers import url3
 
 logger = logging.getLogger(__name__)
 
@@ -188,12 +190,13 @@ class AnchorServer(BaseContent):
                 k, llist, level=1
             )
             requester = "https://".format(kwargs["request"].GET["requester"])
-            ret = url3.request(
-                "POST", requester,
+            ret = requests.post(
+                requester,
                 data=json.dumps(llist).encode("ascii", errors="ignore"),
                 headers={
                     "Content-Type": "application/json"
-                }
+                },
+                verify=certifi.where()
             )
             if ret.status != 200:
                 token.delete()
