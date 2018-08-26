@@ -2,12 +2,13 @@
 <span>{% trans 'Remaining lifetime of token' %}:</span>
 
 <span id="remaining_tokenlifetime-countdown">
-  {% blocktrans trimmed with days=rtime.days hours=rtime.seconds|divide:"3600" minutes=rtime.seconds|divide:"60" seconds=rtime.seconds|remainder:"60" %}
+  {% blocktrans trimmed with days=rtime.days hours=rtime.seconds|divide:"3600" minutes=rtime.seconds|remainder:"3600"|divide:"60" seconds=rtime.seconds|remainder:"60" %}
   Days: {{days}} {{hours}}h:{{minutes}}m:{{seconds}}s
   {% endblocktrans %}
 </span>
 <script>
   var remaining_tokenlifetime_seconds = Math.floor({{rtime.total_seconds}});
+  {# TODO: enter start time of counter, so remaining time is correct even reloaded #}
 
   var interval_id = setInterval(function() {
     remaining_tokenlifetime_seconds -= 1;
