@@ -64,7 +64,10 @@ def generate_form(name, layout):
                 }
             }
 
-        def __init__(self, *, uc=None, initial=None, usertag=None, **kwargs):
+        def __init__(
+            self, *, uc=None, initial=None, usertag=None,
+            request=None, **kwargs
+        ):
             if not initial:
                 initial = {}
             _initial = self.encode_initial(initial)
@@ -73,16 +76,20 @@ def generate_form(name, layout):
             super().__init__(
                 initial=_initial, **kwargs
             )
-            for field in self.fields:
-                if hasattr(field, "queryset"):
-                    filters = {}
-                    attr = getattr(field, "limit_to_usercomponent", None)
-                    if attr:
-                        filters[attr] = uc
-                    attr = getattr(field, "limit_to_user", None)
-                    if attr:
-                        filters[attr] = uc.user
-                    field.queryset = field.queryset.filter(**filters)
+            if request.user != uc.user:
+                for field in self.fields.values():
+                    field.disabled = True
+            else:
+                for field in self.fields:
+                    if hasattr(field, "queryset"):
+                        filters = {}
+                        attr = getattr(field, "limit_to_usercomponent", None)
+                        if attr:
+                            filters[attr] = uc
+                        attr = getattr(field, "limit_to_user", None)
+                        if attr:
+                            filters[attr] = uc.user
+                        field.queryset = field.queryset.filter(**filters)
 
         @classmethod
         def encode_initial(cls, initial, prefix="tag", base=None):

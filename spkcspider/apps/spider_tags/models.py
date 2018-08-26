@@ -134,6 +134,7 @@ class SpiderTag(BaseContent):
             ret["initial"] = self.tagdata.copy()
             ret["uc"] = self.associated.usercomponent
             ret["usertag"] = self
+            ret["request"] = kwargs["request"]
         return ret
 
     def extract_form(
