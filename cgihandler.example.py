@@ -2,12 +2,12 @@
 
 """
 License: Public Domain
-Usage: please copy to cgi.py and change for your own project
+Usage: please copy this file to cgihandler.py and adapt it for your own project
 
 Custom:
 adapt pathes and options for your needs
 
-Nuitka:
+Nuitka (didn't work for me):
 install nuitka (and scons?) in virtual environment
 activate virtual environment and execute
 .venv/bin/nuitka3 --standalone cgihandler.py
@@ -31,7 +31,7 @@ os.environ["SPIDER_SILENCE"] = "true"
 # => topfolder contains spkcspider_etc, e.g. for settings
 #sys.path.insert(0, "../../../spkcspider_etc")
 
-# (if required) path to virtualenv
+# (if required) path to site-packages of virtualenv
 #sys.path.insert(0, ".venv/lib/*/site-packages")
 
 # (if required) path to spkcspider
