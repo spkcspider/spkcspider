@@ -22,11 +22,7 @@ from django.core.exceptions import ValidationError
 from ..helpers import token_nonce, MAX_NONCE_SIZE, get_filterfunc
 from ..constants import ProtectionType
 
-try:
-    from captcha.fields import CaptchaField  # noqa: F401
-    force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
-except ImportError:
-    force_captcha = False
+force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
 
 logger = logging.getLogger(__name__)
 
