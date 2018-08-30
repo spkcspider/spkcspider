@@ -46,13 +46,6 @@ try:
 except ImportError:
     pass
 
-try:
-    # use: CaptchaField elsewise it does not reliable fail
-    from captcha.fields import CaptchaField  # noqa: F401
-    INSTALLED_APPS.append('captcha')
-    USE_CAPTCHAS = True
-except ImportError:
-    USE_CAPTCHAS = False
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -140,6 +133,10 @@ KEY_HASH_ALGO = "sha512"
 MAX_HASH_SIZE = 128
 # OPEN_FOR_REGISTRATION = True # allow registration
 # ALLOW_USERNAME_CHANGE = True # allow users changing their username
+
+## Enable captchas  # noqa: E266
+# INSTALLED_APPS.append('captcha')
+# USE_CAPTCHAS = True
 
 # ANCHOR_HOST
 
