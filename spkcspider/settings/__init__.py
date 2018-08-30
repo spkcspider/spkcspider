@@ -47,7 +47,8 @@ except ImportError:
     pass
 
 try:
-    import captcha  # noqa: F401
+    # use: CaptchaField elsewise it does not reliable fail
+    from captcha.fields import CaptchaField  # noqa: F401
     INSTALLED_APPS.append('captcha')
     USE_CAPTCHAS = True
 except ImportError:
