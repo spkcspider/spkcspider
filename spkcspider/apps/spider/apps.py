@@ -5,8 +5,8 @@ import logging
 
 
 def TriggerUpdate(sender, **_kwargs):
-    from .signals import update_spider
-    results = update_spider.send_robust(sender)
+    from .signals import update_dynamic
+    results = update_dynamic.send_robust(sender)
     for (receiver, result) in results:
         if isinstance(result, Exception):
             logging.exception(result)
