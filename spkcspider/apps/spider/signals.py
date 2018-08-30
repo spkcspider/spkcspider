@@ -1,19 +1,18 @@
 __all__ = (
     "UpdateSpiderCallback", "InitUserCallback", "DeleteContentCallback",
-    "test_success"
+    "update_dynamic"
 )
 from django.dispatch import Signal
-
 from django.conf import settings
 
-test_success = Signal(providing_args=["name", "code"])
+update_dynamic = Signal(providing_args=[])
 
 
 def DeleteContentCallback(sender, instance, **kwargs):
     instance.content.delete(False)
 
 
-def UpdateSpiderCallback(sender, plan=None, **kwargs):
+def UpdateSpiderCallback(**_kwargs):
     # provided apps argument lacks model function support
     # so use this
     from django.apps import apps

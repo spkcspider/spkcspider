@@ -1,6 +1,15 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate, post_save, post_delete
 from django.contrib.auth import get_user_model
+import logging
+
+
+def TriggerUpdate(sender, **_kwargs):
+    from .signals import update_spider
+    results = update_spider.send_robust(sender)
+    for (receiver, result) in results:
+        if isinstance(result, Exception):
+            logging.exception(result)
 
 
 class SpiderBaseConfig(AppConfig):
@@ -11,8 +20,10 @@ class SpiderBaseConfig(AppConfig):
     verbose_name = 'spkcspider base'
 
     def ready(self):
+        from django.conf import settings
         from .signals import (
-            UpdateSpiderCallback, InitUserCallback, DeleteContentCallback
+            UpdateSpiderCallback, InitUserCallback, DeleteContentCallback,
+            update_dynamic
         )
         from .models import (
             AssignedContent
@@ -29,7 +40,14 @@ class SpiderBaseConfig(AppConfig):
             InitUserCallback, sender=get_user_model(),
             dispatch_uid="initial_user"
         )
-        post_migrate.connect(
-            UpdateSpiderCallback, sender=self,
-            dispatch_uid="update_spkcspider"
+
+        update_dynamic.connect(
+            UpdateSpiderCallback,
+            dispatch_uid="update_spider_base"
         )
+
+        if getattr(settings, "UPDATE_DYNAMIC_AFTER_MIGRATION", True):
+            post_migrate.connect(
+                TriggerUpdate, sender=self,
+                dispatch_uid="update_spider_base_trigger"
+            )

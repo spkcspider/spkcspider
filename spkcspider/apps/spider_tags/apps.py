@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-from django.db.models.signals import post_migrate
 from .signals import UpdateDefaultLayouts
 
 
@@ -11,10 +10,12 @@ class SpiderTagsConfig(AppConfig):
     def ready(self):
         from django.apps import apps
         from .fields import valid_fields
+        from spkcspider.apps.spider.signals import update_dynamic
         for app in apps.get_app_configs():
             tags = getattr(app, "spider_tag_fields", {})
             valid_fields.update(tags)
-        post_migrate.connect(
-            UpdateDefaultLayouts, sender=self,
+
+        update_dynamic.connect(
+            UpdateDefaultLayouts,
             dispatch_uid="update_default_layouts"
         )

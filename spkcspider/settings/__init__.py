@@ -137,6 +137,9 @@ MAX_HASH_SIZE = 128
 ## required if using mysql  # noqa: E266
 # MYSQL_HACK = True
 
+## Update dynamic content, ... after migrations, default=true  # noqa: E266
+# UPDATE_DYNAMIC_AFTER_MIGRATION = False
+
 ## Enable captchas  # noqa: E266
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True
