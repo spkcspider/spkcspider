@@ -61,7 +61,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('deletion_requested', models.DateTimeField(blank=True, default=None, null=True)),
-                ('info', models.TextField(editable=False, validators=[contents.info_field_validator], max_length=65536)),
+                ('info', models.TextField(editable=False, validators=[contents.info_field_validator])),
                 ('object_id', models.BigIntegerField(editable=False)),
                 ('content_type', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
             ],
