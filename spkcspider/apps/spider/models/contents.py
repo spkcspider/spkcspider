@@ -119,7 +119,8 @@ class AssignedContent(models.Model):
     #  primary: primary content of type for usercomponent
     info = models.TextField(
         null=False, editable=False,
-        validators=[info_field_validator]
+        validators=[info_field_validator],
+        max_length=65536  # for mysgl
     )
     content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, editable=False
