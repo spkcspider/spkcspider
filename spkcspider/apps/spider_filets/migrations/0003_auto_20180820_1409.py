@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('spider_base', '0007_userinfo'),
+        ('spider_base', '0001_initial'),
         ('spider_filets', '0002_textfilet_non_public_edit'),
     ]
 
