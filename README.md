@@ -32,8 +32,7 @@ spkcspider.apps.spiderkeys: store public keys
 spkcspider: contains spkcspider url detection and wsgi handler
 
 
-Note: Mysql is not supported. Use sqlite instead.
-The only way to fix mysql would be to disable database constraints.
+Note: Mysql works maybe. Set MYSQL_HACK = True if you use mysql
 
 # API
 

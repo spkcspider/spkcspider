@@ -11,6 +11,7 @@ import logging
 from django.db import models
 from django.utils.translation import gettext
 from django.urls import reverse
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -132,12 +133,9 @@ class AssignedContent(models.Model):
     class Meta:
         unique_together = [
             ('content_type', 'object_id'),
-            ('usercomponent', 'info'),
         ]
-        # indexes = [
-        #     models.Index(fields=['usercomponent']),
-        #     models.Index(fields=['object_id']),
-        # ]
+        if not getattr(settings, "MYSQL_HACK", False):
+            unique_together.append(('usercomponent', 'info'))
 
     def __str__(self):
         return self.content.__str__()
@@ -188,6 +186,18 @@ class AssignedContent(models.Model):
                     'Not an allowed ContentVariant for this user'
                 )
             )
+
+        if getattr(settings, "MYSQL_HACK", False):
+            obj = AssignedContent.objects.filter(
+                usercomponent=self.usercomponent,
+                info=self.info
+            ).first()
+
+            if obj and obj.id != getattr(self, "id", None):
+                raise ValidationError(
+                    message=_("Unique Content already exists."),
+                    code='unique_together',
+                )
 
     def get_absolute_url(self):
         return reverse(

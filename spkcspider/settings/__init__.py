@@ -134,6 +134,9 @@ MAX_HASH_SIZE = 128
 # OPEN_FOR_REGISTRATION = True # allow registration
 # ALLOW_USERNAME_CHANGE = True # allow users changing their username
 
+## required if using mysql  # noqa: E266
+# MYSQL_HACK = True
+
 ## Enable captchas  # noqa: E266
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True
