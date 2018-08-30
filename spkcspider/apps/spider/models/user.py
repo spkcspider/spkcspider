@@ -24,9 +24,10 @@ from ..constants import ProtectionType
 
 force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
 
+# require USE_CAPTCHAS
+force_captcha = (force_captcha and getattr(settings, "USE_CAPTCHAS", False))
+
 logger = logging.getLogger(__name__)
-
-
 protected_names = ["index"]
 
 hex_size_of_bigid = 16
