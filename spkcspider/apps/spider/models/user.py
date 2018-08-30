@@ -108,9 +108,6 @@ class UserComponent(models.Model):
 
     class Meta:
         unique_together = [("user", "name")]
-        indexes = [
-            models.Index(fields=['user']),
-        ]
 
     def __repr__(self):
         return "<UserComponent: %s: %s>" % (self.username, self.name)

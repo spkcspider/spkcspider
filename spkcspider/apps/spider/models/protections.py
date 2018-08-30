@@ -198,9 +198,6 @@ class AssignedProtection(models.Model):
 
     class Meta:
         unique_together = [("protection", "usercomponent")]
-        indexes = [
-            models.Index(fields=['usercomponent']),
-        ]
 
     def __str__(self):
         return "%s -> %s" % (
