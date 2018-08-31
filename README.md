@@ -32,7 +32,9 @@ spkcspider.apps.spiderkeys: store public keys
 spkcspider: contains spkcspider url detection and wsgi handler
 
 
-Note: Mysql works maybe. Set MYSQL_HACK = True if you use mysql
+Note: Mysql works maybe. Set MYSQL_HACK = True and fix the errors manually in the db.
+Better use postgresql or sqlite.
+
 
 # API
 
