@@ -35,9 +35,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.sites',
+    'django.contrib.sites',  # for flatpages
     'django.contrib.flatpages',
-    # 'django.contrib.sites',
     'spkcspider.apps.spider',
 ]
 try:

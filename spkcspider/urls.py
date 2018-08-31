@@ -46,8 +46,16 @@ for app in apps.get_app_configs():
             )
         )
 
+
+if getattr(settings, "USE_CAPTCHAS", False):
+    urlpatterns.apppend(path(r'captcha/', include('captcha.urls')))
+
+if 'django.contrib.flatpages' in settings.INSTALLED_APPS:
+    urlpatterns.append(
+        path('pages/', include('django.contrib.flatpages.urls'))
+    )
+
 urlpatterns += [
-    path('pages/', include('django.contrib.flatpages.urls')),
     path('favicon.ico', favicon_view),
     path('robots.txt', robots_view),
     path(
@@ -58,6 +66,3 @@ urlpatterns += [
         name="home"
     ),
 ]
-
-if getattr(settings, "USE_CAPTCHAS", False):
-    urlpatterns.append(path(r'captcha/', include('captcha.urls')))
