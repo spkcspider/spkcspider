@@ -50,8 +50,8 @@ Better use postgresql or sqlite.
 * add: create usercomponent/Cpntent, with AssignedContent form
 * add_raw: create usercomponent/Content, without AssignedContent form
 * update: update Content
-* update_raw: update Content without, without AssignedContent form
-* export: later, not finished
+* update_raw: update Content, without AssignedContent form
+* export: export data (import not finished)
 * view: present usercontent to untrusted parties
 
 # External usage
@@ -72,13 +72,18 @@ verified_by urls should return hashname:hash_hexdigest
 
 # TODO
 
-* textfilet: add what you see is what you get js stuff
+* design: cleanup
+* textfilet
+  * add what you see is what you get js stuff
+  * hot reloading
 * layout: verifiers+examples
 * layout: cleanup defaults
+* improve anchors
 
 Later:
 * export protections and protection settings, Maybe?
 * performance: cache raw zip and json responses => cache decorators
+  * better: don't handle in requests, some queue or job
 * import user content, usercomonents and usercontent
 * travelling protection: disable access till a timepoint
 * travelmode: disable cache and "recently used" completely,
@@ -87,12 +92,6 @@ Later:
 * log changes
 * calculate protection strength
 
-* anchors: epic feature!!!!
-  * see spider_keys for design
-  * allows login
-  * either the verified hash of unique identifying information
-  * or public keys with signed proofs (with private key)
-* layout: anchors: ids which ensure user is unique, and allow roaming between dns names
 
 # Thanks
 
