@@ -234,7 +234,7 @@ class RandomFailProtection(BaseProtection):
         if obj and obj.data.get("success_rate", None):
             if _sysrand.randrange(1, 101) <= obj.data["success_rate"]:
                 return True
-            else:
+            elif obj.data.get("use_404", False):
                 raise Http404()
         return False
 
