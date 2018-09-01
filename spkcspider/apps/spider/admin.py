@@ -50,6 +50,7 @@ class UserContentInline(admin.TabularInline):
     # content is not visible
 
     def has_delete_permission(self, request, obj=None):
+        n = request.user._meta.app_label
         m = request.user._meta.model_name
         if not request.user.is_active:
             return False
@@ -58,7 +59,7 @@ class UserContentInline(admin.TabularInline):
             return True
         # obj is UserComponent
         if obj.name == "index":
-            return request.user.has_perm("spider_base.delete_{}".format(m))
+            return request.user.has_perm("{}.delete_{}".format(n, m))
         return request.user.has_perm("spider_base.delete_usercontent")
 
     def has_view_permission(self, request, obj=None):
@@ -99,6 +100,7 @@ class UserComponentAdmin(admin.ModelAdmin):
         return request.user.has_perm("spider_base.add_usercomponent")
 
     def has_delete_permission(self, request, obj=None):
+        n = request.user._meta.app_label
         m = request.user._meta.model_name
         if not request.user.is_active:
             return False
@@ -106,7 +108,7 @@ class UserComponentAdmin(admin.ModelAdmin):
         if not obj or request.user.is_superuser:
             return True
         if obj.name == "index":
-            return request.user.has_perm("spider_base.delete_{}".format(m))
+            return request.user.has_perm("{}.delete_{}".format(n, m))
         return request.user.has_perm("spider_base.delete_usercomponent")
 
     def has_view_permission(self, request, obj=None):
@@ -182,10 +184,13 @@ class UserInfoAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
+        n = request.user._meta.app_label
         m = request.user._meta.model_name
         if not request.user.is_active:
             return False
         # not obj allows deletion of users
         if not obj:
             return True
-        return request.user.has_perm("spider_base.delete_{}".format(m))
+        ret = request.user.has_perm("{}.delete_{}".format(n, m))
+        print(ret)
+        return ret
