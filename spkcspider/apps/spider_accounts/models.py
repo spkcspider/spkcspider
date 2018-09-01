@@ -19,6 +19,9 @@ class SpiderUser(AbstractUser):
     if getattr(settings, 'ALLOW_USERNAME_CHANGE', False):
         SAFE_FIELDS.insert(0, 'username')
 
+    # first_name,last_name are used in the UserForm so don't remove them
+    # unless you want spending your time adapting the adminform
+
     objects = UserManager()
 
     class Meta(AbstractUser.Meta):

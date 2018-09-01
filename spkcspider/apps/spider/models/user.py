@@ -202,6 +202,7 @@ class AuthToken(models.Model):
 
 
 class UserInfo(models.Model):
+    """ Contains generated Informations about user """
     id = models.BigAutoField(primary_key=True, editable=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
