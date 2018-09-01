@@ -8,7 +8,9 @@
 </span>
 <script>
   var remaining_tokenlifetime_seconds = Math.floor({{rtime.total_seconds}});
-  {# TODO: enter start time of counter, so remaining time is correct even reloaded #}
+  // adjust cached pages to real remaining seconds
+  // instead of multiplying, add zeros as text
+  remaining_tokenlifetime_seconds += {% now "U" %}000-new Date().getTime();
 
   var interval_id = setInterval(function() {
     remaining_tokenlifetime_seconds -= 1;

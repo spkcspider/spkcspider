@@ -17,14 +17,14 @@ class AssignedProtectionInline(admin.TabularInline):
             return True
         if not obj:
             return False
-        return request.user == obj.usercomponent.user
+        return request.user == obj.user
 
     def has_view_permission(self, request, obj=None):
         if not obj:
             return True
         return request.user.is_superuser or \
             request.user.is_staff or \
-            request.user == obj.usercomponent.user
+            request.user == obj.user
 
     has_delete_permission = has_view_permission
     has_change_permission = has_view_permission
@@ -38,28 +38,29 @@ class UserContentInline(admin.TabularInline):
     def has_delete_permission(self, request, obj=None):
         if request.user.is_superuser:
             return True
-        if not obj or obj.usercomponent.name == "index":
+        # obj is UserComponent
+        if not obj or obj.name == "index":
             return False
         return request.user.is_staff
 
     def has_view_permission(self, request, obj=None):
         if request.user.is_superuser or request.user == obj.user:
             return True
-        if not obj or obj.usercomponent.name == "index":
+        # obj is UserComponent
+        if not obj or obj.name == "index":
             return False
         return request.user.has_perm("spider_base.view_usercontent")
 
     def has_change_permission(self, request, obj=None):
         if not obj:
             return False
-        if obj.usercomponent.name == "index":
+        # obj is UserComponent
+        if obj.name == "index":
             return False
         return request.user.is_superuser
 
     def has_add_permission(self, request, obj=None):
-        if not obj:
-            return False
-        return request.user.has_perm("spider_base.add_usercontent")
+        return False
 
 
 @admin.register(UserComponent)
