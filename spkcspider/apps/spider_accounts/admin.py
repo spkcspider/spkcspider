@@ -7,27 +7,38 @@ from .models import SpiderUser
 
 @admin.register(SpiderUser)
 class UserAdmin(user_admin.UserAdmin):
+    # exclude = ["first_name", "last_name"]
 
     def has_change_permission(self, request, obj=None):
-        if obj and obj != request.user:
-            if request.user.is_superuser:
+        if obj:
+            if not request.user.is_active:
+                return False
+            if request.user.is_superuser or request.user == obj:
                 return True
             # only superuser can alter superusers
             if obj.is_superuser:
                 return False
-        super().has_change_permission(request, obj)
+        return super().has_change_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         if obj and obj != request.user:
             if request.user.is_superuser:
                 return True
             # only superuser can delete superusers
             if obj.is_superuser:
                 return False
-        super().has_delete_permission(request, obj)
+        return super().has_delete_permission(request, obj)
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
+    def get_readonly_fields(self, request, obj=None):
+        fields = []
         if not request.user.is_superuser:
-            form.fields["is_superuser"].disabled = True
-        return form
+            fields.append("is_superuser")
+            fields.append("last_login")
+            fields.append("date_joined")
+            if not self.has_change_permission(request, obj):
+                fields.append("groups")
+                fields.append("permissions")
+                fields.append("is_staff")
+        return fields

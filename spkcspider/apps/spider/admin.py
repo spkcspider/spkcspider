@@ -13,21 +13,30 @@ class AssignedProtectionInline(admin.TabularInline):
     fields = ['active', 'instant_fail', 'protection']
 
     def has_add_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         if obj and request.user == obj.user:
             return True
-        super().has_add_permission(request, obj)
+        return super().has_add_permission(request, obj)
 
     def has_change_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         if obj and request.user == obj.user:
             return True
-        super().has_change_permission(request, obj)
+        return super().has_change_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
         if obj and request.user == obj.user:
             return True
-        super().has_delete_permission(request, obj)
+
+        if not request.user.is_active:
+            return False
+        return super().has_delete_permission(request, obj)
 
     def has_view_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         if not obj:
             return True
         return request.user.is_superuser or \
@@ -41,11 +50,15 @@ class UserContentInline(admin.TabularInline):
     # content is not visible
 
     def has_delete_permission(self, request, obj=None):
-        if request.user.is_superuser:
+        m = request.user._meta.model_name
+        if not request.user.is_active:
+            return False
+        # not obj allows deletion of users
+        if not obj or request.user.is_superuser:
             return True
         # obj is UserComponent
-        if not obj or obj.name == "index":
-            return False
+        if obj.name == "index":
+            return request.user.has_perm("spider_base.delete_{}".format(m))
         return request.user.has_perm("spider_base.delete_usercontent")
 
     def has_view_permission(self, request, obj=None):
@@ -57,6 +70,8 @@ class UserContentInline(admin.TabularInline):
         return request.user.has_perm("spider_base.view_usercontent")
 
     def has_change_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         # obj is UserComponent
         if not obj or obj.name == "index":
             return False
@@ -77,18 +92,26 @@ class UserComponentAdmin(admin.ModelAdmin):
     fields = ['name', 'deletion_requested', 'nonce']
 
     def has_add_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         if request.user.is_superuser:
             return True
         return request.user.has_perm("spider_base.add_usercomponent")
 
     def has_delete_permission(self, request, obj=None):
-        if not obj and request.user.is_superuser:
-            return True
-        if not obj or obj.name == "index":
+        m = request.user._meta.model_name
+        if not request.user.is_active:
             return False
+        # not obj allows deletion of user
+        if not obj or request.user.is_superuser:
+            return True
+        if obj.name == "index":
+            return request.user.has_perm("spider_base.delete_{}".format(m))
         return request.user.has_perm("spider_base.delete_usercomponent")
 
     def has_view_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         if request.user.is_superuser:
             return True
         if not obj or obj.name == "index":
@@ -96,6 +119,8 @@ class UserComponentAdmin(admin.ModelAdmin):
         return request.user == obj.user or request.user.is_staff
 
     def has_change_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         if request.user.is_superuser or \
            request.user.has_perm("spider_base.change_usercomponent"):
             return True
@@ -110,12 +135,18 @@ class ProtectionAdmin(admin.ModelAdmin):
         return True
 
     def has_change_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         return request.user.is_superuser or request.user.is_staff
 
     def has_add_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         return request.user.is_superuser or request.user.is_staff
 
     def has_delete_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         return request.user.is_superuser or request.user.is_staff
 
 
@@ -128,14 +159,33 @@ class ContentVariantAdmin(ProtectionAdmin):
 class UserInfoAdmin(admin.ModelAdmin):
     fields = []
 
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if 'delete_selected' in actions:
+            del actions['delete_selected']
+        return actions
+
     def has_view_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
         return request.user.is_superuser or request.user.is_staff
 
     def has_change_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
+        # not obj allows deletion of users
+        if not obj:
+            return True
         return False
 
     def has_add_permission(self, request, obj=None):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        m = request.user._meta.model_name
+        if not request.user.is_active:
+            return False
+        # not obj allows deletion of users
+        if not obj:
+            return True
+        return request.user.has_perm("spider_base.delete_{}".format(m))

@@ -17,6 +17,7 @@ from django.urls import path, include
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.apps import apps
 from spkcspider.apps.spider.views import ComponentAllIndex
 
@@ -27,7 +28,8 @@ robots_view = RedirectView.as_view(
     url='{}spider_base/robots.txt'.format(settings.STATIC_URL), permanent=True
 )
 
-
+# disable admin login page
+admin.site.login = login_required(admin.site.login)
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]
