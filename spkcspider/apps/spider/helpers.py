@@ -1,15 +1,19 @@
 __all__ = (
     "token_nonce", "MAX_NONCE_SIZE", "ALLOW_ALL_FILTER_FUNC", "cmp_pw",
-    "get_filterfunc"
+    "get_settings_func", "generate_embedded"
 )
 
 
 import os
 import base64
 import logging
+import zipfile
+import tempfile
+
 from functools import lru_cache
 from importlib import import_module
 from django.conf import settings
+from django.http import FileResponse
 
 MAX_NONCE_SIZE = 90
 
@@ -21,11 +25,24 @@ def ALLOW_ALL_FILTER_FUNC(*args, **kwargs):
     return True
 
 
+def generate_embedded(func, context, name=None):
+    fil = tempfile.SpooledTemporaryFile(max_size=2048)
+    with zipfile.ZipFile(fil, "w") as zip:
+        func(zip, context)
+    fil.seek(0, 0)
+    ret = FileResponse(
+        fil,
+        content_type='application/force-download'
+    )
+    ret['Content-Disposition'] = 'attachment; filename=result.zip'
+    return ret
+
+
 @lru_cache()
-def get_filterfunc(name):
+def get_settings_func(name, default):
     filterpath = getattr(
         settings, name,
-        "spkcspider.apps.spider.helpers.ALLOW_ALL_FILTER_FUNC"
+        default
     )
     if callable(filterpath):
         return filterpath

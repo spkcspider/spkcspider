@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
-from spkcspider.apps.spider.helpers import get_filterfunc
+from spkcspider.apps.spider.helpers import get_settings_func
 from .models import FileFilet, TextFilet
 
 
@@ -28,7 +28,10 @@ class FileForm(forms.ModelForm):
             return ret
         if not ret["name"] or ret["name"].strip() == "":
             ret["name"] = ret["file"].name
-        func = get_filterfunc("UPLOAD_FILTER_FUNC")
+        func = get_settings_func(
+            "UPLOAD_FILTER_FUNC",
+            "spkcspider.apps.spider.helpers.ALLOW_ALL_FILTER_FUNC"
+        )
         if not func(ret["file"]):
             raise forms.ValidationError(
                 _("%(name)s is not allowed content"),

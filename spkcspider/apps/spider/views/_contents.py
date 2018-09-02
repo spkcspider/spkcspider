@@ -3,8 +3,6 @@
 __all__ = (
     "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
 )
-import zipfile
-import tempfile
 import json
 from collections import OrderedDict
 from datetime import timedelta
@@ -15,7 +13,7 @@ from django.views.generic.base import TemplateResponseMixin, View
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.http.response import HttpResponseBase
-from django.http import JsonResponse, FileResponse
+from django.http import JsonResponse
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
@@ -28,6 +26,7 @@ from ..contents import rate_limit_func
 from ..constants import UserContentType
 from ..models import AssignedContent, ContentVariant, UserComponent
 from ..forms import UserContentForm
+from ..helpers import get_settings_func
 
 
 class ContentBase(UCTestMixin):
@@ -159,95 +158,6 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         )
 
 
-class ContentAdd(ContentBase, ModelFormMixin,
-                 TemplateResponseMixin, View):
-    scope = "add"
-    model = ContentVariant
-    also_authenticated_users = True
-
-    def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        return self.render_to_response(self.get_context_data())
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        return self.render_to_response(self.get_context_data())
-
-    def test_func(self):
-        # test if user and check if user is allowed to create content
-        if (
-            self.has_special_access(user=True, superuser=False) and
-            self.usercomponent.user_info.allowed_content.filter(
-                name=self.kwargs["type"]
-            ).exists()
-        ):
-            return True
-        return False
-
-    def get_context_data(self, **kwargs):
-        kwargs["user_content"] = AssignedContent(
-            usercomponent=self.usercomponent,
-            ctype=self.object
-        )
-        kwargs["content_type"] = self.object.installed_class
-        form_kwargs = {
-            "instance": kwargs["user_content"],
-            "initial": {
-                "usercomponent": self.usercomponent
-            }
-        }
-        if self.request.method in ('POST', 'PUT'):
-            form_kwargs.update({
-                'data': self.request.POST,
-                # 'files': self.request.FILES,
-            })
-        kwargs["form"] = UserContentForm(**form_kwargs)
-        return super().get_context_data(**kwargs)
-
-    def get_form(self):
-        # should never be called
-        raise NotImplementedError
-
-    def get_object(self, queryset=None):
-        if not queryset:
-            queryset = self.get_queryset()
-        qquery = models.Q(name=self.kwargs["type"])
-        if self.usercomponent.name != "index":
-            qquery &= ~models.Q(
-                ctype__contains=UserContentType.confidential.value
-            )
-
-        if self.usercomponent.public:
-            qquery &= models.Q(
-                ctype__contains=UserContentType.public.value
-            )
-        return get_object_or_404(queryset, qquery)
-
-    def render_to_response(self, context):
-        ucontent = context.pop("user_content")
-        ob = context["content_type"].static_create(
-            associated=ucontent, **context
-        )
-        context["render_in_form"] = True
-        rendered = ob.render(**ob.kwargs)
-
-        if UserContentType.raw_add.value in self.object.ctype:
-            return rendered
-        # return response if content returned response
-        if isinstance(rendered, HttpResponseBase):
-            return rendered
-        # show framed output
-        context["content"] = rendered
-        # redirect if saving worked
-        if getattr(ob, "id", None):
-            assert(hasattr(ucontent, "id") and ucontent.usercomponent)
-            return redirect(
-                'spider_base:ucontent-access', id=ucontent.id,
-                nonce=ucontent.nonce, access="update"
-            )
-        return super().render_to_response(context)
-
-
 class ContentIndex(UCTestMixin, ListView):
     model = AssignedContent
     scope = "list"
@@ -346,14 +256,31 @@ class ContentIndex(UCTestMixin, ListView):
             return None
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
+    def generate_embedded(self, zip, context):
+        ctx, maindic = context["context"], context["maindic"]
+        deref_level = 1
+        if self.request.GET.get("deref", "") == "true":
+            deref_level = 2
+        # Here export and raw
+        zip.writestr("data.json", json.dumps(maindic))
+        for n, content in enumerate(ctx["object_list"]):
+            llist = OrderedDict(
+                pk=content.pk,
+                ctype=content.ctype.name
+            )
+            content.content.extract_form(
+                ctx, llist, zip, level=deref_level,
+                prefix="{}/".format(n)
+            )
+            zip.writestr(
+                "{}/data.json".format(n), json.dumps(llist)
+            )
+
     def render_to_response(self, context):
         if context["scope"] not in ["export", "raw"]:
             return super().render_to_response(context)
 
         context["request"] = self.request
-        deref_level = 1
-        if self.request.GET.get("deref", "") == "true":
-            deref_level = 2
 
         maindic = OrderedDict(
             name=self.usercomponent.name,
@@ -373,29 +300,13 @@ class ContentIndex(UCTestMixin, ListView):
             context["scope"] == "export" or
             self.request.GET.get("raw", "") == "embed"
         ):
-            fil = tempfile.SpooledTemporaryFile(max_size=2048)
-            with zipfile.ZipFile(fil, "w") as zip:
-                zip.writestr("data.json", json.dumps(maindic))
-                for n, content in enumerate(context["object_list"]):
-                    llist = OrderedDict(
-                        pk=content.pk,
-                        ctype=content.ctype.name
-                    )
-                    content.content.extract_form(
-                        context, llist, zip, level=deref_level,
-                        prefix="{}/".format(n)
-                    )
-                    zip.writestr(
-                        "{}/data.json".format(n), json.dumps(llist)
-                    )
-
-            fil.seek(0, 0)
-            ret = FileResponse(
-                fil,
-                content_type='application/force-download'
+            return get_settings_func(
+                "GENERATE_EMBEDDED_FUNC",
+                "spkcspider.apps.spider.helpers.generate_embedded"
+            )(
+                self.generate_embedded, locals(),
+                "{}_None".format(self.usercomponent.name)
             )
-            ret['Content-Disposition'] = 'attachment; filename=result.zip'
-            return ret
 
         hostpart = "{}://{}".format(
             self.request.scheme, self.request.get_host()
@@ -421,6 +332,95 @@ class ContentIndex(UCTestMixin, ListView):
             ],
             **maindic
         })
+
+
+class ContentAdd(ContentBase, ModelFormMixin,
+                 TemplateResponseMixin, View):
+    scope = "add"
+    model = ContentVariant
+    also_authenticated_users = True
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_to_response(self.get_context_data())
+
+    def test_func(self):
+        # test if user and check if user is allowed to create content
+        if (
+            self.has_special_access(user=True, superuser=False) and
+            self.usercomponent.user_info.allowed_content.filter(
+                name=self.kwargs["type"]
+            ).exists()
+        ):
+            return True
+        return False
+
+    def get_context_data(self, **kwargs):
+        kwargs["user_content"] = AssignedContent(
+            usercomponent=self.usercomponent,
+            ctype=self.object
+        )
+        kwargs["content_type"] = self.object.installed_class
+        form_kwargs = {
+            "instance": kwargs["user_content"],
+            "initial": {
+                "usercomponent": self.usercomponent
+            }
+        }
+        if self.request.method in ('POST', 'PUT'):
+            form_kwargs.update({
+                'data': self.request.POST,
+                # 'files': self.request.FILES,
+            })
+        kwargs["form"] = UserContentForm(**form_kwargs)
+        return super().get_context_data(**kwargs)
+
+    def get_form(self):
+        # should never be called
+        raise NotImplementedError
+
+    def get_object(self, queryset=None):
+        if not queryset:
+            queryset = self.get_queryset()
+        qquery = models.Q(name=self.kwargs["type"])
+        if self.usercomponent.name != "index":
+            qquery &= ~models.Q(
+                ctype__contains=UserContentType.confidential.value
+            )
+
+        if self.usercomponent.public:
+            qquery &= models.Q(
+                ctype__contains=UserContentType.public.value
+            )
+        return get_object_or_404(queryset, qquery)
+
+    def render_to_response(self, context):
+        ucontent = context.pop("user_content")
+        ob = context["content_type"].static_create(
+            associated=ucontent, **context
+        )
+        context["render_in_form"] = True
+        rendered = ob.render(**ob.kwargs)
+
+        if UserContentType.raw_add.value in self.object.ctype:
+            return rendered
+        # return response if content returned response
+        if isinstance(rendered, HttpResponseBase):
+            return rendered
+        # show framed output
+        context["content"] = rendered
+        # redirect if saving worked
+        if getattr(ob, "id", None):
+            assert(hasattr(ucontent, "id") and ucontent.usercomponent)
+            return redirect(
+                'spider_base:ucontent-access', id=ucontent.id,
+                nonce=ucontent.nonce, access="update"
+            )
+        return super().render_to_response(context)
 
 
 class ContentRemove(ComponentDelete):

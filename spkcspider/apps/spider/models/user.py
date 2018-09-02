@@ -19,7 +19,7 @@ from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 
-from ..helpers import token_nonce, MAX_NONCE_SIZE, get_filterfunc
+from ..helpers import token_nonce, MAX_NONCE_SIZE, get_settings_func
 from ..constants import ProtectionType
 
 force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
@@ -219,7 +219,10 @@ class UserInfo(models.Model):
     def calculate_allowed_content(self):
         ContentVariant = apps.get_model("spider_base.ContentVariant")
         allowed = []
-        cfilterfunc = get_filterfunc("ALLOWED_CONTENT_FILTER")
+        cfilterfunc = get_settings_func(
+            "ALLOWED_CONTENT_FILTER",
+            "spkcspider.apps.spider.helpers.ALLOW_ALL_FILTER_FUNC"
+        )
         for variant in ContentVariant.objects.all():
             if cfilterfunc(self.user, variant):
                 allowed.append(variant)
