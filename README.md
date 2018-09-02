@@ -52,10 +52,10 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 
 ## Special Scopes
 
-* add: create usercomponent/Cpntent, with AssignedContent form
-* add_raw: create usercomponent/Content, without AssignedContent form
-* update: update Content
-* update_raw: update Content, without AssignedContent form
+* add: create content, with AssignedContent form
+* raw_add: not existent, can be archieved by return response
+* update: update content
+* raw_update: update Content, without AssignedContent form, adds second raw update mode
 * export: export data (import not finished)
 * view: present usercontent to untrusted parties
 

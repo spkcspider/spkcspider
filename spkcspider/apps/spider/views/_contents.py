@@ -403,8 +403,6 @@ class ContentAdd(ContentBase, ModelFormMixin,
         context["render_in_form"] = True
         rendered = ob.render(**ob.kwargs)
 
-        if UserContentType.raw_add.value in self.object.ctype:
-            return rendered
         # return response if content returned response
         if isinstance(rendered, HttpResponseBase):
             return rendered

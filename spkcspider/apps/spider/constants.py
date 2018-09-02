@@ -29,9 +29,9 @@ class UserContentType(str, enum.Enum):
     # allow public attribute, incompatible with confidential
     public = "b"
     # update content is without form/for form updates it is not rendered
+    # required for still beeing able to update elemental parameters
     raw_update = "c"
-    # adding content renders no form, only raw output of render
-    raw_add = "d"
+    # raw_add not required, archieved by returning response
     # allow links from non public usercomponents
     link_private = "e"
     # allow links from public usercomponents
