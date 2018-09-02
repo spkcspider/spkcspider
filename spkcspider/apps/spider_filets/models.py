@@ -27,9 +27,11 @@ def get_file_path(instance, filename):
     # try 100 times to find free filename
     # but should not take more than 1 try
     for _i in range(0, 100):
-        ret_path = posixpath.join(
-            ret, str(instance.associated.usercomponent.user.pk),
-            token_nonce(size), filename
+        ret_path = default_storage.generate_filename(
+            posixpath.join(
+                ret, str(instance.associated.usercomponent.user.pk),
+                token_nonce(size), filename
+            )
         )
         if not default_storage.exists(ret_path):
             break

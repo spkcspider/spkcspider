@@ -10,7 +10,6 @@ import logging
 import zipfile
 import tempfile
 import time
-import posixpath
 
 from functools import lru_cache
 from importlib import import_module
@@ -35,16 +34,17 @@ def generate_embedded(func, context, obj=None):
     from .models import UserComponent, AssignedContent
     directory = getattr(settings, "TMP_EMBEDDED_DIR", None)
     if directory:
+        # not neccessary posix
         if not obj:
-            path = posixpath.join(directory, "main.zip")
+            path = os.path.join(directory, "main.zip")
             _time = int(time.time())-43200  # update all 12 hours
         elif isinstance(obj, UserComponent):
-            path = posixpath.join(
+            path = os.path.join(
                 directory, "uc_{}.zip".format(obj.id)
             )
             _time = int(time.time())-7200  # update all 2 hours
         elif isinstance(obj, AssignedContent):  # currently not used
-            path = posixpath.join(
+            path = os.path.join(
                 directory, "ac_{}.zip".format(obj.id)
             )
             _time = int(time.time())-300  # update all 5 minutes
