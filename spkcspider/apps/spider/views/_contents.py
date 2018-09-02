@@ -303,10 +303,7 @@ class ContentIndex(UCTestMixin, ListView):
             return get_settings_func(
                 "GENERATE_EMBEDDED_FUNC",
                 "spkcspider.apps.spider.helpers.generate_embedded"
-            )(
-                self.generate_embedded, locals(),
-                "{}_None".format(self.usercomponent.name)
-            )
+            )(self.generate_embedded, locals(), self.usercomponent)
 
         hostpart = "{}://{}".format(
             self.request.scheme, self.request.get_host()

@@ -36,17 +36,22 @@ Note: Mysql works maybe. Set MYSQL_HACK = True and fix the errors manually in th
 Better use postgresql or sqlite.
 
 
+Note: there are some migration breaks. Especially to unbreak mysql. Should not happen after tests are integrated
+
+
 # API
 
 ## authentication/privileges
+
 * request.is_priv_requester: is private/privileged access. Fullfilled if:
   * is privileged: user, staff, admin
   * non public
   * protections were fullfilled? Maybe later, needs design
 * request.is_owner: requesting user owns the components
-* request.protections: True: enough protections were fullfilled, list: protections which failed, False: no access
+* request.protections: True: enough protections were fullfilled, list: protections which failed, False: no access, no matter what
 
 ## Special Scopes
+
 * add: create usercomponent/Cpntent, with AssignedContent form
 * add_raw: create usercomponent/Content, without AssignedContent form
 * update: update Content
@@ -58,7 +63,7 @@ Better use postgresql or sqlite.
 
 There are some special GET parameters for services with special requirements:
 * prefer_get=true: retrieve token as GET parameter
-, token=xy: token as GET parameter, if invalid refresh token
+* token=xy: token as GET parameter, if invalid: refresh token
 * raw=true: optimize output for machines
 * raw=embed: embed content, for ContentList only
 * id=id&id=id: limit tp ids, for ContentList only
@@ -66,7 +71,7 @@ There are some special GET parameters for services with special requirements:
 * info=foo: search info tag in info for list only
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
-* deref=true: dereference references to BaseContent
+* deref=true: dereference references to other content (link, tags)
 
 verified_by urls should return hashname:hash_hexdigest
 
@@ -79,11 +84,11 @@ verified_by urls should return hashname:hash_hexdigest
 * layout: verifiers+examples
 * layout: cleanup defaults
 * improve anchors
+* tests
 
 Later:
 * export protections and protection settings, Maybe?
-* performance: cache raw zip and json responses => cache decorators
-  * better: don't handle in requests, some queue or job
+* performance improvements
 * import user content, usercomonents and usercontent
 * travelling protection: disable access till a timepoint
 * travelmode: disable cache and "recently used" completely,

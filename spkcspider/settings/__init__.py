@@ -156,6 +156,8 @@ MAX_HASH_SIZE = 128
 # FIELDNAME_QUOTA
 # TAG_LAYOUT_PATHES
 
+# TMP_EMBEDDED_DIR  # activates caching of embedded
+
 # how many user components per page
 COMPONENTS_PER_PAGE = 25
 # how many user contents per page
