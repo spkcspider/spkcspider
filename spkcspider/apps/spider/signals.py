@@ -4,8 +4,16 @@ __all__ = (
 )
 from django.dispatch import Signal
 from django.conf import settings
+import logging
 
 update_dynamic = Signal(providing_args=[])
+
+
+def TriggerUpdate(sender, **_kwargs):
+    results = update_dynamic.send_robust(sender)
+    for (receiver, result) in results:
+        if isinstance(result, Exception):
+            logging.exception(result)
 
 
 def DeleteContentCallback(sender, instance, **kwargs):

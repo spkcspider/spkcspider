@@ -105,7 +105,8 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-cgihandler.py
+cgihandler.cgi
+cgihandler.fcgi
 cgihandler.build
 cgihandler.dist
 media

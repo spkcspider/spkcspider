@@ -1,15 +1,7 @@
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate, post_save, post_delete
 from django.contrib.auth import get_user_model
-import logging
-
-
-def TriggerUpdate(sender, **_kwargs):
-    from .signals import update_dynamic
-    results = update_dynamic.send_robust(sender)
-    for (receiver, result) in results:
-        if isinstance(result, Exception):
-            logging.exception(result)
+from django.conf import settings
 
 
 class SpiderBaseConfig(AppConfig):
@@ -20,10 +12,9 @@ class SpiderBaseConfig(AppConfig):
     verbose_name = 'spkcspider base'
 
     def ready(self):
-        from django.conf import settings
         from .signals import (
             UpdateSpiderCallback, InitUserCallback, DeleteContentCallback,
-            update_dynamic
+            update_dynamic, TriggerUpdate
         )
         from .models import (
             AssignedContent

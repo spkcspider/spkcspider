@@ -18,7 +18,6 @@ activate virtual environment and execute
 
 import cgitb
 import sys
-from wsgiref.handlers import CGIHandler
 import os
 
 cgitb.enable()
@@ -37,7 +36,13 @@ os.environ["SPIDER_SILENCE"] = "true"
 # (if required) path to spkcspider
 #sys.path.insert(0, os.path.dirname(__file__))
 
+
 from spkcspider import wsgi
 
+# either fast cgi handler name ends with .fcgi
+# from flipflop import WSGIServer
+# WSGIServer(wsgi.application).run()
 
-CGIHandler().run(wsgi.application)
+# or cgi wrapper name ends with .cgi
+# from wsgiref.handlers import CGIHandler
+# CGIHandler().run(wsgi.application)
