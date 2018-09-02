@@ -1,0 +1,3 @@
+redirect 301 /index.html /cgi-bin/cgihandler.fgi
+redirect 301 /favivon.ico /cgi-bin/cgihandler.fgi/favivon.ico
+redirect 301 /robots.txt /cgi-bin/cgihandler.fgi/robots.txt
