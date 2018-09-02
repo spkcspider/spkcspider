@@ -133,6 +133,9 @@ class UserComponentAdmin(admin.ModelAdmin):
 class ProtectionAdmin(admin.ModelAdmin):
     fields = ['code']
 
+    def has_module_permission(self, request):
+        return True
+
     def has_view_permission(self, request, obj=None):
         return True
 
