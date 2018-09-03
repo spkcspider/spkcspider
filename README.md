@@ -32,8 +32,27 @@ spkcspider.apps.spiderkeys: store public keys
 spkcspider: contains spkcspider url detection and wsgi handler
 
 
-Note: Mysql works maybe. Set MYSQL_HACK = True and fix the errors manually in the db.
-Better use postgresql or sqlite.
+Note: Mysql works with some special settings:
+Set MYSQL_HACK = True and require mysql to use utf8 charset
+To unbreak tests, use 'CHARSET': 'utf8':
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        ...
+        'TEST': {
+            'CHARSET': 'utf8'
+        }
+    }
+}
+
+```
+
+Possibilities how to add utf8 charset to mysql:
+* use 'read_default_file' and add "default-character-set = utf8" in config
+* create database with "CHARACTER SET utf8"
+* see: https://docs.djangoproject.com/en/dev/ref/databases/#mysql-notes
 
 
 Note: there are some migration breaks. Especially to unbreak mysql. Should not happen after tests are integrated
