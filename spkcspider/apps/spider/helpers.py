@@ -34,6 +34,7 @@ _fperm |= getattr(os, "O_BINARY", 0)
 def generate_embedded(func, context, obj=None):
     from .models import UserComponent, AssignedContent
     directory = getattr(settings, "TMP_EMBEDDED_DIR", None)
+    expires = context.get("token_expires", None)
     if directory:
         # not neccessary posix
         if not obj:
@@ -41,12 +42,16 @@ def generate_embedded(func, context, obj=None):
             _time = int(time.time())-43200  # update all 12 hours
         elif isinstance(obj, UserComponent):
             path = os.path.join(
-                directory, "uc_{}.zip".format(obj.id)
+                directory, "uc_{}_{}.zip".format(
+                    context["maindic"]["scope"], obj.id
+                )
             )
             _time = int(time.time())-7200  # update all 2 hours
         elif isinstance(obj, AssignedContent):  # currently not used
             path = os.path.join(
-                directory, "ac_{}.zip".format(obj.id)
+                directory, "ac_{}_{}.zip".format(
+                    context["maindic"]["scope"], obj.id
+                )
             )
             _time = int(time.time())-300  # update all 5 minutes
             _time_ob = int(obj.modified.time())
@@ -63,6 +68,8 @@ def generate_embedded(func, context, obj=None):
                     content_type='application/force-download'
                 )
                 ret['Content-Disposition'] = 'attachment; filename=result.zip'
+                if expires:
+                    ret['X-Token-Expires'] = expires
                 return ret
         except FileNotFoundError:
             pass
@@ -88,6 +95,8 @@ def generate_embedded(func, context, obj=None):
         content_type='application/force-download'
     )
     ret['Content-Disposition'] = 'attachment; filename=result.zip'
+    if expires:
+        ret['X-Token-Expires'] = expires
     return ret
 
 

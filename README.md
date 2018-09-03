@@ -98,7 +98,6 @@ There are some special GET parameters for services with special requirements:
 * info=foo: search info tag in info for list only
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
-* deref=true: dereference references to other content (link, tags)
 
 verified_by urls should return hashname:hash_hexdigest
 

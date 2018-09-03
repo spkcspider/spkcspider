@@ -154,37 +154,39 @@ class ComponentIndex(UCTestMixin, ListView):
             # serialized_obj = protections=serializers.serialize(
             #     'json', component.protections.all()
             # )
-            llist = OrderedDict(
+            compdic = OrderedDict(
                 name=cname
             )
-            llist["public"] = component.public,
-            llist["required_passes"] = \
+            compdic["public"] = component.public,
+            compdic["required_passes"] = \
                 component.required_passes
-            llist["token_duration"] = \
+            compdic["token_duration"] = \
                 duration_string(component.token_duration)
 
             zip.writestr(
-                "{}/data.json".format(cname), json.dumps(llist)
+                "{}/data.json".format(cname), json.dumps(compdic)
             )
             for n, content in enumerate(
                 component.contents.order_by("ctype__name", "id")
             ):
-                llist = OrderedDict(
+                contdic = OrderedDict(
                     pk=content.pk,
-                    ctype=content.ctype.name
+                    ctype=content.ctype.name,
+                    info=content.info
                 )
                 context["uc"] = self.usercomponent
                 content.content.extract_form(
-                    context, llist, zip, level=deref_level,
+                    context, contdic, zip, level=deref_level,
                     prefix="{}/{}/".format(cname, n)
                 )
                 zip.writestr(
-                    "{}/{}/data.json".format(cname, n), json.dumps(llist)
+                    "{}/{}/data.json".format(cname, n), json.dumps(contdic)
                 )
 
     def render_to_response(self, context):
         if self.scope != "export":
             return super().render_to_response(context)
+        maindic = {"scope": "export"}
         return get_settings_func(
             "GENERATE_EMBEDDED_FUNC",
             "spkcspider.apps.spider.helpers.generate_embedded"

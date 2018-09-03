@@ -6,8 +6,6 @@ __all__ = (
 
 import time
 import os
-import zipfile
-import tempfile
 import json
 from collections import OrderedDict
 from importlib import import_module
@@ -20,12 +18,13 @@ from django.template.loader import render_to_string
 from django.core.files.base import File
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.http import FileResponse, JsonResponse
+from django.http import JsonResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 from django.http import Http404
 
 from .constants import UserContentType
+from .helpers import get_settings_func
 
 
 installed_contents = {}
@@ -310,40 +309,46 @@ class BaseContent(models.Model):
             else:
                 datadic[name] = raw_value
 
+    def generate_embedded(self, zip, context):
+        kwargs, maindic = context["kwargs"], context["maindic"]
+        self.extract_form(
+            kwargs, maindic, zip, level=1
+        )
+        zip.writestr(
+            "data.json", json.dumps(maindic)
+        )
+
     def render_serialize(self, **kwargs):
         # ** creates copy of dict, so it is safe to overwrite kwargs here
-        deref_level = 1
-        if kwargs["request"].GET.get("deref", "") == "true":
-            deref_level = 2
-        llist = OrderedDict(
+        maindic = OrderedDict(
             pk=self.associated.pk,
-            ctype=self.associated.ctype.name
+            ctype=self.associated.ctype.name,
+            scope=kwargs["scope"],
+            info=self.associated.info
         )
+        token_expires = None
         if hasattr(kwargs["request"], "token_expires"):
-            llist["token_expires"] =  \
-                int(self.request.token_expires.timestamp())
+            token_expires = kwargs["request"].token_expires.strftime(
+                "%a, %d %b %Y %H:%M:%S %z"
+            )
         if (
                 kwargs["scope"] == "export" or
                 kwargs["request"].GET.get("raw", "") == "embed"
            ):
-            fil = tempfile.SpooledTemporaryFile(max_size=2048)
-            with zipfile.ZipFile(fil, "w") as zip:
-                self.extract_form(
-                    kwargs, llist, zip,
-                    level=deref_level
-                )
-                zip.writestr("data.json", json.dumps(llist))
-            fil.seek(0, 0)
-            ret = FileResponse(
-                fil,
-                content_type='application/force-download',
-            )
-            ret['Content-Disposition'] = 'attachment; filename=result.zip'
-            return ret
+            return get_settings_func(
+                "GENERATE_EMBEDDED_FUNC",
+                "spkcspider.apps.spider.helpers.generate_embedded"
+            )(self.generate_embedded, locals(), self.associated)
+
         self.extract_form(
-            kwargs, llist, level=deref_level
+            kwargs, maindic, level=2
         )
-        return JsonResponse(llist)
+        if token_expires:
+            maindic["expires"] = token_expires
+        ret = JsonResponse(maindic)
+        if token_expires:
+            ret['X-Token-Expires'] = token_expires
+        return ret
 
     def render_view(self, **kwargs):
         if "raw" in kwargs["request"].GET:

@@ -250,32 +250,32 @@ class ContentIndex(UCTestMixin, ListView):
 
     def generate_embedded(self, zip, context):
         ctx, maindic = context["context"], context["maindic"]
-        deref_level = 1
-        if self.request.GET.get("deref", "") == "true":
-            deref_level = 2
         # Here export and raw
         zip.writestr("data.json", json.dumps(maindic))
         for n, content in enumerate(ctx["object_list"]):
-            llist = OrderedDict(
+            contdic = OrderedDict(
                 pk=content.pk,
-                ctype=content.ctype.name
+                ctype=content.ctype.name,
+                info=content.info
             )
             content.content.extract_form(
-                ctx, llist, zip, level=deref_level,
+                ctx, contdic, zip, level=2,  # allow dereference of 1 level
                 prefix="{}/".format(n)
             )
             zip.writestr(
-                "{}/data.json".format(n), json.dumps(llist)
+                "{}/data.json".format(n), json.dumps(contdic)
             )
 
     def render_to_response(self, context):
         if context["scope"] not in ["export", "raw"]:
             return super().render_to_response(context)
+        token_expires = None
 
         context["request"] = self.request
 
         maindic = OrderedDict(
             name=self.usercomponent.name,
+            scope=context["scope"]
         )
         if context["scope"] == "export":
             maindic["public"] = self.usercomponent.public,
@@ -285,8 +285,9 @@ class ContentIndex(UCTestMixin, ListView):
                 self.usercomponent.token_duration
             )
         elif hasattr(self.request, "token_expires"):
-            maindic["token_expires"] = \
-                int(self.request.token_expires.timestamp())
+            token_expires = self.request.token_expires.strftime(
+                "%a, %d %b %Y %H:%M:%S %z"
+            )
 
         if (
             context["scope"] == "export" or
@@ -296,12 +297,11 @@ class ContentIndex(UCTestMixin, ListView):
                 "GENERATE_EMBEDDED_FUNC",
                 "spkcspider.apps.spider.helpers.generate_embedded"
             )(self.generate_embedded, locals(), self.usercomponent)
-
         hostpart = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )
         enc_get = context["spider_GET"].urlencode()
-        return JsonResponse({
+        ret = JsonResponse({
             "content": [
                 {
                     "info": item.info,
@@ -319,8 +319,12 @@ class ContentIndex(UCTestMixin, ListView):
                 }
                 for item in context["object_list"]
             ],
+            "expires": token_expires,
             **maindic
         })
+        if token_expires:
+            ret['X-Token-Expires'] = token_expires
+        return ret
 
 
 class ContentAdd(ContentBase, ModelFormMixin,
