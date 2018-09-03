@@ -13,10 +13,19 @@
 {% block content %}
   <div>
     {% if request.user.is_authenticated %}
-      <a class="w3-right" href="{% url 'spider_base:ucomponent-create' %}">
-        <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
-        {% trans 'Add New Component' %}
-      </a>
+      <span class="w3-right">
+        <div style="margin-bottom:10px">
+          <a href="{% url 'spider_base:ucomponent-create' %}">
+            <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
+            {% trans 'Add New Component' %}
+          </a>
+        </div>
+        <div style="">
+          <a href="{% url 'spider_base:ucomponent-export' user=request.user %}">
+            {% trans 'Export' %}
+          </a>
+        </div>
+      </span>
     {% endif %}
     <h1 class="w3-center">
       {% trans "User Components" %}

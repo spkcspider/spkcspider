@@ -147,9 +147,11 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def generate_embedded(self, zip, context):
         # Here export only
-        context["request"] = self.request
+        ctx = context["context"]
+        ctx["request"] = self.request
+
         deref_level = 1  # don't dereference, as all data will be available
-        for component in context["object_list"]:
+        for component in ctx["object_list"]:
             cname = component.name
             # serialized_obj = protections=serializers.serialize(
             #     'json', component.protections.all()
@@ -174,9 +176,9 @@ class ComponentIndex(UCTestMixin, ListView):
                     ctype=content.ctype.name,
                     info=content.info
                 )
-                context["uc"] = self.usercomponent
+                ctx["uc"] = self.usercomponent
                 content.content.extract_form(
-                    context, contdic, zip, level=deref_level,
+                    ctx, contdic, zip, level=deref_level,
                     prefix="{}/{}/".format(cname, n)
                 )
                 zip.writestr(
