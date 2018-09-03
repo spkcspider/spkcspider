@@ -331,6 +331,8 @@ class PasswordProtection(BaseProtection):
     )
 
     def get_strength(self):
+        if self.cleaned_data["min_length"] > 15:
+            return 3
         return 2
 
     def clean_passwords(self):
@@ -346,6 +348,12 @@ class PasswordProtection(BaseProtection):
         if ProtectionType.authentication.value in self.ptype and \
            self.cleaned_data["passwords"] == "":
             self.cleaned_data["active"] = False
+        min_length = None
+        for pw in self.cleaned_data["passwords"].split("\n"):
+            lenpw = len(pw)
+            if not min_length or lenpw < min_length:
+                min_length = lenpw
+        ret["min_length"] = lenpw
         return ret
 
     @classmethod
