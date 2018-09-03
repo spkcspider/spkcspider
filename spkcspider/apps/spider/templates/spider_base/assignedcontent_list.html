@@ -24,9 +24,9 @@
         Content of Component: <em>{{name}}</em>
       {% endblocktrans %}
     </h1>
-    {% if request.remaining_tokenlifetime %}
+    {% if request.token_expires %}
     <div>
-      {% include 'spider_base/remaining_tokenlifetime.html' with rtime=request.remaining_tokenlifetime %}
+      {% include 'spider_base/token_lifetime.html' with rtime=request.token_expires %}
     </div>
     {% endif %}
   </div>

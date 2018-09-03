@@ -18,7 +18,6 @@ from django.utils.translation import gettext
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.template.loader import render_to_string
 from django.core.files.base import File
-from django.utils.duration import duration_string
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.http import FileResponse, JsonResponse
@@ -320,9 +319,9 @@ class BaseContent(models.Model):
             pk=self.associated.pk,
             ctype=self.associated.ctype.name
         )
-        if hasattr(kwargs["request"], "remaining_tokenlifetime"):
-            llist["token_time_to_live"] = \
-                duration_string(kwargs["request"].remaining_tokenlifetime)
+        if hasattr(kwargs["request"], "token_expires"):
+            llist["token_expires"] =  \
+                int(self.request.token_expires.timestamp())
         if (
                 kwargs["scope"] == "export" or
                 kwargs["request"].GET.get("raw", "") == "embed"

@@ -1,16 +1,16 @@
-{% load i18n basic_math %}
+{% load i18n spider_base basic_math %}
 <span>{% trans 'Remaining lifetime of token' %}:</span>
 
-<span id="remaining_tokenlifetime-countdown">
-  {% blocktrans trimmed with days=rtime.days hours=rtime.seconds|divide:"3600" minutes=rtime.seconds|remainder:"3600"|divide:"60" seconds=rtime.seconds|remainder:"60" %}
+{% expires_delta rtime as delta %}
+<span id="tokenlifetime-countdown">
+  {% blocktrans trimmed with days=delta.days hours=delta.seconds|divide:"3600" minutes=delta.seconds|remainder:"3600"|divide:"60" seconds=delta.seconds|remainder:"60" %}
   Days: {{days}} {{hours}}h:{{minutes}}m:{{seconds}}s
   {% endblocktrans %}
 </span>
 <script>
-  var remaining_tokenlifetime_seconds = Math.floor({{rtime.total_seconds}});
   // adjust cached pages to real remaining seconds
   // instead of multiplying, add zeros as text
-  remaining_tokenlifetime_seconds += {% now "U" %}000-new Date().getTime();
+  var remaining_tokenlifetime_seconds = Math.floor({{rtime.timestamp}} - new Date().getTime()/1000);
 
   var interval_id = setInterval(function() {
     remaining_tokenlifetime_seconds -= 1;
@@ -30,7 +30,7 @@
       clearInterval(interval_id);
       formatted = '{% trans "Expired" %}';
     }
-    document.getElementById("remaining_tokenlifetime-countdown").innerHTML = formatted;
+    document.getElementById("tokenlifetime-countdown").innerHTML = formatted;
   }, 1000)
 
 

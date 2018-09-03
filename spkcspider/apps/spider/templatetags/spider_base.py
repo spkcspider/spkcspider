@@ -1,6 +1,6 @@
 from django import template
 from django.urls import reverse
-
+from django.utils import timezone
 
 register = template.Library()
 
@@ -25,3 +25,8 @@ def update_user_protection(context):
             "nonce": index.nonce
         })
     return ""
+
+
+@register.simple_tag()
+def expires_delta(expires):
+    return expires-timezone.now()
