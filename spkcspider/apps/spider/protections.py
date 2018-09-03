@@ -4,7 +4,7 @@ namespace: spider_base
 
 """
 
-__all__ = ("add_protection", "check_blacklisted",
+__all__ = ("add_protection",
            "installed_protections", "BaseProtection", "ProtectionResult",
            "initialize_protection_models")
 
@@ -26,16 +26,12 @@ installed_protections = {}
 _sysrand = SystemRandom()
 
 
-def check_blacklisted(name):
-    if name in getattr(settings, "BLACKLISTED_PROTECTIONS", {}):
-        return False
-    return True
-
-
 def add_protection(klass):
     if klass.name == "false":
         raise Exception("Invalid protection name")
-    if klass.name in getattr(settings, "BLACKLISTED_PROTECTIONS", []):
+    if klass._meta.model_name in getattr(
+        settings, "BLACKLISTED_PROTECTIONS", []
+    ):
         return klass
 
     if klass.name in installed_protections:
