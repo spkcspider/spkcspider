@@ -10,7 +10,14 @@
 {% block content %}
   <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
     {% if request.user == uc.user %}
-      <a class="w3-right" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">Update</a>
+      <span class="w3-right">
+        <div style="margin-bottom:5px">
+          <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">Update</a>
+        </div>
+        <div>
+          {% trans "Strength:" %} {{uc.strength}}
+        </div>
+      </span>
     {% endif %}
     <h1 class="w3-center">
       {% blocktrans trimmed with name=uc.name %}
@@ -32,10 +39,16 @@
       </summary>
       <div class="w3-padding w3-border">
         <div class="w3-row">
-          {% for contentt in content_types %}
-            <a class="w3-button w3-col s12 m3 w3-grey" href="{% url 'spider_base:ucontent-add' name=uc.name type=contentt.name %}">
-              <b style="margin-right:5px" aria-hidden="true">+</b>{{contentt}}
+          {% for variant in content_variants %}
+            {% if uc.strength < variant.strength %}
+            <div class="w3-padding w3-center w3-col s12 m3 w3-red" >
+              <b style="margin-right:5px" aria-hidden="true">x</b>{{variant}}
+            </div>
+            {% else %}
+            <a class="w3-button w3-col s12 m3 w3-grey" href="{% url 'spider_base:ucontent-add' name=uc.name type=variant.name %}" >
+              <b style="margin-right:5px" aria-hidden="true">+</b>{{variant}}
             </a>
+            {% endif %}
           {% empty %}
               {% trans 'No Content Variants available.' %}
           {% endfor %}

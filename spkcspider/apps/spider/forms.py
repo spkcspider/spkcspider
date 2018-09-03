@@ -2,6 +2,7 @@ __all__ = [
     "LinkForm", "UserComponentForm", "UserContentForm", "SpiderAuthForm"
 ]
 
+from statistics import mean
 
 from django import forms
 from django.conf import settings
@@ -13,7 +14,7 @@ from .models import (
     AssignedProtection, Protection, UserComponent, AssignedContent, LinkContent
 )
 from .helpers import token_nonce
-from .constants import ProtectionType, UserContentType
+from .constants import ProtectionType
 from .auth import SpiderAuthBackend
 
 _help_text = """Generate new nonce with variable strength<br/>
@@ -98,6 +99,42 @@ class UserComponentForm(forms.ModelForm):
                 isvalid = False
         return isvalid
 
+    def clean(self):
+        ret = super().clean()
+        for protection in self.protections:
+            protection.full_clean()
+        self.cleaned_data["strength"] = 0
+        if self.cleaned_data["name"] == "index":
+            self.cleaned_data["strength"] = 10
+            return ret
+        if not self.cleaned_data["public"]:
+            self.cleaned_data["strength"] += 5
+
+        if self.instance and self.instance.id:
+            fail_strength = 0
+            amount_regular = 0
+            strengths = []
+            for protection in self.protections:
+                if not protection.cleaned_data.get("active", False):
+                    continue
+                if protection.cleaned_data.get("instant_fail", False):
+                    fail_strength = max(
+                        fail_strength, protection.get_strength()
+                    )
+                else:
+                    strengths.append(protection.get_strength())
+                    amount_regular += 1
+            strengths.sort()
+            if self.cleaned_data["required_passes"] > 0:
+                if amount_regular == 0:
+                    strengths = 4  # can only access component via own login
+                else:
+                    strengths = round(mean(strengths[:ret["required_passes"]]))
+            else:
+                strengths = 0
+            self.cleaned_data["strength"] += max(strengths, fail_strength)
+        return self.cleaned_data
+
     def _save_protections(self):
         for protection in self.protections:
             cleaned_data = protection.cleaned_data
@@ -129,6 +166,8 @@ class UserComponentForm(forms.ModelForm):
             self.instance.nonce = token_nonce(
                 int(self.cleaned_data["new_nonce"])
             )
+
+        self.instance.strength = self.cleaned_data["strength"]
         return super().save(commit=commit)
 
 
@@ -232,11 +271,6 @@ class LinkForm(forms.ModelForm):
     def __init__(self, uc, **kwargs):
         super().__init__(**kwargs)
         q = self.fields["content"].queryset
-        if uc.public:
-            self.fields["content"].queryset = q.filter(
-                ctype__ctype__contains=UserContentType.link_public.value
-            )
-        else:
-            self.fields["content"].queryset = q.filter(
-                ctype__ctype__contains=UserContentType.link_private.value
-            )
+        self.fields["content"].queryset = q.filter(
+            strength__lte=uc.strength
+        )

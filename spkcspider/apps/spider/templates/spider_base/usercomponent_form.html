@@ -24,10 +24,13 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name nonce=object.nonce %}">{% trans 'Delete' %}</a>?
           </div>
         {% endif %}
-        <div>
+        <div style="margin-bottom:5px">
           <a class="" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
             {% trans "View" %}
           </a>
+        </div>
+        <div>
+          {% trans "Strength:" %} {{object.strength}}
         </div>
       </span>
     {% endif %}

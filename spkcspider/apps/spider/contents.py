@@ -31,6 +31,8 @@ from .constants import UserContentType
 
 installed_contents = {}
 
+_attribute_list = ["name", "ctype", "strength"]
+
 
 def rate_limit_default(view, request):
     time.sleep(1)
@@ -77,21 +79,26 @@ def initialize_content_models(apps=None):
         update = False
         if len(appearances) == 1:
             update = True
-        for (n, ctype) in appearances:
+        for dic in appearances:
             if update:
                 variant = ContentVariant.objects.get_or_create(
-                    defaults={"ctype": ctype, "name": n}, code=code
+                    defaults=dic, code=code
                 )[0]
             else:
                 variant = ContentVariant.objects.get_or_create(
-                    defaults={"ctype": ctype}, code=code, name=n
+                    defaults=dic, code=code, name=dic["name"]
                 )[0]
-            if variant.ctype != ctype:
-                variant.ctype = ctype
-            if variant.name != n:
-                variant.name = n
-            variant.save()
-            all_content |= models.Q(name=n, code=code)
+            require_save = False
+            for key in _attribute_list:
+                val = dic.get(
+                    key, variant._meta.get_field(key).get_default()
+                )
+                if getattr(variant, key) != val:
+                    setattr(variant, key, val)
+                    require_save = True
+            if require_save:
+                variant.save()
+            all_content |= models.Q(name=dic["name"], code=code)
     invalid_models = ContentVariant.objects.exclude(all_content)
     if invalid_models.exists():
         print("Invalid content, please update or remove them:",
@@ -103,8 +110,11 @@ class BaseContent(models.Model):
     # this way content could be protected to be only visible to admin, user
     # and legitimated users (if not index)
 
-    # iterable or callable with (unique name, ctype) tuples
-    # max name length is 20 chars.
+    # iterable or callable returning iterable containing dicts
+    # required keys: name
+    # optional: strength (default=0), ctype (default="")
+    # max name length is 50 chars
+    # max ctype length is 10 chars (10 attributes)
 
     # use case: addons for usercontent, e.g. dependencies on external libraries
     # use case: model with different abilities
@@ -157,6 +167,14 @@ class BaseContent(models.Model):
 
     def __repr__(self):
         return "<Content: %s>" % self.__str__()
+
+    def get_strength(self):
+        """ get required strength """
+        return self.associated.ctype.strength
+
+    def get_strength_link(self):
+        """ get required strength for links """
+        return self.get_strength()
 
     def get_instance_form(self, context):
         return self
@@ -354,34 +372,26 @@ class BaseContent(models.Model):
         else:
             return self.render_view(**kwargs)
 
-    def get_info(self, no_public=False, unique=False):
-        # no_public=False, unique=False shortcuts for get_info overwrites
+    def get_info(self, unique=False):
+        # unique=False shortcuts for get_info overwrites
         # passing down these parameters not neccessary
-        no_public_var = ""
-        if (
-            no_public or
-            UserContentType.public.value not in self.associated.ctype.ctype
-           ):
-            no_public_var = "no_public\n"
         if not unique:
             unique = (
                 UserContentType.unique.value in self.associated.ctype.ctype
             )
         if unique:
-            return "\ncode=%s\ntype=%s\n%sprimary\n" % \
+            return "\ncode=%s\ntype=%s\nprimary\n" % \
                 (
                     self._meta.model_name,
                     self.associated.ctype.name,
-                    no_public_var
                 )
         else:
             # simulates beeing not unique, by adding id
             # id is from this model, because assigned maybe not ready
-            return "\ncode=%s\ntype=%s\n%sid=%s\n" % \
+            return "\ncode=%s\ntype=%s\nid=%s\n" % \
                 (
                     self._meta.model_name,
                     self.associated.ctype.name,
-                    no_public_var,
                     self.id if self.id else "None"  # placeholder
                 )
 
@@ -395,6 +405,8 @@ class BaseContent(models.Model):
             self._associated2.content = self
         a = self.associated
         a.info = self.get_info()
+        a.strength = self.get_strength()
+        a.strength_link = self.get_strength_link()
         a.full_clean(exclude=["content"])
         self._content_is_cleaned = True
 

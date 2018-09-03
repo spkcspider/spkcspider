@@ -14,7 +14,6 @@ from django.core.files.storage import default_storage
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.helpers import token_nonce
-from spkcspider.apps.spider.constants import UserContentType
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ def get_file_path(instance, filename):
 
 @add_content
 class FileFilet(BaseContent):
-    appearances = [("File", UserContentType.public.value)]
+    appearances = [{"name": "File"}]
 
     add = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True)
@@ -124,12 +123,7 @@ class FileFilet(BaseContent):
 
 @add_content
 class TextFilet(BaseContent):
-    appearances = [
-        (
-            "Text", UserContentType.public.value +
-            UserContentType.link.value
-        )
-    ]
+    appearances = [{"name": "Text"}]
 
     name = models.CharField(max_length=255, null=False)
     editable_from = models.ManyToManyField(

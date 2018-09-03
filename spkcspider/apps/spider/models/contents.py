@@ -15,12 +15,12 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
+from django.core import validators
 
 from ..contents import installed_contents, BaseContent, add_content
 from ..protections import installed_protections
 
 from ..helpers import token_nonce, MAX_NONCE_SIZE
-from ..constants import UserContentType
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +30,14 @@ class ContentVariant(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # usercontent abilities/requirements
     ctype = models.CharField(
-        max_length=10
+        max_length=10, default=""
     )
     code = models.CharField(max_length=255)
-    name = models.SlugField(max_length=255, unique=True)
+    name = models.SlugField(max_length=50, unique=True)
+    # required protection strength (selection)
+    strength = models.PositiveSmallIntegerField(
+        default=0, validators=[validators.MaxValueValidator(10)]
+    )
 
     @property
     def installed_class(self):
@@ -57,11 +61,13 @@ def info_field_validator(value):
     if value[-1] != "\n":
         raise ValidationError(
             _('%(value)s ends not with "\\n"'),
+            code="syntax",
             params={'value': value},
         )
     if value[0] != "\n":
         raise ValidationError(
             _('%(value)s starts not with "\\n"'),
+            code="syntax",
             params={'value': value},
         )
     # check elements
@@ -116,11 +122,20 @@ class AssignedContent(models.Model):
     # in this format: keyword=
     # no unneccessary spaces!
     # flags:
-    #  no_public: cannot switch usercomponent public
     #  primary: primary content of type for usercomponent
     info = models.TextField(
         null=False, editable=False,
         validators=[info_field_validator]
+    )
+    # required protection strength (real)
+    strength = models.PositiveSmallIntegerField(
+        default=0, validators=[validators.MaxValueValidator(10)],
+        editable=False
+    )
+    # required protection strength for links, 11 to disable links
+    strength_link = models.PositiveSmallIntegerField(
+        default=0, validators=[validators.MaxValueValidator(11)],
+        editable=False
     )
     content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, editable=False
@@ -165,19 +180,6 @@ class AssignedContent(models.Model):
 
     def clean(self):
         _ = gettext
-        if UserContentType.confidential.value in self.ctype.ctype and \
-           self.usercomponent.name != "index":
-            raise ValidationError(
-                _('Confidential usercontent is only allowed for index')
-            )
-        if UserContentType.public.value not in self.ctype.ctype and \
-           self.usercomponent.public:
-            raise ValidationError(
-                _(
-                    'Non-Public usercontent is only allowed for '
-                    'usercomponents with "public = False"'
-                )
-            )
         if not self.usercomponent.user_info.allowed_content.filter(
             name=self.ctype.name
         ).exists():
@@ -185,6 +187,12 @@ class AssignedContent(models.Model):
                 _(
                     'Not an allowed ContentVariant for this user'
                 )
+            )
+        if self.strength > self.usercomponent.strength:
+            raise ValidationError(
+                _('Protection strength too low, required: %(strength)s'),
+                code="strength",
+                params={'strength': self.strength},
             )
 
         if getattr(settings, "MYSQL_HACK", False):
@@ -210,8 +218,7 @@ class AssignedContent(models.Model):
 
 @add_content
 class LinkContent(BaseContent):
-    # links are not linkable
-    appearances = [("Link", UserContentType.public.value)]
+    appearances = [{"name": "Link"}]
 
     content = models.ForeignKey(
         "spider_base.AssignedContent", related_name="+",
@@ -229,6 +236,13 @@ class LinkContent(BaseContent):
             return "<Link: %r>" % self.content
         else:
             return "<Link>"
+
+    def get_strength(self):
+        return self.content.get_strength()
+
+    def get_strength_link(self):
+        # don't allow links linking on links
+        return 11
 
     def get_info(self):
         ret = super().get_info()

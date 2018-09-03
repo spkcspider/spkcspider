@@ -183,17 +183,9 @@ class ContentIndex(UCTestMixin, ListView):
             kwargs["scope"] = self.scope
 
         if kwargs["uc"].user == self.request.user:
-            kwargs["content_types"] = (
+            kwargs["content_variants"] = (
                 kwargs["uc"].user_info.allowed_content.all()
             )
-            if kwargs["uc"].name != "index":
-                kwargs["content_types"] = kwargs["content_types"].exclude(
-                    ctype__contains=UserContentType.confidential.value
-                )
-            if kwargs["uc"].public:
-                kwargs["content_types"] = kwargs["content_types"].filter(
-                    ctype__contains=UserContentType.public.value
-                )
         return super().get_context_data(**kwargs)
 
     def test_func(self):
@@ -383,16 +375,10 @@ class ContentAdd(ContentBase, ModelFormMixin,
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        qquery = models.Q(name=self.kwargs["type"])
-        if self.usercomponent.name != "index":
-            qquery &= ~models.Q(
-                ctype__contains=UserContentType.confidential.value
-            )
-
-        if self.usercomponent.public:
-            qquery &= models.Q(
-                ctype__contains=UserContentType.public.value
-            )
+        qquery = models.Q(
+            name=self.kwargs["type"],
+            strength__lte=self.usercomponent.strength
+        )
         return get_object_or_404(queryset, qquery)
 
     def render_to_response(self, context):

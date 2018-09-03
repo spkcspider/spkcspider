@@ -59,6 +59,14 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 * export: export data (import not finished)
 * view: present usercontent to untrusted parties
 
+## strength
+* 0: no protection
+* 1-4: protection which can be provided by protections
+* 5: public attribute not set
+* 6-9: protections + public attribute not set
+* 10: index, can be used in combination with unique attribute to create a component unique to user
+
+
 # External usage
 
 There are some special GET parameters for services with special requirements:

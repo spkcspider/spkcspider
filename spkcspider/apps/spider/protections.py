@@ -69,6 +69,8 @@ def initialize_protection_models(apps=None):
                 asuc.active = True
                 asuc.save()
 
+    UserComponent.objects.filter(name="index", strength=0).update(strength=10)
+
     invalid_models = ProtectionModel.objects.exclude(
         code__in=installed_protections.keys()
     )
@@ -134,6 +136,15 @@ class BaseProtection(forms.Form):
             initial.update(self.instance.data)
         return initial
 
+    def get_strength(self):
+        # can provide strength in range 0-4
+        # 0 no protection
+        # 1 basic protection
+        # 2 normal protection
+        # 3 better protection
+        # 4 strong protection
+        return 1
+
     @staticmethod
     def extract_form_kwargs(request):
         kwargs = {}
@@ -180,11 +191,14 @@ class FriendProtection(BaseProtection):
     users = forms.ModelMultipleChoiceField(
         label=_("Users"), queryset=friend_query(), required=False
     )
-    description = _("Allow logged in users access to usercomponent")
+    description = _("Limit access to selected users")
 
     media = {
         'js': 'admin/js/vendor/select2/select2.full.min.js'
     }
+
+    def get_strength(self):
+        return 4
 
     def clean_users(self):
         return [i.pk for i in self.cleaned_data["users"]]
@@ -225,6 +239,11 @@ class RandomFailProtection(BaseProtection):
             self.initial["instant_fail"] = True
             self.fields["instant_fail"].disabled = True
 
+    def get_strength(self):
+        if self.cleaned_data["success_rate"] > 90:
+            return 0
+        return 1
+
     @classmethod
     def localize_name(cls, name=None):
         return pgettext("protection name", "Random Fail")
@@ -262,6 +281,9 @@ class LoginProtection(BaseProtection):
             self.fields["active"].initial = True
             self.initial["active"] = True
             self.fields["active"].disabled = True
+
+    def get_strength(self):
+        return 4
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
@@ -307,6 +329,9 @@ class PasswordProtection(BaseProtection):
         strip=True, required=False,
         initial=""
     )
+
+    def get_strength(self):
+        return 2
 
     def clean_passwords(self):
         passwords = []
@@ -375,6 +400,9 @@ if getattr(settings, "USE_CAPTCHAS", False):
                     self.fields["active"].disabled = True
                     self.fields["instant_fail"].help_text = \
                         _("captcha is for login required (admin setting)")
+
+        def get_strength(self):
+            return 1
 
         @classmethod
         def localize_name(cls, name=None):

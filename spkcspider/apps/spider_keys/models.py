@@ -55,10 +55,9 @@ def valid_pkey_properties(key):
 
 @add_content
 class PublicKey(BaseContent):
-    appearances = [(
-        "PublicKey",
-        UserContentType.public+UserContentType.unique
-    )]
+    appearances = [
+        {"name": "PublicKey", "ctype": UserContentType.unique.value}
+    ]
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
     note = models.TextField(max_length=100, default="", null=False, blank=True)
@@ -139,10 +138,13 @@ class PublicKey(BaseContent):
 @add_content
 class AnchorServer(BaseContent):
     """ identify by server """
-    appearances = [(
-        "AnchorServer",
-        UserContentType.link_private+UserContentType.anchor
-    )]
+    appearances = [
+        {
+            "name": "AnchorServer",
+            "ctype": UserContentType.anchor.value,
+            "strength": 7
+        }
+    ]
 
     def get_form(self, scope):
         from .forms import AnchorServerForm
@@ -239,11 +241,13 @@ class AnchorKey(AnchorServer):
 
     signature = models.CharField(max_length=1024, help_text=_help_text_sig)
 
-    appearances = [(
-        "AnchorKey",
-        UserContentType.unique+UserContentType.link_private +
-        UserContentType.anchor
-    )]
+    appearances = [
+        {
+            "name": "AnchorKey",
+            "ctype": UserContentType.anchor+UserContentType.unique,
+            "strength": 7
+        }
+    ]
 
     def get_form(self, scope):
         from .forms import AnchorKeyForm
@@ -259,11 +263,13 @@ class AnchorGov(object):
     idtype = models.CharField(max_length=10, null=False, choices=ID_VARIANTS)
     token = models.CharField(max_length=100, null=False)
 
-    appearances = [(
-        "AnchorGov",
-        UserContentType.unique+UserContentType.link_private +
-        UserContentType.anchor
-    )]
+    appearances = [
+        {
+            "name": "AnchorGov",
+            "ctype": UserContentType.anchor+UserContentType.unique,
+            "strength": 7
+        }
+    ]
 
     def get_form(self, scope):
         raise NotImplementedError

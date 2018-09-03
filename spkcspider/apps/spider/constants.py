@@ -24,21 +24,12 @@ class ProtectionType(str, enum.Enum):
 
 
 class UserContentType(str, enum.Enum):
-    # can only be added to protected "index" usercomponent
-    confidential = "a"
-    # allow public attribute, incompatible with confidential
-    public = "b"
+    # a, b not required anymore
     # update content is without form/for form updates it is not rendered
     # required for still beeing able to update elemental parameters
     raw_update = "c"
     # raw_add not required, archieved by returning response
-    # allow links from non public usercomponents
-    link_private = "e"
-    # allow links from public usercomponents
-    link_public = "f"
-    # shortcut for link_private+link_public
-    link = link_private+link_public
-    # g not assigned
+    # d,e,f,g not assigned
 
     # is content unique for usercomponent
     # together with confidential: unique for user

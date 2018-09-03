@@ -57,13 +57,15 @@ class TagLayout(models.Model):
 @add_content
 class UserTagLayout(BaseContent):
     appearances = [
-        (
-            "TagLayout",
-            UserContentType.confidential.value +
-            UserContentType.unique.value +
-            UserContentType.link.value
-        )
+        {
+            "name": "TagLayout",
+            "ctype": UserContentType.unique.value,
+            "strength": 10
+        }
     ]
+
+    def get_strength_link(self):
+        return 11
 
     def get_info(self):
         return "%slayout=%s\n" % (
@@ -94,7 +96,10 @@ class UserTagLayout(BaseContent):
 @add_content
 class SpiderTag(BaseContent):
     appearances = [
-        ("SpiderTag", UserContentType.public+UserContentType.link),
+        {
+            "name": "SpiderTag",
+            "strength": 0
+        }
     ]
     layout = models.ForeignKey(
         TagLayout, related_name="tags", on_delete=models.PROTECT,

@@ -16,8 +16,10 @@ from django.db import models
 from django.conf import settings
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from django.core import validators
 
 from ..helpers import token_nonce, MAX_NONCE_SIZE, get_settings_func
 from ..constants import ProtectionType
@@ -43,6 +45,13 @@ def _get_default_amount():
         return 2
     elif models.F("name") == "index":
         return 1
+    else:
+        return 0  # protections are optional
+
+
+def _get_default_strength():
+    if models.F("name") == "index":
+        return 10
     else:
         return 0  # protections are optional
 
@@ -80,6 +89,12 @@ class UserComponent(models.Model):
         default=_get_default_amount,
         help_text=_required_passes_help
     )
+    # cached protection strength
+    strength = models.PositiveSmallIntegerField(
+        default=_get_default_strength,
+        validators=[validators.MaxValueValidator(10)],
+        editable=False
+    )
     # fix linter warning
     objects = models.Manager()
     # special name: index:
@@ -114,6 +129,22 @@ class UserComponent(models.Model):
 
     def __str__(self):
         return self.__repr__()
+
+    def clean(self):
+        _ = gettext
+        assert(self.name != "index" or self.strength == 10)
+        assert(self.name == "index" or self.strength < 10)
+        obj = self.contents.filter(
+            strength__gt=self.strength
+        ).order_by("strength").last()
+        if obj:
+            raise ValidationError(
+                _(
+                    'Protection strength too low, required: %(strength)s'
+                ),
+                code="strength",
+                params={'strength': obj.strength},
+            )
 
     def auth(self, request, ptype=ProtectionType.access_control.value,
              protection_codes=None, **kwargs):
@@ -152,7 +183,7 @@ class UserComponent(models.Model):
     def no_public(self):
         """ Can the usercomponent be turned public """
         return self.name == "index" or self.contents.filter(
-            info__contains="\nno_public\n"
+            strength__gte=5
         )
 
     def save(self, *args, **kwargs):

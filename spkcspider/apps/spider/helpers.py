@@ -26,7 +26,8 @@ def ALLOW_ALL_FILTER_FUNC(*args, **kwargs):
     return True
 
 
-_fperm = os.O_RDWR | os.O_RDWR | os.O_CREATE | os.O_EXCL
+# O_CREAT is correct
+_fperm = os.O_RDWR | os.O_RDWR | os.O_CREAT | os.O_EXCL
 _fperm |= getattr(os, "O_BINARY", 0)
 
 
