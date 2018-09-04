@@ -1,14 +1,11 @@
 
 __all__ = (
-    "add_content", "installed_contents", "BaseContent",
-    "rate_limit_func", "initialize_ratelimit"
+    "add_content", "installed_contents", "BaseContent"
 )
 
-import time
 import os
 import json
 from collections import OrderedDict
-from importlib import import_module
 
 from django.apps import apps as django_apps
 from django.db import models
@@ -21,7 +18,6 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.http import JsonResponse
 from django.conf import settings
 from django.utils.translation import pgettext
-from django.http import Http404
 
 from .constants import UserContentType
 from .helpers import get_settings_func
@@ -29,38 +25,22 @@ from .helpers import get_settings_func
 
 installed_contents = {}
 
+# don't spam set objects
+_empty_set = set()
+
+# updated attributes of ContentVariant
 _attribute_list = ["name", "ctype", "strength"]
-
-
-def rate_limit_default(view, request):
-    time.sleep(1)
-    raise Http404()
-
-
-rate_limit_func = None
 
 
 def add_content(klass):
     code = klass._meta.model_name
     if code in installed_contents:
         raise Exception("Duplicate content")
-    if code in getattr(settings, "BLACKLISTED_CONTENTS", {}):
-        return klass
-    installed_contents[code] = klass
+    if klass.__qualname__ not in getattr(
+        settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
+    ):
+        installed_contents[code] = klass
     return klass
-
-
-def initialize_ratelimit():
-    global rate_limit_func
-    func = getattr(settings, "RATELIMIT_FUNC_CONTENTS", None)
-    if callable(func):
-        rate_limit_func = func
-    elif isinstance(func, str):
-        func = func.rsplit(".", 1)
-        func = getattr(import_module(func[0]), func[1])
-        rate_limit_func = func
-    else:
-        rate_limit_func = rate_limit_default
 
 
 def initialize_content_models(apps=None):
@@ -337,7 +317,7 @@ class BaseContent(models.Model):
            ):
             return get_settings_func(
                 "GENERATE_EMBEDDED_FUNC",
-                "spkcspider.apps.spider.helpers.generate_embedded"
+                "spkcspider.apps.spider.functions.generate_embedded"
             )(self.generate_embedded, locals(), self.associated)
 
         self.extract_form(

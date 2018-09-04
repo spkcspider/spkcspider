@@ -1,7 +1,14 @@
+__all__ = ["SpiderBaseConfig"]
+
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate, post_save, post_delete
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from .helpers import extract_app_dicts
+from .signals import (
+    UpdateSpiderCallback, InitUserCallback, DeleteContentCallback,
+    update_dynamic, TriggerUpdate
+)
 
 
 class SpiderBaseConfig(AppConfig):
@@ -12,29 +19,31 @@ class SpiderBaseConfig(AppConfig):
     verbose_name = 'spkcspider base'
 
     def ready(self):
-        from .signals import (
-            UpdateSpiderCallback, InitUserCallback, DeleteContentCallback,
-            update_dynamic, TriggerUpdate
-        )
         from .models import (
             AssignedContent
         )
-        from .contents import initialize_ratelimit
-        initialize_ratelimit()
+
+        from django.apps import apps
+        from .protections import installed_protections
+
+        for app in apps.get_app_configs():
+            installed_protections.update(
+                extract_app_dicts(app, "spider_protections")
+            )
 
         post_delete.connect(
             DeleteContentCallback, sender=AssignedContent,
-            dispatch_uid="delete_content"
+            dispatch_uid="delete_spider_content"
         )
 
         post_save.connect(
             InitUserCallback, sender=get_user_model(),
-            dispatch_uid="initial_user"
+            dispatch_uid="setup_spider_user"
         )
 
         update_dynamic.connect(
             UpdateSpiderCallback,
-            dispatch_uid="update_spider_base"
+            dispatch_uid="update_spider_dynamic"
         )
 
         if getattr(settings, "UPDATE_DYNAMIC_AFTER_MIGRATION", True):

@@ -252,9 +252,26 @@ class UserInfo(models.Model):
         allowed = []
         cfilterfunc = get_settings_func(
             "ALLOWED_CONTENT_FILTER",
-            "spkcspider.apps.spider.helpers.ALLOW_ALL_FILTER_FUNC"
+            "spkcspider.apps.spider.functions.allow_all_filter"
         )
         for variant in ContentVariant.objects.all():
             if cfilterfunc(self.user, variant):
                 allowed.append(variant)
+        # save not required, m2m field
         self.allowed_content.set(allowed)
+
+    def update_quota(self, size_diff):
+        quota = getattr(settings, "FIELDNAME_QUOTA", None)
+        if quota:
+            quota = getattr(self.user, quota, None)
+        if not quota:
+            quota = getattr(settings, "DEFAULT_QUOTA_USER", None)
+        if quota and self.used_space + size_diff > quota:
+            raise ValidationError(
+                _("Exceeded quota by %(diff)s Bytes"),
+                code='quota_exceeded',
+                params={'diff': size_diff},
+            )
+        else:
+            self.used_space += size_diff
+            self.save()

@@ -42,6 +42,8 @@ def UpdateSpiderCallback(**_kwargs):
 
 
 def InitUserCallback(sender, instance, **kwargs):
+    if kwargs.get("raw", False):
+        return
     from .models import UserComponent, Protection, AssignedProtection, UserInfo
 
     uc = UserComponent.objects.get_or_create(name="index", user=instance)[0]
@@ -65,9 +67,10 @@ def InitUserCallback(sender, instance, **kwargs):
         if not asp.active:
             asp.active = True
             require_save = True
+    if require_save:
+        asp.save()
     uinfo = UserInfo.objects.get_or_create(
         user=instance
     )[0]
+    # save not required, m2m field
     uinfo.calculate_allowed_content()
-    if require_save:
-        asp.save()

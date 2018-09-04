@@ -4,8 +4,7 @@ namespace: spider_base
 
 """
 
-__all__ = ("add_protection",
-           "installed_protections", "BaseProtection", "ProtectionResult",
+__all__ = ("installed_protections", "BaseProtection", "ProtectionResult",
            "initialize_protection_models")
 
 from random import SystemRandom
@@ -18,26 +17,15 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
 
-from .helpers import cmp_pw
+from .helpers import cmp_pw, add_by_field
 from .constants import ProtectionType, ProtectionResult
 
 
 installed_protections = {}
 _sysrand = SystemRandom()
 
-
-def add_protection(klass):
-    if klass.name == "false":
-        raise Exception("Invalid protection name")
-    if klass._meta.model_name in getattr(
-        settings, "BLACKLISTED_PROTECTIONS", []
-    ):
-        return klass
-
-    if klass.name in installed_protections:
-        raise Exception("Duplicate protection name")
-    installed_protections[klass.name] = klass
-    return klass
+# don't spam set objects
+_empty_set = set()
 
 
 def initialize_protection_models(apps=None):
@@ -179,7 +167,7 @@ def friend_query():
 
 
 # only friends have access
-@add_protection
+@add_by_field(installed_protections)
 class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
@@ -207,7 +195,7 @@ class FriendProtection(BaseProtection):
             return False
 
 
-@add_protection
+@add_by_field(installed_protections)
 class RandomFailProtection(BaseProtection):
     name = "randomfail"
     ptype = ProtectionType.access_control.value
@@ -254,7 +242,7 @@ class RandomFailProtection(BaseProtection):
         return False
 
 
-@add_protection
+@add_by_field(installed_protections)
 class LoginProtection(BaseProtection):
     name = "login"
     ptype = ProtectionType.access_control.value
@@ -301,7 +289,7 @@ class LoginProtection(BaseProtection):
         return cls.localize_name("Password")
 
 
-@add_protection
+@add_by_field(installed_protections)
 class PasswordProtection(BaseProtection):
     name = "password"
     ptype = ProtectionType.access_control.value
@@ -375,7 +363,7 @@ class PasswordProtection(BaseProtection):
 if getattr(settings, "USE_CAPTCHAS", False):
     from captcha.fields import CaptchaField
 
-    @add_protection
+    @add_by_field(installed_protections)
     class CaptchaProtection(BaseProtection):
         name = "captcha"
         ptype = ProtectionType.access_control.value

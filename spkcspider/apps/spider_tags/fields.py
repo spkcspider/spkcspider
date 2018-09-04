@@ -1,4 +1,4 @@
-__all__ = ["valid_fields", "generate_fields"]
+__all__ = ["installed_fields", "generate_fields"]
 
 import logging
 from django import forms
@@ -6,8 +6,9 @@ from django.apps import apps
 from django.utils.translation import gettext
 
 from spkcspider.apps.spider.constants import UserContentType
+from spkcspider.apps.spider.helpers import add_by_field
 
-valid_fields = {}
+installed_fields = {}
 
 safe_default_fields = [
     "BooleanField", "CharField", "ChoiceField", "MultipleChoiceField",
@@ -17,12 +18,12 @@ safe_default_fields = [
     "URLField"
 ]
 for i in safe_default_fields:
-    valid_fields[i] = getattr(forms, i)
+    installed_fields[i] = getattr(forms, i)
 
 
+@add_by_field(installed_fields, "__qualname__")
 class TextareaField(forms.CharField):
     widget = forms.Textarea
-valid_fields["TextareaField"] = TextareaField  # noqa: E305
 
 # extra attributes for fields:
 # limit_to_usercomponent = "<fieldname">: limit field name to associated uc
@@ -36,13 +37,12 @@ def localized_choices(obj):
     return func
 
 
-valid_fields["LocalizedChoiceField"] = localized_choices(forms.ChoiceField)
-
-
-valid_fields["MultipleLocalizedChoiceField"] = \
+installed_fields["LocalizedChoiceField"] = localized_choices(forms.ChoiceField)
+installed_fields["MultipleLocalizedChoiceField"] = \
     localized_choices(forms.MultipleChoiceField)
 
 
+@add_by_field(installed_fields, "__qualname__")
 class UserContentRefField(forms.ModelChoiceField):
     embed_content = None
 
@@ -65,9 +65,9 @@ class UserContentRefField(forms.ModelChoiceField):
             **kwargs.pop("limit_choices_to", {})
         )
         super().__init__(**kwargs)
-valid_fields["UserContentRefField"] = UserContentRefField  # noqa: E305
 
 
+@add_by_field(installed_fields, "__qualname__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
     embed_content = None
 
@@ -90,9 +90,9 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
             **kwargs.pop("limit_choices_to", {})
         )
         super().__init__(**kwargs)
-valid_fields["MultipleUserContentRefField"] = MultipleUserContentRefField  # noqa: E305, E501
 
 
+@add_by_field(installed_fields, "__qualname__")
 class AnchorField(forms.ModelChoiceField):
     embed_content = True
 
@@ -124,7 +124,6 @@ class AnchorField(forms.ModelChoiceField):
                 self.error_messages['invalid_choice'], code='invalid_choice'
             )
         return value
-valid_fields["AnchorField"] = AnchorField  # noqa: E305, E501
 
 
 def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
@@ -161,7 +160,7 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
                 field, new_prefix, _base=_base, _mainprefix=_mainprefix
             )
         elif isinstance(field, str):
-            new_field = valid_fields.get(field)
+            new_field = installed_fields.get(field, None)
             if not new_field:
                 logging.warning("Invalid field specified: %s", field)
             else:

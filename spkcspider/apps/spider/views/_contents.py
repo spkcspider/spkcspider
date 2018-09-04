@@ -22,7 +22,6 @@ from django.utils.duration import duration_string
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
-from ..contents import rate_limit_func
 from ..constants import UserContentType
 from ..models import AssignedContent, ContentVariant, UserComponent
 from ..forms import UserContentForm
@@ -72,7 +71,10 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         try:
             return super().dispatch(request, *args, **kwargs)
         except Http404:
-            return rate_limit_func(self, request)
+            return get_settings_func(
+                "RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -168,7 +170,10 @@ class ContentIndex(UCTestMixin, ListView):
         try:
             return super().dispatch(request, *args, **kwargs)
         except Http404:
-            return rate_limit_func(self, request)
+            return get_settings_func(
+                "RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
 
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
@@ -295,7 +300,7 @@ class ContentIndex(UCTestMixin, ListView):
         ):
             return get_settings_func(
                 "GENERATE_EMBEDDED_FUNC",
-                "spkcspider.apps.spider.helpers.generate_embedded"
+                "spkcspider.apps.spider.functions.generate_embedded"
             )(self.generate_embedded, locals(), self.usercomponent)
         hostpart = "{}://{}".format(
             self.request.scheme, self.request.get_host()

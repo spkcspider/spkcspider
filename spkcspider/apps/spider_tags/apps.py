@@ -1,5 +1,9 @@
-from django.apps import AppConfig
+__all__ = ["SpiderTagsConfig"]
+
+from django.apps import AppConfig, apps
 from .signals import UpdateDefaultLayouts
+from spkcspider.apps.spider.helpers import extract_app_dicts
+from spkcspider.apps.spider.signals import update_dynamic
 
 
 class SpiderTagsConfig(AppConfig):
@@ -8,12 +12,11 @@ class SpiderTagsConfig(AppConfig):
     verbose_name = 'spkcspider tags optionally verified'
 
     def ready(self):
-        from django.apps import apps
-        from .fields import valid_fields
-        from spkcspider.apps.spider.signals import update_dynamic
+        from .fields import installed_fields
         for app in apps.get_app_configs():
-            tags = getattr(app, "spider_tag_fields", {})
-            valid_fields.update(tags)
+            installed_fields.update(
+                extract_app_dicts(app, "spider_tag_fields")
+            )
 
         update_dynamic.connect(
             UpdateDefaultLayouts,

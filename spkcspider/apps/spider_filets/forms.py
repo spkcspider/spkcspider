@@ -1,6 +1,5 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
 
 from spkcspider.apps.spider.helpers import get_settings_func
 from .models import FileFilet, TextFilet
@@ -30,7 +29,7 @@ class FileForm(forms.ModelForm):
             ret["name"] = ret["file"].name
         func = get_settings_func(
             "UPLOAD_FILTER_FUNC",
-            "spkcspider.apps.spider.helpers.ALLOW_ALL_FILTER_FUNC"
+            "spkcspider.apps.spider.functions.allow_all_filter"
         )
         if not func(ret["file"]):
             raise forms.ValidationError(
@@ -41,20 +40,7 @@ class FileForm(forms.ModelForm):
         size_diff = ret["file"].size
         if self.instance.file:
             size_diff -= self.instance.file.size
-        quota = getattr(settings, "FIELDNAME_QUOTA", None)
-        if quota:
-            quota = getattr(self.user, quota, None)
-        if not quota:
-            quota = getattr(settings, "DEFAULT_QUOTA_USER", None)
-        if quota and self.user.spider_info.used_space + size_diff > quota:
-            raise forms.ValidationError(
-                _("%(name)s exceeded quota by %(size)s Bytes"),
-                code='quota_exceeded',
-                params={'name': ret["name"], 'size': size_diff},
-            )
-        else:
-            self.user.spider_info.used_space += size_diff
-            self.user.spider_info.save()
+        self.user.spider_info.update_quota(size_diff)
         return ret
 
 

@@ -1,3 +1,5 @@
+__all__ = ["SpiderKeysConfig"]
+
 from django.apps import AppConfig
 
 
