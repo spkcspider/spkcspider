@@ -105,6 +105,10 @@ class PublicKey(BaseContent):
         return KeyForm
 
     def render_view(self, **kwargs):
+        if "raw" in kwargs["request"].GET:
+            k = kwargs.copy()
+            k["scope"] = "raw"
+            return self.render_serialize(**k)
         kwargs["object"] = self
         kwargs["algo"] = settings.KEY_HASH_ALGO
         kwargs["hash"] = self.associated.getlist(

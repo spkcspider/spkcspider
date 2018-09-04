@@ -268,7 +268,7 @@ class ContentIndex(UCTestMixin, ListView):
             )
             content.content.extract_form(
                 ctx, contdic, zip, level=deref_level,
-                prefix="{}/".format(n),
+                prefix="{}/".format(n)
             )
             zip.writestr(
                 "{}/data.json".format(n), json.dumps(contdic)

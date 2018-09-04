@@ -5,6 +5,7 @@ import html
 
 from django.db import models
 from django.conf import settings
+from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 from django.http import FileResponse
@@ -85,6 +86,14 @@ class FileFilet(BaseContent):
             k = kwargs.copy()
             k["scope"] = "raw"
             return self.render_serialize(**k)
+        kwargs["object"] = self
+        kwargs["content"] = self.associated
+        return render_to_string(
+            "spider_filets/file.html", request=kwargs["request"],
+            context=kwargs
+        )
+
+    def render_download(self, **kwargs):
         if getattr(settings, "FILET_DIRECT_DOWNLOAD", False):
             response = HttpResponseRedirect(
                 self.file.url,
@@ -112,6 +121,11 @@ class FileFilet(BaseContent):
         _ = gettext
         kwargs["legend"] = _("Update File")
         return super().render_update(**kwargs)
+
+    def render(self, **kwargs):
+        if kwargs["scope"] == "download":
+            return self.render_download()
+        return super().render(**kwargs)
 
     def save(self, *args, **kw):
         if self.pk is not None:

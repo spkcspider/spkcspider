@@ -2,8 +2,6 @@
 __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
-
-import os
 import json
 from collections import OrderedDict
 
@@ -277,12 +275,13 @@ class BaseContent(models.Model):
                     }
 
             elif isinstance(value, File):
-                path = "{}{}/{}".format(
-                    prefix, name, os.path.basename(value.name)
+                datadic[name] = get_settings_func(
+                    "EMBED_FILE_FUNC",
+                    "spkcspider.apps.spider.functions.embed_file_default"
+                )(
+                    prefix=prefix, name=name, value=value,
+                    zipf=zipf, context=context
                 )
-                if zipf:
-                    zipf.write(value.path, path)
-                datadic[name] = {"file": path}
             else:
                 datadic[name] = raw_value
 
@@ -337,7 +336,7 @@ class BaseContent(models.Model):
             return self.render_serialize(**k)
 
         kwargs["form"] = self.get_form("view")(
-            **self.get_form_kwargs(**kwargs)
+            **self.get_form_kwargs(disable_data=True, **kwargs)
         )
         kwargs.setdefault("no_button", True)
         template_name = "spider_base/full_form.html"

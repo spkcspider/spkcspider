@@ -191,7 +191,7 @@ class ComponentIndex(UCTestMixin, ListView):
         maindic = {"scope": "export"}
         return get_settings_func(
             "GENERATE_EMBEDDED_FUNC",
-            "spkcspider.apps.spider.helpers.generate_embedded"
+            "spkcspider.apps.spider.functions.generate_embedded"
         )(
             self.generate_embedded, locals()
         )

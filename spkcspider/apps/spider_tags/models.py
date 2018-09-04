@@ -145,7 +145,7 @@ class SpiderTag(BaseContent):
         return ret
 
     def extract_form(
-        self, context, datadic, zipf=None, level=1, prefix="", form=None
+        self, context, datadic, files, level=1, prefix="", form=None
     ):
         if not form:
             form = self.get_form(context["scope"])(
@@ -156,7 +156,7 @@ class SpiderTag(BaseContent):
         else:
             _datadic = datadic
         super().extract_form(
-            context, _datadic, zipf=zipf, level=level, prefix=prefix,
+            context, _datadic, files, level=level, prefix=prefix,
             form=form
         )
         if getattr(form, "layout_generating_form", False):
