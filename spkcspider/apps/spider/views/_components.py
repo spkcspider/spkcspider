@@ -172,7 +172,8 @@ class ComponentIndex(UCTestMixin, ListView):
                 store_dict = OrderedDict(
                     pk=content.pk,
                     ctype=content.ctype.name,
-                    info=content.info
+                    info=content.info,
+                    expires=None  # replaced with expire date of token
                 )
                 context["store_dict"] = store_dict
                 context["uc"] = component

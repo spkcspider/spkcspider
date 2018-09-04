@@ -285,7 +285,8 @@ class ContentIndex(UCTestMixin, ListView):
 
         store_dict = OrderedDict(
             name=self.usercomponent.name,
-            scope=context["scope"]
+            scope=context["scope"],
+            expires=None  # replaced with expire date of token
         )
         session_dict["store_dict"] = store_dict
         if context["scope"] == "export":

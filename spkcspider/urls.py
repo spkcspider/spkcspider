@@ -51,7 +51,7 @@ for app in apps.get_app_configs():
 
 
 if getattr(settings, "USE_CAPTCHAS", False):
-    urlpatterns.apppend(path(r'captcha/', include('captcha.urls')))
+    urlpatterns.append(path(r'captcha/', include('captcha.urls')))
 
 if 'django.contrib.flatpages' in settings.INSTALLED_APPS:
     urlpatterns.append(

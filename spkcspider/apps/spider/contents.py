@@ -286,26 +286,30 @@ class BaseContent(models.Model):
                 datadic[name] = raw_value
 
     def generate_embedded(self, zip, context):
-        kwargs, maindic = context["kwargs"], context["store_dict"]
+        store_dict = context["store_dict"]
         deref_level = 2
-        if kwargs["scope"] == "export":
+        if store_dict["scope"] == "export":
             deref_level = 1
         self.extract_form(
-            kwargs, maindic, zip, level=deref_level
+            context, store_dict, zip, level=deref_level
         )
         zip.writestr(
-            "data.json", json.dumps(maindic)
+            "data.json", json.dumps(store_dict)
         )
 
     def render_serialize(self, **kwargs):
         # ** creates copy of dict, so it is safe to overwrite kwargs here
 
-        session_dict = {"scope": kwargs["scope"]}
+        session_dict = {
+            "request": kwargs["request"],
+            "context": kwargs
+        }
         store_dict = OrderedDict(
             pk=self.associated.pk,
             ctype=self.associated.ctype.name,
             scope=kwargs["scope"],
-            info=self.associated.info
+            info=self.associated.info,
+            expires=None  # replaced with expire date of token
         )
         session_dict["store_dict"] = store_dict
         store_dict["expires"] = None

@@ -24,7 +24,7 @@ def embed_file_default(prefix, name, value, zipf, context):
     path = "{}{}/{}".format(
         prefix, name, os.path.basename(value.name)
     )
-    if value.size < 10000 or context["scope"] == "export":
+    if value.size < 10000 or context["store_dict"]["scope"] == "export":
         zipf.write(value.path, path)
         return {"file": path}
     else:
@@ -32,7 +32,7 @@ def embed_file_default(prefix, name, value, zipf, context):
 
 
 def generate_embedded(func, context, obj=None):
-    expires = context.get("token_expires", None)
+    expires = context["store_dict"].get("token_expires", None)
     fil = tempfile.SpooledTemporaryFile(max_size=2048)
     with zipfile.ZipFile(fil, "w") as zip:
         func(zip, context)
