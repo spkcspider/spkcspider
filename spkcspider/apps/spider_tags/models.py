@@ -118,6 +118,9 @@ class SpiderTag(BaseContent):
             self.id
         )
 
+    def get_strength_link(self):
+        return 0
+
     def get_form(self, scope):
         from .forms import SpiderTagForm
         if scope == "add":
@@ -142,8 +145,7 @@ class SpiderTag(BaseContent):
         return ret
 
     def extract_form(
-        self, context, datadic, zipf=None, level=1, prefix="", form=None,
-        _was_embed=False
+        self, context, datadic, zipf=None, level=1, prefix="", form=None
     ):
         if not form:
             form = self.get_form(context["scope"])(
@@ -155,7 +157,7 @@ class SpiderTag(BaseContent):
             _datadic = datadic
         super().extract_form(
             context, _datadic, zipf=zipf, level=level, prefix=prefix,
-            form=form, _was_embed=_was_embed
+            form=form
         )
         if getattr(form, "layout_generating_form", False):
             datadic["primary"] = _datadic["primary"]

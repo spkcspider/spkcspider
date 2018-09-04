@@ -254,8 +254,11 @@ class ContentIndex(UCTestMixin, ListView):
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
     def generate_embedded(self, zip, context):
-        ctx, maindic = context["context"], context["maindic"]
         # Here export and raw
+        deref_level = 2
+        if self.scope == "export":
+            deref_level = 1
+        ctx, maindic = context["context"], context["maindic"]
         zip.writestr("data.json", json.dumps(maindic))
         for n, content in enumerate(ctx["object_list"]):
             contdic = OrderedDict(
@@ -264,8 +267,8 @@ class ContentIndex(UCTestMixin, ListView):
                 info=content.info
             )
             content.content.extract_form(
-                ctx, contdic, zip, level=2,  # allow dereference of 1 level
-                prefix="{}/".format(n)
+                ctx, contdic, zip, level=deref_level,
+                prefix="{}/".format(n),
             )
             zip.writestr(
                 "{}/data.json".format(n), json.dumps(contdic)

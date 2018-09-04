@@ -230,8 +230,7 @@ class BaseContent(models.Model):
         return self.render_form(**kwargs)
 
     def extract_form(
-        self, context, datadic, zipf=None, level=1, prefix="", form=None,
-        _was_embed=False  # field tag which increases level of embedding
+        self, context, datadic, zipf=None, level=1, prefix="", form=None
     ):
         if level <= 0:
             return
@@ -248,15 +247,13 @@ class BaseContent(models.Model):
             if isinstance(value, AssignedContent):
                 _level = level-1
                 if (
-                        hasattr(form.fields[name], "embed_content") and
-                        not _was_embed and
+                        getattr(field, "force_embed", False) and
                         # dereferencing would break stuff
                         context["scope"] != "export"
                    ):
                     _level += 1
-                    _was_embed = True
                 if _level > 0:
-                    context["uc"] = self.associated.usercomponent
+                    context["uc"] = value.associated.usercomponent
                     form2 = value.get_form(context["scope"])(
                         **value.get_form_kwargs(
                             disable_data=True, **context
@@ -265,12 +262,12 @@ class BaseContent(models.Model):
                     pref = "{}{}/".format(prefix, name)
                     datadic[name] = OrderedDict(
                         pk=self.associated.pk,
-                        ctype=self.associated.ctype.name
+                        ctype=self.associated.ctype.name,
+                        info=self.associated.info
                     )
                     self.extract_form(
                         context, datadic[name], prefix=pref,
                         zipf=zipf, level=_level, form=form2,
-                        _was_embed=_was_embed
                     )
                 else:
                     datadic[name] = {
@@ -291,8 +288,11 @@ class BaseContent(models.Model):
 
     def generate_embedded(self, zip, context):
         kwargs, maindic = context["kwargs"], context["maindic"]
+        deref_level = 2
+        if kwargs["scope"] == "export":
+            deref_level = 1
         self.extract_form(
-            kwargs, maindic, zip, level=1
+            kwargs, maindic, zip, level=deref_level
         )
         zip.writestr(
             "data.json", json.dumps(maindic)

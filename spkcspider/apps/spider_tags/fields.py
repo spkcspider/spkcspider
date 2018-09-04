@@ -44,12 +44,11 @@ installed_fields["MultipleLocalizedChoiceField"] = \
 
 @add_by_field(installed_fields, "__qualname__")
 class UserContentRefField(forms.ModelChoiceField):
-    embed_content = None
+    strength_link_field = "associated_rel__usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
-    def __init__(self, modelname, limit_to_uc=True, embed=False, **kwargs):
+    def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
-        self.embed_content = embed
         if limit_to_uc:
             self.limit_to_usercomponent = "associated_rel__usercomponent"
         else:
@@ -69,12 +68,11 @@ class UserContentRefField(forms.ModelChoiceField):
 
 @add_by_field(installed_fields, "__qualname__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
-    embed_content = None
+    strength_link_field = "associated_rel__usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
-    def __init__(self, modelname, limit_to_uc=True, embed=False, **kwargs):
+    def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
-        self.embed_content = embed
         if limit_to_uc:
             self.limit_to_usercomponent = "associated_rel__usercomponent"
         else:
@@ -94,7 +92,8 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
 
 @add_by_field(installed_fields, "__qualname__")
 class AnchorField(forms.ModelChoiceField):
-    embed_content = True
+    force_embed = True
+    strength_link_field = "associated_rel__usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
     def __init__(self, limit_to_uc=True, **kwargs):

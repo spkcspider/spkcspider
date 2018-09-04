@@ -73,9 +73,12 @@ def generate_form(name, layout):
             super().__init__(
                 initial=_initial, **kwargs
             )
-            for field in self.fields:
+            for field in self.fields.values():
                 if hasattr(field, "queryset"):
                     filters = {}
+                    attr = getattr(field, "strength_link_field", None)
+                    if attr:
+                        filters[attr] = uc.strength
                     attr = getattr(field, "limit_to_usercomponent", None)
                     if attr:
                         filters[attr] = uc
