@@ -128,9 +128,10 @@ class SpiderTag(BaseContent):
         else:
             return self.layout.get_form()
 
-    def get_form_kwargs(self, **kwargs):
+    def get_form_kwargs(self, instance=None, **kwargs):
         if kwargs["scope"] == "add":
             ret = super().get_form_kwargs(
+                instance=instance,
                 **kwargs
             )
             ret["user"] = self.associated.usercomponent.user

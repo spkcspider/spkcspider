@@ -286,7 +286,7 @@ class BaseContent(models.Model):
                 datadic[name] = raw_value
 
     def generate_embedded(self, zip, context):
-        kwargs, maindic = context["kwargs"], context["maindic"]
+        kwargs, maindic = context["kwargs"], context["store_dict"]
         deref_level = 2
         if kwargs["scope"] == "export":
             deref_level = 1
@@ -299,15 +299,18 @@ class BaseContent(models.Model):
 
     def render_serialize(self, **kwargs):
         # ** creates copy of dict, so it is safe to overwrite kwargs here
-        maindic = OrderedDict(
+
+        session_dict = {"scope": kwargs["scope"]}
+        store_dict = OrderedDict(
             pk=self.associated.pk,
             ctype=self.associated.ctype.name,
             scope=kwargs["scope"],
             info=self.associated.info
         )
-        token_expires = None
+        session_dict["store_dict"] = store_dict
+        store_dict["expires"] = None
         if hasattr(kwargs["request"], "token_expires"):
-            token_expires = kwargs["request"].token_expires.strftime(
+            store_dict["expires"] = kwargs["request"].token_expires.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             )
         if (
@@ -317,16 +320,12 @@ class BaseContent(models.Model):
             return get_settings_func(
                 "GENERATE_EMBEDDED_FUNC",
                 "spkcspider.apps.spider.functions.generate_embedded"
-            )(self.generate_embedded, locals(), self.associated)
+            )(self.generate_embedded, session_dict, self.associated)
 
-        self.extract_form(
-            kwargs, maindic, level=2
-        )
-        if token_expires:
-            maindic["expires"] = token_expires
-        ret = JsonResponse(maindic)
-        if token_expires:
-            ret['X-Token-Expires'] = token_expires
+        self.extract_form(kwargs, store_dict, level=2)
+        ret = JsonResponse(store_dict)
+        if store_dict["expires"]:
+            ret['X-Token-Expires'] = store_dict["expires"]
         return ret
 
     def render_view(self, **kwargs):

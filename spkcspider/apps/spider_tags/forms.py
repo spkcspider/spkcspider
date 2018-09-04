@@ -67,9 +67,9 @@ def generate_form(name, layout):
         def __init__(self, *, uc=None, initial=None, usertag=None, **kwargs):
             if not initial:
                 initial = {}
+            self.usertag = usertag
             _initial = self.encode_initial(initial)
             _initial["primary"] = getattr(usertag, "primary", False)
-            self.usertag = usertag
             super().__init__(
                 initial=_initial, **kwargs
             )
@@ -86,6 +86,11 @@ def generate_form(name, layout):
                     if attr:
                         filters[attr] = uc.user
                     field.queryset = field.queryset.filter(**filters)
+
+        def clean(self):
+            if self.usertag:
+                self.usertag.clean()
+            return super().clean()
 
         @classmethod
         def encode_initial(cls, initial, prefix="tag", base=None):

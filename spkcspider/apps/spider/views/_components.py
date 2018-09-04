@@ -147,54 +147,59 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def generate_embedded(self, zip, context):
         # Here export only
-        ctx = context["context"]
-        ctx["request"] = self.request
 
         deref_level = 1  # don't dereference, as all data will be available
-        for component in ctx["object_list"]:
+        for component in context["context"]["object_list"]:
             cname = component.name
             # serialized_obj = protections=serializers.serialize(
             #     'json', component.protections.all()
             # )
-            compdic = OrderedDict(
+            comp_dict = OrderedDict(
                 name=cname
             )
-            compdic["public"] = component.public,
-            compdic["required_passes"] = \
+            comp_dict["public"] = component.public,
+            comp_dict["required_passes"] = \
                 component.required_passes
-            compdic["token_duration"] = \
+            comp_dict["token_duration"] = \
                 duration_string(component.token_duration)
 
             zip.writestr(
-                "{}/data.json".format(cname), json.dumps(compdic)
+                "{}/data.json".format(cname), json.dumps(comp_dict)
             )
             for n, content in enumerate(
                 component.contents.order_by("ctype__name", "id")
             ):
-                contdic = OrderedDict(
+                store_dict = OrderedDict(
                     pk=content.pk,
                     ctype=content.ctype.name,
                     info=content.info
                 )
-                ctx["uc"] = self.usercomponent
+                context["store_dict"] = store_dict
+                context["uc"] = component
                 content.content.extract_form(
-                    ctx, contdic, zip, level=deref_level,
+                    context, store_dict, zip, level=deref_level,
                     prefix="{}/{}/".format(cname, n)
                 )
                 zip.writestr(
-                    "{}/{}/data.json".format(cname, n), json.dumps(contdic)
+                    "{}/{}/data.json".format(cname, n), json.dumps(store_dict)
                 )
 
     def render_to_response(self, context):
         if self.scope != "export":
             return super().render_to_response(context)
-        maindic = {"scope": "export"}
+        session_dict = {
+            "request": self.request,
+            "context": context,
+            "store_dict":
+                {
+                    "scope": "export"
+                }
+        }
+
         return get_settings_func(
             "GENERATE_EMBEDDED_FUNC",
             "spkcspider.apps.spider.functions.generate_embedded"
-        )(
-            self.generate_embedded, locals()
-        )
+        )(self.generate_embedded, session_dict, None)
 
 
 class ComponentCreate(UserTestMixin, CreateView):

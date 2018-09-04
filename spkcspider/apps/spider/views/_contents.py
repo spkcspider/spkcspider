@@ -258,42 +258,45 @@ class ContentIndex(UCTestMixin, ListView):
         deref_level = 2
         if self.scope == "export":
             deref_level = 1
-        ctx, maindic = context["context"], context["maindic"]
-        zip.writestr("data.json", json.dumps(maindic))
-        for n, content in enumerate(ctx["object_list"]):
-            contdic = OrderedDict(
+        store_dict = context["store_dict"]
+        zip.writestr("data.json", json.dumps(store_dict))
+        for n, content in enumerate(context["context"]["object_list"]):
+            context["store_dict"] = OrderedDict(
                 pk=content.pk,
                 ctype=content.ctype.name,
                 info=content.info
             )
             content.content.extract_form(
-                ctx, contdic, zip, level=deref_level,
+                context, context["store_dict"], zip, level=deref_level,
                 prefix="{}/".format(n)
             )
             zip.writestr(
-                "{}/data.json".format(n), json.dumps(contdic)
+                "{}/data.json".format(n), json.dumps(context["store_dict"])
             )
 
     def render_to_response(self, context):
         if context["scope"] not in ["export", "raw"]:
             return super().render_to_response(context)
-        token_expires = None
 
-        context["request"] = self.request
+        session_dict = {}
+        session_dict["request"] = self.request
+        session_dict["context"] = context
+        session_dict["uc"] = self.usercomponent
 
-        maindic = OrderedDict(
+        store_dict = OrderedDict(
             name=self.usercomponent.name,
             scope=context["scope"]
         )
+        session_dict["store_dict"] = store_dict
         if context["scope"] == "export":
-            maindic["public"] = self.usercomponent.public,
-            maindic["required_passes"] = \
+            store_dict["public"] = self.usercomponent.public,
+            store_dict["required_passes"] = \
                 self.usercomponent.required_passes
-            maindic["token_duration"] = duration_string(
+            store_dict["token_duration"] = duration_string(
                 self.usercomponent.token_duration
             )
         elif hasattr(self.request, "token_expires"):
-            token_expires = self.request.token_expires.strftime(
+            store_dict["expires"] = self.request.token_expires.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             )
 
@@ -304,7 +307,7 @@ class ContentIndex(UCTestMixin, ListView):
             return get_settings_func(
                 "GENERATE_EMBEDDED_FUNC",
                 "spkcspider.apps.spider.functions.generate_embedded"
-            )(self.generate_embedded, locals(), self.usercomponent)
+            )(self.generate_embedded, session_dict, self.usercomponent)
         hostpart = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )
@@ -327,11 +330,10 @@ class ContentIndex(UCTestMixin, ListView):
                 }
                 for item in context["object_list"]
             ],
-            "expires": token_expires,
-            **maindic
+            **store_dict
         })
-        if token_expires:
-            ret['X-Token-Expires'] = token_expires
+        if store_dict["expires"]:
+            ret['X-Token-Expires'] = store_dict["expires"]
         return ret
 
 
