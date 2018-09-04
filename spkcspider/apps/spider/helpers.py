@@ -48,13 +48,15 @@ def add_by_field(dic, field="name"):
     return _func
 
 
-def extract_app_dicts(app, name):
+def extract_app_dicts(app, name, fieldname=None):
     ndic = {}
     for (key, value) in getattr(app, name, _empty_dict):
         if inspect.isclass(value):
             if value.__qualname__ not in getattr(
                 settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
             ):
+                if fieldname:
+                    setattr(value, fieldname, key)
                 ndic[key] = value
         else:
             # set None if Module is not always available
@@ -62,7 +64,10 @@ def extract_app_dicts(app, name):
                 settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
             ):
                 module, name = value.rsplit(".", 1)
-                ndic[key] = getattr(import_module(module), name)
+                value = getattr(import_module(module), name)
+                if fieldname:
+                    setattr(value, fieldname, key)
+                ndic[key] = value
     return ndic
 
 

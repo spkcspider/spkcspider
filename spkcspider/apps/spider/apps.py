@@ -28,7 +28,7 @@ class SpiderBaseConfig(AppConfig):
 
         for app in apps.get_app_configs():
             installed_protections.update(
-                extract_app_dicts(app, "spider_protections")
+                extract_app_dicts(app, "spider_protections", "name")
             )
 
         post_delete.connect(

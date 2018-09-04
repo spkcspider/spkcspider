@@ -79,6 +79,7 @@ class BaseProtection(forms.Form):
                     "Requires \"active\".")
     )
     # unique code name max 10 slug chars
+    # if imported by extract_app_dicts, name is automatically set to key name
     # name = foo
 
     # ptype valid for, is overwritten with current ptype
