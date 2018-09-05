@@ -7,8 +7,11 @@ import os
 import zipfile
 import tempfile
 import time
+from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.http import FileResponse
+from django.utils.translation import gettext as _
+from django.conf import settings
 
 
 def rate_limit_default(view, request):
@@ -20,19 +23,52 @@ def allow_all_filter(*args, **kwargs):
     return True
 
 
+def validate_file(value):
+    max_size = getattr(settings, "MAX_FILE_SIZE", None)
+    if max_size and value.size > max_size:
+        raise ValidationError(
+            _("%(name)s is too big"),
+            code='max_size',
+            params={'name': value.name},
+        )
+
+
 def embed_file_default(prefix, name, value, zipf, context):
     path = "{}{}/{}".format(
         prefix, name, os.path.basename(value.name)
     )
-    if value.size < 10000 or context["store_dict"]["scope"] == "export":
+
+    override = (
+        (
+            context["request"].user.is_superuser or
+            context["request"].user.is_staff
+        ) and context["request"].GET.get("embed_big", "") == "true"
+    )
+    if (
+        value.size < getattr(settings, "MAX_EMBED_SIZE", 20000000) or
+        override
+    ):
         zipf.write(value.path, path)
         return {"file": path}
+    elif context["scope"] == "export":
+        # link always direct to files in exports
+        # add host, in case url is relative (can happen)
+        return {"url": value.url, "host": context["request"].get_host()}
     else:
-        return {"url": value.url}
+        hostpart = "{}://{}".format(
+            context["request"].scheme, context["request"].get_host()
+        )
+        # only file filet has files yet
+        url = context["content"].associated.get_absolute_url("download")
+        url = "{}{}?{}".format(
+            hostpart,
+            url, context["context"]["spider_GET"].urlencode()
+        )
+        return {"url": url}
 
 
 def generate_embedded(func, context, obj=None):
-    expires = context["store_dict"].get("token_expires", None)
+    expires = context.get("expires", None)
     fil = tempfile.SpooledTemporaryFile(max_size=2048)
     with zipfile.ZipFile(fil, "w") as zip:
         func(zip, context)

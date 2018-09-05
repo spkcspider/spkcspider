@@ -98,6 +98,8 @@ There are some special GET parameters for services with special requirements:
 * info=foo: search info tag in info for list only
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
+* [embed_big=true]: only staff and superuser can use it. Overrides maximal size of files which are embedded
+
 
 verified_by urls should return hashname:hash_hexdigest
 

@@ -207,10 +207,10 @@ class AssignedContent(models.Model):
                     code='unique_together',
                 )
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, scope="view"):
         return reverse(
             "spider_base:ucontent-access",
-            kwargs={"id": self.id, "nonce": self.nonce, "access": "view"}
+            kwargs={"id": self.id, "nonce": self.nonce, "access": scope}
         )
 
 ###############################################################################

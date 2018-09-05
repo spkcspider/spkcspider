@@ -287,6 +287,7 @@ class BaseContent(models.Model):
 
     def generate_embedded(self, zip, context):
         store_dict = context["store_dict"]
+        context["content"] = self
         deref_level = 2
         if store_dict["scope"] == "export":
             deref_level = 1
@@ -302,21 +303,25 @@ class BaseContent(models.Model):
 
         session_dict = {
             "request": kwargs["request"],
-            "context": kwargs
+            "context": kwargs,
+            "scope": kwargs["scope"]
         }
         store_dict = OrderedDict(
             pk=self.associated.pk,
             ctype=self.associated.ctype.name,
+            modified=self.associated.modified.strftime(
+                "%a, %d %b %Y %H:%M:%S %z"
+            ),
             scope=kwargs["scope"],
             info=self.associated.info,
             expires=None  # replaced with expire date of token
         )
         session_dict["store_dict"] = store_dict
-        store_dict["expires"] = None
         if hasattr(kwargs["request"], "token_expires"):
             store_dict["expires"] = kwargs["request"].token_expires.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             )
+            session_dict["expires"] = store_dict["expires"]
         if (
                 kwargs["scope"] == "export" or
                 kwargs["request"].GET.get("raw", "") == "embed"
@@ -404,7 +409,7 @@ class BaseContent(models.Model):
         if self._associated2:
             a.content = self
             # add id to info
-            if "\nunique\n" not in a.info:
+            if "\nprimary\n" not in a.info:
                 a.info = a.info.replace(
                     "\nid=None\n", "\nid={}\n".format(self.id), 1
                 )

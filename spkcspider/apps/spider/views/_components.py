@@ -169,11 +169,15 @@ class ComponentIndex(UCTestMixin, ListView):
             for n, content in enumerate(
                 component.contents.order_by("ctype__name", "id")
             ):
+                context["content"] = content.content
                 store_dict = OrderedDict(
                     pk=content.pk,
                     ctype=content.ctype.name,
                     info=content.info,
-                    expires=None  # replaced with expire date of token
+                    scope="export",
+                    modified=content.modified.strftime(
+                        "%a, %d %b %Y %H:%M:%S %z"
+                    ),
                 )
                 context["store_dict"] = store_dict
                 context["uc"] = component
@@ -191,10 +195,8 @@ class ComponentIndex(UCTestMixin, ListView):
         session_dict = {
             "request": self.request,
             "context": context,
-            "store_dict":
-                {
-                    "scope": "export"
-                }
+            "scope": context["scope"],
+            "expires": None
         }
 
         return get_settings_func(

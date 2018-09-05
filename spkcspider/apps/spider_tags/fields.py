@@ -65,6 +65,9 @@ class UserContentRefField(forms.ModelChoiceField):
         )
         super().__init__(**kwargs)
 
+    def label_from_instance(self, obj):
+        return str(obj)
+
 
 @add_by_field(installed_fields, "__qualname__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
@@ -89,6 +92,9 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
         )
         super().__init__(**kwargs)
 
+    def label_from_instance(self, obj):
+        return str(obj)
+
 
 @add_by_field(installed_fields, "__qualname__")
 class AnchorField(forms.ModelChoiceField):
@@ -109,9 +115,6 @@ class AnchorField(forms.ModelChoiceField):
         )
         super().__init__(**kwargs)
 
-    def label_from_instance(self, obj):
-        return str(obj.content)
-
     def to_python(self, value):
         if value in self.empty_values:
             return None
@@ -123,6 +126,9 @@ class AnchorField(forms.ModelChoiceField):
                 self.error_messages['invalid_choice'], code='invalid_choice'
             )
         return value
+
+    def label_from_instance(self, obj):
+        return str(obj.content)
 
 
 def generate_fields(layout, prefix="", _base=None, _mainprefix=None):

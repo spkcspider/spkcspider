@@ -258,16 +258,20 @@ class ContentIndex(UCTestMixin, ListView):
         deref_level = 2
         if self.scope == "export":
             deref_level = 1
-        store_dict = context["store_dict"]
-        zip.writestr("data.json", json.dumps(store_dict))
+        zip.writestr("data.json", json.dumps(context["store_dict"]))
         for n, content in enumerate(context["context"]["object_list"]):
-            context["store_dict"] = OrderedDict(
+            context["content"] = content.content
+            store_dict = OrderedDict(
                 pk=content.pk,
                 ctype=content.ctype.name,
-                info=content.info
+                info=content.info,
+                modified=content.modified.strftime(
+                    "%a, %d %b %Y %H:%M:%S %z"
+                )
             )
+            context["store_dict"] = store_dict
             content.content.extract_form(
-                context, context["store_dict"], zip, level=deref_level,
+                context, store_dict, zip, level=deref_level,
                 prefix="{}/".format(n)
             )
             zip.writestr(
@@ -281,12 +285,12 @@ class ContentIndex(UCTestMixin, ListView):
         session_dict = {}
         session_dict["request"] = self.request
         session_dict["context"] = context
+        session_dict["scope"] = context["scope"]
         session_dict["uc"] = self.usercomponent
 
         store_dict = OrderedDict(
             name=self.usercomponent.name,
-            scope=context["scope"],
-            expires=None  # replaced with expire date of token
+            scope=context["scope"]
         )
         session_dict["store_dict"] = store_dict
         if context["scope"] == "export":
@@ -300,6 +304,7 @@ class ContentIndex(UCTestMixin, ListView):
             store_dict["expires"] = self.request.token_expires.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             )
+            session_dict["expires"] = store_dict["expires"]
 
         if (
             context["scope"] == "export" or
@@ -317,6 +322,9 @@ class ContentIndex(UCTestMixin, ListView):
             "content": [
                 {
                     "info": item.info,
+                    "modified": item.modified.strftime(
+                        "%a, %d %b %Y %H:%M:%S %z"
+                    ),
                     "link": "{}{}?{}".format(
                         hostpart,
                         reverse(
@@ -333,8 +341,8 @@ class ContentIndex(UCTestMixin, ListView):
             ],
             **store_dict
         })
-        if store_dict["expires"]:
-            ret['X-Token-Expires'] = store_dict["expires"]
+        if session_dict.get("expires", None):
+            ret['X-Token-Expires'] = session_dict["expires"]
         return ret
 
 

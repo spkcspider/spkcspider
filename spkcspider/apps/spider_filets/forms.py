@@ -1,5 +1,4 @@
 from django import forms
-from django.utils.translation import gettext_lazy as _
 
 from spkcspider.apps.spider.helpers import get_settings_func
 from .models import FileFilet, TextFilet
@@ -27,16 +26,10 @@ class FileForm(forms.ModelForm):
             return ret
         if not ret["name"] or ret["name"].strip() == "":
             ret["name"] = ret["file"].name
-        func = get_settings_func(
+        get_settings_func(
             "UPLOAD_FILTER_FUNC",
-            "spkcspider.apps.spider.functions.allow_all_filter"
-        )
-        if not func(ret["file"]):
-            raise forms.ValidationError(
-                _("%(name)s is not allowed content"),
-                code='upload_filter',
-                params={'name': ret["file"].name},
-            )
+            "spkcspider.apps.spider.functions.validate_file"
+        )(ret["file"])
         size_diff = ret["file"].size
         if self.instance.file:
             size_diff -= self.instance.file.size
