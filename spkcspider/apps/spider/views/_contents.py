@@ -282,11 +282,13 @@ class ContentIndex(UCTestMixin, ListView):
         if context["scope"] not in ["export", "raw"]:
             return super().render_to_response(context)
 
-        session_dict = {}
-        session_dict["request"] = self.request
-        session_dict["context"] = context
-        session_dict["scope"] = context["scope"]
-        session_dict["uc"] = self.usercomponent
+        session_dict = {
+            "request": self.request,
+            "context": context,
+            "scope": context["scope"],
+            "uc": self.usercomponent,
+            "hostpart": context["hostpart"]
+        }
 
         store_dict = OrderedDict(
             name=self.usercomponent.name,

@@ -197,7 +197,8 @@ class ComponentIndex(UCTestMixin, ListView):
             "request": self.request,
             "context": context,
             "scope": context["scope"],
-            "expires": None
+            "expires": None,
+            "hostpart": context["hostpart"]
         }
 
         return get_settings_func(

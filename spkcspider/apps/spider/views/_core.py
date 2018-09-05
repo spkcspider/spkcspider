@@ -39,6 +39,9 @@ class UserTestMixin(AccessMixin):
         kwargs["UserContentType"] = UserContentType
         kwargs["ProtectionType"] = ProtectionType
         kwargs["spider_GET"] = self.sanitize_GET()
+        kwargs["hostpart"] = "{}://{}".format(
+            self.request.scheme, self.request.get_host()
+        )
         return super().get_context_data(**kwargs)
 
     # by default only owner can access view

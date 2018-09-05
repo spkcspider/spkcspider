@@ -52,16 +52,15 @@ def embed_file_default(prefix, name, value, zipf, context):
         return {"file": path}
     elif context["scope"] == "export":
         # link always direct to files in exports
-        # add host, in case url is relative (can happen)
-        return {"url": value.url, "host": context["request"].get_host()}
+        url = value.url
+        if "://" not in getattr(settings, "MEDIA_URL", ""):
+            url = "{}{}".format(context["hostpart"], url)
+        return {"url": url}
     else:
-        hostpart = "{}://{}".format(
-            context["request"].scheme, context["request"].get_host()
-        )
         # only file filet has files yet
         url = context["content"].associated.get_absolute_url("download")
         url = "{}{}?{}".format(
-            hostpart,
+            context["hostpart"],
             url, context["context"]["spider_GET"].urlencode()
         )
         return {"url": url}

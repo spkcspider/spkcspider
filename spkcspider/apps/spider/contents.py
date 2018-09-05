@@ -304,7 +304,8 @@ class BaseContent(models.Model):
         session_dict = {
             "request": kwargs["request"],
             "context": kwargs,
-            "scope": kwargs["scope"]
+            "scope": kwargs["scope"],
+            "hostpart": kwargs["hostpart"]
         }
         store_dict = OrderedDict(
             pk=self.associated.pk,
