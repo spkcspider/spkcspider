@@ -21,12 +21,12 @@ urlpatterns = [
     ),
     path(
         'ucs/user/<slug:user>/',
-        ComponentIndex.as_view(),
+        login_required(ComponentIndex.as_view()),
         name='ucomponent-list'
     ),
     path(
         'ucs/user/',
-        login_required(ComponentIndex.as_view(no_nonce_usercomponent=True)),
+        login_required(ComponentIndex.as_view()),
         name='ucomponent-list'
     ),
     # path(

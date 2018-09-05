@@ -80,6 +80,7 @@ class ComponentAllIndex(ListView):
 class ComponentIndex(UCTestMixin, ListView):
     model = UserComponent
     also_authenticated_users = True
+    no_nonce_usercomponent = True
     scope = "list"
 
     user = None
