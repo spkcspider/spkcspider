@@ -1,4 +1,6 @@
 from django.urls import path
+from django.contrib.auth.decorators import login_required
+
 
 from .views import (
     ComponentIndex, ComponentAllIndex, ComponentCreate,
@@ -14,7 +16,7 @@ app_name = "spider_base"
 urlpatterns = [
     path(
         'ucs/user/<slug:user>/export/',
-        ComponentIndex.as_view(scope="export"),
+        login_required(ComponentIndex.as_view(scope="export")),
         name='ucomponent-export'
     ),
     path(
@@ -24,7 +26,7 @@ urlpatterns = [
     ),
     path(
         'ucs/user/',
-        ComponentIndex.as_view(no_nonce_usercomponent=True),
+        login_required(ComponentIndex.as_view(no_nonce_usercomponent=True)),
         name='ucomponent-list'
     ),
     # path(
@@ -34,22 +36,22 @@ urlpatterns = [
     # ),
     path(
         'ucs/create/',
-        ComponentCreate.as_view(),
+        login_required(ComponentCreate.as_view()),
         name='ucomponent-create'
     ),
     path(
         'ucs/update/<slug:user>/<slug:name>/<slug:nonce>/',
-        ComponentUpdate.as_view(),
+        login_required(ComponentUpdate.as_view()),
         name='ucomponent-update'
     ),
     path(
         'ucs/update/<slug:name>/<slug:nonce>/',
-        ComponentUpdate.as_view(),
+        login_required(ComponentUpdate.as_view()),
         name='ucomponent-update'
     ),
     path(
         'ucs/delete/<slug:user>/<slug:name>/<slug:nonce>/',
-        ComponentDelete.as_view(),
+        login_required(ComponentDelete.as_view()),
         name='ucomponent-delete'
     ),
 
@@ -60,7 +62,7 @@ urlpatterns = [
     ),
     path(
         'ucs/export/<int:id>/<slug:nonce>/',
-        ContentIndex.as_view(scope="export"),
+        login_required(ContentIndex.as_view(scope="export")),
         name='ucontent-export'
     ),
     # path(
@@ -70,7 +72,7 @@ urlpatterns = [
     # ),
     path(
         'ucs/add/<slug:name>/<slug:type>/',
-        ContentAdd.as_view(),
+        login_required(ContentAdd.as_view()),
         name='ucontent-add'
     ),
     path(
@@ -80,7 +82,7 @@ urlpatterns = [
     ),
     path(
         'content/remove/<slug:user>/<slug:name>/<int:id>/<slug:nonce>/',
-        ContentRemove.as_view(),
+        login_required(ContentRemove.as_view()),
         name='ucontent-remove'
     ),
     path(
