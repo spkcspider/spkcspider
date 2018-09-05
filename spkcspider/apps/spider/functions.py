@@ -50,7 +50,10 @@ def embed_file_default(prefix, name, value, zipf, context):
     ):
         zipf.write(value.path, path)
         return {"file": path}
-    elif context["scope"] == "export":
+    elif (
+        context["scope"] == "export" or
+        getattr(settings, "DIRECT_FILE_DOWNLOAD", False)
+    ):
         # link always direct to files in exports
         url = value.url
         if "://" not in getattr(settings, "MEDIA_URL", ""):

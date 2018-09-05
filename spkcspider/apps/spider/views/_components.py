@@ -102,7 +102,8 @@ class ComponentIndex(UCTestMixin, ListView):
     def get_queryset(self):
         searchq = models.Q()
         counter = 0
-        max_counter = 30  # against ddos
+        # against ddos
+        max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 30)
 
         if "search" in self.request.POST or "info" in self.request.POST:
             for info in self.request.POST.getlist("search"):

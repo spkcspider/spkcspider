@@ -144,7 +144,9 @@ MAX_HASH_SIZE = 128
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True
 
-# ANCHOR_HOST
+## Enable direct file downloads (handled by webserver)  # noqa: E266
+# disadvantage: blocking access requires file name change
+# DIRECT_FILE_DOWNLOAD = True
 
 # ALLOWED_CONTENT_FILTER
 
@@ -157,11 +159,12 @@ MAX_HASH_SIZE = 128
 # FIELDNAME_QUOTA
 # TAG_LAYOUT_PATHES
 
-# TMP_EMBEDDED_DIR  # activates caching of embedded
 
 # how many user components per page
 COMPONENTS_PER_PAGE = 25
 # how many user contents per page
 CONTENTS_PER_PAGE = 25
+# how many search parameters are allowed
+MAX_SEARCH_PARAMETERS = 30
 
 SITE_ID = 1

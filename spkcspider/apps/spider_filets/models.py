@@ -94,7 +94,7 @@ class FileFilet(BaseContent):
         )
 
     def render_download(self, **kwargs):
-        if getattr(settings, "FILET_DIRECT_DOWNLOAD", False):
+        if getattr(settings, "DIRECT_FILE_DOWNLOAD", False):
             response = HttpResponseRedirect(
                 self.file.url,
             )
