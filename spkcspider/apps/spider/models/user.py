@@ -52,8 +52,10 @@ def _get_default_amount():
 def _get_default_strength():
     if models.F("name") == "index":
         return 10
+    elif not models.F("public"):
+        return 5
     else:
-        return 0  # protections are optional
+        return 0
 
 
 _name_help = _("""

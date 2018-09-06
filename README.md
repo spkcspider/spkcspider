@@ -11,7 +11,7 @@ saved in a spider component which you provide the online shop. This has followin
 * breaches contain only links to data (which can also be protected)
 * Address Data have to changed only on one place if you move. This is especially useful if you move a lot
   Also if you travel and want to buy something on the way.
-* Signing of Data possible.
+* Verification of Data
 * Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
 * Travelling: don't expose your life to untrusted thirdparty, don't have it on your device
   Note: traces could be still existent (like "recently-used" feature or cache)
@@ -75,7 +75,7 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 * raw_add: not existent, can be archieved by return response
 * update: update content
 * raw_update: update Content, without AssignedContent form, adds second raw update mode
-* export: export data (import not finished)
+* export: export data (import not implemented yet)
 * view: present usercontent to untrusted parties
 
 ## strength
@@ -93,7 +93,7 @@ There are some special GET parameters for services with special requirements:
 * token=xy: token as GET parameter, if invalid: refresh token
 * raw=true: optimize output for machines
 * raw=embed: embed content, for ContentList only
-* id=id&id=id: limit tp ids, for ContentList only
+* id=id&id=id: limit content ids, for ContentList only
 * search=foo: search case insensitive for string in info for lists only
 * info=foo: search info tag in info for list only
 * protection=false: fail if protections are required
@@ -106,6 +106,7 @@ verified_by urls should return hashname:hash_hexdigest
 # TODO
 
 * design: cleanup
+* create client side script for import (pushing to server, index token for auth?)
 * textfilet
   * add what you see is what you get js stuff
   * hot reloading
