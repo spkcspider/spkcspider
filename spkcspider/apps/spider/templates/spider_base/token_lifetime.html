@@ -8,12 +8,12 @@
   {% endblocktrans %}
 </span>
 <script>
-  // adjust cached pages to real remaining seconds
-  // instead of multiplying, add zeros as text
-  var remaining_tokenlifetime_seconds = Math.floor({{rtime.timestamp}} - new Date().getTime()/1000);
+  // save timestamp of django
+  var timestamp = Math.floor({{rtime.timestamp}};
 
   var interval_id = setInterval(function() {
-    remaining_tokenlifetime_seconds -= 1;
+    // calculate difference between timestamp and current time
+    let remaining_tokenlifetime_seconds = timestamp - new Date().getTime()/1000);
     let formatted;
     let seconds = remaining_tokenlifetime_seconds;
     if (seconds > 0){
