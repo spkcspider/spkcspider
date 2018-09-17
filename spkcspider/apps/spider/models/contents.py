@@ -21,7 +21,6 @@ from django.core.exceptions import ValidationError
 from django.core import validators
 from django.utils import timezone
 
-from ..user import UserComponent
 from ..contents import installed_contents, BaseContent, add_content
 from ..protections import installed_protections
 
@@ -295,6 +294,15 @@ def own_components():
     )
 
 
+class TravelProtectionManager(models.Manager):
+    def get_active(self):
+        now = timezone.now()
+        return self.get_queryset().filter(
+            models.Q(active=True, start__le=now) &
+            (models.Q(stop__isnull=True) | models.Q(stop__ge=now))
+        )
+
+
 @add_content
 class TravelProtection(BaseContent):
     appearances = [
@@ -305,12 +313,11 @@ class TravelProtection(BaseContent):
         }
     ]
 
+    objects = TravelProtectionManager()
+
     active = models.BooleanField(default=False)
-    # null for fake TravelProtection
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
-        related_name="travel_protection", null=True
-    )
+    start = models.DateTimeField(null=False)
+    stop = models.DateTimeField(null=True)
 
     disallow = models.ManyToManyField(
         "spider_base.UserComponent", related_name="travel_protected",
@@ -323,6 +330,10 @@ class TravelProtection(BaseContent):
     def get_form(self, scope):
         from ..forms import TravelProtectionForm
         return TravelProtectionForm
+
+    def get_info(self):
+        ret = super().get_info()
+        return ret
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
@@ -349,22 +360,12 @@ class TravelProtection(BaseContent):
     def render_view(self, **kwargs):
         return ""
 
-    @property
-    def is_active(self):
-        if not self.active:
-            return False
-        now = timezone.now()
-        if self.block_times.filter(
-            start__le=now,
-            stop__ge=now
-        ).exists():
-            return True
-        return self.active
+    def render_deactivate(self, **kwargs):
+        self.active = False
+        self.save()
+        return "success"
 
-
-class TravelProtectionTime(models.Model):
-    travel_protection = models.ForeignKey(
-        TravelProtection, on_delete=models.CASCADE, related_name="block_times"
-    )
-    start = models.DateTimeField()
-    stop = models.DateTimeField()
+    def render(self, **kwargs):
+        if kwargs["scope"] == "deactivate":
+            return self.render_deactivate()
+        return super().render(**kwargs)

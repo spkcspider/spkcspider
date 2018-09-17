@@ -21,7 +21,7 @@ from django.utils import timezone
 from ._core import UserTestMixin, UCTestMixin
 from ..forms import UserComponentForm
 from ..contents import installed_contents
-from ..models import UserComponent
+from ..models import UserComponent, TravelProtection
 from ..helpers import get_settings_func
 
 
@@ -141,11 +141,22 @@ class ComponentIndex(UCTestMixin, ListView):
             searchq &= models.Q(required_passes=0)
         searchq &= models.Q(user=self.user)
 
+        travel = TravelProtection.objects.get_active().filter(
+            usercomponent__user=self.usercomponent.user
+        )
         # remove all travel protected if user
-        # if self.request.user == self.user:
-        #     searchq &= ~models.Q(
-        #         travel_protected__active=True
-        #     )
+        if self.request.user == self.user:
+            searchq &= ~models.Q(
+                travel_protected__in=travel
+            )
+            now = timezone.now()
+            searchq &= ~models.Q(
+                contents__info__contains="\ntype=TravelProtection\n",
+                # exclude future events
+                contents__modified__le=now-timedelta(hours=1),
+                # and active
+                contents__content__in=travel
+            )
 
         return super().get_queryset().filter(searchq).distinct()
 

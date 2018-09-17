@@ -426,8 +426,10 @@ class TravelProtection(BaseProtection):
     @classmethod
     def auth(cls, request, obj, **kwargs):
         if obj:
-            if hasattr(obj.usercomponent.user, "travel_protection"):
-                return True
-            if not obj.usercomponent.user.travel_protection.is_active:
+            from .models import TravelProtection
+            travel = TravelProtection.objects.get_active().filter(
+                usercomponent__user=obj.usercomponent.user
+            )
+            if not travel.exists():
                 return True
         return False

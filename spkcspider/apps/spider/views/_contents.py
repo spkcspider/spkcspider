@@ -23,7 +23,9 @@ from django.utils.duration import duration_string
 from ._core import UCTestMixin
 from ._components import ComponentDelete
 from ..constants import UserContentType
-from ..models import AssignedContent, ContentVariant, UserComponent
+from ..models import (
+    AssignedContent, ContentVariant, UserComponent, TravelProtection
+)
 from ..forms import UserContentForm
 from ..helpers import get_settings_func
 
@@ -253,10 +255,13 @@ class ContentIndex(UCTestMixin, ListView):
                 searchq &= models.Q(id__in=ids)
 
         # remove index content if travel protected
-        # searchq &= ~models.Q(
-        #    usercomponent__name="index",
-        #    usercomponent__travel_protected__active=True
-        # )
+        travel = TravelProtection.objects.get_active().filter(
+            usercomponent__user=self.usercomponent.user
+        )
+        if self.usercomponent.name == "index":
+            if travel.exists():
+                return ret.none()
+
         return ret.filter(searchq)
 
     def get_paginate_by(self, queryset):
