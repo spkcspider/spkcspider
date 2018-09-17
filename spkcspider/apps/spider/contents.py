@@ -406,7 +406,7 @@ class BaseContent(models.Model):
         self._content_is_cleaned = True
 
     def save(self, *args, **kwargs):
-        ret = super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
         a = self.associated
         if settings.DEBUG:
             assert self._content_is_cleaned, "Uncleaned content committed"
@@ -421,4 +421,3 @@ class BaseContent(models.Model):
         a.save()
         # require again cleaning
         self._content_is_cleaned = False
-        return ret

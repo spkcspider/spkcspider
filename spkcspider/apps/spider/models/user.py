@@ -184,12 +184,12 @@ class UserComponent(models.Model):
     @property
     def no_public(self):
         """ Can the usercomponent be turned public """
-        return self.name == "index" or self.contents.filter(
+        return self.name in ("index", "fake_index") or self.contents.filter(
             strength__gte=5
         )
 
     def save(self, *args, **kwargs):
-        if self.name == "index" and self.public:
+        if self.name in ("index", "fake_index") and self.public:
             self.public = False
         super().save(*args, **kwargs)
 

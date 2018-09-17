@@ -232,25 +232,40 @@ class LinkContent(BaseContent):
 
     def __str__(self):
         if getattr(self, "content", None):
+            if (
+                self.content.usercomponent.name == "index" and
+                self.associated.usercomponent.name == "fake_index"
+            ):
+                return self.content.__str__()
             return "Link: <%s>" % self.content
         else:
             return "Link"
 
     def __repr__(self):
         if getattr(self, "content", None):
+            if (
+                self.content.usercomponent.name == "index" and
+                self.associated.usercomponent.name == "fake_index"
+            ):
+                return self.content.__repr__()
             return "<Link: %r>" % self.content
         else:
             return "<Link>"
 
     def get_strength(self):
-        return self.content.get_strength()
+        return self.content.content.get_strength()
 
     def get_strength_link(self):
         # don't allow links linking on links
         return 11
 
     def get_info(self):
-        ret = super().get_info()
+        ret = self.content.content.get_info()
+        if (
+            self.content.usercomponent.name == "index" and
+            self.associated.usercomponent.name == "fake_index"
+        ):
+            return ret
         return "%ssource=%s\nlink\n" % (
             ret, self.associated.pk
         )
@@ -279,18 +294,30 @@ class LinkContent(BaseContent):
         kwargs["legend"] = _("Update Content Link")
         return super().render_update(**kwargs)
 
-    def render_view(self, **kwargs):
+    def render(self, **kwargs):
+        if (
+            self.content.usercomponent.name == "index" and
+            self.usercomponent.name == "fake_index"
+        ):
+            return self.content.content.render()
+        if kwargs["scope"] == "add":
+            return self.render_add(**kwargs)
+        elif kwargs["scope"] == "update":
+            return self.render_update(**kwargs)
+        elif kwargs["scope"] == "export":
+            return self.render_serialize(**kwargs)
+
         kwargs["source"] = self
         kwargs["uc"] = self.content.usercomponent
-        return self.content.content.render(**kwargs)
-
-
-# TODO: should enforce self-protection (own component is on protected list)
+        self.content.content.render(**kwargs)
 
 
 def own_components():
     return models.Q(
-        user=models.F("associated_rel__usercomponent__user")
+        user=models.F("associated_rel__usercomponent__user"),
+        strength__lt=10  # don't disclose other index
+    ) & ~models.Q(
+        travel_protected__in=TravelProtection.objects.get_active()
     )
 
 

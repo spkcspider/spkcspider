@@ -35,7 +35,7 @@ class TagLayout(models.Model):
         if TagLayout.objects.filter(usertag=None, name=self.name).exists():
             raise ValidationError(
                 _("Layout exists already"),
-                code="unique"  # TODO:correct code
+                code="unique"
             )
 
     def get_form(self):

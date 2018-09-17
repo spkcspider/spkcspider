@@ -7,6 +7,7 @@ from django.utils.translation import gettext
 
 from spkcspider.apps.spider.constants import UserContentType
 from spkcspider.apps.spider.helpers import add_by_field
+from spkcspider.apps.spider.models import TravelProtection
 
 installed_fields = {}
 
@@ -21,7 +22,7 @@ for i in safe_default_fields:
     installed_fields[i] = getattr(forms, i)
 
 
-@add_by_field(installed_fields, "__qualname__")
+@add_by_field(installed_fields, "__name__")
 class TextareaField(forms.CharField):
     widget = forms.Textarea
 
@@ -42,7 +43,7 @@ installed_fields["MultipleLocalizedChoiceField"] = \
     localized_choices(forms.MultipleChoiceField)
 
 
-@add_by_field(installed_fields, "__qualname__")
+@add_by_field(installed_fields, "__name__")
 class UserContentRefField(forms.ModelChoiceField):
     strength_link_field = "associated_rel__usercomponent__strength__lte"
 
@@ -60,8 +61,11 @@ class UserContentRefField(forms.ModelChoiceField):
         if not issubclass(model, BaseContent):
             raise Exception("Not a content (inherit from BaseContent)")
 
+        travel = TravelProtection.objects.get_active()
         kwargs["queryset"] = model.objects.filter(
             **kwargs.pop("limit_choices_to", {})
+        ).exclude(
+            associated_rel__usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
 
@@ -69,7 +73,7 @@ class UserContentRefField(forms.ModelChoiceField):
         return str(obj)
 
 
-@add_by_field(installed_fields, "__qualname__")
+@add_by_field(installed_fields, "__name__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
     strength_link_field = "associated_rel__usercomponent__strength__lte"
 
@@ -87,8 +91,11 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
         if not issubclass(model, BaseContent):
             raise Exception("Not a content (inherit from BaseContent)")
 
+        travel = TravelProtection.objects.get_active()
         kwargs["queryset"] = model.objects.filter(
             **kwargs.pop("limit_choices_to", {})
+        ).exclude(
+            associated_rel__usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
 
@@ -96,7 +103,7 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
         return str(obj)
 
 
-@add_by_field(installed_fields, "__qualname__")
+@add_by_field(installed_fields, "__name__")
 class AnchorField(forms.ModelChoiceField):
     force_embed = True
     strength_link_field = "associated_rel__usercomponent__strength__lte"
@@ -109,9 +116,12 @@ class AnchorField(forms.ModelChoiceField):
         else:
             self.limit_to_user = "usercomponent__user"
 
+        travel = TravelProtection.objects.get_active()
         kwargs["queryset"] = AssignedContent.objects.filter(
             ctype__ctype__contains=UserContentType.anchor.value,
             **kwargs.pop("limit_choices_to", {})
+        ).exclude(
+            associated_rel__usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
 

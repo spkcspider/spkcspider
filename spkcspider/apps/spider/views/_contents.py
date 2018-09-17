@@ -24,7 +24,7 @@ from ._core import UCTestMixin
 from ._components import ComponentDelete
 from ..constants import UserContentType
 from ..models import (
-    AssignedContent, ContentVariant, UserComponent, TravelProtection
+    AssignedContent, ContentVariant, UserComponent
 )
 from ..forms import UserContentForm
 from ..helpers import get_settings_func
@@ -254,14 +254,6 @@ class ContentIndex(UCTestMixin, ListView):
                 ids = map(lambda x: int(x), self.request.GET.getlist("id"))
                 searchq &= models.Q(id__in=ids)
 
-        # remove index content if travel protected
-        travel = TravelProtection.objects.get_active().filter(
-            usercomponent__user=self.usercomponent.user
-        )
-        if self.usercomponent.name == "index":
-            if travel.exists():
-                return ret.none()
-
         return ret.filter(searchq)
 
     def get_paginate_by(self, queryset):
@@ -332,9 +324,6 @@ class ContentIndex(UCTestMixin, ListView):
                 "GENERATE_EMBEDDED_FUNC",
                 "spkcspider.apps.spider.functions.generate_embedded"
             )(self.generate_embedded, session_dict, self.usercomponent)
-        hostpart = "{}://{}".format(
-            self.request.scheme, self.request.get_host()
-        )
         enc_get = context["spider_GET"].urlencode()
         ret = JsonResponse({
             "content": [
@@ -344,7 +333,7 @@ class ContentIndex(UCTestMixin, ListView):
                         "%a, %d %b %Y %H:%M:%S %z"
                     ),
                     "link": "{}{}?{}".format(
-                        hostpart,
+                        context["hostpart"],
                         reverse(
                             "spider_base:ucontent-access",
                             kwargs={

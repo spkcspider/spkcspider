@@ -9,7 +9,9 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 
 from ..constants import ProtectionType, UserContentType
-from ..models import UserComponent, AuthToken, TokenCreationError
+from ..models import (
+    UserComponent, AuthToken, TokenCreationError
+)
 
 
 class UserTestMixin(AccessMixin):
@@ -151,8 +153,16 @@ class UserTestMixin(AccessMixin):
         return get_object_or_404(model, **margs)
 
     def get_usercomponent(self):
-        query = {"name": self.kwargs["name"]}
-        query["user"] = self.get_user()
+        ucname = self.kwargs["name"]
+        if ucname in ("index", "fake_index"):
+            if self.request.session["is_fake"]:
+                ucname = "fake_index"
+            else:
+                ucname = "index"
+        query = {
+            "name": ucname,
+            "user": self.get_user()
+        }
         if not self.no_nonce_usercomponent:
             query["nonce"] = self.kwargs["nonce"]
         return get_object_or_404(UserComponent, **query)

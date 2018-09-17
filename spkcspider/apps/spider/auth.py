@@ -1,7 +1,7 @@
 from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
 
-from .models import UserComponent, Protection
+from .models import UserComponent, Protection, TravelProtection
 from .constants import ProtectionType
 
 
@@ -14,9 +14,18 @@ class SpiderAuthBackend(ModelBackend):
         # disable SpiderAuthBackend backend (against recursion)
         if nospider:
             return
+        travel = TravelProtection.objects.get_active().filter(
+            user__username=username
+        )
         uc = UserComponent.objects.filter(
             user__username=username, name="index"
         ).first()
+
+        uc_fake = None
+        if travel.exists():
+            uc_fake = UserComponent.objects.filter(
+                user__username=username, name="fake_index"
+            ).first()
         try:
             if not uc:
                 request.protections = Protection.authall(
@@ -27,13 +36,26 @@ class SpiderAuthBackend(ModelBackend):
                 if request.protections is True:  # should never happen
                     return None
             else:
-                request.protections = uc.auth(
+                if uc_fake:
+                    request.protections = uc_fake.auth(
+                        request, scope="auth",
+                        ptype=ProtectionType.authentication.value,
+                        protection_codes=protection_codes
+                    )
+                    if request.protections is True:
+                        request.session["is_fake"] = True
+                        return uc.user
+                protections = uc.auth(
                     request, scope="auth",
                     ptype=ProtectionType.authentication.value,
                     protection_codes=protection_codes
                 )
-                if request.protections is True:
+                if protections is True:
+                    request.protections = protections
+                    request.session["is_fake"] = False
                     return uc.user
+                if not uc_fake:
+                    request.protections = protections
         except Http404:
             # for Http404 auth abort by protections (e.g. Random Fail)
             pass

@@ -106,7 +106,7 @@ class UserComponentForm(forms.ModelForm):
         for protection in self.protections:
             protection.full_clean()
         self.cleaned_data["strength"] = 0
-        if self.cleaned_data["name"] == "index":
+        if self.cleaned_data["name"] in ("index", "fake_index"):
             self.cleaned_data["strength"] = 10
             return ret
         if not self.cleaned_data["public"]:
@@ -273,9 +273,10 @@ class LinkForm(forms.ModelForm):
     def __init__(self, uc, **kwargs):
         super().__init__(**kwargs)
         q = self.fields["content"].queryset
+        travel = TravelProtection.objects.get_active()
         self.fields["content"].queryset = q.filter(
             strength__lte=uc.strength
-        )
+        ).exclude(travel)
 
 
 class TravelProtectionForm(forms.ModelForm):

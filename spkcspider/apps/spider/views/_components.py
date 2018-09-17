@@ -13,7 +13,7 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.duration import duration_string
 from django.db import models
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -65,14 +65,11 @@ class ComponentAllIndex(ListView):
 
         q = models.Q(public=True)
         if self.request.user.is_authenticated:
-            # remove all travel protected components by same user
-            # admins have still access if not the user
-            q |= (
-                models.Q(user=self.request.user)
-                # ~models.Q(
-                #     travel_protected__active=True
-                # )
-            )
+            q |= models.Q(user=self.request.user)
+            if self.request.session["is_fake"]:
+                q &= ~models.Q(name="index")
+            else:
+                q &= ~models.Q(name="fake_index")
         main_query = self.model.objects.prefetch_related('contents').filter(
             q & searchq
         )
@@ -81,6 +78,32 @@ class ComponentAllIndex(ListView):
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
+
+    def render_to_response(self, context):
+        # NEVER: allow embedding, things get much too big
+        if self.request.GET.get("raw", "") != "true":
+            return super().render_to_response(context)
+        return JsonResponse({
+            "components": [
+                {
+                    "user": item.username,
+                    "name": (
+                        item.name if item.name != "fake_index" else "index"
+                    ),
+                    "link": "{}{}".format(
+                        context["hostpart"],
+                        reverse(
+                            "spider_base:ucontent-list",
+                            kwargs={
+                                "id": item.id, "nonce": item.nonce
+                            }
+                        )
+                    )
+                }
+                for item in context["object_list"]
+            ],
+            "scope": "list"
+        })
 
 
 class ComponentIndex(UCTestMixin, ListView):
@@ -141,9 +164,8 @@ class ComponentIndex(UCTestMixin, ListView):
             searchq &= models.Q(required_passes=0)
         searchq &= models.Q(user=self.user)
 
-        travel = TravelProtection.objects.get_active().filter(
-            usercomponent__user=self.usercomponent.user
-        )
+        # don't care if it is same user
+        travel = TravelProtection.objects.get_active()
         # remove all travel protected if user
         if self.request.user == self.user:
             searchq &= ~models.Q(
@@ -160,19 +182,26 @@ class ComponentIndex(UCTestMixin, ListView):
                     # exclude future events
                     models.Q(
                         contents__modified__le=now-timedelta(hours=1)
+                    ) |
+                    models.Q(
+                        # and active
+                        contents__content__in=travel
                     )
-                ) |
-                (
-                    # and active
-                    contents__content__in=travel
                 )
-           )
+            )
+        if self.request.sessions["is_fake"]:
+            searchq &= ~models.Q(name="index")
+        else:
+            searchq &= ~models.Q(name="fake_index")
 
         return super().get_queryset().filter(searchq).distinct()
 
     def get_usercomponent(self):
+        ucname = "index"
+        if self.request.sessions["is_fake"]:
+            ucname = "fake_index"
         return get_object_or_404(
-            UserComponent, user=self.user, name="index"
+            UserComponent, user=self.user, name=ucname
         )
 
     def get_paginate_by(self, queryset):
@@ -186,6 +215,8 @@ class ComponentIndex(UCTestMixin, ListView):
         deref_level = 1  # don't dereference, as all data will be available
         for component in context["context"]["object_list"]:
             cname = component.name
+            if cname == "fake_index":
+                cname = "index"
             # serialized_obj = protections=serializers.serialize(
             #     'json', component.protections.all()
             # )

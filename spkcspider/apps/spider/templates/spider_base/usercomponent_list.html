@@ -34,9 +34,9 @@
   <div class="w3-margin">
     <table class="w3-table w3-striped w3-bordered w3-hoverable">
       {% for uc in object_list %}
-        <tr class="{% if uc.name == 'index' %}w3-yellow{% endif %}">
-          <td class="{% if uc.name == 'index' %}w3-large{% endif %}">
-            {% if uc.name == 'index' %}
+        <tr class="{% if uc.name == 'index' or uc.name == 'fake_index' %}w3-yellow{% endif %}">
+          <td class="{% if uc.name == 'index' or uc.name == 'fake_index' %}w3-large{% endif %}">
+            {% if uc.name == 'index' or uc.name == 'fake_index' %}
               {% trans 'Private Component' %}
             {% else %}
               {% if not component_user %}{{uc.user}} - {% endif %}{{ uc.name }}

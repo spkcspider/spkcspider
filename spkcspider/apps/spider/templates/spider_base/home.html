@@ -16,8 +16,12 @@
     <table class="w3-table w3-striped w3-bordered w3-hoverable">
       {% for uc in object_list %}
         <tr>
-          <td class="">
-            {% if not component_user %}{{uc.user}} - {%endif%}{{ uc.name }}
+          <td class="{% if uc.name == 'index' or uc.name == 'fake_index' %}w3-large{% endif %}">
+            {% if uc.name == 'index' or uc.name == 'fake_index' %}
+              {% trans 'Private Component' %}
+            {% else %}
+              {% if not component_user %}{{uc.user}} - {% endif %}{{ uc.name }}
+            {% endif %}
           </td>
           <td class="w3-show-inline-block">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
