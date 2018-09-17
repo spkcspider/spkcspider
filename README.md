@@ -124,7 +124,6 @@ Later:
   maybe: limit components, needs design
   => extra app
 * log changes
-* calculate protection strength
 
 
 # Thanks

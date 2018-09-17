@@ -68,10 +68,10 @@ class ComponentAllIndex(ListView):
             # remove all travel protected components by same user
             # admins have still access if not the user
             q |= (
-                models.Q(user=self.request.user) &
-                ~models.Q(
-                    travel_protected__active=True
-                )
+                models.Q(user=self.request.user)
+                # ~models.Q(
+                #     travel_protected__active=True
+                # )
             )
         main_query = self.model.objects.prefetch_related('contents').filter(
             q & searchq
@@ -142,10 +142,10 @@ class ComponentIndex(UCTestMixin, ListView):
         searchq &= models.Q(user=self.user)
 
         # remove all travel protected if user
-        if self.request.user == self.user:
-            searchq &= ~models.Q(
-                travel_protected__active=True
-            )
+        # if self.request.user == self.user:
+        #     searchq &= ~models.Q(
+        #         travel_protected__active=True
+        #     )
 
         return super().get_queryset().filter(searchq).distinct()
 

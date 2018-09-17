@@ -253,10 +253,10 @@ class ContentIndex(UCTestMixin, ListView):
                 searchq &= models.Q(id__in=ids)
 
         # remove index content if travel protected
-        searchq &= ~models.Q(
-            usercomponent__name="index",
-            usercomponent__travel_protected__active=True
-        )
+        # searchq &= ~models.Q(
+        #    usercomponent__name="index",
+        #    usercomponent__travel_protected__active=True
+        # )
         return ret.filter(searchq)
 
     def get_paginate_by(self, queryset):

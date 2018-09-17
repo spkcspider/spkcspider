@@ -302,9 +302,9 @@ class TravelProtection(BaseContent):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
         related_name="travel_protection", null=True
     )
-    disallow = models.ManyToManyField(
-        "spider_base.UserComponent", related_name="+"
-    )
+    # disallow = models.ManyToManyField(
+    #     "spider_base.UserComponent", related_name="travel_protected"
+    # )
 
     def get_form(self, scope):
         from ..forms import TravelProtectionForm
