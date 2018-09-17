@@ -175,6 +175,9 @@ class BaseContent(models.Model):
     def get_form(self, scope):
         raise NotImplementedError
 
+    def get_template_name(self, scope):
+        return 'spider_base/base_form.html'
+
     def render_form(self, scope, **kwargs):
         _ = gettext
         if scope == "add":
@@ -199,10 +202,9 @@ class BaseContent(models.Model):
                 parent_form.errors.setdefault(NON_FIELD_ERRORS, []).extend(
                     kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
                 )
-        template_name = "spider_base/base_form.html"
         return render_to_string(
-            template_name, request=kwargs["request"],
-            context=kwargs
+            self.get_template_name(kwargs["scope"]),
+            request=kwargs["request"], context=kwargs
         )
 
     @classmethod

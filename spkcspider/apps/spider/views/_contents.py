@@ -230,6 +230,10 @@ class ContentIndex(UCTestMixin, ListView):
                     break
                 counter += 1
                 searchq |= models.Q(info__contains="\n%s\n" % info)
+
+            if "id" in self.request.POST:
+                ids = map(lambda x: int(x), self.request.POST.getlist("id"))
+                searchq &= models.Q(id__in=ids)
         else:
             for info in self.request.GET.getlist("search"):
                 if counter > max_counter:
@@ -244,9 +248,15 @@ class ContentIndex(UCTestMixin, ListView):
                 counter += 1
                 searchq |= models.Q(info__contains="\n%s\n" % info)
 
-        if "id" in self.request.GET:
-            ids = map(lambda x: int(x), self.request.GET.getlist("id"))
-            searchq &= models.Q(id__in=ids)
+            if "id" in self.request.GET:
+                ids = map(lambda x: int(x), self.request.GET.getlist("id"))
+                searchq &= models.Q(id__in=ids)
+
+        # remove index content if travel protected
+        searchq &= ~models.Q(
+            usercomponent__name="index",
+            usercomponent__travel_protected__active=True
+        )
         return ret.filter(searchq)
 
     def get_paginate_by(self, queryset):

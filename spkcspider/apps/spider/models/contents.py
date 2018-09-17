@@ -4,7 +4,10 @@ namespace: spider_base
 
 """
 
-__all__ = ["ContentVariant", "AssignedContent", "LinkContent"]
+__all__ = [
+    "ContentVariant", "AssignedContent", "LinkContent",
+    "TravelProtection"
+]
 
 import logging
 
@@ -20,12 +23,13 @@ from django.core import validators
 from ..contents import installed_contents, BaseContent, add_content
 from ..protections import installed_protections
 
+from ..constants import UserContentType
 from ..helpers import token_nonce, MAX_NONCE_SIZE
 
 logger = logging.getLogger(__name__)
 
 
-# ContentType is already oocupied
+# ContentType is already occupied
 class ContentVariant(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # usercontent abilities/requirements
@@ -278,3 +282,49 @@ class LinkContent(BaseContent):
         kwargs["source"] = self
         kwargs["uc"] = self.content.usercomponent
         return self.content.content.render(**kwargs)
+
+
+# TODO: should enforce self-protection (own component is on protected list)
+
+@add_content
+class TravelProtection(BaseContent):
+    appearances = [
+        {
+            "name": "TravelProtection",
+            "strength": 5,
+            "ctype": UserContentType.unique.value
+        }
+    ]
+
+    active = models.BooleanField(default=False)
+    # null for fake TravelProtection
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
+        related_name="travel_protection", null=True
+    )
+    disallow = models.ManyToManyField(
+        "spider_base.UserComponent", related_name="+"
+    )
+
+    def get_form(self, scope):
+        from ..forms import TravelProtectionForm
+        return TravelProtectionForm
+
+    def get_form_kwargs(self, **kwargs):
+        ret = super().get_form_kwargs(**kwargs)
+        ret["uc"] = kwargs["uc"]
+        return ret
+
+    def render_add(self, **kwargs):
+        _ = gettext
+        kwargs["legend"] = _("Create Travel Protection")
+        return super().render_add(**kwargs)
+
+    def render_update(self, **kwargs):
+        _ = gettext
+        kwargs["legend"] = _("Update Travel Protection")
+        return super().render_update(**kwargs)
+
+    @property
+    def is_active(self):
+        return self.active

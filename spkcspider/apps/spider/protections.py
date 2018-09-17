@@ -409,3 +409,25 @@ if getattr(settings, "USE_CAPTCHAS", False):
             if request.method != "GET" and form.is_valid():
                 return True
             return form
+
+
+# travel protection
+@add_by_field(installed_protections)
+class TravelProtection(BaseProtection):
+    name = "travel"
+    ptype = ProtectionType.access_control.value
+    ptype += ProtectionType.authentication.value
+
+    description = _("Fail if travel protection is active")
+
+    def get_strength(self):
+        return 0
+
+    @classmethod
+    def auth(cls, request, obj, **kwargs):
+        if obj:
+            if hasattr(obj.usercomponent.user, "travel_protection"):
+                return True
+            if not obj.usercomponent.user.travel_protection.is_active:
+                return True
+        return False

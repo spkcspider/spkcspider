@@ -28,7 +28,6 @@ from ..helpers import get_settings_func
 class ComponentAllIndex(ListView):
     model = UserComponent
     is_home = False
-    _base_query = models.Q(public=True)
     ordering = ("user", "name")
 
     def get_queryset(self):
@@ -64,9 +63,16 @@ class ComponentAllIndex(ListView):
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
-        q = self._base_query
+        q = models.Q(public=True)
         if self.request.user.is_authenticated:
-            q |= models.Q(user=self.request.user)
+            # remove all travel protected components by same user
+            # admins have still access if not the user
+            q |= (
+                models.Q(user=self.request.user) &
+                ~models.Q(
+                    travel_protected__active=True
+                )
+            )
         main_query = self.model.objects.prefetch_related('contents').filter(
             q & searchq
         )
@@ -134,6 +140,12 @@ class ComponentIndex(UCTestMixin, ListView):
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
         searchq &= models.Q(user=self.user)
+
+        # remove all travel protected if user
+        if self.request.user == self.user:
+            searchq &= ~models.Q(
+                travel_protected__active=True
+            )
 
         return super().get_queryset().filter(searchq).distinct()
 

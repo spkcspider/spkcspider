@@ -1,5 +1,6 @@
 __all__ = [
-    "LinkForm", "UserComponentForm", "UserContentForm", "SpiderAuthForm"
+    "LinkForm", "UserComponentForm", "UserContentForm",
+    "SpiderAuthForm", "TravelProtectionForm"
 ]
 
 from statistics import mean
@@ -11,7 +12,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
-    AssignedProtection, Protection, UserComponent, AssignedContent, LinkContent
+    AssignedProtection, Protection, UserComponent, AssignedContent,
+    LinkContent, TravelProtection
 )
 from .helpers import token_nonce
 from .constants import ProtectionType
@@ -267,6 +269,19 @@ class LinkForm(forms.ModelForm):
     class Meta:
         model = LinkContent
         fields = ['content']
+
+    def __init__(self, uc, **kwargs):
+        super().__init__(**kwargs)
+        q = self.fields["content"].queryset
+        self.fields["content"].queryset = q.filter(
+            strength__lte=uc.strength
+        )
+
+
+class TravelProtectionForm(forms.ModelForm):
+
+    class Meta:
+        model = TravelProtection
 
     def __init__(self, uc, **kwargs):
         super().__init__(**kwargs)
