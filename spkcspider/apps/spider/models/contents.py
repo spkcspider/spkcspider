@@ -299,6 +299,8 @@ class LinkContent(BaseContent):
             self.content.usercomponent.name == "index" and
             self.usercomponent.name == "fake_index"
         ):
+            kwargs["uc"] = self.content.usercomponent
+            # no source! trick content because fake
             return self.content.content.render()
         if kwargs["scope"] == "add":
             return self.render_add(**kwargs)
@@ -318,6 +320,8 @@ def own_components():
         strength__lt=10  # don't disclose other index
     ) & ~models.Q(
         travel_protected__in=TravelProtection.objects.get_active()
+    ) & ~models.Q(
+        public=True  # this would easily expose the travel mode
     )
 
 

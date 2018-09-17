@@ -127,10 +127,17 @@ class UserComponent(models.Model):
         unique_together = [("user", "name")]
 
     def __repr__(self):
-        return "<UserComponent: %s: %s>" % (self.username, self.name)
+        name = self.name
+        if name == "fake_index":
+            name = "index"
+        # TODO: undo this for admins
+        return "<UserComponent: %s: %s>" % (self.username, name)
 
     def __str__(self):
-        return self.__repr__()
+        name = self.name
+        if name == "fake_index":
+            name = "index"
+        return name
 
     def clean(self):
         _ = gettext

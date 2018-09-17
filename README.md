@@ -13,8 +13,10 @@ saved in a spider component which you provide the online shop. This has followin
   Also if you travel and want to buy something on the way.
 * Verification of Data
 * Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
-* Travelling: don't expose your life to untrusted thirdparty, don't have it on your device
-  Note: traces could be still existent (like "recently-used" feature or cache)
+* Travelling: some people don't respect common rules for privacy. This allows to keep your life private. First you don't have it on the device, secondly you can hide it with the travel mode (against the worst kind of inspectors)
+  * for governments: even you are civilized do you really want to expose your citizen to some untrusted countries? Will traveller from other countries accept getting exposed? The best compromise is to give people power over their data even it has certain disadvantages for you.
+  * for users:
+    * Note: traces could be still existent (like "recently-used" feature)
 
 
 # Installation
@@ -114,6 +116,7 @@ verified_by urls should return hashname:hash_hexdigest
 * layout: cleanup defaults
 * improve anchors
 * tests
+* complete travel mode
 
 Later:
 * export protections and protection settings, Maybe?

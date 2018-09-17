@@ -66,7 +66,7 @@ class ComponentAllIndex(ListView):
         q = models.Q(public=True)
         if self.request.user.is_authenticated:
             q |= models.Q(user=self.request.user)
-            if self.request.session["is_fake"]:
+            if self.request.session.get("is_fake", False):
                 q &= ~models.Q(name="index")
             else:
                 q &= ~models.Q(name="fake_index")
@@ -164,7 +164,7 @@ class ComponentIndex(UCTestMixin, ListView):
             searchq &= models.Q(required_passes=0)
         searchq &= models.Q(user=self.user)
 
-        # don't care if it is same user
+        # doesn't matter if it is same user
         travel = TravelProtection.objects.get_active()
         # remove all travel protected if user
         if self.request.user == self.user:
@@ -189,7 +189,7 @@ class ComponentIndex(UCTestMixin, ListView):
                     )
                 )
             )
-        if self.request.sessions["is_fake"]:
+        if self.request.session.get("is_fake", False):
             searchq &= ~models.Q(name="index")
         else:
             searchq &= ~models.Q(name="fake_index")
@@ -198,7 +198,7 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def get_usercomponent(self):
         ucname = "index"
-        if self.request.sessions["is_fake"]:
+        if self.request.session.get("is_fake", False):
             ucname = "fake_index"
         return get_object_or_404(
             UserComponent, user=self.user, name=ucname

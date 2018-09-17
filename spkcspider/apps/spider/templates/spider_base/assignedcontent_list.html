@@ -8,7 +8,7 @@
 {% block body_class %}{% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
 
 {% block content %}
-  <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
+  <div class="w3-padding {% if uc.name == "index" or uc.name == "fake_index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
     {% if request.user == uc.user %}
       <span class="w3-right">
         <div style="margin-bottom:5px">
@@ -20,9 +20,11 @@
       </span>
     {% endif %}
     <h1 class="w3-center">
-      {% blocktrans trimmed with name=uc.name %}
-        Content of Component: <em>{{name}}</em>
-      {% endblocktrans %}
+      {% if request.is_owner or uc.public %}
+        {% blocktrans trimmed with name=uc %}
+          Content of Component: <em>{{name}}</em>
+        {% endblocktrans %}
+      {% endif %}
     </h1>
     {% if request.token_expires %}
     <div>
