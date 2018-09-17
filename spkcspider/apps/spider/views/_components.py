@@ -150,13 +150,23 @@ class ComponentIndex(UCTestMixin, ListView):
                 travel_protected__in=travel
             )
             now = timezone.now()
-            searchq &= ~models.Q(
-                contents__info__contains="\ntype=TravelProtection\n",
-                # exclude future events
-                contents__modified__le=now-timedelta(hours=1),
-                # and active
-                contents__content__in=travel
-            )
+            searchq &= ~(
+                models.Q(
+                    # must be active first
+                    contents__content__active=True,
+                    contents__info__contains="\ntype=TravelProtection\n"
+                ) &
+                (
+                    # exclude future events
+                    models.Q(
+                        contents__modified__le=now-timedelta(hours=1)
+                    )
+                ) |
+                (
+                    # and active
+                    contents__content__in=travel
+                )
+           )
 
         return super().get_queryset().filter(searchq).distinct()
 
