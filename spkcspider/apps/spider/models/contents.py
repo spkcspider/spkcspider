@@ -19,11 +19,13 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core import validators
+from django.utils import timezone
 
+from ..user import UserComponent
 from ..contents import installed_contents, BaseContent, add_content
 from ..protections import installed_protections
 
-from ..constants import UserContentType
+# from ..constants import UserContentType
 from ..helpers import token_nonce, MAX_NONCE_SIZE
 
 logger = logging.getLogger(__name__)
@@ -286,13 +288,20 @@ class LinkContent(BaseContent):
 
 # TODO: should enforce self-protection (own component is on protected list)
 
+
+def own_components():
+    return models.Q(
+        user=models.F("associated_rel__usercomponent__user")
+    )
+
+
 @add_content
 class TravelProtection(BaseContent):
     appearances = [
         {
             "name": "TravelProtection",
-            "strength": 5,
-            "ctype": UserContentType.unique.value
+            "strength": 10,
+            # "ctype": UserContentType.unique.value
         }
     ]
 
@@ -302,9 +311,14 @@ class TravelProtection(BaseContent):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
         related_name="travel_protection", null=True
     )
-    # disallow = models.ManyToManyField(
-    #     "spider_base.UserComponent", related_name="travel_protected"
-    # )
+
+    disallow = models.ManyToManyField(
+        "spider_base.UserComponent", related_name="travel_protected",
+        limit_choices_to=own_components
+    )
+
+    def get_strength_link(self):
+        return 5
 
     def get_form(self, scope):
         from ..forms import TravelProtectionForm
@@ -313,6 +327,13 @@ class TravelProtection(BaseContent):
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
         ret["uc"] = kwargs["uc"]
+        user = self.associated.usercomponent.user
+        travel_protection = getattr(user, "travel_protection", None)
+        if (
+            travel_protection and not travel_protection.is_active and
+            user == kwargs["request"].user
+        ):
+            ret["travel_protection"] = travel_protection
         return ret
 
     def render_add(self, **kwargs):
@@ -325,6 +346,25 @@ class TravelProtection(BaseContent):
         kwargs["legend"] = _("Update Travel Protection")
         return super().render_update(**kwargs)
 
+    def render_view(self, **kwargs):
+        return ""
+
     @property
     def is_active(self):
+        if not self.active:
+            return False
+        now = timezone.now()
+        if self.block_times.filter(
+            start__le=now,
+            stop__ge=now
+        ).exists():
+            return True
         return self.active
+
+
+class TravelProtectionTime(models.Model):
+    travel_protection = models.ForeignKey(
+        TravelProtection, on_delete=models.CASCADE, related_name="block_times"
+    )
+    start = models.DateTimeField()
+    stop = models.DateTimeField()

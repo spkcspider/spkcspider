@@ -279,13 +279,17 @@ class LinkForm(forms.ModelForm):
 
 
 class TravelProtectionForm(forms.ModelForm):
+    uc = None
 
     class Meta:
         model = TravelProtection
 
-    def __init__(self, uc, **kwargs):
+    def __init__(self, uc, travel_protection, **kwargs):
         super().__init__(**kwargs)
-        q = self.fields["content"].queryset
-        self.fields["content"].queryset = q.filter(
-            strength__lte=uc.strength
-        )
+        self.uc = uc
+        self.travel_protection = travel_protection
+        if not self.travel_protection:
+            self.instance.user = self.uc.user
+        # elif self.travel_protection.is_active:
+        #    for f in self.fields:
+        #        f.disabled = True

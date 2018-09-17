@@ -176,7 +176,9 @@ class BaseContent(models.Model):
         raise NotImplementedError
 
     def get_template_name(self, scope):
-        return 'spider_base/base_form.html'
+        if scope in ["add", "update"]:
+            'spider_base/base_form.html'
+        return 'spider_base/full_form.html'
 
     def render_form(self, scope, **kwargs):
         _ = gettext
@@ -350,9 +352,8 @@ class BaseContent(models.Model):
             **self.get_form_kwargs(disable_data=True, **kwargs)
         )
         kwargs.setdefault("no_button", True)
-        template_name = "spider_base/full_form.html"
         return render_to_string(
-            template_name, request=kwargs["request"],
+            self.get_template_name(kwargs["scope"]), request=kwargs["request"],
             context=kwargs
         )
 
