@@ -1,18 +1,19 @@
-{% extends "spider_base/ucs_base.html" %}
+{% extends "spider_base/uc_base.html" %}
 {% load i18n %}
 {% block title %}{% blocktrans trimmed with name=uc.name %}
     Content of: {{name}}
-  {% endblocktrans %}{% endblock %}
-
-{% block main_classes %}w3-padding {{block.super}} w3-content w3-card-4{% endblock %}
-{% block body_class %}{% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
+{% endblocktrans %}{% endblock %}
 
 {% block content %}
-  <div class="w3-padding {% if uc.name == "index" or uc.name == "fake_index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
+  <div>
     {% if request.user == uc.user %}
+      <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'index' %}</a>
       <span class="w3-right">
         <div style="margin-bottom:5px">
           <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">Update</a>
+        </div>
+        <div style="margin-bottom:5px">
+          <a class="" href="{% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce %}">{% trans 'Export' %}</a>
         </div>
         <div>
           {% trans "Strength:" %} {{uc.strength}}

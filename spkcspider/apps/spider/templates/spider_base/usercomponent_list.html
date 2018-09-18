@@ -1,4 +1,4 @@
-{% extends "spider_base/ucs_base.html" %}
+{% extends "spider_base/nouc_base.html" %}
 {% load i18n %}
 {% block title %}{% if component_user %}
   {% blocktrans trimmed with name=component_user %}
@@ -7,8 +7,6 @@
 {% else %}{% blocktrans trimmed %}
   Component List
 {% endblocktrans %}{% endif %}{% endblock %}
-
-{% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
 
 {% block content %}
   <div>

@@ -74,7 +74,7 @@ class UserComponentForm(forms.ModelForm):
                 self.fields["name"].disabled = True
             if self.instance.no_public:
                 self.fields["public"].disabled = True
-            if self.instance.name == "index":
+            if self.instance.name in ("fake_index", "index"):
                 self.fields["required_passes"].help_text = _(
                     "How many protections must be passed to login?"
                     "Minimum is 1, no matter what selected"
@@ -103,6 +103,13 @@ class UserComponentForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        if not self.instance or not getattr(self.instance, "id", None):
+            # TODO: cleanup into protected_names/forbidden_names
+            if self.cleaned_data['name'] in ("index", "fake_index"):
+                raise forms.ValidationError(
+                    _('Forbidden Name'),
+                    code="forbidden_name"
+                )
         for protection in self.protections:
             protection.full_clean()
         self.cleaned_data["strength"] = 0
@@ -112,7 +119,7 @@ class UserComponentForm(forms.ModelForm):
         if not self.cleaned_data["public"]:
             self.cleaned_data["strength"] += 5
 
-        if self.instance and self.instance.id:
+        if self.instance and getattr(self.instance, "id", None):
             fail_strength = 0
             amount_regular = 0
             strengths = []

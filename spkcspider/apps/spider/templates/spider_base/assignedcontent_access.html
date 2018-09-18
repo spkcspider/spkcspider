@@ -1,4 +1,4 @@
-{% extends "spider_base/ucs_base.html" %}
+{% extends "spider_base/uc_base.html" %}
 {% load i18n %}
 
 {% block title %}{% if scope == "add" %}{% blocktrans trimmed with name=object %}
@@ -9,24 +9,20 @@
   Content: {{name}}
 {% endblocktrans %}{% endif %}{% endblock %}
 
-{% block context_actions %}
-{{block.super}}
-{% endblock context_actions %}
-{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-green{% endblock %}
-{% block body_class %}{% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
-
-
 {% block content %}
-  <div class="w3-padding {% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-light-green{% else%}w3-light-blue{%endif%}">
+  <div>
     {% if request.user == uc.user or uc.public %}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">{% trans 'index' %}</a>
     {% endif %}
     {% if scope != "add" and request.user == uc.user %}
       <span class="w3-right">
-        <div style="margin-bottom:10px">
+        <div style="margin-bottom:5px">
           <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
             {% trans 'Delete' %}
           </a>?
+        </div>
+        <div style="margin-bottom:5px">
+          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='export' %}">{% trans 'Export' %}</a>
         </div>
         {% if scope != "view" %}
         <div>

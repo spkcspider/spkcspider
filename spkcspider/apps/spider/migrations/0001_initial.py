@@ -8,7 +8,6 @@ import jsonfield.fields
 import spkcspider.apps.spider.helpers
 import spkcspider.apps.spider.models.content_base
 import spkcspider.apps.spider.models.protections
-import spkcspider.apps.spider.models.user
 
 
 class Migration(migrations.Migration):
@@ -89,7 +88,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
                 ('nonce', models.SlugField(default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
                 ('public', models.BooleanField(default=False, help_text='Is public? Can be searched?<br/>Note: Field is maybe blocked by assigned content')),
-                ('required_passes', models.PositiveIntegerField(default=spkcspider.apps.spider.models.user._get_default_amount, help_text='How many protection must be passed? Set greater 0 to enable protection based access')),
+                ('required_passes', models.PositiveIntegerField(default=0, help_text='How many protection must be passed? Set greater 0 to enable protection based access')),
                 ('name', models.SlugField(help_text='\nName of the component.<br/>\nNote: there are special named components\nwith different protection types and scopes.<br/>\nMost prominent: "index" for authentication\n')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),

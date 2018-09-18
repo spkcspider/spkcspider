@@ -34,7 +34,7 @@ def add_content(klass):
     code = klass._meta.model_name
     if code in installed_contents:
         raise Exception("Duplicate content")
-    if klass.__qualname__ not in getattr(
+    if "{}.{}".format(klass.__module__, klass.__qualname__) not in getattr(
         settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
     ):
         installed_contents[code] = klass
@@ -177,7 +177,7 @@ class BaseContent(models.Model):
 
     def get_template_name(self, scope):
         if scope in ["add", "update"]:
-            'spider_base/base_form.html'
+            return 'spider_base/base_form.html'
         return 'spider_base/full_form.html'
 
     def render_form(self, scope, **kwargs):
@@ -205,7 +205,7 @@ class BaseContent(models.Model):
                     kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
                 )
         return render_to_string(
-            self.get_template_name(kwargs["scope"]),
+            self.get_template_name(scope),
             request=kwargs["request"], context=kwargs
         )
 

@@ -1,8 +1,14 @@
-{% extends "spider_base/ucs_base.html" %}
+{% extends "spider_base/uc_base.html" %}
 {% load i18n %}
 {% block title %}{% blocktrans trimmed with name=object.name %}
   Delete: {{name}}
 {% endblocktrans %}{% endblock %}
+
+{% block main_classes %}{{block.super}} w3-grey{% endblock %}
+{% block main_classes %}{{block.super}} w3-grey{% endblock %}
+{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-grey{% endblock %}
+{% block body_class %}{% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
+
 {% block content %}
   <h1 class="w3-center">
     {% blocktrans trimmed with name=object %}

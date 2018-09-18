@@ -37,9 +37,9 @@ def get_settings_func(name, default):
         return getattr(import_module(module), name)
 
 
-def add_by_field(dic, field="name"):
+def add_by_field(dic, field="__name__"):
     def _func(klass):
-        if klass.__qualname__ not in getattr(
+        if klass.__name__ not in getattr(
             settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
         ):
             dic[getattr(klass, field)] = klass
@@ -52,7 +52,9 @@ def extract_app_dicts(app, name, fieldname=None):
     ndic = {}
     for (key, value) in getattr(app, name, _empty_dict):
         if inspect.isclass(value):
-            if value.__qualname__ not in getattr(
+            if "{}.{}".format(
+                value.__module__, value.__qualname__
+            ) not in getattr(
                 settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
             ):
                 if fieldname:

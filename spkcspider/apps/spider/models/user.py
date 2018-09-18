@@ -40,24 +40,6 @@ default_uctoken_duration = getattr(
 )
 
 
-def _get_default_amount():
-    if models.F("name") == "index" and force_captcha:
-        return 2
-    elif models.F("name") == "index":
-        return 1
-    else:
-        return 0  # protections are optional
-
-
-def _get_default_strength():
-    if models.F("name") == "index":
-        return 10
-    elif not models.F("public"):
-        return 5
-    else:
-        return 0
-
-
 _name_help = _("""
 Name of the component.<br/>
 Note: there are special named components
@@ -88,12 +70,12 @@ class UserComponent(models.Model):
                   "Note: Field is maybe blocked by assigned content"
     )
     required_passes = models.PositiveIntegerField(
-        default=_get_default_amount,
+        default=0,
         help_text=_required_passes_help
     )
     # cached protection strength
     strength = models.PositiveSmallIntegerField(
-        default=_get_default_strength,
+        default=0,
         validators=[validators.MaxValueValidator(10)],
         editable=False
     )
@@ -108,7 +90,7 @@ class UserComponent(models.Model):
         help_text=_name_help
     )
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
@@ -118,7 +100,9 @@ class UserComponent(models.Model):
         null=False
     )
     # only editable for admins
-    deletion_requested = models.DateTimeField(null=True, default=None)
+    deletion_requested = models.DateTimeField(
+        null=True, default=None, blank=True
+    )
     contents = None
     # should be used for retrieving active protections, related_name
     protections = None
@@ -130,7 +114,6 @@ class UserComponent(models.Model):
         name = self.name
         if name == "fake_index":
             name = "index"
-        # TODO: undo this for admins
         return "<UserComponent: %s: %s>" % (self.username, name)
 
     def __str__(self):
@@ -139,10 +122,28 @@ class UserComponent(models.Model):
             name = "index"
         return name
 
+    def _get_default_amount(self):
+        if self.name in ("index", "fake_index") and force_captcha:
+            return 2
+        elif self.name in ("index", "fake_index"):
+            return 1
+        else:
+            return 0  # protections are optional
+
+    def _get_default_strength(self):
+        if self.name in ("index", "fake_index"):
+            return 10
+        elif not self.public:
+            return 5
+        else:
+            return 0
+
     def clean(self):
         _ = gettext
-        assert(self.name != "index" or self.strength == 10)
-        assert(self.name == "index" or self.strength < 10)
+        self.required_passes = self._get_default_amount()
+        self.strength = self._get_default_strength()
+        assert(self.name not in ("index", "fake_index") or self.strength == 10)
+        assert(self.name in ("index", "fake_index") or self.strength < 10)
         obj = self.contents.filter(
             strength__gt=self.strength
         ).order_by("strength").last()

@@ -2,7 +2,6 @@
 
 import django.core.validators
 from django.db import migrations, models
-import spkcspider.apps.spider.models.user
 
 
 class Migration(migrations.Migration):
@@ -30,7 +29,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='usercomponent',
             name='strength',
-            field=models.PositiveSmallIntegerField(default=spkcspider.apps.spider.models.user._get_default_strength, editable=False, validators=[django.core.validators.MaxValueValidator(10)]),
+            field=models.PositiveSmallIntegerField(default=0, editable=False, validators=[django.core.validators.MaxValueValidator(10)]),
         ),
         migrations.AlterField(
             model_name='contentvariant',

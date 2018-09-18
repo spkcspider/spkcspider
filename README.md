@@ -124,10 +124,6 @@ Later:
 * export protections and protection settings, Maybe?
 * performance improvements
 * import user content, usercomonents and usercontent
-* travelling protection: disable access till a timepoint
-* travelmode: disable cache and "recently used" completely,
-  maybe: limit components, needs design
-  => extra app
 * log changes
 
 

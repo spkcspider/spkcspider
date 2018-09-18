@@ -178,20 +178,10 @@ class ComponentIndex(UCTestMixin, ListView):
             )
             now = timezone.now()
             searchq &= ~(
+                # exclude future events
                 models.Q(
-                    # must be active first
-                    contents__content__active=True,
+                    contents__modified__lte=now-timedelta(hours=1),
                     contents__info__contains="\ntype=TravelProtection\n"
-                ) &
-                (
-                    # exclude future events
-                    models.Q(
-                        contents__modified__le=now-timedelta(hours=1)
-                    ) |
-                    models.Q(
-                        # and active
-                        contents__content__in=travel
-                    )
                 )
             )
         if self.request.session.get("is_fake", False):

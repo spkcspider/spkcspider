@@ -1,0 +1,7 @@
+{% extends "spider_base/base.html" %}
+
+{% block context_actions %}
+{{block.super}}
+{% endblock context_actions %}
+{% block main_classes %}w3-padding w3-content w3-card-4 color-front-{{uc.strength}}{% endblock %}
+{% block body_class %}color-back-{{uc.strength}}{% endblock %}

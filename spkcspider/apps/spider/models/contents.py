@@ -155,8 +155,8 @@ _login_protection = _("""
 
 
 _self_protection = _("""
-    Disallows user to disable travel protection if active. Only with secret
-    Code
+    Disallows user to disable travel protection if active.
+    Can be used in connection with "secret" to allow unlocking via secret
 """)
 
 
@@ -164,8 +164,8 @@ class TravelProtectionManager(models.Manager):
     def get_active(self):
         now = timezone.now()
         return self.get_queryset().filter(
-            models.Q(active=True, start__le=now) &
-            (models.Q(stop__isnull=True) | models.Q(stop__ge=now))
+            models.Q(active=True, start__lte=now) &
+            (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
         )
 
 
@@ -201,7 +201,7 @@ class TravelProtection(BaseContent):
         max_length=10, choices=login_choices,
         default=TravelLoginType.none.value, help_text=_login_protection
     )
-    code = models.SlugField(
+    secret = models.SlugField(
         default="", max_length=MAX_NONCE_SIZE*4//3
     )
 

@@ -3,7 +3,8 @@ __all__ = ["KeyForm", "AnchorServerForm", "AnchorKeyForm"]
 
 
 from django import forms
-from django.utils.translation import ugettext_lazy as _
+# from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 
 from .models import PublicKey, AnchorServer, AnchorKey
 # AnchorGov, ID_VERIFIERS
@@ -15,11 +16,17 @@ class KeyForm(forms.ModelForm):
         fields = ['key', 'note']
 
     def clean_key(self):
+        _ = gettext
         data = self.cleaned_data['key'].strip()
         if data == "":
-            raise forms.ValidationError(_('Empty Key'))
+            raise forms.ValidationError(
+                _('Empty Key'),
+                code="empty"
+            )
         if "PRIVATE" in data.upper():
-            raise forms.ValidationError(_('Private Key'))
+            raise forms.ValidationError(
+                _('Private Key')
+            )
         return data
 
 

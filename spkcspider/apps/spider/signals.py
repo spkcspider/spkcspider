@@ -46,7 +46,10 @@ def InitUserCallback(sender, instance, **kwargs):
         return
     from .models import UserComponent, Protection, AssignedProtection, UserInfo
 
-    uc = UserComponent.objects.get_or_create(name="index", user=instance)[0]
+    uc = UserComponent.objects.get_or_create(
+        defaults={"strength": 10},
+        name="index", user=instance
+    )[0]
     require_save = False
     login = Protection.objects.filter(code="login").first()
     if login:

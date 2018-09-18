@@ -159,6 +159,10 @@ MAX_HASH_SIZE = 128
 # FIELDNAME_QUOTA
 # TAG_LAYOUT_PATHES
 
+SPIDER_BLACKLISTED_MODULES = [
+    # untested, will fail
+    "spkcspider.apps.spider.models.contents.TravelProtection"
+]
 
 # how many user components per page
 COMPONENTS_PER_PAGE = 25

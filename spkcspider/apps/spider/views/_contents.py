@@ -189,10 +189,7 @@ class ContentIndex(UCTestMixin, ListView):
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
         kwargs["nonpublic"] = not self.usercomponent.public
-        if self.scope != "export" and "raw" in self.request.GET:
-            kwargs["scope"] = "raw"
-        else:
-            kwargs["scope"] = self.scope
+        kwargs["scope"] = self.scope
 
         if kwargs["uc"].user == self.request.user:
             kwargs["content_variants"] = (

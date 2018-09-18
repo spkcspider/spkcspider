@@ -13,7 +13,7 @@ from django.conf import settings
 from django import forms
 from django.http import Http404
 from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
 
@@ -168,7 +168,7 @@ def friend_query():
 
 
 # only friends have access
-@add_by_field(installed_protections)
+@add_by_field(installed_protections, "name")
 class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
@@ -196,7 +196,7 @@ class FriendProtection(BaseProtection):
             return False
 
 
-@add_by_field(installed_protections)
+@add_by_field(installed_protections, "name")
 class RandomFailProtection(BaseProtection):
     name = "randomfail"
     ptype = ProtectionType.access_control.value
@@ -243,7 +243,7 @@ class RandomFailProtection(BaseProtection):
         return False
 
 
-@add_by_field(installed_protections)
+@add_by_field(installed_protections, "name")
 class LoginProtection(BaseProtection):
     name = "login"
     ptype = ProtectionType.access_control.value
@@ -290,7 +290,7 @@ class LoginProtection(BaseProtection):
         return cls.localize_name("Password")
 
 
-@add_by_field(installed_protections)
+@add_by_field(installed_protections, "name")
 class PasswordProtection(BaseProtection):
     name = "password"
     ptype = ProtectionType.access_control.value
@@ -364,7 +364,7 @@ class PasswordProtection(BaseProtection):
 if getattr(settings, "USE_CAPTCHAS", False):
     from captcha.fields import CaptchaField
 
-    @add_by_field(installed_protections)
+    @add_by_field(installed_protections, "name")
     class CaptchaProtection(BaseProtection):
         name = "captcha"
         ptype = ProtectionType.access_control.value
@@ -412,7 +412,7 @@ if getattr(settings, "USE_CAPTCHAS", False):
 
 
 # travel protection
-@add_by_field(installed_protections)
+@add_by_field(installed_protections, "name")
 class TravelProtection(BaseProtection):
     name = "travel"
     ptype = ProtectionType.access_control.value
@@ -430,7 +430,7 @@ class TravelProtection(BaseProtection):
             travel = TravelProtectionContent.objects.get_active().filter(
                 usercomponent__user=obj.usercomponent.user,
                 # only apply to younger TravelProtectionContent
-                modified__ge=obj.modified
+                modified__gte=obj.modified
             )
             if not travel.exists():
                 return True

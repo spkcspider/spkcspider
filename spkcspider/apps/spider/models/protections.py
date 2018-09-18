@@ -165,6 +165,7 @@ def get_limit_choices_assigned_protection():
             "code__in": Protection.objects.valid(),
             "ptype__contains": ProtectionType.access_control.value
         }
+    # TODO: does this work?
     if models.F("usercomponent__name") == "index":
         ret["ptype__contains"] = ProtectionType.authentication.value
     return ret
@@ -176,7 +177,7 @@ class AssignedProtection(models.Model):
     objects = models.Manager()
     protection = models.ForeignKey(
         Protection, on_delete=models.CASCADE, related_name="assigned",
-        limit_choices_to=get_limit_choices_assigned_protection, editable=False
+        limit_choices_to=get_limit_choices_assigned_protection
     )
     usercomponent = models.ForeignKey(
         "spider_base.UserComponent", related_name="protections",

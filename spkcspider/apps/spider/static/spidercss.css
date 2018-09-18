@@ -1,9 +1,35 @@
-.responsive-columns {
-  column-count: 1;
+
+.color-front-0{
+  /* pale blue */
+  color:#000!important;
+  background-color:#ddffff!important;
 }
-@media (min-width:601px){
-  .responsive-columns {
-    column-count: 2;
-    column-rule: 4px double black;
-  }
+
+.color-back-0{
+  /* blue */
+  color:#fff!important;
+  background-color:#2196F3!important;
+}
+
+.color-front-1, .color-front-2, .color-front-3, .color-front-4, .color-front-5, .color-front-6, .color-front-7, .color-front-8, .color-front-9{
+  /* pale green */
+  color:#000!important;
+  background-color:#8bc34a!important
+}
+
+.color-back-1, .color-back-2, .color-back-3, .color-back-4, .color-back-5, .color-back-6, .color-back-7, .color-back-8, .color-back-9{
+  /* green */
+  color:#fff!important;
+  background-color:#4CAF50!important;
+}
+.color-front-10{
+  /* pale yellow */
+  color:#000!important;
+  background-color:#ffffcc!important;
+}
+
+.color-back-10{
+  /* yellow */
+  color:#000!important;
+  background-color:#ffeb3b!important;
 }

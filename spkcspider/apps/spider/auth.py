@@ -15,7 +15,7 @@ class SpiderAuthBackend(ModelBackend):
         if nospider:
             return
         travel = TravelProtection.objects.get_active().filter(
-            user__username=username
+            associated_rel__usercomponent__user__username=username
         ).exclude(login_protection=TravelLoginType.none.value)
         uc = UserComponent.objects.filter(
             user__username=username, name="index"

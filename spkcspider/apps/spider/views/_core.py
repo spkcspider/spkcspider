@@ -132,6 +132,8 @@ class UserTestMixin(AccessMixin):
             self.request.is_priv_requester = True
             self.request.is_owner = True
             return True
+        if self.request.sessions.get("is_fake", False):
+            return False
         if superuser and self.request.user.is_superuser:
             self.request.is_priv_requester = True
             return True
