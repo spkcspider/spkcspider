@@ -30,7 +30,7 @@ force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
 force_captcha = (force_captcha and getattr(settings, "USE_CAPTCHAS", False))
 
 logger = logging.getLogger(__name__)
-protected_names = ["index"]
+protected_names = ["index", "fake_index"]
 
 hex_size_of_bigid = 16
 

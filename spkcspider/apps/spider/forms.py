@@ -281,16 +281,19 @@ class LinkForm(forms.ModelForm):
 
 class TravelProtectionForm(forms.ModelForm):
     uc = None
+    is_fake = None
 
     class Meta:
         model = TravelProtection
+        fields = [
+            "active", "start", "stop", "self_protection", "login_protection",
+            "disallow"
+        ]
 
-    def __init__(self, uc, travel_protection, **kwargs):
+    def __init__(self, uc, is_fake, **kwargs):
         super().__init__(**kwargs)
         self.uc = uc
-        self.travel_protection = travel_protection
-        if not self.travel_protection:
-            self.instance.user = self.uc.user
+        self.is_fake = is_fake
         # elif self.travel_protection.is_active:
         #    for f in self.fields:
         #        f.disabled = True
