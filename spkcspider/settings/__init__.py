@@ -111,9 +111,16 @@ USE_L10N = True
 USE_TZ = True
 
 
+STATICFILES_DIRS = [
+    # add node_modules as node_modules under static
+    ("node_modules", os.path.join(BASE_DIR, "node_modules"))
+]
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
+
+STATIC_ROOT = 'static/'
 STATIC_URL = '/static/'
 
 MEDIA_ROOT = 'media/'

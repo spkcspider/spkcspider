@@ -42,6 +42,19 @@ class TextForm(forms.ModelForm):
         model = TextFilet
         fields = ['text', 'name', 'editable_from']
 
+    class Media:
+        css = {
+            'all': [
+                'node_modules/trumbowyg/dist/ui/trumbowyg.min.css',
+                'spider_filets/text.css'
+            ]
+        }
+        js = [
+            'admin/js/vendor/jquery/jquery.min.js',
+            'node_modules/trumbowyg/dist/trumbowyg.min.js',
+            'spider_filets/text.js'
+        ]
+
     def __init__(self, request, source=None, **kwargs):
         super().__init__(**kwargs)
         self.fields["editable_from"].to_field_name = "name"

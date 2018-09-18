@@ -114,9 +114,12 @@ class PublicKey(BaseContent):
         kwargs["hash"] = self.associated.getlist(
             "hash:%s" % settings.KEY_HASH_ALGO
         )[0].split("=", 1)[1]
-        return render_to_string(
-            "spider_keys/key.html", request=kwargs["request"],
-            context=kwargs
+        return (
+            render_to_string(
+                "spider_keys/key.html", request=kwargs["request"],
+                context=kwargs
+            ),
+            ""
         )
 
 # Anchors can ONLY be used for server content.
@@ -229,9 +232,12 @@ class AnchorServer(BaseContent):
         )
         kwargs.setdefault("no_button", True)
         template_name = "spider_base/full_form.html"
-        return render_to_string(
-            template_name, request=kwargs["request"],
-            context=kwargs
+        return (
+            render_to_string(
+                template_name, request=kwargs["request"],
+                context=kwargs
+            ),
+            kwargs["form"].media
         )
 
 

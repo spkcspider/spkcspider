@@ -204,9 +204,12 @@ class BaseContent(models.Model):
                 parent_form.errors.setdefault(NON_FIELD_ERRORS, []).extend(
                     kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
                 )
-        return render_to_string(
-            self.get_template_name(scope),
-            request=kwargs["request"], context=kwargs
+        return (
+            render_to_string(
+                self.get_template_name(scope),
+                request=kwargs["request"], context=kwargs
+            ),
+            kwargs["form"].media
         )
 
     @classmethod
@@ -352,9 +355,13 @@ class BaseContent(models.Model):
             **self.get_form_kwargs(disable_data=True, **kwargs)
         )
         kwargs.setdefault("no_button", True)
-        return render_to_string(
-            self.get_template_name(kwargs["scope"]), request=kwargs["request"],
-            context=kwargs
+        return (
+            render_to_string(
+                self.get_template_name(kwargs["scope"]),
+                request=kwargs["request"],
+                context=kwargs
+            ),
+            kwargs["form"].media
         )
 
     def render(self, **kwargs):

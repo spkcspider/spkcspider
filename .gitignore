@@ -110,3 +110,4 @@ cgihandler.fcgi
 cgihandler.build
 cgihandler.dist
 media
+node_modules

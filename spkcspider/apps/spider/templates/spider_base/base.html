@@ -21,13 +21,13 @@
     <link rel="shortcut icon" type="image/svg" href="{% static 'spider_base/favicon.svg' %}" />
     {% endblock %}
     {# CSS for all pages #}
-    {% block base_styles %}{% endblock %}
-    {# CSS for page #}
-    {% block styles %}
+    {% block base_styles %}
     <link rel="stylesheet" href="{% static 'w3.css' %}">
     <link rel="stylesheet" href="{% static 'spidercss.css' %}">
     <link rel="stylesheet" href="{% static 'fontawesome/css/fontawesome-all.min.css' %}">
     {% endblock %}
+    {# CSS for page #}
+    {% block styles %}{% endblock %}
     {# form scripts and foo #}
     {% block extrahead %}{% endblock %}
   </head>

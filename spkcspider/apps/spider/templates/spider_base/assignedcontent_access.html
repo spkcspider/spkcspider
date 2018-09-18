@@ -9,6 +9,18 @@
   Content: {{name}}
 {% endblocktrans %}{% endif %}{% endblock %}
 
+
+{% block extrahead %}
+{{block.super}}
+{% if content %}
+  {{content.1}}
+{% endif %}
+{% if form %}
+  {{form.media}}
+{% endif %}
+{% endblock %}
+
+
 {% block content %}
   <div>
     {% if request.user == uc.user or uc.public %}
@@ -35,17 +47,20 @@
     {% endif %}
     <h1 class="w3-center">
       {% if scope == "add" %}
-        {% blocktrans trimmed with name=object %}
+        {% trans object.name as local_name %}
+        {% blocktrans trimmed with name=local_name %}
           Create Content: <em>{{name}}</em>
         {% endblocktrans %}
       {% elif scope == "update" %}
+        {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed with name=object %}
           Update Content: <em>{{name}}</em>
-        {% endblocktrans %}
+        {% endblocktrans %} <small><em>({{local_name}})</em></small>
       {% else %}
+        {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed with name=object %}
-          Content: <em>{{name}}</em>
-        {% endblocktrans %}
+          View: <em>{{name}}</em>
+        {% endblocktrans %} <small><em>({{local_name}})</em></small>
       {% endif %}
     </h1>
     {% if request.token_expires %}
@@ -55,7 +70,6 @@
     {% endif %}
   </div>
 {% if form %}
-  {{form.media}}
   {% if not render_in_form %}
   <details>
     <summary class="w3-btn w3-grey">
@@ -74,7 +88,7 @@
       {% if content and render_in_form %}
         <fieldset>
           <legend><h2>{% if scope == "add" %}{{object}}{% else %}{{object.associated.ctype}}{% endif %}</h2></legend>
-          {{content|safe}}
+          {{content.0|safe}}
         </fieldset>
       {% endif %}
       <button class="w3-button w3-grey">
@@ -103,5 +117,5 @@
     </a>
   </div>
 {% endif %}
-{% if not render_in_form %}{{content|safe}}{% endif %}
+{% if not render_in_form %}{{content.0|safe}}{% endif %}
 {% endblock %}

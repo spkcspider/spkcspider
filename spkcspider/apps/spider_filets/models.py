@@ -44,9 +44,6 @@ def get_file_path(instance, filename):
 class FileFilet(BaseContent):
     appearances = [{"name": "File"}]
 
-    add = models.DateTimeField(auto_now_add=True)
-    modified = models.DateTimeField(auto_now=True)
-
     name = models.CharField(max_length=255, null=False)
 
     file = models.FileField(upload_to=get_file_path, null=False, blank=False)
@@ -59,10 +56,7 @@ class FileFilet(BaseContent):
             ext = self.file.name.rsplit(".", 1)
             if len(ext) > 1:
                 name = "%s.%s" % (name, ext[1])
-        return "%s: %s" % (
-            self.localize_name(self.associated.ctype.name),
-            name
-        )
+        return name
 
     def get_info(self):
         ret = super().get_info()
@@ -88,9 +82,12 @@ class FileFilet(BaseContent):
             return self.render_serialize(**k)
         kwargs["object"] = self
         kwargs["content"] = self.associated
-        return render_to_string(
-            "spider_filets/file.html", request=kwargs["request"],
-            context=kwargs
+        return (
+            render_to_string(
+                "spider_filets/file.html", request=kwargs["request"],
+                context=kwargs
+            ),
+            ""
         )
 
     def render_download(self, **kwargs):
@@ -156,8 +153,7 @@ class TextFilet(BaseContent):
     def __str__(self):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
-        _i = self.name
-        return "%s: %s" % (self.localize_name(self.associated.ctype.name), _i)
+        return self.name
 
     def get_form(self, scope):
         from .forms import TextForm
@@ -170,17 +166,25 @@ class TextFilet(BaseContent):
         return ret
 
     def render_view(self, **kwargs):
-        if kwargs["request"].is_owner:
-            kwargs["no_button"] = None
-            kwargs["legend"] = _("Update \"%s\"") % self.__str__()
-            kwargs["confirm"] = _("Update")
-        else:
-            source = kwargs.get("source", self.associated.usercomponent)
-            if self.editable_from.filter(
-                pk=source.pk
-            ).exists():
-                if kwargs["request"].is_priv_requester:
-                    kwargs["no_button"] = None
-                    kwargs["legend"] = _("Update \"%s\"") % self.__str__()
-                    kwargs["confirm"] = _("Update")
-        return super().render_view(**kwargs)
+        if "raw" in kwargs["request"].GET:
+            k = kwargs.copy()
+            k["scope"] = "raw"
+            return self.render_serialize(**k)
+        source = kwargs.get("source", self.associated.usercomponent)
+        if self.editable_from.filter(
+            pk=source.pk
+        ).exists():
+            if kwargs["request"].is_priv_requester:
+                kwargs["no_button"] = None
+                kwargs["legend"] = _("Update \"%s\"") % self.__str__()
+                kwargs["confirm"] = _("Update")
+                return self.render_update(**kwargs)
+        kwargs["object"] = self
+        kwargs["content"] = self.associated
+        return (
+            render_to_string(
+                "spider_filets/text.html", request=kwargs["request"],
+                context=kwargs
+            ),
+            ""
+        )

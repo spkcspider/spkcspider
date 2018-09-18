@@ -64,6 +64,15 @@ def generate_form(name, layout):
                 }
             }
 
+        class Media:
+            css = {}
+            js = set()
+
+        for i in base_fields:
+            if hasattr(i, "Media"):
+                Media.css.update(i.Media.css)
+                Media.css.update(i.Media.js)
+
         def __init__(self, *, uc=None, initial=None, usertag=None, **kwargs):
             if not initial:
                 initial = {}
