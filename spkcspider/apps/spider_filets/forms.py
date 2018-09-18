@@ -52,6 +52,7 @@ class TextForm(forms.ModelForm):
         js = [
             'admin/js/vendor/jquery/jquery.min.js',
             'node_modules/trumbowyg/dist/trumbowyg.min.js',
+            'node_modules/trumbowyg/dist/plugins/pasteimage/trumbowyg.pasteimage.min.js',  # noqa: E501
             'spider_filets/text.js'
         ]
 

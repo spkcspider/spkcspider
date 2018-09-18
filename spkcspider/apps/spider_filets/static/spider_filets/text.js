@@ -1,3 +1,3 @@
 $(document).ready(function(){
-  $('#id_text').trumbowyg();
+  $('#id_text').trumbowyg({});
 });
