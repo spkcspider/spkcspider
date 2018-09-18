@@ -34,11 +34,30 @@ spkcspider.apps.spiderkeys: store public keys
 spkcspider: contains spkcspider url detection and wsgi handler
 
 
-Note: Mysql works with some special settings:
+## Requirements
+* npm
+* poetry or setuptools
+
+## Poetry
+~~~~.sh
+poetry install
+npm install
+~~~~
+
+
+## Poetry
+~~~~.sh
+poetry install
+npm install
+~~~~
+
+## Caveats
+
+Mysql works with some special settings:
 Set MYSQL_HACK = True and require mysql to use utf8 charset
 To unbreak tests, use 'CHARSET': 'utf8':
 
-```python
+~~~~.python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -49,7 +68,7 @@ DATABASES = {
     }
 }
 
-```
+~~~~
 
 Possibilities how to add utf8 charset to mysql:
 * use 'read_default_file' and add "default-character-set = utf8" in config
@@ -57,10 +76,10 @@ Possibilities how to add utf8 charset to mysql:
 * see: https://docs.djangoproject.com/en/dev/ref/databases/#mysql-notes
 
 
+# API
+
 Note: there are some migration breaks. Especially to unbreak mysql. Should not happen after tests are integrated
 
-
-# API
 
 ## authentication/privileges
 
@@ -129,4 +148,4 @@ Later:
 
 Default theme uses Font Awesome by Dave Gandy - http://fontawesome.io
 Some fields and TextField use Trumbowyg by Alexander
-Django team for their excellent product 
+Django team for their excellent product
