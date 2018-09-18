@@ -108,6 +108,8 @@ verified_by urls should return hashname:hash_hexdigest
 # TODO
 
 * design: cleanup
+  * use strength for coloring e.g. yellow 10, blue 0, the rest green tones
+  * black and white for rest
 * create client side script for import (pushing to server, index token for auth?)
 * textfilet
   * add what you see is what you get js stuff
