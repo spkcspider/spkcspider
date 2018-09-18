@@ -2,7 +2,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
 
 from .models import UserComponent, Protection, TravelProtection
-from .constants import ProtectionType
+from .constants import ProtectionType, TravelLoginType
 
 
 class SpiderAuthBackend(ModelBackend):
@@ -16,7 +16,7 @@ class SpiderAuthBackend(ModelBackend):
             return
         travel = TravelProtection.objects.get_active().filter(
             user__username=username
-        )
+        ).exclude(login_protection=TravelLoginType.none.value)
         uc = UserComponent.objects.filter(
             user__username=username, name="index"
         ).first()

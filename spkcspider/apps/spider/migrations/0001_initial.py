@@ -6,7 +6,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
 import spkcspider.apps.spider.helpers
-import spkcspider.apps.spider.models.contents
+import spkcspider.apps.spider.models.content_base
 import spkcspider.apps.spider.models.protections
 import spkcspider.apps.spider.models.user
 
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('deletion_requested', models.DateTimeField(blank=True, default=None, null=True)),
-                ('info', models.TextField(editable=False, validators=[spkcspider.apps.spider.models.contents.info_field_validator])),
+                ('info', models.TextField(editable=False, validators=[spkcspider.apps.spider.models.content_base.info_field_validator])),
                 ('object_id', models.BigIntegerField(editable=False)),
                 ('content_type', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
             ],

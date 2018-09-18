@@ -105,6 +105,10 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
                 )
         return self.render_to_response(self.get_context_data(**context))
 
+    def get_context_data(self, **kwargs):
+        kwargs["nonpublic"] = not self.usercomponent.public
+        return super().get_context_data(**kwargs)
+
     def get_form_success_kwargs(self):
         """Return the keyword arguments for instantiating the form."""
         return {
@@ -184,6 +188,7 @@ class ContentIndex(UCTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
+        kwargs["nonpublic"] = not self.usercomponent.public
         if self.scope != "export" and "raw" in self.request.GET:
             kwargs["scope"] = "raw"
         else:

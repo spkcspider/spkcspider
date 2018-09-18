@@ -1,5 +1,8 @@
 
-__all__ = ("ProtectionType", "UserContentType", "ProtectionResult")
+__all__ = (
+    "ProtectionType", "UserContentType", "ProtectionResult",
+    "TravelLoginType"
+)
 
 import enum
 from collections import namedtuple
@@ -36,3 +39,15 @@ class UserContentType(str, enum.Enum):
     unique = "h"
     # can be used as anchor, hash is automatically embedded
     anchor = "i"
+
+
+class TravelLoginType(str, enum.Enum):
+    # no protection, login works as usual
+    none = "a"
+    # experimental, creates a fake subset view
+    fake_login = "b"
+    # wipe travel protected data and index as soon as login occurs
+    # Note: noticable if shared contents are removed
+    wipe = "c"
+    # wipe user, self destruct user on login, Note: maybe noticable
+    wipe_user = "d"

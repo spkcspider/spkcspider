@@ -40,6 +40,8 @@ class UserTestMixin(AccessMixin):
     def get_context_data(self, **kwargs):
         kwargs["UserContentType"] = UserContentType
         kwargs["ProtectionType"] = ProtectionType
+        if "nonpublic" not in kwargs:
+            kwargs["nonpublic"] = True
         kwargs["spider_GET"] = self.sanitize_GET()
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
@@ -67,7 +69,7 @@ class UserTestMixin(AccessMixin):
             if not self.request.session.session_key:
                 self.request.session.cycle_key()
 
-            # only valid tokens here yeah
+            # only valid tokens here
             tokenstring = self.request.GET.get("token", None)
             if tokenstring or not self.request.session.session_key:
                 # find by tokenstring

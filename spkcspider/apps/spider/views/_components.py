@@ -30,6 +30,10 @@ class ComponentAllIndex(ListView):
     is_home = False
     ordering = ("user", "name")
 
+    def get_context_data(self, **kwargs):
+        kwargs["nonpublic"] = False
+        return super().get_context_data(**kwargs)
+
     def get_queryset(self):
         searchq = models.Q()
         counter = 0
@@ -121,6 +125,7 @@ class ComponentIndex(UCTestMixin, ListView):
     def get_context_data(self, **kwargs):
         kwargs["component_user"] = self.user
         kwargs["scope"] = self.scope
+        kwargs["nonpublic"] = True
         return super().get_context_data(**kwargs)
 
     def test_func(self):
