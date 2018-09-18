@@ -108,25 +108,25 @@ verified_by urls should return hashname:hash_hexdigest
 # TODO
 
 * design: cleanup
-  * use strength for coloring e.g. yellow 10, blue 0, the rest green tones
-  * black and white for rest
-* create client side script for import (pushing to server, index token for auth?)
-* textfilet
-  * add what you see is what you get js stuff
-  * hot reloading
+  * use strength for coloring e.g. yellow 10, blue 0, the rest green tones (primive done)
 * layout: verifiers+examples
 * layout: cleanup defaults
 * improve anchors
 * tests
-* complete travel mode
 
 Later:
+* create client side script for import (pushing to server, index token for auth?)
+* textfilet
+* hot reloading
 * export protections and protection settings, Maybe?
 * performance improvements
 * import user content, usercomonents and usercontent
 * log changes
+* complete travel mode
 
 
 # Thanks
 
 Default theme uses Font Awesome by Dave Gandy - http://fontawesome.io
+Some fields and TextField use Trumbowyg by Alexander
+Django team for their excellent product 
