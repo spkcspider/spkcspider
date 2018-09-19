@@ -323,7 +323,10 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
-        if self.kwargs["nonce"] != self.object.nonce:
+        if (
+            self.kwargs["nonce"] != self.object.nonce or
+            self.kwargs["name"] != self.object.name
+        ):
             return redirect(
                 "spider_base:ucomponent-update", kwargs={
                     "name": self.object.name,
