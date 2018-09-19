@@ -22,7 +22,7 @@
 
 
 {% block content %}
-  <div>
+  <div class="w3-padding">
     {% if request.user == uc.user or uc.public %}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">{% trans 'index' %}</a>
     {% endif %}
@@ -79,7 +79,7 @@
     </summary>
     {% endif %}
     {% include "spider_base/form_errors.html" with form=form %}
-    <form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
+    <form class="w3-padding" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
       {% csrf_token %}
       <fieldset>
         <legend><h2>{% trans 'Content Settings' %}</h2></legend>

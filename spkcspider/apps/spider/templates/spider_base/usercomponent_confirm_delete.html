@@ -11,20 +11,23 @@
 
 {% block content %}
   <h1 class="w3-center">
-    {% blocktrans trimmed with name=object %}
-      Delete User Component: <em>{{name}}</em>
-    {% endblocktrans %}
+    {% blocktrans trimmed %}
+      Delete User Component:
+    {% endblocktrans %} <em>{{object.content}}</em>
   </h1>
-  <div class="w3-padding w3-content w3-center w3-red w3-xlarge">
-    {% blocktrans trimmed with name=object %}
-      Warning this deletes the component and all depending content.<br/>
-      Go back if you don't want to this and you didn't hit delete.<br/>
-      You can abort the deletion process with reset if it is shown.<br/>
-      It is always shown except no deletion is in progress.<br/>
-    {% endblocktrans %}
+
+  <div class="w3-padding">
+    <div class="w3-content w3-center w3-red w3-xlarge" style="margin-bottom:20px">
+      {% blocktrans trimmed with name=object %}
+        Warning this deletes the component and all depending content.<br/>
+        Go back if you don't want to this and you didn't hit delete.<br/>
+        You can abort the deletion process with reset if it is shown.<br/>
+        It is always shown except no deletion is in progress.<br/>
+      {% endblocktrans %}
+    </div>
   </div>
 
-  <div class="w3-bar w3-black w3-container w3-margin">
+  <div class="w3-bar w3-black w3-container">
     {% if not remaining or remaining == 0 %}
     <form method="post" action="{{request.path}}">
       {% csrf_token %}

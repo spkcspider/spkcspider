@@ -46,13 +46,16 @@ class TextForm(forms.ModelForm):
         css = {
             'all': [
                 'node_modules/trumbowyg/dist/ui/trumbowyg.min.css',
-                'spider_filets/text.css'
+                'spider_filets/text.css',
+                'node_modules/trumbowyg/dist/plugins/history/ui/trumbowyg.history.css'  # noqa: E501
             ]
         }
         js = [
             'admin/js/vendor/jquery/jquery.min.js',
             'node_modules/trumbowyg/dist/trumbowyg.min.js',
             'node_modules/trumbowyg/dist/plugins/pasteimage/trumbowyg.pasteimage.min.js',  # noqa: E501
+            'node_modules/trumbowyg/dist/plugins/base64/trumbowyg.base64.min.js',  # noqa: E501
+            'node_modules/trumbowyg/dist/plugins/history/ui/trumbowyg.history.min.js',  # noqa: E501
             'spider_filets/text.js'
         ]
 

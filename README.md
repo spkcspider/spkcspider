@@ -146,6 +146,6 @@ Later:
 
 # Thanks
 
-Default theme uses Font Awesome by Dave Gandy - http://fontawesome.io
-Some fields and TextField use Trumbowyg by Alexander
-Django team for their excellent product
+* Default theme uses Font Awesome by Dave Gandy - http://fontawesome.io
+* Some fields and TextField use Trumbowyg by Alexander Demode
+* Django team for their excellent product

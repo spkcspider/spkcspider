@@ -140,9 +140,9 @@
 
     {# Block for body onload functions #}
     <script type="text/javascript">
-      $(function() {
+      window.onload =function() {
           {% block onbodyload %}{% endblock %}
-      });
+      };
     </script>
   </body>
 </html>

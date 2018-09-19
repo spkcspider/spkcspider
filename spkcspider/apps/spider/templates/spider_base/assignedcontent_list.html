@@ -5,7 +5,7 @@
 {% endblocktrans %}{% endblock %}
 
 {% block content %}
-  <div>
+  <div class="w3-padding">
     {% if request.user == uc.user %}
       <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'index' %}</a>
       <span class="w3-right">
@@ -34,7 +34,7 @@
     {% endif %}
   </div>
   {% if uc.user == request.user %}
-    <details class="" style="margin-bottom:30px" {% if object_list|length < 2 %}open="open"{% endif %}>
+    <details class="w3-margin" style="margin-bottom:30px" {% if object_list|length < 2 %}open="open"{% endif %}>
       <summary class="w3-button w3-hover-dark-grey w3-black">
         <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
         {% trans 'Add new content' %}
@@ -44,11 +44,11 @@
         <div class="w3-row">
           {% for variant in content_variants %}
             {% if uc.strength < variant.strength %}
-            <div class="w3-padding w3-center w3-col s12 m3 w3-red" >
+            <div class="w3-padding w3-left-align w3-col s12 m4 l3 w3-red" >
               <b style="margin-right:5px" aria-hidden="true">x</b>{{variant}}
             </div>
             {% else %}
-            <a class="w3-button w3-col s12 m3 w3-grey" href="{% url 'spider_base:ucontent-add' name=uc.name type=variant.name %}" >
+            <a class="w3-button w3-left-align w3-col s12 m4 l3 w3-grey" href="{% url 'spider_base:ucontent-add' name=uc.name type=variant.name %}" >
               <b style="margin-right:5px" aria-hidden="true">+</b>{{variant}}
             </a>
             {% endif %}
@@ -59,35 +59,37 @@
       </div>
     </details>
   {% endif %}
-  <table class="w3-table w3-striped w3-bordered w3-hoverable w3-margin">
-    {% for content in object_list %}
-      <tr>
-        <td class="">
-          {{ content.content|truncatechars:50 }}
-        </td>
-        <td class="w3-show-inline-block">
-          <div class="w3-bar w3-round-large w3-tiny w3-blue">
-            <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}">
-              <i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i>
-              <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "View" %}</span></span>
-            </a>
-            {% if uc.user == request.user  %}
-            <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}">
-              <i class="fa fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i>
-              <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "Edit" %}</span></span>
-            </a>
-            <a class="w3-hover-black w3-button w3-bar-item w3-tooltip" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}">
-              <i class="fa fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i>
-              <span aria-hidden="true" style="position:absolute;left:1px;bottom:2px" class="w3-text w3-black w3-large"><span class="w3-animate-opacity">{% trans "Del" %}</span></span>
-            </a>
-            {% endif %}
-          </div>
-        </td>
-      </tr>
-    {% empty %}
-      <tr><td>{% trans 'No User Content available.' %}</td></tr>
-    {% endfor %}
-  </table>
+  <div class="w3-margin">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable">
+      {% for content in object_list %}
+        <tr>
+          <td class="" style="width:60%; min-height:48px">
+              {{ content.content|truncatechars:50 }}
+          </td>
+          <td class="w3-show-inline-block">
+            <div class="w3-bar w3-round-large w3-tiny w3-blue">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}">
+                <div class="spkc-item-button"><i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
+                <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "View" %}</div></span>
+              </a>
+              {% if uc.user == request.user  %}
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}">
+                <div class="spkc-item-button"><i class="fa fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
+                <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "Edit" %}</div></span>
+              </a>
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}">
+                <div class="spkc-item-button"><i class="fa fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
+                <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "Del" %}</div></span>
+              </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td>{% trans 'No User Content available.' %}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
   <div class="page-manipulation w3-padding" style="margin-top:40px">
     {% include 'spider_base/list_footer.html' %}
   </div>

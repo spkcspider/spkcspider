@@ -1,3 +1,21 @@
+.spkc-item{
+  font-size:17px!important;
+  width:95px;
+  position:absolute;
+  left:1px;
+  bottom:2px;
+  text-align:center;
+}
+
+@media (min-width:601px){
+  .spkc-item-button{
+    width:25px;
+  }
+
+  .spkc-item{
+    width:57px;
+  }
+}
 
 .color-front-0{
   /* pale blue */
