@@ -31,7 +31,8 @@ setup(name='spkcspider',
       platforms='Platform Independent',
       install_requires=install_requirements,
       extras_require={
-        "debug": debug_requirements
+        "debug": debug_requirements,
+        "fcgi": ["flipflop"]
       },
       use_scm_version=VERSIONING,
       setup_requires=['setuptools_scm'],

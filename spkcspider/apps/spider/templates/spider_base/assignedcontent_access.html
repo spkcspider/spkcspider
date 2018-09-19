@@ -20,6 +20,7 @@
 {% endif %}
 {% endblock %}
 
+{% block main_classes %}{{block.super}}{% if not object %} w3-animate-bottom{% endif %}{% endblock %}
 
 {% block content %}
   <div class="w3-padding">

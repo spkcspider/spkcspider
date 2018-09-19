@@ -1,4 +1,4 @@
-{% extends "spider_base/uc_base.html" %}
+{% extends "spider_base/nouc_base.html" %}
 {% load i18n %}
 
 {% block title %}{% if object %}{% if object.name == "index" %}{% blocktrans trimmed %}
@@ -8,14 +8,12 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   Create Component
 {% endblocktrans %}{% endif %}{% endblock %}
 
-{% block context_actions %}
-{{block.super}}
-{% endblock context_actions %}
-{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-green{% if not object %} w3-animate-bottom{% endif %}{% endblock %}
+{% block main_classes %}{% if not object %}{{block.super}}{% else %} w3-content w3-card-4 color-front-{{object.strength}}{% endif %}{% endblock %}
+{% block body_class %}{% if not object %}{{block.super}}{% else %} color-back-{{object.strength}}{% endif %}{% endblock %}
 
 
 {% block content %}
-  <div>
+  <div class="w3-padding">
     <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'index' %}</a>
     {% if object %}
       <span class="w3-right">
@@ -48,7 +46,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   </div>
 
   {% if form.instance.id %}
-  <div>
+  <div  class="w3-padding">
     {% trans "Link to Component:" %}
     <a class="" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
       {{request.scheme}}://{{request.get_host}}{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}
@@ -58,7 +56,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   {% endif %}
   {% include "spider_base/form_errors.html" with form=form %}
   {{form.media}}
-  <form class="" action="{{ request.path }}" encdata="multipart/form-data" method="post">
+  <form class="w3-padding" action="{{ request.path }}" encdata="multipart/form-data" method="post">
     {% csrf_token %}
     <fieldset>
       <legend>
