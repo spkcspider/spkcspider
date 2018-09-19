@@ -1,7 +1,10 @@
 #! /usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
+import os
 from setuptools import setup
+
+base_dir = os.path.dirname(__file__)
 
 install_requirements = [
     "django>=2",
@@ -25,24 +28,30 @@ VERSIONING = {
     'local_scheme': 'dirty-tag',
 }
 
-setup(name='spkcspider',
-      license="MIT",
-      zip_safe=False,
-      platforms='Platform Independent',
-      install_requires=install_requirements,
-      extras_require={
+scm_stuff = {}
+if os.path.exists(os.path.join(base_dir, ".git")):
+    scm_stuff["setup_requires"] = ['setuptools_scm']
+    scm_stuff["use_scm_version"] = VERSIONING
+
+setup(
+    name='spkcspider',
+    license="MIT",
+    zip_safe=False,
+    platforms='Platform Independent',
+    install_requires=install_requirements,
+    extras_require={
         "debug": debug_requirements,
         "fcgi": ["flipflop"]
-      },
-      use_scm_version=VERSIONING,
-      setup_requires=['setuptools_scm'],
-      data_files=[('spkcspider', ['LICENSE'])],
-      packages=[
+    },
+    data_files=[('spkcspider', ['LICENSE'])],
+    packages=[
         "spkcspider", "spkcspider.apps.spider",
         "spkcspider.apps.spider_accounts", "spkcspider.apps.spider_tags",
         "spkcspider.apps.spider_keys"
-      ],
-      package_data={
+    ],
+    package_data={
         '': ['templates/**.*', 'static/**'],
-      },
-      test_suite="tests")
+    },
+    test_suite="tests",
+    **scm_stuff
+)
