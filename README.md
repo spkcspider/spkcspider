@@ -126,8 +126,6 @@ verified_by urls should return hashname:hash_hexdigest
 
 # TODO
 
-* design: cleanup
-  * use strength for coloring e.g. yellow 10, blue 0, the rest green tones (primive done)
 * layout: verifiers+examples
 * layout: cleanup defaults
 * improve anchors
@@ -135,14 +133,11 @@ verified_by urls should return hashname:hash_hexdigest
 
 Later:
 * create client side script for import (pushing to server, index token for auth?)
-* textfilet
-* hot reloading
-* export protections and protection settings, Maybe?
-* performance improvements
-* import user content, usercomonents and usercontent
+* email to spkcspider transport wrapper (also script)+component
+* textfilet hot reloading
 * log changes
 * complete travel mode
-
+* color tones for strength
 
 # Thanks
 
