@@ -30,7 +30,7 @@ setup(name='spkcspider',
       zip_safe=False,
       platforms='Platform Independent',
       install_requires=install_requirements,
-      extras_requires={
+      extras_require={
         "debug": debug_requirements
       },
       use_scm_version=VERSIONING,
