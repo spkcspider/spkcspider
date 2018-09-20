@@ -9,7 +9,13 @@
 {% endblocktrans %}{% endif %}{% endblock %}
 
 {% block content %}
+  {% url 'spider_base:ucomponent-listall' as listall %}
   <div>
+    {% if listall == request.path %}
+    <a class="w3-left" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
+    {% else %}
+    <a class="w3-left" href="{% url 'spider_base:ucomponent-listall' %}?{{request.GET.urlencode}}">{% trans 'Index' %}</a>
+    {% endif %}
     {% if request.user.is_authenticated %}
       <span class="w3-right">
         <div style="margin-bottom:10px">

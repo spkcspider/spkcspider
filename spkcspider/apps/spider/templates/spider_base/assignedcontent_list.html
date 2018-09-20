@@ -7,10 +7,10 @@
 {% block content %}
   <div class="w3-padding">
     {% if request.user == uc.user %}
-      <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'index' %}</a>
+      <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Index' %}</a>
       <span class="w3-right">
         <div style="margin-bottom:5px">
-          <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">Update</a>
+          <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">{% trans 'Update' %}</a>
         </div>
         <div style="margin-bottom:5px">
           <a class="" href="{% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce %}">{% trans 'Export' %}</a>

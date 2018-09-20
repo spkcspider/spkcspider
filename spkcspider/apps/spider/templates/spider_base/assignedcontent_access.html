@@ -25,7 +25,7 @@
 {% block content %}
   <div class="w3-padding">
     {% if request.user == uc.user or uc.public %}
-      <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">{% trans 'index' %}</a>
+      <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">{% trans 'Index' %}</a>
     {% endif %}
     {% if scope != "add" and request.user == uc.user %}
       <span class="w3-right">
@@ -41,6 +41,13 @@
         <div>
           <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{spider_GET.urlencode}}">
             {% trans "View" %}
+          </a>
+        </div>
+        {% endif %}
+        {% if scope != "add" and scope != "update" %}
+        <div>
+          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='update' %}?{{spider_GET.urlencode}}">
+            {% trans "Update" %}
           </a>
         </div>
         {% endif %}

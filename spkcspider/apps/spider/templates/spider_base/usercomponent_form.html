@@ -14,7 +14,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block content %}
   <div class="w3-padding">
-    <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'index' %}</a>
+    <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Index' %}</a>
     {% if object %}
       <span class="w3-right">
         {% if object.name != "index" %}
