@@ -9,11 +9,11 @@
 </span>
 <script>
   // save timestamp of django
-  var timestamp = Math.floor({{rtime.timestamp}};
+  var timestamp = Math.floor({{rtime.timestamp}});
 
   var interval_id = setInterval(function() {
     // calculate difference between timestamp and current time
-    let remaining_tokenlifetime_seconds = timestamp - new Date().getTime()/1000);
+    let remaining_tokenlifetime_seconds = timestamp - Math.floor(new Date().getTime()/1000);
     let formatted;
     let seconds = remaining_tokenlifetime_seconds;
     if (seconds > 0){
