@@ -150,6 +150,7 @@ class UserComponent(models.Model):
         _ = gettext
         self.required_passes = self._get_default_amount()
         self.strength = self._get_default_strength()
+        self.featured = (self.featured and self.public)
         assert(self.name not in ("index", "fake_index") or self.strength == 10)
         assert(self.name in ("index", "fake_index") or self.strength < 10)
         obj = self.contents.filter(

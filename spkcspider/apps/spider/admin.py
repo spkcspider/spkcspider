@@ -115,12 +115,14 @@ class UserComponentAdmin(admin.ModelAdmin):
         'user', 'name', 'created', 'modified',
         'featured', 'deletion_requested', 'nonce'
     ]
-    readonly_fields = ['created', 'modified']
-    list_display = ('name', 'username', 'modified')
+    readonly_fields = ['created', 'modified', 'featured']
+    list_display = ('name', 'username', 'modified', 'featured')
     view_on_site = True
 
     def feature(self, request, queryset):
-        queryset.update(featured=True)
+        queryset.exclude(
+            name__in=("index", "fake_index")
+        ).exclude(public=False).update(featured=True)
     feature.allowed_permissions = ('can_feature',)
 
     def unfeature(self, request, queryset):
