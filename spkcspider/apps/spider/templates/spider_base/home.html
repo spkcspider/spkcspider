@@ -12,6 +12,11 @@
       {% trans "Home" %}
     </h1>
   </div>
+  <div>
+    <h2 class="">
+      {% trans "Featured:" %}
+    </h2>
+  </div>
   <div class="w3-margin">
     <table class="w3-table w3-striped w3-bordered w3-hoverable">
       {% for uc in object_list %}
@@ -43,6 +48,15 @@
           <tr><td>{% trans 'No User Components available.' %}</td></tr>
       {% endfor %}
     </table>
+  </div>
+  <div class="w3-margin">
+    <a href="{% url 'spider_base:ucomponent-listall' %}">
+      <span class="w3-large w3-text-blue">
+        {% blocktrans trimmed %}
+          List all public spiders (User Components)...
+        {% endblocktrans %}
+      </span>
+    </a>
   </div>
   <div class="page-manipulation w3-padding" style="margin-top:40px">
     {% include 'spider_base/list_footer.html' %}
