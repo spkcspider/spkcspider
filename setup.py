@@ -10,7 +10,8 @@ install_requirements = [
     "django>=2",
     "django-simple-jsonfield",
     'certifi',
-    'requests'
+    'requests',
+    'bleach'
 ]
 
 debug_requirements = [

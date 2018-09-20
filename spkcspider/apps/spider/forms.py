@@ -81,7 +81,9 @@ class UserComponentForm(forms.ModelForm):
                 self.fields["name"].disabled = True
             if self.instance.no_public:
                 self.fields["public"].disabled = True
+                self.fields.pop("featured", None)
             if self.instance.name in ("fake_index", "index"):
+                self.fields.pop("featured", None)
                 self.fields["required_passes"].help_text = _(
                     "How many protections must be passed to login?"
                     "Minimum is 1, no matter what selected"

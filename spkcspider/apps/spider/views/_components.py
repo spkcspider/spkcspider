@@ -72,24 +72,19 @@ class ComponentAllIndex(ListView):
         else:
             if self.request.user.is_authenticated:
                 q |= models.Q(user=self.request.user)
-                if self.request.session.get("is_fake", False):
-                    q &= ~models.Q(name="index")
-                else:
-                    q &= ~models.Q(name="fake_index")
         main_query = self.model.objects.prefetch_related('contents').filter(
-            q & searchq
+            q & searchq & ~models.Q(name__in=("index", "fake_index"))
         )
-        order = self.get_ordering()
-        return main_query.order_by(*order)
+        return main_query.order_by(*self.get_ordering()).distinct()
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
     def get_ordering(self):
         if self.is_home:
-            return ("contents__modified",)
+            return ("modified",)
         else:
-            return ("user", "contents__modified")
+            return ("user", "modified")
 
     def render_to_response(self, context):
         # NEVER: allow embedding, things get much too big

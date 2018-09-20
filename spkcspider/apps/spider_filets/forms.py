@@ -1,7 +1,28 @@
+
+import bleach
+from bleach import sanitizer
+
 from django import forms
 
 from spkcspider.apps.spider.helpers import get_settings_func
 from .models import FileFilet, TextFilet
+
+tags = sanitizer.ALLOWED_TAGS + ['img', 'p', 'br', 'sub', 'sup']
+protocols = sanitizer.ALLOWED_PROTOCOLS + ['data']
+
+
+class FakeList(object):
+    def __contains__(self, value):
+        return True
+
+
+styles = FakeList()
+svg_props = FakeList()
+
+
+def check_attrs_func(tag, name, value):
+    # currently no objections
+    return True
 
 
 class FileForm(forms.ModelForm):
@@ -47,7 +68,7 @@ class TextForm(forms.ModelForm):
             'all': [
                 'node_modules/trumbowyg/dist/ui/trumbowyg.min.css',
                 'spider_filets/text.css',
-                'node_modules/trumbowyg/dist/plugins/history/ui/trumbowyg.history.css'  # noqa: E501
+                # 'node_modules/trumbowyg/dist/plugins/history/ui/trumbowyg.history.css'  # noqa: E501
             ]
         }
         js = [
@@ -73,3 +94,12 @@ class TextForm(forms.ModelForm):
                 allow_edit = True
 
         self.fields["text"].editable = allow_edit
+
+    def clean_text(self):
+        return bleach.clean(
+            self.cleaned_data['text'],
+            tags=tags,
+            attributes=check_attrs_func,
+            protocols=protocols,
+            styles=styles,
+        )
