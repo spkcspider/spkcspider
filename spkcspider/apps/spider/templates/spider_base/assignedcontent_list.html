@@ -66,6 +66,11 @@
           <td class="" style="width:60%; min-height:48px">
               {{ content.content|truncatechars:50 }}
           </td>
+          {% if uc.public or request.user == uc.user %}
+            <td>
+              {{content.modified}}
+            </td>
+          {% endif %}
           <td class="w3-show-inline-block">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
               <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}">

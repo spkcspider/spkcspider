@@ -50,14 +50,16 @@ class UserComponentForm(forms.ModelForm):
 
     class Meta:
         model = UserComponent
-        fields = ['name', 'public', 'required_passes', 'token_duration']
+        fields = [
+            'name', 'public', 'featured', 'required_passes', 'token_duration',
+        ]
         error_messages = {
             NON_FIELD_ERRORS: {
                 'unique_together': _('UserComponent name already exists')
             }
         }
 
-    def __init__(self, data=None, files=None, auto_id='id_%s',
+    def __init__(self, request, data=None, files=None, auto_id='id_%s',
                  prefix=None, *args, **kwargs):
         super().__init__(
             *args, data=data, files=files, auto_id=auto_id,
@@ -67,6 +69,11 @@ class UserComponentForm(forms.ModelForm):
             lambda c: (c[0], c[1].format(c[0])),
             self.fields["new_nonce"].choices
         )
+        if not (
+            request.user.is_superuser or
+            request.user.has_perm('spider_base.can_feature')
+        ) or request.session.get("is_fake", False):
+            self.fields['featured'].disabled = True
 
         if self.instance and self.instance.id:
             assigned = self.instance.protections

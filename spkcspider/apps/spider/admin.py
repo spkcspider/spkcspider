@@ -64,7 +64,9 @@ class UserContentAdmin(admin.ModelAdmin):
 
 class UserContentInline(admin.TabularInline):
     model = AssignedContent
-    fields = ['info', 'created', 'modified', 'deletion_requested', 'nonce']
+    fields = [
+        'info', 'created', 'modified', 'deletion_requested', 'nonce'
+    ]
     readonly_fields = [
         'info', 'created', 'modified'
     ]
@@ -108,12 +110,29 @@ class UserComponentAdmin(admin.ModelAdmin):
         UserContentInline,
         AssignedProtectionInline,
     ]
+    actions = ["feature", "unfeature"]
     fields = [
-        'user', 'name', 'created', 'modified', 'deletion_requested', 'nonce'
+        'user', 'name', 'created', 'modified',
+        'featured', 'deletion_requested', 'nonce'
     ]
     readonly_fields = ['created', 'modified']
-    list_display = ('name', 'username')
+    list_display = ('name', 'username', 'modified')
     view_on_site = True
+
+    def feature(self, request, queryset):
+        queryset.update(featured=True)
+    feature.allowed_permissions = ('can_feature',)
+
+    def unfeature(self, request, queryset):
+        queryset.update(featured=False)
+    unfeature.allowed_permissions = ('can_feature',)
+
+    def has_can_feature_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
+        if request.user.is_superuser:
+            return True
+        return request.user.has_perm("spider_base.can_feature")
 
     def has_add_permission(self, request, obj=None):
         if not request.user.is_active:

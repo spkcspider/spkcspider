@@ -53,6 +53,10 @@ _required_passes_help = _(
     "Set greater 0 to enable protection based access"
 )
 
+_feature_help = _(
+    "Appears as featured on \"home\" page"
+)
+
 
 class TokenCreationError(Exception):
     pass
@@ -95,6 +99,9 @@ class UserComponent(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
 
+    # only admin
+    featured = models.BooleanField(default=False, help_text=_feature_help)
+
     token_duration = models.DurationField(
         default=default_uctoken_duration,
         null=False
@@ -109,6 +116,7 @@ class UserComponent(models.Model):
 
     class Meta:
         unique_together = [("user", "name")]
+        permissions = [("can_feature", "Can feature User Components")]
 
     def __repr__(self):
         name = self.name

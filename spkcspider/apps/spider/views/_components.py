@@ -28,7 +28,6 @@ from ..helpers import get_settings_func
 class ComponentAllIndex(ListView):
     model = UserComponent
     is_home = False
-    ordering = ("user", "name")
 
     def get_context_data(self, **kwargs):
         kwargs["nonpublic"] = False
@@ -68,12 +67,15 @@ class ComponentAllIndex(ListView):
             searchq &= models.Q(required_passes=0)
 
         q = models.Q(public=True)
-        if self.request.user.is_authenticated:
-            q |= models.Q(user=self.request.user)
-            if self.request.session.get("is_fake", False):
-                q &= ~models.Q(name="index")
-            else:
-                q &= ~models.Q(name="fake_index")
+        if self.is_home:
+            q &= models.Q(featured=True)
+        else:
+            if self.request.user.is_authenticated:
+                q |= models.Q(user=self.request.user)
+                if self.request.session.get("is_fake", False):
+                    q &= ~models.Q(name="index")
+                else:
+                    q &= ~models.Q(name="fake_index")
         main_query = self.model.objects.prefetch_related('contents').filter(
             q & searchq
         )
@@ -82,6 +84,12 @@ class ComponentAllIndex(ListView):
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
+
+    def get_ordering(self):
+        if self.is_home:
+            return ("contents__modified",)
+        else:
+            return ("user", "contents__modified")
 
     def render_to_response(self, context):
         # NEVER: allow embedding, things get much too big
@@ -293,6 +301,7 @@ class ComponentCreate(UserTestMixin, CreateView):
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()
         ret["instance"] = self.model(user=self.get_user())
+        ret['request'] = self.request
         return ret
 
 
@@ -313,12 +322,18 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             nonce=self.kwargs["nonce"]
         )
 
+    def get_form_kwargs(self):
+        ret = super().get_form_kwargs()
+        ret['request'] = self.request
+        return ret
+
     def get_form_success_kwargs(self):
         """Return the keyword arguments for instantiating the form."""
         return {
             'initial': self.get_initial(),
             'prefix': self.get_prefix(),
-            'instance': self.object
+            'instance': self.object,
+            'request': self.request
         }
 
     def form_valid(self, form):
