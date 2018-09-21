@@ -1,3 +1,5 @@
+__all__ = ["FileForm", "TextForm", "RawTextForm"]
+
 
 import bleach
 from bleach import sanitizer
@@ -86,13 +88,16 @@ class TextForm(forms.ModelForm):
         super().__init__(**kwargs)
         self.fields["editable_from"].to_field_name = "name"
         if request.is_owner:
+            self.fields["editable_from"].queryset = \
+                self.fields["editable_from"].queryset.filter(
+                    user=request.user
+                ).exclude(name__in=("index", "fake_index"))
             return
 
-        self.fields["name"].editable = False
         del self.fields["editable_from"]
         allow_edit = False
         if self.instance.editable_from.filter(pk=source.pk).exists():
-            if kwargs["request"].is_priv_requester:
+            if request.is_priv_requester:
                 allow_edit = True
 
         self.fields["text"].editable = allow_edit
@@ -105,3 +110,12 @@ class TextForm(forms.ModelForm):
             protocols=protocols,
             styles=styles,
         )
+
+
+class RawTextForm(forms.ModelForm):
+    class Meta:
+        model = TextFilet
+        fields = ['text', 'name']
+
+    def __init__(self, request, source=None, **kwargs):
+        super().__init__(**kwargs)

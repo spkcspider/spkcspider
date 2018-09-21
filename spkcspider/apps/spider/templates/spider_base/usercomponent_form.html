@@ -70,6 +70,11 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       </legend>
       {% include "spider_base/base_form.html" with form=form %}
     </fieldset>
+    {% if form.instance.id %}
+    <button class="w3-button w3-grey">
+      {% trans "Change" %}
+    </button>
+    {% endif %}
     <fieldset>
       <legend><h1>{% trans 'Protections' %}</h1></legend>
       <div class="">

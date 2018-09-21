@@ -1,10 +1,16 @@
 .spkc-item{
   font-size:17px!important;
-  width:95px;
+  width:55px;
   position:absolute;
   left:1px;
   bottom:2px;
   text-align:center;
+}
+
+@media (min-width:341px){
+  .spkc-item{
+    width:95px;
+  }
 }
 
 @media (min-width:601px){

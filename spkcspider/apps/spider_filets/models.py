@@ -139,7 +139,7 @@ class TextFilet(BaseContent):
     name = models.CharField(max_length=255, null=False)
     editable_from = models.ManyToManyField(
         "spider_base.UserComponent", related_name="+",
-        help_text=_("Allow editing from selected components"
+        help_text=_("Allow editing from selected components "
                     "by privileged users."),
         blank=True
     )
@@ -156,8 +156,11 @@ class TextFilet(BaseContent):
         return self.name
 
     def get_form(self, scope):
-        from .forms import TextForm
-        return TextForm
+        if scope in ("raw", "export"):
+            from .forms import RawTextForm as f
+        else:
+            from .forms import TextForm as f
+        return f
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)

@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='textfilet',
             name='editable_from',
-            field=models.ManyToManyField(blank=True, help_text='Allow editing from selected componentsby privileged users.', related_name='_textfilet_editable_from_+', to='spider_base.UserComponent'),
+            field=models.ManyToManyField(blank=True, help_text='Allow editing from selected components by privileged users.', related_name='_textfilet_editable_from_+', to='spider_base.UserComponent'),
         ),
     ]
