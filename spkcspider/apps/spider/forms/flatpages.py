@@ -1,17 +1,20 @@
 __all__ = ["FlatpageItemForm"]
 
-
+import copy
 from django.contrib.flatpages.forms import FlatpageForm
 from django.utils.translation import gettext_lazy as _
 
+_help_text = _("""
+    Example: '/about/contact/'. Make sure to have leading and trailing slashes.
+    "<br/>Special Urls (ordered by url):<br/>
+    /home/heading/*/ : flatpages used for heading on frontpage <br/>
+    /home/main/*/ : flatpages used for general information on frontpage"
+""")
+
 
 class FlatpageItemForm(FlatpageForm):
-    url = FlatpageForm.base_fields["url"]
-    url.help_text = _(
-        url.help_text +
-        "<br/>Special Urls: /home/main/*"
-        # /home/sideleft/*, /home/sideright/*
-    )
+    url = copy.copy(FlatpageForm.base_fields["url"])
+    url.help_text = _help_text
 
     class Media:
         css = {

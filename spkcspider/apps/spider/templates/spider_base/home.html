@@ -12,8 +12,20 @@
   {% block frontblock %}
   <div>
     {% get_flatpages '/home/main/' as main_pages %}
+    {% get_flatpages '/home/heading/' as heading_pages %}
+    {% for page in heading_pages %}
+      <div>
+        {{page.content|safe}}
+      </div>
+    {% empty%}
+      <div>
+        <h1>{% blocktrans trimmed %}
+          Welcome to spkcspider
+        {% endblocktrans %}</h1>
+      </div>
+    {% endfor %}
     {% for page in main_pages %}
-      <div class="w3-border w3-white">
+      <div class="w3-margin w3-padding w3-white">
         <h3 class="">{{page.title}}</h3>
         <hr/>
         {{page.content|safe}}
@@ -21,43 +33,47 @@
     {% endfor %}
   </div>
   {% endblock %}
+  {% block featured_components %}
+  {% if object_list|length > 0 %}
   <div>
-    <h2 class="">
-      {% trans "Featured:" %}
-    </h2>
-  </div>
-  <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable">
-      {% for uc in object_list %}
-        <tr>
-          <td style="width:40%; min-height:48px">
-            {{uc.user}} - {{ uc.name }}
-          </td>
-          <td>
-            {% blocktrans trimmed with time=uc.modified|timesince %}
-            Modified: {{time}} ago
-            {% endblocktrans %}
-          </td>
-          <td class="w3-show-inline-block">
-            <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list'  id=uc.id nonce=uc.nonce %}">
-                <div class="spkc-item-button"><i class="fa fa-list-ul" aria-label="{% trans 'List' %}" alt="{% trans 'List' %}"></i></div>
-                <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans 'List' %}</div></span>
-              </a>
-              {% if uc.user == request.user %}
-                <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">
-                  <div class="spkc-item-button"><i class="fa fa-edit" aria-label="{% trans 'Edit' %}" alt="{% trans 'Edit' %}"></i></div>
-                  <span aria-hidden="true" class="w3-text w3-black w3-large spkc-item"><div class="w3-animate-opacity">{% trans 'Edit' %}</div></span>
+    <div>
+      <h2 class="">
+        {% trans "Featured:" %}
+      </h2>
+    </div>
+    <div  class="w3-margin">
+      <table class="w3-table w3-striped w3-bordered w3-hoverable">
+        {% for uc in object_list %}
+          <tr>
+            <td style="width:40%; min-height:48px">
+              {{uc.user}} - {{ uc.name }}
+            </td>
+            <td>
+              {% blocktrans trimmed with time=uc.modified|timesince %}
+              Modified: {{time}} ago
+              {% endblocktrans %}
+            </td>
+            <td class="w3-show-inline-block">
+              <div class="w3-bar w3-round-large w3-tiny w3-blue">
+                <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list'  id=uc.id nonce=uc.nonce %}">
+                  <div class="spkc-item-button"><i class="fa fa-list-ul" aria-label="{% trans 'List' %}" alt="{% trans 'List' %}"></i></div>
+                  <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans 'List' %}</div></span>
                 </a>
-              {% endif %}
-            </div>
-          </td>
-        </tr>
-      {% empty %}
-          <tr><td>{% trans 'No User Components available.' %}</td></tr>
-      {% endfor %}
-    </table>
+                {% if uc.user == request.user %}
+                  <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">
+                    <div class="spkc-item-button"><i class="fa fa-edit" aria-label="{% trans 'Edit' %}" alt="{% trans 'Edit' %}"></i></div>
+                    <span aria-hidden="true" class="w3-text w3-black w3-large spkc-item"><div class="w3-animate-opacity">{% trans 'Edit' %}</div></span>
+                  </a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
   </div>
+  {% endif %}
+  {% endblock featured_components %}
   <div class="w3-margin">
     <a href="{% url 'spider_base:ucomponent-listall' %}">
       <span class="w3-large w3-text-blue">
