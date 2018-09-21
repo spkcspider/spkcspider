@@ -22,8 +22,12 @@
     {% endif %}
     <h1 class="w3-center">
       {% if request.is_owner or uc.public %}
-        {% blocktrans trimmed with name=uc %}
-          Content of Component: <em>{{name}}</em>
+        {% blocktrans trimmed %}
+          Content of Component:
+        {% endblocktrans %} <b>{{name}}</b>
+      {% else %}
+        {% blocktrans trimmed %}
+          Contents:
         {% endblocktrans %}
       {% endif %}
     </h1>

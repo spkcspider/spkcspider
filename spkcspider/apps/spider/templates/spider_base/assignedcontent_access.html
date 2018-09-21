@@ -63,12 +63,12 @@
         {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed %}
           Update:
-        {% endblocktrans %} <em>{{uc}}</em>:<b>{{object}}</b> <small><em>({{local_name}})</em></small>
+        {% endblocktrans %} {% if uc.public or uc.user == request.user %}<em>{{uc}}</em>:{% endif %}<b>{{object}}</b> <small><em>({{local_name}})</em></small>
       {% else %}
         {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed with name=object %}
           View:
-        {% endblocktrans %} <em>{{uc}}</em>:<b>{{object}}</b> <small><em>({{local_name}})</em></small>
+        {% endblocktrans %} {% if uc.public or uc.user == request.user %}<em>{{uc}}</em>:{% endif %}<b>{{object}}</b> <small><em>({{local_name}})</em></small>
       {% endif %}
     </h1>
     {% if request.token_expires %}
