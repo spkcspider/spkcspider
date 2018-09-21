@@ -1,0 +1,43 @@
+{% load i18n %}
+
+<div id="qrpresenter" class="w3-modal">
+  <div class="w3-modal-content">
+    <header class="w3-container w3-teal">
+      <span onclick="document.getElementById('qrpresenter').style.display='none'"
+      class="w3-button w3-display-topright">&times;</span>
+      <h2>{% trans "QR/Export-Mode" %}</h2>
+    </header>
+    <div class="w3-container">
+      <canvas id="qrcanvas"></canvas>
+    </div>
+    <div class="w3-container">
+      <div>
+        {% trans "Link"%}: <a href="" class="w3-text-black" id="nativelink"></a>
+      </div>
+      {% if exportlink %}
+        <div>
+          <a class="w3-text-black" href="{{exportlink}}">{% trans 'Export' %}</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+function open_qrmodal(){
+  let _qrcanvas = document.getElementById('qrcanvas');
+  let nativelink = document.getElementById('nativelink');
+  if (nativelink.href != "{{nativelink}}"){
+    nativelink.href = "{{nativelink}}";
+    nativelink.text = "{{nativelink}}";
+    QRCode.toCanvas(
+      _qrcanvas, '{{nativelink}}', {  },
+      function (error) {
+        if (error)
+          console.error(error)
+      }
+    )
+  }
+  document.getElementById('qrpresenter').style.display='block';
+}
+</script>
