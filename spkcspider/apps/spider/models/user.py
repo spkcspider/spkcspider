@@ -5,12 +5,10 @@ namespace: spider_base
 """
 
 __all__ = [
-    "UserComponent", "TokenCreationError", "AuthToken", "protected_names",
-    "UserInfo"
+    "UserComponent", "TokenCreationError", "AuthToken", "UserInfo"
 ]
 
 import logging
-import datetime
 
 from django.db import models
 from django.conf import settings
@@ -21,23 +19,14 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core import validators
 
-from ..helpers import token_nonce, MAX_NONCE_SIZE, get_settings_func
-from ..constants import ProtectionType
+from ..helpers import token_nonce, get_settings_func
+from ..constants import (
+    ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
+    default_uctoken_duration, protected_names, force_captcha
+)
 
-force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
-
-# require USE_CAPTCHAS
-force_captcha = (force_captcha and getattr(settings, "USE_CAPTCHAS", False))
 
 logger = logging.getLogger(__name__)
-protected_names = ["index", "fake_index"]
-
-hex_size_of_bigid = 16
-
-default_uctoken_duration = getattr(
-    settings, "DEFAULT_UCTOKEN_DURATION",
-    datetime.timedelta(days=7)
-)
 
 
 _name_help = _("""
@@ -56,10 +45,6 @@ _required_passes_help = _(
 _feature_help = _(
     "Appears as featured on \"home\" page"
 )
-
-
-class TokenCreationError(Exception):
-    pass
 
 
 class UserComponent(models.Model):

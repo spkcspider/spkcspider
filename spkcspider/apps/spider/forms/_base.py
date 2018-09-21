@@ -1,23 +1,16 @@
-__all__ = [
-    "LinkForm", "UserComponentForm", "UserContentForm",
-    "SpiderAuthForm", "TravelProtectionForm"
-]
+__all__ = ["UserComponentForm", "UserContentForm"]
 
 from statistics import mean
 
 from django import forms
-from django.conf import settings
 from django.core.exceptions import NON_FIELD_ERRORS
-from django.contrib.auth.forms import AuthenticationForm
 from django.utils.translation import gettext_lazy as _
 
-from .models import (
-    AssignedProtection, Protection, UserComponent, AssignedContent,
-    LinkContent, TravelProtection
+from ..models import (
+    AssignedProtection, Protection, UserComponent, AssignedContent
 )
-from .helpers import token_nonce
-from .constants import ProtectionType
-from .auth import SpiderAuthBackend
+from ..helpers import token_nonce
+from ..constants import ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE
 
 _help_text = """Generate new nonce with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
@@ -29,16 +22,6 @@ Warning: if you rely on nonces make sure user component has <em>public</em>
 not set
 </span>
 """
-
-INITIAL_NONCE_SIZE = str(getattr(settings, "INITIAL_NONCE_SIZE", 12))
-
-NONCE_CHOICES = [
-    ("", ""),
-    (INITIAL_NONCE_SIZE, _("default ({} Bytes)")),
-    ("3", _("low ({} Bytes)")),
-    ("12", _("medium ({} Bytes)")),
-    ("30", _("high ({} Bytes)")),
-]
 
 
 class UserComponentForm(forms.ModelForm):
@@ -234,82 +217,3 @@ class UserContentForm(forms.ModelForm):
                 int(self.cleaned_data["new_nonce"])
             )
         return super().save(commit=commit)
-
-
-class SpiderAuthForm(AuthenticationForm):
-    password = None
-    # can authenticate only with SpiderAuthBackend
-    # or descendants, so ignore others
-    auth_backend = SpiderAuthBackend()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not self.is_bound:
-            self.reset_protections()
-
-    def reset_protections(self):
-        self.request.protections = Protection.authall(
-            self.request, scope="auth",
-            ptype=ProtectionType.authentication.value,
-        )
-        # here is not even a usercomponent available
-        # if this works, something is wrong
-        # protections should match username from POST with the ones of the
-        # usercomponent (which is available in clean)
-        assert(self.request.protections is not True)
-
-    def clean(self):
-        username = self.cleaned_data.get('username')
-        protection_codes = None
-        if "protection" in self.request.GET:
-            protection_codes = self.request.GET.getlist("protection")
-
-        if username is not None:
-            self.user_cache = self.auth_backend.authenticate(
-                self.request, username=username,
-                protection_codes=protection_codes
-            )
-            if self.user_cache is None:
-                raise forms.ValidationError(
-                    self.error_messages['invalid_login'],
-                    code='invalid_login',
-                    params={'username': self.username_field.verbose_name},
-                )
-            else:
-                self.confirm_login_allowed(self.user_cache)
-        return self.cleaned_data
-
-
-class LinkForm(forms.ModelForm):
-
-    class Meta:
-        model = LinkContent
-        fields = ['content']
-
-    def __init__(self, uc, **kwargs):
-        super().__init__(**kwargs)
-        q = self.fields["content"].queryset
-        travel = TravelProtection.objects.get_active()
-        self.fields["content"].queryset = q.filter(
-            strength__lte=uc.strength
-        ).exclude(travel)
-
-
-class TravelProtectionForm(forms.ModelForm):
-    uc = None
-    is_fake = None
-
-    class Meta:
-        model = TravelProtection
-        fields = [
-            "active", "start", "stop", "self_protection", "login_protection",
-            "disallow"
-        ]
-
-    def __init__(self, uc, is_fake, **kwargs):
-        super().__init__(**kwargs)
-        self.uc = uc
-        self.is_fake = is_fake
-        # elif self.travel_protection.is_active:
-        #    for f in self.fields:
-        #        f.disabled = True

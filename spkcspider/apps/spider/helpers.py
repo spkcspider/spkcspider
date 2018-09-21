@@ -1,5 +1,5 @@
 __all__ = (
-    "token_nonce", "MAX_NONCE_SIZE", "cmp_pw", "get_settings_func",
+    "token_nonce", "cmp_pw", "get_settings_func",
     "extract_app_dicts", "add_by_field"
 )
 
@@ -12,16 +12,12 @@ import inspect
 from functools import lru_cache
 from importlib import import_module
 from django.conf import settings
+from .constants.static import MAX_NONCE_SIZE
 
 # for not spamming sets
 _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
-
-MAX_NONCE_SIZE = 90
-
-if MAX_NONCE_SIZE % 3 != 0:
-    raise Exception("MAX_NONCE_SIZE must be multiple of 3")
 
 
 @lru_cache(maxsize=None)

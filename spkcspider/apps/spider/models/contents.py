@@ -18,8 +18,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from ..contents import BaseContent, add_content
-from ..constants import TravelLoginType
-from ..helpers import MAX_NONCE_SIZE
+from ..constants.static import TravelLoginType, MAX_NONCE_SIZE
 
 logger = logging.getLogger(__name__)
 

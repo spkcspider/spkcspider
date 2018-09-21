@@ -23,7 +23,8 @@ from ..contents import installed_contents
 from ..protections import installed_protections
 
 # from ..constants import UserContentType
-from ..helpers import token_nonce, MAX_NONCE_SIZE
+from ..helpers import token_nonce
+from ..constants.static import MAX_NONCE_SIZE
 
 logger = logging.getLogger(__name__)
 
