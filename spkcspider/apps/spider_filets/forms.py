@@ -67,7 +67,8 @@ class TextForm(forms.ModelForm):
         css = {
             'all': [
                 'node_modules/trumbowyg/dist/ui/trumbowyg.min.css',
-                'spider_filets/text.css',
+                'node_modules/trumbowyg/dist/plugins/colors/ui/trumbowyg.colors.css',  # noqa: E501
+                'spider_base/trumbowyg.css',
                 # 'node_modules/trumbowyg/dist/plugins/history/ui/trumbowyg.history.css'  # noqa: E501
             ]
         }
@@ -77,6 +78,7 @@ class TextForm(forms.ModelForm):
             'node_modules/trumbowyg/dist/plugins/pasteimage/trumbowyg.pasteimage.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/base64/trumbowyg.base64.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/history/trumbowyg.history.min.js',  # noqa: E501
+            'node_modules/trumbowyg/dist/plugins/colors/trumbowyg.colors.min.js',  # noqa: E501
             'spider_filets/text.js'
         ]
 

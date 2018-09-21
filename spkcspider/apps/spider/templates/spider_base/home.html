@@ -1,17 +1,26 @@
 {% extends "spider_base/nouc_base.html" %}
 {% load i18n %}
+{% load flatpages %}
 {% block title %}{% blocktrans trimmed %}
   Home
 {% endblocktrans %}{% endblock %}
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4{% endblock %}
 
+
 {% block content %}
+  {% block frontblock %}
   <div>
-    <h1 class="w3-center">
-      {% trans "Home" %}
-    </h1>
+    {% get_flatpages '/home/main/' as main_pages %}
+    {% for page in main_pages %}
+      <div class="w3-border w3-white">
+        <h3 class="">{{page.title}}</h3>
+        <hr/>
+        {{page.content|safe}}
+      </div>
+    {% endfor %}
   </div>
+  {% endblock %}
   <div>
     <h2 class="">
       {% trans "Featured:" %}

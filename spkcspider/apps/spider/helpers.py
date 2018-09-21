@@ -71,7 +71,7 @@ def extract_app_dicts(app, name, fieldname=None):
 
 def token_nonce(size=None):
     if not size:
-        from .forms import INITIAL_NONCE_SIZE
+        from .constants.settings import INITIAL_NONCE_SIZE
         size = int(INITIAL_NONCE_SIZE)
     if size > MAX_NONCE_SIZE:
         logging.warning("Nonce too big")

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.conf import settings
 
 from .models import (
     Protection, AssignedProtection, UserComponent, AssignedContent,
@@ -241,3 +242,10 @@ class UserInfoAdmin(admin.ModelAdmin):
         if not obj:
             return True
         return request.user.has_perm("{}.delete_{}".format(n, m))
+
+
+if 'django.contrib.flatpages' in settings.INSTALLED_APPS:
+    from django.contrib.flatpages.admin import FlatPageAdmin
+    from .forms.flatpages import FlatpageItemForm
+
+    FlatPageAdmin.form = FlatpageItemForm

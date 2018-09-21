@@ -1,5 +1,5 @@
 $(document).ready(function(){
-  $('#id_text').trumbowyg({
+  $('#id_content').trumbowyg({
     btns: [
         ['viewHTML'],
         ['historyUndo', 'historyRedo'], // Only supported in Blink browsers
