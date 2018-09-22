@@ -11,7 +11,7 @@
 {% block content %}
   {% block frontblock %}
   <div>
-    {% get_flatpages '/home/heading/' as heading_pages %}
+    {% get_flatpages '/home/heading/' for request.user as heading_pages %}
     {% for page in heading_pages %}
       <div>
         {{page.content|safe}}
