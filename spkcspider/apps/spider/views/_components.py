@@ -125,6 +125,11 @@ class ComponentIndex(UCTestMixin, ListView):
         self.user = self.get_user()
         return super().dispatch(request, *args, **kwargs)
 
+    def get_ordering(self):
+        # if self.scope != "export":
+        #     return ("modified",)
+        return ("id",)
+
     def get_context_data(self, **kwargs):
         kwargs["component_user"] = self.user
         kwargs["scope"] = self.scope

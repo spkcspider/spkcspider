@@ -24,7 +24,7 @@
             {% trans 'Add New Component' %}
           </a>
         </div>
-        <div style="">
+        <div style="text-align:right;">
           <a href="{% url 'spider_base:ucomponent-export' user=request.user %}">
             {% trans 'Export' %}
           </a>
@@ -47,11 +47,10 @@
             {% endif %}
           </td>
           <td>
-            {% if uc.public %}
-              {% blocktrans trimmed with time=uc.modified|timesince %}
-              Modified: {{time}} ago
-              {% endblocktrans %}
-            {% endif %}
+            {# always user or admin #}
+            {% blocktrans trimmed with time=uc.modified|timesince %}
+            Modified: {{time}} ago
+            {% endblocktrans %}
           </td>
           <td class="w3-show-inline-block">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">

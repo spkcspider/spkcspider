@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import admin as user_admin
+from django.utils.translation import gettext_lazy as _
 
 from .models import SpiderUser
 # Register your models here.
@@ -8,6 +9,14 @@ from .models import SpiderUser
 @admin.register(SpiderUser)
 class UserAdmin(user_admin.UserAdmin):
     # exclude = ["first_name", "last_name"]
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('email',)}),
+        (_('Permissions'), {'fields': ('is_active', 'is_staff',
+                                       'is_superuser', 'quota', 'groups',
+                                       'user_permissions')}),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+    )
 
     def has_change_permission(self, request, obj=None):
         if obj:
