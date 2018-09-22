@@ -23,7 +23,7 @@
         {% endblocktrans %}</h1>
       </div>
     {% endfor %}
-    {% get_flatpages '/home/main/' as main_pages %}
+    {% get_flatpages '/home/main/' for request.user as main_pages %}
     {% for page in main_pages %}
       <div class="w3-margin w3-padding w3-white">
         <h3 class="">{{page.title}}</h3>
