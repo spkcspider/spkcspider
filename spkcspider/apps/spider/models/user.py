@@ -181,6 +181,10 @@ class UserComponent(models.Model):
         return UserComponent.objects.get(user=self.user, name="index")
 
     @property
+    def is_index(self):
+        return (self.name in ("index", "fake_index"))
+
+    @property
     def name_protected(self):
         """ Is it allowed to change the name """
         return self.name in protected_names

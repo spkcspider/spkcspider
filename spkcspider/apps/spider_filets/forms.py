@@ -4,6 +4,7 @@ __all__ = ["FileForm", "TextForm", "RawTextForm"]
 import bleach
 from bleach import sanitizer
 
+from django.conf import settings
 from django import forms
 
 from spkcspider.apps.spider.helpers import get_settings_func
@@ -20,6 +21,7 @@ class FakeList(object):
 
 styles = FakeList()
 svg_props = FakeList()
+_extra = '' if settings.DEBUG else '.min'
 
 
 def check_attrs_func(tag, name, value):
@@ -75,8 +77,8 @@ class TextForm(forms.ModelForm):
             ]
         }
         js = [
-            'admin/js/vendor/jquery/jquery.min.js',
-            'node_modules/trumbowyg/dist/trumbowyg.min.js',
+            'admin/js/vendor/jquery/jquery%s.js' % _extra,
+            'node_modules/trumbowyg/dist/trumbowyg%s.js' % _extra,
             'node_modules/trumbowyg/dist/plugins/pasteimage/trumbowyg.pasteimage.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/base64/trumbowyg.base64.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/history/trumbowyg.history.min.js',  # noqa: E501

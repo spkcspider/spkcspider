@@ -33,12 +33,12 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       </span>
     {% endif %}
     <h1 class="w3-center">
-      {% if form.instance.id and form.instance.name == "index" %}
+      {% if form.instance.id and form.instance.is_index %}
         {% trans 'Change Login Protection' %}
       {% elif form.instance.id %}
         {% blocktrans trimmed %}
           Change Component:
-        {% endblocktrans %} <b>form.instance.name</b>
+        {% endblocktrans %} <b>{{form.instance}}</b>
       {% else %}
         {% trans 'Create new Component' %}
       {% endif %}
