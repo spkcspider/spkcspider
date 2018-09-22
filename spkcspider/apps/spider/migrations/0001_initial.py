@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name='AssignedContent',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('nonce', models.SlugField(default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
+                ('nonce', models.SlugField(db_index=False, default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('deletion_requested', models.DateTimeField(blank=True, default=None, null=True)),
@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Protection',
             fields=[
-                ('code', models.SlugField(max_length=10, primary_key=True, serialize=False)),
+                ('code', models.SlugField(db_index=False, max_length=10, primary_key=True, serialize=False)),
                 ('ptype', models.CharField(default='b', max_length=10)),
             ],
         ),
@@ -86,10 +86,10 @@ class Migration(migrations.Migration):
             name='UserComponent',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('nonce', models.SlugField(default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
+                ('nonce', models.SlugField(db_index=False, default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
                 ('public', models.BooleanField(default=False, help_text='Is public? Can be searched?<br/>Note: Field is maybe blocked by assigned content')),
                 ('required_passes', models.PositiveIntegerField(default=0, help_text='How many protection must be passed? Set greater 0 to enable protection based access')),
-                ('name', models.SlugField(help_text='\nName of the component.<br/>\nNote: there are special named components\nwith different protection types and scopes.<br/>\nMost prominent: "index" for authentication\n')),
+                ('name', models.SlugField(db_index=False, help_text='\nName of the component.<br/>\nNote: there are special named components\nwith different protection types and scopes.<br/>\nMost prominent: "index" for authentication\n')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('token_duration', models.DurationField(default=datetime.timedelta(7))),

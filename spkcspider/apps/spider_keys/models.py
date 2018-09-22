@@ -264,13 +264,14 @@ class AnchorKey(AnchorServer):
         return AnchorKeyForm
 
 
+# TODO: implement
 # @add_content
 class AnchorGov(object):
     """
         Anchor by Organisation, e.g. government,
         verifier returns token pointing to url
     """
-    idtype = models.CharField(max_length=10, null=False, choices=ID_VARIANTS)
+    url = models.URLField()
     token = models.CharField(max_length=100, null=False)
 
     appearances = [

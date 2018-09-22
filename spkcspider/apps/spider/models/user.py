@@ -51,7 +51,8 @@ class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
     nonce = models.SlugField(
-        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3
+        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3,
+        db_index=False
     )
     public = models.BooleanField(
         default=False,
@@ -76,6 +77,7 @@ class UserComponent(models.Model):
     name = models.SlugField(
         max_length=50,
         null=False,
+        db_index=False,
         help_text=_name_help
     )
     user = models.ForeignKey(
@@ -206,7 +208,8 @@ class AuthToken(models.Model):
     # brute force protection
     #  16 = usercomponent.id in hexadecimal
     token = models.SlugField(
-        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid
+        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
+        db_index=True
     )
     created = models.DateTimeField(auto_now_add=True, editable=False)
 

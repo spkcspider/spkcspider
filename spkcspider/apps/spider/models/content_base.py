@@ -37,7 +37,7 @@ class ContentVariant(models.Model):
         max_length=10, default=""
     )
     code = models.CharField(max_length=255)
-    name = models.SlugField(max_length=50, unique=True)
+    name = models.SlugField(max_length=50, unique=True, db_index=True)
     # required protection strength (selection)
     strength = models.PositiveSmallIntegerField(
         default=0, validators=[validators.MaxValueValidator(10)]
@@ -96,7 +96,8 @@ class AssignedContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
     nonce = models.SlugField(
-        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3
+        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3,
+        db_index=False
     )
     # fix linter warning
     objects = models.Manager()
