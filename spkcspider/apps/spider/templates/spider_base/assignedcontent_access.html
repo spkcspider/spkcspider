@@ -30,33 +30,31 @@
     {% endif %}
     <span class="w3-right">
       {% if scope != "add" and request.user == uc.user %}
-        <div style="margin-bottom:5px">
-          <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
-            {% trans 'Delete' %}
-          </a>?
-        </div>
-        <div style="margin-bottom:5px">
-          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='export' %}">{% trans 'Export' %}</a>
-        </div>
+      <div class="actionbar_user" style="margin-bottom:5px">
+        <a href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
+          {% trans 'Delete' %}
+        </a>
         {% if scope != "view" %}
-        <div style="margin-bottom:5px">
-          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{spider_GET.urlencode}}">
+          <a  style="margin-left:5px" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{spider_GET.urlencode}}">
             {% trans "View" %}
           </a>
-        </div>
         {% endif %}
-        {% if scope != "add" and scope != "update" %}
-        <div style="margin-bottom:5px">
-          <a class="" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='update' %}?{{spider_GET.urlencode}}">
+        {% if scope != "update" %}
+          <a  style="margin-left:5px" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='update' %}?{{spider_GET.urlencode}}">
             {% trans "Update" %}
           </a>
-        </div>
+        {% endif %}
+      </div>
       {% endif %}
-      <div>
+      {% if scope != "add" %}
+      <div style="margin-bottom:5px; text-align:right">
+        <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">{% trans 'Link/Export' %}</a>
+      </div>
+      {% endif %}
+      <div style="text-align:right">
         {% trans "Strength:" %} {{uc.strength}}
       </div>
     </span>
-    {% endif %}
     <h1 class="w3-center">
       {% if scope == "add" %}
         {% trans object.name as local_name %}

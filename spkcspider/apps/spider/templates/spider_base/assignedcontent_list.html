@@ -15,13 +15,13 @@
     {% endif %}
     <span class="w3-right">
       {% if request.user == uc.user %}
-      <div style="margin-bottom:5px">
+      <div style="margin-bottom:5px" class="actionbar_user">
         <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">{% trans 'Update' %}</a>
       </div>
-      <div style="margin-bottom:5px">
-        <a class="" href="{% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce %}">{% trans 'Export' %}</a>
-      </div>
       {% endif %}
+      <div style="margin-bottom:5px">
+        <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">{% trans 'Link/Export' %}</a>
+      </div>
       <div>
         {% trans "Strength:" %} {{uc.strength}}
       </div>
