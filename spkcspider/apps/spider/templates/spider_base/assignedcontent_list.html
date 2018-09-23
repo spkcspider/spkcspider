@@ -1,8 +1,10 @@
 {% extends "spider_base/uc_base.html" %}
 {% load i18n static spider_base %}
-{% block title %}{% blocktrans trimmed with name=uc.name %}
-    Content of: {{name}}
-{% endblocktrans %}{% endblock %}
+{% block title %}{% if uc.public %}{% blocktrans trimmed %}
+  Content of:
+{% endblocktrans %} {{uc}} ({{uc.username}}){% else %}{% blocktrans trimmed %}
+  Content List
+{% endblocktrans %}{% endif %}{% endblock %}
 
 {% block extrahead %}
 <script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
@@ -29,11 +31,11 @@
     <h1 class="w3-center">
       {% if request.is_owner or uc.public %}
         {% blocktrans trimmed %}
-          Content of Component:
-        {% endblocktrans %} <b>{{name}}</b>
+          Content of:
+        {% endblocktrans %} <b>{{uc}}</b> <em>({{uc.username}})</em>
       {% else %}
         {% blocktrans trimmed %}
-          Contents:
+          Content:
         {% endblocktrans %}
       {% endif %}
     </h1>
