@@ -1,7 +1,7 @@
 {% extends "spider_base/nouc_base.html" %}
 {% load i18n %}
-{% block title %}{% if component_user %}
-  {% blocktrans trimmed with name=component_user %}
+{% block title %}{% if not request.is_owner %}
+  {% blocktrans trimmed with name=uc.username %}
     Component List of {{name}}
   {% endblocktrans %}
 {% else %}{% blocktrans trimmed %}
@@ -43,7 +43,7 @@
             {% if uc.name == 'index' or uc.name == 'fake_index' %}
               {% trans 'Private Component' %}
             {% else %}
-              {{ uc.name }}{% if not component_user %} <em>({{uc.user}})</em>{% endif %}
+              {{ uc.name }}{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
             {% endif %}
           </td>
           <td>
