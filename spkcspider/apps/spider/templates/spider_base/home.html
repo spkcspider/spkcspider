@@ -46,7 +46,7 @@
         {% for uc in object_list %}
           <tr>
             <td style="width:40%; min-height:48px">
-              {{uc.user}} - {{ uc.name }}
+              {{ uc.name }} <em>({{uc.user}})</em>
             </td>
             <td>
               {% blocktrans trimmed with time=uc.modified|timesince %}

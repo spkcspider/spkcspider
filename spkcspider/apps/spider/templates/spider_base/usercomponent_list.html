@@ -43,7 +43,7 @@
             {% if uc.name == 'index' or uc.name == 'fake_index' %}
               {% trans 'Private Component' %}
             {% else %}
-              {% if not component_user %}{{uc.user}} - {% endif %}{{ uc.name }}
+              {{ uc.name }}{% if not component_user %} <em>({{uc.user}})</em>{% endif %}
             {% endif %}
           </td>
           <td>
