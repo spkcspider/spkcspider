@@ -1,7 +1,11 @@
 
 jQuery.noConflict();
+var trumbowyg_initialized = false;
 
 jQuery( document ).ready(function( $ ) {
+  if (trumbowyg_initialized)
+    return;
+  trumbowyg_initialized = true;
   $('#id_content').trumbowyg({
     btns: [
         ['viewHTML'],
