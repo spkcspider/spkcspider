@@ -32,11 +32,15 @@ from ..helpers import get_settings_func
 
 class ContentBase(UCTestMixin):
     model = AssignedContent
-    # Views should use one template to render usercontent (whatever it is)
-    template_name = 'spider_base/assignedcontent_access.html'
     scope = None
     object = None
     no_nonce_usercomponent = True
+
+    def get_template_names(self):
+        if self.scope in ("add", "update"):
+            return ['spider_base/assignedcontent_form.html']
+        else:
+            return ['spider_base/assignedcontent_access.html']
 
     def dispatch(self, request, *args, **kwargs):
         _scope = kwargs.get("access", None)
@@ -144,8 +148,6 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
                 return rendered
 
             context["content"] = rendered
-        if self.scope == "update":
-            context["render_in_form"] = True
         return super().render_to_response(context)
 
     def get_usercomponent(self):
@@ -418,7 +420,6 @@ class ContentAdd(ContentBase, ModelFormMixin,
         ob = context["content_type"].static_create(
             associated=ucontent, **context
         )
-        context["render_in_form"] = True
         rendered = ob.render(**ob.kwargs)
 
         # return response if content returned response

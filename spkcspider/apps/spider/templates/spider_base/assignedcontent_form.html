@@ -1,0 +1,39 @@
+{% extends "spider_base/assignedcontent_access.html" %}
+{% load i18n %}
+
+{% block render_content %}
+{% include "spider_base/form_errors.html" with form=form %}
+<form class="w3-padding" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
+  {% csrf_token %}
+  <fieldset>
+    <legend><h2>{% trans 'Content Settings' %}</h2></legend>
+    {% include "spider_base/base_form.html" with form=form %}
+  </fieldset>
+  {% if content %}
+    <fieldset>
+      <legend><h2>{% if scope == "add" %}{{object}}{% else %}{{object.associated.ctype}}{% endif %}</h2></legend>
+      {{content.0|safe}}
+    </fieldset>
+  {% endif %}
+  <button class="w3-button w3-grey">
+    {% if scope == "add" %}
+      {% trans 'Create' %}
+    {% else %}
+      {% trans 'Update' %}
+    {% endif %}
+  </button>
+
+  {% if scope == "update" and UserContentType.raw_update in associated.ctype %}
+    <a class="w3-button w3-grey" href="{% url 'ucontent-access' id=object.id nonce=object.nonce access='raw_update' %}">
+      <i class="fa fa-settings" aria-hidden="true"></i>
+      {% trans 'Update Raw Content' %}
+    </a>
+  {% endif %}
+
+  {% if scope != "add" %}
+    <a class="w3-right" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{request.GET.urlencode}}">
+      {% trans "View" %}
+    </a>
+  {% endif %}
+</form>
+{% endblock %}
