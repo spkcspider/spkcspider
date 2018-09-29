@@ -13,10 +13,11 @@ saved in a spider component which you provide the online shop. This has followin
   Also if you travel and want to buy something on the way.
 * Verification of Data
 * Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
-* Travelling: some people don't respect common rules for privacy. This allows to keep your life private. First you don't have it on the device, secondly you can hide it with the travel mode (against the worst kind of inspectors)
-  * for governments: even you are civilized do you really want to expose your citizen to some untrusted countries? Will traveller from other countries accept getting exposed? The best compromise is to give people power over their data even it has certain disadvantages for you.
-  * for users:
+* Travelling: some people don't respect common rules for privacy. This allows to keep your life private.
+  * You don't have it on the device
+  * You can hide your data with the travel mode (against the worst kind of inspectors)
     * Note: traces could be still existent (like "recently-used" feature)
+  * for governments: the data can still be acquired on other ways. So why bothering the travel mode?
 
 
 # Installation
