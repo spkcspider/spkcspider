@@ -84,10 +84,14 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 
 ## authentication/privileges
 
-* request.is_priv_requester: is private/privileged access. Fullfilled if:
-  * is privileged: user, staff, admin
-  * non public
-  * protections were fullfilled? Maybe later, needs design
+* request.is_elevated_request:
+  * Fullfilled if:
+    * user has some privileges: owner, staff, admin
+    * passed protections of strength >= MIN_STRENGTH_EVELATION = 2 by default
+  * Purpose:
+    * protect bad protected content
+
+
 * request.is_owner: requesting user owns the components
 * request.protections: True: enough protections were fullfilled, list: protections which failed, False: no access, no matter what
 
@@ -106,7 +110,6 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 * 5: public attribute not set
 * 6-9: protections + public attribute not set
 * 10: index, can be used in combination with unique attribute to create a component unique to user
-
 
 # External usage
 

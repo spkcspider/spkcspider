@@ -177,7 +177,7 @@ class TextFilet(BaseContent):
         if self.editable_from.filter(
             pk=source.pk
         ).exists():
-            if kwargs["request"].is_priv_requester:
+            if kwargs["request"].is_elevated_request:
                 kwargs["no_button"] = None
                 kwargs["legend"] = _("Update \"%s\"") % self.__str__()
                 kwargs["confirm"] = _("Update")

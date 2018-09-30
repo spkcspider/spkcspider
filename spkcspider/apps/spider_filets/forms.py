@@ -97,12 +97,16 @@ class TextForm(forms.ModelForm):
             return
 
         del self.fields["editable_from"]
+        self.fields["name"].disabled = True
+
         allow_edit = False
-        if self.instance.editable_from.filter(pk=source.pk).exists():
-            if request.is_priv_requester:
+        if self.instance.editable_from.filter(
+            pk=source.pk
+        ).exists():
+            if request.is_elevated_request:
                 allow_edit = True
 
-        self.fields["text"].editable = allow_edit
+        self.fields["text"].disabled = not allow_edit
 
     def clean_text(self):
         return bleach.clean(

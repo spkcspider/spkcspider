@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.utils import timezone
+from django.conf import settings
 
 from ..constants import ProtectionType, UserContentType
 from ..models import (
@@ -19,7 +20,7 @@ class UserTestMixin(AccessMixin):
     also_authenticated_users = False
 
     def dispatch(self, request, *args, **kwargs):
-        self.request.is_priv_requester = False
+        self.request.is_elevated_request = False
         self.request.is_owner = False
         user_test_result = self.test_func()
         if not user_test_result:
@@ -84,7 +85,6 @@ class UserTestMixin(AccessMixin):
             if token:
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
-                # self.request.is_priv_requester = True
                 return True
 
         protection_codes = None
@@ -99,7 +99,6 @@ class UserTestMixin(AccessMixin):
             # token not required
             if no_token:
                 return True
-            # self.request.is_priv_requester = True
             token = AuthToken(
                 usercomponent=self.usercomponent,
                 session_key=self.request.session.session_key
@@ -126,19 +125,19 @@ class UserTestMixin(AccessMixin):
     def has_special_access(self, user=True, staff=False, superuser=True):
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
-        if not self.usercomponent.public:
-            self.request.is_priv_requester = True
+        if self.usercomponent.strength >= settings.MIN_STRENGTH_EVELATION:
+            self.request.is_elevated_request = True
         if self.request.user == self.usercomponent.user:
-            self.request.is_priv_requester = True
+            self.request.is_elevated_request = True
             self.request.is_owner = True
             return True
         if self.request.session.get("is_fake", False):
             return False
         if superuser and self.request.user.is_superuser:
-            self.request.is_priv_requester = True
+            self.request.is_elevated_request = True
             return True
         if staff and self.request.user.is_staff:
-            self.request.is_priv_requester = True
+            self.request.is_elevated_request = True
             return True
         return False
 
