@@ -71,13 +71,15 @@ class UserComponent(models.Model):
     )
     # fix linter warning
     objects = models.Manager()
-    # special name: index:
+    # special name: index, (fake_index):
     #    protections are used for authentication
     #    attached content is only visible for admin and user
+    # db_index=True: "index", "fake_index" requests can speed up
     name = models.SlugField(
         max_length=50,
         null=False,
-        db_index=False,
+        db_index=True,
+        allow_unicode=True,
         help_text=_name_help
     )
     user = models.ForeignKey(
