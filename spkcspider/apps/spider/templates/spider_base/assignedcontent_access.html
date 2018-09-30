@@ -64,13 +64,11 @@
       {% elif scope == "update" %}
         {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed %}
-          Update:
-        {% endblocktrans %} <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
+          Update
+        {% endblocktrans %} "<b>{{object}}</b>" <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
       {% else %}
         {% trans object.ctype.name as local_name %}
-        {% blocktrans trimmed with name=object %}
-          View:
-        {% endblocktrans %} <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
+        <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
       {% endif %}
     </h1>
     {% if request.token_expires %}
