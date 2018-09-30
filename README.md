@@ -24,7 +24,7 @@ saved in a spider component which you provide the online shop. This has followin
 
 This project can either be used as a standalone project (clone repo) or as a set of reusable apps (setup.py installation).
 
-spkcspider.apps.spideraccounts: user implementation suitable for the spiders, you may want to use your own user model
+spkcspider.apps.spideraccounts: user implementation suitable for the spiders. You can supply your own user model instead.
 
 spkcspider.apps.spider: store User Components, common base, WARNING: has spider_base namespace to not break existing apps
 
@@ -131,7 +131,7 @@ verified_by urls should return hashname:hash_hexdigest
 # TODO
 
 * layout: verifiers+examples
-* layout: cleanup defaults
+* fix search
 * improve anchors
 * tests
 
