@@ -95,6 +95,9 @@ class UserComponentForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        if 'name' not in self.cleaned_data:
+            # ValidationError so return, calculations won't work here
+            return
         if not self.instance or not getattr(self.instance, "id", None):
             # TODO: cleanup into protected_names/forbidden_names
             if self.cleaned_data['name'] in ("index", "fake_index"):

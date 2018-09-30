@@ -343,10 +343,9 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             self.kwargs["name"] != self.object.name
         ):
             return redirect(
-                "spider_base:ucomponent-update", kwargs={
-                    "name": self.object.name,
-                    "nonce": self.object.nonce
-                }
+                "spider_base:ucomponent-update",
+                name=self.object.name,
+                nonce=self.object.nonce
             )
         return self.render_to_response(
             self.get_context_data(
