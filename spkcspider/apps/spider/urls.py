@@ -13,6 +13,9 @@ from .views import (
 app_name = "spider_base"
 
 # uc = UserComponent
+# name = UserComponent.name
+# UserComponent.name contains unicode => str
+
 urlpatterns = [
     path(
         'ucs/user/<slug:user>/export/',
@@ -40,17 +43,17 @@ urlpatterns = [
         name='ucomponent-create'
     ),
     path(
-        'ucs/update/<slug:user>/<slug:name>/<slug:nonce>/',
+        'ucs/update/<slug:user>/<str:name>/<slug:nonce>/',
         login_required(ComponentUpdate.as_view()),
         name='ucomponent-update'
     ),
     path(
-        'ucs/update/<slug:name>/<slug:nonce>/',
+        'ucs/update/<str:name>/<slug:nonce>/',
         login_required(ComponentUpdate.as_view()),
         name='ucomponent-update'
     ),
     path(
-        'ucs/delete/<slug:user>/<slug:name>/<slug:nonce>/',
+        'ucs/delete/<slug:user>/<str:name>/<slug:nonce>/',
         login_required(ComponentDelete.as_view()),
         name='ucomponent-delete'
     ),
@@ -71,7 +74,7 @@ urlpatterns = [
     #     name='ucontent-add'
     # ),
     path(
-        'ucs/add/<slug:name>/<slug:type>/',
+        'ucs/add/<str:name>/<slug:type>/',
         login_required(ContentAdd.as_view()),
         name='ucontent-add'
     ),
@@ -81,7 +84,7 @@ urlpatterns = [
         name='ucontent-access'
     ),
     path(
-        'content/remove/<slug:user>/<slug:name>/<int:id>/<slug:nonce>/',
+        'content/remove/<slug:user>/<str:name>/<int:id>/<slug:nonce>/',
         login_required(ContentRemove.as_view()),
         name='ucontent-remove'
     ),
