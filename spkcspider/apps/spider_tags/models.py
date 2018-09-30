@@ -79,7 +79,7 @@ class UserTagLayout(BaseContent):
             return TagLayoutForm
         else:
             ret = self.layout.get_form()
-            if scope not in ["update", "update_raw"]:
+            if scope not in ["update", "raw_update"]:
                 for i in ret.fields:
                     i.disabled = True
             return ret

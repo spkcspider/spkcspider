@@ -172,6 +172,16 @@ class BaseContent(models.Model):
             })
         return fkwargs
 
+    # default scopes:
+    #  public accessible:
+    #   raw: view with raw parameter
+    #   list: raw but embedded in content list
+    #   view: view of conten without raw parameter
+    #  only accessible by owner and staff:
+    #   add: create view of content
+    #   update: update view of content
+    #   raw_update: special update mode for machines or really fancy updates
+    #   export: like raw just optimized for export: e.g. no dereferencing
     def get_form(self, scope):
         raise NotImplementedError
 

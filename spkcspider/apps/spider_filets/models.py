@@ -156,7 +156,7 @@ class TextFilet(BaseContent):
         return self.name
 
     def get_form(self, scope):
-        if scope in ("raw", "export"):
+        if scope in ("raw", "export", "list"):
             from .forms import RawTextForm as f
         else:
             from .forms import TextForm as f

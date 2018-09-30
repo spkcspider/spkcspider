@@ -13,13 +13,13 @@
       <canvas id="qrcanvas"></canvas>
     </div>
     <div class="w3-container">
-      <div class="w3-text-black">
-        {# # important for href check, elsewise same url #}
+      <div class="w3-text-black" id="nativelink_wrapper">
+        {# important for href check, elsewise same url #}
         {% trans "Link"%}: <a type="text" href="#" id="nativelink"></a>
       </div>
-      <div>
-        {# # important for href check, elsewise same url #}
-        <a href="#" class="w3-text-black" id="rawlink">{% trans "Raw" %}</a>
+      <div class="w3-text-black" id="rawlink_wrapper">
+        {# important for href check, elsewise same url #}
+        <a href="#" id="rawlink">{% trans "Raw" %}</a>
       </div>
       <a class="w3-text-black" style="display:none;" id="exportlink" href="">{% trans 'Export' %}</a>
     </div>
@@ -33,7 +33,9 @@ function open_qrmodal(){
   let _qrcanvas = document.getElementById('qrcanvas');
   let nativelink_link = document.getElementById('nativelink');
   let rawlink_link = document.getElementById('rawlink');
+  let rawlink_wrapper = document.getElementById('rawlink_wrapper');
   let exportlink_link = document.getElementById('exportlink');
+  rawlink_wrapper.style.display = "block";
   if (nativelink_link.href != nativelink){
     if (nativelink.slice(-1)=="?"){
       rawlink_link.href = `${nativelink}raw=true`;
@@ -54,6 +56,7 @@ function open_qrmodal(){
     exportlink_link.href = exportlink;
     exportlink_link.style.display = "block";
   } else {
+    exportlink_link.href = "";
     exportlink_link.style.display = "none";
   }
   document.getElementById('qrpresenter').style.display='block';

@@ -22,7 +22,6 @@ from django.utils.duration import duration_string
 
 from ._core import UCTestMixin
 from ._components import ComponentDelete
-from ..constants import UserContentType
 from ..models import (
     AssignedContent, ContentVariant, UserComponent
 )
@@ -46,7 +45,8 @@ class ContentBase(UCTestMixin):
         _scope = kwargs.get("access", None)
         if self.scope == "access":
             # special scopes which should be not available as url parameter
-            if _scope in ["add", "list"]:
+            # raw is also deceptive because view and raw=? = raw scope
+            if _scope in ["add", "list", "raw"]:
                 raise PermissionDenied("Deceptive scopes")
             self.scope = _scope
         return super().dispatch(request, *args, **kwargs)
@@ -134,20 +134,15 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         return False
 
     def render_to_response(self, context):
-        if self.scope != "update" or \
-           UserContentType.raw_update.value not in self.object.ctype.ctype:
-            rendered = self.object.content.render(
-                **context
-            )
-            if UserContentType.raw_update.value in \
-               self.object.ctype.ctype:
-                return rendered
-            # return response if content returned response
-            # useful for redirects
-            if isinstance(rendered, HttpResponseBase):
-                return rendered
+        rendered = self.object.content.render(
+            **context
+        )
+        # return response if content returned response
+        # useful for redirects and raw update
+        if isinstance(rendered, HttpResponseBase):
+            return rendered
 
-            context["content"] = rendered
+        context["content"] = rendered
         return super().render_to_response(context)
 
     def get_usercomponent(self):
@@ -291,7 +286,7 @@ class ContentIndex(UCTestMixin, ListView):
             )
 
     def render_to_response(self, context):
-        if context["scope"] not in ["export", "raw"]:
+        if context["scope"] != "export" and "raw" not in self.request.GET:
             return super().render_to_response(context)
 
         session_dict = {
