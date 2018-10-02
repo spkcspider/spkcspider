@@ -9,35 +9,42 @@ __all__ = [
 ]
 
 import logging
+import re
 from datetime import timedelta
 
 from django.db import models
+from django.shortcuts import redirect
 from django.utils.translation import gettext
 from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from ..contents import BaseContent, add_content
-from ..constants.static import TravelLoginType, MAX_NONCE_SIZE
+from ..constants.static import (
+    TravelLoginType, UserContentType, MAX_NONCE_SIZE
+)
 
 logger = logging.getLogger(__name__)
+
+_replace_id = re.compile("^id=[0-9]+$")
 
 
 @add_content
 class LinkContent(BaseContent):
-    appearances = [{"name": "Link"}]
+    appearances = [{
+        "name": "Link",
+        "ctype": UserContentType.raw_update.value
+    }]
 
     content = models.ForeignKey(
         "spider_base.AssignedContent", related_name="+",
         on_delete=models.CASCADE
     )
+    is_fake = models.BooleanField(default=False, editable=False)
 
     def __str__(self):
         if getattr(self, "content", None):
-            if (
-                self.content.usercomponent.name == "index" and
-                self.associated.usercomponent.name == "fake_index"
-            ):
+            if self.is_fake:
                 return self.content.__str__()
             return "Link: <%s>" % self.content
         else:
@@ -45,10 +52,7 @@ class LinkContent(BaseContent):
 
     def __repr__(self):
         if getattr(self, "content", None):
-            if (
-                self.content.usercomponent.name == "index" and
-                self.associated.usercomponent.name == "fake_index"
-            ):
+            if self.is_fake:
                 return self.content.__repr__()
             return "<Link: %r>" % self.content
         else:
@@ -58,28 +62,31 @@ class LinkContent(BaseContent):
         return self.content.content.get_strength()
 
     def get_strength_link(self):
+        if self.is_fake:
+            return self.content.content.get_strength_link()
         # don't allow links linking on links
         return 11
 
     def get_info(self):
         ret = self.content.content.get_info()
-        if (
-            self.content.usercomponent.name == "index" and
-            self.associated.usercomponent.name == "fake_index"
-        ):
-            return ret
+        if self.is_fake:
+            id_info = "id={}".format(self.id) if self.id else "id=None"
+            return _replace_id.replace(ret, id_info)
         return "%ssource=%s\nlink\n" % (
             ret, self.associated.pk
         )
 
     def get_form(self, scope):
         from ..forms import LinkForm
-        if scope in ["add", "update", "export", "raw"]:
+        if not self.is_fake and scope in ["add", "update", "export", "raw"]:
             return LinkForm
         return self.content.content.get_form(scope)
 
     def get_form_kwargs(self, **kwargs):
-        if kwargs["scope"] in ["add", "update", "export", "raw"]:
+        if (
+            not self.is_fake and
+            kwargs["scope"] in ["add", "update", "export", "raw"]
+        ):
             ret = super().get_form_kwargs(**kwargs)
             ret["uc"] = kwargs["uc"]
         else:
@@ -97,10 +104,7 @@ class LinkContent(BaseContent):
         return super().render_update(**kwargs)
 
     def render(self, **kwargs):
-        if (
-            self.content.usercomponent.name == "index" and
-            self.usercomponent.name == "fake_index"
-        ):
+        if self.is_fake:
             kwargs["uc"] = self.content.usercomponent
             # no source! trick content because fake
             return self.content.content.render()
@@ -108,6 +112,13 @@ class LinkContent(BaseContent):
             return self.render_add(**kwargs)
         elif kwargs["scope"] == "update":
             return self.render_update(**kwargs)
+        elif kwargs["scope"] == "raw_update":
+            return redirect(
+                'spider_base:ucontent-access',
+                id=self.content.id,
+                nonce=self.content.nonce,
+                access='update'
+            )
         elif kwargs["scope"] == "export":
             return self.render_serialize(**kwargs)
 

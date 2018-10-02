@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 
 
 from .views import (
-    ComponentIndex, ComponentAllIndex, ComponentCreate,
+    ComponentIndex, ComponentPublicIndex, ComponentCreate,
     ComponentUpdate, ComponentDelete
 )
 from .views import (
@@ -90,7 +90,7 @@ urlpatterns = [
     ),
     path(
         'ucs/',
-        ComponentAllIndex.as_view(is_home=False),
-        name='ucomponent-listall'
+        ComponentPublicIndex.as_view(is_home=False),
+        name='ucomponent-listpublic'
     ),
 ]

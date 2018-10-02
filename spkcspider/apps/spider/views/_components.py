@@ -1,6 +1,6 @@
 
 __all__ = (
-    "ComponentIndex", "ComponentAllIndex", "ComponentCreate",
+    "ComponentIndex", "ComponentPublicIndex", "ComponentCreate",
     "ComponentUpdate", "ComponentDelete"
 )
 
@@ -25,7 +25,7 @@ from ..models import UserComponent, TravelProtection
 from ..helpers import get_settings_func
 
 
-class ComponentAllIndex(ListView):
+class ComponentPublicIndex(ListView):
     model = UserComponent
     is_home = False
 
@@ -69,13 +69,10 @@ class ComponentAllIndex(ListView):
         q = models.Q(public=True)
         if self.is_home:
             q &= models.Q(featured=True)
-        else:
-            if self.request.user.is_authenticated:
-                q |= models.Q(user=self.request.user)
-        main_query = self.model.objects.prefetch_related('contents').filter(
-            q & searchq & ~models.Q(name__in=("index", "fake_index"))
-        )
-        return main_query.order_by(*self.get_ordering()).distinct()
+        main_query = self.model.objects.filter(
+            q & searchq
+        ).order_by(*self.get_ordering()).distinct()
+        return main_query
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
@@ -197,7 +194,9 @@ class ComponentIndex(UCTestMixin, ListView):
         else:
             searchq &= ~models.Q(name="fake_index")
 
-        return super().get_queryset().filter(searchq).distinct()
+        return super().get_queryset().prefetch_related(
+            'contents'
+        ).filter(searchq).distinct()
 
     def get_usercomponent(self):
         ucname = "index"

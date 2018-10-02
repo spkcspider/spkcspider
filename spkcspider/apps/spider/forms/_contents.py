@@ -19,7 +19,7 @@ class LinkForm(forms.ModelForm):
         travel = TravelProtection.objects.get_active()
         self.fields["content"].queryset = q.filter(
             strength__lte=uc.strength
-        ).exclude(travel)
+        ).exclude(usercomponent__travel_protected__in=travel)
 
 
 class TravelProtectionForm(forms.ModelForm):

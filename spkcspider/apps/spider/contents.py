@@ -256,16 +256,22 @@ class BaseContent(models.Model):
         AssignedContent = django_apps.get_model(
             "spider_base", "AssignedContent"
         )
+        save_field_order = False
+        # [] is also False
+        if context.get("current_order", None) is not None:
+            save_field_order = True
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
+            if save_field_order:
+                context["current_order"][-1].append(name)
             if isinstance(value, AssignedContent):
                 _level = level-1
                 if (
-                        getattr(field, "force_embed", False) and
-                        # dereferencing would break stuff
-                        context["scope"] != "export"
-                   ):
+                    getattr(field, "force_embed", False) and
+                    # dereferencing would break stuff
+                    context["scope"] != "export"
+                ):
                     _level += 1
                 if _level > 0:
                     context["uc"] = value.associated.usercomponent
@@ -280,10 +286,16 @@ class BaseContent(models.Model):
                         ctype=self.associated.ctype.name,
                         info=self.associated.info
                     )
+                    if save_field_order:
+                        new_order = []
+                        context["current_order"][-1].append(new_order)
+                        context["current_order"].append(new_order)
                     self.extract_form(
                         context, datadic[name], prefix=pref,
                         zipf=zipf, level=_level, form=form2,
                     )
+                    if save_field_order:
+                        context["current_order"].pop(-1)
                 else:
                     datadic[name] = {
                         "pk": value.pk,
@@ -335,6 +347,9 @@ class BaseContent(models.Model):
             expires=None  # replaced with expire date of token
         )
         session_dict["store_dict"] = store_dict
+        if kwargs["scope"] != "export":
+            store_dict["field_order"] = []
+            session_dict["current_order"] = [store_dict["field_order"]]
         if hasattr(kwargs["request"], "token_expires"):
             store_dict["expires"] = kwargs["request"].token_expires.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"

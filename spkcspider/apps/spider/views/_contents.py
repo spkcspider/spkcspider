@@ -277,6 +277,9 @@ class ContentIndex(UCTestMixin, ListView):
                 )
             )
             context["store_dict"] = store_dict
+            if context["scope"] != "export":
+                store_dict["field_order"] = []
+                context["current_order"] = [store_dict["field_order"]]
             content.content.extract_form(
                 context, store_dict, zip, level=deref_level,
                 prefix="{}/".format(n)
@@ -299,7 +302,7 @@ class ContentIndex(UCTestMixin, ListView):
 
         store_dict = OrderedDict(
             name=self.usercomponent.name,
-            scope=context["scope"]
+            scope=context["scope"],
         )
         session_dict["store_dict"] = store_dict
         if context["scope"] == "export":

@@ -20,7 +20,7 @@ from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.apps import apps
-from spkcspider.apps.spider.views import ComponentAllIndex
+from spkcspider.apps.spider.views import ComponentPublicIndex
 
 favicon_view = RedirectView.as_view(
     url='{}spider_base/favicon.svg'.format(settings.STATIC_URL), permanent=True
@@ -63,7 +63,7 @@ urlpatterns += [
     path('robots.txt', robots_view),
     path(
         '',
-        ComponentAllIndex.as_view(
+        ComponentPublicIndex.as_view(
             is_home=True, template_name="spider_base/home.html"
         ),
         name="home"

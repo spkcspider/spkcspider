@@ -9,12 +9,17 @@
 {% endblocktrans %}{% endif %}{% endblock %}
 
 {% block content %}
-  {% url 'spider_base:ucomponent-listall' as listall %}
+  {% url 'spider_base:ucomponent-listpublic' as listpublic %}
   <div>
-    {% if listall == request.path %}
-    <a class="w3-left" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
+    {% if listpublic == request.path %}
+    <span class="w3-left">
+      <a class="w3-block" style="margin-bottom:10px" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
+      <a class="w3-block" href="{% url 'spider_base:ucomponent-list' %}?{{request.GET.urlencode}}">{% trans 'Owned' %}</a>
+    </span>
     {% else %}
-    <a class="w3-left" href="{% url 'spider_base:ucomponent-listall' %}?{{request.GET.urlencode}}">{% trans 'Index' %}</a>
+    <span class="w3-left">
+      <a class="" href="{% url 'spider_base:ucomponent-listpublic' %}?{{request.GET.urlencode}}">{% trans 'Index' %}</a>
+    </span>
     {% endif %}
     {% if request.user.is_authenticated %}
       <span class="w3-right">
@@ -32,13 +37,17 @@
       </span>
     {% endif %}
     <h1 class="w3-center">
-      {% trans "User Components" %}
+      {% if listpublic == request.path %}
+        {% trans "Public Components" %}
+      {% else %}
+        {% trans "Owned Components" %}
+      {% endif %}
     </h1>
   </div>
   <div class="w3-margin">
     <table class="w3-table w3-striped w3-bordered w3-hoverable">
       {% for uc in object_list %}
-        <tr class="{% if uc.name == 'index' or uc.name == 'fake_index' %}w3-yellow{% endif %}">
+        <tr class="color-front-{{uc.strength}}">
           <td class="{% if uc.name == 'index' or uc.name == 'fake_index' %}w3-large{% endif %}" style="width:40%; min-height:48px">
             {% if uc.name == 'index' or uc.name == 'fake_index' %}
               {% trans 'Private Component' %}
@@ -68,7 +77,7 @@
           </td>
         </tr>
       {% empty %}
-          <tr><td>{% trans 'No User Components available.' %}</td></tr>
+          <tr><td>{% trans 'No Components available.' %}</td></tr>
       {% endfor %}
     </table>
   </div>
