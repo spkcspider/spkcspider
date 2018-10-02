@@ -129,6 +129,7 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         kwargs["component_user"] = self.user
+        kwargs["username"] = getattr(self.user, self.user.USERNAME_FIELD)
         kwargs["scope"] = self.scope
         kwargs["nonpublic"] = True
         return super().get_context_data(**kwargs)
