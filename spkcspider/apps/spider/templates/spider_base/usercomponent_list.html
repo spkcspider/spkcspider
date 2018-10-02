@@ -1,12 +1,13 @@
 {% extends "spider_base/nouc_base.html" %}
 {% load i18n %}
-{% block title %}{% if not request.is_owner %}
-  {% blocktrans trimmed with name=uc.username %}
+{% block title %}{% if listpublic == request.path %}{% blocktrans trimmed %}
+  Public Components
+{% endblocktrans %}{% elif request.is_owner %}{% blocktrans trimmed %}
+  Owned Components
+{% endblocktrans %}{% else %}{% blocktrans trimmed with name=uc.username %}
     Component List of {{name}}
   {% endblocktrans %}
-{% else %}{% blocktrans trimmed %}
-  Component List
-{% endblocktrans %}{% endif %}{% endblock %}
+{% endif %}{% endblock %}
 
 {% block content %}
   {% url 'spider_base:ucomponent-listpublic' as listpublic %}
@@ -42,10 +43,13 @@
       </span>
     {% endif %}
     <h1 class="w3-center">
-      {% if listpublic == request.path %}
-        {% trans "Public Components" %}
-      {% else %}
-        {% trans "Owned Components" %}
+      {% if listpublic == request.path %}{% blocktrans trimmed %}
+        Public Components
+      {% endblocktrans %}{% elif request.is_owner %}{% blocktrans trimmed %}
+        Owned Components
+      {% endblocktrans %}{% else %}{% blocktrans trimmed with name=uc.username %}
+          Component List of {{name}}
+        {% endblocktrans %}
       {% endif %}
     </h1>
   </div>
