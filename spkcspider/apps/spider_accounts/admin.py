@@ -9,6 +9,9 @@ from .models import SpiderUser
 @admin.register(SpiderUser)
 class UserAdmin(user_admin.UserAdmin):
     # exclude = ["first_name", "last_name"]
+    list_display = ('username', 'active', 'email', 'is_staff')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    search_fields = ('username', 'email')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('email',)}),
