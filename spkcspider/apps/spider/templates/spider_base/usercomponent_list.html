@@ -1,6 +1,6 @@
 {% extends "spider_base/nouc_base.html" %}
 {% load i18n %}
-{% block title %}{% if listpublic == request.path %}{% blocktrans trimmed %}
+{% block title %}{% url 'spider_base:ucomponent-listpublic' as listpublic %}{% if listpublic == request.path %}{% blocktrans trimmed %}
   Public Components
 {% endblocktrans %}{% elif request.is_owner %}{% blocktrans trimmed %}
   Owned Components
