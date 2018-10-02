@@ -35,7 +35,7 @@
           </div>
         {% else %}
           <div style="text-align:right;">
-            <a href="{% url 'spider_base:ucomponent-export' user=username %}">
+            <a href="{% url 'spider_base:ucomponent-export' user=request.user %}">
               {% trans 'Export' %}
             </a>
           </div>
@@ -47,7 +47,7 @@
         Public Components
       {% endblocktrans %}{% elif request.is_owner %}{% blocktrans trimmed %}
         Owned Components
-      {% endblocktrans %}{% else %}{% blocktrans trimmed with name=uc.username %}
+      {% endblocktrans %}{% else %}{% blocktrans trimmed with name=username %}
           Component List of {{name}}
         {% endblocktrans %}
       {% endif %}
