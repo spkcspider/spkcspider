@@ -47,9 +47,9 @@
         Public Components
       {% endblocktrans %}{% elif request.is_owner %}{% blocktrans trimmed %}
         Owned Components
-      {% endblocktrans %}{% else %}{% blocktrans trimmed with name=username %}
+      {% endblocktrans %}{% else %}{% blocktrans trimmed %}
           Component List of
-        {% endblocktrans %} <b>{{name}}</b>
+        {% endblocktrans %} <b>{{username}}</b>
       {% endif %}
     </h1>
   </div>
