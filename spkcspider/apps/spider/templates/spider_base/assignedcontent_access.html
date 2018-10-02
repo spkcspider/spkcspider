@@ -12,13 +12,13 @@
 
 {% block extrahead %}
 {{block.super}}
-{% if content %}
-  {{content.1}}
-{% endif %}
-{% if form %}
-  {{form.media}}
-{% endif %}
 <script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
+{% if form %}
+  {{form.media|safe}}
+{% endif %}
+{% if content %}
+  {{content.1|safe}}
+{% endif %}
 {% endblock %}
 
 {% block main_classes %}{{block.super}}{% if not object %} w3-animate-bottom{% endif %}{% endblock %}

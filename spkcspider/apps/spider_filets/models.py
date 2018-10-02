@@ -189,5 +189,8 @@ class TextFilet(BaseContent):
                 "spider_filets/text.html", request=kwargs["request"],
                 context=kwargs
             ),
-            ""
+            render_to_string(
+                "spider_filets/text_head.html", request=kwargs["request"],
+                context=kwargs
+            )
         )
