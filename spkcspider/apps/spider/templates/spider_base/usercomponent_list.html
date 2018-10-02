@@ -14,7 +14,6 @@
     {% if listpublic == request.path %}
     <span class="w3-left">
       <a class="w3-block" style="margin-bottom:10px" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
-      <a class="w3-block" href="{% url 'spider_base:ucomponent-list' %}?{{request.GET.urlencode}}">{% trans 'Owned' %}</a>
     </span>
     {% else %}
     <span class="w3-left">
@@ -29,11 +28,17 @@
             {% trans 'Add New Component' %}
           </a>
         </div>
-        <div style="text-align:right;">
-          <a href="{% url 'spider_base:ucomponent-export' user=request.user %}">
-            {% trans 'Export' %}
-          </a>
-        </div>
+        {% if listpublic == request.path %}
+          <div style="text-align:right;">
+            <a href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Owned' %}</a>
+          </div>
+        {% else %}
+          <div style="text-align:right;">
+            <a href="{% url 'spider_base:ucomponent-export' user=request.user %}">
+              {% trans 'Export' %}
+            </a>
+          </div>
+        {% endif %}
       </span>
     {% endif %}
     <h1 class="w3-center">
