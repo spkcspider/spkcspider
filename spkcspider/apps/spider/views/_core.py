@@ -9,7 +9,7 @@ from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.conf import settings
 
-from ..constants import ProtectionType, UserContentType
+from ..constants import UserContentType
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
 )
@@ -39,8 +39,7 @@ class UserTestMixin(AccessMixin):
         return GET
 
     def get_context_data(self, **kwargs):
-        kwargs["UserContentType"] = UserContentType
-        kwargs["ProtectionType"] = ProtectionType
+        kwargs["raw_update_type"] = UserContentType.raw_update.value
         if "nonpublic" not in kwargs:
             kwargs["nonpublic"] = True
         kwargs["spider_GET"] = self.sanitize_GET()
