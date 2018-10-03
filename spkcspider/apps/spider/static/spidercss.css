@@ -1,25 +1,14 @@
 .spkc-item{
   font-size:17px!important;
-  width:55px;
+  width:100%;
   position:absolute;
   left:1px;
   bottom:2px;
   text-align:center;
 }
-
-@media (min-width:341px){
-  .spkc-item{
-    width:95px;
-  }
-}
-
 @media (min-width:601px){
   .spkc-item-button{
     width:25px;
-  }
-
-  .spkc-item{
-    width:57px;
   }
 }
 
