@@ -9,6 +9,7 @@ from django import forms
 
 # from django.apps import apps
 from django.db.models import Q
+from django.db import models
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
@@ -105,8 +106,10 @@ def generate_form(name, layout):
             return base
 
         @staticmethod
-        def encode_data(cleaned_data, embed=False, prefix="tag"):
+        def encode_data(cleaned_data, order=None, embed=False, prefix="tag"):
             ret = OrderedDict()
+            if order is not None:
+                ret._fieldorder = order
             for i in cleaned_data.items():
                 selected_dict = ret
                 splitted = i[0].split(":")
@@ -116,8 +119,21 @@ def generate_form(name, layout):
                 for key in splitted[1:-1]:
                     if key not in selected_dict:
                         selected_dict[key] = OrderedDict()
+                        if order is not None:
+                            _norder = {key: []}
+                            selected_dict._fieldorder.append(_norder)
+                            selected_dict[key]._fieldorder = _norder[key]
                     selected_dict = selected_dict[key]
-                selected_dict[splitted[-1]] = i[1]
+                if isinstance(i[1], models.Model):
+                    selected_dict[splitted[-1]] = i[1].pk
+                elif isinstance(i[1], models.QuerySet):
+                    selected_dict[splitted[-1]] = list(i[1].values_list(
+                        'id', flat=True
+                    ))
+                else:
+                    selected_dict[splitted[-1]] = i[1]
+                if order is not None:
+                    selected_dict._fieldorder.append(splitted[-1])
             return ret
 
         def save(self):

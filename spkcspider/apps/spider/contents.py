@@ -265,7 +265,10 @@ class BaseContent(models.Model):
             value = field.to_python(raw_value)
             if save_field_order:
                 context["current_order"][-1].append(name)
-            if isinstance(value, AssignedContent):
+            if (
+                isinstance(value, AssignedContent) or
+                isinstance(value, models.QuerySet)
+            ):
                 _level = level-1
                 if (
                     getattr(field, "force_embed", False) and
@@ -274,34 +277,50 @@ class BaseContent(models.Model):
                 ):
                     _level += 1
                 if _level > 0:
-                    context["uc"] = value.associated.usercomponent
-                    form2 = value.get_form(context["scope"])(
-                        **value.get_form_kwargs(
-                            disable_data=True, **context
-                        )
-                    )
-                    pref = "{}{}/".format(prefix, name)
-                    datadic[name] = OrderedDict(
-                        pk=self.associated.pk,
-                        ctype=self.associated.ctype.name,
-                        info=self.associated.info
-                    )
                     if save_field_order:
-                        new_order = []
+                        new_order = {name: []}
                         context["current_order"][-1].append(new_order)
-                        context["current_order"].append(new_order)
-                    self.extract_form(
-                        context, datadic[name], prefix=pref,
-                        zipf=zipf, level=_level, form=form2,
-                    )
-                    if save_field_order:
-                        context["current_order"].pop(-1)
+                        context["current_order"].append(new_order[name])
+                    if isinstance(value, models.QuerySet):
+                        arr = value
+                    else:
+                        arr = [value]
+                    for val in arr:
+                        if (
+                            save_field_order and
+                            isinstance(value, models.QuerySet)
+                        ):
+                            new_order = []
+                            context["current_order"][-1].append(new_order)
+                            context["current_order"].append(new_order)
+                        context["uc"] = val.associated.usercomponent
+                        form2 = val.get_form(context["scope"])(
+                            **val.get_form_kwargs(
+                                disable_data=True, **context
+                            )
+                        )
+                        pref = "{}{}/".format(prefix, name)
+                        datadic[name] = OrderedDict(
+                            pk=val.associated.pk,
+                            ctype=val.associated.ctype.name,
+                            info=val.associated.info
+                        )
+                        self.extract_form(
+                            context, datadic[name], prefix=pref,
+                            zipf=zipf, level=_level, form=form2,
+                        )
+                        if save_field_order:
+                            context["current_order"].pop(-1)
                 else:
                     datadic[name] = {
-                        "pk": value.pk,
-                        "ctype": value.ctype.name,
-                        "info": value.info
+                        "pk": val.pk,
+                        "ctype": val.ctype.name,
+                        "info": val.info
                     }
+                    if save_field_order:
+                        new_order = {name: ["pk", "ctype", "info"]}
+                        context["current_order"][-1].append(new_order)
+                        context["current_order"].append(new_order[name])
 
             elif isinstance(value, File):
                 datadic[name] = get_settings_func(

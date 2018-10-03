@@ -87,6 +87,7 @@ class UserTagLayout(BaseContent):
     def render_add(self, **kwargs):
         if not hasattr(self, "layout"):
             self.layout = TagLayout(usertag=self)
+        return super().render_add(**kwargs)
 
     def get_form_kwargs(self, **kwargs):
         kwargs["instance"] = self.layout
@@ -154,15 +155,27 @@ class SpiderTag(BaseContent):
             )
         if getattr(form, "layout_generating_form", False):
             _datadic = OrderedDict()
+            context["_current_order"] = context.pop("current_order", None)
         else:
             _datadic = datadic
+            if context.get("_current_order", None):
+                context["current_order"] = context["_current_order"]
         super().extract_form(
             context, _datadic, zipf=zipf, level=level, prefix=prefix,
             form=form
         )
         if getattr(form, "layout_generating_form", False):
             datadic["primary"] = _datadic["primary"]
-            datadic["tagdata"] = form.encode_data(_datadic)
+            order = context.get("_current_order", None)
+            if order:
+                _norder = {"tagdata": []}
+                order[-1].append("primary")
+                order[-1].append(_norder)
+                datadic["tagdata"] = form.encode_data(
+                    _datadic, order=_norder["tagdata"]
+                )
+            else:
+                datadic["tagdata"] = form.encode_data(_datadic)
 
     def encode_verifiers(self):
         return "".join(

@@ -106,7 +106,7 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
 @add_by_field(installed_fields, "__name__")
 class AnchorField(forms.ModelChoiceField):
     force_embed = True
-    strength_link_field = "associated_rel__usercomponent__strength__lte"
+    strength_link_field = "usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
     def __init__(self, limit_to_uc=True, **kwargs):
@@ -121,7 +121,7 @@ class AnchorField(forms.ModelChoiceField):
             ctype__ctype__contains=UserContentType.anchor.value,
             **kwargs.pop("limit_choices_to", {})
         ).exclude(
-            associated_rel__usercomponent__travel_protected__in=travel
+            usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
 
