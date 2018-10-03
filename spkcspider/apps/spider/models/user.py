@@ -229,7 +229,7 @@ class AuthToken(models.Model):
     def create_auth_token(self):
         self.token = "{}_{}".format(
             hex(self.usercomponent.id)[2:],
-            token_nonce()
+            token_nonce(getattr(settings, "TOKEN_SIZE", 30))
         )
 
     def save(self, *args, **kwargs):

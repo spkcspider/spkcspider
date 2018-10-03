@@ -34,7 +34,7 @@ class UserTestMixin(AccessMixin):
         GET = self.request.GET.copy()
         for key in list(GET.keys()):
             if key not in [
-                "prefer_get", "token", "deref", "raw", "protection"
+                "token", "deref", "raw", "protection"
             ]:
                 GET.pop(key, None)
         return GET
@@ -55,22 +55,10 @@ class UserTestMixin(AccessMixin):
             return True
         return False
 
-    def replace_prefer_get(self):
+    def replace_token(self):
         GET = self.request.GET.copy()
-        # should not fail as only executed when positive
-        token = self.request.auth_token.token
-        if (
-            GET.get("token", "") != token and
-            (
-                self.request.GET.get("prefer_get", "") == "true" or
-                not self.request.session.session_key
-            )
-        ):
-            GET["token"] = token
-            # not required anymore, token does the same + authorizes
-            GET.pop("prefer_get", None)
-            return "?".join((self.request.path, GET.urlencode()))
-        return True
+        GET["token"] = self.request.auth_token.token
+        return "?".join((self.request.path, GET.urlencode()))
 
     def test_token(self):
         expire = timezone.now()-self.usercomponent.token_duration
@@ -103,7 +91,9 @@ class UserTestMixin(AccessMixin):
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
                 self.request.auth_token = token
-                return self.replace_prefer_get()
+                if "token" not in self.request.GET:
+                    return self.replace_token()
+                return True
 
         protection_codes = None
         if "protection" in self.request.GET:
@@ -129,7 +119,9 @@ class UserTestMixin(AccessMixin):
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
             self.request.auth_token = token
-            return self.replace_prefer_get()
+            if "token" in self.request.GET:
+                return self.replace_token()
+            return True
         return False
 
     def has_special_access(self, user=True, staff=False, superuser=True):

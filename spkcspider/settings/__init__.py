@@ -139,6 +139,10 @@ KEY_HASH_ALGO = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
 MIN_STRENGTH_EVELATION = 2
+# change size of request token.
+# Note: should be high to prevent token exhaustion
+# FIXME: high load behavior to invalid token
+# TOKEN_SIZE = 30
 # OPEN_FOR_REGISTRATION = True # allow registration
 # ALLOW_USERNAME_CHANGE = True # allow users changing their username
 

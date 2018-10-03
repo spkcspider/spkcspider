@@ -114,8 +114,8 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 # External usage
 
 There are some special GET parameters for services with special requirements:
-* prefer_get=true: retrieve token as GET parameter
-* token=xy: token as GET parameter, if invalid: refresh token
+* token=xy: token as GET parameter, if invalid: retrieve token as GET parameter
+* token=prefer: uses invalid mechanic, easier to see what it does
 * raw=true: optimize output for machines
 * raw=embed: embed content, for ContentList only
 * id=id&id=id: limit content ids, for ContentList only
