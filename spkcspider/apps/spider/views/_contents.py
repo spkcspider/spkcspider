@@ -110,8 +110,28 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         return self.render_to_response(self.get_context_data(**context))
 
     def get_context_data(self, **kwargs):
-        kwargs["nonpublic"] = not self.usercomponent.public
-        return super().get_context_data(**kwargs)
+        kwargs["nonpublic"] = (
+            not self.usercomponent.public or
+            self.scope in ("add", "update", "update_raw")
+        )
+        context = super().get_context_data(**kwargs)
+
+        if self.scope != "add":
+            context["remotelink"] = context["spider_GET"].copy()
+            if self.request.auth_token:
+                context["remotelink"]["token"] = \
+                    self.request.auth_token.token
+                context["remotelink"].pop("prefer_get", None)
+            context["remotelink"] = "{}{}?{}".format(
+                context["hostpart"],
+                reverse("spider_base:ucontent-access", kwargs={
+                    "id": self.object.id,
+                    "nonce": self.object.nonce,
+                    "access": "view"
+                }),
+                context["remotelink"].urlencode()
+            )
+        return context
 
     def get_form_success_kwargs(self):
         """Return the keyword arguments for instantiating the form."""
@@ -184,15 +204,29 @@ class ContentIndex(UCTestMixin, ListView):
         return get_object_or_404(UserComponent, **query)
 
     def get_context_data(self, **kwargs):
-        kwargs["uc"] = self.usercomponent
-        kwargs["nonpublic"] = not self.usercomponent.public
         kwargs["scope"] = self.scope
-
-        if kwargs["uc"].user == self.request.user:
-            kwargs["content_variants"] = (
-                kwargs["uc"].user_info.allowed_content.all()
+        kwargs["uc"] = self.usercomponent
+        context = super().get_context_data(**kwargs)
+        if self.usercomponent.user == self.request.user:
+            context["content_variants"] = (
+                self.usercomponent.user_info.allowed_content.all()
             )
-        return super().get_context_data(**kwargs)
+        context["nonpublic"] = not self.usercomponent.public
+
+        context["remotelink"] = context["spider_GET"].copy()
+        if self.request.auth_token:
+            context["remotelink"]["token"] = \
+                self.request.auth_token.token
+            context["remotelink"].pop("prefer_get", None)
+        context["remotelink"] = "{}{}?{}".format(
+            context["hostpart"],
+            reverse("spider_base:ucontent-list", kwargs={
+                "id": self.usercomponent.id,
+                "nonce": self.usercomponent.nonce
+            }),
+            context["remotelink"].urlencode()
+        )
+        return context
 
     def test_func(self):
         if self.has_special_access(staff=(self.usercomponent.name != "index"),

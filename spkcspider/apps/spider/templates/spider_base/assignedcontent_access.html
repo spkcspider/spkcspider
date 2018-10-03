@@ -87,7 +87,7 @@
 {% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='export' as exportlink %}
 {% endif %}
 {% if scope != "add" %}
-  {% reverse_get 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' as nativelink %}
+  {# remotelink generated in view #}
+  {% include "spider_base/modalpresenter.html" %}
 {% endif %}
-{% include "spider_base/modalpresenter.html" %}
 {% endblock %}

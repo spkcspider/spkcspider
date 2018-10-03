@@ -46,7 +46,7 @@ def InitUserCallback(sender, instance, **kwargs):
         return
     from .models import UserComponent, Protection, AssignedProtection, UserInfo
 
-    uc = UserComponent.objects.get_or_create(
+    uc = UserComponent.objects.get_or_create_component(
         defaults={"strength": 10},
         name="index", user=instance
     )[0]

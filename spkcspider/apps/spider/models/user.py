@@ -5,7 +5,8 @@ namespace: spider_base
 """
 
 __all__ = [
-    "UserComponent", "TokenCreationError", "AuthToken", "UserInfo"
+    "UserComponent", "UserComponentManager", "TokenCreationError",
+    "AuthToken", "UserInfo"
 ]
 
 import logging
@@ -16,7 +17,7 @@ from django.apps import apps
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 from django.urls import reverse
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core import validators
 
 from ..helpers import token_nonce, get_settings_func
@@ -47,6 +48,25 @@ _feature_help = _(
 )
 
 
+class UserComponentManager(models.Manager):
+    def get_or_create_component(self, defaults={}, **kwargs):
+        try:
+            return (self.get_queryset().get(**kwargs), False)
+        except ObjectDoesNotExist:
+            defaults.update(kwargs)
+            if defaults["name"] in ("index", "fake_index") and force_captcha:
+                defaults["required_passes"] = 2
+                defaults["strength"] = 10
+            elif self.name in ("index", "fake_index"):
+                defaults["required_passes"] = 1
+                defaults["strength"] = 10
+            elif defaults["public"]:
+                defaults["strength"] = 5
+            else:
+                defaults["strength"] = 0
+            return (self.create(**defaults), True)
+
+
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
@@ -70,7 +90,7 @@ class UserComponent(models.Model):
         editable=False
     )
     # fix linter warning
-    objects = models.Manager()
+    objects = UserComponentManager()
     # special name: index, (fake_index):
     #    protections are used for authentication
     #    attached content is only visible for admin and user
@@ -119,26 +139,8 @@ class UserComponent(models.Model):
             name = "index"
         return name
 
-    def _get_default_amount(self):
-        if self.name in ("index", "fake_index") and force_captcha:
-            return 2
-        elif self.name in ("index", "fake_index"):
-            return 1
-        else:
-            return 0  # protections are optional
-
-    def _get_default_strength(self):
-        if self.name in ("index", "fake_index"):
-            return 10
-        elif not self.public:
-            return 5
-        else:
-            return 0
-
     def clean(self):
         _ = gettext
-        self.required_passes = self._get_default_amount()
-        self.strength = self._get_default_strength()
         self.featured = (self.featured and self.public)
         assert(self.name not in ("index", "fake_index") or self.strength == 10)
         assert(self.name in ("index", "fake_index") or self.strength < 10)

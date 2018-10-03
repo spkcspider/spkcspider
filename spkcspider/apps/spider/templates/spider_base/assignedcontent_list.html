@@ -118,6 +118,5 @@
 {% if request.user == uc.user %}
 {% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce as exportlink %}
 {% endif %}
-{% reverse_get 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce as nativelink %}
 {% include "spider_base/modalpresenter.html" %}
 {% endblock %}

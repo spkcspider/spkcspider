@@ -47,14 +47,14 @@
     var raw_updatelink = "{{raw_updatelink}}";
     function open_qrmodal_raw_update(){
       let _qrcanvas = document.getElementById('qrcanvas');
-      let nativelink_link = document.getElementById('nativelink');
+      let remotelink_link = document.getElementById('remotelink');
       let rawlink_link = document.getElementById('rawlink');
       let rawlink_wrapper = document.getElementById('rawlink_wrapper');
       let exportlink_link = document.getElementById('exportlink');
       rawlink_wrapper.style.display = "none";
-      if (nativelink_link.href != raw_updatelink){
-        nativelink_link.href = raw_updatelink;
-        nativelink_link.text = raw_updatelink;
+      if (remotelink_link.href != raw_updatelink){
+        remotelink_link.href = raw_updatelink;
+        remotelink_link.text = raw_updatelink;
         QRCode.toCanvas(
           _qrcanvas, raw_updatelink, {  },
           function (error) {

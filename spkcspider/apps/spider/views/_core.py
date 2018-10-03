@@ -22,6 +22,7 @@ class UserTestMixin(AccessMixin):
     def dispatch(self, request, *args, **kwargs):
         self.request.is_elevated_request = False
         self.request.is_owner = False
+        self.request.auth_token = None
         user_test_result = self.test_func()
         if not user_test_result:
             return self.handle_no_permission()
@@ -42,10 +43,10 @@ class UserTestMixin(AccessMixin):
         kwargs["raw_update_type"] = UserContentType.raw_update.value
         if "nonpublic" not in kwargs:
             kwargs["nonpublic"] = True
-        kwargs["spider_GET"] = self.sanitize_GET()
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )
+        kwargs["spider_GET"] = self.sanitize_GET()
         return super().get_context_data(**kwargs)
 
     # by default only owner can access view
@@ -53,6 +54,23 @@ class UserTestMixin(AccessMixin):
         if self.has_special_access(staff=False, superuser=False):
             return True
         return False
+
+    def replace_prefer_get(self):
+        GET = self.request.GET.copy()
+        # should not fail as only executed when positive
+        token = self.request.auth_token.token
+        if (
+            GET.get("token", "") != token and
+            (
+                self.request.GET.get("prefer_get", "") == "true" or
+                not self.request.session.session_key
+            )
+        ):
+            GET["token"] = token
+            # not required anymore, token does the same + authorizes
+            GET.pop("prefer_get", None)
+            return "?".join((self.request.path, GET.urlencode()))
+        return True
 
     def test_token(self):
         expire = timezone.now()-self.usercomponent.token_duration
@@ -84,7 +102,8 @@ class UserTestMixin(AccessMixin):
             if token:
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
-                return True
+                self.request.auth_token = token
+                return self.replace_prefer_get()
 
         protection_codes = None
         if "protection" in self.request.GET:
@@ -106,19 +125,11 @@ class UserTestMixin(AccessMixin):
                 token.save()
             except TokenCreationError as e:
                 logging.exception(e)
-                return True
+                return False
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
-            GET = self.request.GET.copy()
-            if (
-                    self.request.GET.get("prefer_get", "") == "true" or
-                    "token" in self.request.GET or
-                    not self.request.session.session_key
-               ):
-                GET["token"] = token.token
-                # not required anymore, token does the same + authorizes
-                GET.pop("prefer_get", None)
-            return "?".join((self.request.path, GET.urlencode()))
+            self.request.auth_token = token
+            return self.replace_prefer_get()
         return False
 
     def has_special_access(self, user=True, staff=False, superuser=True):

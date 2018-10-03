@@ -85,6 +85,7 @@ class UserComponentForm(forms.ModelForm):
             self.fields["new_nonce"].choices = \
                 self.fields["new_nonce"].choices[1:]
             self.protections = []
+            self.fields["required_passes"].initial = 1
 
     def is_valid(self):
         isvalid = super().is_valid()

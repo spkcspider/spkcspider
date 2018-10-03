@@ -13,9 +13,9 @@
       <canvas id="qrcanvas"></canvas>
     </div>
     <div class="w3-container">
-      <div class="w3-text-black" id="nativelink_wrapper">
+      <div class="w3-text-black" id="remotelink_wrapper">
         {# important for href check, elsewise same url #}
-        {% trans "Link"%}: <a type="text" href="#" id="nativelink"></a>
+        {% trans "Link"%}: <a type="text" href="#" id="remotelink"></a>
       </div>
       <div class="w3-text-black" id="rawlink_wrapper">
         {# important for href check, elsewise same url #}
@@ -30,25 +30,25 @@
 </div>
 
 <script type="text/javascript">
-var nativelink = "{{nativelink}}";
-var exportlink = "{{exportlink}}";
+var remotelink = "{{remotelink|escapejs}}";
+var exportlink = "{{exportlink|escapejs}}";
 function open_qrmodal(){
   let _qrcanvas = document.getElementById('qrcanvas');
-  let nativelink_link = document.getElementById('nativelink');
+  let remotelink_link = document.getElementById('remotelink');
   let rawlink_link = document.getElementById('rawlink');
   let rawlink_wrapper = document.getElementById('rawlink_wrapper');
   let exportlink_link = document.getElementById('exportlink');
   rawlink_wrapper.style.display = "block";
-  if (nativelink_link.href != nativelink){
-    if (nativelink.slice(-1)=="?"){
-      rawlink_link.href = `${nativelink}raw=true`;
+  if (remotelink_link.href != remotelink){
+    if (remotelink.slice(-1)=="?"){
+      rawlink_link.href = `${remotelink}raw=true`;
     } else {
-      rawlink_link.href = `${nativelink}&raw=true`;
+      rawlink_link.href = `${remotelink}&raw=true`;
     }
-    nativelink_link.href = nativelink;
-    nativelink_link.text = nativelink;
+    remotelink_link.href = remotelink;
+    remotelink_link.text = remotelink;
     QRCode.toCanvas(
-      _qrcanvas, nativelink, {  },
+      _qrcanvas, remotelink, {  },
       function (error) {
         if (error)
           console.error(error)
@@ -59,7 +59,7 @@ function open_qrmodal(){
     exportlink_link.href = exportlink;
     exportlink_link.style.display = "block";
   } else {
-    exportlink_link.href = "";
+    exportlink_link.href = "#";
     exportlink_link.style.display = "none";
   }
   document.getElementById('qrpresenter').style.display='block';
