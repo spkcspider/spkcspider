@@ -364,7 +364,7 @@ class BaseContent(models.Model):
                 "spkcspider.apps.spider.functions.generate_embedded"
             )(self.generate_embedded, session_dict, self.associated)
 
-        self.extract_form(kwargs, store_dict, level=2)
+        self.extract_form(session_dict, store_dict, level=2)
         ret = JsonResponse(store_dict)
         if store_dict["expires"]:
             ret['X-Token-Expires'] = store_dict["expires"]
