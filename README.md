@@ -130,8 +130,6 @@ verified_by urls should return hashname:hash_hexdigest
 
 # TODO
 
-* link should contain token
-* transfer with prefer_get token into GET
 * layout: verifiers+examples
 * fix search
 * improve anchors
