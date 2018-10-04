@@ -166,7 +166,7 @@ default_layouts["emergency"] = {
             "key": "health_problems",
             "label": _("Health Problems"),
             "localize": True,
-            "field": "LocalizedMultipleChoiceField",
+            "field": "MultipleLocalizedChoiceField",
             "choices": [
                 ("heart", _("Heart")),
                 ("diabetes", _("Diabetes")),
@@ -194,7 +194,7 @@ default_layouts["emergency"] = {
         {
             "key": "organs",
             "label": _('In case of: "Special Organs", which?'),
-            "field": "TextField",
+            "field": "TextareaField",
             "required": False
         }
     ]

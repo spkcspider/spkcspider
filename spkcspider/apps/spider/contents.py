@@ -260,15 +260,12 @@ class BaseContent(models.Model):
         # [] is also False
         if context.get("current_order", None) is not None:
             save_field_order = True
+            assert len(context["current_order"]) >= 1
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
-            if save_field_order:
-                context["current_order"][-1].append(name)
-            if (
-                isinstance(value, AssignedContent) or
-                isinstance(value, models.QuerySet)
-            ):
+            # deserialized as list
+            if isinstance(value, (AssignedContent, models.QuerySet, list)):
                 _level = level-1
                 if (
                     getattr(field, "force_embed", False) and
@@ -276,23 +273,27 @@ class BaseContent(models.Model):
                     context["scope"] != "export"
                 ):
                     _level += 1
+                if save_field_order:
+                    assert len(context["current_order"]) >= 1
+                    context["current_order"][-1].append({name: []})
+                    context["current_order"].append(
+                        context["current_order"][-1][-1][name]
+                    )
+                    assert len(context["current_order"]) >= 2
                 if _level > 0:
-                    if save_field_order:
-                        new_order = {name: []}
-                        context["current_order"][-1].append(new_order)
-                        context["current_order"].append(new_order[name])
-                    if isinstance(value, models.QuerySet):
+                    datadic[name] = []
+                    if isinstance(value, (models.QuerySet, list)):
                         arr = value
                     else:
                         arr = [value]
+
                     for val in arr:
-                        if (
-                            save_field_order and
-                            isinstance(value, models.QuerySet)
-                        ):
-                            new_order = []
-                            context["current_order"][-1].append(new_order)
-                            context["current_order"].append(new_order)
+                        if isinstance(value, (models.QuerySet, list)):
+                            if save_field_order:
+                                context["current_order"][-1].append([])
+                                context["current_order"].append(
+                                    context["current_order"][-1][-1]
+                                )
                         context["uc"] = val.associated.usercomponent
                         form2 = val.get_form(context["scope"])(
                             **val.get_form_kwargs(
@@ -300,29 +301,41 @@ class BaseContent(models.Model):
                             )
                         )
                         pref = "{}{}/".format(prefix, name)
-                        datadic[name] = OrderedDict(
+                        datadic[name].append(OrderedDict(
                             pk=val.associated.pk,
                             ctype=val.associated.ctype.name,
                             info=val.associated.info
-                        )
-                        self.extract_form(
-                            context, datadic[name], prefix=pref,
+                        ))
+                        val.extract_form(
+                            context, datadic[name][-1], prefix=pref,
                             zipf=zipf, level=_level, form=form2,
                         )
                         if save_field_order:
                             context["current_order"].pop(-1)
-                else:
+                    if isinstance(value, (models.QuerySet, list)):
+                        if save_field_order:
+                            context["current_order"].pop(-1)
+                    else:
+                        # only one element
+                        datadic[name] = datadic[name][0]
+                elif isinstance(value, AssignedContent):
                     datadic[name] = {
+                        "pk": value.pk,
+                        "ctype": value.ctype.name,
+                        "info": value.info
+                    }
+                    if save_field_order:
+                        context["current_order"][-1].append(name)
+                else:
+                    datadic[name] = [{
                         "pk": val.pk,
                         "ctype": val.ctype.name,
                         "info": val.info
-                    }
+                    } for val in value]
                     if save_field_order:
-                        new_order = {name: ["pk", "ctype", "info"]}
-                        context["current_order"][-1].append(new_order)
-                        context["current_order"].append(new_order[name])
-
+                        context["current_order"][-1].append(name)
             elif isinstance(value, File):
+                context["content"] = self
                 datadic[name] = get_settings_func(
                     "EMBED_FILE_FUNC",
                     "spkcspider.apps.spider.functions.embed_file_default"
@@ -330,8 +343,12 @@ class BaseContent(models.Model):
                     prefix=prefix, name=name, value=value,
                     zipf=zipf, context=context
                 )
+                if save_field_order:
+                    context["current_order"][-1].append(name)
             else:
                 datadic[name] = raw_value
+                if save_field_order:
+                    context["current_order"][-1].append(name)
 
     def generate_embedded(self, zip, context):
         store_dict = context["store_dict"]

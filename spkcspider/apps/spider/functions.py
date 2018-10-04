@@ -44,7 +44,7 @@ def embed_file_default(prefix, name, value, zipf, context):
             context["request"].user.is_staff
         ) and context["request"].GET.get("embed_big", "") == "true"
     )
-    if (
+    if zipf and (
         value.size < getattr(settings, "MAX_EMBED_SIZE", 20000000) or
         override
     ):

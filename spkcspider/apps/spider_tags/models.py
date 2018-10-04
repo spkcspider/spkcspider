@@ -153,29 +153,36 @@ class SpiderTag(BaseContent):
             form = self.get_form(context["scope"])(
                 **self.get_form_kwargs(disable_data=True, **context)
             )
+        _t_order_list = []
+        _old_preserve = None
         if getattr(form, "layout_generating_form", False):
             _datadic = OrderedDict()
-            context["_current_order"] = context.pop("current_order", None)
+            _old_preserve = context.pop("current_order", None)
+            if _old_preserve is not None:
+                context["current_order"] = [_t_order_list]
         else:
             _datadic = datadic
-            if context.get("_current_order", None):
-                context["current_order"] = context["_current_order"]
+            if _old_preserve is not None:
+                context["current_order"] = _old_preserve
         super().extract_form(
             context, _datadic, zipf=zipf, level=level, prefix=prefix,
             form=form
         )
         if getattr(form, "layout_generating_form", False):
             datadic["primary"] = _datadic["primary"]
-            order = context.get("_current_order", None)
-            if order:
+            if _old_preserve:
+                context["current_order"] = _old_preserve
                 _norder = {"tagdata": []}
-                order[-1].append("primary")
-                order[-1].append(_norder)
+                _old_preserve[-1].append("primary")
+                _old_preserve[-1].append(_norder)
                 datadic["tagdata"] = form.encode_data(
-                    _datadic, order=_norder["tagdata"]
+                    _datadic, order=_norder["tagdata"],
+                    embed_order=_t_order_list
                 )
             else:
-                datadic["tagdata"] = form.encode_data(_datadic)
+                datadic["tagdata"] = form.encode_data(
+                    _datadic, embed_order=_t_order_list
+                )
 
     def encode_verifiers(self):
         return "".join(

@@ -27,6 +27,8 @@ class Command(BaseCommand):
                 datetime.timedelta(days=int(options['days']))
             q.filter(created__lt=dt)
         if options['oldest']:
-            ids = q.order_by("created").values_list('id', flat=True)[:int(options['oldest'])]
+            ids = q.order_by("created").values_list(
+                'id', flat=True
+            )[:int(options['oldest'])]
             q = AuthToken.objects.filter(id__in=ids)
         print(q.delete()[0])
