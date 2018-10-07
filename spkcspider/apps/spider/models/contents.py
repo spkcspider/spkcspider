@@ -67,6 +67,9 @@ class LinkContent(BaseContent):
         # don't allow links linking on links
         return 11
 
+    def get_protected_preview(self):
+        return self.content.content.get_protected_preview()
+
     def get_info(self):
         ret = self.content.content.get_info()
         if self.is_fake:
