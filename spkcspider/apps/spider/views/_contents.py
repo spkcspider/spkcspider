@@ -75,6 +75,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
 
     def dispatch(self, request, *args, **kwargs):
         try:
+            self.object = self.get_object()
             return super().dispatch(request, *args, **kwargs)
         except Http404:
             return get_settings_func(
@@ -83,14 +84,12 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
             )(self, request)
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
         context = {"form": None}
         if self.scope == "update":
             context["form"] = self.get_form()
         return self.render_to_response(self.get_context_data(**context))
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
         context = {"form": None}
         # other than update have no form
         if self.scope == "update":

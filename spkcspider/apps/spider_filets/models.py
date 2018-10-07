@@ -8,19 +8,18 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
-from django.utils.html import strip_tags
 from django.http import FileResponse
 from django.http import HttpResponseRedirect
 from django.core.files.storage import default_storage
 
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.helpers import token_nonce
+from spkcspider.apps.spider.helpers import token_nonce, prepare_description
 
 logger = logging.getLogger(__name__)
 
-
 # Create your models here.
+
 
 def get_file_path(instance, filename):
     ret = getattr(settings, "FILET_FILE_DIR", "file_filet")
@@ -162,13 +161,10 @@ class TextFilet(BaseContent):
         return "%sname=%s\n" % (ret, self.name)
 
     def get_protected_preview(self):
-        return "{}: {}".format(
-            self.name,
-            " ".join(
-                strip_tags(self.text).split(
-                    " \n\t", self.preview_words+1
-                )[:self.preview_words]
-            )
+        return " ".join(
+            prepare_description(
+                self.text, self.preview_words+1
+            )[:self.preview_words]
         )
 
     def get_form(self, scope):

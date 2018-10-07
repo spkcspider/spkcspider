@@ -5,7 +5,7 @@
   {% if scope == "list" %}
     <meta name="description" content="{{uc.description|escape}}" />
   {% else %}
-    <meta name="description" content="{{object.get_protected_preview|escape}}" />
+    <meta name="description" content="{{object.content.get_protected_preview|escape}}" />
   {% endif %}
 {% endblock %}
 
@@ -13,5 +13,6 @@
 {% block context_actions %}
 {{block.super}}
 {% endblock context_actions %}
-{% block main_classes %}{{block.super}} w3-content w3-card-4 color-front-{{uc.strength}}{% endblock %}
-{% block body_class %}{{block.super}} color-back-{{uc.strength}}{% endblock %}
+{# Disclose strength of protection only if public #}
+{% block main_classes %}{{block.super}} w3-content w3-card-4 {% if uc.public %} color-front-{{uc.strength}}{% else %}w3-sand{% endif %}{% endblock %}
+{% block body_class %}{{block.super}} {% if uc.public %}color-back-{{uc.strength}}{% else %}w3-light-grey{% endif %}{% endblock %}

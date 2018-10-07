@@ -1,10 +1,11 @@
 __all__ = (
     "token_nonce", "cmp_pw", "get_settings_func",
-    "extract_app_dicts", "add_by_field"
+    "extract_app_dicts", "add_by_field", "prepare_description"
 )
 
 
 import os
+import re
 import base64
 import logging
 import inspect
@@ -93,3 +94,12 @@ def cmp_pw(pw_source, pw_user):
         elif pw_source[i] != pw_user[i]:
             error = True
     return (not error and len(pw_source) == len(pw_user))
+
+
+_cleanstr = re.compile(r'<.*?>')
+_whitespsplit = re.compile(r'\s+')
+
+
+def prepare_description(raw_html, amount=0):
+    text = _cleanstr.sub(' ', raw_html).strip()
+    return _whitespsplit.split(text, amount)

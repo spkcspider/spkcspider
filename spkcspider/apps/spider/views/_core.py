@@ -177,12 +177,21 @@ class UserTestMixin(AccessMixin):
             return super().handle_no_permission()
         # should be never true here
         assert(p is not True)
+        context = {
+            "spider_GET": self.sanitize_GET(),
+            "scope": getattr(self, "scope", None),
+            "uc": self.usercomponent,
+            "object": getattr(self, "object", None),
+            "is_public_view": self.usercomponent.public
+        }
+        if context["scope"] == "view" and "raw" in self.request.GET:
+            context["scope"] = "raw"
         return self.response_class(
             request=self.request,
             template=self.get_noperm_template_names(),
             # render with own context; get_context_data may breaks stuff or
             # disclose informations
-            context={},
+            context=context,
             using=self.template_engine,
             content_type=self.content_type
         )
