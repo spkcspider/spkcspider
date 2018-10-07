@@ -152,6 +152,12 @@ class BaseContent(models.Model):
         """ get required strength for links """
         return self.get_strength()
 
+    def get_protected_preview(self):
+        """
+            description shown for spider if public and protections are active
+        """
+        return ""
+
     def get_instance_form(self, context):
         return self
 

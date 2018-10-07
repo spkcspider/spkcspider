@@ -65,7 +65,7 @@ class FileForm(forms.ModelForm):
 class TextForm(forms.ModelForm):
     class Meta:
         model = TextFilet
-        fields = ['text', 'name', 'editable_from']
+        fields = ['text', 'name', 'editable_from', 'preview_words']
 
     class Media:
         css = {
@@ -97,6 +97,7 @@ class TextForm(forms.ModelForm):
             return
 
         del self.fields["editable_from"]
+        self.fields["preview_words"].disabled = True
         self.fields["name"].disabled = True
 
         allow_edit = False

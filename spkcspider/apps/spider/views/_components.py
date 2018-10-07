@@ -30,7 +30,7 @@ class ComponentPublicIndex(ListView):
     is_home = False
 
     def get_context_data(self, **kwargs):
-        kwargs["nonpublic"] = False
+        kwargs["is_public_view"] = True
         return super().get_context_data(**kwargs)
 
     def get_queryset(self):
@@ -131,7 +131,7 @@ class ComponentIndex(UCTestMixin, ListView):
         kwargs["component_user"] = self.user
         kwargs["username"] = getattr(self.user, self.user.USERNAME_FIELD)
         kwargs["scope"] = self.scope
-        kwargs["nonpublic"] = True
+        kwargs["is_public_view"] = False
         return super().get_context_data(**kwargs)
 
     def test_func(self):

@@ -41,8 +41,6 @@ class UserTestMixin(AccessMixin):
 
     def get_context_data(self, **kwargs):
         kwargs["raw_update_type"] = UserContentType.raw_update.value
-        if "nonpublic" not in kwargs:
-            kwargs["nonpublic"] = True
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )

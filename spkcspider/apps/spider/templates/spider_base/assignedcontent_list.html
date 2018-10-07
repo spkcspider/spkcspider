@@ -6,6 +6,11 @@
   Content List
 {% endblocktrans %}{% endif %}{% endblock %}
 
+{% block public_meta %}
+  {{block.super}}
+  <meta name="description" content="{{uc.description|escape}}" />
+{% endblock %}
+
 {% block extrahead %}
 <script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
 {% endblock %}
@@ -14,6 +19,8 @@
   <div class="w3-padding">
     {% if request.user == uc.user %}
       <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Index' %}</a>
+    {% else %}
+      <a class="w3-left" href="{% url 'spider_base:ucomponent-listpublic' %}">{% trans 'Index' %}</a>
     {% endif %}
     <span class="w3-right">
       {% if request.user == uc.user %}
@@ -39,6 +46,11 @@
         {% endblocktrans %}
       {% endif %}
     </h1>
+    {% if uc.description %}
+      <div class="w3-white w3-center">
+        {{uc.description|linebreaks}}
+      </div>
+    {% endif %}
     {% if request.token_expires %}
     <div>
       {% include 'spider_base/token_lifetime.html' with rtime=request.token_expires %}

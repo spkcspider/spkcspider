@@ -76,8 +76,16 @@ class UserComponent(models.Model):
     )
     public = models.BooleanField(
         default=False,
-        help_text="Is public? Can be searched?<br/>"
-                  "Note: Field is maybe blocked by assigned content"
+        help_text=_(
+            "Is public? Can be searched?<br/>"
+            "Note: Field is maybe blocked by assigned content"
+        )
+    )
+    description = models.TextField(
+        default="",
+        help_text=_(
+            "Description of user component. Visible if \"public\"."
+        )
     )
     required_passes = models.PositiveIntegerField(
         default=0,

@@ -8,6 +8,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
+from django.utils.html import strip_tags
 from django.http import FileResponse
 from django.http import HttpResponseRedirect
 from django.core.files.storage import default_storage
@@ -144,16 +145,31 @@ class TextFilet(BaseContent):
         blank=True
     )
 
-    text = models.TextField(default="")
+    preview_words = models.PositiveIntegerField(
+        default=10,
+        help_text=_("How many words should be used for preview?")
+    )
 
-    def get_info(self):
-        ret = super().get_info()
-        return "%sname=%s\n" % (ret, self.name)
+    text = models.TextField(default="")
 
     def __str__(self):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
         return self.name
+
+    def get_info(self):
+        ret = super().get_info()
+        return "%sname=%s\n" % (ret, self.name)
+
+    def get_protected_preview(self):
+        return "{}: {}".format(
+            self.name,
+            " ".join(
+                strip_tags(self.text).split(
+                    " \n\t", self.preview_words+1
+                )[:self.preview_words]
+            )
+        )
 
     def get_form(self, scope):
         if scope in ("raw", "export", "list"):

@@ -113,8 +113,9 @@ class UserComponentAdmin(admin.ModelAdmin):
     ]
     actions = ["feature", "unfeature"]
     fields = [
-        'user', 'name', 'created', 'modified',
-        'featured', 'deletion_requested', 'nonce'
+        'user', 'name', 'created', 'modified', 'featured', 'public',
+        'description', 'nonce', 'required_passes', 'deletion_requested',
+        'token_duration'
     ]
     readonly_fields = ['created', 'modified', 'featured']
     list_display = ('name', 'username', 'modified', 'featured')

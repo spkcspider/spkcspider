@@ -110,9 +110,9 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         return self.render_to_response(self.get_context_data(**context))
 
     def get_context_data(self, **kwargs):
-        kwargs["nonpublic"] = (
-            not self.usercomponent.public or
-            self.scope in ("add", "update", "update_raw")
+        kwargs["is_public_view"] = (
+            self.usercomponent.public and
+            self.scope not in ("add", "update", "update_raw")
         )
         context = super().get_context_data(**kwargs)
 
@@ -211,7 +211,7 @@ class ContentIndex(UCTestMixin, ListView):
             context["content_variants"] = (
                 self.usercomponent.user_info.allowed_content.all()
             )
-        context["nonpublic"] = not self.usercomponent.public
+        context["is_public_view"] = self.usercomponent.public
 
         context["remotelink"] = context["spider_GET"].copy()
         if self.request.auth_token:

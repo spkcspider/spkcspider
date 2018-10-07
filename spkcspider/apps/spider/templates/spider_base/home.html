@@ -44,7 +44,7 @@
     <div  class="w3-margin">
       <table class="w3-table w3-striped w3-bordered w3-hoverable">
         {% for uc in object_list %}
-          <tr>
+          <tr title="{{uc.description|escape}}">
             <td style="width:40%; min-height:48px">
               {{ uc.name }} <em>({{uc.user}})</em>
             </td>
