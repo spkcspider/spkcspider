@@ -141,6 +141,7 @@ Later:
 * textfilet hot reloading
 * log changes
 * complete travel mode
+* use Clear-Site-Data: "*"
 * color tones for strength
 
 # Thanks
