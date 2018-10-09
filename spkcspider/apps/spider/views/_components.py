@@ -29,6 +29,9 @@ class ComponentPublicIndex(ListView):
     model = UserComponent
     is_home = False
 
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         kwargs["is_public_view"] = True
         return super().get_context_data(**kwargs)
@@ -121,6 +124,9 @@ class ComponentIndex(UCTestMixin, ListView):
     def dispatch(self, request, *args, **kwargs):
         self.user = self.get_user()
         return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
 
     def get_ordering(self):
         # if self.scope != "export":

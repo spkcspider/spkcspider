@@ -197,6 +197,9 @@ class ContentIndex(UCTestMixin, ListView):
                 "spkcspider.apps.spider.functions.rate_limit_default"
             )(self, request)
 
+    def post(self, request, *args, **kwargs):
+        return self.get(request, *args, **kwargs)
+
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
         query["nonce"] = self.kwargs["nonce"]

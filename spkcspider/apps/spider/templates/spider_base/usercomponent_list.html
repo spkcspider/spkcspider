@@ -1,5 +1,5 @@
 {% extends "spider_base/nouc_base.html" %}
-{% load i18n %}
+{% load i18n static %}
 {% block title %}{% url 'spider_base:ucomponent-listpublic' as listpublic %}{% if listpublic == request.path %}{% blocktrans trimmed %}
   Public Components
 {% endblocktrans %}{% elif request.is_owner %}{% blocktrans trimmed %}
@@ -8,6 +8,19 @@
     Component List of {{name}}
   {% endblocktrans %}
 {% endif %}{% endblock %}
+
+{% block extrahead %}
+{{block.super}}
+{% if DEBUG %}
+  <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+  <script src="{% static 'admin/js/vendor/select2/select2.full.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'admin/css/vendor/select2/select2.css' %}">
+{% else %}
+  <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'admin/js/vendor/select2/select2.full.min.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'admin/css/vendor/select2/select2.css' %}">
+{% endif %}
+{% endblock %}
 
 {% block content %}
   {% url 'spider_base:ucomponent-listpublic' as listpublic %}
