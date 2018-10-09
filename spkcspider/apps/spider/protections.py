@@ -27,6 +27,9 @@ _sysrand = SystemRandom()
 # don't spam set objects
 _empty_set = set()
 
+# for debug/min switch
+_extra = '' if settings.DEBUG else '.min'
+
 
 def initialize_protection_models(apps=None):
     if not apps:
@@ -177,10 +180,6 @@ class FriendProtection(BaseProtection):
         label=_("Users"), queryset=friend_query(), required=False
     )
     description = _("Limit access to selected users")
-
-    media = {
-        'js': 'admin/js/vendor/select2/select2.full.min.js'
-    }
 
     def get_strength(self):
         return 4

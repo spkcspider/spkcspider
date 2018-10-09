@@ -131,7 +131,7 @@ verified_by urls should return hashname:hash_hexdigest
 # TODO
 
 * layout: verifiers+examples
-* fix search
+* FriendProtection: use select2, don't enforce existing users
 * improve anchors
 * tests
 
@@ -140,8 +140,9 @@ Later:
 * email to spkcspider transport wrapper (also script)+component
 * textfilet hot reloading
 * log changes
+* improve protections, add protections
 * complete travel mode
-* use Clear-Site-Data: "*"
+* use Clear-Site-Data: "\*"
 * color tones for strength
 
 # Thanks

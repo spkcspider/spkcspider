@@ -14,14 +14,13 @@
 {% block extrahead %}
 {{block.super}}
 <script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'admin/css/vendor/select2/select2.css' %}">
 {% if DEBUG %}
   <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
   <script src="{% static 'admin/js/vendor/select2/select2.full.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'admin/css/vendor/select2/select2.css' %}">
 {% else %}
   <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
   <script src="{% static 'admin/js/vendor/select2/select2.full.min.js' %}"></script>
-  <link rel="stylesheet" href="{% static 'admin/css/vendor/select2/select2.css' %}">
 {% endif %}
 {% endblock %}
 
