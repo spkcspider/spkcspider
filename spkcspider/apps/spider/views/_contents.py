@@ -249,6 +249,7 @@ class ContentIndex(UCTestMixin, ListView):
         ret = super().get_queryset().filter(usercomponent=self.usercomponent)
 
         searchq = models.Q()
+        infoq = models.Q()
 
         counter = 0
         # against ddos
@@ -266,7 +267,7 @@ class ContentIndex(UCTestMixin, ListView):
                 if counter > max_counter:
                     break
                 counter += 1
-                searchq |= models.Q(info__contains="\n%s\n" % info)
+                infoq |= models.Q(info__contains="\n%s\n" % info)
 
             if "id" in self.request.POST:
                 ids = map(lambda x: int(x), self.request.POST.getlist("id"))
@@ -283,13 +284,13 @@ class ContentIndex(UCTestMixin, ListView):
                 if counter > max_counter:
                     break
                 counter += 1
-                searchq |= models.Q(info__contains="\n%s\n" % info)
+                infoq |= models.Q(info__contains="\n%s\n" % info)
 
             if "id" in self.request.GET:
                 ids = map(lambda x: int(x), self.request.GET.getlist("id"))
                 searchq &= models.Q(id__in=ids)
 
-        return ret.filter(searchq)
+        return ret.filter(searchq & infoq)
 
     def get_paginate_by(self, queryset):
         if self.scope == "export":

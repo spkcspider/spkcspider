@@ -1,10 +1,10 @@
-{% load i18n spider_base %}
+{% load i18n spider_paging %}
+{% list_search_parameters as cur_search %}
+{% get_searchpath as searchpath %}
 <div class="w3-padding">
-  <form class="" style="max-width:400px;white-space: nowrap;" method="POST" action="">
+  <form class="" style="max-width:400px;white-space: nowrap;" method="POST" action="{{searchpath}}">
     {% csrf_token %}
-    <input type="hidden" name="page" value="{{ page_obj.number }}"/>
     <select class="w3-input" name="search" id="search_field_list_footer" multiple="multiple">
-      {% list_search_parameters as cur_search %}
       {% for elem in cur_search %}
         <option selected="selected" value="{{elem}}">{{elem}}</option>
       {% endfor %}
@@ -12,22 +12,31 @@
     <button class="w3-button w3-gray"><i class="fa fa-search" aria-hidden="true"></i></button>
   </form>
 </div>
-<div class="w3-padding w3-center">
-  {% if page_obj.has_previous %}
-      <a href="?page=1">&laquo; first</a>
-      <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-  {% endif %}
+{% if page_obj.paginator.num_pages > 1 %}
+  <form class="w3-padding w3-center" style="white-space: nowrap;" method="POST">
+    {% csrf_token %}
+    <select hidden="hidden" name="search" multiple="multiple">
+      {% for elem in cur_search %}
+        <option selected="selected" value="{{elem}}">{{elem}}</option>
+      {% endfor %}
+    </select>
+    {% if page_obj.has_previous %}
+      <button type="submit" formaction="{{searchpath}}&page=1" >&laquo; first</button>
+      <button type="submit" formaction="{{searchpath}}&page={{page_obj.previous_page_number}}" >{% trans "previous" %}</button>
+    {% endif %}
 
-  <span class="current">
-      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-  </span>
+    <span class="current">
+      {% blocktrans trimmed with page=page_obj.number num_pages=page_obj.paginator.num_pages %}
+        Page {{ page }} of {{ num_pages }}.
+      {% endblocktrans %}
+    </span>
 
-  {% if page_obj.has_next %}
-      <a href="?page={{ page_obj.next_page_number }}">next</a>
-      <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-  {% endif %}
-</div>
-
+    {% if page_obj.has_next %}
+      <button type="submit" formaction="{{searchpath}}&page={{ page_obj.next_page_number }}">next</button>
+      <button type="submit" formaction="{{searchpath}}&page={{ page_obj.paginator.num_pages }}">last &raquo;</button>
+    {% endif %}
+  </form>
+{% endif %}
 
 <script>
 jQuery.noConflict();

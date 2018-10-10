@@ -15,13 +15,6 @@ def list_own_content(context):
 
 
 @register.simple_tag(takes_context=True)
-def list_search_parameters(context):
-    ret = set(context["request"].GET.getlist("search"))
-    ret.update(context["request"].POST.getlist("search"))
-    return ret
-
-
-@register.simple_tag(takes_context=True)
 def update_user_protection(context):
     if context["request"].user.is_authenticated:
         index = context["request"].user.usercomponent_set.get(

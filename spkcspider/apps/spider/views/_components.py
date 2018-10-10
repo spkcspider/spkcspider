@@ -38,6 +38,7 @@ class ComponentPublicIndex(ListView):
 
     def get_queryset(self):
         searchq = models.Q()
+        infoq = models.Q()
         counter = 0
         max_counter = 30  # against ddos
         if "search" in self.request.POST or "info" in self.request.POST:
@@ -47,12 +48,14 @@ class ComponentPublicIndex(ListView):
                 counter += 1
                 if len(info) > 0:
                     searchq |= models.Q(contents__info__icontains="%s" % info)
+                    searchq |= models.Q(description__icontains="%s" % info)
+                    searchq |= models.Q(name__icontains="%s" % info)
 
             for info in self.request.POST.getlist("info"):
                 if counter > max_counter:
                     break
                 counter += 1
-                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
         else:
             for info in self.request.GET.getlist("search"):
                 if counter > max_counter:
@@ -60,12 +63,14 @@ class ComponentPublicIndex(ListView):
                 counter += 1
                 if len(info) > 0:
                     searchq |= models.Q(contents__info__icontains="%s" % info)
+                    searchq |= models.Q(description__icontains="%s" % info)
+                    searchq |= models.Q(name__icontains="%s" % info)
 
             for info in self.request.GET.getlist("info"):
                 if counter > max_counter:
                     break
                 counter += 1
-                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
@@ -73,7 +78,7 @@ class ComponentPublicIndex(ListView):
         if self.is_home:
             q &= models.Q(featured=True)
         main_query = self.model.objects.filter(
-            q & searchq
+            q & searchq & infoq
         ).order_by(*self.get_ordering()).distinct()
         return main_query
 
@@ -147,6 +152,7 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def get_queryset(self):
         searchq = models.Q()
+        infoq = models.Q()
         counter = 0
         # against ddos
         max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 30)
@@ -158,12 +164,14 @@ class ComponentIndex(UCTestMixin, ListView):
                 counter += 1
                 if len(info) > 0:
                     searchq |= models.Q(contents__info__icontains="%s" % info)
+                    searchq |= models.Q(description__icontains="%s" % info)
+                    searchq |= models.Q(name__icontains="%s" % info)
 
             for info in self.request.POST.getlist("info"):
                 if counter > max_counter:
                     break
                 counter += 1
-                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
         else:
             for info in self.request.GET.getlist("search"):
                 if counter > max_counter:
@@ -171,15 +179,17 @@ class ComponentIndex(UCTestMixin, ListView):
                 counter += 1
                 if len(info) > 0:
                     searchq |= models.Q(contents__info__icontains="%s" % info)
+                    searchq |= models.Q(description__icontains="%s" % info)
+                    searchq |= models.Q(name__icontains="%s" % info)
 
             for info in self.request.GET.getlist("info"):
                 if counter > max_counter:
                     break
                 counter += 1
-                searchq |= models.Q(contents__info__contains="\n%s\n" % info)
+                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
-        searchq &= models.Q(user=self.user)
+        searchq &= infoq & models.Q(user=self.user)
 
         # doesn't matter if it is same user
         travel = TravelProtection.objects.get_active()
