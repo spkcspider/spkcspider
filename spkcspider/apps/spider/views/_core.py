@@ -18,6 +18,7 @@ from ..models import (
 class UserTestMixin(AccessMixin):
     no_nonce_usercomponent = False
     also_authenticated_users = False
+    allowed_GET_parameters = set(["token", "raw", "protection"])
 
     def dispatch(self, request, *args, **kwargs):
         self.request.is_elevated_request = False
@@ -33,9 +34,7 @@ class UserTestMixin(AccessMixin):
     def sanitize_GET(self):
         GET = self.request.GET.copy()
         for key in list(GET.keys()):
-            if key not in [
-                "token", "deref", "raw", "protection"
-            ]:
+            if key not in self.allowed_GET_parameters:
                 GET.pop(key, None)
         return GET
 

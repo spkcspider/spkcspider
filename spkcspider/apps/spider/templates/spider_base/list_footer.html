@@ -1,9 +1,15 @@
 {% load i18n spider_paging %}
-{% list_search_parameters as cur_search %}
+{% list_parameters "search" as cur_search %}
+{% list_parameters "info" as cur_info %}
 {% get_searchpath as searchpath %}
 <div class="w3-padding">
   <form class="" style="max-width:400px;white-space: nowrap;" method="POST" action="{{searchpath}}">
     {% csrf_token %}
+    <select hidden="hidden" name="info" multiple="multiple">
+      {% for elem in cur_info %}
+        <option selected="selected" value="{{elem}}">{{elem}}</option>
+      {% endfor %}
+    </select>
     <select class="w3-input" name="search" id="search_field_list_footer" multiple="multiple">
       {% for elem in cur_search %}
         <option selected="selected" value="{{elem}}">{{elem}}</option>
@@ -17,6 +23,12 @@
     {% csrf_token %}
     <select hidden="hidden" name="search" multiple="multiple">
       {% for elem in cur_search %}
+        <option selected="selected" value="{{elem}}">{{elem}}</option>
+      {% endfor %}
+    </select>
+
+    <select hidden="hidden" name="info" multiple="multiple">
+      {% for elem in cur_info %}
         <option selected="selected" value="{{elem}}">{{elem}}</option>
       {% endfor %}
     </select>

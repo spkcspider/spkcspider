@@ -4,9 +4,9 @@ register = template.Library()
 
 
 @register.simple_tag(takes_context=True)
-def list_search_parameters(context):
-    ret = set(context["request"].GET.getlist("search"))
-    ret.update(context["request"].POST.getlist("search"))
+def list_parameters(context, name):
+    ret = set(context["request"].GET.getlist(name))
+    ret.update(context["request"].POST.getlist(name))
     return ret
 
 

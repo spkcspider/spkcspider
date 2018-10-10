@@ -28,12 +28,20 @@ from ..helpers import get_settings_func
 class ComponentPublicIndex(ListView):
     model = UserComponent
     is_home = False
+    allowed_GET_parameters = set(["protection"])
 
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         kwargs["is_public_view"] = True
+
+        GET = self.request.GET.copy()
+        # parameters preserved in search
+        for key in list(GET.keys()):
+            if key not in self.allowed_GET_parameters:
+                GET.pop(key, None)
+        kwargs["spider_GET"] = GET
         return super().get_context_data(**kwargs)
 
     def get_queryset(self):
