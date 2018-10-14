@@ -13,6 +13,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 {% block extrahead %}
 {{block.super}}
 <script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
+{{form.media|safe}}
 {% endblock %}
 
 {% block main_classes %}{% if not object %}{{block.super}}{% else %} w3-content w3-card-4 color-front-{{object.strength}}{% endif %}{% endblock %}
@@ -62,7 +63,6 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   </div>
   {% endif %}
   {% include "spider_base/form_errors.html" with form=form %}
-  {{form.media}}
   <form class="w3-padding" action="{{ request.path }}" encdata="multipart/form-data" method="post">
     {% csrf_token %}
     <fieldset>
@@ -94,7 +94,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           </div>
         {% empty%}
           <div class="w3-padding">
-            <div class="w3-padding w3-card w3-orange"> No protections: create component first </div>
+            <div class="w3-padding w3-card w3-orange">{% trans 'No protections: create component first' %}</div>
           </div>
         {% endfor %}
     </fieldset>

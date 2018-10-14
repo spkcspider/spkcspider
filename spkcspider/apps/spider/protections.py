@@ -19,7 +19,8 @@ from django.contrib.auth import authenticate
 
 from .helpers import cmp_pw, add_by_field
 from .constants import ProtectionType, ProtectionResult
-
+from .fields import OpenChoiceField
+from .widgets import OpenChoiceWidget
 
 installed_protections = {}
 _sysrand = SystemRandom()
@@ -166,30 +167,34 @@ class BaseProtection(forms.Form):
         return self.localize_name(self.name)
 
 
-def friend_query():
-    return get_user_model().objects.filter(is_active=True)
-
-
 # only friends have access
 @add_by_field(installed_protections, "name")
 class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
 
-    users = forms.ModelMultipleChoiceField(
-        label=_("Users"), queryset=friend_query(), required=False
+    users = OpenChoiceField(
+        label=_("Users"), required=False,
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
     )
     description = _("Limit access to selected users")
 
     def get_strength(self):
         return 4
 
-    def clean_users(self):
-        return [i.pk for i in self.cleaned_data["users"]]
-
     @classmethod
     def auth(cls, request, obj, **kwargs):
-        if obj and request.user.pk in obj.data["users"]:
+        if (
+            obj and
+            (
+                getattr(request.user, request.user.USERNAME_FIELD) in
+                obj.data["users"]
+            )
+        ):
             return True
         else:
             return False

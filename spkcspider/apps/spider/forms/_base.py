@@ -88,6 +88,14 @@ class UserComponentForm(forms.ModelForm):
             self.protections = []
             self.fields["required_passes"].initial = 1
 
+    @property
+    def media(self):
+        """Return all media required to render the widgets on this form."""
+        media = super().media
+        for protection in self.protections:
+            media = media + protection.media
+        return media
+
     def is_valid(self):
         isvalid = super().is_valid()
         for protection in self.protections:

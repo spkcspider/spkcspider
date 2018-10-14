@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "SPKCSpider"
+name = "spkcspider"
 description = ""
 version = "0.1"
 authors = []
