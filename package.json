@@ -7,7 +7,7 @@
   },
   "private": true,
   "dependencies": {
-    "qrcode": "^1.2.2",
-    "trumbowyg": "^2.11.0"
+    "qrcode": "^1.3.0",
+    "trumbowyg": "^2.11.1"
   }
 }
