@@ -152,7 +152,10 @@ class UserTestMixin(AccessMixin):
         model = get_user_model()
         margs = {model.USERNAME_FIELD: None}
         margs[model.USERNAME_FIELD] = self.kwargs.get("user", None)
-        return get_object_or_404(model, **margs)
+        return get_object_or_404(
+            model.objects.select_related("spider_info"),
+            **margs
+        )
 
     def get_usercomponent(self):
         ucname = self.kwargs["name"]
@@ -167,7 +170,12 @@ class UserTestMixin(AccessMixin):
         }
         if not self.no_nonce_usercomponent:
             query["nonce"] = self.kwargs["nonce"]
-        return get_object_or_404(UserComponent, **query)
+        return get_object_or_404(
+            UserComponent.objects.prefetch_related(
+                "authtokens", "protections"
+            ),
+            **query
+        )
 
     def handle_no_permission(self):
         # in case no protections are used (e.g. add content)

@@ -168,7 +168,7 @@ class AssignedContent(models.Model):
             return True
         return False
 
-    def getlist(self, key):
+    def getlist(self, key, amount=None):
         info = self.info
         ret = []
         pstart = info.find("\n%s=" % key)
@@ -181,6 +181,9 @@ class AssignedContent(models.Model):
                 )
             ret.append(info[pstart:pend])
             pstart = info.find("\n%s=" % key, pend)
+            # if amount=0 => bool(amount) == false
+            if amount and amount <= len(ret):
+                break
         return ret
 
     def clean(self):

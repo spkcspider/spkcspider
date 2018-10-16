@@ -85,7 +85,9 @@ class ComponentPublicIndex(ListView):
         q = models.Q(public=True)
         if self.is_home:
             q &= models.Q(featured=True)
-        main_query = self.model.objects.filter(
+        main_query = self.model.objects.prefetch_related(
+            "contents"
+        ).filter(
             q & searchq & infoq
         ).order_by(*self.get_ordering()).distinct()
         return main_query
@@ -260,12 +262,12 @@ class ComponentIndex(UCTestMixin, ListView):
                 "{}/data.json".format(cname), json.dumps(comp_dict)
             )
             for n, content in enumerate(
-                component.contents.order_by("ctype__name", "id")
+                component.contents.order_by("id")
             ):
                 context["content"] = content.content
                 store_dict = OrderedDict(
                     pk=content.pk,
-                    ctype=content.ctype.name,
+                    ctype=content.getlist("type", 1)[0],
                     info=content.info,
                     scope="export",
                     modified=content.modified.strftime(
@@ -342,7 +344,10 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(
-            queryset, user=self.get_user(), name=self.kwargs["name"],
+            queryset.prefetch_related(
+                "protections",
+            ),
+            user=self.get_user(), name=self.kwargs["name"],
             nonce=self.kwargs["nonce"]
         )
 

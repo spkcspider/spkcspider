@@ -112,7 +112,7 @@ class PublicKey(BaseContent):
         kwargs["object"] = self
         kwargs["algo"] = settings.KEY_HASH_ALGO
         kwargs["hash"] = self.associated.getlist(
-            "hash:%s" % settings.KEY_HASH_ALGO
+            "hash:%s" % settings.KEY_HASH_ALGO, 1
         )[0].split("=", 1)[1]
         return (
             render_to_string(

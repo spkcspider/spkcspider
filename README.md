@@ -129,9 +129,10 @@ There are some special GET parameters for services with special requirements:
 verified_by urls should return hashname:hash_hexdigest
 
 # TODO
-
+* use referer header for Anchors
+* improve default logout
 * layout: verifiers+examples
-* FriendProtection: use select2, don't enforce existing users
+* token control
 * improve anchors
 * tests
 

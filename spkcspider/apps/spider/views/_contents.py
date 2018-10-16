@@ -176,7 +176,10 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(
-            queryset,
+            queryset.select_related(
+                "usercomponent", "usercomponent__user",
+                "usercomponent__user__spider_info"
+            ),
             id=self.kwargs["id"],
             nonce=self.kwargs["nonce"]
         )
@@ -185,7 +188,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
 class ContentIndex(UCTestMixin, ListView):
     model = AssignedContent
     scope = "list"
-    ordering = ("ctype__name", "id")
+    ordering = ("id",)
     no_nonce_usercomponent = False
 
     def dispatch(self, request, *args, **kwargs):
@@ -203,7 +206,12 @@ class ContentIndex(UCTestMixin, ListView):
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
         query["nonce"] = self.kwargs["nonce"]
-        return get_object_or_404(UserComponent, **query)
+        return get_object_or_404(
+            UserComponent.objects.select_related(
+                "user", "user__spider_info",
+            ).prefetch_related("protections"),
+            **query
+        )
 
     def get_context_data(self, **kwargs):
         kwargs["scope"] = self.scope
@@ -307,7 +315,7 @@ class ContentIndex(UCTestMixin, ListView):
             context["content"] = content.content
             store_dict = OrderedDict(
                 pk=content.pk,
-                ctype=content.ctype.name,
+                ctype=content.getlist("type", 1)[0],
                 info=content.info,
                 modified=content.modified.strftime(
                     "%a, %d %b %Y %H:%M:%S %z"

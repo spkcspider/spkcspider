@@ -21,7 +21,9 @@ class DataVerificationTag(models.Model):
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
 
-    hash = models.TextField(null=True, blank=True)
+    hash = models.TextField(
+        unique=True, db_index=True, null=False
+    )
     dvfile = models.FileField(upload_to=dv_path, null=True, blank=True)
     checked = models.DateTimeField(default=None, null=True)
     data_type = models.CharField(

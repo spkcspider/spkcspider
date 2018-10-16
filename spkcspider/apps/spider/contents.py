@@ -309,7 +309,7 @@ class BaseContent(models.Model):
                         pref = "{}{}/".format(prefix, name)
                         datadic[name].append(OrderedDict(
                             pk=val.associated.pk,
-                            ctype=val.associated.ctype.name,
+                            ctype=val.associated.getlist("type", 1)[0],
                             info=val.associated.info
                         ))
                         val.extract_form(
@@ -327,7 +327,7 @@ class BaseContent(models.Model):
                 elif isinstance(value, AssignedContent):
                     datadic[name] = {
                         "pk": value.pk,
-                        "ctype": value.ctype.name,
+                        "ctype": value.getlist("type", 1)[0],
                         "info": value.info
                     }
                     if save_field_order:
@@ -335,7 +335,7 @@ class BaseContent(models.Model):
                 else:
                     datadic[name] = [{
                         "pk": val.pk,
-                        "ctype": val.ctype.name,
+                        "ctype": val.getlist("type", 1)[0],
                         "info": val.info
                     } for val in value]
                     if save_field_order:
@@ -380,7 +380,7 @@ class BaseContent(models.Model):
         }
         store_dict = OrderedDict(
             pk=self.associated.pk,
-            ctype=self.associated.ctype.name,
+            ctype=self.associated.getlist("type", 1)[0],
             modified=self.associated.modified.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             ),
