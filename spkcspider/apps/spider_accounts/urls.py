@@ -3,11 +3,11 @@ from django.conf import settings
 from django.urls import path, reverse_lazy
 
 from django.contrib.auth.views import (
-    LogoutView, PasswordChangeView, PasswordChangeDoneView
+    PasswordChangeView, PasswordChangeDoneView
 )
 from django.views.generic.base import RedirectView, TemplateView
 
-from .views import SignupView, UserUpdateView, UserLoginView
+from .views import SignupView, UserUpdateView, UserLoginView, UserLogoutView
 
 
 app_name = "spider_accounts"
@@ -16,7 +16,7 @@ app_name = "spider_accounts"
 
 urlpatterns = [
     path('login/', UserLoginView.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(), name='logout'),
+    path('logout/', UserLogoutView.as_view(), name='logout'),
     path(
         'password_change/',
         PasswordChangeView.as_view(

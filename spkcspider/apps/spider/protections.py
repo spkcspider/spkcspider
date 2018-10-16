@@ -57,7 +57,7 @@ def initialize_protection_models(apps=None):
                 asuc.active = True
                 asuc.save()
 
-    UserComponent.objects.filter(name="index", strength=0).update(strength=10)
+    UserComponent.objects.filter(name__in=("index", "fake_index")).update(strength=10)
 
     invalid_models = ProtectionModel.objects.exclude(
         code__in=installed_protections.keys()

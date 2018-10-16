@@ -1,10 +1,14 @@
-__all__ = ("SignupView", "UserLoginView", "UserUpdateView")
+__all__ = (
+    "SignupView", "UserLoginView", "UserLogoutView", "UserUpdateView"
+)
 
 from django.http import HttpResponseRedirect
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, LogoutView
 from django.views.generic.edit import FormView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
@@ -47,6 +51,14 @@ class UserLoginView(LoginView):
     def form_invalid(self, form):
         form.reset_protections()
         return super().form_invalid(form)
+
+
+class UserLogoutView(LogoutView):
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        ret = super().dispatch(request, *args, **kwargs)
+        ret["Clear-Site-Data"] = "*"
+        return ret
 
 
 class UserUpdateView(LoginRequiredMixin, UpdateView):
