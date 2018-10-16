@@ -145,8 +145,11 @@ class TextFilet(BaseContent):
     )
 
     preview_words = models.PositiveIntegerField(
-        default=10,
-        help_text=_("How many words should be used for preview?")
+        default=0,
+        help_text=_(
+            "How many words from start should be used for search, seo, "
+            "search machine preview (tags are stripped)?"
+        )
     )
 
     text = models.TextField(default="")
@@ -158,14 +161,17 @@ class TextFilet(BaseContent):
 
     def get_info(self):
         ret = super().get_info()
-        return "%sname=%s\n" % (ret, self.name)
+        return "%sname=%s\npreview=%s\n" % (
+            ret, self.name,
+            " ".join(
+                prepare_description(
+                    self.text, self.preview_words+1
+                )[:self.preview_words]
+            )
+        )
 
     def get_protected_preview(self):
-        return " ".join(
-            prepare_description(
-                self.text, self.preview_words+1
-            )[:self.preview_words]
-        )
+        return self.assigned.getlist("preview", 1)[0]
 
     def get_form(self, scope):
         if scope in ("raw", "export", "list"):
