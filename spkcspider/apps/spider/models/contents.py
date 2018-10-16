@@ -127,7 +127,7 @@ class LinkContent(BaseContent):
 
         kwargs["source"] = self
         kwargs["uc"] = self.content.usercomponent
-        self.content.content.render(**kwargs)
+        return self.content.content.render(**kwargs)
 
 
 def own_components():

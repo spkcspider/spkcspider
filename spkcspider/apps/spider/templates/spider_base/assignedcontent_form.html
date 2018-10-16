@@ -44,7 +44,7 @@
 {% if scope == "update" and raw_update_type in object.ctype.ctype %}
   {% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='raw_update' as raw_updatelink %}
   <script type="text/javascript">
-    var raw_updatelink = "{{raw_updatelink}}";
+    var raw_updatelink = "{{hostpart}}{{raw_updatelink}}";
     function open_qrmodal_raw_update(){
       let _qrcanvas = document.getElementById('qrcanvas');
       let remotelink_link = document.getElementById('remotelink');
