@@ -1,10 +1,6 @@
 
-import hashlib
 import logging
 import json
-
-import requests
-import certifi
 
 from django.db import models
 from django.conf import settings
@@ -27,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Create your models here.
 
-_htest = hashlib.new(settings.KEY_HASH_ALGO)
+_htest = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
 _htest.update(b"test")
 
 _help_text_sig = _(""" Signed identifier """)
@@ -69,10 +65,10 @@ class PublicKey(BaseContent):
     def get_info(self):
         ret = super().get_info()
         key = self.get_key_name()[0]
-        h = hashlib.new(settings.KEY_HASH_ALGO)
+        h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
         h.update(key.encode("ascii", "ignore"))
         return "%shash:%s=%s\n" % (
-            ret, settings.KEY_HASH_ALGO, h.hexdigest()
+            ret, settings.SPIDER_HASH_ALGORITHM, h.hexdigest()
         )
 
     def get_key_name(self):
@@ -110,9 +106,9 @@ class PublicKey(BaseContent):
             k["scope"] = "raw"
             return self.render_serialize(**k)
         kwargs["object"] = self
-        kwargs["algo"] = settings.KEY_HASH_ALGO
+        kwargs["algo"] = settings.SPIDER_HASH_ALGORITHM
         kwargs["hash"] = self.associated.getlist(
-            "hash:%s" % settings.KEY_HASH_ALGO, 1
+            "hash:%s" % settings.SPIDER_HASH_ALGORITHM, 1
         )[0].split("=", 1)[1]
         return (
             render_to_string(
@@ -178,7 +174,6 @@ class AnchorServer(BaseContent):
     def render_view(self, **kwargs):
         if "requester" in kwargs["request"].GET:
             k = kwargs.copy()
-            k["scope"] = "raw"
             token = AuthToken(
                 usercomponent=self.associated.usercomponent,
                 session_key=kwargs["request"].session.session_key
@@ -209,15 +204,15 @@ class AnchorServer(BaseContent):
             )
             if ret.status != 200:
                 token.delete()
-            h = hashlib.new(settings.KEY_HASH_ALGO)
+            h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
             h.update(token.token.encode("ascii", "ignore"))
             if "?" not in requester:
                 requester = "{}?algo={}&hash={}".format(
-                    requester, settings.KEY_HASH_ALGO, h.hexdigest()
+                    requester, settings.SPIDER_HASH_ALGORITHM, h.hexdigest()
                 )
             else:
                 requester = "{}?algo={}&hash={}".format(
-                    requester, settings.KEY_HASH_ALGO, h.hexdigest()
+                    requester, settings.SPIDER_HASH_ALGORITHM, h.hexdigest()
                 )
             return HttpResponseRedirect(requester)
 

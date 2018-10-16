@@ -1,6 +1,10 @@
 __all__ = ("UserTestMixin", "UCTestMixin")
 
 import logging
+import hashlib
+
+import requests
+import certifi
 
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
@@ -29,6 +33,10 @@ class UserTestMixin(AccessMixin):
             return self.handle_no_permission()
         if isinstance(user_test_result, str):
             return HttpResponseRedirect(redirect_to=user_test_result)
+        if "referrer" in self.request.GET:
+            # don't want to have to clean up, GET is easier
+            assert("token" in self.request.GET)
+            return self.handle_referrer()
         return super().dispatch(request, *args, **kwargs)
 
     def sanitize_GET(self):
@@ -104,15 +112,19 @@ class UserTestMixin(AccessMixin):
             # token not required
             if no_token:
                 return True
+            session_key = None
+            if "token" not in self.request.GET:
+                session_key=self.request.session.session_key
             token = AuthToken(
                 usercomponent=self.usercomponent,
-                session_key=self.request.session.session_key
+                session_key=session_key
             )
             try:
                 token.save()
             except TokenCreationError as e:
                 logging.exception(e)
                 return False
+
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
             self.request.auth_token = token
@@ -202,6 +214,45 @@ class UserTestMixin(AccessMixin):
             using=self.template_engine,
             content_type=self.content_type
         )
+
+    def handle_referrer(self):
+        context = self.get_context_data()
+        context["referrer"] = "https://{}".format(
+            self.request.GET["referrer"]
+        )
+        if "confirm" in self.request.POST:
+            referrer = "https://{}".format(
+                self.request.POST["referrer"]
+            )
+            # www-data is best here, for beeing compatible to webservers
+            # webservers can transfer dictionary to logic (this program) where
+            # json is no problem
+            ret = requests.post(
+                referrer,
+                data={
+                    "token": token.token,
+                    "url": "%s%s" % (
+                        context["hostpart"],
+                        self.request.get_full_path()
+                    )
+                },
+                verify=certifi.where()
+            )
+            h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
+            h.update(token.token.encode("ascii", "ignore"))
+
+            return HttpResponseRedirect(redirect_to=referrer)
+        else:
+            return self.response_class(
+                request=self.request,
+                template=self.get_referrer_template_names(),
+                context=context,
+                using=self.template_engine,
+                content_type=self.content_type
+            )
+
+    def get_referrer_template_names(self):
+        return "spider_protections/referring.html"
 
     def get_noperm_template_names(self):
         return "spider_protections/protections.html"

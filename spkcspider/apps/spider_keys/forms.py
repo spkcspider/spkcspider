@@ -56,14 +56,13 @@ class AnchorKeyForm(forms.ModelForm):
 
     class Meta:
         model = AnchorKey
-        fields = ['key', 'identifier', 'signature']
+        fields = ['key', 'signature']
 
     def __init__(self, scope, **kwargs):
         self.scope = scope
         super().__init__(**kwargs)
         if self.scope == "add":
             del self.fields["signature"]
-            del self.fields["identifier"]
 
     def clean(self):
         self.cleaned_data["type"] = "key"

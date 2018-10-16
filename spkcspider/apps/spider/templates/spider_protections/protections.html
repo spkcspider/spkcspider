@@ -2,6 +2,7 @@
 {% load spider_protections i18n %}
 {% block content %}
 <form action="{{ request.get_full_path }}" method="post">
+  {% csrf_token %}
   <fieldset>
     <legend><h1>{% trans 'Protections' %}</h1></legend>
     {% extract_protections "protections" as protections %}

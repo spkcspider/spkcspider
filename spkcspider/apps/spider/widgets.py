@@ -21,10 +21,9 @@ class OpenChoiceWidget(widgets.SelectMultiple):
         groups = []
         has_selected = False
 
+        choices = list(self.choices)
         if value:
-            choices = [(i, i) for i in value]
-        else:
-            choices = self.choices
+            choices = [(i, i) for i in value] + choices
 
         for index, (option_value, option_label) in enumerate(choices):
             if option_value is None:

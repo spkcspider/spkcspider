@@ -123,18 +123,20 @@ There are some special GET parameters for services with special requirements:
 * info=foo: search info tag in info, for list only. Restricts search field.
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
+* referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if strength > 0
 * [embed_big=true]: only staff and superuser can use it. Overrides maximal size of files which are embedded
 
 
 verified_by urls should return hashname:hash_hexdigest
 
 # TODO
-* use referer header for Anchors
-* improve default logout
-* layout: verifiers+examples
 * token control
+* finish global referrer mode, remove cruft from anchors
 * improve anchors
+* improve tags
+* examples
 * tests
+* documentation
 
 Later:
 * create client side script for import (pushing to server, index token for auth?)
@@ -143,7 +145,6 @@ Later:
 * log changes
 * improve protections, add protections
 * complete travel mode
-* use Clear-Site-Data: "\*"
 * color tones for strength
 
 # Thanks

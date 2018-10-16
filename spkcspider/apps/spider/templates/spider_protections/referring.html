@@ -1,0 +1,18 @@
+{% extends "spider_protections/base.html" %}
+{% block content %}
+<form action="{{ request.get_full_path }}" method="post">
+  {% csrf_token %}
+  <fieldset>
+    <legend><h1>{% trans 'Access to' %}</h1></legend>
+    <div>
+      TODO
+    </div>
+  </fieldset>
+  <button class="w3-button w3-grey">
+    {% trans 'Confirm Access' %}
+  </button>
+  <a class="w3-button w3-grey" href="{{referrer}}">
+    {% trans 'Cancel' %}
+  </a>
+</form>
+{% endblock %}

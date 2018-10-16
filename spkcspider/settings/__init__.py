@@ -135,7 +135,7 @@ LOGIN_REDIRECT_URL = "auth:profile"
 LOGOUT_REDIRECT_URL = "home"
 
 AUTH_USER_MODEL = 'spider_accounts.SpiderUser'
-KEY_HASH_ALGO = "sha512"
+SPIDER_HASH_ALGORITHM = "sha512"
 # as hex digest
 MAX_HASH_SIZE = 128
 MIN_STRENGTH_EVELATION = 2

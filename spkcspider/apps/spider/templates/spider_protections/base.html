@@ -13,6 +13,6 @@
 {% block context_actions %}
 {{block.super}}
 {% endblock context_actions %}
-{# Disclose strength of protection only if public #}
-{% block main_classes %}{{block.super}} w3-content w3-card-4 {% if uc.public %} color-front-{{uc.strength}}{% else %}w3-sand{% endif %}{% endblock %}
-{% block body_class %}{{block.super}} {% if uc.public %}color-back-{{uc.strength}}{% else %}w3-light-grey{% endif %}{% endblock %}
+{# Disclose strength of protection only if public or referring #}
+{% block main_classes %}{{block.super}} w3-content w3-card-4 {% if uc.public or referring %} color-front-{{uc.strength}}{% else %}w3-sand{% endif %}{% endblock %}
+{% block body_class %}{{block.super}} {% if uc.public or referring %}color-back-{{uc.strength}}{% else %}w3-light-grey{% endif %}{% endblock %}
