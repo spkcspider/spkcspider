@@ -171,7 +171,7 @@ class TextFilet(BaseContent):
         )
 
     def get_protected_preview(self):
-        return self.assigned.getlist("preview", 1)[0]
+        return self.associated.getlist("preview", 1)[0]
 
     def get_form(self, scope):
         if scope in ("raw", "export", "list"):
