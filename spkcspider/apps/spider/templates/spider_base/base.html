@@ -103,13 +103,13 @@
           </div>
         {% else %}
           {% if OPEN_FOR_REGISTRATION %}
-          <a class="w3-bar-item w3-button w3-right" href="{{registerpath}}{% if registerpath != request.path %}?next={{request.path|urlencode}}{% endif %}">
+          <a class="w3-bar-item w3-button w3-right" href="{{registerpath}}{% if registerpath != request.path %}?{{REDIRECT_FIELD_NAME}}={{request.path|urlencode}}{% endif %}">
             <i class="fa fa-user-plus" style="margin-right:10px" aria-hidden="true"></i>
             {% trans 'Register' %}
           </a>
           {% endif %}
           {% if request.path != loginpath %}
-            <a class="w3-bar-item w3-button w3-right" href="{% url 'auth:login'%}?next={{request.path|urlencode}}">
+            <a class="w3-bar-item w3-button w3-right" href="{{LOGIN_URL}}?{{REDIRECT_FIELD_NAME}}={{request.path|urlencode}}">
               <i class="fa fa-sign-in-alt" style="margin-right:10px" aria-hidden="true"></i>
               {% trans 'Login' %}
             </a>

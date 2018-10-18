@@ -2,16 +2,19 @@ __all__ = ("UserTestMixin", "UCTestMixin")
 
 import logging
 import hashlib
+from urllib.parse import urlencode
 
 import requests
 import certifi
 
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
-from django.http import HttpResponseRedirect
+from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
+from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.utils import timezone
 from django.conf import settings
+from django.urls import reverse_lazy
+from django.utils.translation import gettext
 
 from ..constants import UserContentType
 from ..models import (
@@ -23,12 +26,24 @@ class UserTestMixin(AccessMixin):
     no_nonce_usercomponent = False
     also_authenticated_users = False
     allowed_GET_parameters = set(["token", "raw", "protection"])
+    login_url = getattr(
+        settings,
+        "LOGIN_URL",
+        reverse_lazy("auth:login")
+    )
 
     def dispatch(self, request, *args, **kwargs):
+        _ = gettext
         self.request.is_elevated_request = False
         self.request.is_owner = False
         self.request.auth_token = None
-        user_test_result = self.test_func()
+        try:
+            user_test_result = self.test_func()
+        except TokenCreationError as e:
+            logging.exception(e)
+            return HttpResponseServerError(
+                _("Token creation failed, try again")
+            )
         if not user_test_result:
             return self.handle_no_permission()
         if isinstance(user_test_result, str):
@@ -52,6 +67,8 @@ class UserTestMixin(AccessMixin):
             self.request.scheme, self.request.get_host()
         )
         kwargs["spider_GET"] = self.sanitize_GET()
+        kwargs["REDIRECT_FIELD_NAME"] = REDIRECT_FIELD_NAME
+        kwargs["LOGIN_URL"] = self.get_login_url()
         return super().get_context_data(**kwargs)
 
     # by default only owner can access view
@@ -114,16 +131,12 @@ class UserTestMixin(AccessMixin):
                 return True
             session_key = None
             if "token" not in self.request.GET:
-                session_key=self.request.session.session_key
+                session_key = self.request.session.session_key
             token = AuthToken(
                 usercomponent=self.usercomponent,
                 session_key=session_key
             )
-            try:
-                token.save()
-            except TokenCreationError as e:
-                logging.exception(e)
-                return False
+            token.save()
 
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
@@ -198,6 +211,7 @@ class UserTestMixin(AccessMixin):
         assert(p is not True)
         context = {
             "spider_GET": self.sanitize_GET(),
+            "LOGIN_URL": self.get_login_url(),
             "scope": getattr(self, "scope", None),
             "uc": self.usercomponent,
             "object": getattr(self, "object", None),
@@ -215,22 +229,59 @@ class UserTestMixin(AccessMixin):
             content_type=self.content_type
         )
 
+    def join_get_url(self, url, **kwargs):
+        getargs = "&".join(
+            ["{}={}".format(i[0], urlencode(i[1])) for i in kwargs.items()]
+        )
+        if "?" in url:
+            if url[-1] == "?":
+                url = "{}{}".format(url, getargs)
+            else:
+                url = "{}&{}".format(url, getargs)
+        else:
+            url = "{}?{}".format(url, getargs)
+        return url
+
     def handle_referrer(self):
+        _ = gettext
+        if (
+            self.request.user != self.usercomponent.user and
+            not self.request.auth_token
+        ):
+            return HttpResponseRedirect(
+                redirect_to="{}?{}={}".format(
+                    self.get_login_url(),
+                    REDIRECT_FIELD_NAME,
+                    urlencode(self.request.GET["referrer"])
+                )
+            )
         context = self.get_context_data()
         context["referrer"] = "https://{}".format(
             self.request.GET["referrer"]
         )
         if "confirm" in self.request.POST:
-            referrer = "https://{}".format(
-                self.request.POST["referrer"]
-            )
+            if self.usercomponent.user == self.request.user:
+                authtoken = AuthToken(
+                    usercomponent=self.usercomponent
+                )
+                try:
+                    authtoken.save()
+                except TokenCreationError as e:
+                    logging.exception(e)
+                    return HttpResponseServerError(
+                        _("Token creation failed, try again")
+                    )
+                token = authtoken.token
+            else:
+                token = self.request.auth_token.token
             # www-data is best here, for beeing compatible to webservers
             # webservers can transfer dictionary to logic (this program) where
             # json is no problem
             ret = requests.post(
-                referrer,
+                context["referrer"],
                 data={
-                    "token": token.token,
+                    "token": token,
+                    "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
                     "url": "%s%s" % (
                         context["hostpart"],
                         self.request.get_full_path()
@@ -238,10 +289,21 @@ class UserTestMixin(AccessMixin):
                 },
                 verify=certifi.where()
             )
+            if ret.status_code not in (200, 201):
+                return HttpResponseRedirect(
+                    redirect_to=self.join_get_url(
+                        context["referrer"],
+                        error="post_failed"
+                    )
+                )
             h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
-            h.update(token.token.encode("ascii", "ignore"))
-
-            return HttpResponseRedirect(redirect_to=referrer)
+            h.update(token.encode("ascii", "ignore"))
+            return HttpResponseRedirect(
+                redirect_to=self.join_get_url(
+                    context["referrer"],
+                    hash=h.hexdigest()
+                )
+            )
         else:
             return self.response_class(
                 request=self.request,

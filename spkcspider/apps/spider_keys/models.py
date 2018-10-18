@@ -1,6 +1,7 @@
 
 import logging
 import json
+import hashlib
 
 from django.db import models
 from django.conf import settings
