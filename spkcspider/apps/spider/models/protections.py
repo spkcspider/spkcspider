@@ -148,6 +148,9 @@ class Protection(models.Model):
             **kwargs
         )
 
+    def render_raw(self, result):
+        return {self.code: self.installed_class.render_raw(result)}
+
     @classmethod
     def get_forms(cls, ptype=None, **kwargs):
         protections = cls.objects.valid()

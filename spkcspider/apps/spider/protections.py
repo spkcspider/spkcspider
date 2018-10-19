@@ -99,7 +99,7 @@ class BaseProtection(forms.Form):
 
     @classmethod
     def render_raw(cls, result):
-        return {cls.auth_localize_name(): {}}
+        return {}
 
     # auto populated, instance
     protection = None

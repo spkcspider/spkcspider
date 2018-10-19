@@ -29,13 +29,16 @@ from ..helpers import get_settings_func
 class ComponentPublicIndex(ListView):
     model = UserComponent
     is_home = False
-    allowed_GET_parameters = set(["protection"])
+    allowed_GET_parameters = set(["protection", "raw"])
 
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         kwargs["is_public_view"] = True
+        kwargs["hostpart"] = "{}://{}".format(
+            self.request.scheme, self.request.get_host()
+        )
 
         GET = self.request.GET.copy()
         # parameters preserved in search
@@ -113,14 +116,15 @@ class ComponentPublicIndex(ListView):
                     "name": (
                         item.name if item.name != "fake_index" else "index"
                     ),
-                    "link": "{}{}".format(
+                    "link": "{}{}?{}".format(
                         context["hostpart"],
                         reverse(
                             "spider_base:ucontent-list",
                             kwargs={
                                 "id": item.id, "nonce": item.nonce
                             }
-                        )
+                        ),
+                        context["spider_GET"].urlencode()
                     )
                 }
                 for item in context["object_list"]

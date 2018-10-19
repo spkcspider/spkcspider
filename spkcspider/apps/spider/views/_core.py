@@ -241,7 +241,7 @@ class UserTestMixin(AccessMixin):
             )
         return self.response_class(
             request=self.request,
-            template=self.get_noperm_template_names("raw" in self.request.GET),
+            template=self.get_noperm_template_names(),
             # render with own context; get_context_data may breaks stuff or
             # disclose informations
             context=context,
@@ -320,7 +320,11 @@ class UserTestMixin(AccessMixin):
                     ret["contents"] = [str(ob) for ob in self.object.contents]
                 else:
                     ret["contents"] = [str(self.object)]
-                ret["name"] = str(self.object)
+                if self.request.is_owner:
+                    # strong authentication
+                    ret["usercomponent"] = self.usercomponent.name
+                else:
+                    ret["usercomponent"] = None
                 return JsonResponse(ret)
             return self.response_class(
                 request=self.request,
