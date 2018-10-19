@@ -17,7 +17,10 @@ def TriggerUpdate(sender, **_kwargs):
 
 
 def DeleteContentCallback(sender, instance, **kwargs):
-    instance.content.delete(False)
+    if instance.fake_id is None:
+        instance.content.delete(False)
+    # because Operations are done on the real object
+    # deletions in fake view work too
 
 
 def UpdateSpiderCallback(**_kwargs):

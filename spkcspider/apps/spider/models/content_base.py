@@ -94,6 +94,7 @@ def info_field_validator(value):
 
 class AssignedContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
+    fake_id = models.BigIntegerField(editable=False, null=True)
     # brute force protection
     nonce = models.SlugField(
         default=token_nonce, max_length=MAX_NONCE_SIZE*4//3,
@@ -162,6 +163,16 @@ class AssignedContent(models.Model):
 
     def __repr__(self):
         return self.content.__repr__()
+
+    def get_id(self):
+        """
+            provides "right" id
+            only neccessary for access from usercomponent to hide fakes
+        """
+        # access from content works out of the box by using associated
+        if self.fake_id:
+            return self.fake_id
+        return self.id
 
     def get_flag(self, flag):
         if self.info and "\n%s\n" % flag in self.info:

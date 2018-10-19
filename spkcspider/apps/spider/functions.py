@@ -1,6 +1,6 @@
 __all__ = [
     "rate_limit_default", "allow_all_filter", "generate_embedded",
-    "embed_file_default"
+    "embed_file_default", "has_admin_permission"
 ]
 
 import os
@@ -9,7 +9,9 @@ import tempfile
 import time
 from django.core.exceptions import ValidationError
 from django.http import Http404
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponseRedirect
+from django.views.decorators.cache import never_cache
+from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.conf import settings
 
@@ -84,3 +86,28 @@ def generate_embedded(func, context, obj=None):
     if expires:
         ret['X-Token-Expires'] = expires
     return ret
+
+
+def has_admin_permission(self, request):
+    # allow only non faked user with superuser and staff permissions
+    if request.session.get("is_fake", False):
+        return False
+    return request.user.is_active and request.user.is_staff
+
+
+@never_cache
+def admin_login(self, request, extra_context=None):
+    """
+    Display the login form for the given HttpRequest.
+    """
+    if request.method == 'GET' and self.has_permission(request):
+        # Already logged-in, redirect to admin index
+        index_path = reverse('admin:index', current_app=self.name)
+        return HttpResponseRedirect(index_path)
+    else:
+        loginpath = getattr(
+            settings,
+            "LOGIN_URL",
+            reverse("auth:login")
+        )
+        return HttpResponseRedirect(loginpath)

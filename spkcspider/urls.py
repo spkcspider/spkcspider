@@ -18,9 +18,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.conf import settings
-from django.contrib.auth.decorators import login_required
 from django.apps import apps
 from spkcspider.apps.spider.views import ComponentPublicIndex
+from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.apps.spider.functions import admin_login
 
 favicon_view = RedirectView.as_view(
     url='{}spider_base/favicon.svg'.format(settings.STATIC_URL), permanent=True
@@ -30,7 +31,12 @@ robots_view = RedirectView.as_view(
 )
 
 # disable admin login page
-admin.site.login = login_required(admin.site.login)
+admin.site.login = admin_login
+# default: allow only non faked user with superuser and staff permissions
+admin.site.has_permission = get_settings_func(
+    "HAS_ADMIN_PERMISSION_FUNC",
+    "spkcspider.apps.spider.functions.has_admin_permission"
+)
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]

@@ -1,6 +1,5 @@
 
 import logging
-import json
 import hashlib
 
 from django.db import models
@@ -9,13 +8,9 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
-from django.utils.duration import duration_string
 from django.utils.translation import pgettext
-from django.http import HttpResponseRedirect
-from collections import OrderedDict
 
 
-from spkcspider.apps.spider.models import AuthToken, TokenCreationError
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.constants import UserContentType
 
@@ -30,10 +25,6 @@ _htest.update(b"test")
 _help_text_sig = _(""" Signed identifier """)
 
 _help_text_key = _(""" Public Key-Content """)
-
-ID_VARIANTS = [
-    ("", "")
-]
 
 ID_VERIFIERS = {
 
@@ -170,70 +161,6 @@ class AnchorServer(BaseContent):
         return "{}@{}".format(
             getattr(self.associated, "id", None),
             request.get_host()
-        )
-
-    def render_view(self, **kwargs):
-        if "requester" in kwargs["request"].GET:
-            k = kwargs.copy()
-            token = AuthToken(
-                usercomponent=self.associated.usercomponent,
-                session_key=kwargs["request"].session.session_key
-            )
-            try:
-                token.save()
-            except TokenCreationError as e:
-                logging.exception(e)
-                raise
-            llist = OrderedDict(
-                token=token.token,
-                token_time_to_live=duration_string(
-                        self.associated.usercomponent.token_duration
-                    )
-            )
-
-            self.extract_form(
-                k, llist, level=1
-            )
-            requester = "https://".format(kwargs["request"].GET["requester"])
-            ret = requests.post(
-                requester,
-                data=json.dumps(llist).encode("ascii", errors="ignore"),
-                headers={
-                    "Content-Type": "application/json"
-                },
-                verify=certifi.where()
-            )
-            if ret.status != 200:
-                token.delete()
-            h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
-            h.update(token.token.encode("ascii", "ignore"))
-            if "?" not in requester:
-                requester = "{}?algo={}&hash={}".format(
-                    requester, settings.SPIDER_HASH_ALGORITHM, h.hexdigest()
-                )
-            else:
-                requester = "{}?algo={}&hash={}".format(
-                    requester, settings.SPIDER_HASH_ALGORITHM, h.hexdigest()
-                )
-            return HttpResponseRedirect(requester)
-
-        if "raw" in kwargs["request"].GET:
-            k = kwargs.copy()
-            k["scope"] = "raw"
-            return self.render_serialize(**k)
-
-        # not important
-        kwargs["form"] = self.get_form("view")(
-            **self.get_form_kwargs(**kwargs)
-        )
-        kwargs.setdefault("no_button", True)
-        template_name = "spider_base/full_form.html"
-        return (
-            render_to_string(
-                template_name, request=kwargs["request"],
-                context=kwargs
-            ),
-            kwargs["form"].media
         )
 
 

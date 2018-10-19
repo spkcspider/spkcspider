@@ -10,7 +10,9 @@ from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent
 )
 from ..helpers import token_nonce
-from ..constants import ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE
+from ..constants import (
+    ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names
+)
 
 _help_text = """Generate new nonce with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
@@ -66,7 +68,7 @@ class UserComponentForm(forms.ModelForm):
             if self.instance.no_public:
                 self.fields["public"].disabled = True
                 self.fields.pop("featured", None)
-            if self.instance.name in ("fake_index", "index"):
+            if self.instance.name in index_names:
                 self.fields.pop("featured", None)
                 self.fields["required_passes"].help_text = _(
                     "How many protections must be passed to login?"
@@ -110,7 +112,7 @@ class UserComponentForm(forms.ModelForm):
             return
         if not self.instance or not getattr(self.instance, "id", None):
             # TODO: cleanup into protected_names/forbidden_names
-            if self.cleaned_data['name'] in ("index", "fake_index"):
+            if self.cleaned_data['name'] in index_names:
                 raise forms.ValidationError(
                     _('Forbidden Name'),
                     code="forbidden_name"
@@ -118,7 +120,7 @@ class UserComponentForm(forms.ModelForm):
         for protection in self.protections:
             protection.full_clean()
         self.cleaned_data["strength"] = 0
-        if self.cleaned_data["name"] in ("index", "fake_index"):
+        if self.cleaned_data["name"] in index_names:
             self.cleaned_data["strength"] = 10
             return ret
         if not self.cleaned_data["public"]:

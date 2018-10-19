@@ -15,7 +15,7 @@ from django.views.decorators.debug import sensitive_variables
 from jsonfield import JSONField
 
 from ..protections import installed_protections
-from ..constants import ProtectionType, ProtectionResult
+from ..constants import ProtectionType, ProtectionResult, index_names
 
 logger = logging.getLogger(__name__)
 
@@ -160,15 +160,16 @@ class Protection(models.Model):
 
 def get_limit_choices_assigned_protection():
     # django cannot serialize static, classmethods
-    ret = \
-        {
-            "code__in": Protection.objects.valid(),
-            "ptype__contains": ProtectionType.access_control.value
-        }
-    # TODO: does this work?
-    if models.F("usercomponent__name") == "index":
-        ret["ptype__contains"] = ProtectionType.authentication.value
-    return ret
+    index = models.Q(usercomponent__name__in=index_names)
+    ret = models.Q(
+        ~index, ptype__contains=ProtectionType.access_control.value
+    )
+    ret |= models.Q(
+        index, ptype__contains=ProtectionType.authentication.value
+    )
+    return models.Q(
+        ret, code__in=Protection.objects.valid()
+    )
 
 
 class AssignedProtection(models.Model):
@@ -227,7 +228,7 @@ class AssignedProtection(models.Model):
                     len(query.exclude(instant_fail=True))
                 ), 1
             )
-        elif usercomponent.name == "index":
+        elif usercomponent.name in index_names:
             # enforce a minimum of required_passes, if index
             required_passes = 1
         else:

@@ -16,7 +16,7 @@ from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
 
-from ..constants import UserContentType
+from ..constants import UserContentType, index_names
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
 )
@@ -115,6 +115,11 @@ class UserTestMixin(AccessMixin):
                 self.request.auth_token = token
                 if "token" not in self.request.GET:
                     return self.replace_token()
+                if (
+                    self.usercomponent.strength >=
+                    settings.MIN_STRENGTH_EVELATION
+                ):
+                    self.request.is_elevated_request = True
                 return True
 
         protection_codes = None
@@ -143,18 +148,22 @@ class UserTestMixin(AccessMixin):
             self.request.auth_token = token
             if "token" in self.request.GET:
                 return self.replace_token()
+            if (
+                self.usercomponent.strength >=
+                settings.MIN_STRENGTH_EVELATION
+            ):
+                self.request.is_elevated_request = True
             return True
         return False
 
     def has_special_access(self, user=True, staff=False, superuser=True):
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
-        if self.usercomponent.strength >= settings.MIN_STRENGTH_EVELATION:
-            self.request.is_elevated_request = True
         if self.request.user == self.usercomponent.user:
             self.request.is_elevated_request = True
             self.request.is_owner = True
             return True
+        # remove user special state if is_fake
         if self.request.session.get("is_fake", False):
             return False
         if superuser and self.request.user.is_superuser:
@@ -184,7 +193,7 @@ class UserTestMixin(AccessMixin):
 
     def get_usercomponent(self):
         ucname = self.kwargs["name"]
-        if ucname in ("index", "fake_index"):
+        if ucname in index_names:
             if self.request.session["is_fake"]:
                 ucname = "fake_index"
             else:
@@ -214,6 +223,7 @@ class UserTestMixin(AccessMixin):
             "LOGIN_URL": self.get_login_url(),
             "scope": getattr(self, "scope", None),
             "uc": self.usercomponent,
+            "index_names": index_names,
             "object": getattr(self, "object", None),
             "is_public_view": self.usercomponent.public
         }

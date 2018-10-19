@@ -7,21 +7,28 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def list_own_content(context):
+    ucname = "index"
+    if context["request"].session.get("is_fake", False):
+        ucname = "fake_index"
     if context["request"].user.is_authenticated:
         return context["request"].user.usercomponent_set.get(
-            name="index"
+            name=ucname
         ).get_absolute_url()
     return ""
 
 
 @register.simple_tag(takes_context=True)
-def update_user_protection(context):
+def update_component(context, name):
+    ucname = name
+    if ucname == "index" and context["request"].session.get("is_fake", False):
+        ucname = "fake_index"
     if context["request"].user.is_authenticated:
         index = context["request"].user.usercomponent_set.get(
-            name="index"
+            name=ucname
         )
+        # use index here to disguise that it is something else
         return reverse("spider_base:ucomponent-update", kwargs={
-            "name": "index",
+            "name": name,
             "nonce": index.nonce
         })
     return ""
@@ -35,6 +42,7 @@ def reverse_get(context, name, **kwargs):
         reverse(name, kwargs=kwargs),
         context["spider_GET"].urlencode()
     )
+
 
 @register.simple_tag()
 def expires_delta(expires):

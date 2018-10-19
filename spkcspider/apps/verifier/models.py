@@ -1,11 +1,9 @@
 import datetime
 
 from django.db import models
-from django.conf import settings
-from jsonfield import JSONField
 
 from .constants import (
-    VERIFICATION_CHOICES, get_hashob
+    VERIFICATION_CHOICES
 )
 
 
@@ -15,8 +13,10 @@ def dv_path(instance, filename):
         instance.hash
     )
 
+
 class DataVerificationTag(models.Model):
-    """ Contains generated Informations about user """
+    """ Contains verified data """
+    # warning: never depend directly on user, seperate for multi-db setups
     id = models.BigAutoField(primary_key=True, editable=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
@@ -26,11 +26,14 @@ class DataVerificationTag(models.Model):
     )
     dvfile = models.FileField(upload_to=dv_path, null=True, blank=True)
     checked = models.DateTimeField(default=None, null=True)
+    anchor = models.TextField(
+        default=None, null=True
+    )
     data_type = models.CharField(
-        default="layout"
+        default="layout",
         max_length=20,
     )
     verification_state = models.CharField(
-        default="pending"
+        default="pending",
         max_length=10, choices=VERIFICATION_CHOICES
     )

@@ -239,11 +239,13 @@ class ContentIndex(UCTestMixin, ListView):
         return context
 
     def test_func(self):
-        if self.has_special_access(staff=(self.usercomponent.name != "index"),
-                                   superuser=True):
+        if self.has_special_access(
+            staff=(not self.usercomponent.is_index),
+            superuser=True
+        ):
             return True
         # block view on special objects for non user and non superusers
-        if self.usercomponent.name == "index":
+        if self.usercomponent.is_index:
             return False
         # export is only available for user and superuser
         if self.scope == "export":
@@ -279,7 +281,7 @@ class ContentIndex(UCTestMixin, ListView):
 
             if "id" in self.request.POST:
                 ids = map(lambda x: int(x), self.request.POST.getlist("id"))
-                searchq &= models.Q(id__in=ids)
+                searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
         else:
             for info in self.request.GET.getlist("search"):
                 if counter > max_counter:
@@ -296,7 +298,7 @@ class ContentIndex(UCTestMixin, ListView):
 
             if "id" in self.request.GET:
                 ids = map(lambda x: int(x), self.request.GET.getlist("id"))
-                searchq &= models.Q(id__in=ids)
+                searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
 
         return ret.filter(searchq & infoq)
 
@@ -314,7 +316,7 @@ class ContentIndex(UCTestMixin, ListView):
         for n, content in enumerate(context["context"]["object_list"]):
             context["content"] = content.content
             store_dict = OrderedDict(
-                pk=content.pk,
+                pk=content.get_id(),
                 ctype=content.getlist("type", 1)[0],
                 info=content.info,
                 modified=content.modified.strftime(
@@ -384,7 +386,7 @@ class ContentIndex(UCTestMixin, ListView):
                         reverse(
                             "spider_base:ucontent-access",
                             kwargs={
-                                "id": item.id, "nonce": item.nonce,
+                                "id": item.get_id(), "nonce": item.nonce,
                                 "access": "view"
                             }
                         ),

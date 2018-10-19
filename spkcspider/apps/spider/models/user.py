@@ -23,7 +23,7 @@ from django.core import validators
 from ..helpers import token_nonce, get_settings_func
 from ..constants import (
     ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
-    default_uctoken_duration, protected_names, force_captcha
+    default_uctoken_duration, protected_names, force_captcha, index_names
 )
 
 
@@ -54,10 +54,10 @@ class UserComponentManager(models.Manager):
             return (self.get_queryset().get(**kwargs), False)
         except ObjectDoesNotExist:
             defaults.update(kwargs)
-            if defaults["name"] in ("index", "fake_index") and force_captcha:
+            if defaults["name"] in index_names and force_captcha:
                 defaults["required_passes"] = 2
                 defaults["strength"] = 10
-            elif self.name in ("index", "fake_index"):
+            elif self.name in index_names:
                 defaults["required_passes"] = 1
                 defaults["strength"] = 10
             elif defaults["public"]:
@@ -137,21 +137,21 @@ class UserComponent(models.Model):
 
     def __repr__(self):
         name = self.name
-        if name == "fake_index":
+        if name in index_names:
             name = "index"
         return "<UserComponent: %s: %s>" % (self.username, name)
 
     def __str__(self):
         name = self.name
-        if name == "fake_index":
+        if name in index_names:
             name = "index"
         return name
 
     def clean(self):
         _ = gettext
         self.featured = (self.featured and self.public)
-        assert(self.name not in ("index", "fake_index") or self.strength == 10)
-        assert(self.name in ("index", "fake_index") or self.strength < 10)
+        assert(self.name not in index_names or self.strength == 10)
+        assert(self.name in index_names or self.strength < 10)
         obj = self.contents.filter(
             strength__gt=self.strength
         ).order_by("strength").last()
@@ -194,7 +194,7 @@ class UserComponent(models.Model):
 
     @property
     def is_index(self):
-        return (self.name in ("index", "fake_index"))
+        return (self.name in index_names)
 
     @property
     def name_protected(self):
@@ -204,12 +204,12 @@ class UserComponent(models.Model):
     @property
     def no_public(self):
         """ Can the usercomponent be turned public """
-        return self.name in ("index", "fake_index") or self.contents.filter(
+        return self.name in index_names or self.contents.filter(
             strength__gte=5
         )
 
     def save(self, *args, **kwargs):
-        if self.name in ("index", "fake_index") and self.public:
+        if self.name in index_names and self.public:
             self.public = False
         super().save(*args, **kwargs)
 

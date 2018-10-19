@@ -2,7 +2,7 @@
 
 {% load i18n static %}
 
-{% block title %}{% if object %}{% if object.name == "index" %}{% blocktrans trimmed %}
+{% block title %}{% if object %}{% if object.is_index %}{% blocktrans trimmed %}
 Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     Change Component
   {% endblocktrans %}{% endif %}{% else %}{% blocktrans trimmed %}
@@ -25,7 +25,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Index' %}</a>
     {% if object %}
       <span class="w3-right">
-        {% if object.name != "index" %}
+        {% if not object.is_index %}
           <div style="margin-bottom:5px">
             <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name nonce=object.nonce %}">{% trans 'Delete' %}</a>?
           </div>
@@ -68,7 +68,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     <fieldset>
       <legend>
         <h1>
-        {% if form.instance.id and form.instance.name == "index" %}
+        {% if form.instance.id and form.instance.is_index %}
           {% trans 'Login Protection' %}
         {% else %}
           {% trans 'User Component' %}

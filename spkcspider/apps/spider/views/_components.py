@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from ._core import UserTestMixin, UCTestMixin
+from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import UserComponent, TravelProtection
@@ -266,7 +267,7 @@ class ComponentIndex(UCTestMixin, ListView):
             ):
                 context["content"] = content.content
                 store_dict = OrderedDict(
-                    pk=content.pk,
+                    pk=content.get_id(),
                     ctype=content.getlist("type", 1)[0],
                     info=content.info,
                     scope="export",
@@ -316,7 +317,11 @@ class ComponentCreate(UserTestMixin, CreateView):
         )
 
     def get_usercomponent(self):
-        query = {"name": "index"}
+        query = {}
+        if self.request.session.get("is_fake", False):
+            query["name"] = "fake_index"
+        else:
+            query["name"] = "index"
         query["user"] = self.get_user()
         return get_object_or_404(UserComponent, **query)
 
@@ -424,7 +429,7 @@ class ComponentDelete(UserTestMixin, DeleteView):
 
     def delete(self, request, *args, **kwargs):
         # hack for compatibility to ContentRemove
-        if getattr(self.object, "name", "") == "index":
+        if getattr(self.object, "name", "") in index_names:
             return self.handle_no_permission()
         _time = self.get_required_timedelta()
         if _time:

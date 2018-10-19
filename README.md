@@ -1,23 +1,23 @@
-Simple Public Key and Content Spider (short: spkcspider)
+Simple protection-knocking (visiting) card Spider (short: spkcspider)
 --------------------------------------------------------
 
-spkcspider can manage your online data in a safe way:
+spkcspider provides a digital visiting card which can e.g. be used for authentication, shopping and payment. For this a multifactor authentication is provided.
+It keeps your online data safe while shopping by just providing a link to a potion of your data. Doing this, the user may can provide some knocking mechanism (e.g. has to provide some code, tan) to protect the content.
 
-Instead of storing your address data on every online shop, your address data is
-saved in a spider component which you provide the online shop. This has following advantages:
+Further features and advantages of spkcspider are:
 
-* depending services like web stores doesn't save your private data
+* depending services like web stores need not tp save your private data
   This makes them easily DSGVO compatible without adjustments
-* breaches contain only links to data (which can also be protected)
+  * doing so breaches contain only links to data (which can also be protected)
 * Address Data have to changed only on one place if you move. This is especially useful if you move a lot
   Also if you travel and want to buy something on the way.
-* Verification of Data
+* Verification of Data possible.
 * Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
 * Travelling: some people don't respect common rules for privacy. This allows to keep your life private.
   * You don't have it on the device
   * You can hide your data with the travel mode (against the worst kind of inspectors)
-    * Note: traces could be still existent (like "recently-used" feature)
-  * for governments: the data can still be acquired on other ways. So why bothering the travel mode?
+    * Note: traces could be still existent (like "recently-used" feature, bookmarks)
+  * for governments: the data can still be acquired by other ways. So why bothering the travel mode and trusting your inspectors blindly?
 
 
 # Installation
@@ -130,6 +130,7 @@ There are some special GET parameters for services with special requirements:
 verified_by urls should return hashname:hash_hexdigest
 
 # TODO
+* raw protection mode
 * token control
 * finish global referrer mode, remove cruft from anchors
 * improve anchors
@@ -139,6 +140,7 @@ verified_by urls should return hashname:hash_hexdigest
 * documentation
 
 Later:
+* raw add, update mode
 * create client side script for import (pushing to server, index token for auth?)
 * email to spkcspider transport wrapper (also script)+component
 * textfilet hot reloading

@@ -9,6 +9,11 @@ from django.utils.translation import gettext
 from .models import PublicKey, AnchorServer, AnchorKey
 # AnchorGov, ID_VERIFIERS
 
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend_
+default_backend = default_backend_()
+
 
 class KeyForm(forms.ModelForm):
     class Meta:
@@ -44,11 +49,6 @@ class AnchorServerForm(forms.ModelForm):
         if self.scope == "add":
             del self.fields["identifier"]
 
-    def clean(self):
-        self.cleaned_data["type"] = "server"
-        self.cleaned_data["format"] = "server_{identifier}"
-        return self.cleaned_data
-
 
 class AnchorKeyForm(forms.ModelForm):
     identifier = forms.CharField(disabled=True)
@@ -62,11 +62,20 @@ class AnchorKeyForm(forms.ModelForm):
         self.scope = scope
         super().__init__(**kwargs)
         if self.scope == "add":
-            del self.fields["signature"]
+            del self.fields["identifier"]
 
     def clean(self):
-        self.cleaned_data["type"] = "key"
-        self.cleaned_data["format"] = "key_{hash}"
+        ret = super().clean()
+        if "-----BEGIN CERTIFICATE-----" in ret["key"].key:
+            pubkey = serialization.load_pem_public_key(
+                ret["key"].key, default_backend
+            )
+        else:
+            pubkey = serialization.load_ssh_public_key(
+                ret["key"].key, default_backend
+            )
+        #pubkey.verify()
+        # validate signature
         return self.cleaned_data
 
 

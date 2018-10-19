@@ -69,8 +69,8 @@
     <table class="w3-table w3-striped w3-bordered w3-hoverable">
       {% for uc in object_list %}
         <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}">
-          <td class="{% if uc.name == 'index' or uc.name == 'fake_index' %}w3-large{% endif %}" style="width:40%; min-height:48px">
-            {% if uc.name == 'index' or uc.name == 'fake_index' %}
+          <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px">
+            {% if uc.is_index %}
               {% trans 'Private Component' %}
             {% else %}
               {{ uc.name }}{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
