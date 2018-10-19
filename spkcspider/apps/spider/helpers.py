@@ -96,10 +96,11 @@ def cmp_pw(pw_source, pw_user):
     return (not error and len(pw_source) == len(pw_user))
 
 
-_cleanstr = re.compile(r'<.*?>')
+_cleanstr = re.compile(r'<+.*>+')
 _whitespsplit = re.compile(r'\s+')
 
 
 def prepare_description(raw_html, amount=0):
-    text = _cleanstr.sub(' ', raw_html).strip()
+    text = _cleanstr.sub(' ', raw_html).\
+        replace("<", " ").replace(">", " ").strip()
     return _whitespsplit.split(text, amount)
