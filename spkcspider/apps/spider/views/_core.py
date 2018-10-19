@@ -15,7 +15,9 @@ from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
+from django.http import JsonResponse
 
+from ..helpers import join_get_url
 from ..constants import UserContentType, index_names
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
@@ -67,8 +69,6 @@ class UserTestMixin(AccessMixin):
             self.request.scheme, self.request.get_host()
         )
         kwargs["spider_GET"] = self.sanitize_GET()
-        kwargs["REDIRECT_FIELD_NAME"] = REDIRECT_FIELD_NAME
-        kwargs["LOGIN_URL"] = self.get_login_url()
         return super().get_context_data(**kwargs)
 
     # by default only owner can access view
@@ -227,30 +227,27 @@ class UserTestMixin(AccessMixin):
             "object": getattr(self, "object", None),
             "is_public_view": self.usercomponent.public
         }
-        if context["scope"] == "view" and "raw" in self.request.GET:
-            context["scope"] = "raw"
+        if "raw" in self.request.GET:
+            if context["scope"] == "view":
+                context["scope"] = "raw"
+            return JsonResponse(
+                {
+                    "scope": context["scope"],
+                    "protections": [
+                        prot.protection.render_raw(prot.result)
+                        for prot in self.request.protections
+                    ]
+                }
+            )
         return self.response_class(
             request=self.request,
-            template=self.get_noperm_template_names(),
+            template=self.get_noperm_template_names("raw" in self.request.GET),
             # render with own context; get_context_data may breaks stuff or
             # disclose informations
             context=context,
             using=self.template_engine,
             content_type=self.content_type
         )
-
-    def join_get_url(self, url, **kwargs):
-        getargs = "&".join(
-            ["{}={}".format(i[0], urlencode(i[1])) for i in kwargs.items()]
-        )
-        if "?" in url:
-            if url[-1] == "?":
-                url = "{}{}".format(url, getargs)
-            else:
-                url = "{}&{}".format(url, getargs)
-        else:
-            url = "{}?{}".format(url, getargs)
-        return url
 
     def handle_referrer(self):
         _ = gettext
@@ -301,7 +298,7 @@ class UserTestMixin(AccessMixin):
             )
             if ret.status_code not in (200, 201):
                 return HttpResponseRedirect(
-                    redirect_to=self.join_get_url(
+                    redirect_to=join_get_url(
                         context["referrer"],
                         error="post_failed"
                     )
@@ -309,12 +306,22 @@ class UserTestMixin(AccessMixin):
             h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
             h.update(token.encode("ascii", "ignore"))
             return HttpResponseRedirect(
-                redirect_to=self.join_get_url(
+                redirect_to=join_get_url(
                     context["referrer"],
                     hash=h.hexdigest()
                 )
             )
         else:
+            if "raw" in self.request.GET:
+                ret = {
+                    "scope": context["scope"],
+                }
+                if isinstance(self.object, UserComponent):
+                    ret["contents"] = [str(ob) for ob in self.object.contents]
+                else:
+                    ret["contents"] = [str(self.object)]
+                ret["name"] = str(self.object)
+                return JsonResponse(ret)
             return self.response_class(
                 request=self.request,
                 template=self.get_referrer_template_names(),

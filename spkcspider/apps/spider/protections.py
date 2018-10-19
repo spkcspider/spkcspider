@@ -12,13 +12,12 @@ from random import SystemRandom
 from django.conf import settings
 from django import forms
 from django.http import Http404
-from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
 
 from .helpers import cmp_pw, add_by_field
-from .constants import ProtectionType, ProtectionResult
+from .constants import ProtectionType, ProtectionResult, index_names
 from .fields import OpenChoiceField
 from .widgets import OpenChoiceWidget
 
@@ -57,7 +56,7 @@ def initialize_protection_models(apps=None):
                 asuc.active = True
                 asuc.save()
 
-    UserComponent.objects.filter(name__in=("index", "fake_index")).update(strength=10)
+    UserComponent.objects.filter(name__in=index_names).update(strength=10)
 
     invalid_models = ProtectionModel.objects.exclude(
         code__in=installed_protections.keys()
@@ -97,6 +96,10 @@ class BaseProtection(forms.Form):
     form = None
     # optional render function
     # render = None
+
+    @classmethod
+    def render_raw(cls, result):
+        return {cls.auth_localize_name(): {}}
 
     # auto populated, instance
     protection = None

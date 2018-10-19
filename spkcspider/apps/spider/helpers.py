@@ -1,6 +1,7 @@
 __all__ = (
     "token_nonce", "cmp_pw", "get_settings_func",
-    "extract_app_dicts", "add_by_field", "prepare_description"
+    "extract_app_dicts", "add_by_field", "prepare_description",
+    "join_get_url"
 )
 
 
@@ -9,6 +10,7 @@ import re
 import base64
 import logging
 import inspect
+from urllib.parse import urlencode
 
 from functools import lru_cache
 from importlib import import_module
@@ -104,3 +106,17 @@ def prepare_description(raw_html, amount=0):
     text = _cleanstr.sub(' ', raw_html).\
         replace("<", " ").replace(">", " ").strip()
     return _whitespsplit.split(text, amount)
+
+
+def join_get_url(url, **kwargs):
+    getargs = "&".join(
+        ["{}={}".format(i[0], urlencode(i[1])) for i in kwargs.items()]
+    )
+    if "?" in url:
+        if url[-1] == "?":
+            url = "{}{}".format(url, getargs)
+        else:
+            url = "{}&{}".format(url, getargs)
+    else:
+        url = "{}?{}".format(url, getargs)
+    return url
