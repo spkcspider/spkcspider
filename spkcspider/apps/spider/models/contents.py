@@ -16,6 +16,9 @@ from django.shortcuts import redirect
 from django.utils.translation import gettext
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth.hashers import (
+    check_password, make_password
+)
 from django.utils.translation import gettext_lazy as _
 
 from ..contents import BaseContent, add_content
@@ -148,12 +151,13 @@ _login_protection = _("""
 
 
 class TravelProtectionManager(models.Manager):
-    def get_active(self):
-        now = timezone.now()
-        return self.get_queryset().filter(
-            models.Q(active=True, start__lte=now) &
-            (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
-        )
+    def get_active(self, now=None, no_stop=False):
+        if not now:
+            now = timezone.now()
+        q = models.Q(active=True, start__lte=now)
+        if not no_stop:
+            q &= (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
+        return self.get_queryset().filter(q)
 
 
 def default_start():
@@ -195,6 +199,18 @@ class TravelProtection(BaseContent):
         limit_choices_to=own_components
     )
 
+    def check_password(self, raw_password):
+        """
+        Return a boolean of whether the raw_password was correct. Handles
+        hashing formats behind the scenes.
+        """
+        def setter(raw_password):
+            self.hashed_secret = make_password(raw_password)
+            self.save(update_fields=["hashed_secret"])
+        return check_password(
+            raw_password, self.hashed_secret, setter
+        )
+
     def get_strength_link(self):
         return 5
 
@@ -226,6 +242,11 @@ class TravelProtection(BaseContent):
         return ""
 
     def render_deactivate(self, **kwargs):
+        if self.hashed_secret:
+            if not self.check_password(
+                kwargs["request"].GET.get("travel", "")
+            ):
+                return "failure"
         self.active = False
         self.save()
         return "success"

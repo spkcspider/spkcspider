@@ -206,7 +206,7 @@ class ComponentIndex(UCTestMixin, ListView):
             searchq &= models.Q(required_passes=0)
         searchq &= infoq & models.Q(user=self.user)
 
-        # doesn't matter if it is same user
+        # doesn't matter if it is same user, lazy
         travel = TravelProtection.objects.get_active()
         # remove all travel protected if user
         if self.request.user == self.user:

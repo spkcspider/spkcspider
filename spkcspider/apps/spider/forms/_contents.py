@@ -3,8 +3,9 @@ __all__ = [
 ]
 
 from django import forms
+from django.db import models
 from django.contrib.auth.hashers import (
-    check_password, make_password,
+    make_password,
 )
 from django.utils.translation import gettext_lazy as _
 
@@ -45,7 +46,7 @@ class LinkForm(forms.ModelForm):
 class TravelProtectionForm(forms.ModelForm):
     uc = None
     is_fake = None
-    password = None
+    _password = None
     password = forms.CharField(
         label=_("Password"),
         strip=False,
@@ -77,22 +78,20 @@ class TravelProtectionForm(forms.ModelForm):
         if self.instance.hashed_secret:
             self.fields["self_protection"].choices = KEEP_CHOICES
 
-    def check_password(self, raw_password):
-        """
-        Return a boolean of whether the raw_password was correct. Handles
-        hashing formats behind the scenes.
-        """
-        def setter(raw_password):
-            self.instance.hashed_secret = make_password(raw_password)
-            self.instance.save(update_fields=["hashed_secret"])
-        return check_password(
-            raw_password, self.instance.hashed_secret, setter
-        )
+        # doesn't matter if it is same user, lazy
+        travel = TravelProtection.objects.get_active(no_stop=True)
+        self.fields["disallow"].queryset = self.fields["disallow"].queryset.\
+            filter(
+                ~models.Q(travel_protected__in=travel),
+                user=self.uc.user, strength__lt=10
+            )
 
     def is_valid(self):
         isvalid = super().is_valid()
         if self.instance.active and self.instance.hashed_secret:
-            isvalid = check_password(self.cleaned_data["password"])
+            isvalid = self.instance.check_password(
+                self.cleaned_data["password"]
+            )
         return isvalid
 
     def clean(self):
