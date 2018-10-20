@@ -16,7 +16,8 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
 
-from .helpers import cmp_pw, add_by_field
+from .helpers import add_by_field
+from django.utils.crypto import constant_time_compare
 from .constants import ProtectionType, ProtectionResult, index_names
 from .fields import OpenChoiceField
 from .widgets import OpenChoiceWidget
@@ -358,9 +359,9 @@ class PasswordProtection(BaseProtection):
         password2 = request.POST.get("password2", "")
         success = False
         for pw in obj.data["passwords"].split("\n"):
-            if cmp_pw(pw, password):
+            if constant_time_compare(pw, password):
                 success = True
-            if cmp_pw(pw, password2):
+            if constant_time_compare(pw, password2):
                 success = True
 
         if success:
@@ -381,9 +382,11 @@ if getattr(settings, "USE_CAPTCHAS", False):
         class auth_form(forms.Form):
             use_required_attribute = False
             prefix = "protection_captcha"
-            sunglasses = CaptchaField(
-                label=_("Captcha"),
-            )
+
+        auth_form.declared_fields[settings.SPIDER_CAPTCHA_FIELD_NAME] = \
+            CaptchaField(label=_("Captcha"))
+        auth_form.base_fields[settings.SPIDER_CAPTCHA_FIELD_NAME] = \
+            auth_form.declared_fields[settings.SPIDER_CAPTCHA_FIELD_NAME]
 
         def __init__(self, **kwargs):
             super().__init__(**kwargs)

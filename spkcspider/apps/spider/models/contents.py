@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _
 
 from ..contents import BaseContent, add_content
 from ..constants.static import (
-    TravelLoginType, UserContentType, MAX_NONCE_SIZE
+    TravelLoginType, UserContentType
 )
 
 logger = logging.getLogger(__name__)
@@ -147,12 +147,6 @@ _login_protection = _("""
 """)
 
 
-_self_protection = _("""
-    Disallows user to disable travel protection if active.
-    Can be used in connection with "secret" to allow unlocking via secret
-""")
-
-
 class TravelProtectionManager(models.Manager):
     def get_active(self):
         now = timezone.now()
@@ -187,15 +181,13 @@ class TravelProtection(BaseContent):
     # no stop for no termination
     stop = models.DateTimeField(default=default_stop, null=True)
 
-    self_protection = models.BooleanField(
-        default=True, help_text=_self_protection
-    )
     login_protection = models.CharField(
         max_length=10, choices=login_choices,
         default=TravelLoginType.none.value, help_text=_login_protection
     )
-    secret = models.SlugField(
-        default="", max_length=MAX_NONCE_SIZE*4//3
+    # use defaults from user
+    hashed_secret = models.CharField(
+        null=True, max_length=128
     )
 
     disallow = models.ManyToManyField(

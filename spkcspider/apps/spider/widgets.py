@@ -7,7 +7,40 @@ from django.conf import settings
 
 _extra = '' if settings.DEBUG else '.min'
 
+
+class Select2Multiple(widgets.SelectMultiple):
+    class Media:
+        css = {
+            'all': [
+                'admin/css/vendor/select2/select2.css'
+            ]
+        }
+        js = [
+            'admin/js/vendor/jquery/jquery%s.js' % _extra,
+            'admin/js/vendor/select2/select2.full%s.js' % _extra,
+            'spider_base/Select2MultipleWidget.js'
+        ]
+
+    def __init__(self, *, attrs=None, **kwargs):
+        if not attrs:
+            attrs = {"class": ""}
+        attrs.setdefault("class", "")
+        attrs["class"] += " Select2Multiple"
+        super().__init__(attrs=attrs, **kwargs)
+
+
 class OpenChoiceWidget(widgets.SelectMultiple):
+    class Media:
+        css = {
+            'all': [
+                'admin/css/vendor/select2/select2.css'
+            ]
+        }
+        js = [
+            'admin/js/vendor/jquery/jquery%s.js' % _extra,
+            'admin/js/vendor/select2/select2.full%s.js' % _extra,
+            'spider_base/OpenChoiceWidget.js'
+        ]
 
     def __init__(self, *, attrs=None, **kwargs):
         if not attrs:
@@ -53,15 +86,3 @@ class OpenChoiceWidget(widgets.SelectMultiple):
                 if subindex is not None:
                     subindex += 1
         return groups
-
-    class Media:
-        css = {
-            'all': [
-                'admin/css/vendor/select2/select2.css'
-            ]
-        }
-        js = [
-            'admin/js/vendor/jquery/jquery%s.js' % _extra,
-            'admin/js/vendor/select2/select2.full%s.js' % _extra,
-            'spider_base/OpenChoiceWidget.js'
-        ]

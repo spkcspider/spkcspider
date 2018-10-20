@@ -13,16 +13,16 @@ else:
 
 
 class SignupForm(UserCreationForm):
+    # TODO: for a better spammer protection, use useragent for seeding
+    # and add/rename, move random fields
+    # disguise hidden fields
     use_required_attribute = False
-    if CaptchaField:
-        # add captcha, disguised name
-        search = CaptchaField(label=_("Captcha"))
 
-    # real: username, fake for spammers
+    # real: username, fake for simple spammers
     name = forms.CharField(
         label="", max_length=100, required=False, widget=forms.HiddenInput()
     )
-    # fake for spammers
+    # fake for simple spammers
     email = forms.EmailField(
         label="", max_length=100, required=False, widget=forms.HiddenInput()
     )
@@ -31,8 +31,6 @@ class SignupForm(UserCreationForm):
         label=_('Email Address'), max_length=100, required=False,
         help_text=_("(optional)")
     )
-    # question = forms.CharField(max_length=100, required=True)
-    # question_answer = None
 
     class Meta:
         model = get_user_model()
@@ -44,7 +42,7 @@ class SignupForm(UserCreationForm):
         Returns True if the form has no errors. Otherwise, False. If errors are
         being ignored, returns False.
         """
-        if self.data['email'] != "" or self.data['name']:
+        if self.data['email'] or self.data['name']:
             return False
         return self.is_bound and not self.errors
 
@@ -54,6 +52,14 @@ class SignupForm(UserCreationForm):
         self.cleaned_data["email"] = self.cleaned_data["liame"]
         del self.cleaned_data["liame"]
         del self.cleaned_data["name"]
+
+
+if CaptchaField:
+    # add captcha, disguised name
+    SignupForm.declared_fields[settings.SPIDER_CAPTCHA_FIELD_NAME] = \
+        CaptchaField(label=_("Captcha"))
+    SignupForm.base_fields[settings.SPIDER_CAPTCHA_FIELD_NAME] = \
+        SignupForm.declared_fields[settings.SPIDER_CAPTCHA_FIELD_NAME]
 
 
 class UserUpdateForm(UserChangeForm):
@@ -70,4 +76,4 @@ class UserUpdateForm(UserChangeForm):
         f = self.fields.get('user_permissions')
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
-        self.fields['email'].help_text += "Optional"
+        self.fields['email'].help_text += _("Optional")

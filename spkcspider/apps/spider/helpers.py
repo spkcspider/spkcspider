@@ -1,5 +1,5 @@
 __all__ = (
-    "token_nonce", "cmp_pw", "get_settings_func",
+    "token_nonce", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
     "join_get_url"
 )
@@ -83,19 +83,6 @@ def token_nonce(size=None):
     return base64.urlsafe_b64encode(
         os.urandom(size)
     ).decode('ascii')
-
-
-def cmp_pw(pw_source, pw_user):
-    error = False
-    len_pw1 = len(pw_source)
-    for i in range(0, len(pw_user)):
-        if len_pw1 <= i:
-            # fake
-            pw_user[i] != pw_user[i]
-            error = True
-        elif pw_source[i] != pw_user[i]:
-            error = True
-    return (not error and len(pw_source) == len(pw_user))
 
 
 _cleanstr = re.compile(r'<+.*>+')

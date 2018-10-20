@@ -14,7 +14,7 @@ from ..constants import (
     ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names
 )
 
-_help_text = """Generate new nonce with variable strength<br/>
+_help_text = _("""Generate new nonce with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
 If you have problems with attackers (because they know the nonce),
 you can invalidate it with this option and/or add protections<br/>
@@ -23,13 +23,13 @@ Warning: this removes also access for all services you gave the link<br/>
 Warning: if you rely on nonces make sure user component has <em>public</em>
 not set
 </span>
-"""
+""")
 
 
 class UserComponentForm(forms.ModelForm):
     protections = None
     new_nonce = forms.ChoiceField(
-        label=_("New Nonce"), help_text=_(_help_text),
+        label=_("New Nonce"), help_text=_help_text,
         required=False, initial="", choices=NONCE_CHOICES
     )
 

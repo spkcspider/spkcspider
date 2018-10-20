@@ -141,10 +141,12 @@ MAX_HASH_SIZE = 128
 MIN_STRENGTH_EVELATION = 2
 # change size of request token.
 # Note: should be high to prevent token exhaustion
-# FIXME: high load behavior to invalid token
 # TOKEN_SIZE = 30
 # OPEN_FOR_REGISTRATION = True # allow registration
 # ALLOW_USERNAME_CHANGE = True # allow users changing their username
+
+## captcha field names (REQUIRED) # noqa: E266
+SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 
 ## required if using mysql  # noqa: E266
 # MYSQL_HACK = True
