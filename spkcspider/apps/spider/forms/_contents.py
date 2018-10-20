@@ -12,11 +12,13 @@ from ..models import LinkContent, TravelProtection
 from ..helpers import token_nonce
 
 
-PROTECTION_CHOICES = {
-    "none": _("No self-protection (not recommended)"),
-    "pw": _("Password"),
-    "token": _("Token")
-}
+PROTECTION_CHOICES = [
+    ("none", _("No self-protection (not recommended)")),
+    ("pw", _("Password")),
+    ("token", _("Token"))
+]
+
+KEEP_CHOICES = [("keep", _("Keep protection"))] + PROTECTION_CHOICES
 
 
 _self_protection = _("""
@@ -43,6 +45,12 @@ class LinkForm(forms.ModelForm):
 class TravelProtectionForm(forms.ModelForm):
     uc = None
     is_fake = None
+    password = None
+    password = forms.CharField(
+        label=_("Password"),
+        strip=False,
+        widget=forms.PasswordInput,
+    )
     self_protection = forms.ChoiceField(
         label=_("Self protection"), help_text=_(_self_protection),
         initial="None", choices=PROTECTION_CHOICES
@@ -55,14 +63,19 @@ class TravelProtectionForm(forms.ModelForm):
             "active", "start", "stop", "login_protection", "disallow"
         ]
 
-    def __init__(self, uc, is_fake, *args, **kwargs):
+    def __init__(self, request, uc, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.uc = uc
-        self.is_fake = is_fake
         # elif self.travel_protection.is_active:
         #    for f in self.fields:
         #        f.disabled = True
         self.fields["protection_arg"].initial = token_nonce(30)
+
+        if not self.instance.active and not self.instance.hashed_secret:
+            del self.fields["password"]
+
+        if self.instance.hashed_secret:
+            self.fields["self_protection"].choices = KEEP_CHOICES
 
     def check_password(self, raw_password):
         """
@@ -78,16 +91,23 @@ class TravelProtectionForm(forms.ModelForm):
 
     def is_valid(self):
         isvalid = super().is_valid()
-        if self.is_fake and self.instance.hashed_secret:
-            isvalid = check_password(self.cleaned_data["protection_arg"])
+        if self.instance.active and self.instance.hashed_secret:
+            isvalid = check_password(self.cleaned_data["password"])
         return isvalid
 
-    def save(self, commit=True):
-        if self.cleaned_data["self_protection"] != "none":
-            if self.cleaned_data["self_protection"] == "pw":
-                raw_password = self.cleaned_data["protection_arg"]
-            elif self.cleaned_data["self_protection"] == "token":
-                raw_password = self.fields["protection_arg"].initial
+    def clean(self):
+        ret = super().clean()
+        if ret["self_protection"] == "none":
+            self._password = False
+        if ret["self_protection"] == "pw":
+            self._password = self.cleaned_data["protection_arg"]
+        elif ret["self_protection"] == "token":
+            self._password = self.fields["protection_arg"].initial
+        return ret
 
-            self.instance.hashed_secret = make_password(raw_password)
+    def save(self, commit=True):
+        if self._password:
+            self.instance.hashed_secret = make_password(self._password)
+        if self._password is False:
+            self.instance.hashed_secret = None
         return super().save(commit=commit)

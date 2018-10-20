@@ -209,13 +209,7 @@ class TravelProtection(BaseContent):
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
         ret["uc"] = kwargs["uc"]
-        user = self.associated.usercomponent.user
-        travel_protection = getattr(user, "travel_protection", None)
-        if (
-            travel_protection and not travel_protection.is_active and
-            user == kwargs["request"].user
-        ):
-            ret["travel_protection"] = travel_protection
+        ret["request"] = kwargs["request"]
         return ret
 
     def render_add(self, **kwargs):
