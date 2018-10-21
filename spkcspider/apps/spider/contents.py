@@ -110,7 +110,7 @@ class BaseContent(models.Model):
     def associated(self):
         if self._associated2:
             return self._associated2
-        return self.associated_rel.filter(fake_id=None).first()
+        return self.associated_rel.filter(fake_id__isnull=True).first()
 
     # if static_create is used and class not saved yet
     kwargs = None
@@ -494,7 +494,7 @@ class BaseContent(models.Model):
         # update info and set content
         a.save()
         # update fakes
-        self.associated_rel.filter(fake_id__null=False).update(
+        self.associated_rel.filter(fake_id__isnull=False).update(
             info=a.info, strength=a.strength, strength_link=a.strength_link,
             nonce=a.nonce
         )
