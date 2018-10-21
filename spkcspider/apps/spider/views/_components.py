@@ -399,8 +399,9 @@ class ComponentDelete(UserTestMixin, DeleteView):
     http_method_names = ['get', 'post', 'delete']
 
     def dispatch(self, request, *args, **kwargs):
-        self.object = self.get_object()
         self.user = self.get_user()
+        self.object = self.get_object()
+        self.usercomponent = self.object
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
@@ -412,6 +413,7 @@ class ComponentDelete(UserTestMixin, DeleteView):
         )
 
     def get_required_timedelta(self):
+        # TODO: needs better design
         _time = getattr(
             settings, "DELETION_PERIODS_COMPONENTS", {}
         ).get(self.object.name, None)
@@ -422,6 +424,7 @@ class ComponentDelete(UserTestMixin, DeleteView):
         return _time
 
     def get_context_data(self, **kwargs):
+        kwargs["uc"] = self.usercomponent
         _time = self.get_required_timedelta()
         if _time and self.object.deletion_requested:
             now = timezone.now()

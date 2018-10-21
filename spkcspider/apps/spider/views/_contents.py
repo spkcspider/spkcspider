@@ -20,7 +20,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.utils.duration import duration_string
 
-from ._core import UCTestMixin
+from ._core import UCTestMixin, UserTestMixin
 from ._components import ComponentDelete
 from ..models import (
     AssignedContent, ContentVariant, UserComponent
@@ -489,7 +489,9 @@ class ContentRemove(ComponentDelete):
 
     def dispatch(self, request, *args, **kwargs):
         self.usercomponent = self.get_usercomponent()
-        return super().dispatch(request, *args, **kwargs)
+        self.user = self.usercomponent.user
+        self.object = self.get_object()
+        return UserTestMixin.dispatch(self, request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse(

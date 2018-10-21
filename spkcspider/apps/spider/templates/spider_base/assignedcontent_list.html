@@ -27,9 +27,9 @@
 {% block content %}
   <div class="w3-padding">
     {% if request.user == uc.user %}
-      <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Index' %}</a>
+      <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Up (Owned)' %}</a>
     {% else %}
-      <a class="w3-left" href="{% url 'spider_base:ucomponent-listpublic' %}">{% trans 'Index' %}</a>
+      <a class="w3-left" href="{% url 'spider_base:ucomponent-listpublic' %}">{% trans 'up (Public)' %}</a>
     {% endif %}
     <span class="w3-right">
       {% if request.user == uc.user %}

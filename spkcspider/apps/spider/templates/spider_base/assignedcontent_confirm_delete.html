@@ -6,11 +6,15 @@
 
 {% block content %}
 <div class="">
-  <h1 class="w3-center">
-    {% blocktrans trimmed %}
-      Delete Content:
-    {% endblocktrans %} <em>{{object.content}}</em>
-  </h1>
+  <div class="w3-padding">
+    {# index is redirected in view #}
+    <a class="w3-left" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='update' %}?{{request.GET.urlencode}}">{% trans 'Back' %}</a>
+    <h1 class="w3-center">
+      {% blocktrans trimmed %}
+        Delete Content:
+      {% endblocktrans %} <em>{{object.content}}</em>
+    </h1>
+  </div>
 
   <div class="w3-padding">
     <div class="w3-content w3-center w3-red w3-xlarge" style="margin-bottom:20px">

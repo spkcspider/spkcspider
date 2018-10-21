@@ -30,7 +30,7 @@
     </span>
     {% else %}
     <span class="w3-left">
-      <a class="" href="{% url 'spider_base:ucomponent-listpublic' %}?{{request.GET.urlencode}}">{% trans 'Index' %}</a>
+      <a class="" href="{% url 'spider_base:ucomponent-listpublic' %}?{{request.GET.urlencode}}">{% trans 'Up (Public)' %}</a>
     </span>
     {% endif %}
     {% if request.user.is_authenticated %}

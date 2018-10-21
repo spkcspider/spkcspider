@@ -4,17 +4,17 @@
   Delete: {{name}}
 {% endblocktrans %}{% endblock %}
 
-{% block main_classes %}{{block.super}} w3-grey{% endblock %}
-{% block main_classes %}{{block.super}} w3-grey{% endblock %}
-{% block main_classes %}w3-padding w3-content w3-card-4 w3-pale-grey{% endblock %}
-{% block body_class %}{% if uc.name == "index" %}w3-yellow{% elif not uc.public%}w3-green{% else%}w3-blue{%endif%}{% endblock %}
-
 {% block content %}
-  <h1 class="w3-center">
-    {% blocktrans trimmed %}
-      Delete User Component:
-    {% endblocktrans %} <em>{{object.content}}</em>
-  </h1>
+<div>
+  <div class="w3-padding">
+    {# index is redirected in view #}
+    <a class="w3-left" href="{% url 'spider_base:ucomponent-update' name=object.name nonce=object.nonce %}">{% trans 'Back' %}</a>
+    <h1 class="w3-center">
+      {% blocktrans trimmed %}
+        Delete User Component:
+      {% endblocktrans %} <em>{{object.content}}</em>
+    </h1>
+  </div>
 
   <div class="w3-padding">
     <div class="w3-content w3-center w3-red w3-xlarge" style="margin-bottom:20px">
@@ -44,4 +44,5 @@
     </form>
     {% endif %}
   </div>
+</div>
 {% endblock %}
