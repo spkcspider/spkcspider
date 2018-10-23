@@ -283,16 +283,17 @@ class ContentIndex(UCTestMixin, ListView):
             if len(item) == 0:
                 continue
             if item.startswith("!!"):
-                item = item[1:]
-                qob = searchq
+                searchq |= models.Q(
+                    info__icontains="%s" % item[1:]
+                )
             elif item.startswith("!"):
-                item = item[1:]
-                qob = searchq_exc
+                searchq_exc |= models.Q(
+                    info__icontains="%s" % item[1:]
+                )
             else:
-                qob = searchq
-            qob |= models.Q(
-                info__icontains="%s" % item
-            )
+                searchq |= models.Q(
+                    info__icontains="%s" % item
+                )
 
         for item in infolist:
             if counter > max_counter:
@@ -300,15 +301,15 @@ class ContentIndex(UCTestMixin, ListView):
             counter += 1
             if len(item) == 0:
                 continue
+
             if item.startswith("!!"):
-                item = item[1:]
-                qob = infoq
+                infoq |= models.Q(info__contains="\n%s\n" % item[1:])
             elif item.startswith("!"):
-                item = item[1:]
-                qob = infoq_exc
+                infoq_exc |= models.Q(
+                    info__contains="\n%s\n" % item[1:]
+                )
             else:
-                qob = infoq
-            qob |= models.Q(info__contains="\n%s\n" % item)
+                infoq |= models.Q(info__contains="\n%s\n" % item)
         if idlist:
             ids = map(lambda x: int(x), idlist)
             searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))

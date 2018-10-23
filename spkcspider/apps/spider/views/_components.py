@@ -69,22 +69,26 @@ class ComponentPublicIndex(ListView):
             if len(item) == 0:
                 continue
             if item.startswith("!!"):
-                item = item[1:]
-                qob = searchq
+                _item = item[1:]
             elif item.startswith("!"):
-                item = item[1:]
-                qob = searchq_exc
+                _item = item[1:]
             else:
-                qob = searchq
-            qob |= models.Q(
-                contents__info__icontains="%s" % item
+                _item = item
+            qob = models.Q(
+                contents__info__icontains="%s" % _item
             )
             qob |= models.Q(
-                description__icontains="%s" % item
+                description__icontains="%s" % _item
             )
             qob |= models.Q(
-                name__icontains="%s" % item
+                name__icontains="%s" % _item
             )
+            if item.startswith("!!"):
+                searchq |= qob
+            elif item.startswith("!"):
+                searchq_exc |= qob
+            else:
+                searchq |= qob
 
         for item in infolist:
             if counter > max_counter:
@@ -93,14 +97,13 @@ class ComponentPublicIndex(ListView):
             if len(item) == 0:
                 continue
             if item.startswith("!!"):
-                item = item[1:]
-                qob = infoq
+                infoq |= models.Q(contents__info__contains="\n%s\n" % item[1:])
             elif item.startswith("!"):
-                item = item[1:]
-                qob = infoq_exc
+                infoq_exc |= models.Q(
+                    contents__info__contains="\n%s\n" % item[1:]
+                )
             else:
-                qob = infoq
-            qob |= models.Q(contents__info__contains="\n%s\n" % item)
+                infoq |= models.Q(contents__info__contains="\n%s\n" % item)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
@@ -110,7 +113,7 @@ class ComponentPublicIndex(ListView):
         main_query = self.model.objects.prefetch_related(
             "contents"
         ).filter(
-            q & searchq & infoq & ~searchq_exc & ~infoq_exc
+            q & searchq & ~searchq_exc & infoq & ~infoq_exc
         ).order_by(*self.get_ordering()).distinct()
         return main_query
 
@@ -206,22 +209,26 @@ class ComponentIndex(UCTestMixin, ListView):
             if len(item) == 0:
                 continue
             if item.startswith("!!"):
-                item = item[1:]
-                qob = searchq
+                _item = item[1:]
             elif item.startswith("!"):
-                item = item[1:]
-                qob = searchq_exc
+                _item = item[1:]
             else:
-                qob = searchq
-            qob |= models.Q(
-                contents__info__icontains="%s" % item
+                _item = item
+            qob = models.Q(
+                contents__info__icontains="%s" % _item
             )
             qob |= models.Q(
-                description__icontains="%s" % item
+                description__icontains="%s" % _item
             )
             qob |= models.Q(
-                name__icontains="%s" % item
+                name__icontains="%s" % _item
             )
+            if item.startswith("!!"):
+                searchq |= qob
+            elif item.startswith("!"):
+                searchq_exc |= qob
+            else:
+                searchq |= qob
 
         for item in infolist:
             if counter > max_counter:
@@ -230,14 +237,13 @@ class ComponentIndex(UCTestMixin, ListView):
             if len(item) == 0:
                 continue
             if item.startswith("!!"):
-                item = item[1:]
-                qob = infoq
+                infoq |= models.Q(contents__info__contains="\n%s\n" % item[1:])
             elif item.startswith("!"):
-                item = item[1:]
-                qob = infoq_exc
+                infoq_exc |= models.Q(
+                    contents__info__contains="\n%s\n" % item[1:]
+                )
             else:
-                qob = infoq
-            qob |= models.Q(contents__info__contains="\n%s\n" % item)
+                infoq |= models.Q(contents__info__contains="\n%s\n" % item)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
         searchq &= (

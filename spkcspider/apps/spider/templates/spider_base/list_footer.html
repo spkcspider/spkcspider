@@ -2,15 +2,15 @@
 {% list_parameters "search" as cur_search %}
 {% list_parameters "info" as cur_info %}
 {% get_searchpath as searchpath %}
-<div class="w3-padding">
-  <form class="" style="max-width:400px;white-space: nowrap;" method="POST" action="{{searchpath}}">
+<div class="">
+  <form class="" style="white-space: nowrap;" method="POST" action="{{searchpath}}">
     {% csrf_token %}
     <select hidden="hidden" name="info" multiple="multiple">
       {% for elem in cur_info %}
         <option selected="selected" value="{{elem}}">{{elem}}</option>
       {% endfor %}
     </select>
-    <select class="w3-input" name="search" id="search_field_list_footer" multiple="multiple">
+    <select name="search" id="search_field_list_footer" multiple="multiple">
       {% for elem in cur_search %}
         <option selected="selected" value="{{elem}}">{{elem}}</option>
       {% endfor %}
@@ -19,7 +19,7 @@
   </form>
 </div>
 {% if page_obj.paginator.num_pages > 1 %}
-  <form class="w3-padding w3-center" style="white-space: nowrap;" method="POST">
+  <form class="w3-center" style="white-space: nowrap; margin-top:40px" method="POST">
     {% csrf_token %}
     <select hidden="hidden" name="search" multiple="multiple">
       {% for elem in cur_search %}
@@ -60,6 +60,7 @@ jQuery( document ).ready(function( $ ) {
   list_footer_scripts_initialized = true;
   $("#search_field_list_footer").select2({
     tags: true,
+    width: "80%",
     placeholder: "{% trans 'Search' %}",
   });
 })
