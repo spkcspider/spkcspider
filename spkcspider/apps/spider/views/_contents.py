@@ -259,48 +259,61 @@ class ContentIndex(UCTestMixin, ListView):
         ret = super().get_queryset().filter(usercomponent=self.usercomponent)
 
         searchq = models.Q()
+        searchq_exc = models.Q()
         infoq = models.Q()
+        infoq_exc = models.Q()
 
         counter = 0
         # against ddos
         max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 30)
 
         if "search" in self.request.POST or "info" in self.request.POST:
-            for info in self.request.POST.getlist("search"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                if len(info) > 0:
-                    searchq |= models.Q(info__icontains="%s" % info)
-
-            for info in self.request.POST.getlist("info"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                infoq |= models.Q(info__contains="\n%s\n" % info)
-
-            if "id" in self.request.POST:
-                ids = map(lambda x: int(x), self.request.POST.getlist("id"))
-                searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
+            searchlist = self.request.POST.getlist("search")
+            infolist = self.request.POST.getlist("info")
+            idlist = self.request.POST.getlist("id")
         else:
-            for info in self.request.GET.getlist("search"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                if len(info) > 0:
-                    searchq |= models.Q(info__icontains="%s" % info)
+            searchlist = self.request.GET.getlist("search")
+            infolist = self.request.GET.getlist("info")
+            idlist = self.request.GET.getlist("id")
 
-            for info in self.request.GET.getlist("info"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                infoq |= models.Q(info__contains="\n%s\n" % info)
+        for item in searchlist:
+            if counter > max_counter:
+                break
+            counter += 1
+            if len(item) == 0:
+                continue
+            if item.startswith("!!"):
+                item = item[1:]
+                qob = searchq
+            elif item.startswith("!"):
+                item = item[1:]
+                qob = searchq_exc
+            else:
+                qob = searchq
+            qob |= models.Q(
+                info__icontains="%s" % item
+            )
 
-            if "id" in self.request.GET:
-                ids = map(lambda x: int(x), self.request.GET.getlist("id"))
-                searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
+        for item in infolist:
+            if counter > max_counter:
+                break
+            counter += 1
+            if len(item) == 0:
+                continue
+            if item.startswith("!!"):
+                item = item[1:]
+                qob = infoq
+            elif item.startswith("!"):
+                item = item[1:]
+                qob = infoq_exc
+            else:
+                qob = infoq
+            qob |= models.Q(info__contains="\n%s\n" % item)
+        if idlist:
+            ids = map(lambda x: int(x), idlist)
+            searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
 
-        return ret.filter(searchq & infoq)
+        return ret.filter(searchq & infoq & ~searchq_exc & ~infoq_exc)
 
     def get_paginate_by(self, queryset):
         if self.scope == "export":

@@ -50,39 +50,57 @@ class ComponentPublicIndex(ListView):
 
     def get_queryset(self):
         searchq = models.Q()
+        searchq_exc = models.Q()
         infoq = models.Q()
+        infoq_exc = models.Q()
         counter = 0
         max_counter = 30  # against ddos
         if "search" in self.request.POST or "info" in self.request.POST:
-            for info in self.request.POST.getlist("search"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                if len(info) > 0:
-                    searchq |= models.Q(contents__info__icontains="%s" % info)
-                    searchq |= models.Q(description__icontains="%s" % info)
-                    searchq |= models.Q(name__icontains="%s" % info)
-
-            for info in self.request.POST.getlist("info"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
+            searchlist = self.request.POST.getlist("search")
+            infolist = self.request.POST.getlist("info")
         else:
-            for info in self.request.GET.getlist("search"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                if len(info) > 0:
-                    searchq |= models.Q(contents__info__icontains="%s" % info)
-                    searchq |= models.Q(description__icontains="%s" % info)
-                    searchq |= models.Q(name__icontains="%s" % info)
+            searchlist = self.request.GET.getlist("search")
+            infolist = self.request.GET.getlist("info")
 
-            for info in self.request.GET.getlist("info"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
+        for item in searchlist:
+            if counter > max_counter:
+                break
+            counter += 1
+            if len(item) == 0:
+                continue
+            if item.startswith("!!"):
+                item = item[1:]
+                qob = searchq
+            elif item.startswith("!"):
+                item = item[1:]
+                qob = searchq_exc
+            else:
+                qob = searchq
+            qob |= models.Q(
+                contents__info__icontains="%s" % item
+            )
+            qob |= models.Q(
+                description__icontains="%s" % item
+            )
+            qob |= models.Q(
+                name__icontains="%s" % item
+            )
+
+        for item in infolist:
+            if counter > max_counter:
+                break
+            counter += 1
+            if len(item) == 0:
+                continue
+            if item.startswith("!!"):
+                item = item[1:]
+                qob = infoq
+            elif item.startswith("!"):
+                item = item[1:]
+                qob = infoq_exc
+            else:
+                qob = infoq
+            qob |= models.Q(contents__info__contains="\n%s\n" % item)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
@@ -92,7 +110,7 @@ class ComponentPublicIndex(ListView):
         main_query = self.model.objects.prefetch_related(
             "contents"
         ).filter(
-            q & searchq & infoq
+            q & searchq & infoq & ~searchq_exc & ~infoq_exc
         ).order_by(*self.get_ordering()).distinct()
         return main_query
 
@@ -167,44 +185,65 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def get_queryset(self):
         searchq = models.Q()
+        searchq_exc = models.Q()
         infoq = models.Q()
+        infoq_exc = models.Q()
         counter = 0
         # against ddos
         max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 30)
 
         if "search" in self.request.POST or "info" in self.request.POST:
-            for info in self.request.POST.getlist("search"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                if len(info) > 0:
-                    searchq |= models.Q(contents__info__icontains="%s" % info)
-                    searchq |= models.Q(description__icontains="%s" % info)
-                    searchq |= models.Q(name__icontains="%s" % info)
-
-            for info in self.request.POST.getlist("info"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
+            searchlist = self.request.POST.getlist("search")
+            infolist = self.request.POST.getlist("info")
         else:
-            for info in self.request.GET.getlist("search"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                if len(info) > 0:
-                    searchq |= models.Q(contents__info__icontains="%s" % info)
-                    searchq |= models.Q(description__icontains="%s" % info)
-                    searchq |= models.Q(name__icontains="%s" % info)
+            searchlist = self.request.GET.getlist("search")
+            infolist = self.request.GET.getlist("info")
 
-            for info in self.request.GET.getlist("info"):
-                if counter > max_counter:
-                    break
-                counter += 1
-                infoq |= models.Q(contents__info__contains="\n%s\n" % info)
+        for item in searchlist:
+            if counter > max_counter:
+                break
+            counter += 1
+            if len(item) == 0:
+                continue
+            if item.startswith("!!"):
+                item = item[1:]
+                qob = searchq
+            elif item.startswith("!"):
+                item = item[1:]
+                qob = searchq_exc
+            else:
+                qob = searchq
+            qob |= models.Q(
+                contents__info__icontains="%s" % item
+            )
+            qob |= models.Q(
+                description__icontains="%s" % item
+            )
+            qob |= models.Q(
+                name__icontains="%s" % item
+            )
+
+        for item in infolist:
+            if counter > max_counter:
+                break
+            counter += 1
+            if len(item) == 0:
+                continue
+            if item.startswith("!!"):
+                item = item[1:]
+                qob = infoq
+            elif item.startswith("!"):
+                item = item[1:]
+                qob = infoq_exc
+            else:
+                qob = infoq
+            qob |= models.Q(contents__info__contains="\n%s\n" % item)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
-        searchq &= infoq & models.Q(user=self.user)
+        searchq &= (
+            infoq & ~searchq_exc & ~infoq_exc &
+            models.Q(user=self.user)
+        )
 
         # doesn't matter if it is same user, lazy
         travel = TravelProtection.objects.get_active()
@@ -217,7 +256,7 @@ class ComponentIndex(UCTestMixin, ListView):
             searchq &= ~(
                 # exclude future events
                 models.Q(
-                    contents__modified__lte=now-timedelta(hours=1),
+                    contents__modified__lte=now,
                     contents__info__contains="\ntype=TravelProtection\n"
                 )
             )

@@ -119,18 +119,23 @@ There are some special GET parameters for services with special requirements:
 * raw=true: optimize output for machines
 * raw=embed: embed content, for ContentList only
 * id=id&id=id: limit content ids, for ContentList only
-* search=foo: search case insensitive for string in assigned content info, user component description and name (if uc not selected), for lists only
-* info=foo: search info tag in info, for list only. Restricts search field.
+* search=foo&search=!notfoo: search case insensitive a string
+* info=foo&info=!notfoo: search info tag in info. Restricts search.
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
 * referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if strength > 0
 * [embed_big=true]: only staff and superuser can use it. Overrides maximal size of files which are embedded
 
+## search and info parameters
+
+* search also searches UserComponents name and description fields
+* can only be used with "list"-views
+* items can be negated with !foo
+* !!foo escapes a !foo item
 
 verified_by urls should return hashname:hash_hexdigest
 
 # TODO
-* raw protection mode
 * token control
 * finish global referrer mode, remove cruft from anchors
 * improve anchors
