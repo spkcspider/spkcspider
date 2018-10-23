@@ -17,6 +17,13 @@
     </select>
     <button class="w3-button w3-gray"><i class="fa fa-search" aria-hidden="true"></i></button>
   </form>
+  <div class="w3-text-grey w3-padding">
+    <small>
+      {% blocktrans %}
+        ! to negate. Press Enter to confirm tag. The magnifying glass button right starts the search.
+      {% endblocktrans %}
+    </small>
+  </div>
 </div>
 {% if page_obj.paginator.num_pages > 1 %}
   <form class="w3-center" style="white-space: nowrap; margin-top:40px" method="POST">
