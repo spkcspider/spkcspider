@@ -253,6 +253,7 @@ class BaseContent(models.Model):
     def extract_form(
         self, context, datadic, zipf=None, level=1, prefix="", form=None
     ):
+        # MAYBE: reorganize with async
         if level <= 0:
             return
         if not form:
@@ -310,6 +311,7 @@ class BaseContent(models.Model):
                         datadic[name].append(OrderedDict(
                             pk=val.associated.pk,
                             ctype=val.associated.getlist("type", 1)[0],
+                            ref_fields=[],
                             info=val.associated.info
                         ))
                         val.extract_form(
@@ -325,14 +327,17 @@ class BaseContent(models.Model):
                         # only one element
                         datadic[name] = datadic[name][0]
                 elif isinstance(value, AssignedContent):
-                    datadic[name] = {
-                        "pk": value.pk,
-                        "ctype": value.getlist("type", 1)[0],
-                        "info": value.info
-                    }
+                    datadic["ref_fields"].append(name)
+                    datadic[name] = OrderedDict(
+                        pk=value.pk,
+                        ctype=value.getlist("type", 1)[0],
+                        ref_fields=[],
+                        info=value.info
+                    )
                     if save_field_order:
                         context["current_order"][-1].append(name)
                 else:
+                    datadic["ref_fields"].append(name)
                     datadic[name] = [{
                         "pk": val.pk,
                         "ctype": val.getlist("type", 1)[0],
@@ -349,6 +354,7 @@ class BaseContent(models.Model):
                     prefix=prefix, name=name, value=value,
                     zipf=zipf, context=context
                 )
+                datadic["ref_fields"].append(name)
                 if save_field_order:
                     context["current_order"][-1].append(name)
             else:
@@ -380,11 +386,12 @@ class BaseContent(models.Model):
         }
         store_dict = OrderedDict(
             pk=self.associated.pk,
-            ctype=self.associated.getlist("type", 1)[0],
             modified=self.associated.modified.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             ),
             scope=kwargs["scope"],
+            ctype=self.associated.getlist("type", 1)[0],
+            ref_fields=[],
             info=self.associated.info,
             expires=None  # replaced with expire date of token
         )

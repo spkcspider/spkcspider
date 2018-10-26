@@ -364,6 +364,8 @@ class ContentIndex(UCTestMixin, ListView):
         store_dict = OrderedDict(
             name=self.usercomponent.name,
             scope=context["scope"],
+            ctype="UserComponent",
+            ref_fields=[],
         )
         session_dict["store_dict"] = store_dict
         if context["scope"] == "export":

@@ -22,16 +22,14 @@ class CreateEntry(forms.ModelForm):
 
     class Meta:
         model = DataVerificationTag
-        fields = ["source", "source_type", "dvfile"]
+        fields = ["source", "dvfile"]
         widgets = {
             "source": widgets.URLInput(),
-            "source_type": widgets.HiddenInput()
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["source"].help_text = _source_url_help
-        self.fields["source_type"].disabled = True
         if getattr(settings, "VERIFIER_ALLOW_FILE_UPLOAD", False):
             self.fields["dvfile"].help_text = _source_file_help
         else:
@@ -41,11 +39,10 @@ class CreateEntry(forms.ModelForm):
     def clean(self):
         ret = super().clean()
         if not ret["dvfile"]:
-            ret["dvfile"]
 
-        h = get_hashob()
-        with ret["dvfile"].open("rb") as fi:
-            for chunk in fi.chunks():
-                h.update(chunk)
-        ret["hash"] = h.hexdigest()
+            h = get_hashob()
+            with ret["dvfile"].open("rb") as fi:
+                for chunk in fi.chunks():
+                    h.update(chunk)
+            ret["hash"] = h.hexdigest()
         return ret

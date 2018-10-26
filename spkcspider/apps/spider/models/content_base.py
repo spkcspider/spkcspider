@@ -150,6 +150,12 @@ class AssignedContent(models.Model):
     content = GenericForeignKey(
         'content_type', 'object_id', for_concrete_model=False
     )
+    # for quick retrieval!! even duplicate
+    # layouts referencing models are not appearing here, so do it here
+    references = models.ManyToManyField(
+        "spider_base.AssignedContent", related_name="referenced_by",
+        editable=False
+    )
 
     class Meta:
         unique_together = [

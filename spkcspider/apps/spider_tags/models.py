@@ -156,7 +156,9 @@ class SpiderTag(BaseContent):
         _t_order_list = []
         _old_preserve = None
         if getattr(form, "layout_generating_form", False):
-            _datadic = OrderedDict()
+            _datadic = OrderedDict(
+                ref_fields=[]
+            )
             _old_preserve = context.pop("current_order", None)
             if _old_preserve is not None:
                 context["current_order"] = [_t_order_list]

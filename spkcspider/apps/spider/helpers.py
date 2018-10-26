@@ -7,20 +7,28 @@ __all__ = (
 
 import os
 import re
+import json
 import base64
 import logging
 import inspect
-from urllib.parse import urlencode
+from urllib.parse import urlunsplit, urlsplit
 
 from functools import lru_cache
 from importlib import import_module
+
+import requests
+
 from django.conf import settings
+from django.http import QueryDict
 from .constants.static import MAX_NONCE_SIZE
 
 # for not spamming sets
 _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
+
+
+BUFFER_SIZE = 65536  # read in 64kb chunks
 
 
 @lru_cache(maxsize=None)
@@ -96,14 +104,33 @@ def prepare_description(raw_html, amount=0):
 
 
 def join_get_url(url, **kwargs):
-    getargs = "&".join(
-        ["{}={}".format(i[0], urlencode(i[1])) for i in kwargs.items()]
-    )
-    if "?" in url:
-        if url[-1] == "?":
-            url = "{}{}".format(url, getargs)
-        else:
-            url = "{}&{}".format(url, getargs)
-    else:
-        url = "{}?{}".format(url, getargs)
-    return url
+    urlparsed = urlsplit(url)
+    GET = QueryDict(urlparsed.query)
+    GET.update(kwargs)
+    return urlunsplit(*urlparsed[:3], GET.urlencode(), "")
+
+
+# even when used in verifier, better specified here
+def download_spider(
+    fp, url, session=None
+):
+    if not session:
+        session = requests.Session()
+    resp = session.get(join_get_url(url, raw="embed"), stream=True)
+    resp.raise_for_status()
+    for chunk in resp.iter_content(BUFFER_SIZE):
+        fp.write(chunk)
+
+
+def fix_embedded(
+    zipf, session=None
+):
+    if not session:
+        session = requests.Session()
+    ctype = "none"
+    tmpob = None
+    try:
+        tmpob = json.loads(zipf.read("data.json"))
+        ctype = tmpob["ctype"]
+    except ValueError:
+        pass

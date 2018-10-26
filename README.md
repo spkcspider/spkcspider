@@ -24,15 +24,24 @@ Further features and advantages of spkcspider are:
 
 This project can either be used as a standalone project (clone repo) or as a set of reusable apps (setup.py installation).
 
-spkcspider.apps.spideraccounts: user implementation suitable for the spiders. You can supply your own user model instead.
+## spider:
+For spiders and contents
 
 spkcspider.apps.spider: store User Components, common base, WARNING: has spider_base namespace to not break existing apps
+
+spkcspider.apps.spideraccounts: user implementation suitable for the spiders. You can supply your own user model instead.
 
 spkcspider.apps.spidertags: verified information tags and
 
 spkcspider.apps.spiderkeys: store public keys
 
 spkcspider: contains spkcspider url detection and wsgi handler
+
+## verifier:
+Base reference implementation of a verifier.
+
+spkcspider.apps.verifier: verifier base  WARNING: has verifier_base namespace to not break existing apps
+
 
 
 ## Requirements
@@ -143,6 +152,7 @@ verified_by urls should return hashname:hash_hexdigest
 * examples
 * tests
 * documentation
+* RDF instead json
 
 Later:
 * raw add, update mode
@@ -153,6 +163,9 @@ Later:
 * improve protections, add protections
 * complete travel mode
 * color tones for strength
+
+Maybe:
+* use async
 
 # Thanks
 

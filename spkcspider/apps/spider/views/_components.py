@@ -290,6 +290,12 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def generate_embedded(self, zip, context):
         # Here export only
+        store_dict = OrderedDict(
+            ctype="Index",
+        )
+        zip.writestr(
+            "data.json", json.dumps(store_dict)
+        )
 
         deref_level = 1  # don't dereference, as all data will be available
         for component in context["context"]["object_list"]:
@@ -318,6 +324,7 @@ class ComponentIndex(UCTestMixin, ListView):
                 store_dict = OrderedDict(
                     pk=content.get_id(),
                     ctype=content.getlist("type", 1)[0],
+                    ref_fields=[],
                     info=content.info,
                     scope="export",
                     modified=content.modified.strftime(

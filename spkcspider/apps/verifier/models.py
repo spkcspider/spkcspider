@@ -30,10 +30,10 @@ class DataVerificationTag(models.Model):
             "File with data to verify"
         )
     )
-    source = models.TextField(
+    source = models.UrlField(
         null=True, blank=True
     )
-    source_type = models.CharField(default="url", max_length=20)
+    data_type = models.CharField(default="layout", max_length=20)
     checked = models.DateTimeField(null=True, blank=True)
     verification_state = models.CharField(
         default="pending",
