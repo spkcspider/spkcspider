@@ -1,3 +1,8 @@
+__all__ = [
+    "ns_uc", "ns_ac", "ns_content", "ns_status", "ns_prot", "merge_get_url",
+    "serialize_content", "serialize_component"
+]
+
 
 import posixpath
 from urllib.parse import urlsplit, parse_qs, urlencode, urlunsplit
@@ -7,6 +12,8 @@ from rdflib import Namespace, Literal, URIRef
 ns_uc = Namespace("https:///spkcspider.net/UserComponent")
 ns_ac = Namespace("https:///spkcspider.net/AssignedContent")
 ns_content = Namespace("https:///spkcspider.net/Content")
+ns_status = Namespace("https:///spkcspider.net/Status")
+ns_prot = Namespace("https:///spkcspider.net/Protection")
 
 
 def merge_get_url(url, **kwargs):
@@ -25,10 +32,11 @@ def serialize_content(graph, content, context):
         raw=context["request"].GET["raw"]
     )
     content_ref = URIRef(url)
-    graph.add((content_ref, ns_ac.id, Literal(content.get_id())))
     graph.add((content_ref, ns_ac.info, Literal(content.info)))
+    graph.add((content_ref, ns_ac.type, Literal(content.ctype.ctype)))
     content.content.serialize(graph, content_ref, context)
     for c in content.references.all():
+        # references field not required, can be calculated
         serialize_content(graph, c, context)
 
     return content_ref
@@ -43,9 +51,24 @@ def serialize_component(graph, component, context):
         raw=context["request"].GET["raw"]
     )
     comp_ref = URIRef(url)
-    graph.add((comp_ref, ns_uc.id, Literal(component.id)))
-    graph.add((comp_ref, ns_uc.name, Literal(component.name)))
-    graph.add((comp_ref, ns_uc.description, Literal(component.description)))
+    if component.public or context["scope"] == "export":
+        graph.add((comp_ref, ns_uc.name, Literal(component.name)))
+        graph.add(
+            (comp_ref, ns_uc.description, Literal(component.description))
+        )
+    if context["scope"] == "export":
+        graph.add(
+            (
+                comp_ref, ns_uc.required_passes,
+                Literal(component.required_passes)
+            )
+        )
+        graph.add(
+            (
+                comp_ref, ns_uc.token_duration,
+                Literal(component.token_duration)
+            )
+        )
     for content in component.contents.all():
         graph.add(
             (
