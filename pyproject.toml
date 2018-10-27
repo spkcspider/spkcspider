@@ -12,6 +12,7 @@ requests = '*'
 certifi = '*'
 bleach = '*'
 rdflib = '*'
+html5lib = '*'
 django-widget-tweaks = "*"
 
 [tool.poetry.dev-dependencies]

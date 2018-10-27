@@ -13,6 +13,7 @@ install_requirements = [
     'requests',
     'bleach',
     'rdflib',
+    'html5lib',
     'django-widget-tweaks'
 ]
 

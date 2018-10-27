@@ -11,8 +11,10 @@ from collections import namedtuple
 from rdflib.namespace import ClosedNamespace
 
 namespace_spkcspider = ClosedNamespace(
-    "https:///spkcspider.net/schemes/",
-    ("assignedcontent", "content", "usercomponent", "protection", "status")
+    "https://spkcspider.net/schemes/",
+    (
+        "assignedcontent", "content", "usercomponent", "protection", "status",
+    )
 )
 
 
