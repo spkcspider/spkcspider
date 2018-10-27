@@ -11,6 +11,8 @@ django-simple-captcha = '*'
 requests = '*'
 certifi = '*'
 bleach = '*'
+rdflib = '*'
+django-widget-tweaks = "*"
 
 [tool.poetry.dev-dependencies]
 django-extensions = '*'

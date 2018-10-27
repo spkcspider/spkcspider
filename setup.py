@@ -11,7 +11,9 @@ install_requirements = [
     "django-simple-jsonfield",
     'certifi',
     'requests',
-    'bleach'
+    'bleach',
+    'rdflib',
+    'django-widget-tweaks'
 ]
 
 debug_requirements = [

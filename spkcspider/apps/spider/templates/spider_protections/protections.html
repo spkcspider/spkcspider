@@ -1,7 +1,7 @@
 {% extends "spider_protections/base.html" %}
-{% load spider_protections i18n %}
+{% load spider_protections i18n spider_rdf %}
 {% block content %}
-<form action="{{ request.get_full_path }}" method="post">
+<form action="{{ request.get_full_path }}" method="post" itemscope itemtype="{% namespace 'protection' %}" itemid="{{ request.path }}">
   {% csrf_token %}
   <fieldset>
     <legend><h1>{% trans 'Protections' %}</h1></legend>

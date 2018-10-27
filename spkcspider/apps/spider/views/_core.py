@@ -17,7 +17,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext
 from django.http import JsonResponse
 
-from ..helpers import join_get_url
+from ..helpers import merge_get_url
 from ..constants import UserContentType, index_names
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
@@ -227,18 +227,6 @@ class UserTestMixin(AccessMixin):
             "object": getattr(self, "object", None),
             "is_public_view": self.usercomponent.public
         }
-        if "raw" in self.request.GET:
-            if context["scope"] == "view":
-                context["scope"] = "raw"
-            return JsonResponse(
-                {
-                    "scope": context["scope"],
-                    "protections": [
-                        prot.protection.render_raw(prot.result)
-                        for prot in self.request.protections
-                    ]
-                }
-            )
         return self.response_class(
             request=self.request,
             template=self.get_noperm_template_names(),
@@ -298,7 +286,7 @@ class UserTestMixin(AccessMixin):
             )
             if ret.status_code not in (200, 201):
                 return HttpResponseRedirect(
-                    redirect_to=join_get_url(
+                    redirect_to=merge_get_url(
                         context["referrer"],
                         error="post_failed"
                     )
@@ -306,7 +294,7 @@ class UserTestMixin(AccessMixin):
             h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
             h.update(token.encode("ascii", "ignore"))
             return HttpResponseRedirect(
-                redirect_to=join_get_url(
+                redirect_to=merge_get_url(
                     context["referrer"],
                     hash=h.hexdigest()
                 )

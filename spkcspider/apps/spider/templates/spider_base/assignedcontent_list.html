@@ -1,5 +1,5 @@
 {% extends "spider_base/uc_base.html" %}
-{% load i18n static spider_base %}
+{% load i18n static spider_base spider_rdf %}
 {% block title %}{% if uc.public %}{% blocktrans trimmed %}
   Content of:
 {% endblocktrans %} {{uc}} ({{uc.username}}){% else %}{% blocktrans trimmed %}
@@ -93,7 +93,7 @@
     </details>
   {% endif %}
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable" itemscope itemtype="{% namespace 'usercomponent' %}" itemid="{{ request.path }}">
       {% for content in object_list %}
         <tr>
           <td class="" style="width:20%; min-height:48px">
@@ -108,7 +108,7 @@
           </td>
           <td class="w3-show-inline-block">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" itemprop="contents">
                 <div class="spkc-item-button"><i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "View" %}</div></span>
               </a>

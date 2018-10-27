@@ -1,7 +1,7 @@
 __all__ = (
     "token_nonce", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
-    "join_get_url"
+    "merge_get_url"
 )
 
 
@@ -11,7 +11,7 @@ import json
 import base64
 import logging
 import inspect
-from urllib.parse import urlunsplit, urlsplit
+from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 
 from functools import lru_cache
 from importlib import import_module
@@ -19,7 +19,6 @@ from importlib import import_module
 import requests
 
 from django.conf import settings
-from django.http import QueryDict
 from .constants.static import MAX_NONCE_SIZE
 
 # for not spamming sets
@@ -103,11 +102,11 @@ def prepare_description(raw_html, amount=0):
     return _whitespsplit.split(text, amount)
 
 
-def join_get_url(url, **kwargs):
+def merge_get_url(url, **kwargs):
     urlparsed = urlsplit(url)
-    GET = QueryDict(urlparsed.query)
+    GET = parse_qs(urlparsed.query)
     GET.update(kwargs)
-    return urlunsplit(*urlparsed[:3], GET.urlencode(), "")
+    return urlunsplit(*urlparsed[:3], urlencode(GET), "")
 
 
 # even when used in verifier, better specified here
@@ -116,7 +115,7 @@ def download_spider(
 ):
     if not session:
         session = requests.Session()
-    resp = session.get(join_get_url(url, raw="embed"), stream=True)
+    resp = session.get(merge_get_url(url, raw="embed"), stream=True)
     resp.raise_for_status()
     for chunk in resp.iter_content(BUFFER_SIZE):
         fp.write(chunk)
@@ -134,3 +133,4 @@ def fix_embedded(
         ctype = tmpob["ctype"]
     except ValueError:
         pass
+    return ctype == None

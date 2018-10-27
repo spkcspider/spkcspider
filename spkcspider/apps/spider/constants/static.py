@@ -2,12 +2,18 @@
 __all__ = (
     "ProtectionType", "UserContentType", "ProtectionResult",
     "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
-    "TokenCreationError",
-    "index_names"
+    "TokenCreationError", "namespace_spkcspider", "index_names"
 )
 
 import enum
 from collections import namedtuple
+
+from rdflib.namespace import ClosedNamespace
+
+namespace_spkcspider = ClosedNamespace(
+    "https:///spkcspider.net/schemes/",
+    ("assignedcontent", "content", "usercomponent", "protection", "status")
+)
 
 
 hex_size_of_bigid = 16

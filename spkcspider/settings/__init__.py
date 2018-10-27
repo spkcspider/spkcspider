@@ -28,6 +28,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'widget_tweaks',
     'spkcspider.apps.spider_accounts',
     'django.contrib.admin',
     'django.contrib.auth',

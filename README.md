@@ -152,7 +152,9 @@ verified_by urls should return hashname:hash_hexdigest
 * examples
 * tests
 * documentation
-* RDF instead json
+* RDF instead json, integrate rdf into html to simplify protections
+  * requires recursion form, so still allow n3 or so
+  * eliminate serializing
 
 Later:
 * raw add, update mode

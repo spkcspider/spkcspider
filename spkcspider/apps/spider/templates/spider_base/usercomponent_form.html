@@ -1,6 +1,6 @@
 {% extends "spider_base/base.html" %}
 
-{% load i18n static %}
+{% load i18n static spider_rdf %}
 
 {% block title %}{% if object %}{% if object.is_index %}{% blocktrans trimmed %}
 Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
@@ -63,7 +63,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   </div>
   {% endif %}
   {% include "spider_base/form_errors.html" with form=form %}
-  <form class="w3-padding" action="{{ request.path }}" encdata="multipart/form-data" method="post">
+  <form class="w3-padding" action="{{ request.path }}" encdata="multipart/form-data" method="post" itemscope itemtype="{% namespace 'usercomponent' %}" itemid="{{ request.path }}">
     {% csrf_token %}
     <fieldset>
       <legend>
