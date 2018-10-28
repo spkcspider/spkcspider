@@ -13,17 +13,20 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.duration import duration_string
 from django.db import models
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
+
+from rdflib import Graph, Literal, URIRef
 
 from ._core import UserTestMixin, UCTestMixin
 from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import UserComponent, TravelProtection
-from ..helpers import get_settings_func
+from ..constants import namespaces_spkcspider
+from ..serializing import serialize_component
 
 
 class ComponentPublicIndex(ListView):
@@ -351,11 +354,23 @@ class ComponentIndex(UCTestMixin, ListView):
             "expires": None,
             "hostpart": context["hostpart"]
         }
+        meta_ref = URIRef(context["hostpart"] + self.request.path)
+        namesp_meta = namespaces_spkcspider.meta
+        g = Graph()
+        g.add((meta_ref, namesp_meta.scope, Literal(context["scope"])))
+        for component in context["context"]["object_list"]:
+            ref = serialize_component(g, component, session_dict, True)
+            g.add(
+                (
+                    meta_ref, namesp_meta.usercomponent, ref
+                )
+            )
 
-        return get_settings_func(
-            "GENERATE_EMBEDDED_FUNC",
-            "spkcspider.apps.spider.functions.generate_embedded"
-        )(self.generate_embedded, session_dict, None)
+        ret = HttpResponse(
+            g.serialize(format="n3"),
+            content_type="text/n3;charset=utf-8"
+        )
+        return ret
 
 
 class ComponentCreate(UserTestMixin, CreateView):

@@ -3,8 +3,6 @@
 __all__ = (
     "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
 )
-import json
-from collections import OrderedDict
 from datetime import timedelta
 
 from django.views.generic.edit import ModelFormMixin
@@ -12,13 +10,15 @@ from django.views.generic.list import ListView
 from django.views.generic.base import TemplateResponseMixin, View
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.http.response import HttpResponseBase
-from django.http import JsonResponse
+from django.http.response import HttpResponseBase, HttpResponse
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
-from django.utils.duration import duration_string
+
+
+from rdflib import Graph, Literal
+
 
 from ._core import UCTestMixin, UserTestMixin
 from ._components import ComponentDelete
@@ -27,6 +27,8 @@ from ..models import (
 )
 from ..forms import UserContentForm
 from ..helpers import get_settings_func
+from ..constants import namespaces_spkcspider
+from ..serializing import serialize_component
 
 
 class ContentBase(UCTestMixin):
@@ -321,34 +323,6 @@ class ContentIndex(UCTestMixin, ListView):
             return None
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
-    def generate_embedded(self, zip, context):
-        # Here export and raw
-        deref_level = 2
-        if self.scope == "export":
-            deref_level = 1
-        zip.writestr("data.json", json.dumps(context["store_dict"]))
-        for n, content in enumerate(context["context"]["object_list"]):
-            context["content"] = content.content
-            store_dict = OrderedDict(
-                pk=content.get_id(),
-                ctype=content.getlist("type", 1)[0],
-                info=content.info,
-                modified=content.modified.strftime(
-                    "%a, %d %b %Y %H:%M:%S %z"
-                )
-            )
-            context["store_dict"] = store_dict
-            if context["scope"] != "export":
-                store_dict["field_order"] = []
-                context["current_order"] = [store_dict["field_order"]]
-            content.content.extract_form(
-                context, store_dict, zip, level=deref_level,
-                prefix="{}/".format(n)
-            )
-            zip.writestr(
-                "{}/data.json".format(n), json.dumps(context["store_dict"])
-            )
-
     def render_to_response(self, context):
         if context["scope"] != "export" and "raw" not in self.request.GET:
             return super().render_to_response(context)
@@ -360,59 +334,34 @@ class ContentIndex(UCTestMixin, ListView):
             "uc": self.usercomponent,
             "hostpart": context["hostpart"]
         }
+        namesp_meta = namespaces_spkcspider.meta
+        g = Graph()
 
-        store_dict = OrderedDict(
-            name=self.usercomponent.name,
-            scope=context["scope"],
-            ctype="UserComponent",
-            ref_fields=[],
-        )
-        session_dict["store_dict"] = store_dict
-        if context["scope"] == "export":
-            store_dict["public"] = self.usercomponent.public,
-            store_dict["required_passes"] = \
-                self.usercomponent.required_passes
-            store_dict["token_duration"] = duration_string(
-                self.usercomponent.token_duration
-            )
-        elif hasattr(self.request, "token_expires"):
-            store_dict["expires"] = self.request.token_expires.strftime(
-                "%a, %d %b %Y %H:%M:%S %z"
-            )
-            session_dict["expires"] = store_dict["expires"]
-
+        embed = False
         if (
             context["scope"] == "export" or
             self.request.GET.get("raw", "") == "embed"
         ):
-            return get_settings_func(
-                "GENERATE_EMBEDDED_FUNC",
-                "spkcspider.apps.spider.functions.generate_embedded"
-            )(self.generate_embedded, session_dict, self.usercomponent)
-        enc_get = context["spider_GET"].urlencode()
-        ret = JsonResponse({
-            "content": [
-                {
-                    "info": item.info,
-                    "modified": item.modified.strftime(
-                        "%a, %d %b %Y %H:%M:%S %z"
-                    ),
-                    "link": "{}{}?{}".format(
-                        context["hostpart"],
-                        reverse(
-                            "spider_base:ucontent-access",
-                            kwargs={
-                                "id": item.get_id(), "nonce": item.nonce,
-                                "access": "view"
-                            }
-                        ),
-                        enc_get
-                    )
-                }
-                for item in context["object_list"]
-            ],
-            **store_dict
-        })
+            embed = True
+        ref = serialize_component(g, self.usercomponent, session_dict, embed)
+        if hasattr(self.request, "token_expires"):
+            session_dict["expires"] = self.request.token_expires.strftime(
+                "%a, %d %b %Y %H:%M:%S %z"
+            )
+            g.add(
+                (
+                    ref,
+                    namesp_meta.expires,
+                    Literal(self.request.token_expires)
+                )
+            )
+        g.add((ref, namesp_meta.scope, Literal(context["scope"])))
+
+        ret = HttpResponse(
+            g.serialize(format="n3"),
+            content_type="text/n3;charset=utf-8"
+        )
+
         if session_dict.get("expires", None):
             ret['X-Token-Expires'] = session_dict["expires"]
         return ret

@@ -2,9 +2,9 @@
 __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
-import json
-from collections import OrderedDict
 
+import base64
+import posixpath
 from django.apps import apps as django_apps
 from django.db import models
 from django.utils.translation import gettext
@@ -13,12 +13,17 @@ from django.template.loader import render_to_string
 from django.core.files.base import File
 
 from django.contrib.contenttypes.fields import GenericRelation
-from django.http import JsonResponse
+from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 
-from .constants import UserContentType
-from .helpers import get_settings_func
+from rdflib import Literal, Graph
+from rdflib.namespace import XSD
+
+from .constants import UserContentType, namespaces_spkcspider
+from .serializing import serialize_content
+from .helpers import merge_get_url
+# from .helpers import get_settings_func
 
 
 installed_contents = {}
@@ -228,9 +233,60 @@ class BaseContent(models.Model):
             kwargs["form"].media
         )
 
-    @classmethod
-    def create_from_import(cls, data):
-        raise NotImplementedError
+    def get_references(self):
+        return []
+
+    def map_data(self, name, data, context):
+        from ..models import AssignedContent
+        namesp = namespaces_spkcspider.content
+        if isinstance(data, AssignedContent):
+            url = merge_get_url(
+                posixpath.join(
+                    context["hostpart"],
+                    data.get_absolute_url()
+                ),
+                raw=context["request"].GET["raw"]
+            )
+            return (
+                namesp[name],
+                Literal(
+                    url,
+                    XSD.anyURI,
+                )
+            )
+        elif isinstance(data, File):
+            return (
+                namesp[name],
+                Literal(
+                    base64.b64encode(data.read()),
+                    XSD.base64Binary,
+                    False
+                )
+            )
+        return (
+            namesp[name],
+            Literal(data)
+        )
+
+    def serialize(self, graph, content_ref, context):
+        form = self.get_form(context["scope"])(
+            **self.get_form_kwargs(
+                disable_data=True,
+                **context
+            )
+        )
+        form.full_clean()
+        for name, field in form.fields.items():
+            raw_value = form.initial.get(name, None)
+            value = field.to_python(raw_value)
+            if not isinstance(value, (list, tuple, models.QuerySet)):
+                value = [value]
+
+            for i in value:
+                graph.add((
+                    content_ref,
+                    *self.map_data(name, i, context)
+                ))
 
     def render_add(self, **kwargs):
         _ = gettext
@@ -250,131 +306,6 @@ class BaseContent(models.Model):
         kwargs.setdefault("confirm", _("Update"))
         return self.render_form(**kwargs)
 
-    def extract_form(
-        self, context, datadic, zipf=None, level=1, prefix="", form=None
-    ):
-        # MAYBE: reorganize with async
-        if level <= 0:
-            return
-        if not form:
-            form = self.get_form(context["scope"])(
-                **self.get_form_kwargs(disable_data=True, **context)
-            )
-        AssignedContent = django_apps.get_model(
-            "spider_base", "AssignedContent"
-        )
-        save_field_order = False
-        # [] is also False
-        if context.get("current_order", None) is not None:
-            save_field_order = True
-            assert len(context["current_order"]) >= 1
-        for name, field in form.fields.items():
-            raw_value = form.initial.get(name, None)
-            value = field.to_python(raw_value)
-            # deserialized as list
-            if isinstance(value, (AssignedContent, models.QuerySet, list)):
-                _level = level-1
-                if (
-                    getattr(field, "force_embed", False) and
-                    # dereferencing would break stuff
-                    context["scope"] != "export"
-                ):
-                    _level += 1
-                if save_field_order:
-                    assert len(context["current_order"]) >= 1
-                    context["current_order"][-1].append({name: []})
-                    context["current_order"].append(
-                        context["current_order"][-1][-1][name]
-                    )
-                    assert len(context["current_order"]) >= 2
-                if _level > 0:
-                    datadic[name] = []
-                    if isinstance(value, (models.QuerySet, list)):
-                        arr = value
-                    else:
-                        arr = [value]
-
-                    for val in arr:
-                        if isinstance(value, (models.QuerySet, list)):
-                            if save_field_order:
-                                context["current_order"][-1].append([])
-                                context["current_order"].append(
-                                    context["current_order"][-1][-1]
-                                )
-                        context["uc"] = val.associated.usercomponent
-                        form2 = val.get_form(context["scope"])(
-                            **val.get_form_kwargs(
-                                disable_data=True, **context
-                            )
-                        )
-                        pref = "{}{}/".format(prefix, name)
-                        datadic[name].append(OrderedDict(
-                            pk=val.associated.pk,
-                            ctype=val.associated.getlist("type", 1)[0],
-                            ref_fields=[],
-                            info=val.associated.info
-                        ))
-                        val.extract_form(
-                            context, datadic[name][-1], prefix=pref,
-                            zipf=zipf, level=_level, form=form2,
-                        )
-                        if save_field_order:
-                            context["current_order"].pop(-1)
-                    if isinstance(value, (models.QuerySet, list)):
-                        if save_field_order:
-                            context["current_order"].pop(-1)
-                    else:
-                        # only one element
-                        datadic[name] = datadic[name][0]
-                elif isinstance(value, AssignedContent):
-                    datadic["ref_fields"].append(name)
-                    datadic[name] = OrderedDict(
-                        pk=value.pk,
-                        ctype=value.getlist("type", 1)[0],
-                        ref_fields=[],
-                        info=value.info
-                    )
-                    if save_field_order:
-                        context["current_order"][-1].append(name)
-                else:
-                    datadic["ref_fields"].append(name)
-                    datadic[name] = [{
-                        "pk": val.pk,
-                        "ctype": val.getlist("type", 1)[0],
-                        "info": val.info
-                    } for val in value]
-                    if save_field_order:
-                        context["current_order"][-1].append(name)
-            elif isinstance(value, File):
-                context["content"] = self
-                datadic[name] = get_settings_func(
-                    "EMBED_FILE_FUNC",
-                    "spkcspider.apps.spider.functions.embed_file_default"
-                )(
-                    prefix=prefix, name=name, value=value,
-                    zipf=zipf, context=context
-                )
-                datadic["ref_fields"].append(name)
-                if save_field_order:
-                    context["current_order"][-1].append(name)
-            else:
-                datadic[name] = raw_value
-                if save_field_order:
-                    context["current_order"][-1].append(name)
-
-    def generate_embedded(self, zip, context):
-        store_dict = context["store_dict"]
-        context["content"] = self
-        deref_level = 2
-        if store_dict["scope"] == "export":
-            deref_level = 1
-        self.extract_form(
-            context, store_dict, zip, level=deref_level
-        )
-        zip.writestr(
-            "data.json", json.dumps(store_dict)
-        )
-
     def render_serialize(self, **kwargs):
         # ** creates copy of dict, so it is safe to overwrite kwargs here
 
@@ -384,39 +315,12 @@ class BaseContent(models.Model):
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"]
         }
-        store_dict = OrderedDict(
-            pk=self.associated.pk,
-            modified=self.associated.modified.strftime(
-                "%a, %d %b %Y %H:%M:%S %z"
-            ),
-            scope=kwargs["scope"],
-            ctype=self.associated.getlist("type", 1)[0],
-            ref_fields=[],
-            info=self.associated.info,
-            expires=None  # replaced with expire date of token
+        g = Graph()
+        serialize_content(g, self.associated, session_dict)
+        ret = HttpResponse(
+            g.serialize(format="n3"),
+            content_type="text/n3;charset=utf-8"
         )
-        session_dict["store_dict"] = store_dict
-        if kwargs["scope"] != "export":
-            store_dict["field_order"] = []
-            session_dict["current_order"] = [store_dict["field_order"]]
-        if hasattr(kwargs["request"], "token_expires"):
-            store_dict["expires"] = kwargs["request"].token_expires.strftime(
-                "%a, %d %b %Y %H:%M:%S %z"
-            )
-            session_dict["expires"] = store_dict["expires"]
-        if (
-                kwargs["scope"] == "export" or
-                kwargs["request"].GET.get("raw", "") == "embed"
-           ):
-            return get_settings_func(
-                "GENERATE_EMBEDDED_FUNC",
-                "spkcspider.apps.spider.functions.generate_embedded"
-            )(self.generate_embedded, session_dict, self.associated)
-
-        self.extract_form(session_dict, store_dict, level=2)
-        ret = JsonResponse(store_dict)
-        if store_dict["expires"]:
-            ret['X-Token-Expires'] = store_dict["expires"]
         return ret
 
     def render_view(self, **kwargs):

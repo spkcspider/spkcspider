@@ -1,19 +1,19 @@
 __all__ = [
-    "rate_limit_default", "allow_all_filter", "generate_embedded",
+    "rate_limit_default", "allow_all_filter",
     "embed_file_default", "has_admin_permission"
 ]
 
-import os
-import zipfile
-import tempfile
 import time
+import base64
 from django.core.exceptions import ValidationError
 from django.http import Http404
-from django.http import FileResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.conf import settings
+
+from rdflib import Literal, XSD
 
 
 def rate_limit_default(view, request):
@@ -35,10 +35,7 @@ def validate_file(value):
         )
 
 
-def embed_file_default(prefix, name, value, zipf, context):
-    path = "{}{}/{}".format(
-        prefix, name, os.path.basename(value.name)
-    )
+def embed_file_default(prefix, name, value, context):
 
     override = (
         (
@@ -46,12 +43,15 @@ def embed_file_default(prefix, name, value, zipf, context):
             context["request"].user.is_staff
         ) and context["request"].GET.get("embed_big", "") == "true"
     )
-    if zipf and (
+    if (
         value.size < getattr(settings, "MAX_EMBED_SIZE", 20000000) or
         override
     ):
-        zipf.write(value.path, path)
-        return {"file": path}
+        return Literal(
+            base64.b64encode(value.read()),
+            XSD.base64Binary,
+            False
+        )
     elif (
         context["scope"] == "export" or
         getattr(settings, "DIRECT_FILE_DOWNLOAD", False)
@@ -60,7 +60,10 @@ def embed_file_default(prefix, name, value, zipf, context):
         url = value.url
         if "://" not in getattr(settings, "MEDIA_URL", ""):
             url = "{}{}".format(context["hostpart"], url)
-        return {"url": url}
+        return Literal(
+            url,
+            XSD.anyURI,
+        )
     else:
         # only file filet has files yet
         url = context["content"].associated.get_absolute_url("download")
@@ -68,24 +71,10 @@ def embed_file_default(prefix, name, value, zipf, context):
             context["hostpart"],
             url, context["context"]["spider_GET"].urlencode()
         )
-        return {"url": url}
-
-
-def generate_embedded(func, context, obj=None):
-    expires = context.get("expires", None)
-    fil = tempfile.SpooledTemporaryFile(max_size=2048)
-    with zipfile.ZipFile(fil, "w") as zip:
-        func(zip, context)
-    # now reset
-    fil.seek(0, 0)
-    ret = FileResponse(
-        fil,
-        content_type='application/force-download'
-    )
-    ret['Content-Disposition'] = 'attachment; filename=result.zip'
-    if expires:
-        ret['X-Token-Expires'] = expires
-    return ret
+        return Literal(
+            url,
+            XSD.anyURI,
+        )
 
 
 def has_admin_permission(self, request):

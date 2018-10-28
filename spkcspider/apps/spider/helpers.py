@@ -7,7 +7,6 @@ __all__ = (
 
 import os
 import re
-import json
 import base64
 import logging
 import inspect
@@ -102,11 +101,14 @@ def prepare_description(raw_html, amount=0):
     return _whitespsplit.split(text, amount)
 
 
-def merge_get_url(url, **kwargs):
-    urlparsed = urlsplit(url)
+def merge_get_url(_url, _strip=None, **kwargs):
+    urlparsed = urlsplit(_url)
     GET = parse_qs(urlparsed.query)
     GET.update(kwargs)
-    return urlunsplit(*urlparsed[:3], urlencode(GET), "")
+    if _strip:
+        for item in _strip:
+            GET.pop(item, None)
+    return urlunsplit((*urlparsed[:3], urlencode(GET), ""))
 
 
 # even when used in verifier, better specified here
@@ -119,18 +121,3 @@ def download_spider(
     resp.raise_for_status()
     for chunk in resp.iter_content(BUFFER_SIZE):
         fp.write(chunk)
-
-
-def fix_embedded(
-    zipf, session=None
-):
-    if not session:
-        session = requests.Session()
-    ctype = "none"
-    tmpob = None
-    try:
-        tmpob = json.loads(zipf.read("data.json"))
-        ctype = tmpob["ctype"]
-    except ValueError:
-        pass
-    return ctype == None

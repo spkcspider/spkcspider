@@ -99,61 +99,33 @@ def generate_form(name, layout):
                 base = {}
             for i in initial.items():
                 if isinstance(i[1], dict):
-                    new_prefix = "{}:{}".format(prefix, i[0])
+                    new_prefix = "{}/{}".format(prefix, i[0])
                     cls.encode_initial(i[i], prefix=new_prefix, base=base)
                 else:
-                    base["{}:{}".format(prefix, i[0])] = i[1]
+                    base["{}/{}".format(prefix, i[0])] = i[1]
             return base
 
         @staticmethod
-        def encode_data(
-            cleaned_data, order=None, embed_order=None, prefix="tag"
-        ):
-            ret = OrderedDict()
-            if order is not None:
-                assert isinstance(order, list)
-                ret._fieldorder = order
+        def encode_data(cleaned_data, prefix="tag"):
+            ret = {}
             for counter, i in enumerate(cleaned_data.items()):
                 selected_dict = ret
-                splitted = i[0].split(":")
+                splitted = i[0].split("/")
                 if splitted[0] != prefix:  # unrelated data
                     continue
                 # last key is item key, first is "tag"
                 for key in splitted[1:-1]:
                     if key not in selected_dict:
-                        selected_dict[key] = OrderedDict()
-                        if order is not None:
-                            selected_dict._fieldorder.append({key: []})
-                            selected_dict[key]._fieldorder = \
-                                selected_dict._fieldorder[-1][key]
+                        selected_dict[key] = {}
                     selected_dict = selected_dict[key]
-                if embed_order is not None:
-                    selected_dict[splitted[-1]] = i[1]
-                    if order is not None:
-                        if isinstance(
-                            i[1], (models.Model, dict, models.QuerySet, list)
-                        ):
-                            selected_dict._fieldorder.append(
-                                {
-                                    splitted[-1]: embed_order[counter][i[0]]
-                                }
-                            )
-                        else:
-                            selected_dict._fieldorder.append(splitted[-1])
-                elif isinstance(i[1], models.Model):
+                if isinstance(i[1], models.Model):
                     selected_dict[splitted[-1]] = i[1].pk
-                    if order is not None:
-                        selected_dict._fieldorder.append(splitted[-1])
                 elif isinstance(i[1], models.QuerySet):
                     selected_dict[splitted[-1]] = list(i[1].values_list(
                         'id', flat=True
                     ))
-                    if order is not None:
-                        selected_dict._fieldorder.append(splitted[-1])
                 else:
                     selected_dict[splitted[-1]] = i[1]
-                    if order is not None:
-                        selected_dict._fieldorder.append(splitted[-1])
             return ret
 
         def save(self):

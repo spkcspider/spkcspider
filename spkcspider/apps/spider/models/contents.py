@@ -69,6 +69,11 @@ class LinkContent(BaseContent):
             ret, self.associated.pk
         )
 
+    def get_references(self):
+        if not self.content:
+            return []
+        return [self.content]
+
     def get_form(self, scope):
         from ..forms import LinkForm
         if scope in ["add", "update", "export", "raw"]:

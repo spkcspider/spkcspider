@@ -1,5 +1,4 @@
 
-from collections import OrderedDict
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -146,45 +145,9 @@ class SpiderTag(BaseContent):
             ret["usertag"] = self
         return ret
 
-    def extract_form(
-        self, context, datadic, zipf=None, level=1, prefix="", form=None
-    ):
-        if not form:
-            form = self.get_form(context["scope"])(
-                **self.get_form_kwargs(disable_data=True, **context)
-            )
-        _t_order_list = []
-        _old_preserve = None
-        if getattr(form, "layout_generating_form", False):
-            _datadic = OrderedDict(
-                ref_fields=[]
-            )
-            _old_preserve = context.pop("current_order", None)
-            if _old_preserve is not None:
-                context["current_order"] = [_t_order_list]
-        else:
-            _datadic = datadic
-            if _old_preserve is not None:
-                context["current_order"] = _old_preserve
-        super().extract_form(
-            context, _datadic, zipf=zipf, level=level, prefix=prefix,
-            form=form
-        )
-        if getattr(form, "layout_generating_form", False):
-            datadic["primary"] = _datadic["primary"]
-            if _old_preserve:
-                context["current_order"] = _old_preserve
-                _norder = {"tagdata": []}
-                _old_preserve[-1].append("primary")
-                _old_preserve[-1].append(_norder)
-                datadic["tagdata"] = form.encode_data(
-                    _datadic, order=_norder["tagdata"],
-                    embed_order=_t_order_list
-                )
-            else:
-                datadic["tagdata"] = form.encode_data(
-                    _datadic, embed_order=_t_order_list
-                )
+    def map_data(self, name, data, context):
+        name = name.replace("tag/", "", 1)
+        super().map_data(name, data, context)
 
     def encode_verifiers(self):
         return "".join(

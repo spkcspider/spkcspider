@@ -1,5 +1,5 @@
 from django import template
-from ..constants.static import namespace_spkcspider
+from ..constants.static import namespaces_spkcspider
 
 register = template.Library()
 
@@ -11,4 +11,4 @@ def namespace(ob):
     else:
         nname = ob._meta.model_name
 
-    return namespace_spkcspider[nname]
+    return getattr(namespaces_spkcspider, nname)

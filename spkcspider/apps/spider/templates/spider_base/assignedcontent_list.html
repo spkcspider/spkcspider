@@ -31,10 +31,10 @@
     {% else %}
       <a class="w3-left" href="{% url 'spider_base:ucomponent-listpublic' %}">{% trans 'up (Public)' %}</a>
     {% endif %}
-    <span class="w3-right">
+    <span class="w3-right" itemscope itemtype="{% namespace 'usercomponent' %}" itemid="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">
       {% if request.user == uc.user %}
       <div style="margin-bottom:5px" class="actionbar_user">
-        <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}">{% trans 'Update' %}</a>
+        <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}" itemprop="update">{% trans 'Update' %}</a>
       </div>
       {% endif %}
       <div style="margin-bottom:5px">

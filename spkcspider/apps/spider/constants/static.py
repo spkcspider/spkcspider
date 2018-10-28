@@ -2,18 +2,25 @@
 __all__ = (
     "ProtectionType", "UserContentType", "ProtectionResult",
     "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
-    "TokenCreationError", "namespace_spkcspider", "index_names"
+    "TokenCreationError", "namespaces_spkcspider", "index_names"
 )
 
 import enum
 from collections import namedtuple
 
-from rdflib.namespace import ClosedNamespace
+from rdflib.namespace import Namespace
 
-namespace_spkcspider = ClosedNamespace(
-    "https://spkcspider.net/schemes/",
+
+_namespaces_spkcspider = namedtuple(
+    "namespaces_spkcspider",
     (
-        "assignedcontent", "content", "usercomponent", "protection", "status",
+        "assignedcontent", "content", "usercomponent", "protection", "meta",
+    )
+)
+namespaces_spkcspider = _namespaces_spkcspider(
+    *(
+        Namespace("https://spkcspider.net/schemes/{}/".format(item))
+        for item in _namespaces_spkcspider._fields
     )
 )
 
