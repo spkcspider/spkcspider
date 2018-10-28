@@ -22,7 +22,14 @@ def serialize_content(graph, content, context):
     namesp = namespaces_spkcspider.assignedcontent
     graph.add((content_ref, namesp.id, Literal(content.get_id())))
     graph.add((content_ref, namesp.info, Literal(content.info)))
-    graph.add((content_ref, namesp.type, Literal(content.ctype.ctype)))
+    graph.add(
+        (
+            content_ref, namesp.type,
+            Literal(
+                content.getlist("type", 1)[0]
+            )
+        )
+    )
     content.content.serialize(graph, content_ref, context)
     references = content.references.exclude(
         id__in=graph.objects(predicate=namesp.id)

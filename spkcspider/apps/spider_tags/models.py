@@ -11,6 +11,8 @@ from jsonfield import JSONField
 from spkcspider.apps.spider.contents import (
     BaseContent, add_content, UserContentType
 )
+
+from spkcspider.apps.spider.models import AssignedContent
 CACHE_FORMS = {}
 
 # Create your models here.
@@ -129,7 +131,6 @@ class SpiderTag(BaseContent):
             return self.layout.get_form()
 
     def get_references(self):
-        from .models import AssignedContent
         if not getattr(self, "layout", None):
             return []
         ret = []
@@ -137,10 +138,11 @@ class SpiderTag(BaseContent):
             initial=self.tagdata.copy(),
             uc=self.associated.usercomponent
         )
-        form.full_clean()
-        for val in form.cleaned_data.values():
-            if isinstance(val, AssignedContent):
-                ret.append(val)
+        for name, field in form.fields.items():
+            raw_value = form.initial.get(name, None)
+            value = field.to_python(raw_value)
+            if isinstance(value, AssignedContent):
+                ret.append(value)
         return ret
 
     def get_form_kwargs(self, instance=None, **kwargs):
@@ -162,7 +164,7 @@ class SpiderTag(BaseContent):
 
     def map_data(self, name, data, context):
         name = name.replace("tag/", "", 1)
-        super().map_data(name, data, context)
+        return super().map_data(name, data, context)
 
     def encode_verifiers(self):
         return "".join(

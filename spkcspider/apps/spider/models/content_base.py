@@ -196,7 +196,7 @@ class AssignedContent(models.Model):
                     "Info field error: doesn't end with \"\\n\": \"%s\"" %
                     info
                 )
-            ret.append(info[pstart:pend])
+            ret.append(info[pstart+1:pend])
             pstart = info.find("\n%s=" % key, pend)
             # if amount=0 => bool(amount) == false
             if amount and amount <= len(ret):

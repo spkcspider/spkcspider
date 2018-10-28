@@ -1,0 +1,5 @@
+{% load spider_rdf %}
+<fieldset {% if namespace_form %}itemscope itemtype="{% namespace namespace_form %}" itemid="{{ request.path }}"{% endif %}>
+  <legend><h2>{{legend|safe}}</h2></legend>
+  {% include "spider_base/base_view_form.html" with form=form %}
+</fieldset>

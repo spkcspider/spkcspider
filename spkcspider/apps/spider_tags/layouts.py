@@ -133,6 +133,7 @@ default_layouts["emergency"] = {
                 ("", _("")),
                 ("male", _("male")),
                 ("female", _("female")),
+                ("other", _("other")),
             ],
             "required": False
         },

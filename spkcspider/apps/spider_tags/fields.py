@@ -162,15 +162,15 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
                     # remove mainprefix
                     *prefix.replace(
                         _mainprefix, "", 1
-                    ).replace(":", ": "),  # beautify :
+                    ).replace("/", " > "),  # beautify /
                     item["label"],
                 ]
             )
-        if not key or ":" in key:
-            logging.warning("Invalid item (no key/contains :)", i)
+        if not key or "/" in key:
+            logging.warning("Invalid item (no key/contains /)", i)
             continue
         if isinstance(field, list):
-            new_prefix = "{}:{}".format(prefix, key)
+            new_prefix = "{}/{}".format(prefix, key)
             generate_fields(
                 field, new_prefix, _base=_base, _mainprefix=_mainprefix
             )
@@ -179,7 +179,7 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             if not new_field:
                 logging.warning("Invalid field specified: %s", field)
             else:
-                _base.append(("{}:{}".format(prefix, key), new_field(**item)))
+                _base.append(("{}/{}".format(prefix, key), new_field(**item)))
         else:
             logging.warning("Invalid item", i)
     return _base

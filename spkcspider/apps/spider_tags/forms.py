@@ -90,7 +90,7 @@ def generate_form(name, layout):
 
         def clean(self):
             if self.usertag:
-                self.usertag.clean()
+                self.usertag.full_clean()
             return super().clean()
 
         @classmethod

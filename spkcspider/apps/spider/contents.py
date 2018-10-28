@@ -199,7 +199,7 @@ class BaseContent(models.Model):
     def get_template_name(self, scope):
         if scope in ["add", "update"]:
             return 'spider_base/base_form.html'
-        return 'spider_base/full_form.html'
+        return 'spider_base/view_form.html'
 
     def render_form(self, scope, **kwargs):
         _ = gettext
@@ -275,7 +275,6 @@ class BaseContent(models.Model):
                 **context
             )
         )
-        form.full_clean()
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
@@ -406,9 +405,13 @@ class BaseContent(models.Model):
         # update info and set content
         a.save()
         # update fakes
-        self.associated_rel.filter(fake_id__isnull=False).update(
+        fakes = self.associated_rel.filter(fake_id__isnull=False)
+        fakes.update(
             info=a.info, strength=a.strength, strength_link=a.strength_link,
-            nonce=a.nonce, references=a.references
+            nonce=a.nonce
         )
-        # require again cleaning
+        # update references of fakes
+        for i in fakes:
+            i.references.set(a.references)
+        # require cleaning again
         self._content_is_cleaned = False

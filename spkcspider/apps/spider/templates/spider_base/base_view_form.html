@@ -1,0 +1,15 @@
+{% load i18n widget_tweaks %}
+<ul class="w3-ul">
+  {% for field in form.visible_fields %}
+    <li class="">
+      <div class="">
+        <div class="w3-cell w3-padding">
+          {{ field.label_tag }}<br/>
+          <span itemprop="{{field.name}}" class="w3-white">
+              {{field.value}}
+          </span>
+        </div>
+      </div>
+    </li>
+  {% empty %}{{form_empty_message|safe}}{% endfor %}
+</ul>
