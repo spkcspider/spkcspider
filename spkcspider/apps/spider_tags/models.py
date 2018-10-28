@@ -128,6 +128,21 @@ class SpiderTag(BaseContent):
         else:
             return self.layout.get_form()
 
+    def get_references(self):
+        from .models import AssignedContent
+        if not getattr(self, "layout", None):
+            return []
+        ret = []
+        form = self.layout.get_form()(
+            initial=self.tagdata.copy(),
+            uc=self.associated.usercomponent
+        )
+        form.full_clean()
+        for val in form.cleaned_data.values():
+            if isinstance(val, AssignedContent):
+                ret.append(val)
+        return ret
+
     def get_form_kwargs(self, instance=None, **kwargs):
         if kwargs["scope"] == "add":
             ret = super().get_form_kwargs(

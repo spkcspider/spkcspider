@@ -237,7 +237,7 @@ class BaseContent(models.Model):
         return []
 
     def map_data(self, name, data, context):
-        from ..models import AssignedContent
+        from .models import AssignedContent
         namesp = namespaces_spkcspider.content
         if isinstance(data, AssignedContent):
             url = merge_get_url(
@@ -402,12 +402,13 @@ class BaseContent(models.Model):
                 a.info = a.info.replace(
                     "\nid=None\n", "\nid={}\n".format(self.id), 1
                 )
+        a.references.set(self.get_references())
         # update info and set content
         a.save()
         # update fakes
         self.associated_rel.filter(fake_id__isnull=False).update(
             info=a.info, strength=a.strength, strength_link=a.strength_link,
-            nonce=a.nonce
+            nonce=a.nonce, references=a.references
         )
         # require again cleaning
         self._content_is_cleaned = False
