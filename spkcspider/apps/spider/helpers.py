@@ -101,13 +101,16 @@ def prepare_description(raw_html, amount=0):
     return _whitespsplit.split(text, amount)
 
 
-def merge_get_url(_url, _strip=None, **kwargs):
+def merge_get_url(_url, **kwargs):
     urlparsed = urlsplit(_url)
+    _strip = []
+    for i in kwargs.keys():
+        if not kwargs[i]:
+            _strip.append(i)
     GET = parse_qs(urlparsed.query)
     GET.update(kwargs)
-    if _strip:
-        for item in _strip:
-            GET.pop(item, None)
+    for item in _strip:
+        GET.pop(item, None)
     return urlunsplit((*urlparsed[:3], urlencode(GET), ""))
 
 

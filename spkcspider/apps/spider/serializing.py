@@ -20,6 +20,17 @@ def serialize_content(graph, content, context):
     )
     content_ref = URIRef(url)
     namesp = namespaces_spkcspider.assignedcontent
+    token = context["request"].auth_token
+    if token:
+        token = token.token
+    url2 = merge_get_url(url, token=token)
+    graph.add(
+        (
+            content_ref,
+            namesp["action/view"],
+            URIRef(url2)
+        )
+    )
     graph.add((content_ref, namesp.id, Literal(content.get_id())))
     graph.add((content_ref, namesp.info, Literal(content.info)))
     graph.add(
@@ -53,6 +64,17 @@ def serialize_component(graph, component, context, embed=False):
     namesp = namespaces_spkcspider.usercomponent
     namesp_content = namespaces_spkcspider.assignedcontent
     comp_ref = URIRef(url)
+    token = context["request"].auth_token
+    if token:
+        token = token.token
+    url2 = merge_get_url(url, token=token)
+    graph.add(
+        (
+            comp_ref,
+            namesp["action/view"],
+            URIRef(url2)
+        )
+    )
     if component.public or context["scope"] == "export":
         graph.add((comp_ref, namesp.name, Literal(component.__str__())))
         graph.add(
