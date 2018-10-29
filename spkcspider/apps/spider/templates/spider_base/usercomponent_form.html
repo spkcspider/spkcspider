@@ -63,7 +63,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   </div>
   {% endif %}
   {% include "spider_base/form_errors.html" with form=form %}
-  <form class="w3-padding" action="{{ request.path }}" encdata="multipart/form-data" method="post" itemscope itemtype="{% namespace 'usercomponent' %}" itemid="{{ request.path }}">
+  <form class="w3-padding" action="{{ request.path }}" encdata="multipart/form-data" method="post" vocab="{% namespace 'usercomponent' %}" resource="{{ request.get_full_path }}">
     {% csrf_token %}
     <fieldset>
       <legend>

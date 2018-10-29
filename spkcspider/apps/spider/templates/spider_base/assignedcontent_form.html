@@ -3,14 +3,15 @@
 
 {% block render_content %}
 {% include "spider_base/form_errors.html" with form=form %}
+
 <form class="w3-padding" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}
-  <fieldset itemscope itemtype="{% namespace 'assignedcontent' %}" itemid="{{ request.path }}">
+  <fieldset vocab="{% namespace 'assignedcontent' %}" resource="{{ request.get_full_path }}">
     <legend><h2>{% trans 'Content Settings' %}</h2></legend>
     {% include "spider_base/base_form.html" with form=form %}
   </fieldset>
   {% if content %}
-    <fieldset itemscope itemtype="{% namespace 'content' %}" itemid="{{ request.path }}">
+    <fieldset vocab="{% namespace 'content' %}/{% if scope == 'add' %}{{object.name}}{% else %}{{object.ctype.name}}{% endif %}" resource="{{ request.path }}">
       <legend><h2>{% if scope == "add" %}{{object}}{% else %}{{object.ctype}}{% endif %}</h2></legend>
       {{content.0|safe}}
     </fieldset>

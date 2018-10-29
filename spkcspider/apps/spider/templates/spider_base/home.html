@@ -53,12 +53,12 @@
         {% trans "Featured:" %}
       </h2>
     </div>
-    <div  class="w3-margin">
-      <table class="w3-table w3-striped w3-bordered w3-hoverable">
+    <div  class="w3-margin" vocab="{% namespace 'meta' %}" resource="{{request.get_full_path}}">
+      <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="usercomponent">
         {% for uc in object_list %}
-          <tr title="{{uc.description|escape}}" itemscope itemtype="{% namespace 'usercomponent' %}" itemid="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}">
+          <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" vocab="{% namespace 'usercomponent' %}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" property="description" content="{{uc.description|escape}}">
             <td style="width:40%; min-height:48px">
-              {{ uc.name }} <em>({{uc.user}})</em>
+              <span property="title">{{ uc.name }}</span> <em property="user">({{uc.user}})</em>
             </td>
             <td>
               {% blocktrans trimmed with time=uc.modified|timesince %}
@@ -67,12 +67,12 @@
             </td>
             <td class="w3-show-inline-block">
               <div class="w3-bar w3-round-large w3-tiny w3-blue">
-                <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list'  id=uc.id nonce=uc.nonce %}" itemprop="list">
+                <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list'  id=uc.id nonce=uc.nonce %}" property="action/view">
                   <div class="spkc-item-button"><i class="fa fa-list-ul" aria-label="{% trans 'List' %}" alt="{% trans 'List' %}"></i></div>
                   <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans 'List' %}</div></span>
                 </a>
                 {% if uc.user == request.user %}
-                  <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}" itemprop="update">
+                  <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}" property="action/update">
                     <div class="spkc-item-button"><i class="fa fa-edit" aria-label="{% trans 'Edit' %}" alt="{% trans 'Edit' %}"></i></div>
                     <span aria-hidden="true" class="w3-text w3-black w3-large spkc-item"><div class="w3-animate-opacity">{% trans 'Edit' %}</div></span>
                   </a>

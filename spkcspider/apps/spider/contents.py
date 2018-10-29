@@ -233,12 +233,19 @@ class BaseContent(models.Model):
             kwargs["form"].media
         )
 
+    def get_absolute_url(self):
+        return self.associated.get_absolute_url()
+
     def get_references(self):
         return []
 
     def map_data(self, name, data, context):
         from .models import AssignedContent
         namesp = namespaces_spkcspider.content
+        name = posixpath.join(
+            self.associated.getlist("type", 1)[0],
+            name
+        )
         if isinstance(data, AssignedContent):
             url = merge_get_url(
                 posixpath.join(
@@ -331,7 +338,11 @@ class BaseContent(models.Model):
         kwargs["form"] = self.get_form("view")(
             **self.get_form_kwargs(disable_data=True, **kwargs)
         )
-        kwargs.setdefault("no_button", True)
+        kwargs.setdefault("namespace_form", "content")
+        kwargs.setdefault(
+            "namespace_sub",
+            "{}/".format(self.associated.getlist("type", 1)[0])
+        )
         return (
             render_to_string(
                 self.get_template_name(kwargs["scope"]),

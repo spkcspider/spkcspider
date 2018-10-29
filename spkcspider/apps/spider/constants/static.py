@@ -14,13 +14,15 @@ from rdflib.namespace import Namespace
 _namespaces_spkcspider = namedtuple(
     "namespaces_spkcspider",
     (
-        "assignedcontent", "content", "usercomponent", "protection", "meta",
+        "base", "assignedcontent", "content", "usercomponent", "protection",
+        "meta",
     )
 )
 namespaces_spkcspider = _namespaces_spkcspider(
+    Namespace("https://spkcspider.net/schemes/"),
     *(
         Namespace("https://spkcspider.net/schemes/{}/".format(item))
-        for item in _namespaces_spkcspider._fields
+        for item in _namespaces_spkcspider._fields[1:]
     )
 )
 

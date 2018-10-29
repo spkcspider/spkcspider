@@ -5,9 +5,25 @@
       <div class="">
         <div class="w3-cell w3-padding">
           {{ field.label_tag }}<br/>
-          <span itemprop="{{field.name}}" class="w3-white">
-              {{field.value}}
-          </span>
+          {% if field.field.widget.input_type == "select" %}
+            {% if field.field.queryset %}
+              <ul rel="{{field.name}}" class="w3-white">
+                {% for q in field.field.queryset %}
+                  <li><a property="url" href="{{q.get_absolute_url}}">{{q}}</a></li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <ul rel="{{field.name}}" class="w3-white">
+                {% for q in field.value %}
+                  <li property="value">{{q}}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          {% elif field|widget_type == "url" %}
+            <a property="{{field.name}}" class="w3-white" href={{field.value}}>{{field.name}}</a>
+          {% else %}
+            <span property="{{field.name}}" class="w3-white">{{field.value}}</span>
+          {% endif %}
         </div>
       </div>
     </li>

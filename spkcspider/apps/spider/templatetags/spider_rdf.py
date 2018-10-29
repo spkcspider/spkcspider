@@ -5,10 +5,14 @@ register = template.Library()
 
 
 @register.simple_tag()
-def namespace(ob):
+def namespace(ob, sub=None):
     if isinstance(ob, str):
         nname = ob
     else:
         nname = ob._meta.model_name
 
-    return getattr(namespaces_spkcspider, nname)
+    ret = getattr(namespaces_spkcspider, nname)
+    if sub:
+        ret = ret[sub]
+    return ret
+    

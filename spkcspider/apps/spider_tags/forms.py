@@ -2,7 +2,7 @@ __all__ = [
     "TagLayoutForm", "SpiderTagForm", "generate_form",
 ]
 
-
+import posixpath
 from collections import OrderedDict
 # from django.utils.translation import gettext_lazy as _
 from django import forms
@@ -99,10 +99,10 @@ def generate_form(name, layout):
                 base = {}
             for i in initial.items():
                 if isinstance(i[1], dict):
-                    new_prefix = "{}/{}".format(prefix, i[0])
+                    new_prefix = posixpath.join(prefix, i[0])
                     cls.encode_initial(i[i], prefix=new_prefix, base=base)
                 else:
-                    base["{}/{}".format(prefix, i[0])] = i[1]
+                    base[posixpath.join(prefix, i[0])] = i[1]
             return base
 
         @staticmethod

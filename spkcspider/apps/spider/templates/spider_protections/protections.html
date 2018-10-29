@@ -1,11 +1,11 @@
 {% extends "spider_protections/base.html" %}
 {% load spider_protections i18n spider_rdf %}
 {% block content %}
-<form action="{{ request.get_full_path }}" method="post" itemscope itemtype="{% namespace 'protection' %}" itemid="{{ request.path }}">
+{% extract_protections "protections" as protections %}
+<form action="{{ request.get_full_path }}" method="post" vocab="{% namespace 'protection' %}" resource="{{ request.get_full_path }}" property="amount" content="{{protections|length}}">
   {% csrf_token %}
   <fieldset>
     <legend><h1>{% trans 'Protections' %}</h1></legend>
-    {% extract_protections "protections" as protections %}
     <div>
       {% for prot in protections %}
         <div class="w3-padding">

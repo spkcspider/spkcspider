@@ -12,7 +12,7 @@
             {% if form.use_required_attribute and not field.required %}
             <small class="w3-text-grey">(optional)</small>{% endif %}
           {% endcomment %}<br/>
-          {% render_field field itemprop=field.name %}
+          {% render_field field property=field.name %}
         </div>
         <div class="w3-cell w3-padding">
         {% if field.help_text %}

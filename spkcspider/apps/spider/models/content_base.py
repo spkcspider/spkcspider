@@ -190,13 +190,14 @@ class AssignedContent(models.Model):
         ret = []
         pstart = info.find("\n%s=" % key)
         while pstart != -1:
-            pend = info.find("\n", pstart+len(key)+1)
+            tmpstart = pstart+len(key)+2
+            pend = info.find("\n", tmpstart)
             if pend == -1:
                 raise Exception(
                     "Info field error: doesn't end with \"\\n\": \"%s\"" %
                     info
                 )
-            ret.append(info[pstart+1:pend])
+            ret.append(info[tmpstart:pend])
             pstart = info.find("\n%s=" % key, pend)
             # if amount=0 => bool(amount) == false
             if amount and amount <= len(ret):

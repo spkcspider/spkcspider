@@ -1,6 +1,7 @@
 __all__ = ["installed_fields", "generate_fields"]
 
 import logging
+import posixpath
 from django import forms
 from django.apps import apps
 from django.utils.translation import gettext
@@ -170,7 +171,7 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             logging.warning("Invalid item (no key/contains /)", i)
             continue
         if isinstance(field, list):
-            new_prefix = "{}/{}".format(prefix, key)
+            new_prefix = posixpath.join(prefix, key)
             generate_fields(
                 field, new_prefix, _base=_base, _mainprefix=_mainprefix
             )
@@ -179,7 +180,7 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             if not new_field:
                 logging.warning("Invalid field specified: %s", field)
             else:
-                _base.append(("{}/{}".format(prefix, key), new_field(**item)))
+                _base.append((posixpath.join(prefix, key), new_field(**item)))
         else:
             logging.warning("Invalid item", i)
     return _base

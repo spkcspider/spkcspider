@@ -1,6 +1,6 @@
 {% load spider_rdf %}
 {% include "spider_base/form_errors.html" with form=form %}
-<form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post" {% if namespace_form %}itemscope itemtype="{% namespace namespace_form %}" itemid="{{ request.path }}" {% endif %}>
+<form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post" {% if namespace_form %}vocab="{% namespace namespace_form %}" resource="{{ request.get_full_path }}"{% endif %}>
   {% csrf_token %}
   <fieldset>
     <legend><h2>{{legend|safe}}</h2></legend>

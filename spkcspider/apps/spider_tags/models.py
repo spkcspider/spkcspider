@@ -162,10 +162,6 @@ class SpiderTag(BaseContent):
             ret["usertag"] = self
         return ret
 
-    def map_data(self, name, data, context):
-        name = name.replace("tag/", "", 1)
-        return super().map_data(name, data, context)
-
     def encode_verifiers(self):
         return "".join(
             map(
