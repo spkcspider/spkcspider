@@ -358,8 +358,8 @@ class ContentIndex(UCTestMixin, ListView):
         g.add((ref, namesp_meta.scope, Literal(context["scope"])))
 
         ret = HttpResponse(
-            g.serialize(format="n3"),
-            content_type="text/n3;charset=utf-8"
+            g.serialize(format="turtle"),
+            content_type="text/turtle;charset=utf-8"
         )
 
         if session_dict.get("expires", None):

@@ -367,8 +367,8 @@ class ComponentIndex(UCTestMixin, ListView):
             )
 
         ret = HttpResponse(
-            g.serialize(format="n3"),
-            content_type="text/n3;charset=utf-8"
+            g.serialize(format="turtle"),
+            content_type="text/turtle;charset=utf-8"
         )
         return ret
 

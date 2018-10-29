@@ -258,7 +258,7 @@ class BaseContent(models.Model):
                 namesp[name],
                 Literal(
                     url,
-                    XSD.anyURI,
+                    datatype=XSD.anyURI,
                 )
             )
         elif isinstance(data, File):
@@ -266,8 +266,8 @@ class BaseContent(models.Model):
                 namesp[name],
                 Literal(
                     base64.b64encode(data.read()),
-                    XSD.base64Binary,
-                    False
+                    datatype=XSD.base64Binary,
+                    normalize=False
                 )
             )
         return (
@@ -324,8 +324,8 @@ class BaseContent(models.Model):
         g = Graph()
         serialize_content(g, self.associated, session_dict)
         ret = HttpResponse(
-            g.serialize(format="n3"),
-            content_type="text/n3;charset=utf-8"
+            g.serialize(format="turtle"),
+            content_type="text/turtle;charset=utf-8"
         )
         return ret
 
