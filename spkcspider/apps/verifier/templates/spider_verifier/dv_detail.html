@@ -1,0 +1,17 @@
+{# real verifier have to replace this or to depend on spider #}
+{% extends "spider_base/base.html" %}
+{% load i18n %}
+{% block content %}
+<table vocab="{{namespace}}" resource="{{ request.get_full_path }}">
+  <th>Results:</th>
+  <tr>
+    <td>{% trans "Hash:" %}</td>
+    <td property="hash">{{object.hash}}</td>
+  </tr>
+  <tr>
+    <td>{% trans "Verification State:" %}</td>
+    <td property="verified">{% if object.verification_state == "verified" %}{{object.checked}}{% else %}unverified{% endif %}</td>
+  </tr>
+
+</table>
+{% endblock content %}

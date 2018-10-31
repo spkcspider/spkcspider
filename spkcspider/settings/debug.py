@@ -6,7 +6,13 @@ INSTALLED_APPS += [
     'spkcspider.apps.spider_filets',
     'spkcspider.apps.spider_keys',
     'spkcspider.apps.spider_tags',
+    # ONLY for tests and REAL verifiers=companies verifing data
+    'spkcspider.apps.verifier',
 ]
+
+# Verifier specific options, not required
+AUTO_INCLUDE_VERIFIER = True
+VERIFIER_ALLOW_FILE_UPLOAD = True
 
 
 # SECURITY WARNING: don't run with debug turned on in production!

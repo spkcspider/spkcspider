@@ -2,6 +2,7 @@ import datetime
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse
 
 from .constants import (
     VERIFICATION_CHOICES
@@ -9,9 +10,10 @@ from .constants import (
 
 
 def dv_path(instance, filename):
-    return 'dvfiles/{0}/{1}'.format(
+    return 'dvfiles/{}/{}.{}'.format(
         datetime.datetime.now().strftime("%Y/%m"),
-        instance.hash
+        instance.hash,
+        "ttl"
     )
 
 
@@ -30,9 +32,6 @@ class DataVerificationTag(models.Model):
             "File with data to verify"
         )
     )
-    source = models.UrlField(
-        null=True, blank=True
-    )
     data_type = models.CharField(default="layout", max_length=20)
     checked = models.DateTimeField(null=True, blank=True)
     verification_state = models.CharField(
@@ -40,3 +39,11 @@ class DataVerificationTag(models.Model):
         max_length=10, choices=VERIFICATION_CHOICES
     )
     note = models.TextField(default="")
+
+    def get_absolute_url(self):
+        return reverse(
+            "spider_verifier:verify",
+            kwargs={
+                "hash": self.hash
+            }
+        )

@@ -15,7 +15,6 @@ from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 from functools import lru_cache
 from importlib import import_module
 
-import requests
 
 from django.conf import settings
 from .constants.static import MAX_NONCE_SIZE
@@ -24,9 +23,6 @@ from .constants.static import MAX_NONCE_SIZE
 _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
-
-
-BUFFER_SIZE = 65536  # read in 64kb chunks
 
 
 @lru_cache(maxsize=None)
@@ -102,7 +98,7 @@ def prepare_description(raw_html, amount=0):
 
 
 def merge_get_url(_url, **kwargs):
-    urlparsed = urlsplit(_url)
+    urlparsed = urlsplit(_url, scheme="https")
     _strip = []
     for i in kwargs.keys():
         if not kwargs[i]:
@@ -112,15 +108,3 @@ def merge_get_url(_url, **kwargs):
     for item in _strip:
         GET.pop(item, None)
     return urlunsplit((*urlparsed[:3], urlencode(GET), ""))
-
-
-# even when used in verifier, better specified here
-def download_spider(
-    fp, url, session=None
-):
-    if not session:
-        session = requests.Session()
-    resp = session.get(merge_get_url(url, raw="embed"), stream=True)
-    resp.raise_for_status()
-    for chunk in resp.iter_content(BUFFER_SIZE):
-        fp.write(chunk)
