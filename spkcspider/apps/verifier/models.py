@@ -38,7 +38,13 @@ class DataVerificationTag(models.Model):
         default="pending",
         max_length=10, choices=VERIFICATION_CHOICES
     )
-    note = models.TextField(default="")
+    note = models.TextField(default="", blank=True)
+
+    class Meta:
+        permissions = [("can_verify", "Can verify Data Tag?")]
+
+    def __str__(self):
+        return "DVTag: ...%s" % self.hash[:30]
 
     def get_absolute_url(self):
         return reverse(

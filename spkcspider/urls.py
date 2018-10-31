@@ -31,12 +31,15 @@ robots_view = RedirectView.as_view(
 )
 
 # disable admin login page
-admin.site.login = admin_login
+admin.site.login = lambda *args, **kwargs: admin_login(
+    admin.site, *args, **kwargs
+)
 # default: allow only non faked user with superuser and staff permissions
-admin.site.has_permission = get_settings_func(
+admin.site.has_permission = lambda *args, **kwargs: get_settings_func(
     "HAS_ADMIN_PERMISSION_FUNC",
     "spkcspider.apps.spider.functions.has_admin_permission"
-)
+)(admin.site, *args, **kwargs)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]

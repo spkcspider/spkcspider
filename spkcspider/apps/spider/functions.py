@@ -7,7 +7,7 @@ import time
 import base64
 from django.core.exceptions import ValidationError
 from django.http import Http404
-from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -92,11 +92,11 @@ def admin_login(self, request, extra_context=None):
     if request.method == 'GET' and self.has_permission(request):
         # Already logged-in, redirect to admin index
         index_path = reverse('admin:index', current_app=self.name)
-        return HttpResponseRedirect(index_path)
+        return redirect(index_path)
     else:
         loginpath = getattr(
             settings,
             "LOGIN_URL",
             reverse("auth:login")
         )
-        return HttpResponseRedirect(loginpath)
+        return redirect(loginpath)

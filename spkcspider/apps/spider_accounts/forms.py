@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
+from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.conf import settings
@@ -68,6 +69,7 @@ class UserUpdateForm(UserChangeForm):
         fields = model.SAFE_FIELDS
 
     def __init__(self, *args, **kwargs):
+        _ = gettext
         super(UserChangeForm, self).__init__(*args, **kwargs)
         self.fields['password'].help_text = \
             self.fields['password'].help_text.format(
