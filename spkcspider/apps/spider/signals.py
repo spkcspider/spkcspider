@@ -1,6 +1,6 @@
 __all__ = (
     "UpdateSpiderCallback", "InitUserCallback", "DeleteContentCallback",
-    "update_dynamic", "failed_guess", "RemoveOldTokens"
+    "update_dynamic", "failed_guess", "RemoveTokensLogout"
 )
 from django.dispatch import Signal
 from django.conf import settings
@@ -84,8 +84,9 @@ def InitUserCallback(sender, instance, **kwargs):
     uinfo.calculate_allowed_content()
 
 
-def RemoveOldTokens(sender, user, request, **kwargs):
+def RemoveTokensLogout(sender, user, request, **kwargs):
     from .models import AuthToken
     AuthToken.objects.filter(
-        created_by_special_user=user
+        created_by_special_user=user,
+        session_key=request.session.session_key
     ).delete()
