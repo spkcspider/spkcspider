@@ -35,7 +35,7 @@ def validate_file(value):
         )
 
 
-def embed_file_default(prefix, name, value, context):
+def embed_file_default(name, value, content, context):
 
     override = (
         (
@@ -44,13 +44,13 @@ def embed_file_default(prefix, name, value, context):
         ) and context["request"].GET.get("embed_big", "") == "true"
     )
     if (
-        value.size < getattr(settings, "MAX_EMBED_SIZE", 20000000) or
+        value.size < getattr(settings, "MAX_EMBED_SIZE", 4000000) or
         override
     ):
         return Literal(
             base64.b64encode(value.read()),
-            XSD.base64Binary,
-            False
+            datatype=XSD.base64Binary,
+            normalize=False
         )
     elif (
         context["scope"] == "export" or
@@ -62,18 +62,18 @@ def embed_file_default(prefix, name, value, context):
             url = "{}{}".format(context["hostpart"], url)
         return Literal(
             url,
-            XSD.anyURI,
+            datatype=XSD.anyURI,
         )
     else:
         # only file filet has files yet
-        url = context["content"].associated.get_absolute_url("download")
+        url = content.associated.get_absolute_url("download")
         url = "{}{}?{}".format(
             context["hostpart"],
             url, context["context"]["spider_GET"].urlencode()
         )
         return Literal(
             url,
-            XSD.anyURI,
+            datatype=XSD.anyURI,
         )
 
 

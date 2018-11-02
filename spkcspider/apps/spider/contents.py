@@ -3,7 +3,6 @@ __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
 
-import base64
 import posixpath
 from django.apps import apps as django_apps
 from django.db import models
@@ -17,13 +16,13 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 
-from rdflib import Literal, Graph
+from rdflib import Literal, Graph, BNode
 from rdflib.namespace import XSD
 
 from .constants import UserContentType, namespaces_spkcspider
 from .serializing import serialize_content
 from .helpers import merge_get_url
-# from .helpers import get_settings_func
+from .helpers import get_settings_func
 
 
 installed_contents = {}
@@ -100,6 +99,8 @@ class BaseContent(models.Model):
     # use case: addons for usercontent, e.g. dependencies on external libraries
     # use case: model with different abilities
     appearances = None
+
+    hashed_fields = None
 
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
@@ -241,11 +242,6 @@ class BaseContent(models.Model):
 
     def map_data(self, name, data, context):
         from .models import AssignedContent
-        namesp = namespaces_spkcspider.content
-        name = posixpath.join(
-            self.associated.getlist("type", 1)[0],
-            name
-        )
         if isinstance(data, AssignedContent):
             url = merge_get_url(
                 posixpath.join(
@@ -255,25 +251,27 @@ class BaseContent(models.Model):
                 raw=context["request"].GET["raw"]
             )
             return (
-                namesp[name],
+                "url",
                 Literal(
                     url,
                     datatype=XSD.anyURI,
                 )
             )
         elif isinstance(data, File):
-            return (
-                namesp[name],
-                Literal(
-                    base64.b64encode(data.read()),
-                    datatype=XSD.base64Binary,
-                    normalize=False
-                )
-            )
+            return get_settings_func(
+                "spkcspider.apps.spider.functions.embed_file_default"
+            )(name, data, self, context)
         return (
-            namesp[name],
+            "value",
             Literal(data)
         )
+
+    def get_field_types(self, name, form, context):
+        namesp = namespaces_spkcspider.content
+        if self.hashed_fields and name in self.hashed_fields:
+            return name, namesp["hashable/"]
+        else:
+            return name, namesp["info/"]
 
     def serialize(self, graph, content_ref, context):
         form = self.get_form(context["scope"])(
@@ -282,16 +280,38 @@ class BaseContent(models.Model):
                 **context
             )
         )
+        graph.add((
+            content_ref,
+            namespaces_spkcspider.content["type"],
+            Literal(self.associated.getlist("type", 1)[0])
+        ))
+
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
+            value_node = BNode()
+            newname, namesp = self.get_field_types(name, form, context)
+
+            graph.add((
+                content_ref,
+                namesp+"field",
+                value_node
+            ))
+            graph.add((
+                value_node,
+                namesp+"name",
+                Literal(newname)
+            ))
+
             if not isinstance(value, (list, tuple, models.QuerySet)):
                 value = [value]
 
             for i in value:
+                type_, encoded = self.map_data(name, i, context)
                 graph.add((
-                    content_ref,
-                    *self.map_data(name, i, context)
+                    value_node,
+                    namesp+type_,
+                    encoded
                 ))
 
     def render_add(self, **kwargs):

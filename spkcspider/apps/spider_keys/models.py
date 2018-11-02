@@ -47,6 +47,8 @@ class PublicKey(BaseContent):
         {"name": "PublicKey", "ctype": UserContentType.unique.value}
     ]
 
+    hashed_fields = ["key", "hash"]
+
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
     note = models.TextField(max_length=100, default="", null=False, blank=True)
 
@@ -140,6 +142,7 @@ class AnchorServer(BaseContent):
             "strength": 7
         }
     ]
+    hashed_fields = ["identifier"]
 
     def get_form(self, scope):
         from .forms import AnchorServerForm
@@ -171,6 +174,7 @@ class AnchorKey(AnchorServer):
         PublicKey, on_delete=models.CASCADE, related_name="+",
         help_text=_help_text_key
     )
+    hashed_fields = ["key"]
 
     signature = models.CharField(max_length=1024, help_text=_help_text_sig)
 

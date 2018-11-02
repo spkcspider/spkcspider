@@ -1,4 +1,6 @@
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
+
 
 from .views import CreateEntry, VerifyEntry
 
@@ -13,7 +15,7 @@ urlpatterns = [
     ),
     path(
         '',
-        CreateEntry.as_view(),
+        csrf_exempt(CreateEntry.as_view()),
         name='create'
     ),
 

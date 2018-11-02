@@ -14,8 +14,7 @@ from rdflib.namespace import Namespace
 _namespaces_spkcspider = namedtuple(
     "namespaces_spkcspider",
     (
-        "base", "assignedcontent", "content", "usercomponent", "protection",
-        "meta",
+        "base", "content", "usercomponent", "protection", "meta",
     )
 )
 namespaces_spkcspider = _namespaces_spkcspider(

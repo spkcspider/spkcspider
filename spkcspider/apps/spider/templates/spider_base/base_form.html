@@ -1,18 +1,18 @@
-{% load i18n widget_tweaks %}
+{% load i18n widget_tweaks spider_rdf %}
 {% for hidden in form.hidden_fields %}
 {{ hidden }}
 {% endfor %}
 <ul class="w3-ul">
   {% for field in form.visible_fields %}
-    <li class="{% if field.errors %}w3-pale-red{% endif %}">
+    <li class="{% if field.errors %}w3-pale-red{% endif %}" resource="{% bnode %}" typeof="field">
       <div class="">
         <div class="w3-cell w3-padding">
-          {{ field.label_tag }}
+          <div property="name" content="{{field.name}}">{{ field.label_tag }}</div>
           {% comment %}
             {% if form.use_required_attribute and not field.required %}
             <small class="w3-text-grey">(optional)</small>{% endif %}
           {% endcomment %}<br/>
-          {% render_field field property=field.name %}
+          {% render_field field property="value" %}
         </div>
         <div class="w3-cell w3-padding">
         {% if field.help_text %}

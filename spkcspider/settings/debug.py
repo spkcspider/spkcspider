@@ -13,6 +13,7 @@ INSTALLED_APPS += [
 # Verifier specific options, not required
 AUTO_INCLUDE_VERIFIER = True
 VERIFIER_ALLOW_FILE_UPLOAD = True
+VERIFIER_MAX_SIZE_ACCEPTED = 40000000
 
 
 # SECURITY WARNING: don't run with debug turned on in production!

@@ -3,6 +3,7 @@ import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
+from jsonfield import JSONField
 
 from .constants import (
     VERIFICATION_CHOICES
@@ -38,6 +39,7 @@ class DataVerificationTag(models.Model):
         default="pending",
         max_length=10, choices=VERIFICATION_CHOICES
     )
+    linked_hashes = JSONField(default={}, blank=True)
     note = models.TextField(default="", blank=True)
 
     class Meta:

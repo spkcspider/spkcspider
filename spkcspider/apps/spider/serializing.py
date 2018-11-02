@@ -19,7 +19,7 @@ def serialize_content(graph, content, context):
         raw=context["request"].GET["raw"]
     )
     content_ref = URIRef(url)
-    namesp = namespaces_spkcspider.assignedcontent
+    namesp = namespaces_spkcspider.content
     token = context["request"].auth_token
     if token:
         token = token.token
@@ -33,14 +33,6 @@ def serialize_content(graph, content, context):
     )
     graph.add((content_ref, namesp.id, Literal(content.get_id())))
     graph.add((content_ref, namesp.info, Literal(content.info)))
-    graph.add(
-        (
-            content_ref, namesp.type,
-            Literal(
-                content.getlist("type", 1)[0]
-            )
-        )
-    )
     content.content.serialize(graph, content_ref, context)
     references = content.references.exclude(
         id__in=graph.objects(predicate=namesp.id)

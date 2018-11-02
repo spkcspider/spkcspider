@@ -43,6 +43,7 @@ def get_file_path(instance, filename):
 @add_content
 class FileFilet(BaseContent):
     appearances = [{"name": "File"}]
+    hashed_fields = ["file"]
 
     name = models.CharField(max_length=255, null=False)
 
@@ -135,6 +136,7 @@ class FileFilet(BaseContent):
 @add_content
 class TextFilet(BaseContent):
     appearances = [{"name": "Text"}]
+    hashed_fields = ["name", "text"]
 
     name = models.CharField(max_length=255, null=False)
     editable_from = models.ManyToManyField(

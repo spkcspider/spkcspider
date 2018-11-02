@@ -2,6 +2,9 @@
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import DetailView
 from django.http import HttpResponseRedirect
+from django.core.files.uploadhandler import TemporaryFileUploadHandler
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
 
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
@@ -12,6 +15,14 @@ class CreateEntry(CreateView):
     model = DataVerificationTag
     form_class = CreateEntryForm
     template_name = "spider_verifier/dv_form.html"
+
+    _dispatch = method_decorator(csrf_protect)(CreateView.dispatch)
+
+    def dispatch(self, request, *args, **kwargs):
+        request.upload_handlers = [
+            TemporaryFileUploadHandler(request)
+        ]
+        return self._dispatch(request, *args, **kwargs)
 
     def form_invalid(self, form):
         q = DataVerificationTag.objects.filter(

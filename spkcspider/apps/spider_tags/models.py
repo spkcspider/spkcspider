@@ -12,6 +12,7 @@ from spkcspider.apps.spider.contents import (
     BaseContent, add_content, UserContentType
 )
 
+from spkcspider.apps.spider.constants.static import namespaces_spkcspider
 from spkcspider.apps.spider.models import AssignedContent
 CACHE_FORMS = {}
 
@@ -103,6 +104,7 @@ class SpiderTag(BaseContent):
             "strength": 0
         }
     ]
+    hashed_fields = ["primary"]
     layout = models.ForeignKey(
         TagLayout, related_name="tags", on_delete=models.PROTECT,
 
@@ -144,6 +146,15 @@ class SpiderTag(BaseContent):
             if isinstance(value, AssignedContent):
                 ret.append(value)
         return ret
+
+    def get_field_types(self, name, form, context):
+        namesp = namespaces_spkcspider.content
+        if name in self.hashed_fields or getattr(
+            form, "layout_generating_form", False
+        ):
+            return name, namesp["hashable/"]
+        else:
+            return name, namesp["info/"]
 
     def get_form_kwargs(self, instance=None, **kwargs):
         if kwargs["scope"] == "add":
