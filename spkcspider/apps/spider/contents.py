@@ -342,7 +342,13 @@ class BaseContent(models.Model):
             "hostpart": kwargs["hostpart"]
         }
         g = Graph()
-        serialize_content(g, self.associated, session_dict)
+
+        g.add((
+            serialize_content(g, self.associated, session_dict),
+            namespaces_spkcspider.meta.scope,
+            Literal(kwargs["scope"])
+        ))
+
         ret = HttpResponse(
             g.serialize(format="turtle"),
             content_type="text/turtle;charset=utf-8"

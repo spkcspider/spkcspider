@@ -13,15 +13,15 @@
       <canvas id="qrcanvas"></canvas>
     </div>
     <div class="w3-container">
-      <div class="w3-text-black" id="remotelink_wrapper">
+      <div class="w3-text-black" id="remotelink_wrapper"  style="word-break: break-all">
         {# important for href check, elsewise same url #}
         {% trans "Link"%}: <a type="text" href="#" id="remotelink"></a>
       </div>
-      <div class="w3-text-black" id="rawlink_wrapper">
+      <div class="w3-text-black" id="rawlink_wrapper"  style="word-break: break-all">
         {# important for href check, elsewise same url #}
         <a href="#" id="rawlink">{% trans "Raw" %}</a>
       </div>
-      <a class="w3-text-black" style="display:none;" id="exportlink" href="">{% trans 'Export' %}</a>
+      <a class="w3-text-black" style="display:none; word-break: break-all" id="exportlink" href="">{% trans 'Export' %}</a>
     </div>
     <div class="w3-container">
       <br/>

@@ -5,6 +5,7 @@ from django.http import HttpResponseRedirect
 from django.core.files.uploadhandler import TemporaryFileUploadHandler
 from django.views.decorators.csrf import csrf_protect
 from django.utils.decorators import method_decorator
+from rdflib import Literal
 
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
@@ -41,6 +42,5 @@ class VerifyEntry(DetailView):
 
     def get_context_data(self, **kwargs):
         kwargs["namespace"] = namespace_verifier
+        kwargs["verified"] = Literal(self.object.checked)
         return super().get_context_data(**kwargs)
-
-    # "%a, %d %b %Y %H:%M:%S %z"

@@ -220,6 +220,10 @@ class AuthToken(models.Model):
         UserComponent, on_delete=models.CASCADE,
         related_name="authtokens"
     )
+    created_by_special_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="+", blank=True, null=True
+    )
     session_key = models.CharField(max_length=40, null=True)
     # brute force protection
     #  16 = usercomponent.id in hexadecimal

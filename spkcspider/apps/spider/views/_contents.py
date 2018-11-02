@@ -63,6 +63,7 @@ class ContentBase(UCTestMixin):
     def test_func(self):
         if self.has_special_access(staff=(self.usercomponent.name != "index"),
                                    superuser=True):
+            self.request.auth_token = self.create_admin_token()
             return True
         # block view on special objects for non user and non superusers
         if self.usercomponent.name == "index":
@@ -151,6 +152,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         # for index the same reason as for add
         uncritically = self.usercomponent.name != "index"
         if self.has_special_access(staff=uncritically, superuser=uncritically):
+            self.request.auth_token = self.create_admin_token()
             return True
         return False
 
@@ -245,6 +247,7 @@ class ContentIndex(UCTestMixin, ListView):
             staff=(not self.usercomponent.is_index),
             superuser=True
         ):
+            self.create_admin_token()
             return True
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_index:

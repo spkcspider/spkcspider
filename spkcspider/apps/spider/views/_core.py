@@ -82,6 +82,37 @@ class UserTestMixin(AccessMixin):
         GET["token"] = self.request.auth_token.token
         return "?".join((self.request.path, GET.urlencode()))
 
+    def create_token(self, special_user=None):
+        session_key = None
+        if "token" not in self.request.GET:
+            session_key = self.request.session.session_key
+        token = AuthToken(
+            usercomponent=self.usercomponent,
+            session_key=session_key,
+            created_by_special_user=special_user
+        )
+        token.save()
+        return token
+
+    def create_admin_token(self):
+        expire = timezone.now()-self.usercomponent.token_duration
+        # delete old token, so no confusion happen
+        self.usercomponent.authtokens.filter(
+            created__lt=expire
+        ).delete()
+        # delete tokens from old sessions
+        self.usercomponent.authtokens.exclude(
+            session_key=self.request.session.session_key,
+        ).filter(created_by_special_user=self.request.user).delete()
+
+        # use session_key, causes deletion on logout
+        token = self.usercomponent.authtokens.filter(
+            session_key=self.request.session.session_key
+        ).first()
+        if token:
+            return token
+        return self.create_token(self.request.user)
+
     def test_token(self):
         expire = timezone.now()-self.usercomponent.token_duration
         no_token = self.usercomponent.required_passes == 0
@@ -134,14 +165,8 @@ class UserTestMixin(AccessMixin):
             # token not required
             if no_token:
                 return True
-            session_key = None
-            if "token" not in self.request.GET:
-                session_key = self.request.session.session_key
-            token = AuthToken(
-                usercomponent=self.usercomponent,
-                session_key=session_key
-            )
-            token.save()
+
+            token = self.create_token()
 
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration

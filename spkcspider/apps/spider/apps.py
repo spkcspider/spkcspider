@@ -2,12 +2,13 @@ __all__ = ["SpiderBaseConfig"]
 
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate, post_save, post_delete
+from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from .helpers import extract_app_dicts
 from .signals import (
     UpdateSpiderCallback, InitUserCallback, DeleteContentCallback,
-    update_dynamic, TriggerUpdate
+    update_dynamic, TriggerUpdate, RemoveOldTokens
 )
 
 
@@ -30,6 +31,13 @@ class SpiderBaseConfig(AppConfig):
             installed_protections.update(
                 extract_app_dicts(app, "spider_protections", "name")
             )
+
+        user_logged_in.connect(
+            RemoveOldTokens, dispatch_uid="delete_old_token_login"
+        )
+        user_logged_out.connect(
+            RemoveOldTokens, dispatch_uid="delete_old_token_logout"
+        )
 
         post_delete.connect(
             DeleteContentCallback, sender=AssignedContent,

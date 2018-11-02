@@ -5,6 +5,7 @@ __all__ = [
 
 import time
 import base64
+import logging
 from django.core.exceptions import ValidationError
 from django.http import Http404
 from django.shortcuts import redirect
@@ -12,11 +13,15 @@ from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.conf import settings
-
+from .signals import failed_guess
 from rdflib import Literal, XSD
 
 
 def rate_limit_default(view, request):
+    results = failed_guess.send_robust(view=view, request=request)
+    for (receiver, result) in results:
+        if isinstance(result, Exception):
+            logging.exception(result)
     time.sleep(1)
     raise Http404()
 

@@ -1,12 +1,14 @@
 __all__ = (
     "UpdateSpiderCallback", "InitUserCallback", "DeleteContentCallback",
-    "update_dynamic"
+    "update_dynamic", "failed_guess", "RemoveOldTokens"
 )
 from django.dispatch import Signal
 from django.conf import settings
 import logging
 
 update_dynamic = Signal(providing_args=[])
+# failed guess of combination from id, nonce
+failed_guess = Signal(providing_args=[])
 
 
 def TriggerUpdate(sender, **_kwargs):
@@ -80,3 +82,10 @@ def InitUserCallback(sender, instance, **kwargs):
     )[0]
     # save not required, m2m field
     uinfo.calculate_allowed_content()
+
+
+def RemoveOldTokens(sender, user, request, **kwargs):
+    from .models import AuthToken
+    AuthToken.objects.filter(
+        created_by_special_user=user
+    ).delete()

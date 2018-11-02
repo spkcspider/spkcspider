@@ -3,14 +3,14 @@
 {% load i18n %}
 {% block content %}
 <table vocab="{{namespace}}" resource="{{ request.get_full_path }}">
-  <th>Results:</th>
+  <thead><tr><th cellspan="2">Results:</th></tr></thead>
   <tr>
     <td>{% trans "Hash:" %}</td>
-    <td property="hash">{{object.hash}}</td>
+    <td property="hash" style="word-break: break-all">{{object.hash}}</td>
   </tr>
   <tr>
     <td>{% trans "Verification State:" %}</td>
-    <td property="verified">{% if object.verification_state == "verified" %}{{object.checked}}{% else %}unverified{% endif %}</td>
+    <td property="verified" {% if object.verification_state == "verified" %}datatype="{{verified.datatype}}"{% else %}content="unverified"{% endif %}>{% if object.verification_state == "verified" %}{{verified}}{% else %}{% trans 'unverified' %}{% endif %}</td>
   </tr>
 
 </table>

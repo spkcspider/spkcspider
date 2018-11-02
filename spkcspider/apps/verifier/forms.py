@@ -32,8 +32,9 @@ _source_file_help = _("""
 
 def hash_entry(triple):
     h = get_hashob()
-    h.update(triple[2].datatype.encode("ascii"))
-    h.update(triple[2].value.encode("ascii"))
+    if triple[2].datatype:
+        h.update(triple[2].datatype.encode("utf8"))
+    h.update(triple[2].value.encode("utf8"))
     return h.digest()
 
 
@@ -118,11 +119,12 @@ class CreateEntryForm(forms.ModelForm):
                     'content-type', "application/octet-stream"
                 ),
                 int(resp.headers["content-length"]),
-                "ascii"
+                "utf8"
             )
-            dvfile = self.cleaned_data["dvfile"].open("wb")
+            self._dvfile_scope = self.cleaned_data["dvfile"].open("wb")
             for chunk in resp.iter_content(BUFFER_SIZE):
-                dvfile.write(chunk)
+                self._dvfile_scope.write(chunk)
+            self._dvfile_scope.seek(0, 0)
 
         g = Graph()
         try:
@@ -131,6 +133,8 @@ class CreateEntryForm(forms.ModelForm):
                 format="turtle"
             )
         except Exception as exc:
+            with open(self.cleaned_data["dvfile"].temporary_file_path()) as f:
+                logging.error(f.read())
             logging.exception(exc)
             raise forms.ValidationError(
                 _("not a \"%s\" file") % "turtle",
@@ -141,7 +145,14 @@ class CreateEntryForm(forms.ModelForm):
         namesp_meta = namespaces_spkcspider.meta
         namesp_content = namespaces_spkcspider.content
 
-        start, scope = list(g.triples((None, namesp_meta.scope, None)))[:2]
+        tmp = list(g.triples((None, namesp_meta.scope, None)))
+        if len(tmp) == 0:
+            raise forms.ValidationError(
+                _("invalid graph"),
+                code="invalid_graph"
+            )
+        start = tmp[0][0]
+        scope = tmp[0][2].value
         mtype = None
         if scope == "list":
             mtype = "UserComponent"
@@ -171,7 +182,7 @@ class CreateEntryForm(forms.ModelForm):
 
         hashes = [
             hash_entry(i) for i in
-            chain.from_iterables(
+            chain(
                 g.triples((None, namesp + "name", None)),
                 g.triples((None, namesp + "value", None))
             )
@@ -210,7 +221,7 @@ class CreateEntryForm(forms.ModelForm):
 
         for i in g.subjects(namesp + "id", None):
             h = get_hashob()
-            h.update(i.encode("ascii"))
+            h.update(i.encode("utf8"))
             hashes.append(h.digest())
         hashes.sort()
 
