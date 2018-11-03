@@ -323,7 +323,7 @@ class ContentIndex(UCTestMixin, ListView):
 
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
-            return None
+            return 0
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
     def render_to_response(self, context):
@@ -349,7 +349,7 @@ class ContentIndex(UCTestMixin, ListView):
             embed = True
 
         p = paginated_contents(
-            context["object_list"],
+            [context["uc"]],
             getattr(settings, "SERIALIZED_PER_PAGE", 50)
         )
         page = 1

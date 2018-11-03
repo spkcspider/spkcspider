@@ -129,8 +129,9 @@ def paginated_from_content(content, page_size):
 
 def paginated_contents(ucs, page_size):
     from .models import AssignedContent
+    print(ucs)
     query = AssignedContent.objects.filter(
-        usercomponent__id__in=ucs.values_list('id', flat=True)
+        usercomponent__in=ucs
     )
     length = len(query)
     while True:

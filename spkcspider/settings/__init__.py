@@ -160,6 +160,9 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 ## Update dynamic content, ... after migrations, default=true  # noqa: E266
 # UPDATE_DYNAMIC_AFTER_MIGRATION = False
 
+## embeddding function for files in graph, for e.g. linking  # noqa: E266
+# SPIDER_FILE_EMBED_FUNC
+
 ## Enable captchas  # noqa: E266
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True

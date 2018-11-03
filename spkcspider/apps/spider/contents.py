@@ -2,7 +2,7 @@
 __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
-
+import logging
 import posixpath
 from django.apps import apps as django_apps
 from django.db import models
@@ -271,6 +271,7 @@ class BaseContent(models.Model):
             )
         elif isinstance(data, File):
             return get_settings_func(
+                "SPIDER_FILE_EMBED_FUNC",
                 "spkcspider.apps.spider.functions.embed_file_default"
             )(name, data, self, context)
         return (
@@ -300,7 +301,11 @@ class BaseContent(models.Model):
 
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
-            value = field.to_python(raw_value)
+            try:
+                value = field.to_python(raw_value)
+            except Exception as exc:
+                # user can corrupt tags
+                continue
             value_node = BNode()
             newname, namesp = self.get_field_types(name, form, context)
 

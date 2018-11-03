@@ -92,11 +92,11 @@ def embed_file_default(name, value, content, context):
         value.size < getattr(settings, "MAX_EMBED_SIZE", 4000000) or
         override
     ):
-        return Literal(
+        return ("value", Literal(
             base64.b64encode(value.read()),
             datatype=XSD.base64Binary,
             normalize=False
-        )
+        ))
     elif (
         context["scope"] == "export" or
         getattr(settings, "DIRECT_FILE_DOWNLOAD", False)
@@ -105,10 +105,10 @@ def embed_file_default(name, value, content, context):
         url = value.url
         if "://" not in getattr(settings, "MEDIA_URL", ""):
             url = "{}{}".format(context["hostpart"], url)
-        return Literal(
+        return ("url", Literal(
             url,
             datatype=XSD.anyURI,
-        )
+        ))
     else:
         # only file filet has files yet
         url = content.associated.get_absolute_url("download")
@@ -116,10 +116,10 @@ def embed_file_default(name, value, content, context):
             context["hostpart"],
             url, context["context"]["spider_GET"].urlencode()
         )
-        return Literal(
+        return ("url", Literal(
             url,
             datatype=XSD.anyURI,
-        )
+        ))
 
 
 def has_admin_permission(self, request):
