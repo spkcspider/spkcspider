@@ -186,6 +186,9 @@ class TextFilet(BaseContent):
             )
         )
 
+    def get_size(self):
+        return len(self.text.encode("utf8"))
+
     def get_protected_preview(self):
         return self.associated.getlist("preview", 1)[0]
 

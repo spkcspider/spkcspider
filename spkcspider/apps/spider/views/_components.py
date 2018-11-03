@@ -4,16 +4,15 @@ __all__ = (
     "ComponentUpdate", "ComponentDelete"
 )
 
+import posixpath
+
 from datetime import timedelta
-import json
-from collections import OrderedDict
 
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
-from django.utils.duration import duration_string
 from django.db import models
-from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -27,6 +26,7 @@ from ..contents import installed_contents
 from ..models import UserComponent, TravelProtection
 from ..constants import namespaces_spkcspider
 from ..serializing import serialize_component
+from ..helpers import merge_get_url
 
 
 class ComponentPublicIndex(ListView):
@@ -133,28 +133,35 @@ class ComponentPublicIndex(ListView):
         # NEVER: allow embedding, things get much too big
         if self.request.GET.get("raw", "") != "true":
             return super().render_to_response(context)
-        return JsonResponse({
-            "components": [
-                {
-                    "user": item.username,
-                    "name": (
-                        item.name if item.name != "fake_index" else "index"
-                    ),
-                    "link": "{}{}?{}".format(
-                        context["hostpart"],
-                        reverse(
-                            "spider_base:ucontent-list",
-                            kwargs={
-                                "id": item.id, "nonce": item.nonce
-                            }
-                        ),
-                        context["spider_GET"].urlencode()
-                    )
-                }
-                for item in context["object_list"]
-            ],
-            "scope": "list"
-        })
+        meta_ref = URIRef(context["hostpart"] + self.request.path)
+        namesp_meta = namespaces_spkcspider.meta
+        g = Graph()
+        g.add((meta_ref, namesp_meta.scope, Literal("list")))
+        for component in context["object_list"]:
+            url = merge_get_url(
+                posixpath.join(
+                    context["hostpart"],
+                    component.get_absolute_url()
+                ),
+                raw=self.request.GET["raw"]
+            )
+            comp_ref = URIRef(url)
+            g.add(
+                (
+                    meta_ref, namesp_meta.usercomponent, comp_ref
+                )
+            )
+            namesp = namespaces_spkcspider.usercomponent
+            g.add((comp_ref, namesp.name, Literal(component.__str__())))
+            g.add(
+                (comp_ref, namesp.description, Literal(component.description))
+            )
+
+        ret = HttpResponse(
+            g.serialize(format="turtle"),
+            content_type="text/turtle;charset=utf-8"
+        )
+        return ret
 
 
 class ComponentIndex(UCTestMixin, ListView):
@@ -291,66 +298,13 @@ class ComponentIndex(UCTestMixin, ListView):
             return None
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
-    def generate_embedded(self, zip, context):
-        # Here export only
-        store_dict = OrderedDict(
-            ctype="Index",
-        )
-        zip.writestr(
-            "data.json", json.dumps(store_dict)
-        )
-
-        deref_level = 1  # don't dereference, as all data will be available
-        for component in context["context"]["object_list"]:
-            cname = component.name
-            if cname == "fake_index":
-                cname = "index"
-            # serialized_obj = protections=serializers.serialize(
-            #     'json', component.protections.all()
-            # )
-            comp_dict = OrderedDict(
-                name=cname
-            )
-            comp_dict["public"] = component.public,
-            comp_dict["required_passes"] = \
-                component.required_passes
-            comp_dict["token_duration"] = \
-                duration_string(component.token_duration)
-
-            zip.writestr(
-                "{}/data.json".format(cname), json.dumps(comp_dict)
-            )
-            for n, content in enumerate(
-                component.contents.order_by("id")
-            ):
-                context["content"] = content.content
-                store_dict = OrderedDict(
-                    pk=content.get_id(),
-                    ctype=content.getlist("type", 1)[0],
-                    ref_fields=[],
-                    info=content.info,
-                    scope="export",
-                    modified=content.modified.strftime(
-                        "%a, %d %b %Y %H:%M:%S %z"
-                    ),
-                )
-                context["store_dict"] = store_dict
-                context["uc"] = component
-                content.content.extract_form(
-                    context, store_dict, zip, level=deref_level,
-                    prefix="{}/{}/".format(cname, n)
-                )
-                zip.writestr(
-                    "{}/{}/data.json".format(cname, n), json.dumps(store_dict)
-                )
-
     def render_to_response(self, context):
         if self.scope != "export":
             return super().render_to_response(context)
         session_dict = {
             "request": self.request,
             "context": context,
-            "scope": context["scope"],
+            "scope": self.scope,
             "expires": None,
             "hostpart": context["hostpart"]
         }

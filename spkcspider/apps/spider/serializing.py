@@ -20,7 +20,7 @@ def serialize_content(graph, content, context):
     )
     content_ref = URIRef(url)
     namesp = namespaces_spkcspider.content
-    token = context["request"].auth_token
+    token = getattr(context["request"], "auth_token", None)
     if token:
         token = token.token
     url2 = merge_get_url(url, token=token)
@@ -54,9 +54,9 @@ def serialize_component(graph, component, context, embed=False):
         raw=context["request"].GET["raw"]
     )
     namesp = namespaces_spkcspider.usercomponent
-    namesp_content = namespaces_spkcspider.assignedcontent
+    namesp_content = namespaces_spkcspider.content
     comp_ref = URIRef(url)
-    token = context["request"].auth_token
+    token = getattr(context["request"], "auth_token", None)
     if token:
         token = token.token
     url2 = merge_get_url(url, token=token)

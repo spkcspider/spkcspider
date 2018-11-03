@@ -133,6 +133,12 @@ class UserComponentForm(forms.ModelForm):
             for protection in self.protections:
                 if not protection.cleaned_data.get("active", False):
                     continue
+
+                if len(str(protection.cleaned_data)) > 1_000_000:
+                    raise forms.ValidationError(
+                        _("Protection >1 mb: %(name)s"),
+                        params={"name": protection}
+                    )
                 if protection.cleaned_data.get("instant_fail", False):
                     fail_strength = max(
                         fail_strength, protection.get_strength()

@@ -11,7 +11,7 @@ class SpiderTokenAuthBackend(ModelBackend):
     def authenticate(self, request, username=None,
                      protection_codes=None, **kwargs):
         """ Use protections for authentication"""
-        tokenstring = self.request.GET.get("token", None)
+        tokenstring = request.GET.get("token", None)
         if not tokenstring:
             return
         expire = timezone.now()-self.usercomponent.token_duration

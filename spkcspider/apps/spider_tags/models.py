@@ -66,6 +66,9 @@ class UserTagLayout(BaseContent):
         }
     ]
 
+    def get_size(self):
+        return len(str(self.layout.layout).encode("utf8"))
+
     def get_strength_link(self):
         return 11
 
@@ -121,6 +124,9 @@ class SpiderTag(BaseContent):
             self.layout.name,
             self.id
         )
+
+    def get_size(self):
+        return len(str(self.tagdata).encode("utf8"))
 
     def get_strength_link(self):
         return 0

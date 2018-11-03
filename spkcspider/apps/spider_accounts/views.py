@@ -11,6 +11,7 @@ from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from .forms import SignupForm, UserUpdateForm
 from spkcspider.apps.spider.forms import SpiderAuthForm
@@ -47,6 +48,17 @@ class UserLoginView(LoginView):
 
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        """Security check complete. Log the user in."""
+        # backend for loging in, select the first
+        backend = settings.AUTHENTICATION_BACKENDS[0]
+        login(
+            self.request,
+            form.get_user(),
+            backend
+        )
+        return HttpResponseRedirect(self.get_success_url())
 
     def form_invalid(self, form):
         form.reset_protections()

@@ -18,8 +18,8 @@ VERIFIER_MAX_SIZE_ACCEPTED = 40000000
 
 # not required, SpiderTokenAuthBackend have to be tested, so here active
 AUTHENTICATION_BACKENDS = [
-    'spkcspider.apps.spider.auth.SpiderTokenAuthBackend',
-    'django.contrib.auth.backends.ModelBackend'
+    'django.contrib.auth.backends.ModelBackend',
+    'spkcspider.apps.spider.auth.SpiderTokenAuthBackend'
 ]
 
 # SECURITY WARNING: don't run with debug turned on in production!
