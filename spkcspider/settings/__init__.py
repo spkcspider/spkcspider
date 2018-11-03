@@ -190,6 +190,9 @@ SPIDER_BLACKLISTED_MODULES = [
 COMPONENTS_PER_PAGE = 25
 # how many user contents per page
 CONTENTS_PER_PAGE = 25
+# how many raw/serialized results per page?
+# Note: verifier doesn't support multi page contents yet, so put it higher
+SERIALIZED_PER_PAGE = 50
 # how many search parameters are allowed
 MAX_SEARCH_PARAMETERS = 30
 

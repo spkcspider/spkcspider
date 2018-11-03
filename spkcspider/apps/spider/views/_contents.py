@@ -17,7 +17,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
 
-from rdflib import Graph, Literal
+from rdflib import Graph, Literal, URIRef
 
 
 from ._core import UCTestMixin, UserTestMixin
@@ -28,7 +28,7 @@ from ..models import (
 from ..forms import UserContentForm
 from ..helpers import get_settings_func
 from ..constants import namespaces_spkcspider
-from ..serializing import serialize_component
+from ..serializing import paginated_contents, serialize_stream
 
 
 class ContentBase(UCTestMixin):
@@ -322,7 +322,7 @@ class ContentIndex(UCTestMixin, ListView):
         return ret.filter(searchq & infoq & ~searchq_exc & ~infoq_exc)
 
     def get_paginate_by(self, queryset):
-        if self.scope == "export":
+        if self.scope == "export" or "raw" in self.request.GET:
             return None
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
@@ -335,7 +335,8 @@ class ContentIndex(UCTestMixin, ListView):
             "context": context,
             "scope": context["scope"],
             "uc": self.usercomponent,
-            "hostpart": context["hostpart"]
+            "hostpart": context["hostpart"],
+            "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
         namesp_meta = namespaces_spkcspider.meta
         g = Graph()
@@ -346,19 +347,38 @@ class ContentIndex(UCTestMixin, ListView):
             self.request.GET.get("raw", "") == "embed"
         ):
             embed = True
-        ref = serialize_component(g, self.usercomponent, session_dict, embed)
+
+        p = paginated_contents(
+            context["object_list"],
+            getattr(settings, "SERIALIZED_PER_PAGE", 50)
+        )
+        page = 1
+        try:
+            page = int(self.request.GET.get("page", "1"))
+        except Exception:
+            pass
+        serialize_stream(
+            g, p, session_dict,
+            page=page,
+            embed=embed
+        )
+
         if hasattr(self.request, "token_expires"):
             session_dict["expires"] = self.request.token_expires.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             )
-            g.add(
-                (
-                    ref,
+            if page <= 1:
+                g.add((
+                    session_dict["sourceref"],
                     namesp_meta.expires,
                     Literal(self.request.token_expires)
-                )
-            )
-        g.add((ref, namesp_meta.scope, Literal(context["scope"])))
+                ))
+        if page <= 1:
+            g.add((
+                session_dict["sourceref"],
+                namesp_meta.scope,
+                Literal(context["scope"])
+            ))
 
         ret = HttpResponse(
             g.serialize(format="turtle"),

@@ -1,110 +1,181 @@
 __all__ = [
-    "serialize_content", "serialize_component"
+    "paginated_contents", "paginated_from_content", "serialize_stream"
 ]
 
 
 import posixpath
+import logging
+
+from django.http import Http404
+from django.core.paginator import InvalidPage, Paginator
+from django.utils.translation import gettext as _
+
 from rdflib import URIRef, Literal
+
 
 from .constants.static import namespaces_spkcspider
 from .helpers import merge_get_url
 
 
-def serialize_content(graph, content, context):
-    url = merge_get_url(
-        posixpath.join(
-            context["hostpart"],
-            content.get_absolute_url()
-        ),
-        raw=context["request"].GET["raw"]
+def serialize_content(graph, content, context, embed=False):
+    url_content = posixpath.join(
+        context["hostpart"],
+        content.get_absolute_url()
     )
-    content_ref = URIRef(url)
+    ref_content = URIRef(url_content)
+    url_component = posixpath.join(
+        context["hostpart"],
+        content.usercomponent.get_absolute_url()
+    )
+    ref_component = URIRef(url_component)
+    if (
+        context["scope"] == "export" or
+        (
+            ref_component == context["sourceref"] and
+            content.usercomponent.public
+        )
+    ):
+        graph.add(
+            (
+                ref_component,
+                namespaces_spkcspider.usercomponent.contents,
+                ref_content
+            )
+        )
+
     namesp = namespaces_spkcspider.content
     token = getattr(context["request"], "auth_token", None)
     if token:
         token = token.token
-    url2 = merge_get_url(url, token=token)
+    url2 = merge_get_url(url_content, token=token)
     graph.add(
         (
-            content_ref,
+            ref_content,
             namesp["action/view"],
             URIRef(url2)
         )
     )
-    graph.add((content_ref, namesp.id, Literal(content.get_id())))
-    graph.add((content_ref, namesp.info, Literal(content.info)))
-    content.content.serialize(graph, content_ref, context)
-    references = content.references.exclude(
-        id__in=graph.objects(predicate=namesp.id)
+    graph.add((ref_content, namesp.id, Literal(content.get_id())))
+    graph.add((ref_content, namesp.info, Literal(content.info)))
+    if embed:
+        content.content.serialize(graph, ref_content, context)
+    return ref_content
+
+
+def serialize_component(graph, component, context):
+    url_component = posixpath.join(
+        context["hostpart"],
+        component.get_absolute_url()
     )
-    for c in references:
-        # references field not required, can be calculated
-        if (None, namesp.id, Literal(content.get_id())) not in graph:
-            serialize_content(graph, c, context)
-
-    return content_ref
-
-
-def serialize_component(graph, component, context, embed=False):
-    url = merge_get_url(
-        posixpath.join(
-            context["hostpart"],
-            component.get_absolute_url()
-        ),
-        raw=context["request"].GET["raw"]
-    )
+    ref_component = URIRef(url_component)
+    if (
+        context["scope"] != "export" and
+        (
+            ref_component != context["sourceref"] or
+            not component.public
+        )
+    ):
+        return ref_component
     namesp = namespaces_spkcspider.usercomponent
-    namesp_content = namespaces_spkcspider.content
-    comp_ref = URIRef(url)
     token = getattr(context["request"], "auth_token", None)
     if token:
         token = token.token
-    url2 = merge_get_url(url, token=token)
+    url2 = merge_get_url(url_component, token=token)
     graph.add(
         (
-            comp_ref,
+            ref_component,
             namesp["action/view"],
             URIRef(url2)
         )
     )
     if component.public or context["scope"] == "export":
-        graph.add((comp_ref, namesp.name, Literal(component.__str__())))
+        graph.add((ref_component, namesp.name, Literal(component.__str__())))
         graph.add(
-            (comp_ref, namesp.description, Literal(component.description))
+            (ref_component, namesp.description, Literal(component.description))
         )
     if context["scope"] == "export":
-        graph.add(
-            (
-                comp_ref, namesp.required_passes,
-                Literal(component.required_passes)
-            )
-        )
-        graph.add(
-            (
-                comp_ref, namesp.token_duration,
-                Literal(component.token_duration)
-            )
-        )
-    for content in component.contents.all():
-        if embed and (
-            None, namesp_content.id, Literal(content.get_id())
-        ) not in graph:
-            ref = serialize_content(graph, content, context)
-        else:
-            content_url = merge_get_url(
-                posixpath.join(
-                    context["hostpart"],
-                    content.get_absolute_url()
-                ),
-                raw=context["request"].GET["raw"]
-            )
-            ref = URIRef(content_url)
+        graph.add((
+            ref_component, namesp.required_passes,
+            Literal(component.required_passes)
+        ))
+        graph.add((
+            ref_component, namesp.token_duration,
+            Literal(component.token_duration)
+        ))
+    if context.get("meta_namespace", None):
+        graph.add((
+            context["sourceref"],
+            context["meta_namespace"],
+            ref_component
+        ))
+    return ref_component
 
-        graph.add(
-            (
-                comp_ref,
-                namesp.contents,
-                ref
-            )
+
+def paginated_from_content(content, page_size):
+    from .models import AssignedContent
+    query = AssignedContent.objects.filter(id=content)
+    length = len(query)
+    while True:
+        query = query.union(
+            AssignedContent.objects.filter(referenced_by__in=query)
         )
-    return comp_ref
+        if len(query) != length:
+            length = len(query)
+        else:
+            break
+    query = query.order_by("usercomponent__id", "id")
+    return Paginator(query, page_size, orphans=0, allow_empty_first_page=True)
+
+
+def paginated_contents(ucs, page_size):
+    from .models import AssignedContent
+    query = AssignedContent.objects.filter(
+        usercomponent__id__in=ucs.values_list('id', flat=True)
+    )
+    length = len(query)
+    while True:
+        query = query.union(
+            AssignedContent.objects.filter(referenced_by__in=query)
+        )
+        if len(query) != length:
+            length = len(query)
+        else:
+            break
+    query = query.order_by("usercomponent__id", "id")
+    return Paginator(query, page_size, orphans=0, allow_empty_first_page=True)
+
+
+def serialize_stream(graph, paginator, context, page=1, embed=False):
+    if page <= 1:
+        graph.add((
+            context["sourceref"],
+            namespaces_spkcspider.meta.pages,
+            Literal(paginator.num_pages)
+        ))
+        graph.add((
+            context["sourceref"],
+            namespaces_spkcspider.meta.page_size,
+            Literal(paginator.per_page)
+        ))
+    try:
+        page_view = paginator.get_page(page)
+    except InvalidPage as e:
+        exc = Http404(_('Invalid page (%(page_number)s): %(message)s') % {
+            'page_number': page,
+            'message': str(e)
+        })
+        logging.exception(exc)
+        raise exc
+    if page <= 1 or len(page_view.object_list) == 0:
+        usercomponent = None
+    else:
+        usercomponent = page_view.object_list[0].usercomponent
+    for content in page_view.object_list:
+        if usercomponent != content.usercomponent:
+            serialize_component(
+                graph, content.usercomponent, context
+            )
+            usercomponent = content.usercomponent
+        serialize_content(
+            graph, content, context, embed=embed
+        )

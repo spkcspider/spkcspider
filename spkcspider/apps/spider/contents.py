@@ -15,11 +15,11 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 
-from rdflib import Literal, Graph, BNode
+from rdflib import Literal, Graph, BNode, URIRef
 from rdflib.namespace import XSD
 
 from .constants import UserContentType, namespaces_spkcspider
-from .serializing import serialize_content
+from .serializing import serialize_stream, paginated_from_content
 from .helpers import merge_get_url
 from .helpers import get_settings_func
 
@@ -351,20 +351,49 @@ class BaseContent(models.Model):
             "request": kwargs["request"],
             "context": kwargs,
             "scope": kwargs["scope"],
-            "hostpart": kwargs["hostpart"]
+            "hostpart": kwargs["hostpart"],
+            "sourceref": URIRef(kwargs["hostpart"] + kwargs["request"].path)
         }
-        g = Graph()
 
-        g.add((
-            serialize_content(g, self.associated, session_dict),
-            namespaces_spkcspider.meta.scope,
-            Literal(kwargs["scope"])
-        ))
+        g = Graph()
+        p = paginated_from_content(
+            self.associated,
+            getattr(settings, "SERIALIZED_PER_PAGE", 50)
+        )
+        page = 1
+        try:
+            page = int(self.request.GET.get("page", "1"))
+        except Exception:
+            pass
+        serialize_stream(
+            g, p, session_dict,
+            page=page,
+            embed=True
+        )
+        if hasattr(kwargs["request"], "token_expires"):
+            session_dict["expires"] = kwargs["request"].token_expires.strftime(
+                "%a, %d %b %Y %H:%M:%S %z"
+            )
+            if page <= 1:
+                g.add((
+                    session_dict["sourceref"],
+                    namespaces_spkcspider.meta.expires,
+                    Literal(kwargs["request"].token_expires)
+                ))
+        if page <= 1:
+            g.add((
+                session_dict["sourceref"],
+                namespaces_spkcspider.meta.scope,
+                Literal(kwargs["scope"])
+            ))
 
         ret = HttpResponse(
             g.serialize(format="turtle"),
             content_type="text/turtle;charset=utf-8"
         )
+
+        if session_dict.get("expires", None):
+            ret['X-Token-Expires'] = session_dict["expires"]
         return ret
 
     def render_view(self, **kwargs):

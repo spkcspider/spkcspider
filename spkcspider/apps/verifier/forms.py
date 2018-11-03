@@ -88,7 +88,8 @@ class CreateEntryForm(forms.ModelForm):
             if not settings.DEBUG and not url.startswith("https://"):
                 self.add_error(
                     "url", forms.ValidationError(
-                        _('Insecure url scheme: %s') % url,
+                        _('Insecure url scheme: %(url)s'),
+                        params={"url": url},
                         code="insecure_scheme"
                     )
                 )
@@ -98,7 +99,8 @@ class CreateEntryForm(forms.ModelForm):
             except requests.exceptions.ConnectionError:
                 self.add_error(
                     "url", forms.ValidationError(
-                        _("invalid url: %s") % url,
+                        _('invalid url: %(url)s'),
+                        params={"url": url},
                         code="invalid_url"
                     )
                 )
@@ -119,8 +121,11 @@ class CreateEntryForm(forms.ModelForm):
                     "url", forms.ValidationError(
                         _(
                             "Retrieval failed, no length specified, invalid\n"
-                            "or too long, length: %s"
-                        ) % resp.headers.get("content-length", None),
+                            "or too long, length: %(length)s"
+                        ),
+                        params={"length": resp.headers.get(
+                            "content-length", None
+                        )},
                         code="invalid_length"
                     )
                 )
@@ -148,7 +153,8 @@ class CreateEntryForm(forms.ModelForm):
                 logging.error(f.read())
             logging.exception(exc)
             raise forms.ValidationError(
-                _("not a \"%s\" file") % "turtle",
+                _("not a \"%(format)s\" file"),
+                params={"format": "turtle"},
                 code="invalid_file"
             )
 
@@ -157,13 +163,27 @@ class CreateEntryForm(forms.ModelForm):
         namesp_content = namespaces_spkcspider.content
 
         tmp = list(g.triples((None, namesp_meta.scope, None)))
-        if len(tmp) == 0:
+        if len(tmp) != 1:
             raise forms.ValidationError(
-                _("invalid graph"),
+                _("invalid graph, scopes: %(scope)s"),
+                params={"scope": tmp},
                 code="invalid_graph"
             )
         start = tmp[0][0]
         scope = tmp[0][2].value
+        tmp = g.objects((start, namesp_meta.pages, None))
+        if len(tmp) != 1:
+            raise forms.ValidationError(
+                _("invalid graph, pages: %(page)s"),
+                params={"page": tmp},
+                code="invalid_graph"
+            )
+        pages = tmp[0][2].value
+        if pages != 1:
+            raise forms.ValidationError(
+                _("Multipage graphs not supported yet, sorry"),
+                code="not_supported"
+            )
         mtype = None
         if scope == "list":
             mtype = "UserComponent"
@@ -185,8 +205,9 @@ class CreateEntryForm(forms.ModelForm):
         if not self.cleaned_data["data_type"]:
             raise forms.ValidationError(
                 _(
-                    "Invalid type: %s"
-                ) % mtype,
+                    "Invalid type: %(type)s"
+                ),
+                params={"type": mtype},
                 code="invalid_type"
             )
             return
@@ -205,7 +226,8 @@ class CreateEntryForm(forms.ModelForm):
             url = merge_get_url(i[2].value, raw="embed")
             if not settings.DEBUG and not url.startswith("https://"):
                 raise forms.ValidationError(
-                    _('Insecure url scheme: %s') % url,
+                    _('Insecure url scheme: %(url)s'),
+                    params={"url": url},
                     code="insecure_scheme"
                 )
                 return
@@ -213,13 +235,15 @@ class CreateEntryForm(forms.ModelForm):
                 resp = requests.get(url, stream=True)
             except requests.exceptions.ConnectionError:
                 raise forms.ValidationError(
-                    _("invalid url: %s") % url,
+                    _('invalid url: %(url)s'),
+                    params={"url": url},
                     code="invalid_url"
                 )
                 return
             if resp.status_code != 200:
                 raise forms.ValidationError(
-                    _("Retrieval failed: %s") % resp.reason,
+                    _("Retrieval failed: %(reason)s"),
+                    params={"reason": resp.reason},
                     code=str(resp.status_code)
                 )
                 return

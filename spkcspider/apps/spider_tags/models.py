@@ -125,6 +125,11 @@ class SpiderTag(BaseContent):
             self.id
         )
 
+    def get_template_name(self, scope):
+        if scope in ["add", "update"]:
+            return 'spider_tag/edit_form.html'
+        return 'spider_tag/view_form.html'
+
     def get_size(self):
         return len(str(self.tagdata).encode("utf8"))
 

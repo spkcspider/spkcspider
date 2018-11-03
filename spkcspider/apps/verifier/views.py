@@ -62,6 +62,12 @@ class CreateEntry(CreateView):
             ]
         return self._dispatch(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        ret = super().get_form_kwargs()
+        ret["initial"].setdefault({})
+        ret["initial"]["url"] = self.request.get("Referer", "")
+        return ret
+
     def form_invalid(self, form):
         q = DataVerificationTag.objects.filter(
             hash=form.fields["hash"].initial

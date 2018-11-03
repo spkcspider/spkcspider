@@ -1,0 +1,14 @@
+{% load i18n %}
+<table>
+  <tr><th>{% trans "List of verifiers, where the tag was verified" %}</th></tr>
+  {% for verifier in object.verifiers %}
+    <tr>
+      <td>
+        <a href="{{verifier}}">
+          {{verifier|trunc:"20"}}
+        </a>
+      </td>
+    </tr>
+  {% endfor %}
+</table>
+{% include "spider_base/view_form.html" %}

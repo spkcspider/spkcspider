@@ -20,7 +20,7 @@ from rdflib import Literal, XSD
 
 
 def rate_limit_default(view, request):
-    results = failed_guess.send_robust(view=view, request=request)
+    results = failed_guess.send_robust(sender=view, request=request)
     for (receiver, result) in results:
         if isinstance(result, Exception):
             logging.exception(result)

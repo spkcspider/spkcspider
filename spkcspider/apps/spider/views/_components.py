@@ -25,7 +25,7 @@ from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import UserComponent, TravelProtection
 from ..constants import namespaces_spkcspider
-from ..serializing import serialize_component
+from ..serializing import paginated_contents, serialize_stream
 from ..helpers import merge_get_url
 
 
@@ -306,19 +306,32 @@ class ComponentIndex(UCTestMixin, ListView):
             "context": context,
             "scope": self.scope,
             "expires": None,
-            "hostpart": context["hostpart"]
+            "hostpart": context["hostpart"],
+            "meta_namespace": namespaces_spkcspider.meta.usercomponent,
+            "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
-        meta_ref = URIRef(context["hostpart"] + self.request.path)
         namesp_meta = namespaces_spkcspider.meta
         g = Graph()
-        g.add((meta_ref, namesp_meta.scope, Literal(context["scope"])))
-        for component in context["context"]["object_list"]:
-            ref = serialize_component(g, component, session_dict, True)
-            g.add(
-                (
-                    meta_ref, namesp_meta.usercomponent, ref
-                )
-            )
+        p = paginated_contents(
+            context["object_list"],
+            getattr(settings, "SERIALIZED_PER_PAGE", 50)
+        )
+        page = 1
+        try:
+            page = int(self.request.GET.get("page", "1"))
+        except Exception:
+            pass
+        serialize_stream(
+            g, p, session_dict,
+            page=page,
+            embed=True
+        )
+        if page <= 1:
+            g.add((
+                session_dict["sourceref"],
+                namesp_meta.scope,
+                Literal(context["scope"])
+            ))
 
         ret = HttpResponse(
             g.serialize(format="turtle"),
