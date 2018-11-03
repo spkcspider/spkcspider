@@ -96,10 +96,10 @@ class TextForm(forms.ModelForm):
             'spider_filets/text.js'
         ]
 
-    def __init__(self, request, source=None, **kwargs):
+    def __init__(self, request, source, scope, **kwargs):
         super().__init__(**kwargs)
         self.fields["editable_from"].to_field_name = "name"
-        if request.is_owner:
+        if scope == "update":
             self.fields["editable_from"].queryset = \
                 self.fields["editable_from"].queryset.filter(
                     user=request.user
@@ -107,15 +107,12 @@ class TextForm(forms.ModelForm):
             return
 
         del self.fields["editable_from"]
-        self.fields["preview_words"].disabled = True
-        self.fields["name"].disabled = True
+        del self.fields["preview_words"]
+        del self.fields["name"]
 
         allow_edit = False
-        if self.instance.editable_from.filter(
-            pk=source.pk
-        ).exists():
-            if request.is_elevated_request:
-                allow_edit = True
+        if scope == "update_user":
+            allow_edit = True
 
         self.fields["text"].disabled = not allow_edit
 
@@ -134,5 +131,5 @@ class RawTextForm(forms.ModelForm):
         model = TextFilet
         fields = ['text', 'name']
 
-    def __init__(self, request, source=None, **kwargs):
+    def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)

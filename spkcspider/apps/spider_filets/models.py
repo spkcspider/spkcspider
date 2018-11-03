@@ -169,6 +169,12 @@ class TextFilet(BaseContent):
             return self.localize_name(self.associated.ctype.name)
         return self.name
 
+    def get_template_name(self, scope):
+        # view update form
+        if scope == "update_user":
+            return 'spider_base/edit_form.html'
+        return super().get_template_name(scope)
+
     def get_info(self):
         ret = super().get_info()
         return "%sname=%s\npreview=%s\n" % (
@@ -194,22 +200,29 @@ class TextFilet(BaseContent):
         ret = super().get_form_kwargs(**kwargs)
         ret["request"] = kwargs["request"]
         ret["source"] = kwargs.get("source", self.associated.usercomponent)
+        ret["scope"] = kwargs["scope"]
         return ret
+
+    def render(self, **kwargs):
+        source = kwargs.get("source", self.associated.usercomponent)
+        if self.editable_from.filter(
+            pk=source.pk
+        ).exists():
+            if kwargs["request"].is_elevated_request:
+                kwargs["no_button"] = False
+                kwargs["legend"] = _("Update \"%s\" (guest)") % self.__str__()
+                kwargs["confirm"] = _("Update")
+                kwargs["can_upgrade"] = True
+                if kwargs["scope"] == "update_user":
+                    return self.render_update(**kwargs)
+        return super().render(**kwargs)
 
     def render_view(self, **kwargs):
         if "raw" in kwargs["request"].GET:
             k = kwargs.copy()
             k["scope"] = "raw"
             return self.render_serialize(**k)
-        source = kwargs.get("source", self.associated.usercomponent)
-        if self.editable_from.filter(
-            pk=source.pk
-        ).exists():
-            if kwargs["request"].is_elevated_request:
-                kwargs["no_button"] = None
-                kwargs["legend"] = _("Update \"%s\"") % self.__str__()
-                kwargs["confirm"] = _("Update")
-                return self.render_update(**kwargs)
+
         kwargs["object"] = self
         kwargs["content"] = self.associated
         return (

@@ -247,7 +247,7 @@ class ContentIndex(UCTestMixin, ListView):
             staff=(not self.usercomponent.is_index),
             superuser=True
         ):
-            self.create_admin_token()
+            self.request.auth_token = self.create_admin_token()
             return True
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_index:
