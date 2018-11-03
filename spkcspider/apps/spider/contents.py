@@ -7,7 +7,6 @@ import posixpath
 from django.apps import apps as django_apps
 from django.db import models
 from django.utils.translation import gettext
-from django.core.exceptions import NON_FIELD_ERRORS
 from django.template.loader import render_to_string
 from django.core.files.base import File
 
@@ -131,7 +130,6 @@ class BaseContent(models.Model):
         if associated:
             ob._associated2 = associated
         ob.kwargs = kwargs
-        ob.kwargs["parent_form"] = ob.kwargs.pop("form")
         return ob
 
     @classmethod
@@ -223,9 +221,7 @@ class BaseContent(models.Model):
             )
         else:
             if parent_form and len(kwargs["form"].errors) > 0:
-                parent_form.errors.setdefault(NON_FIELD_ERRORS, []).extend(
-                    kwargs["form"].errors.setdefault(NON_FIELD_ERRORS, [])
-                )
+                parent_form.add_error(None, kwargs["form"].errors)
         return (
             render_to_string(
                 self.get_template_name(scope),
@@ -438,9 +434,10 @@ class BaseContent(models.Model):
                 a.info = a.info.replace(
                     "\nid=None\n", "\nid={}\n".format(self.id), 1
                 )
-        a.references.set(self.get_references())
         # update info and set content
         a.save()
+        # needs id first
+        a.references.set(self.get_references())
         # update fakes
         fakes = self.associated_rel.filter(fake_id__isnull=False)
         fakes.update(

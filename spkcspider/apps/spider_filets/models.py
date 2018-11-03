@@ -49,6 +49,11 @@ class FileFilet(BaseContent):
 
     file = models.FileField(upload_to=get_file_path, null=False, blank=False)
 
+    def get_template_name(self, scope):
+        if scope in ["add", "update"]:
+            return 'spider_filets/file_form.html'
+        return 'spider_base/view_form.html'
+
     def __str__(self):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)

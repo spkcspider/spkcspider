@@ -31,6 +31,9 @@ def check_attrs_func(tag, name, value):
 
 class FileForm(forms.ModelForm):
     user = None
+    MAX_FILE_SIZE = forms.CharField(
+        disabled=True, widget=forms.HiddenInput(), required=False
+    )
 
     class Meta:
         model = FileFilet
@@ -44,6 +47,16 @@ class FileForm(forms.ModelForm):
             return
         self.fields["file"].editable = False
         self.fields["name"].editable = False
+        if request.user.is_staff or request.user.is_superuser:
+            self.fields["MAX_FILE_SIZE"].initial = getattr(
+                settings, "MAX_FILE_SIZE", None
+            )
+        else:
+            self.fields["MAX_FILE_SIZE"].initial = getattr(
+                settings, "MAX_FILE_SIZE_STAFF", None
+            )
+        if not self.fields["MAX_FILE_SIZE"].initial:
+            del self.fields["MAX_FILE_SIZE"]
 
     def clean(self):
         ret = super().clean()
@@ -51,9 +64,10 @@ class FileForm(forms.ModelForm):
             return ret
         if not ret["name"] or ret["name"].strip() == "":
             ret["name"] = ret["file"].name
+        # has to raise ValidationError
         get_settings_func(
             "UPLOAD_FILTER_FUNC",
-            "spkcspider.apps.spider.functions.validate_file"
+            "spkcspider.apps.spider.functions.allow_all_filter"
         )(ret["file"])
         size_diff = ret["file"].size
         if self.instance.file:

@@ -1,5 +1,7 @@
 {# just use edit_form, real verifier have to replace this or to depend on spider #}
 {% extends "spider_base/base.html" %}
+{% load i18n %}
 {% block content %}
+<div>{% trans "If the graph is too big, the connection is resetted" %}</div>
 {% include "spider_base/edit_form.html" with enctype="multipart/form-data" legend='Send spider or content to verify' confirm='Submit' %}
 {% endblock content %}

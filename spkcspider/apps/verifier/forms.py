@@ -40,6 +40,10 @@ def hash_entry(triple):
 
 class CreateEntryForm(forms.ModelForm):
     url = forms.URLField(help_text=_source_url_help)
+    MAX_FILE_SIZE = forms.CharField(
+        disabled=True, widget=forms.HiddenInput(), required=False,
+        initial=settings.VERIFIER_MAX_SIZE_ACCEPTED
+    )
 
     class Meta:
         model = DataVerificationTag
@@ -62,6 +66,14 @@ class CreateEntryForm(forms.ModelForm):
         else:
             self.fields["dvfile"].disabled = True
             self.fields["dvfile"].widget = widgets.HiddenInput()
+
+    def _verify_download_size(length):
+        if not length or not length.isdigit():
+            return False
+        length = int(length)
+        if settings.VERIFIER_MAX_SIZE_ACCEPTED < length:
+            return False
+        return True
 
     def clean(self):
         ret = super().clean()
@@ -100,10 +112,9 @@ class CreateEntryForm(forms.ModelForm):
                 )
                 return
 
-            if not get_settings_func(
-                "VERIFIER_VERIFY_LENGTH",
-                "spkcspider.apps.verifier.functions.verify_length"
-            )(resp):
+            if not self._verify_download_size(
+                resp.headers.get("content-length", None)
+            ):
                 self.add_error(
                     "url", forms.ValidationError(
                         _(

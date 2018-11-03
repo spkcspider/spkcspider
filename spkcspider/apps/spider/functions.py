@@ -1,17 +1,19 @@
 __all__ = [
     "rate_limit_default", "allow_all_filter",
-    "embed_file_default", "has_admin_permission"
+    "embed_file_default", "has_admin_permission",
+    "LimitedTemporaryFileUploadHandler"
 ]
 
 import time
 import base64
 import logging
-from django.core.exceptions import ValidationError
+from django.core.files.uploadhandler import (
+    TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
+)
 from django.http import Http404
 from django.shortcuts import redirect
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
-from django.utils.translation import gettext as _
 from django.conf import settings
 from .signals import failed_guess
 from rdflib import Literal, XSD
@@ -30,14 +32,52 @@ def allow_all_filter(*args, **kwargs):
     return True
 
 
-def validate_file(value):
-    max_size = getattr(settings, "MAX_FILE_SIZE", None)
-    if max_size and value.size > max_size:
-        raise ValidationError(
-            _("%(name)s is too big"),
-            code='max_size',
-            params={'name': value.name},
-        )
+class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
+    activated = False
+
+    def handle_raw_input(
+        self, input_data, META, content_length, boundary, encoding=None
+    ):
+        """
+        Use the content_length to signal whether or not this handler should be
+        used.
+        """
+        # disable upload if too big
+        self.activated = self.check_allowed_size(content_length)
+
+    def new_file(self, *args, **kwargs):
+        if not self.activated:
+            raise StopFutureHandlers()
+        return super().new_file(*args, **kwargs)
+
+    def receive_data_chunk(self, raw_data, start):
+        if not self.activated:
+            raise StopUpload(True)
+        return super().receive_data_chunk(raw_data, start)
+
+    def file_complete(self, file_size):
+        """Return a file object if this handler is activated."""
+        if not self.activated:
+            return
+        return super().file_complete(file_size)
+
+    def check_allowed_size(self, content_length):
+        if self.request.user.is_staff:
+            max_length = getattr(
+                settings, "MAX_FILE_SIZE_STAFF", None
+            )
+        else:
+            max_length = getattr(
+                settings, "MAX_FILE_SIZE", None
+            )
+        if not max_length:
+            return True
+
+        # admin can upload as much as he wants
+        if self.request.user.is_superuser:
+            return True
+
+        return content_length <= max_length
 
 
 def embed_file_default(name, value, content, context):

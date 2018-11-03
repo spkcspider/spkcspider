@@ -13,6 +13,7 @@ INSTALLED_APPS += [
 # Verifier specific options, not required
 AUTO_INCLUDE_VERIFIER = True
 VERIFIER_ALLOW_FILE_UPLOAD = True
+# 40 mb maximal size
 VERIFIER_MAX_SIZE_ACCEPTED = 40000000
 
 # not required, SpiderTokenAuthBackend have to be tested, so here active

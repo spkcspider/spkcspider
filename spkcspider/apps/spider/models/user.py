@@ -295,7 +295,7 @@ class UserInfo(models.Model):
             quota = getattr(settings, "DEFAULT_QUOTA_USER", None)
         if quota and self.used_space + size_diff > quota:
             raise ValidationError(
-                _("Exceeded quota by %(diff)s Bytes"),
+                _("Exceeds quota by %(diff)s Bytes"),
                 code='quota_exceeded',
                 params={'diff': size_diff},
             )

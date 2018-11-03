@@ -24,6 +24,11 @@ BASE_DIR = os.path.dirname(
 
 ALLOWED_HOSTS = []
 
+FILE_UPLOAD_HANDLERS = [
+    'django.core.files.uploadhandler.MemoryFileUploadHandler',
+    "spkcspider.apps.spider.functions.LimitedTemporaryFileUploadHandler",
+]
+
 
 # Application definition
 
