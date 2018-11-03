@@ -149,12 +149,12 @@ verified_by urls should return hashname:hash_hexdigest
 * finish global referrer mode, remove cruft from anchors
 * improve anchors
 * improve tags
+* paging
+  * special export
+  * pages meta attribute
 * examples
 * tests
 * documentation
-* RDF instead json, integrate rdf into html to simplify protections
-  * requires recursion form, so still allow n3 or so
-  * eliminate serializing
 
 Later:
 * raw add, update mode
