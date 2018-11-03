@@ -64,6 +64,9 @@ class FileFilet(BaseContent):
                 name = "%s.%s" % (name, ext[1])
         return name
 
+    def get_size(self):
+        return self.file.size
+
     def get_info(self):
         ret = super().get_info()
         return "%sname=%s\n" % (ret, self.name)

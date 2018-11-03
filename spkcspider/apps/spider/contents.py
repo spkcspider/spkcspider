@@ -148,6 +148,9 @@ class BaseContent(models.Model):
     def __repr__(self):
         return "<Content: %s>" % self.__str__()
 
+    def get_size(self):
+        return 0
+
     def get_strength(self):
         """ get required strength """
         return self.associated.ctype.strength
@@ -204,6 +207,9 @@ class BaseContent(models.Model):
         _ = gettext
         if scope == "add":
             kwargs["form_empty_message"] = _("<b>No User Input required</b>")
+            size_diff = 0
+        else:
+            size_diff = self.get_size()
         parent_form = kwargs.get("form", None)
         kwargs["form"] = self.get_form(scope)(
             **self.get_form_kwargs(
@@ -212,13 +218,23 @@ class BaseContent(models.Model):
             )
         )
         if kwargs["form"].is_valid():
+            instance = kwargs["form"].save(False)
+            size_diff = kwargs["form"].instance.get_size() - size_diff
+            if size_diff != 0:
+                ret = self.associated.usercomponent.user_info.update_quota(
+                    size_diff
+                )
+                if ret:
+                    kwargs["form"].add_error(None, ret)
+        if kwargs["form"].is_valid():
             kwargs["form"] = self.get_form(scope)(
                 **self.get_form_kwargs(
                     scope=scope,
-                    instance=kwargs["form"].save(),
+                    instance=instance.save(),
                     **kwargs
                 )
             )
+
         else:
             if parent_form and len(kwargs["form"].errors) > 0:
                 parent_form.add_error(None, kwargs["form"].errors)

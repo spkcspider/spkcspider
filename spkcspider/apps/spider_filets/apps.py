@@ -6,7 +6,8 @@ from django.db.models.signals import post_delete
 
 
 def DeleteFilesCallback(sender, instance, **kwargs):
-    instance.file.delete(False)
+    if instance.file:
+        instance.file.delete(False)
 
 
 class SpiderFiletsConfig(AppConfig):

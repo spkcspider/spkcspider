@@ -69,10 +69,6 @@ class FileForm(forms.ModelForm):
             "UPLOAD_FILTER_FUNC",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )(ret["file"])
-        size_diff = ret["file"].size
-        if self.instance.file:
-            size_diff -= self.instance.file.size
-        self.user.spider_info.update_quota(size_diff)
         return ret
 
 

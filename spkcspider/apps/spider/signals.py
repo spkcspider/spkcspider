@@ -1,8 +1,9 @@
 __all__ = (
-    "UpdateSpiderCallback", "InitUserCallback", "DeleteContentCallback",
-    "update_dynamic", "failed_guess", "RemoveTokensLogout"
+    "UpdateSpiderCallback", "InitUserCallback",
+    "update_dynamic", "failed_guess", "RemoveTokensLogout", "CleanupCallback"
 )
 from django.dispatch import Signal
+from django.contrib.auth import get_user_model
 from django.conf import settings
 import logging
 
@@ -18,11 +19,17 @@ def TriggerUpdate(sender, **_kwargs):
             logging.exception(result)
 
 
-def DeleteContentCallback(sender, instance, **kwargs):
-    if instance.fake_id is None:
-        instance.content.delete(False)
-    # because Operations are done on the real object
-    # deletions in fake view work too
+def CleanupCallback(sender, instance, **kwargs):
+    if sender._meta.model_name == "usercomponent":
+        if instance.user:
+            instance.user.spider_info.update_quota(-instance.get_size())
+    elif sender._meta.model_name == "assignedcontent":
+        if instance.usercomponent and instance.usercomponent.user:
+            instance.usercomponent.user.spider_info.update_quota(
+                -instance.get_size()
+            )
+        if instance.fake_id is None:
+            instance.content.delete(False)
 
 
 def UpdateSpiderCallback(**_kwargs):
@@ -36,14 +43,16 @@ def UpdateSpiderCallback(**_kwargs):
 
     # regenerate info field
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
-    UserInfo = apps.get_model("spider_base", "UserInfo")
     for row in AssignedContent.objects.all():
         # works only with django.apps.apps
         row.info = row.content.get_info()
         row.save(update_fields=['info'])
 
-    for row in UserInfo.objects.all():
-        row.calculate_allowed_content()
+    for row in get_user_model().objects.prefetch_related(
+        "spider_info", "usercomponent_set", "usercomponent_set__contents"
+    ).all():
+        row.spider_info.calculate_allowed_content()
+        row.spider_info.update_used_space()
 
 
 def InitUserCallback(sender, instance, **kwargs):

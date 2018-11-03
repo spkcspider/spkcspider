@@ -85,7 +85,7 @@ class UserComponent(models.Model):
         default="",
         help_text=_(
             "Description of user component. Visible if \"public\"."
-        )
+        ), blank=True
     )
     required_passes = models.PositiveIntegerField(
         default=0,
@@ -171,6 +171,12 @@ class UserComponent(models.Model):
             request, self, ptype=ptype, protection_codes=protection_codes,
             **kwargs
         )
+
+    def get_size(self):
+        size_ = 0
+        for elem in self.contents.all():
+            size_ += elem.get_size()
+        return size_
 
     def get_absolute_url(self):
         return reverse(
@@ -287,6 +293,12 @@ class UserInfo(models.Model):
         # save not required, m2m field
         self.allowed_content.set(allowed)
 
+    def update_used_space(self):
+        size_ = 0
+        for u in self.user.usercomponent_set.all():
+            size_ += u.get_size()
+        self.used_space = size_
+
     def update_quota(self, size_diff):
         quota = getattr(settings, "FIELDNAME_QUOTA", None)
         if quota:
@@ -294,7 +306,7 @@ class UserInfo(models.Model):
         if not quota:
             quota = getattr(settings, "DEFAULT_QUOTA_USER", None)
         if quota and self.used_space + size_diff > quota:
-            raise ValidationError(
+            return ValidationError(
                 _("Exceeds quota by %(diff)s Bytes"),
                 code='quota_exceeded',
                 params={'diff': size_diff},

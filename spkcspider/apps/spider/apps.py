@@ -7,8 +7,8 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from .helpers import extract_app_dicts
 from .signals import (
-    UpdateSpiderCallback, InitUserCallback, DeleteContentCallback,
-    update_dynamic, TriggerUpdate, RemoveTokensLogout
+    UpdateSpiderCallback, InitUserCallback,
+    update_dynamic, TriggerUpdate, RemoveTokensLogout, CleanupCallback
 )
 
 
@@ -21,7 +21,7 @@ class SpiderBaseConfig(AppConfig):
 
     def ready(self):
         from .models import (
-            AssignedContent
+            AssignedContent, UserComponent
         )
 
         from django.apps import apps
@@ -36,10 +36,17 @@ class SpiderBaseConfig(AppConfig):
             RemoveTokensLogout, dispatch_uid="delete_token_logout"
         )
 
+        # order important for next two
         post_delete.connect(
-            DeleteContentCallback, sender=AssignedContent,
-            dispatch_uid="delete_spider_content"
+            CleanupCallback, sender=UserComponent,
+            dispatch_uid="spider_delete_cleanup_usercomponent"
         )
+
+        post_delete.connect(
+            CleanupCallback, sender=AssignedContent,
+            dispatch_uid="spider_delete_cleanup_content"
+        )
+        #####################
 
         post_save.connect(
             InitUserCallback, sender=get_user_model(),

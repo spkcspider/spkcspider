@@ -180,6 +180,9 @@ class AssignedContent(models.Model):
             return self.fake_id
         return self.id
 
+    def get_size(self):
+        return self.content.get_size()
+
     def get_flag(self, flag):
         if self.info and "\n%s\n" % flag in self.info:
             return True
