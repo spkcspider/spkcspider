@@ -207,6 +207,12 @@ class ContentIndex(UCTestMixin, ListView):
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
 
+    def get_ordering(self):
+        # ordering will happen here
+        if self.scope == "export" or "raw" in self.request.GET:
+            return None
+        return ("id",)
+
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
         query["nonce"] = self.kwargs["nonce"]
@@ -323,7 +329,7 @@ class ContentIndex(UCTestMixin, ListView):
 
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
-            return 0
+            return None
         return getattr(settings, "CONTENTS_PER_PAGE", 25)
 
     def render_to_response(self, context):
@@ -349,7 +355,7 @@ class ContentIndex(UCTestMixin, ListView):
             embed = True
 
         p = paginated_contents(
-            [context["uc"]],
+            context["object_list"],
             getattr(settings, "SERIALIZED_PER_PAGE", 50)
         )
         page = 1
@@ -357,11 +363,6 @@ class ContentIndex(UCTestMixin, ListView):
             page = int(self.request.GET.get("page", "1"))
         except Exception:
             pass
-        serialize_stream(
-            g, p, session_dict,
-            page=page,
-            embed=embed
-        )
 
         if hasattr(self.request, "token_expires"):
             session_dict["expires"] = self.request.token_expires.strftime(
@@ -379,6 +380,12 @@ class ContentIndex(UCTestMixin, ListView):
                 namesp_meta.scope,
                 Literal(context["scope"])
             ))
+
+        serialize_stream(
+            g, p, session_dict,
+            page=page,
+            embed=embed
+        )
 
         ret = HttpResponse(
             g.serialize(format="turtle"),

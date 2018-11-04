@@ -1,10 +1,10 @@
 __all__ = [
-    "paginated_contents", "paginated_from_content", "serialize_stream"
+    "paginated_contents", "serialize_stream"
 ]
 
 
-import posixpath
 import logging
+from urllib.parse import urljoin
 
 from django.http import Http404
 from django.core.paginator import InvalidPage, Paginator
@@ -18,12 +18,12 @@ from .helpers import merge_get_url
 
 
 def serialize_content(graph, content, context, embed=False):
-    url_content = posixpath.join(
+    url_content = urljoin(
         context["hostpart"],
         content.get_absolute_url()
     )
     ref_content = URIRef(url_content)
-    url_component = posixpath.join(
+    url_component = urljoin(
         context["hostpart"],
         content.usercomponent.get_absolute_url()
     )
@@ -42,6 +42,12 @@ def serialize_content(graph, content, context, embed=False):
                 ref_content
             )
         )
+    if context.get("ac_namespace", None):
+        graph.add((
+            context["sourceref"],
+            context["ac_namespace"],
+            ref_content
+        ))
 
     namesp = namespaces_spkcspider.content
     token = getattr(context["request"], "auth_token", None)
@@ -63,7 +69,7 @@ def serialize_content(graph, content, context, embed=False):
 
 
 def serialize_component(graph, component, context):
-    url_component = posixpath.join(
+    url_component = urljoin(
         context["hostpart"],
         component.get_absolute_url()
     )
@@ -102,44 +108,29 @@ def serialize_component(graph, component, context):
             ref_component, namesp.token_duration,
             Literal(component.token_duration)
         ))
-    if context.get("meta_namespace", None):
+    if context.get("uc_namespace", None):
         graph.add((
             context["sourceref"],
-            context["meta_namespace"],
+            context["uc_namespace"],
             ref_component
         ))
     return ref_component
 
 
-def paginated_from_content(content, page_size):
+def paginated_contents(query, page_size, limit_depth=None):
     from .models import AssignedContent
-    query = AssignedContent.objects.filter(id=content)
     length = len(query)
+    count = 0
     while True:
         query = query.union(
             AssignedContent.objects.filter(referenced_by__in=query)
         )
         if len(query) != length:
             length = len(query)
-        else:
-            break
-    query = query.order_by("usercomponent__id", "id")
-    return Paginator(query, page_size, orphans=0, allow_empty_first_page=True)
-
-
-def paginated_contents(ucs, page_size):
-    from .models import AssignedContent
-    print(ucs)
-    query = AssignedContent.objects.filter(
-        usercomponent__in=ucs
-    )
-    length = len(query)
-    while True:
-        query = query.union(
-            AssignedContent.objects.filter(referenced_by__in=query)
-        )
-        if len(query) != length:
-            length = len(query)
+            count += 1
+            if limit_depth and count > limit_depth:
+                logging.warning("Content references exceeded maximal depth")
+                break
         else:
             break
     query = query.order_by("usercomponent__id", "id")

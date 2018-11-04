@@ -4,7 +4,7 @@ __all__ = (
     "ComponentUpdate", "ComponentDelete"
 )
 
-import posixpath
+from urllib.parse import urljoin
 
 from datetime import timedelta
 
@@ -23,7 +23,7 @@ from ._core import UserTestMixin, UCTestMixin
 from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
-from ..models import UserComponent, TravelProtection
+from ..models import UserComponent, TravelProtection, AssignedContent
 from ..constants import namespaces_spkcspider
 from ..serializing import paginated_contents, serialize_stream
 from ..helpers import merge_get_url
@@ -139,7 +139,7 @@ class ComponentPublicIndex(ListView):
         g.add((meta_ref, namesp_meta.scope, Literal("list")))
         for component in context["object_list"]:
             url = merge_get_url(
-                posixpath.join(
+                urljoin(
                     context["hostpart"],
                     component.get_absolute_url()
                 ),
@@ -307,13 +307,17 @@ class ComponentIndex(UCTestMixin, ListView):
             "scope": self.scope,
             "expires": None,
             "hostpart": context["hostpart"],
-            "meta_namespace": namespaces_spkcspider.meta.usercomponent,
+            "uc_namespace": namespaces_spkcspider.meta.usercomponent,
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
         namesp_meta = namespaces_spkcspider.meta
+
+        contents = AssignedContent.objects.filter(
+            usercomponent__in=context["object_list"]
+        )
         g = Graph()
         p = paginated_contents(
-            context["object_list"],
+            contents,
             getattr(settings, "SERIALIZED_PER_PAGE", 50)
         )
         page = 1
@@ -321,17 +325,18 @@ class ComponentIndex(UCTestMixin, ListView):
             page = int(self.request.GET.get("page", "1"))
         except Exception:
             pass
-        serialize_stream(
-            g, p, session_dict,
-            page=page,
-            embed=True
-        )
         if page <= 1:
             g.add((
                 session_dict["sourceref"],
                 namesp_meta.scope,
                 Literal(context["scope"])
             ))
+
+        serialize_stream(
+            g, p, session_dict,
+            page=page,
+            embed=True
+        )
 
         ret = HttpResponse(
             g.serialize(format="turtle"),

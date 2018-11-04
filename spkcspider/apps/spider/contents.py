@@ -3,7 +3,7 @@ __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
 import logging
-import posixpath
+from urllib.parse import urljoin
 from django.apps import apps as django_apps
 from django.db import models
 from django.utils.translation import gettext
@@ -19,7 +19,7 @@ from rdflib import Literal, Graph, BNode, URIRef
 from rdflib.namespace import XSD
 
 from .constants import UserContentType, namespaces_spkcspider
-from .serializing import serialize_stream, paginated_from_content
+from .serializing import paginated_contents, serialize_stream
 from .helpers import merge_get_url
 from .helpers import get_settings_func
 
@@ -256,7 +256,7 @@ class BaseContent(models.Model):
         from .models import AssignedContent
         if isinstance(data, AssignedContent):
             url = merge_get_url(
-                posixpath.join(
+                urljoin(
                     context["hostpart"],
                     data.get_absolute_url()
                 ),
@@ -357,12 +357,14 @@ class BaseContent(models.Model):
             "context": kwargs,
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
+            "ac_namespace": namespaces_spkcspider.meta.content,
             "sourceref": URIRef(kwargs["hostpart"] + kwargs["request"].path)
         }
 
         g = Graph()
-        p = paginated_from_content(
-            self.associated,
+
+        p = paginated_contents(
+            models.QuerySet(self.associated),
             getattr(settings, "SERIALIZED_PER_PAGE", 50)
         )
         page = 1

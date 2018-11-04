@@ -53,7 +53,7 @@
         {% trans "Featured:" %}
       </h2>
     </div>
-    <div  class="w3-margin" vocab="{% namespace 'meta' %}" resource="{{request.get_full_path}}">
+    <div  class="w3-margin" vocab="{% namespace 'meta' %}" resource="{{request.path}}">
       <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="usercomponent">
         {% for uc in object_list %}
           <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" vocab="{% namespace 'usercomponent' %}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" property="description" content="{{uc.description|escape}}">

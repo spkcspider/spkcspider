@@ -183,6 +183,11 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # user fieldname of quota
 FIELDNAME_QUOTA = "quota"
 
+# usercomponents created with user
+DEFAULT_USERCOMPONENTS = {
+    "home": False,
+    "public": True
+}
 
 SPIDER_BLACKLISTED_MODULES = [
     # untested, will fail

@@ -25,7 +25,7 @@
 {% endblock %}
 
 {% block content %}
-<div vocab="{% namespace 'usercomponent' %}" resource="{{ request.get_full_path }}">
+<div vocab="{% namespace 'usercomponent' %}" resource="{{ request.path }}">
   <div class="w3-padding">
     {% if request.user == uc.user %}
       <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Up (Owned)' %}</a>
