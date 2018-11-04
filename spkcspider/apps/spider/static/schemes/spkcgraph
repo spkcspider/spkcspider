@@ -16,6 +16,6 @@ spkc:name a rdfs:Datatype ;
 spkc:type a rdf:Property ;
 	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
 	rdfs:label "type" ;
-	rdfs:comment "The subject is the class type of a property." ;
+	rdfs:comment "The subject is the class type of an object." ;
 	rdfs:range rdfs:Class ;
 	rdfs:domain rdfs:Resource .
