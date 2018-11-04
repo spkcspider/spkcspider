@@ -39,6 +39,8 @@ def hash_entry(triple):
     else:
         if triple[2].datatype:
             h.update(triple[2].datatype.encode("utf8"))
+        else:
+            h.update(XSD.string.encode("utf8"))
         h.update(triple[2].value.encode("utf8"))
     return h.digest()
 
