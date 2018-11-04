@@ -144,15 +144,17 @@ class ComponentPublicIndex(ListView):
                 ),
                 raw=self.request.GET["raw"]
             )
-            comp_ref = URIRef(url)
+            ref_component = URIRef(url)
             g.add(
                 (
-                    meta_ref, namesp_meta.usercomponent, comp_ref
+                    meta_ref, spkcgraph["#usercomponent"], ref_component
                 )
             )
-            g.add((comp_ref, namesp.name, Literal(component.__str__())))
-            g.add(
-                (comp_ref, namesp.description, Literal(component.description))
+            add_property(
+                g, "name", ref=ref_component, literal=component.__str__()
+            )
+            add_property(
+                g, "description", ref=ref_component, ob=component
             )
 
         ret = HttpResponse(

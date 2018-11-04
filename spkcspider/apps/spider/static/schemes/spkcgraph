@@ -1,0 +1,21 @@
+@prefix spkc: <https://spkcspider.net/static/schemes/spkcgraph#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+
+<http://www.w3.org/1999/02/22-rdf-syntax-ns#> a owl:Ontology ;
+	dc:title "The spkcgraph format" ;
+	dc:description "This is the spkcgraph format used by spkcspider." .
+
+spkc:name a rdfs:Datatype ;
+	rdfs:subClassOf rdfs:Literal ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "HTML" ;
+	rdfs:comment "The datatype of RDF literals storing fragments of HTML content" .
+
+spkc:type a rdf:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "type" ;
+	rdfs:comment "The subject is the class type of a property." ;
+	rdfs:range rdfs:Class ;
+	rdfs:domain rdfs:Resource .
