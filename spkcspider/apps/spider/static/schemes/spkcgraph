@@ -10,7 +10,7 @@
 spkc:name a rdfs:Datatype ;
 	rdfs:subClassOf rdfs:Literal ;
 	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-	rdfs:label "HTML" ;
+	rdfs:label "name" ;
 	rdfs:comment "The datatype of RDF literals storing fragments of HTML content" .
 
 spkc:type a rdf:Property ;

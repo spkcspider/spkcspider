@@ -63,7 +63,7 @@ def serialize_content(graph, content, context, embed=False):
     graph.add((
         ref_content,
         spkcgraph["#type"],
-        Literal("AssignedContent")
+        Literal("Content")
     ))
     add_property(
         graph, "info", ref=ref_content, ob=content

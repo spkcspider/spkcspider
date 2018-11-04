@@ -150,6 +150,11 @@ class ComponentPublicIndex(ListView):
                     meta_ref, spkcgraph["#usercomponent"], ref_component
                 )
             )
+            g.add(
+                (
+                    ref_component, spkcgraph["#type"], Literal("UserComponent")
+                )
+            )
             add_property(
                 g, "name", ref=ref_component, literal=component.__str__()
             )
