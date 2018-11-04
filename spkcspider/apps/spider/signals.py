@@ -64,7 +64,9 @@ def InitUserCallback(sender, instance, **kwargs):
         defaults={"strength": 10},
         name="index", user=instance
     )[0]
-    for name, is_public in getattr(settings, "DEFAULT_USERCOMPONENTS", {}):
+    for name, is_public in getattr(
+        settings, "DEFAULT_USERCOMPONENTS", {}
+    ).items():
         strength = 0 if is_public else 5
         UserComponent.objects.get_or_create_component(
             defaults={"strength": strength, "public": is_public},
