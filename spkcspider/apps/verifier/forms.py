@@ -2,6 +2,7 @@ __all__ = ["CreateEntryForm"]
 
 from itertools import chain
 import logging
+import base64
 
 from django import forms
 from django.forms import widgets
@@ -32,9 +33,13 @@ _source_file_help = _("""
 
 def hash_entry(triple):
     h = get_hashob()
-    if triple[2].datatype:
+    if triple[2].datatype == XSD.base64Binary:
         h.update(triple[2].datatype.encode("utf8"))
-    h.update(triple[2].value.encode("utf8"))
+        h.update(triple[2].toPython())
+    else:
+        if triple[2].datatype:
+            h.update(triple[2].datatype.encode("utf8"))
+        h.update(triple[2].value.encode("utf8"))
     return h.digest()
 
 
@@ -248,7 +253,7 @@ class CreateEntryForm(forms.ModelForm):
                 )
                 return
             h = get_hashob()
-            h.update(XSD.base64Binary)
+            h.update(XSD.base64Binary.encode("utf8"))
             for chunk in resp.iter_content(BUFFER_SIZE):
                 h.update(chunk)
             self.cleaned_data["linked_hashes"][i[2].value] = h.hexdigest()
