@@ -64,14 +64,15 @@ def InitUserCallback(sender, instance, **kwargs):
         defaults={"strength": 10},
         name="index", user=instance
     )[0]
-    for name, is_public in getattr(
-        settings, "DEFAULT_USERCOMPONENTS", {}
-    ).items():
-        strength = 0 if is_public else 5
-        UserComponent.objects.get_or_create_component(
-            defaults={"strength": strength, "public": is_public},
-            name=name, user=instance
-        )
+    if kwargs.get("created", False):
+        for name, is_public in getattr(
+            settings, "DEFAULT_USERCOMPONENTS", {}
+        ).items():
+            strength = 0 if is_public else 5
+            UserComponent.objects.get_or_create_component(
+                defaults={"strength": strength, "public": is_public},
+                name=name, user=instance
+            )
     require_save = False
     login = Protection.objects.filter(code="login").first()
     if login:
