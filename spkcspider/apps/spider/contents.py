@@ -28,6 +28,9 @@ installed_contents = {}
 # don't spam set objects
 _empty_set = set()
 
+# never use these names
+forbidden_names = ["Content", "UserComponent"]
+
 # updated attributes of ContentVariant
 _attribute_list = ["name", "ctype", "strength"]
 
@@ -58,6 +61,8 @@ def initialize_content_models(apps=None):
         if len(appearances) == 1:
             update = True
         for dic in appearances:
+            assert dic["name"] not in forbidden_names, \
+                "Forbidden content name: %" % dic["name"]
             if update:
                 variant = ContentVariant.objects.get_or_create(
                     defaults=dic, code=code
@@ -302,7 +307,15 @@ class BaseContent(models.Model):
             try:
                 value = field.to_python(raw_value)
             except Exception as exc:
-                # user can corrupt tags
+                # user can corrupt tags, so just debug
+                level = logging.WARNING
+                if getattr(form, "layout_generating_form", False):
+                    level = logging.DEBUG
+                logging.log(
+                    level,
+                    "Corrupted field: %s, form: %s, error: %s",
+                    name, form, exc
+                )
                 continue
             value_node = BNode()
             newname, hashable = self.transform_field(name, form, context)
