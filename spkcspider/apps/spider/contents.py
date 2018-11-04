@@ -335,7 +335,7 @@ class BaseContent(models.Model):
                 type_, encoded = self.map_data(name, i, context)
                 graph.add((
                     value_node,
-                    namesp[type_],
+                    spkcgraph[type_],
                     encoded
                 ))
 
