@@ -61,7 +61,7 @@ def InitUserCallback(sender, instance, **kwargs):
     from .models import UserComponent, Protection, AssignedProtection, UserInfo
 
     uc = UserComponent.objects.get_or_create_component(
-        defaults={"strength": 10},
+        defaults={"strength": 10, "public": False},
         name="index", user=instance
     )[0]
     if kwargs.get("created", False):

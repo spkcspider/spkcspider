@@ -8,19 +8,6 @@ from .models import (
 
 # Register your models here.
 
-
-class AssignedProtectionInline(admin.TabularInline):
-    model = AssignedProtection
-    fields = [
-        'protection', 'created', 'modified', 'active', 'data', 'instant_fail'
-    ]
-    readonly_fields = ['created', 'modified']
-    fk_name = 'usercomponent'
-    extra = 0
-
-    # users should not be able to edit here
-
-
 @admin.register(AssignedContent)
 class UserContentAdmin(admin.ModelAdmin):
     fields = ['info', 'created', 'modified', 'deletion_requested', 'nonce']
@@ -61,6 +48,18 @@ class UserContentAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request, obj=None):
         return False
+
+
+class AssignedProtectionInline(admin.TabularInline):
+    model = AssignedProtection
+    fields = [
+        'protection', 'created', 'modified', 'active', 'data', 'instant_fail'
+    ]
+    readonly_fields = ['created', 'modified']
+    fk_name = 'usercomponent'
+    extra = 0
+
+    # users should not be able to edit here
 
 
 class UserContentInline(admin.TabularInline):
