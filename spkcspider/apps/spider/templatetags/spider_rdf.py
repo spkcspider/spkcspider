@@ -2,24 +2,20 @@ from django import template
 
 from rdflib import BNode
 
-from ..constants.static import namespaces_spkcspider
+from ..constants.static import spkcgraph
 
 register = template.Library()
 
 
 @register.simple_tag()
-def bnode():
+def bnode(ob=None):
+    if ob:
+        return BNode(ob.pk)
     return BNode()
 
 
 @register.simple_tag()
-def namespace(ob, sub=None):
-    if isinstance(ob, str):
-        nname = ob
-    else:
-        nname = ob._meta.model_name
-
-    ret = getattr(namespaces_spkcspider, nname)
+def namespace(sub=None):
     if sub:
-        ret = ret[sub]
-    return ret
+        return spkcgraph[sub]
+    return spkcgraph

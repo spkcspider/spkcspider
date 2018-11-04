@@ -92,7 +92,7 @@ def embed_file_default(name, value, content, context):
         value.size < getattr(settings, "MAX_EMBED_SIZE", 4000000) or
         override
     ):
-        return ("value", Literal(
+        return ("#value", Literal(
             base64.b64encode(value.read()),
             datatype=XSD.base64Binary,
             normalize=False
@@ -105,7 +105,7 @@ def embed_file_default(name, value, content, context):
         url = value.url
         if "://" not in getattr(settings, "MEDIA_URL", ""):
             url = "{}{}".format(context["hostpart"], url)
-        return ("url", Literal(
+        return ("#url", Literal(
             url,
             datatype=XSD.anyURI,
         ))
@@ -116,7 +116,7 @@ def embed_file_default(name, value, content, context):
             context["hostpart"],
             url, context["context"]["spider_GET"].urlencode()
         )
-        return ("url", Literal(
+        return ("#url", Literal(
             url,
             datatype=XSD.anyURI,
         ))

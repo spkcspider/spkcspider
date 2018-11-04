@@ -27,7 +27,7 @@ from ..models import (
 )
 from ..forms import UserContentForm
 from ..helpers import get_settings_func
-from ..constants import namespaces_spkcspider
+from ..constants import spkcgraph
 from ..serializing import paginated_contents, serialize_stream
 
 
@@ -344,7 +344,6 @@ class ContentIndex(UCTestMixin, ListView):
             "hostpart": context["hostpart"],
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
-        namesp_meta = namespaces_spkcspider.meta
         g = Graph()
 
         embed = False
@@ -369,15 +368,14 @@ class ContentIndex(UCTestMixin, ListView):
                 "%a, %d %b %Y %H:%M:%S %z"
             )
             if page <= 1:
-                g.add((
-                    session_dict["sourceref"],
-                    namesp_meta.expires,
-                    Literal(self.request.token_expires)
-                ))
+                add_property(
+                    g, "token_expires", ob=session_dict["request"],
+                    ref=session_dict["sourceref"]
+                )
         if page <= 1:
             g.add((
                 session_dict["sourceref"],
-                namesp_meta.scope,
+                spkcgraph["#scope"],
                 Literal(context["scope"])
             ))
 

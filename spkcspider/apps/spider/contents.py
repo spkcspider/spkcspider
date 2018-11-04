@@ -18,10 +18,9 @@ from django.utils.translation import pgettext
 from rdflib import Literal, Graph, BNode, URIRef
 from rdflib.namespace import XSD
 
-from .constants import UserContentType, namespaces_spkcspider
+from .constants import UserContentType, spkcgraph
 from .serializing import paginated_contents, serialize_stream
-from .helpers import merge_get_url
-from .helpers import get_settings_func
+from .helpers import merge_get_url, get_settings_func, add_property
 
 
 installed_contents = {}
@@ -279,12 +278,11 @@ class BaseContent(models.Model):
             Literal(data)
         )
 
-    def get_field_types(self, name, form, context):
-        namesp = namespaces_spkcspider.content
+    def transform_field(self, name, form, context):
         if self.hashed_fields and name in self.hashed_fields:
-            return name, namesp["hashable/"]
+            return name, True
         else:
-            return name, namesp["info/"]
+            return name, False
 
     def serialize(self, graph, content_ref, context):
         form = self.get_form(context["scope"])(
@@ -295,7 +293,7 @@ class BaseContent(models.Model):
         )
         graph.add((
             content_ref,
-            namespaces_spkcspider.content["type"],
+            spkcgraph["#type"],
             Literal(self.associated.getlist("type", 1)[0])
         ))
 
@@ -307,17 +305,27 @@ class BaseContent(models.Model):
                 # user can corrupt tags
                 continue
             value_node = BNode()
-            newname, namesp = self.get_field_types(name, form, context)
+            newname, hashable = self.transform_field(name, form, context)
 
             graph.add((
                 content_ref,
-                namesp+"field",
+                spkcgraph["#property"],
                 value_node
             ))
             graph.add((
                 value_node,
-                namesp+"name",
+                spkcgraph["#hashable"],
+                Literal(hashable)
+            ))
+            graph.add((
+                value_node,
+                spkcgraph["#name"],
                 Literal(newname)
+            ))
+            graph.add((
+                value_node,
+                spkcgraph["#fieldname"],
+                Literal(name)
             ))
 
             if not isinstance(value, (list, tuple, models.QuerySet)):
@@ -327,7 +335,7 @@ class BaseContent(models.Model):
                 type_, encoded = self.map_data(name, i, context)
                 graph.add((
                     value_node,
-                    namesp+type_,
+                    namesp[type_],
                     encoded
                 ))
 
@@ -357,7 +365,7 @@ class BaseContent(models.Model):
             "context": kwargs,
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
-            "ac_namespace": namespaces_spkcspider.meta.content,
+            "ac_namespace": spkcgraph["#content"],
             "sourceref": URIRef(kwargs["hostpart"] + kwargs["request"].path)
         }
 
@@ -382,15 +390,14 @@ class BaseContent(models.Model):
                 "%a, %d %b %Y %H:%M:%S %z"
             )
             if page <= 1:
-                g.add((
-                    session_dict["sourceref"],
-                    namespaces_spkcspider.meta.expires,
-                    Literal(kwargs["request"].token_expires)
-                ))
+                add_property(
+                    g, "token_expires", ob=session_dict["request"],
+                    ref=session_dict["sourceref"]
+                )
         if page <= 1:
             g.add((
                 session_dict["sourceref"],
-                namespaces_spkcspider.meta.scope,
+                spkcgraph["#scope"],
                 Literal(kwargs["scope"])
             ))
 

@@ -4,25 +4,25 @@
     <li class="" resource="{% bnode %}" typeof="field">
       <div class="">
         <div class="w3-cell w3-padding">
-          <div property="name" content="{{field.name}}">{{ field.label_tag }}</div>
+          <div property="#name" content="{{field.name}}">{{ field.label_tag }}</div>
           {% if field.field.widget.input_type == "select" %}
             {% if field.field.queryset %}
               <ul class="w3-white">
                 {% for q in field.field.queryset %}
-                  <li><a property="url" href="{{q.get_absolute_url}}">{{q}}</a></li>
+                  <li><a property="#url" href="{{q.get_absolute_url}}">{{q}}</a></li>
                 {% endfor %}
               </ul>
             {% else %}
               <ul class="w3-white">
                 {% for q in field.value %}
-                  <li property="value">{{q}}</li>
+                  <li property="#value">{{q}}</li>
                 {% endfor %}
               </ul>
             {% endif %}
           {% elif field|widget_type == "url" %}
-            <a property="url" class="w3-white" href={{field.value}}>{{field.name}}</a>
+            <a property="#url" class="w3-white" href={{field.value}}>{{field.name}}</a>
           {% else %}
-            <span property="value" class="w3-white">{{field.value}}</span>
+            <span property="#value" class="w3-white">{{field.value}}</span>
           {% endif %}
         </div>
       </div>

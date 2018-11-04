@@ -6,7 +6,7 @@
 
 <form class="w3-padding" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}
-  <fieldset vocab="{% namespace 'content' %}" resource="{{ request.path }}">
+  <fieldset vocab="{% namespace %}" resource="{{ request.path }}">
     <legend><h2>{% trans 'Content Settings' %}</h2></legend>
     {% include "spider_base/base_form.html" with form=form %}
   </fieldset>

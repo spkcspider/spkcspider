@@ -1,7 +1,7 @@
 __all__ = (
     "token_nonce", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
-    "merge_get_url"
+    "merge_get_url", "add_property"
 )
 
 
@@ -15,15 +15,34 @@ from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 from functools import lru_cache
 from importlib import import_module
 
+from rdflib import Literal, BNode
 
 from django.conf import settings
-from .constants.static import MAX_NONCE_SIZE
+from .constants.static import MAX_NONCE_SIZE, spkcgraph
 
 # for not spamming sets
 _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
 
+def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
+    value_node = BNode()
+    if ref:
+        graph.add((
+            ref, spkcgraph["#property"],
+            value_node
+        ))
+    graph.add((
+        value_node, spkcgraph["#name"],
+        Literal(name)
+    ))
+    if not literal:
+        literal = getattr(ob, name)
+    graph.add((
+        value_node, spkcgraph["#value"],
+        Literal(literal, datatype=datatype)
+    ))
+    return value_node
 
 @lru_cache(maxsize=None)
 def get_settings_func(name, default):

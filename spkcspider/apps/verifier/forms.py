@@ -15,7 +15,7 @@ from rdflib import Graph, URIRef
 from rdflib.namespace import XSD
 
 from spkcspider.apps.spider.helpers import merge_get_url
-from spkcspider.apps.spider.constants.static import namespaces_spkcspider
+from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.helpers import get_settings_func
 
 from .models import DataVerificationTag
@@ -165,11 +165,7 @@ class CreateEntryForm(forms.ModelForm):
                 code="invalid_file"
             )
 
-        namesp = namespaces_spkcspider.content["hashable/"]
-        namesp_meta = namespaces_spkcspider.meta
-        namesp_content = namespaces_spkcspider.content
-
-        tmp = list(g.triples((None, namesp_meta.scope, None)))
+        tmp = list(g.triples((None, spkcgraph["#scope"], None)))
         if len(tmp) != 1:
             raise forms.ValidationError(
                 _("invalid graph, scopes: %(scope)s"),
@@ -177,15 +173,15 @@ class CreateEntryForm(forms.ModelForm):
                 code="invalid_graph"
             )
         start = tmp[0][0]
-        scope = tmp[0][2].value
-        tmp = g.objects((start, namesp_meta.pages, None))
+        scope = tmp[0][2].toPython()
+        tmp = g.objects((start, spkcgraph["#pages:num_pages"], None))
         if len(tmp) != 1:
             raise forms.ValidationError(
                 _("invalid graph, pages: %(page)s"),
                 params={"page": tmp},
                 code="invalid_graph"
             )
-        pages = tmp[0][2].value
+        pages = tmp[0][2].toPython()
         if pages != 1:
             raise forms.ValidationError(
                 _("Multipage graphs not supported yet, sorry"),
@@ -218,16 +214,19 @@ class CreateEntryForm(forms.ModelForm):
                 code="invalid_type"
             )
             return
+        hashable_nodes = g.subjects(
+            predicate=spkcgraph["#hashable"], object=Literal(True)
+        )
 
         hashes = [
             hash_entry(i) for i in
             chain(
-                g.triples((None, namesp + "name", None)),
-                g.triples((None, namesp + "value", None))
+                g.triples((hashable_nodes, spkcgraph["#name"], None)),
+                g.triples((hashable_nodes, spkcgraph["#value"], None))
             )
         ]
         self.cleaned_data["linked_hashes"] = {}
-        for i in g.triples((None, namesp + "url", None)):
+        for i in g.triples((hashable_nodes, spkcgraph["#url"], None)):
             if (URIRef(i[2].value), None, None) in g:
                 continue
             url = merge_get_url(i[2].value, raw="embed")

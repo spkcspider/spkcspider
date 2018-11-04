@@ -2,7 +2,7 @@
 __all__ = (
     "ProtectionType", "UserContentType", "ProtectionResult",
     "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
-    "TokenCreationError", "namespaces_spkcspider", "index_names"
+    "TokenCreationError", "index_names", "spkcgraph"
 )
 
 import enum
@@ -11,19 +11,7 @@ from collections import namedtuple
 from rdflib.namespace import Namespace
 
 
-_namespaces_spkcspider = namedtuple(
-    "namespaces_spkcspider",
-    (
-        "base", "content", "usercomponent", "protection", "meta",
-    )
-)
-namespaces_spkcspider = _namespaces_spkcspider(
-    Namespace("https://spkcspider.net/schemes/"),
-    *(
-        Namespace("https://spkcspider.net/schemes/{}/".format(item))
-        for item in _namespaces_spkcspider._fields[1:]
-    )
-)
+spkcgraph = Namespace("https://spkcspider.net/static/schemes/spkcgraph")
 
 
 hex_size_of_bigid = 16

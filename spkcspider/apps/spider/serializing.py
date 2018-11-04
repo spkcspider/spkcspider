@@ -13,8 +13,8 @@ from django.utils.translation import gettext as _
 from rdflib import URIRef, Literal
 
 
-from .constants.static import namespaces_spkcspider
-from .helpers import merge_get_url
+from .constants.static import spkcgraph
+from .helpers import merge_get_url, add_property
 
 
 def serialize_content(graph, content, context, embed=False):
@@ -38,7 +38,7 @@ def serialize_content(graph, content, context, embed=False):
         graph.add(
             (
                 ref_component,
-                namespaces_spkcspider.usercomponent.contents,
+                spkcgraph["#contents"],
                 ref_content
             )
         )
@@ -49,7 +49,6 @@ def serialize_content(graph, content, context, embed=False):
             ref_content
         ))
 
-    namesp = namespaces_spkcspider.content
     token = getattr(context["request"], "auth_token", None)
     if token:
         token = token.token
@@ -57,12 +56,18 @@ def serialize_content(graph, content, context, embed=False):
     graph.add(
         (
             ref_content,
-            namesp["action/view"],
+            spkcgraph["#action:view"],
             URIRef(url2)
         )
     )
-    graph.add((ref_content, namesp.id, Literal(content.get_id())))
-    graph.add((ref_content, namesp.info, Literal(content.info)))
+    graph.add((
+        ref_content,
+        spkcgraph["#type"],
+        Literal("AssignedContent")
+    ))
+    add_property(
+        graph, "info", ref=ref_content, ob=content
+    )
     if embed:
         content.content.serialize(graph, ref_content, context)
     return ref_content
@@ -82,7 +87,6 @@ def serialize_component(graph, component, context):
         )
     ):
         return ref_component
-    namesp = namespaces_spkcspider.usercomponent
     token = getattr(context["request"], "auth_token", None)
     if token:
         token = token.token
@@ -90,24 +94,24 @@ def serialize_component(graph, component, context):
     graph.add(
         (
             ref_component,
-            namesp["action/view"],
+            spkcgraph["#action:view"],
             URIRef(url2)
         )
     )
     if component.public or context["scope"] == "export":
-        graph.add((ref_component, namesp.name, Literal(component.__str__())))
-        graph.add(
-            (ref_component, namesp.description, Literal(component.description))
+        add_property(
+            graph, "name", ref=ref_component, literal=component.__str__()
+        )
+        add_property(
+            graph, "description", ref=ref_component, ob=component
         )
     if context["scope"] == "export":
-        graph.add((
-            ref_component, namesp.required_passes,
-            Literal(component.required_passes)
-        ))
-        graph.add((
-            ref_component, namesp.token_duration,
-            Literal(component.token_duration)
-        ))
+        add_property(
+            graph, "required_passes", ref=ref_component, ob=component
+        )
+        add_property(
+            graph, "token_duration", ref=ref_component, ob=component
+        )
     if context.get("uc_namespace", None):
         graph.add((
             context["sourceref"],
@@ -141,12 +145,12 @@ def serialize_stream(graph, paginator, context, page=1, embed=False):
     if page <= 1:
         graph.add((
             context["sourceref"],
-            namespaces_spkcspider.meta.pages,
+            spkcgraph["#pages:num_pages"],
             Literal(paginator.num_pages)
         ))
         graph.add((
             context["sourceref"],
-            namespaces_spkcspider.meta.page_size,
+            spkcgraph["#pages:size_page"],
             Literal(paginator.per_page)
         ))
     try:

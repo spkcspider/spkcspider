@@ -24,9 +24,9 @@ from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import UserComponent, TravelProtection, AssignedContent
-from ..constants import namespaces_spkcspider
+from ..constants import spkcgraph
 from ..serializing import paginated_contents, serialize_stream
-from ..helpers import merge_get_url
+from ..helpers import merge_get_url, add_property
 
 
 class ComponentPublicIndex(ListView):
@@ -134,9 +134,8 @@ class ComponentPublicIndex(ListView):
         if self.request.GET.get("raw", "") != "true":
             return super().render_to_response(context)
         meta_ref = URIRef(context["hostpart"] + self.request.path)
-        namesp_meta = namespaces_spkcspider.meta
         g = Graph()
-        g.add((meta_ref, namesp_meta.scope, Literal("list")))
+        g.add((meta_ref, spkcgraph["#scope"], Literal("list")))
         for component in context["object_list"]:
             url = merge_get_url(
                 urljoin(
@@ -151,7 +150,6 @@ class ComponentPublicIndex(ListView):
                     meta_ref, namesp_meta.usercomponent, comp_ref
                 )
             )
-            namesp = namespaces_spkcspider.usercomponent
             g.add((comp_ref, namesp.name, Literal(component.__str__())))
             g.add(
                 (comp_ref, namesp.description, Literal(component.description))
@@ -307,10 +305,9 @@ class ComponentIndex(UCTestMixin, ListView):
             "scope": self.scope,
             "expires": None,
             "hostpart": context["hostpart"],
-            "uc_namespace": namespaces_spkcspider.meta.usercomponent,
+            "uc_namespace": spkcgraph["#usercomponent"],
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
-        namesp_meta = namespaces_spkcspider.meta
 
         contents = AssignedContent.objects.filter(
             usercomponent__in=context["object_list"]
@@ -328,7 +325,7 @@ class ComponentIndex(UCTestMixin, ListView):
         if page <= 1:
             g.add((
                 session_dict["sourceref"],
-                namesp_meta.scope,
+                spkcgraph["#scope"],
                 Literal(context["scope"])
             ))
 
