@@ -134,7 +134,7 @@ class UserComponentForm(forms.ModelForm):
                 if not protection.cleaned_data.get("active", False):
                     continue
 
-                if len(str(protection.cleaned_data)) > 1_000_000:
+                if len(str(protection.cleaned_data)) > 1000000:
                     raise forms.ValidationError(
                         _("Protection >1 mb: %(name)s"),
                         params={"name": protection}
