@@ -61,21 +61,22 @@ def InitUserCallback(sender, instance, **kwargs):
     from .models import UserComponent, Protection, AssignedProtection, UserInfo
 
     uc = UserComponent.objects.get_or_create_component(
-        defaults={"strength": 10, "public": False},
+        defaults={"public": False},
         name="index", user=instance
     )[0]
     if kwargs.get("created", False):
         for name, is_public in getattr(
             settings, "DEFAULT_USERCOMPONENTS", {}
         ).items():
-            strength = 0 if is_public else 5
+            # get_or_create_component calculates strength, ...
             UserComponent.objects.get_or_create_component(
-                defaults={"strength": strength, "public": is_public},
+                defaults={"public": is_public},
                 name=name, user=instance
             )
     require_save = False
     login = Protection.objects.filter(code="login").first()
     if login:
+        # get_or_create_component calculates strength, ...
         asp = AssignedProtection.objects.get_or_create(
             defaults={"active": True},
             usercomponent=uc, protection=login
@@ -86,6 +87,7 @@ def InitUserCallback(sender, instance, **kwargs):
 
     if getattr(settings, "USE_CAPTCHAS", False):
         captcha = Protection.objects.filter(code="captcha").first()
+        # get_or_create_component calculates strength, ...
         asp = AssignedProtection.objects.get_or_create(
             defaults={"active": True},
             usercomponent=uc, protection=captcha

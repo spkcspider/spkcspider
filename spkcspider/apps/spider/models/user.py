@@ -61,9 +61,9 @@ class UserComponentManager(models.Manager):
                 defaults["required_passes"] = 1
                 defaults["strength"] = 10
             elif defaults["public"]:
-                defaults["strength"] = 5
-            else:
                 defaults["strength"] = 0
+            else:
+                defaults["strength"] = 5
             return (self.create(**defaults), True)
 
 

@@ -117,11 +117,11 @@ class UserComponentAdmin(admin.ModelAdmin):
     actions = ["feature", "unfeature"]
     fields = [
         'user', 'name', 'created', 'modified', 'featured', 'public',
-        'description', 'nonce', 'required_passes', 'deletion_requested',
-        'token_duration'
+        'strength', 'description', 'nonce', 'required_passes',
+        'deletion_requested', 'token_duration'
     ]
-    readonly_fields = ['created', 'modified', 'featured']
-    list_display = ('name', 'username', 'modified', 'featured')
+    readonly_fields = ['created', 'modified', 'featured', 'strength']
+    list_display = ('name', 'username', 'strength', 'featured', 'modified')
     view_on_site = True
 
     def feature(self, request, queryset):
