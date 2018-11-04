@@ -358,6 +358,7 @@ class BaseContent(models.Model):
         return self.render_form(**kwargs)
 
     def render_serialize(self, **kwargs):
+        from .models import AssignedContent
         # ** creates copy of dict, so it is safe to overwrite kwargs here
 
         session_dict = {
@@ -372,7 +373,7 @@ class BaseContent(models.Model):
         g = Graph()
 
         p = paginated_contents(
-            models.QuerySet(self.associated),
+            AssignedContent.objects.filter(id=self.associated.id),
             getattr(settings, "SERIALIZED_PER_PAGE", 50)
         )
         page = 1
