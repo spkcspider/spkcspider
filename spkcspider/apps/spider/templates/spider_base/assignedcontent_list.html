@@ -1,5 +1,5 @@
 {% extends "spider_base/uc_base.html" %}
-{% load i18n static spider_base spider_rdf %}
+{% load i18n static spider_base spider_paging spider_rdf %}
 {% block title %}{% if uc.public %}{% blocktrans trimmed %}
   Content of:
 {% endblocktrans %} {{uc}} ({{uc.username}}){% else %}{% blocktrans trimmed %}
@@ -67,7 +67,9 @@
     </div>
     {% endif %}
   </div>
-  {% if uc.user == request.user %}
+  {% list_parameters "search" as cur_search %}
+  {% list_parameters "info" as cur_info %}
+  {% if uc.user == request.user and not cur_search and not cur_info %}
     <details class="w3-margin" style="margin-bottom:30px" {% if object_list|length < 2 %}open="open"{% endif %}>
       <summary class="w3-button w3-hover-dark-grey w3-black">
         <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
