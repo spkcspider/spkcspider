@@ -375,7 +375,7 @@ class ContentIndex(UCTestMixin, ListView):
         if page <= 1:
             g.add((
                 session_dict["sourceref"],
-                spkcgraph["#scope"],
+                spkcgraph["scope"],
                 Literal(context["scope"])
             ))
 

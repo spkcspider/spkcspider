@@ -135,7 +135,7 @@ class ComponentPublicIndex(ListView):
             return super().render_to_response(context)
         meta_ref = URIRef(context["hostpart"] + self.request.path)
         g = Graph()
-        g.add((meta_ref, spkcgraph["#scope"], Literal("list")))
+        g.add((meta_ref, spkcgraph["scope"], Literal("list")))
         for component in context["object_list"]:
             url = urljoin(
                 context["hostpart"],
@@ -144,12 +144,12 @@ class ComponentPublicIndex(ListView):
             ref_component = URIRef(url)
             g.add(
                 (
-                    meta_ref, spkcgraph["#usercomponent"], ref_component
+                    meta_ref, spkcgraph["components"], ref_component
                 )
             )
             g.add(
                 (
-                    ref_component, spkcgraph["#type"], Literal("UserComponent")
+                    ref_component, spkcgraph["type"], Literal("UserComponent")
                 )
             )
             add_property(
@@ -309,7 +309,7 @@ class ComponentIndex(UCTestMixin, ListView):
             "scope": self.scope,
             "expires": None,
             "hostpart": context["hostpart"],
-            "uc_namespace": spkcgraph["#usercomponent"],
+            "uc_namespace": spkcgraph["components"],
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
 
@@ -329,7 +329,7 @@ class ComponentIndex(UCTestMixin, ListView):
         if page <= 1:
             g.add((
                 session_dict["sourceref"],
-                spkcgraph["#scope"],
+                spkcgraph["scope"],
                 Literal(context["scope"])
             ))
 

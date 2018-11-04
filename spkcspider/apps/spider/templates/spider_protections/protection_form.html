@@ -1,5 +1,5 @@
 {% load spider_rdf %}
 <span resource="{% namespace 'protection' name %}">
-<input type="hidden" name="protection_codes" property="#code" content="{{name}}" value="{{name}}" />
+<input type="hidden" name="protection_codes" property="code" content="{{name}}" value="{{name}}" />
 {% include "spider_base/base_form.html" with form=form %}
 </span>

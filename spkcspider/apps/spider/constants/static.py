@@ -11,7 +11,7 @@ from collections import namedtuple
 from rdflib.namespace import Namespace
 
 
-spkcgraph = Namespace("https://spkcspider.net/static/schemes/spkcgraph")
+spkcgraph = Namespace("https://spkcspider.net/static/schemes/spkcgraph#")
 
 
 hex_size_of_bigid = 16

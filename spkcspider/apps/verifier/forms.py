@@ -165,7 +165,7 @@ class CreateEntryForm(forms.ModelForm):
                 code="invalid_file"
             )
 
-        tmp = list(g.triples((None, spkcgraph["#scope"], None)))
+        tmp = list(g.triples((None, spkcgraph["scope"], None)))
         if len(tmp) != 1:
             raise forms.ValidationError(
                 _("invalid graph, scopes: %(scope)s"),
@@ -174,7 +174,7 @@ class CreateEntryForm(forms.ModelForm):
             )
         start = tmp[0][0]
         scope = tmp[0][2].toPython()
-        tmp = g.objects((start, spkcgraph["#pages:num_pages"], None))
+        tmp = g.objects((start, spkcgraph["pages:num_pages"], None))
         if len(tmp) != 1:
             raise forms.ValidationError(
                 _("invalid graph, pages: %(page)s"),
@@ -215,18 +215,18 @@ class CreateEntryForm(forms.ModelForm):
             )
             return
         hashable_nodes = g.subjects(
-            predicate=spkcgraph["#hashable"], object=Literal(True)
+            predicate=spkcgraph["hashable"], object=Literal(True)
         )
 
         hashes = [
             hash_entry(i) for i in
             chain(
-                g.triples((hashable_nodes, spkcgraph["#name"], None)),
-                g.triples((hashable_nodes, spkcgraph["#value"], None))
+                g.triples((hashable_nodes, spkcgraph["name"], None)),
+                g.triples((hashable_nodes, spkcgraph["value"], None))
             )
         ]
         self.cleaned_data["linked_hashes"] = {}
-        for i in g.triples((hashable_nodes, spkcgraph["#url"], None)):
+        for i in g.triples((hashable_nodes, spkcgraph["url"], None)):
             if (URIRef(i[2].value), None, None) in g:
                 continue
             url = merge_get_url(i[2].value, raw="embed")

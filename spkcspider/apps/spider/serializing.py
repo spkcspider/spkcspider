@@ -38,7 +38,7 @@ def serialize_content(graph, content, context, embed=False):
         graph.add(
             (
                 ref_component,
-                spkcgraph["#contents"],
+                spkcgraph["contents"],
                 ref_content
             )
         )
@@ -56,13 +56,13 @@ def serialize_content(graph, content, context, embed=False):
     graph.add(
         (
             ref_content,
-            spkcgraph["#action:view"],
+            spkcgraph["action:view"],
             URIRef(url2)
         )
     )
     graph.add((
         ref_content,
-        spkcgraph["#type"],
+        spkcgraph["type"],
         Literal("Content")
     ))
     add_property(
@@ -94,7 +94,7 @@ def serialize_component(graph, component, context):
     graph.add(
         (
             ref_component,
-            spkcgraph["#action:view"],
+            spkcgraph["action:view"],
             URIRef(url2)
         )
     )
@@ -145,12 +145,12 @@ def serialize_stream(graph, paginator, context, page=1, embed=False):
     if page <= 1:
         graph.add((
             context["sourceref"],
-            spkcgraph["#pages:num_pages"],
+            spkcgraph["pages:num_pages"],
             Literal(paginator.num_pages)
         ))
         graph.add((
             context["sourceref"],
-            spkcgraph["#pages:size_page"],
+            spkcgraph["pages:size_page"],
             Literal(paginator.per_page)
         ))
     try:

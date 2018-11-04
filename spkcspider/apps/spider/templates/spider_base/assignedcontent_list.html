@@ -57,7 +57,7 @@
       {% endif %}
     </h1>
     {% if uc.description %}
-      <div class="w3-white w3-center" property="#description">
+      <div class="w3-white w3-center" property="description">
         {{uc.description|linebreaks}}
       </div>
     {% endif %}
@@ -94,17 +94,17 @@
     </details>
   {% endif %}
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="content">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="contents">
       {% for content in object_list %}
         <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}">
           <td class="" style="width:20%; min-height:48px" >
             <span about="{% bnode %}" typeof="property">
-              <data hidden="hidden" property="#name">short-title</data>
-              <data property="#value">{{ content.content|truncatechars:50 }}</data>
+              <data hidden="hidden" property="name">short-title</data>
+              <data property="value">{{ content.content|truncatechars:50 }}</data>
             </span>
             <data hidden="hidden" about="{% bnode %}" typeof="property">
-              <data hidden="hidden" property="#name">item</data>
-              <data hidden="hidden" property="#value">{{ content.info}}</data>
+              <data hidden="hidden" property="name">item</data>
+              <data hidden="hidden" property="value">{{ content.info}}</data>
             </data>
           </td>
           <td>
@@ -116,16 +116,16 @@
           </td>
           <td class="w3-show-inline-block">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" property="#action:view">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" property="action:view">
                 <div class="spkc-item-button"><i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "View" %}</div></span>
               </a>
               {% if uc.user == request.user  %}
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}" property="#action:update">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}" property="action:update">
                 <div class="spkc-item-button"><i class="fa fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "Edit" %}</div></span>
               </a>
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="#action:delete">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="action:delete">
                 <div class="spkc-item-button"><i class="fa fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "Del" %}</div></span>
               </a>

@@ -293,7 +293,7 @@ class BaseContent(models.Model):
         )
         graph.add((
             content_ref,
-            spkcgraph["#type"],
+            spkcgraph["type"],
             Literal(self.associated.getlist("type", 1)[0])
         ))
 
@@ -309,22 +309,22 @@ class BaseContent(models.Model):
 
             graph.add((
                 content_ref,
-                spkcgraph["#property"],
+                spkcgraph["property"],
                 value_node
             ))
             graph.add((
                 value_node,
-                spkcgraph["#hashable"],
+                spkcgraph["hashable"],
                 Literal(hashable)
             ))
             graph.add((
                 value_node,
-                spkcgraph["#name"],
+                spkcgraph["name"],
                 Literal(newname)
             ))
             graph.add((
                 value_node,
-                spkcgraph["#fieldname"],
+                spkcgraph["fieldname"],
                 Literal(name)
             ))
 
@@ -365,7 +365,7 @@ class BaseContent(models.Model):
             "context": kwargs,
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
-            "ac_namespace": spkcgraph["#content"],
+            "ac_namespace": spkcgraph["content"],
             "sourceref": URIRef(kwargs["hostpart"] + kwargs["request"].path)
         }
 
@@ -397,7 +397,7 @@ class BaseContent(models.Model):
         if page <= 1:
             g.add((
                 session_dict["sourceref"],
-                spkcgraph["#scope"],
+                spkcgraph["scope"],
                 Literal(kwargs["scope"])
             ))
 

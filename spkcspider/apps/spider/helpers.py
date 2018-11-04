@@ -29,17 +29,17 @@ def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
     value_node = BNode()
     if ref:
         graph.add((
-            ref, spkcgraph["#property"],
+            ref, spkcgraph["property"],
             value_node
         ))
     graph.add((
-        value_node, spkcgraph["#name"],
+        value_node, spkcgraph["name"],
         Literal(name)
     ))
     if not literal:
         literal = getattr(ob, name)
     graph.add((
-        value_node, spkcgraph["#value"],
+        value_node, spkcgraph["value"],
         Literal(literal, datatype=datatype)
     ))
     return value_node
