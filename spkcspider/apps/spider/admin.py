@@ -52,14 +52,18 @@ class UserContentAdmin(admin.ModelAdmin):
 
 class AssignedProtectionInline(admin.TabularInline):
     model = AssignedProtection
+    # protection field is not possible (and shouldn't, can corrupt data)
+    # data is too dangerous, admin should not have access to e.g. pws
     fields = [
-        'protection', 'created', 'modified', 'active', 'data', 'instant_fail'
+        'created', 'modified', 'active', 'instant_fail'
     ]
     readonly_fields = ['created', 'modified']
     fk_name = 'usercomponent'
     extra = 0
 
-    # users should not be able to edit here
+    def has_add_permission(self, request, obj=None):
+        # adding protection doesn't make sense without data
+        return False
 
 
 class UserContentInline(admin.TabularInline):
