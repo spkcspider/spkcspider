@@ -490,45 +490,50 @@ class BaseContent(models.Model):
     def clean(self):
         if self._associated_tmp:
             self._associated_tmp.content = self
-        a = self.associated
-        a.info = self.get_info()
-        a.strength = self.get_strength()
-        a.strength_link = self.get_strength_link()
-        a.full_clean(exclude=["content"])
+        assignedcontent = self.associated
+        assignedcontent.info = self.get_info()
+        assignedcontent.strength = self.get_strength()
+        assignedcontent.strength_link = self.get_strength_link()
+        assignedcontent.full_clean(exclude=["content"])
         # persist AssignedContent for saving
-        self._associated_tmp = a
+        self._associated_tmp = assignedcontent
         self._content_is_cleaned = True
 
     def save(self, *args, **kwargs):
         if settings.DEBUG:
             assert self._content_is_cleaned, "try to save uncleaned content"
         super().save(*args, **kwargs)
-        a = self.associated
+        assignedcontent = self.associated
         if settings.DEBUG:
-            assert a.content, "associated lacks \"self\" as content"
-        update_id = False
-        if not getattr(a, "id", None):
-            update_id = True
+            assert assignedcontent.content, \
+                "associated lacks \"self\" as content"
+        created = False
+        if not getattr(assignedcontent, "id", None):
+            created = True
         # update info and set content
-        a.save()
-        if update_id:
+        assignedcontent.save()
+        if created:
             # add id to info
-            if "\nprimary\n" not in a.info:
-                a.info = a.info.replace(
-                    "\nid=None\n", "\nid={}\n".format(a.id), 1
+            if "\nprimary\n" not in assignedcontent.info:
+                assignedcontent.info = assignedcontent.info.replace(
+                    "\nid=None\n", "\nid={}\n".format(
+                        assignedcontent.id
+                    ), 1
                 )
                 # second save required
-                a.save()
+                assignedcontent.save(update_fields=["info"])
         # needs id first
-        a.references.set(self.get_references())
+        assignedcontent.references.set(self.get_references())
         # update fakes
         fakes = self.associated_rel.filter(fake_id__isnull=False)
         fakes.update(
-            info=a.info, strength=a.strength, strength_link=a.strength_link,
-            nonce=a.nonce
+            info=assignedcontent.info,
+            strength=assignedcontent.strength,
+            strength_link=assignedcontent.strength_link,
+            nonce=assignedcontent.nonce
         )
         # update references of fakes
         for i in fakes:
-            i.references.set(a.references)
+            i.references.set(assignedcontent.references)
         # require cleaning again
         self._content_is_cleaned = False
