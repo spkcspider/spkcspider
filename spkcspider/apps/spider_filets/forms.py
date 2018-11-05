@@ -99,7 +99,7 @@ class TextForm(forms.ModelForm):
     def __init__(self, request, source, scope, **kwargs):
         super().__init__(**kwargs)
         self.fields["editable_from"].to_field_name = "name"
-        if scope == "update":
+        if scope in ("add", "update"):
             self.fields["editable_from"].queryset = \
                 self.fields["editable_from"].queryset.filter(
                     user=request.user

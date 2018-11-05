@@ -111,14 +111,14 @@ class BaseContent(models.Model):
     # if created associated is None (will be set later)
     # use usercomponent in form instead
     associated_rel = GenericRelation("spider_base.AssignedContent")
-    _associated2 = None
+    _associated_tmp = None
 
     _content_is_cleaned = False
 
     @property
     def associated(self):
-        if self._associated2:
-            return self._associated2
+        if self._associated_tmp:
+            return self._associated_tmp
         return self.associated_rel.filter(fake_id__isnull=True).first()
 
     # if static_create is used and class not saved yet
@@ -132,7 +132,7 @@ class BaseContent(models.Model):
     def static_create(cls, associated=None, **kwargs):
         ob = cls()
         if associated:
-            ob._associated2 = associated
+            ob._associated_tmp = associated
         ob.kwargs = kwargs
         return ob
 
@@ -472,12 +472,14 @@ class BaseContent(models.Model):
                 )
         else:
             # simulates beeing not unique, by adding id
-            # id is from this model, because assigned maybe not ready
+            assignedid = "None"  # placeholder
+            if getattr(self.associated, "id", None):
+                assignedid = self.associated.id
             return "\ncode=%s\ntype=%s\nid=%s\n" % \
                 (
                     self._meta.model_name,
                     self.associated.ctype.name,
-                    self.id if self.id else "None"  # placeholder
+                    assignedid
                 )
 
     def full_clean(self, **kwargs):
@@ -486,29 +488,37 @@ class BaseContent(models.Model):
         return super().full_clean(**kwargs)
 
     def clean(self):
-        if self._associated2:
-            self._associated2.content = self
+        if self._associated_tmp:
+            self._associated_tmp.content = self
         a = self.associated
         a.info = self.get_info()
         a.strength = self.get_strength()
         a.strength_link = self.get_strength_link()
         a.full_clean(exclude=["content"])
+        # persist AssignedContent for saving
+        self._associated_tmp = a
         self._content_is_cleaned = True
 
     def save(self, *args, **kwargs):
+        if settings.DEBUG:
+            assert self._content_is_cleaned, "try to save uncleaned content"
         super().save(*args, **kwargs)
         a = self.associated
         if settings.DEBUG:
-            assert self._content_is_cleaned, "Uncleaned content committed"
-        if self._associated2:
-            a.content = self
+            assert a.content, "associated lacks \"self\" as content"
+        update_id = False
+        if not getattr(a, "id", None):
+            update_id = True
+        # update info and set content
+        a.save()
+        if update_id:
             # add id to info
             if "\nprimary\n" not in a.info:
                 a.info = a.info.replace(
-                    "\nid=None\n", "\nid={}\n".format(self.id), 1
+                    "\nid=None\n", "\nid={}\n".format(a.id), 1
                 )
-        # update info and set content
-        a.save()
+                # second save required
+                a.save()
         # needs id first
         a.references.set(self.get_references())
         # update fakes

@@ -25,6 +25,7 @@ _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
 
+
 def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
     value_node = BNode()
     if ref:
@@ -43,6 +44,7 @@ def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
         Literal(literal, datatype=datatype)
     ))
     return value_node
+
 
 @lru_cache(maxsize=None)
 def get_settings_func(name, default):

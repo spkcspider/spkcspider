@@ -208,7 +208,7 @@ class TextFilet(BaseContent):
 
     def render(self, **kwargs):
         source = kwargs.get("source", self.associated.usercomponent)
-        if self.editable_from.filter(
+        if kwargs["scope"] != "add" and self.editable_from.filter(
             pk=source.pk
         ).exists():
             if kwargs["request"].is_elevated_request:
