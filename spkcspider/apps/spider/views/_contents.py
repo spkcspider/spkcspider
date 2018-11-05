@@ -26,7 +26,7 @@ from ..models import (
     AssignedContent, ContentVariant, UserComponent
 )
 from ..forms import UserContentForm
-from ..helpers import get_settings_func
+from ..helpers import get_settings_func, add_property
 from ..constants import spkcgraph
 from ..serializing import paginated_contents, serialize_stream
 
@@ -355,7 +355,8 @@ class ContentIndex(UCTestMixin, ListView):
 
         p = paginated_contents(
             context["object_list"],
-            getattr(settings, "SERIALIZED_PER_PAGE", 50)
+            getattr(settings, "SERIALIZED_PER_PAGE", 50),
+            getattr(settings, "SERIALIZED_MAX_DEPTH", 20)
         )
         page = 1
         try:

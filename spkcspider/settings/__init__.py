@@ -201,6 +201,8 @@ CONTENTS_PER_PAGE = 25
 # how many raw/serialized results per page?
 # Note: verifier doesn't support multi page contents yet, so put it higher
 SERIALIZED_PER_PAGE = 50
+# max depth of references
+SERIALIZED_MAX_DEPTH = 20
 # how many search parameters are allowed
 MAX_SEARCH_PARAMETERS = 30
 

@@ -26,7 +26,7 @@ from ..contents import installed_contents
 from ..models import UserComponent, TravelProtection, AssignedContent
 from ..constants import spkcgraph
 from ..serializing import paginated_contents, serialize_stream
-from ..helpers import merge_get_url, add_property
+from ..helpers import add_property
 
 
 class ComponentPublicIndex(ListView):
@@ -319,7 +319,8 @@ class ComponentIndex(UCTestMixin, ListView):
         g = Graph()
         p = paginated_contents(
             contents,
-            getattr(settings, "SERIALIZED_PER_PAGE", 50)
+            getattr(settings, "SERIALIZED_PER_PAGE", 50),
+            getattr(settings, "SERIALIZED_MAX_DEPTH", 20)
         )
         page = 1
         try:

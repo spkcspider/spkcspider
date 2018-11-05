@@ -387,7 +387,8 @@ class BaseContent(models.Model):
 
         p = paginated_contents(
             AssignedContent.objects.filter(id=self.associated.id),
-            getattr(settings, "SERIALIZED_PER_PAGE", 50)
+            getattr(settings, "SERIALIZED_PER_PAGE", 50),
+            getattr(settings, "SERIALIZED_MAX_DEPTH", 20)
         )
         page = 1
         try:
