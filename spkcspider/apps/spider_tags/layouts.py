@@ -8,39 +8,53 @@ default_layouts["address"] = {
     "layout": [
         {
             "key": "name",
+            "localize": True,
+            "label": _("Name"),
             "field": "CharField",
             "max_length": 512
         },
         {
             "key": "place",
+            "localize": True,
+            "label": _("Street/Place"),
             "field": "CharField",
             "max_length": 512
         },
         {
             "key": "street_number",
+            "localize": True,
+            "label": _("Street Number"),
             "field": "CharField",
             "max_length": 10,
             "required": False
         },
         {
             "key": "city",
+            "localize": True,
+            "label": _("City"),
             "field": "CharField",
             "max_length": 256
         },
         {
             "key": "post_code",
+            "localize": True,
+            "label": _("Post Code"),
             "field": "CharField",
             "max_length": 20,
             "required": False
         },
         {
             "key": "country_area",
+            "localize": True,
+            "label": _("Country Area"),
             "field": "CharField",
             "max_length": 256,
             "required": False
         },
         {
             "key": "country_code",
+            "localize": True,
+            "label": _("Country Code"),
             "field": "CharField",
             "min_length": 2,
             "max_length": 3
@@ -111,6 +125,8 @@ default_layouts["emergency"] = {
     "layout": [
         {
             "key": "address",
+            "label": _("Adress Object"),
+            "localize": True,
             "field": "UserContentRefField",
             "modelname": "spider_tags.SpiderTag",
             "limit_choices_to": {
@@ -120,6 +136,8 @@ default_layouts["emergency"] = {
         },
         {
             "key": "contacts",
+            "label": _("Contacts"),
+            "localize": True,
             "initial": "",
             "field": "TextareaField",
             "required": False
@@ -194,6 +212,7 @@ default_layouts["emergency"] = {
         },
         {
             "key": "organs",
+            "localize": True,
             "label": _('In case of: "Special Organs", which?'),
             "field": "TextareaField",
             "required": False
