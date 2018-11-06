@@ -5,6 +5,7 @@ import bleach
 from bleach import sanitizer
 
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from django import forms
 
 from spkcspider.apps.spider.helpers import get_settings_func
@@ -98,8 +99,13 @@ class TextForm(forms.ModelForm):
 
     def __init__(self, request, source, scope, **kwargs):
         super().__init__(**kwargs)
-        self.fields["editable_from"].to_field_name = "name"
         if scope in ("add", "update"):
+            self.fields["editable_from"].help_text = \
+                _(
+                    "Allow editing from selected components."
+                    "Requires %s protection strength."
+                ) % settings.MIN_STRENGTH_EVELATION
+
             self.fields["editable_from"].queryset = \
                 self.fields["editable_from"].queryset.filter(
                     user=request.user

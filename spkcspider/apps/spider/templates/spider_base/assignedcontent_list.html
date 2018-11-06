@@ -100,9 +100,8 @@
       {% for content in object_list %}
         <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}">
           <td class="" style="width:20%; min-height:48px" >
-            <span about="{% bnode %}" typeof="property">
-              <data hidden="hidden" property="name">short-title</data>
-              <data property="value">{{ content.content|truncatechars:50 }}</data>
+            <span >
+              <span>{{ content.content|truncatechars:50 }}</span>
             </span>
             <data hidden="hidden" about="{% bnode %}" typeof="property">
               <data hidden="hidden" property="name">item</data>

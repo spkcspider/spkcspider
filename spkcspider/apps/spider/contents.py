@@ -358,7 +358,10 @@ class BaseContent(models.Model):
             "legend",
             _("Add \"%s\"") % self.__str__()
         )
+        # not visible by default
         kwargs.setdefault("confirm", _("Create"))
+        # prevent second button
+        kwargs.setdefault("no_button", True)
         return self.render_form(**kwargs)
 
     def render_update(self, **kwargs):
@@ -367,7 +370,10 @@ class BaseContent(models.Model):
             "legend",
             _("Update \"%s\"") % self.__str__()
         )
+        # not visible by default
         kwargs.setdefault("confirm", _("Update"))
+        # prevent second button
+        kwargs.setdefault("no_button", True)
         return self.render_form(**kwargs)
 
     def render_serialize(self, **kwargs):
@@ -505,9 +511,12 @@ class BaseContent(models.Model):
             assert self._content_is_cleaned, "try to save uncleaned content"
         super().save(*args, **kwargs)
         assignedcontent = self.associated
-        if settings.DEBUG:
-            assert assignedcontent.content, \
-                "associated lacks \"self\" as content"
+        if not assignedcontent.content:
+            # add requires this
+            assignedcontent.content = self
+            assignedcontent.info = self.get_info()
+            assignedcontent.strength = self.get_strength()
+            assignedcontent.strength_link = self.get_strength_link()
         created = False
         if not getattr(assignedcontent, "id", None):
             created = True

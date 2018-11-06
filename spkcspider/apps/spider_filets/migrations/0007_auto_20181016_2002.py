@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='textfilet',
             name='preview_words',
-            field=models.PositiveIntegerField(default=0, help_text='How many words from start should be used for search, seo, search machine preview (tags are stripped)?'),
+            field=models.PositiveIntegerField(default=0, help_text='How many words from start should be used for search, seo, search machine preview? (tags are stripped)'),
         ),
     ]

@@ -149,8 +149,7 @@ class TextFilet(BaseContent):
     name = models.CharField(max_length=255, null=False)
     editable_from = models.ManyToManyField(
         "spider_base.UserComponent", related_name="+",
-        help_text=_("Allow editing from selected components "
-                    "by privileged users."),
+        help_text=_("Allow editing from selected components."),
         blank=True
     )
 
@@ -158,7 +157,7 @@ class TextFilet(BaseContent):
         default=0,
         help_text=_(
             "How many words from start should be used for search, seo, "
-            "search machine preview (tags are stripped)?"
+            "search machine preview? (tags are stripped)"
         )
     )
 
@@ -173,6 +172,8 @@ class TextFilet(BaseContent):
         # view update form
         if scope == "update_user":
             return 'spider_base/edit_form.html'
+        elif scope == "view":
+            return 'spider_base/text.html'
         return super().get_template_name(scope)
 
     def get_info(self):
@@ -208,15 +209,16 @@ class TextFilet(BaseContent):
 
     def render(self, **kwargs):
         source = kwargs.get("source", self.associated.usercomponent)
+        kwargs["can_upgrade"] = False
         if kwargs["scope"] != "add" and self.editable_from.filter(
             pk=source.pk
         ).exists():
             if kwargs["request"].is_elevated_request:
-                kwargs["no_button"] = False
-                kwargs["legend"] = _("Update \"%s\" (guest)") % self.__str__()
-                kwargs["confirm"] = _("Update")
                 kwargs["can_upgrade"] = True
                 if kwargs["scope"] == "update_user":
+                    kwargs["no_button"] = False
+                    kwargs["legend"] = \
+                        _("Update \"%s\" (guest)") % self.__str__()
                     return self.render_update(**kwargs)
         return super().render(**kwargs)
 

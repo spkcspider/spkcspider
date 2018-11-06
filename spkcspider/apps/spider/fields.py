@@ -2,6 +2,7 @@
 from django.forms import fields
 from .widgets import OpenChoiceWidget
 
+
 class OpenChoiceField(fields.MultipleChoiceField):
     widget = OpenChoiceWidget
     validate_choice = None
