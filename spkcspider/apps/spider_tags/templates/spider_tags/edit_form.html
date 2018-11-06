@@ -1,5 +1,6 @@
 {% load i18n %}
-<table>
+{% include "spider_base/edit_form.html" %}
+<table class="w3-border" style="width:100%">
   <tr><th>{% trans "List of verifiers:" %}</th></tr>
   {% for verifier in object.layout.default_verifiers %}
     <tr>
@@ -11,4 +12,3 @@
     </tr>
   {% endfor %}
 </table>
-{% include "spider_base/edit_form.html" %}

@@ -1,14 +1,20 @@
 {% load spider_rdf %}
 {% include "spider_base/form_errors.html" with form=form %}
-<form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post" {% if namespace_form %}vocab="{% namespace namespace_form %}" resource="{{ request.get_full_path }}"{% endif %}>
+<{% if not inner_form %}form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post"{% else %}div{% endif %}{% if include_namespace %}vocab="{% namespace %}" resource="{{ request.path }}"{% endif %}>
+  {% for rdftype in add_rdf_type %}
+  <data resource="{% bnode %}" hidden="hidden">
+    <data property="name" hidden="hidden">type</data>
+    <data property="value" hidden="hidden">{{rdftype}}</data>
+  </data>
+  {% endfor %}
   {% csrf_token %}
   <fieldset>
     <legend><h2>{{legend|safe}}</h2></legend>
     {% include "spider_base/base_form.html" with form=form %}
   </fieldset>
-  {% if not no_button %}
+  {% if not inner_form %}
     <button class="w3-button w3-grey">
       {{confirm}}
     </button>
-  {% endif %}
-</form>
+    {% endif %}
+<{% if not inner_form %}/form{% else %}/div{% endif %}>

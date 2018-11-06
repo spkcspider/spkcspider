@@ -361,7 +361,8 @@ class BaseContent(models.Model):
         # not visible by default
         kwargs.setdefault("confirm", _("Create"))
         # prevent second button
-        kwargs.setdefault("no_button", True)
+        kwargs.setdefault("inner_form", True)
+        kwargs.setdefault("include_namespace", False)
         return self.render_form(**kwargs)
 
     def render_update(self, **kwargs):
@@ -373,7 +374,8 @@ class BaseContent(models.Model):
         # not visible by default
         kwargs.setdefault("confirm", _("Update"))
         # prevent second button
-        kwargs.setdefault("no_button", True)
+        kwargs.setdefault("inner_form", True)
+        kwargs.setdefault("include_namespace", False)
         return self.render_form(**kwargs)
 
     def render_serialize(self, **kwargs):
@@ -432,6 +434,7 @@ class BaseContent(models.Model):
         return ret
 
     def render_view(self, **kwargs):
+        _ = gettext
         if "raw" in kwargs["request"].GET:
             k = kwargs.copy()
             k["scope"] = "raw"
@@ -440,10 +443,14 @@ class BaseContent(models.Model):
         kwargs["form"] = self.get_form("view")(
             **self.get_form_kwargs(disable_data=True, **kwargs)
         )
-        kwargs.setdefault("namespace_form", "content")
+        kwargs.setdefault("include_namespace", True)
+        kwargs.setdefault("legend", _("View"))
         kwargs.setdefault(
-            "namespace_sub",
-            "{}/".format(self.associated.getlist("type", 1)[0])
+            "add_rdf_type",
+            [
+                self.associated.getlist("type", 1)[0],
+                "Content"
+            ]
         )
         return (
             render_to_string(
