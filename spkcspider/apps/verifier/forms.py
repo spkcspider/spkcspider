@@ -2,7 +2,7 @@ __all__ = ["CreateEntryForm"]
 
 from itertools import chain
 import logging
-import base64
+from tempfile import NamedTemporaryFile
 
 from django import forms
 from django.forms import widgets
@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import TemporaryUploadedFile
 
 import requests
-from rdflib import Graph, URIRef
+from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import XSD
 
 from spkcspider.apps.spider.helpers import merge_get_url
@@ -74,7 +74,7 @@ class CreateEntryForm(forms.ModelForm):
             self.fields["dvfile"].disabled = True
             self.fields["dvfile"].widget = widgets.HiddenInput()
 
-    def _verify_download_size(length):
+    def _verify_download_size(length, current_size=0):
         if not length or not length.isdigit():
             return False
         length = int(length)
@@ -84,6 +84,8 @@ class CreateEntryForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        _dvfile_scope = None
+        current_size = 0
         if not ret.get("url", None) and not ret.get("dvfile", None):
             raise forms.ValidationError(
                 _('Require either url or dvfile'),
@@ -122,21 +124,25 @@ class CreateEntryForm(forms.ModelForm):
                 return
 
             if not self._verify_download_size(
-                resp.headers.get("content-length", None)
+                resp.headers.get("content-length", None), current_size
             ):
                 self.add_error(
                     "url", forms.ValidationError(
                         _(
                             "Retrieval failed, no length specified, invalid\n"
-                            "or too long, length: %(length)s"
+                            "or too long, length: %(length)s, url: %(url)s"
                         ),
-                        params={"length": resp.headers.get(
-                            "content-length", None
-                        )},
+                        params={
+                            "length": resp.headers.get(
+                                "content-length", None
+                            ),
+                            "url": url
+                        },
                         code="invalid_length"
                     )
                 )
                 return
+            current_size += int(resp.headers["content-length"])
             self.cleaned_data["dvfile"] = TemporaryUploadedFile(
                 "url_uploaded", resp.headers.get(
                     'content-type', "application/octet-stream"
@@ -144,17 +150,20 @@ class CreateEntryForm(forms.ModelForm):
                 int(resp.headers["content-length"]),
                 "utf8"
             )
-            self._dvfile_scope = self.cleaned_data["dvfile"].open("wb")
-            for chunk in resp.iter_content(BUFFER_SIZE):
-                self._dvfile_scope.write(chunk)
-            self._dvfile_scope.seek(0, 0)
 
-        g = Graph()
+            _dvfile_scope = self.cleaned_data["dvfile"].open("wb")
+            for chunk in resp.iter_content(BUFFER_SIZE):
+                _dvfile_scope.write(chunk)
+            _dvfile_scope.seek(0, 0)
+        _graph_store = NamedTemporaryFile()
+        g = Graph('Sleepycat', identifier='mygraph')
+        g.open(_graph_store.name, create=True)
         try:
             g.parse(
                 self.cleaned_data["dvfile"].temporary_file_path(),
                 format="turtle"
             )
+            self.cleaned_data["dvfile"].close()
         except Exception as exc:
             with open(self.cleaned_data["dvfile"].temporary_file_path()) as f:
                 logging.error(f.read())
@@ -182,18 +191,23 @@ class CreateEntryForm(forms.ModelForm):
                 code="invalid_graph"
             )
         pages = tmp[0][2].toPython()
-        if pages != 1:
-            raise forms.ValidationError(
-                _("Multipage graphs not supported yet, sorry"),
-                code="not_supported"
-            )
+        view_url = None
+        if pages > 1:
+            tmp = g.objects((start, spkcgraph["action:view"], None))
+            if len(tmp) != 1:
+                raise forms.ValidationError(
+                    _("invalid graph, view url: %(url)s"),
+                    params={"url": tmp},
+                    code="invalid_graph"
+                )
+            view_url = tmp[0][2].toPython()
         mtype = None
         if scope == "list":
             mtype = "UserComponent"
         else:
             mtype = list(g.triples(
                 (
-                    start, namesp_content.type, None
+                    start, spkcgraph["type"], None
                 )
             ))
             if len(mtype) > 0:
@@ -214,6 +228,81 @@ class CreateEntryForm(forms.ModelForm):
                 code="invalid_type"
             )
             return
+
+        # retrieve further pages
+        for page in range(2, pages+1):
+            url = merge_get_url(view_url, raw="embed", page=str(page))
+            if not settings.DEBUG and not url.startswith("https://"):
+                raise forms.ValidationError(
+                    _('Insecure url scheme: %(url)s'),
+                    params={"url": url},
+                    code="insecure_scheme"
+                )
+                return
+            try:
+                resp = requests.get(url, stream=True)
+            except requests.exceptions.ConnectionError:
+                raise forms.ValidationError(
+                    _('invalid url: %(url)s'),
+                    params={"url": url},
+                    code="invalid_url"
+                )
+                return
+            if resp.status_code != 200:
+                raise forms.ValidationError(
+                    _("Retrieval failed: %s") % resp.reason,
+                    code=str(resp.status_code)
+                )
+                return
+
+            if not self._verify_download_size(
+                resp.headers.get("content-length", None), current_size
+            ):
+                raise forms.ValidationError(
+                    _(
+                        "Retrieval failed, no length specified, invalid\n"
+                        "or too long, length: %(length)s, url: %(url)s"
+                    ),
+                    params={
+                        "length": resp.headers.get(
+                            "content-length", None
+                        ),
+                        "url": url
+                    },
+                    code="invalid_length"
+                )
+                return
+            current_size += int(resp.headers["content-length"])
+            self.cleaned_data["dvfile"] = TemporaryUploadedFile(
+                "url_uploaded", resp.headers.get(
+                    'content-type', "application/octet-stream"
+                ),
+                int(resp.headers["content-length"]),
+                "utf8"
+            )
+
+            _dvfile_scope = self.cleaned_data["dvfile"].open("wb")
+            for chunk in resp.iter_content(BUFFER_SIZE):
+                _dvfile_scope.write(chunk)
+            _dvfile_scope.seek(0, 0)
+            try:
+                g.parse(
+                    self.cleaned_data["dvfile"].temporary_file_path(),
+                    format="turtle"
+                )
+                self.cleaned_data["dvfile"].close()
+            except Exception as exc:
+                with open(
+                    self.cleaned_data["dvfile"].temporary_file_path()
+                ) as f:
+                    logging.error(f.read())
+                logging.exception(exc)
+                raise forms.ValidationError(
+                    _("not a \"%(format)s\" file"),
+                    params={"format": "turtle"},
+                    code="invalid_file"
+                )
+
         hashable_nodes = g.subjects(
             predicate=spkcgraph["hashable"], object=Literal(True)
         )
@@ -260,7 +349,7 @@ class CreateEntryForm(forms.ModelForm):
             self.cleaned_data["linked_hashes"][i[2].value] = h.hexdigest()
             hashes.append(h.digest())
 
-        for i in g.subjects(namesp + "id", None):
+        for i in g.subjects(spkcgraph["type"], Literal("Content")):
             h = get_hashob()
             h.update(i.encode("utf8"))
             hashes.append(h.digest())
@@ -270,6 +359,11 @@ class CreateEntryForm(forms.ModelForm):
         for i in hashes:
             h.update(i)
         self.cleaned_data["hash"] = h.hexdigest()
+        self.cleaned_data["dvfile"] = TemporaryUploadedFile(
+            "url_uploaded", "text/turtle", None, "utf8"
+        )
+        _sdvfile_scope = self.cleaned_data["dvfile"].open("w")
+        self.cleaned_data["dvfile"].serialize(_sdvfile_scope, format="turtle")
         self.fields["linked_hashes"].initial = \
             self.cleaned_data["linked_hashes"]
         self.fields["hash"].initial = self.cleaned_data["hash"]
