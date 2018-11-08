@@ -156,7 +156,7 @@ class CreateEntryForm(forms.ModelForm):
                 _dvfile_scope.write(chunk)
             _dvfile_scope.seek(0, 0)
         _graph_store = NamedTemporaryFile()
-        g = Graph('Sleepycat', identifier='mygraph')
+        g = Graph('Sleepycat', identifier='spkcgraph')
         g.open(_graph_store.name, create=True)
         try:
             g.parse(
