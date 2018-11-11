@@ -1,7 +1,7 @@
 __all__ = ["CreateEntryForm"]
 
-from itertools import chain
 import logging
+import binascii
 from tempfile import NamedTemporaryFile
 
 from django import forms
@@ -29,6 +29,7 @@ _source_url_help = _("""
 _source_file_help = _("""
     File with data to verify
 """)
+hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
 
 
 def hash_entry(triple):
@@ -45,6 +46,18 @@ def hash_entry(triple):
     return h.digest()
 
 
+def yield_hashes(graph, hashable_nodes):
+    for t in graph.triples((None, None, None)):
+        if t[0] in hashable_nodes and t[1] in hashable_predicates:
+            yield hash_entry(t)
+
+
+def yield_hashable_urls(graph, hashable_nodes):
+    for t in graph.triples((None, spkcgraph["url"], None)):
+        if t[0] in hashable_nodes:
+            yield t
+
+
 class CreateEntryForm(forms.ModelForm):
     url = forms.URLField(help_text=_source_url_help)
     MAX_FILE_SIZE = forms.CharField(
@@ -54,16 +67,13 @@ class CreateEntryForm(forms.ModelForm):
 
     class Meta:
         model = DataVerificationTag
-        fields = ["dvfile", "hash", "linked_hashes", "data_type"]
+        fields = ["dvfile", "hash", "data_type"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["hash"].required = False
         self.fields["hash"].disabled = True
         self.fields["hash"].widget = widgets.HiddenInput()
-        self.fields["linked_hashes"].required = False
-        self.fields["linked_hashes"].disabled = True
-        self.fields["linked_hashes"].widget = widgets.HiddenInput()
         self.fields["data_type"].required = False
         self.fields["data_type"].disabled = True
         self.fields["data_type"].widget = widgets.HiddenInput()
@@ -164,9 +174,13 @@ class CreateEntryForm(forms.ModelForm):
                 format="turtle"
             )
             self.cleaned_data["dvfile"].close()
+            del self.cleaned_data["dvfile"]
         except Exception as exc:
-            with open(self.cleaned_data["dvfile"].temporary_file_path()) as f:
-                logging.error(f.read())
+            if settings.DEBUG:
+                with open(
+                    self.cleaned_data["dvfile"].temporary_file_path()
+                ) as f:
+                    logging.error(f.read())
             logging.exception(exc)
             raise forms.ValidationError(
                 _("not a \"%(format)s\" file"),
@@ -281,44 +295,41 @@ class CreateEntryForm(forms.ModelForm):
                 "utf8"
             )
 
-            _dvfile_scope = self.cleaned_data["dvfile"].open("wb")
             for chunk in resp.iter_content(BUFFER_SIZE):
-                _dvfile_scope.write(chunk)
-            _dvfile_scope.seek(0, 0)
+                self.cleaned_data["dvfile"].write(chunk)
+            self.cleaned_data["dvfile"].seek(0, 0)
             try:
                 g.parse(
                     self.cleaned_data["dvfile"].temporary_file_path(),
                     format="turtle"
                 )
                 self.cleaned_data["dvfile"].close()
+                del self.cleaned_data["dvfile"]
             except Exception as exc:
-                with open(
-                    self.cleaned_data["dvfile"].temporary_file_path()
-                ) as f:
-                    logging.error(f.read())
+                if settings.DEBUG:
+                    with open(
+                        self.cleaned_data["dvfile"].temporary_file_path()
+                    ) as f:
+                        logging.error(f.read())
                 logging.exception(exc)
+                # pages could have changed, but still incorrect
                 raise forms.ValidationError(
-                    _("not a \"%(format)s\" file"),
-                    params={"format": "turtle"},
+                    _("%(page)s is not a \"%(format)s\" file"),
+                    params={"format": "turtle", "page": page},
                     code="invalid_file"
                 )
 
-        hashable_nodes = g.subjects(
+        hashable_nodes = set(g.subjects(
             predicate=spkcgraph["hashable"], object=Literal(True)
-        )
+        ))
 
         hashes = [
-            hash_entry(i) for i in
-            chain(
-                g.triples((hashable_nodes, spkcgraph["name"], None)),
-                g.triples((hashable_nodes, spkcgraph["value"], None))
-            )
+            i for i in yield_hashes(g, hashable_nodes)
         ]
-        self.cleaned_data["linked_hashes"] = {}
-        for i in g.triples((hashable_nodes, spkcgraph["url"], None)):
-            if (URIRef(i[2].value), None, None) in g:
+        for t in yield_hashable_urls(g, hashable_nodes):
+            if (URIRef(t[2].value), None, None) in g:
                 continue
-            url = merge_get_url(i[2].value, raw="embed")
+            url = merge_get_url(t[2].value, raw="embed")
             if not settings.DEBUG and not url.startswith("https://"):
                 raise forms.ValidationError(
                     _('Insecure url scheme: %(url)s'),
@@ -346,8 +357,24 @@ class CreateEntryForm(forms.ModelForm):
             h.update(XSD.base64Binary.encode("utf8"))
             for chunk in resp.iter_content(BUFFER_SIZE):
                 h.update(chunk)
-            self.cleaned_data["linked_hashes"][i[2].value] = h.hexdigest()
-            hashes.append(h.digest())
+            # do not use add as it could be corrupted by user
+            # can be provided by user too
+            g.set((
+                URIRef(t[2].value),
+                spkcgraph["hash"],
+                Literal(h.hexdigest())
+            ))
+
+        # make sure triples are linked to start
+        # (user can provide arbitary data)
+        g.remove((start, spkcgraph["hashed"], None))
+        for t in g.triples((None, spkcgraph["hash"], None)):
+            g.add((
+                start,
+                spkcgraph["hashed"],
+                t[0]
+            ))
+            hashes.append(binascii.unhexlify(t[2].value))
 
         for i in g.subjects(spkcgraph["type"], Literal("Content")):
             h = get_hashob()
@@ -359,13 +386,19 @@ class CreateEntryForm(forms.ModelForm):
         for i in hashes:
             h.update(i)
         self.cleaned_data["hash"] = h.hexdigest()
+        # replace dvfile by combined file
         self.cleaned_data["dvfile"] = TemporaryUploadedFile(
             "url_uploaded", "text/turtle", None, "utf8"
         )
-        _sdvfile_scope = self.cleaned_data["dvfile"].open("w")
-        self.cleaned_data["dvfile"].serialize(_sdvfile_scope, format="turtle")
-        self.fields["linked_hashes"].initial = \
-            self.cleaned_data["linked_hashes"]
+        g.serialize(
+            self.cleaned_data["dvfile"], format="turtle"
+        )
+        self.cleaned_data["dvfile"].size = \
+            self.cleaned_data["dvfile"].tell()
+        self.cleaned_data["dvfile"].seek(0, 0)
+        # delete graph
+        del g
+        # make sure, that updated data is used
         self.fields["hash"].initial = self.cleaned_data["hash"]
         self.fields["dvfile"].initial = self.cleaned_data["dvfile"]
         self.fields["data_type"].initial = self.cleaned_data["data_type"]
