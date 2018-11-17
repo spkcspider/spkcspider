@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 
+
 from .views import (
     ComponentIndex, ComponentPublicIndex, ComponentCreate,
     ComponentUpdate, ComponentDelete
@@ -60,7 +61,7 @@ urlpatterns = [
 
     path(
         'ucs/list/<int:id>/<slug:nonce>/',
-        cache_page(120)(ContentIndex.as_view()),
+        ContentIndex.as_view(),
         name='ucontent-list'
     ),
     path(
@@ -90,7 +91,7 @@ urlpatterns = [
     ),
     path(
         'ucs/',
-        ComponentPublicIndex.as_view(is_home=False),
+        cache_page(600)(ComponentPublicIndex.as_view(is_home=False)),
         name='ucomponent-listpublic'
     ),
 ]
