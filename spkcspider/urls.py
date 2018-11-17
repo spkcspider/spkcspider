@@ -72,8 +72,9 @@ if 'django.contrib.flatpages' in settings.INSTALLED_APPS:
     )
 
 urlpatterns += [
-    path('favicon.ico', favicon_view),
-    path('robots.txt', robots_view),
+    # daily
+    path('favicon.ico', cache_page(86400)(favicon_view)),
+    path('robots.txt', cache_page(86400)(robots_view)),
     path(
         '',
         ComponentPublicIndex.as_view(
@@ -81,11 +82,13 @@ urlpatterns += [
         ),
         name="home"
     ),
+    # daily
     path('sitemap.xml',
          cache_page(86400)(sitemaps_views.index),
          {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemaps'}),
+    # hourly
     path('sitemap-<section>.xml',
-         cache_page(86400)(sitemaps_views.sitemap),
+         cache_page(3600)(sitemaps_views.sitemap),
          {'sitemaps': sitemaps}, name='sitemaps'),
 ]
 
