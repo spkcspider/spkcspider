@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth.decorators import login_required
-
+from django.views.decorators.cache import cache_page
 
 from .views import (
     ComponentIndex, ComponentPublicIndex, ComponentCreate,
@@ -60,7 +60,7 @@ urlpatterns = [
 
     path(
         'ucs/list/<int:id>/<slug:nonce>/',
-        ContentIndex.as_view(),
+        cache_page(120)(ContentIndex.as_view()),
         name='ucontent-list'
     ),
     path(

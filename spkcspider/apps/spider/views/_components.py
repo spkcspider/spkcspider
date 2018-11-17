@@ -8,6 +8,8 @@ from urllib.parse import urljoin
 
 from datetime import timedelta
 
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
@@ -33,6 +35,15 @@ class ComponentPublicIndex(ListView):
     model = UserComponent
     is_home = False
     allowed_GET_parameters = set(["protection", "raw"])
+
+    @method_decorator(cache_page, 3600)
+    def dispatch_cached(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def dispatch(self, request, *args, **kwargs):
+        if "raw" in request.GET:
+            return self.dispatch_cached(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
@@ -130,7 +141,7 @@ class ComponentPublicIndex(ListView):
             return ("user", "modified")
 
     def render_to_response(self, context):
-        # NEVER: allow embedding, things get much too big
+        # NEVER: allow embedding, things get too big
         if self.request.GET.get("raw", "") != "true":
             return super().render_to_response(context)
         meta_ref = URIRef(context["hostpart"] + self.request.path)
@@ -174,9 +185,18 @@ class ComponentIndex(UCTestMixin, ListView):
 
     user = None
 
-    def dispatch(self, request, *args, **kwargs):
+    def _dispatch(self, request, *args, **kwargs):
         self.user = self.get_user()
         return super().dispatch(request, *args, **kwargs)
+
+    @method_decorator(cache_page, 21600)
+    def dispatch_cached(self, request, *args, **kwargs):
+        return self._dispatch(request, *args, **kwargs)
+
+    def dispatch(self, request, *args, **kwargs):
+        if "raw" in request.GET:
+            return self.dispatch_cached(request, *args, **kwargs)
+        return self._dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
