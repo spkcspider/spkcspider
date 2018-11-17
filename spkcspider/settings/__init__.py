@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',  # for flatpages
     'django.contrib.flatpages',
+    'django.contrib.sitemaps',
     'spkcspider.apps.spider',
 ]
 try:

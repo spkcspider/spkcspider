@@ -22,6 +22,10 @@ from django.apps import apps
 from spkcspider.apps.spider.views import ComponentPublicIndex
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.functions import admin_login
+from django.contrib.sitemaps import views as sitemaps_views
+from django.views.decorators.cache import cache_page
+
+from spkcspider.apps.spider.sitemaps import sitemaps
 
 favicon_view = RedirectView.as_view(
     url='{}spider_base/favicon.svg'.format(settings.STATIC_URL), permanent=True
@@ -77,6 +81,12 @@ urlpatterns += [
         ),
         name="home"
     ),
+    path('sitemap.xml',
+         cache_page(86400)(sitemaps_views.index),
+         {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemaps'}),
+    path('sitemap-<section>.xml',
+         cache_page(86400)(sitemaps_views.sitemap),
+         {'sitemaps': sitemaps}, name='sitemaps'),
 ]
 
 if settings.DEBUG:
