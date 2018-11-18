@@ -9,19 +9,27 @@
       class="w3-button w3-black w3-display-topright">&times;</span>
       <h2>{% trans "QR/Export-Mode" %}</h2>
     </header>
-    <div class="w3-container">
-      <canvas id="qrcanvas"></canvas>
+    <div style="margin-bottom:10px">
+      <div class="w3-container w3-cell w3-mobile">
+        <canvas id="qrcanvas"></canvas>
+      </div>
+      <div id="use_access_token_wrapper" style="display:none" class="w3-container w3-cell w3-text-red w3-mobile">
+        <label class="w3-left">
+          <input type="checkbox" id="use_access_token" onchange="open_qrmodal()"{% if not request.is_owner %} checked="checked"{% endif %}></input>
+          {% trans "With access token" %}
+        </label>
+      </div>
     </div>
-    <div class="w3-container">
-      <div class="w3-text-black" id="remotelink_wrapper"  style="word-break: break-all">
+    <div class="w3-container w3-text-black">
+      <div class="" id="remotelink_wrapper"  style="word-break: break-all">
         {# important for href check, elsewise same url #}
         {% trans "Link"%}: <a type="text" href="#" id="remotelink"></a>
       </div>
-      <div class="w3-text-black" id="rawlink_wrapper"  style="word-break: break-all">
+      <div id="rawlink_wrapper"  style="word-break: break-all">
         {# important for href check, elsewise same url #}
         <a href="#" id="rawlink">{% trans "Raw" %}</a>
       </div>
-      <a class="w3-text-black" style="display:none; word-break: break-all" id="exportlink" href="">{% trans 'Export' %}</a>
+      <a style="display:none; word-break: break-all" id="exportlink" href="">{% trans 'Export' %}</a>
     </div>
     <div class="w3-container">
       <br/>
@@ -32,29 +40,43 @@
 <script type="text/javascript">
 var remotelink = "{{remotelink|escapejs}}";
 var exportlink = "{{exportlink|escapejs}}";
+var auth_token = "{{auth_token|escapejs}}";
 function open_qrmodal(){
   let _qrcanvas = document.getElementById('qrcanvas');
   let remotelink_link = document.getElementById('remotelink');
+  let use_access_token = document.getElementById('use_access_token');
+  let use_access_token_wrapper = document.getElementById('use_access_token_wrapper');
   let rawlink_link = document.getElementById('rawlink');
   let rawlink_wrapper = document.getElementById('rawlink_wrapper');
   let exportlink_link = document.getElementById('exportlink');
   rawlink_wrapper.style.display = "block";
-  if (remotelink_link.href != remotelink){
-    if (remotelink.slice(-1)=="?"){
-      rawlink_link.href = `${remotelink}raw=true`;
-    } else {
-      rawlink_link.href = `${remotelink}&raw=true`;
-    }
-    remotelink_link.href = remotelink;
-    remotelink_link.text = remotelink;
-    QRCode.toCanvas(
-      _qrcanvas, remotelink, {  },
-      function (error) {
-        if (error)
-          console.error(error)
-      }
-    )
+  let _remotelink = remotelink.slice();
+  if (auth_token==""){
+    use_access_token_wrapper.style.display = "none";
+  } else {
+    use_access_token_wrapper.style.display = "table-cell";
   }
+  if (auth_token != "" && use_access_token.checked){
+    if (_remotelink.slice(-1)=="?"){
+      _remotelink = `${_remotelink}token=${auth_token}`;
+    } else {
+      _remotelink = `${_remotelink}&token=${auth_token}`;
+    }
+  }
+  if (_remotelink.slice(-1)=="?"){
+    rawlink_link.href = `${_remotelink}raw=true`;
+  } else {
+    rawlink_link.href = `${_remotelink}&raw=true`;
+  }
+  remotelink_link.href = _remotelink;
+  remotelink_link.text = _remotelink;
+  QRCode.toCanvas(
+    _qrcanvas, _remotelink, {  },
+    function (error) {
+      if (error)
+        console.error(error)
+    }
+  )
   if (exportlink != "" && exportlink_link.href != exportlink){
     exportlink_link.href = exportlink;
     exportlink_link.style.display = "block";
