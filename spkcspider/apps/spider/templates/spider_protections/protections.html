@@ -2,7 +2,7 @@
 {% load spider_protections i18n spider_rdf %}
 {% block content %}
 {% extract_protections "protections" as protections %}
-<form action="{{ request.get_full_path }}" method="post" vocab="{% namespace %}" resource="{{ request.path }}" ">
+<form action="{{ request.get_full_path }}" method="post">
   {% csrf_token %}
   <data hidden="hidden" about="{% bnode %}" typeof="Property">
     <data hidden="hidden" property="name">amount</data>

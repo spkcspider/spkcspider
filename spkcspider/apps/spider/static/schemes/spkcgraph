@@ -108,6 +108,13 @@ spkc:hash rdf:type rdfs:Literal ;
 
 spkc:hashed rdf:type spkc:hash ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Hashed Objects" ;
   rdfs:comment "(Optional) hashed objects. Defined by verifier." ;
   rdfs:domain rdfs:Resource ;
   rdfs:range rdfs:Literal .
+
+
+spkc:protection rdf:type rdfs:Literal ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Protection Name" ;
+  rdfs:comment "The name of the protection" .
