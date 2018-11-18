@@ -144,7 +144,7 @@ class UserTestMixin(AccessMixin):
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
                 self.request.auth_token = token
-                if "token" not in self.request.GET:
+                if not token.session_key and "token" not in self.request.GET:
                     return self.replace_token()
                 if (
                     self.usercomponent.strength >=
