@@ -25,7 +25,7 @@
 {% endblock %}
 
 {% block content %}
-<div vocab="{% namespace %}" resource="{{ request.path }}">
+<div>
   <div class="w3-padding">
     {% if request.user == uc.user %}
       <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Up (Owned)' %}</a>
@@ -56,8 +56,12 @@
         {% endblocktrans %}
       {% endif %}
     </h1>
+    <data about="{% bnode %}" typeof="Property">
+      <data hidden="hidden" property="name">description</data>
+      <data hidden="hidden" property="value">{{uc.description}}</data>
+    </data>
     {% if uc.description %}
-      <div class="w3-white w3-center" property="description">
+      <div class="w3-white w3-center">
         {{uc.description|linebreaks}}
       </div>
     {% endif %}
@@ -96,14 +100,14 @@
     </details>
   {% endif %}
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="contents">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="Content">
       {% for content in object_list %}
         <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}">
           <td class="" style="width:20%; min-height:48px" >
             <span >
               <span>{{ content.content|truncatechars:50 }}</span>
             </span>
-            <data hidden="hidden" about="{% bnode %}" typeof="property">
+            <data hidden="hidden" about="{% bnode %}" typeof="Property">
               <data hidden="hidden" property="name">item</data>
               <data hidden="hidden" property="value">{{ content.info}}</data>
             </data>

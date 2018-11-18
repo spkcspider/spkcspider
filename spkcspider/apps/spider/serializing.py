@@ -38,7 +38,7 @@ def serialize_content(graph, content, context, embed=False):
         graph.add(
             (
                 ref_component,
-                spkcgraph["contents"],
+                spkcgraph["Content"],
                 ref_content
             )
         )
@@ -91,13 +91,16 @@ def serialize_component(graph, component, context):
     if token:
         token = token.token
     url2 = merge_get_url(url_component, token=token)
-    graph.add(
-        (
-            ref_component,
-            spkcgraph["action:view"],
-            URIRef(url2)
-        )
-    )
+    graph.add((
+        ref_component,
+        spkcgraph["action:view"],
+        URIRef(url2)
+    ))
+    graph.add((
+        ref_component,
+        spkcgraph["type"],
+        Literal("Component")
+    ))
     if component.public or context["scope"] == "export":
         add_property(
             graph, "name", ref=ref_component, literal=component.__str__()

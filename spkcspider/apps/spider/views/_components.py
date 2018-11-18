@@ -144,12 +144,12 @@ class ComponentPublicIndex(ListView):
             ref_component = URIRef(url)
             g.add(
                 (
-                    meta_ref, spkcgraph["components"], ref_component
+                    meta_ref, spkcgraph["Component"], ref_component
                 )
             )
             g.add(
                 (
-                    ref_component, spkcgraph["type"], Literal("UserComponent")
+                    ref_component, spkcgraph["type"], Literal("Component")
                 )
             )
             add_property(
@@ -309,7 +309,7 @@ class ComponentIndex(UCTestMixin, ListView):
             "scope": self.scope,
             "expires": None,
             "hostpart": context["hostpart"],
-            "uc_namespace": spkcgraph["components"],
+            "uc_namespace": spkcgraph["Component"],
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
 

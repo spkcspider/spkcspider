@@ -65,12 +65,12 @@
       {% endif %}
     </h1>
   </div>
-  <div class="w3-margin" vocab="{% namespace %}" resource="{{request.path}}">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="components">
+  <div class="w3-margin">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="Component">
       {% for uc in object_list %}
         <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}">
           <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px" >
-            <span about="{% bnode %}" typeof="property">
+            <span about="{% bnode %}" typeof="Property">
               <data hidden="hidden" property="name">name</data>
               {% if uc.is_index %}
                 <span property="value">{% trans 'Private Component' %}</span>
@@ -78,7 +78,7 @@
                 <span property="value">{{ uc.name }}</span>{% if not request.is_owner %} <em property="user">({{uc.user}})</em>{% endif %}
               {% endif %}
             </span>
-            <data hidden="hidden" about="{% bnode %}" typeof="property">
+            <data hidden="hidden" about="{% bnode %}" typeof="Property">
               <data hidden="hidden" property="name">description</data>
               <data hidden="hidden" property="value">{{uc.description|escape}}</data>
             </data>

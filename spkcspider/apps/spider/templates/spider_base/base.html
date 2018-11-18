@@ -117,7 +117,7 @@
         {% endif %}
       </header>
       {% endblock headerbar %}
-      <main class="{% block main_classes %}w3-padding{% endblock %}" id="content-main" style="margin-top: 20px">
+      <main class="{% block main_classes %}w3-padding{% endblock %}" id="content-main" style="margin-top: 20px" {% block main_attributes %}{% endblock %}>
       {% block messages %}
           {% if messages %}
           <ul class="messagelist">{% for message in messages %}

@@ -4,7 +4,7 @@
 {% extract_protections "protections" as protections %}
 <form action="{{ request.get_full_path }}" method="post" vocab="{% namespace %}" resource="{{ request.path }}" ">
   {% csrf_token %}
-  <data hidden="hidden" about="{% bnode %}" typeof="property">
+  <data hidden="hidden" about="{% bnode %}" typeof="Property">
     <data hidden="hidden" property="name">amount</data>
     <data hidden="hidden" property="value">{{protections|length}}</data>
   </data>
