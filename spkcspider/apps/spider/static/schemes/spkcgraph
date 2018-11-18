@@ -23,7 +23,7 @@ spkc:Component rdf:type rdfs:Class ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Component" ;
   rdfs:Container spkc:Property ;
-  rdfs:Container spkc:Content ;
+  "contents" spkc:Content ;
   rdfs:subClassOf spkc:Entity ;
   rdfs:comment "Container for contents. Defines Protections." .
 
@@ -31,7 +31,7 @@ spkc:Content rdf:type rdfs:Class ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Content" ;
   rdfs:Container spkc:Property ;
-  rdfs:ContainerMembershipProperty spkc:Component ;
+  "component" spkc:Component ;
   rdfs:subClassOf spkc:Entity ;
   rdfs:comment "Contains real content." .
 
@@ -113,6 +113,7 @@ spkc:hashed rdf:type spkc:hash ;
   rdfs:domain rdfs:Resource ;
   rdfs:range rdfs:Literal .
 
+# TODO: meta relations: contents, components
 
 spkc:protection rdf:type rdfs:Literal ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

@@ -38,7 +38,7 @@ def serialize_content(graph, content, context, embed=False):
         graph.add(
             (
                 ref_component,
-                spkcgraph["Content"],
+                spkcgraph["contents"],
                 ref_content
             )
         )

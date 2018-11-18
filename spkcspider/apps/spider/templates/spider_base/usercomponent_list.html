@@ -66,7 +66,7 @@
     </h1>
   </div>
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="Component">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="components">
       {% for uc in object_list %}
         <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}">
           <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px" >

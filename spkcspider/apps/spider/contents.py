@@ -387,7 +387,7 @@ class BaseContent(models.Model):
             "context": kwargs,
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
-            "ac_namespace": spkcgraph["content"],
+            "ac_namespace": spkcgraph["contents"],
             "sourceref": URIRef(kwargs["hostpart"] + kwargs["request"].path)
         }
 

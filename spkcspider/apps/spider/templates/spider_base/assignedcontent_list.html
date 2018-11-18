@@ -100,7 +100,7 @@
     </details>
   {% endif %}
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="Content">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="contents">
       {% for content in object_list %}
         <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}">
           <td class="" style="width:20%; min-height:48px" >
