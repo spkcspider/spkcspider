@@ -56,15 +56,16 @@
     <div  class="w3-margin">
       <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="components">
         {% for uc in object_list %}
-          <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}">
+          <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" vocab="{% namespace %}">
             <td style="width:40%; min-height:48px">
+              <data hidden="hidden" property="spkc:type">Component</data>
               <span about="{% bnode %}" rel="properties" typeof="Property">
                 <data hidden="hidden" property="name">name</data>
                 <span property="value">{{ uc.name }}</span>
               </span>
               <span about="{% bnode %}" rel="properties" typeof="Property">
                 <data hidden="hidden" property="name">user</data>
-                <em property="value">({{uc.user}})</em>
+                <em>(<data property="value">{{uc.user}}</data>)</em>
               </span>
               <data hidden="hidden" about="{% bnode %}"  rel="properties" typeof="Property">
                 <data hidden="hidden" property="name">description</data>

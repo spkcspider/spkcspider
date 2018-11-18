@@ -103,6 +103,9 @@ def serialize_component(graph, component, context):
     ))
     if component.public or context["scope"] == "export":
         add_property(
+            graph, "user", ref=ref_component, literal=component.username
+        )
+        add_property(
             graph, "name", ref=ref_component, literal=component.__str__()
         )
         add_property(

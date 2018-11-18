@@ -102,9 +102,10 @@
   <div class="w3-margin">
     <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="contents">
       {% for content in object_list %}
-        <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}">
-          <td class="" style="width:20%; min-height:48px" >
-            <span >
+        <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}" vocab="{% namespace %}">
+          <td class="" style="width:20%; min-height:48px">
+            <data hidden="hidden" property="spkc:type">Content</data>
+            <span>
               <span>{{ content.content|truncatechars:50 }}</span>
             </span>
             <data hidden="hidden" about="{% bnode %}" typeof="Property">
@@ -119,7 +120,7 @@
               {% endblocktrans %}
             {% endif %}
           </td>
-          <td class="w3-show-inline-block">
+          <td class="w3-show-inline-block"  vocab="{% namespace %}">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
               <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" property="action:view">
                 <div class="spkc-item-button"><i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
