@@ -4,118 +4,144 @@
 @prefix dc: <http://purl.org/dc/elements/1.1/> .
 
 <http://www.w3.org/1999/02/22-rdf-syntax-ns#> a owl:Ontology ;
-  dc:title "The spkcgraph format" ;
-  dc:description "This is the spkcgraph format used by spkcspider." .
+	dc:title "The spkcgraph format" ;
+	dc:description "This is the spkcgraph format used by spkcspider." .
 
-spkc:Entity rdf:type rdfs:Class ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Entity" ;
-  rdfs:comment "The subject is either a component or a content" .
+spkc:Entity a rdfs:Class ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Entity" ;
+	rdfs:comment "The subject is either a component or a content" .
 
-spkc:type rdf:type rdfs:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "type" ;
-  rdfs:member spkc:Entity ;
-  rdfs:comment "The type of an Entity." .
-
-
-spkc:Component rdf:type rdfs:Class ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Component" ;
-  rdfs:Container spkc:Property ;
-  "contents" spkc:Content ;
-  rdfs:subClassOf spkc:Entity ;
-  rdfs:comment "Container for contents. Defines Protections." .
-
-spkc:Content rdf:type rdfs:Class ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Content" ;
-  rdfs:Container spkc:Property ;
-  "component" spkc:Component ;
-  rdfs:subClassOf spkc:Entity ;
-  rdfs:comment "Contains real content." .
+spkc:type a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "type" ;
+	rdfs:member spkc:Entity ;
+	rdfs:comment "The type of an Entity." ;
+	rdfs:range rdfs:Literal .
 
 
-spkc:Property rdf:type rdfs:Class ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Property" ;
-  rdfs:ContainerMembershipProperty spkc:Entity ;
-  rdfs:comment "Structured Property of an Entity." .
+spkc:Component a rdfs:Class ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Component" ;
+	rdfs:subClassOf spkc:Entity ;
+	rdfs:comment "Container for contents. Defines Protections." .
+
+spkc:Content a rdfs:Class ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Content" ;
+	rdfs:subClassOf spkc:Entity ;
+	rdfs:comment "Contains real content." .
 
 
-spkc:url rdf:type rdfs:Literal ;
-  rdfs:subPropertyOf spkc:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "value" ;
-  rdfs:comment "Pointer to real resource. If not in graph, it should be dereferenced" .
-
-spkc:value rdf:type rdfs:Datatype ;
-  rdfs:subPropertyOf spkc:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "value" ;
-  rdfs:comment "The value of a property, if url, dereferencing is not required" .
-
-spkc:name rdf:type rdfs:Literal ;
-  rdfs:subPropertyOf spkc:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "name" ;
-  rdfs:comment "The name of a property" .
-
-spkc:fieldname rdf:type rdfs:Literal ;
-  rdfs:subPropertyOf spkc:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "name" ;
-  rdfs:comment "(Optional) the original fieldname of a property (in case form is used)." .
-
-spkc:hashable rdf:type rdfs:Literal ;
-  rdfs:subPropertyOf spkc:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "hashable" ;
-  rdfs:comment "Should this property be used for hashing/verification?" .
+spkc:contents a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Contents" ;
+	rdfs:comment "Set of Contents" ;
+	rdf:Seq spkc:Content ;
+	rdfs:domain rdfs:Resource .
 
 
-spkc:action:view rdf:type rdfs:Resource ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "view" ;
-  rdfs:comment "View/Access Resource" .
-
-spkc:action:update rdf:type rdfs:Resource ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "update" ;
-  rdfs:comment "(Optional) Update Resource. Often not defined." .
-
-spkc:action:delete rdf:type rdfs:Resource ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "delete" ;
-  rdfs:comment "(Optional) Delete Resource. Often not defined." .
+spkc:components a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Components" ;
+	rdfs:comment "Set of components" ;
+	rdf:Seq spkc:Component ;
+	rdfs:domain rdfs:Resource .
 
 
-spkc:pages:num_pages rdf:type rdfs:Literal ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Amount Pages" ;
-  rdfs:comment "The amount of pages. 1 indicates no paging" .
+spkc:Property a rdfs:Class ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Structured Property" ;
+	rdfs:comment "Structured Property of an Entity." ;
+	rdfs:domain spkc:Entity .
 
-spkc:pages:size_page rdf:type rdfs:Literal ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Page Size" ;
-  rdfs:comment "The size of the page." .
+spkc:properties a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Components" ;
+	rdfs:comment "Set of components" ;
+	rdf:Bag spkc:Property ;
+	rdfs:domain rdfs:Entity .
+
+spkc:url a rdfs:Literal ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "value" ;
+	rdfs:comment "Pointer to real resource. If not in graph, it should be dereferenced" ;
+	rdfs:subPropertyOf spkc:property .
+
+spkc:value a rdfs:Datatype ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "value" ;
+	rdfs:comment "The value of a property, if url, dereferencing is not required" ;
+	rdfs:subPropertyOf spkc:property .
+
+spkc:name a rdfs:Literal ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "name" ;
+	rdfs:comment "The name of a property" ;
+	rdfs:subPropertyOf spkc:property .
+
+spkc:fieldname a rdfs:Literal ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "name" ;
+	rdfs:comment "(Optional) the original fieldname of a property (in case form is used)." ;
+	rdfs:subPropertyOf spkc:property .
+
+spkc:hashable a rdfs:Literal ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "hashable" ;
+	rdfs:comment "Should this property be used for hashing/verification?" ;
+	rdfs:subPropertyOf spkc:property .
 
 
-spkc:hash rdf:type rdfs:Literal ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Hash" ;
-  rdfs:comment "(Optional) Hash of an external resource" .
+spkc:action:view a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "view" ;
+	rdfs:comment "View/Access Resource" ;
+	rdfs:range rdfs:Resource .
 
-spkc:hashed rdf:type spkc:hash ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Hashed Objects" ;
-  rdfs:comment "(Optional) hashed objects. Defined by verifier." ;
-  rdfs:domain rdfs:Resource ;
-  rdfs:range rdfs:Literal .
+spkc:action:update a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "update" ;
+	rdfs:comment "(Optional) Update Resource. Often not defined." ;
+	rdfs:range rdfs:Resource .
 
-# TODO: meta relations: contents, components
+spkc:action:delete a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "delete" ;
+	rdfs:comment "(Optional) Delete Resource. Often not defined." ;
+	rdfs:range rdfs:Resource .
 
-spkc:protection rdf:type rdfs:Literal ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Protection Name" ;
-  rdfs:comment "The name of the protection" .
+
+spkc:pages:num_pages a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Amount Pages" ;
+	rdfs:comment "The amount of pages. 1 indicates no paging" ;
+	rdfs:range rdfs:Literal .
+
+spkc:pages:size_page a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Page Size" ;
+	rdfs:comment "The size of the page." ;
+	rdfs:range rdfs:Literal .
+
+
+spkc:hash a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Hash" ;
+	rdfs:comment "(Optional) Hash of an external resource" ;
+	rdfs:domain rdfs:Resource ;
+	rdfs:range rdfs:Literal .
+
+spkc:hashed a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Hashed Objects" ;
+	rdfs:comment "(Optional) hashed objects. Defined by verifier." ;
+	rdfs:domain rdfs:Resource ;
+	rdfs:range spkc:hash .
+
+spkc:protection a rdfs:Property ;
+	rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+	rdfs:label "Protection Name" ;
+	rdfs:comment "The name of the protection" ;
+	rdfs:domain rdfs:Resource ;
+	rdfs:range rdfs:Literal .

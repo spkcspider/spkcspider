@@ -2,11 +2,12 @@
 {% for hidden in form.hidden_fields %}
 {{ hidden }}
 {% endfor %}
-<ul class="w3-ul">
+<ul class="w3-ul" rel="properties">
   {% for field in form.visible_fields %}
-    <li class="{% if field.errors %}w3-pale-red{% endif %}" resource="{% bnode %}" typeof="field">
+    <li class="{% if field.errors %}w3-pale-red{% endif %}" about="{% bnode %}" typeof="Property">
       <div class="">
         <div class="w3-cell w3-padding">
+          <data hidden="hidden" property="fieldname">{{field.name}}</data>
           <div property="name" content="{{field.name}}">{{ field.label_tag }}</div>
           {% comment %}
             {% if form.use_required_attribute and not field.required %}

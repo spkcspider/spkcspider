@@ -30,7 +30,7 @@ def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
     value_node = BNode()
     if ref:
         graph.add((
-            ref, spkcgraph["property"],
+            ref, spkcgraph["properties"],
             value_node
         ))
     graph.add((

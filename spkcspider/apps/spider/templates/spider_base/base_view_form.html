@@ -1,7 +1,7 @@
 {% load i18n widget_tweaks spider_rdf %}
-<ul class="w3-ul">
+<ul class="w3-ul" rel="properties">
   {% for field in form.visible_fields %}
-    <li class="" resource="{% bnode %}" typeof="field">
+    <li class="" resource="{% bnode %}" typeof="Property">
       <div class="">
         <div class="w3-cell w3-padding">
           <div property="name" content="{{field.name}}">{{ field.label_tag }}</div>

@@ -322,7 +322,7 @@ class BaseContent(models.Model):
 
             graph.add((
                 content_ref,
-                spkcgraph["Property"],
+                spkcgraph["properties"],
                 value_node
             ))
             graph.add((
