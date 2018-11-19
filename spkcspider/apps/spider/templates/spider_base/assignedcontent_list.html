@@ -50,13 +50,13 @@
         {% blocktrans trimmed %}
           Content of:
         {% endblocktrans %} <b>{{uc}}</b> <em>({{uc.user}})</em>
-        <data hidden="hidden" rel="properties" typeof="Property">
-          <data hidden="hidden" property="name">name</data>
-          <data hidden="hidden" property="value">{{uc.name}}</data>
+        <data hidden="hidden" rel="spkc:properties" typeof="spkc:Property">
+          <data hidden="hidden" property="spkc:name">name</data>
+          <data hidden="hidden" property="spkc:value">{{uc.name}}</data>
         </data>
-        <data hidden="hidden" rel="properties" typeof="Property">
-          <data hidden="hidden" property="name">user</data>
-          <data hidden="hidden" property="value">{{uc.username}}</data>
+        <data hidden="hidden" rel="spkc:properties" typeof="spkc:Property">
+          <data hidden="hidden" property="spkc:name">user</data>
+          <data hidden="hidden" property="spkc:value">{{uc.username}}</data>
         </data>
       {% else %}
         {% blocktrans trimmed %}
@@ -64,9 +64,9 @@
         {% endblocktrans %}
       {% endif %}
     </h1>
-    <data hidden="hidden" rel="properties" typeof="Property">
-      <data hidden="hidden" property="name">description</data>
-      <data hidden="hidden" property="value">{{uc.description}}</data>
+    <data hidden="hidden" rel="spkc:properties" typeof="spkc:Property">
+      <data hidden="hidden" property="spkc:name">description</data>
+      <data hidden="hidden" property="spkc:value">{{uc.description}}</data>
     </data>
     {% if uc.description %}
       <div class="w3-white w3-center">
@@ -108,17 +108,17 @@
     </details>
   {% endif %}
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="contents">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="spkc:contents">
       {% for content in object_list %}
-        <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}" vocab="{% namespace %}">
+        <tr resource="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}" typeof="spkc:Content">
           <td class="" style="width:20%; min-height:48px">
             <data hidden="hidden" property="spkc:type">Content</data>
             <span>
               <span>{{ content.content|truncatechars:50 }}</span>
             </span>
-            <data hidden="hidden" about="{% bnode %}" typeof="Property">
-              <data hidden="hidden" property="name">item</data>
-              <data hidden="hidden" property="value">{{ content.info}}</data>
+            <data hidden="hidden" about="{% bnode %}" typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name">item</data>
+              <data hidden="hidden" property="spkc:value">{{ content.info}}</data>
             </data>
           </td>
           <td>
@@ -128,18 +128,18 @@
               {% endblocktrans %}
             {% endif %}
           </td>
-          <td class="w3-show-inline-block"  vocab="{% namespace %}">
+          <td class="w3-show-inline-block">
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" property="action:view">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" property="spkc:action:view">
                 <div class="spkc-item-button"><i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "View" %}</div></span>
               </a>
               {% if uc.user == request.user  %}
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}" property="action:update">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}" property="spkc:action:update">
                 <div class="spkc-item-button"><i class="fa fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "Edit" %}</div></span>
               </a>
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="action:delete">
+              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="spkc:action:delete">
                 <div class="spkc-item-button"><i class="fa fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans "Del" %}</div></span>
               </a>

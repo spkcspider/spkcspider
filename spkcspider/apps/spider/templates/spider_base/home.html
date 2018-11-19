@@ -54,27 +54,27 @@
       </h2>
     </div>
     <div  class="w3-margin">
-      <table class="w3-table w3-bordered w3-hoverable" rel="components">
+      <table class="w3-table w3-bordered w3-hoverable" rel="spkc:components">
         {% for uc in object_list %}
-          <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" vocab="{% namespace %}">
+          <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" resource="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" typeof="spkc:Component">
             <td style="width:40%; min-height:48px">
               <data hidden="hidden" property="spkc:type">Component</data>
-              <span about="{% bnode %}" rel="properties" typeof="Property">
-                <data hidden="hidden" property="name">name</data>
-                <span property="value">{{ uc.name }}</span>
+              <span about="{% bnode %}" rel="spkc:properties" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">name</data>
+                <span property="spkc:value">{{ uc.name }}</span>
               </span>
               <em>({{uc.user}})</em>
-              <data hidden="hidden" about="{% bnode %}"  rel="properties" typeof="Property">
-                <data hidden="hidden" property="name">user</data>
-                <data hidden="hidden" property="value">{{uc.username}}</data>
+              <data hidden="hidden" about="{% bnode %}"  rel="spkc:properties" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">user</data>
+                <data hidden="hidden" property="spkc:value">{{uc.username}}</data>
               </data>
-              <data hidden="hidden" about="{% bnode %}"  rel="properties" typeof="Property">
-                <data hidden="hidden" property="name">description</data>
-                <data hidden="hidden" property="value">{{uc.description|escape}}</data>
+              <data hidden="hidden" about="{% bnode %}"  rel="spkc:properties" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">description</data>
+                <data hidden="hidden" property="spkc:value">{{uc.description|escape}}</data>
               </data>
-              <data hidden="hidden" about="{% bnode %}" rel="properties" typeof="Property">
-                <data hidden="hidden" property="name">strength</data>
-                <data hidden="hidden" property="value">{{uc.strength}}</data>
+              <data hidden="hidden" about="{% bnode %}" rel="spkc:properties" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">strength</data>
+                <data hidden="hidden" property="spkc:value">{{uc.strength}}</data>
               </data>
             </td>
             <td>

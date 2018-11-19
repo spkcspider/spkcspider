@@ -3,4 +3,4 @@
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4 w3-sand{% endblock %}
 {% block body_class %}{{block.super}} w3-light-grey{% endblock %}
-{% block main_attributes %}{{block.super}} vocab="{% namespace %}" about="{{ request.path }}"{% endblock %}
+{% block main_attributes %}{{block.super}} prefix="spkc: {% namespace %}" resource="{{ request.path }}"{% endblock %}

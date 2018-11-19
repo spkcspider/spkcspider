@@ -2,8 +2,8 @@
 <fieldset {% if include_namespace %}vocab="{% namespace %}" resource="{{ request.path }}"{% endif %}>
   {% for rdftype in add_rdf_type %}
   <data resource="{% bnode %}" hidden="hidden">
-    <data property="name" hidden="hidden">type</data>
-    <data property="value" hidden="hidden">{{rdftype}}</data>
+    <data property="spkc:name" hidden="hidden">type</data>
+    <data property="spkc:value" hidden="hidden">{{rdftype}}</data>
   </data>
   {% endfor %}
   <legend><h2>{{legend|safe}}</h2></legend>

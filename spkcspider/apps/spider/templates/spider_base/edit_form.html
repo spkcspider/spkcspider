@@ -3,8 +3,8 @@
 <{% if not inner_form %}form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post"{% else %}div{% endif %}{% if include_namespace %}vocab="{% namespace %}" resource="{{ request.path }}"{% endif %}>
   {% for rdftype in add_rdf_type %}
   <data resource="{% bnode %}" hidden="hidden">
-    <data property="name" hidden="hidden">type</data>
-    <data property="value" hidden="hidden">{{rdftype}}</data>
+    <data property="spkc:name" hidden="hidden">type</data>
+    <data property="spkc:value" hidden="hidden">{{rdftype}}</data>
   </data>
   {% endfor %}
   {% csrf_token %}

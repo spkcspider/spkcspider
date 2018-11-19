@@ -2,18 +2,18 @@
 {% for hidden in form.hidden_fields %}
 {{ hidden }}
 {% endfor %}
-<ul class="w3-ul" rel="properties">
+<ul class="w3-ul" rel="spkc:properties">
   {% for field in form.visible_fields %}
-    <li class="{% if field.errors %}w3-pale-red{% endif %}" about="{% bnode %}" typeof="Property">
+    <li class="{% if field.errors %}w3-pale-red{% endif %}" about="{% bnode %}" typeof="spkc:Property">
       <div class="">
         <div class="w3-cell w3-padding">
           <data hidden="hidden" property="fieldname">{{field.name}}</data>
-          <div property="name" content="{{field.name}}">{{ field.label_tag }}</div>
+          <div property="spkc:name" content="{{field.name}}">{{ field.label_tag }}</div>
           {% comment %}
             {% if form.use_required_attribute and not field.required %}
             <small class="w3-text-grey">(optional)</small>{% endif %}
           {% endcomment %}<br/>
-          {% render_field field property="value" %}
+          {% render_field field property="spkc:value" %}
         </div>
         <div class="w3-cell w3-padding">
         {% if field.help_text %}

@@ -4,9 +4,9 @@
 {% extract_protections "protections" as protections %}
 <form action="{{ request.get_full_path }}" method="post">
   {% csrf_token %}
-  <data hidden="hidden" about="{% bnode %}" typeof="Property">
-    <data hidden="hidden" property="name">amount</data>
-    <data hidden="hidden" property="value">{{protections|length}}</data>
+  <data hidden="hidden" about="{% bnode %}" typeof="spkc:Property">
+    <data hidden="hidden" property="spkc:name">amount</data>
+    <data hidden="hidden" property="spkc:value">{{protections|length}}</data>
   </data>
   <fieldset>
     <legend><h1>{% trans 'Protections' %}</h1></legend>
