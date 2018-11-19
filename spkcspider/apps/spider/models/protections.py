@@ -121,7 +121,7 @@ class Protection(models.Model):
         # before protection_codes, for not allowing users
         # to manipulate required passes
         if required_passes > 0:
-            # required_passes 1 and no protection means: login only
+            # required_passes 1 and no protection means: login or token only
             required_passes = max(min(required_passes, len(query)), 1)
         else:
             query = query.filter(

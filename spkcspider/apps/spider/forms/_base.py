@@ -149,7 +149,9 @@ class UserComponentForm(forms.ModelForm):
             strengths.sort()
             if self.cleaned_data["required_passes"] > 0:
                 if amount_regular == 0:
-                    strengths = 4  # can only access component via own login
+                    # login or token only
+                    # not 10 because 10 is also used for uniqueness
+                    strengths = 4
                 else:
                     strengths = round(mean(strengths[:ret["required_passes"]]))
             else:
