@@ -71,25 +71,24 @@
         <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" resource="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" typeof="spkc:Component">
           <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px" >
             <data hidden="hidden" property="spkc:type">Component</data>
-            <span about="{% bnode %}" rel="spkc:properties" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name">name</data>
-              {% if uc.is_index %}
-                <span property="spkc:value">{% trans 'Private Component' %}</span>
-              {% else %}
-                <span property="spkc:value">{{ uc.name }}</span>{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
-              {% endif %}
-            </span>
-            <data hidden="hidden" about="{% bnode %}"  rel="spkc:properties" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name">user</data>
-              <data hidden="hidden" property="spkc:value">{{uc.username}}</data>
-            </data>
-            <data hidden="hidden" about="{% bnode %}" rel="spkc:properties" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name">description</data>
-              <data hidden="hidden" property="spkc:value">{{uc.description|escape}}</data>
-            </data>
-            <data hidden="hidden" about="{% bnode %}" rel="spkc:properties" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name">strength</data>
-              <data hidden="hidden" property="spkc:value">{{uc.strength}}</data>
+            <data hidden="hidden" property="spkc:strength">{{uc.strength}}</data>
+            <data rel="spkc:properties">
+              <data about="{% bnode %}" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">name</data>
+                {% if uc.is_index %}
+                  <span property="spkc:value">{% trans 'Private Component' %}</span>
+                {% else %}
+                  <span property="spkc:value">{{ uc.name }}</span>{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
+                {% endif %}
+              </data>
+              <data hidden="hidden" about="{% bnode %}" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">user</data>
+                <data hidden="hidden" property="spkc:value">{{uc.username}}</data>
+              </data>
+              <data hidden="hidden" about="{% bnode %}" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">description</data>
+                <data hidden="hidden" property="spkc:value">{{uc.description|escape}}</data>
+              </data>
             </data>
           </td>
           <td>

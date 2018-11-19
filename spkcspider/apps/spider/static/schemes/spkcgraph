@@ -16,8 +16,15 @@ spkc:Entity a rdfs:Class ;
 spkc:type a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "type" ;
-  rdfs:member spkc:Entity ;
   rdfs:comment "The type of an Entity." ;
+  rdfs:domain spkc:Entity ;
+  rdfs:range rdfs:Literal .
+
+spkc:strength a rdfs:Property ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Strength" ;
+  rdfs:comment "The protection strength of an component or content access." ;
+  rdfs:domain rdfs:Resource ;
   rdfs:range rdfs:Literal .
 
 

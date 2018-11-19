@@ -136,6 +136,9 @@ class ComponentPublicIndex(ListView):
         meta_ref = URIRef(context["hostpart"] + self.request.path)
         g = Graph()
         g.add((meta_ref, spkcgraph["scope"], Literal("list")))
+        g.add((
+            meta_ref, spkcgraph["strength"], 0
+        ))
         for component in context["object_list"]:
             url = urljoin(
                 context["hostpart"],
@@ -147,11 +150,12 @@ class ComponentPublicIndex(ListView):
                     meta_ref, spkcgraph["components"], ref_component
                 )
             )
-            g.add(
-                (
-                    ref_component, spkcgraph["type"], Literal("Component")
-                )
-            )
+            g.add((
+                ref_component, spkcgraph["type"], Literal("Component")
+            ))
+            g.add((
+                ref_component, spkcgraph["strength"], component.strength
+            ))
             add_property(
                 g, "name", ref=ref_component, literal=component.__str__()
             )
@@ -332,6 +336,10 @@ class ComponentIndex(UCTestMixin, ListView):
                 session_dict["sourceref"],
                 spkcgraph["scope"],
                 Literal(context["scope"])
+            ))
+            g.add((
+                session_dict["sourceref"], spkcgraph["strength"],
+                Literal(10)
             ))
 
         serialize_stream(

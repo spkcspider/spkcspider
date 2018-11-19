@@ -424,6 +424,12 @@ class BaseContent(models.Model):
                 Literal(kwargs["scope"])
             ))
 
+            uc = kwargs.get("source", self.associated.usercomponent)
+            g.add((
+                "strength", spkcgraph["strength"],
+                Literal(uc.strength)
+            ))
+
         ret = HttpResponse(
             g.serialize(format="turtle"),
             content_type="text/turtle;charset=utf-8"

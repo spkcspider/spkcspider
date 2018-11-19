@@ -42,7 +42,7 @@
         <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">{% trans 'Link/Export' %}</a>
       </div>
       <div>
-        {% trans "Strength:" %} {{uc.strength}}
+        {% trans "Strength:" %} <data property="spkc:strength">{{uc.strength}}</data>
       </div>
     </span>
     <h1 class="w3-center">
@@ -64,9 +64,11 @@
         {% endblocktrans %}
       {% endif %}
     </h1>
-    <data hidden="hidden" rel="spkc:properties" typeof="spkc:Property">
-      <data hidden="hidden" property="spkc:name">description</data>
-      <data hidden="hidden" property="spkc:value">{{uc.description}}</data>
+    <data hidden="hidden" rel="spkc:properties">
+      <data hidden="hidden" typeof="spkc:Property">
+        <data hidden="hidden" property="spkc:name">description</data>
+        <data hidden="hidden" property="spkc:value">{{uc.description}}</data>
+      </data>
     </data>
     {% if uc.description %}
       <div class="w3-white w3-center">
@@ -111,7 +113,7 @@
     <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="spkc:contents">
       {% for content in object_list %}
         <tr resource="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}" typeof="spkc:Content">
-          <td class="" style="width:20%; min-height:48px">
+          <td class="" style="width:20%; min-height:48px" rel="spkc:properties">
             <data hidden="hidden" property="spkc:type">Content</data>
             <span>
               <span>{{ content.content|truncatechars:50 }}</span>

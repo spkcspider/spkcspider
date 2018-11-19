@@ -373,6 +373,11 @@ class ContentIndex(UCTestMixin, ListView):
                 spkcgraph["scope"],
                 Literal(context["scope"])
             ))
+            g.add((
+                session_dict["sourceref"],
+                spkcgraph["strength"],
+                Literal(self.usercomponent.strength)
+            ))
 
         serialize_stream(
             g, p, session_dict,
