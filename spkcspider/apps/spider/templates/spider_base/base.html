@@ -90,8 +90,8 @@
                   {% trans 'Profile' %}
                 </a>
                 <a class="w3-bar-item w3-button" href="{% update_component 'index' %}">
-                  <i class="fa fa-user-edit" style="margin-right:10px" aria-hidden="true"></i>
-                  {% trans 'Change User Protection' %}
+                  <i class="fa fa-lock" style="margin-right:10px" aria-hidden="true"></i>
+                  {% trans 'Security' %}
                 </a>
                 {% if request.user.is_superuser or request.user.is_staff %}
                   <a class="w3-bar-item w3-button" href="{% url 'admin:index' %}">
