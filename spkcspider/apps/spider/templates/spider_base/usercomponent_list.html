@@ -66,7 +66,7 @@
     </h1>
   </div>
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="components">
+    <table class="w3-table w3-bordered w3-hoverable" rel="components">
       {% for uc in object_list %}
         <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" about="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" vocab="{% namespace %}">
           <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px" >
@@ -76,16 +76,23 @@
               {% if uc.is_index %}
                 <span property="value">{% trans 'Private Component' %}</span>
               {% else %}
-                <span property="value">{{ uc.name }}</span>{% if not request.is_owner %} <em property="user">({{uc.user}})</em>{% endif %}
+                <span property="value">{{ uc.name }}</span>{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
               {% endif %}
             </span>
+            <data hidden="hidden" about="{% bnode %}"  rel="properties" typeof="Property">
+              <data hidden="hidden" property="name">user</data>
+              <data hidden="hidden" property="value">{{uc.username}}</data>
+            </data>
             <data hidden="hidden" about="{% bnode %}" rel="properties" typeof="Property">
               <data hidden="hidden" property="name">description</data>
               <data hidden="hidden" property="value">{{uc.description|escape}}</data>
             </data>
+            <data hidden="hidden" about="{% bnode %}" rel="properties" typeof="Property">
+              <data hidden="hidden" property="name">strength</data>
+              <data hidden="hidden" property="value">{{uc.strength}}</data>
+            </data>
           </td>
           <td>
-            {# always user or admin #}
             {% blocktrans trimmed with time=uc.modified|timesince %}
             Modified: {{time}} ago
             {% endblocktrans %}

@@ -49,14 +49,22 @@
       {% if request.is_owner or uc.public %}
         {% blocktrans trimmed %}
           Content of:
-        {% endblocktrans %} <b>{{uc}}</b> <em>({{uc.username}})</em>
+        {% endblocktrans %} <b>{{uc}}</b> <em>({{uc.user}})</em>
+        <data hidden="hidden" rel="properties" typeof="Property">
+          <data hidden="hidden" property="name">name</data>
+          <data hidden="hidden" property="value">{{uc.name}}</data>
+        </data>
+        <data hidden="hidden" rel="properties" typeof="Property">
+          <data hidden="hidden" property="name">user</data>
+          <data hidden="hidden" property="value">{{uc.username}}</data>
+        </data>
       {% else %}
         {% blocktrans trimmed %}
           Content:
         {% endblocktrans %}
       {% endif %}
     </h1>
-    <data rel="properties" typeof="Property">
+    <data hidden="hidden" rel="properties" typeof="Property">
       <data hidden="hidden" property="name">description</data>
       <data hidden="hidden" property="value">{{uc.description}}</data>
     </data>
@@ -100,7 +108,7 @@
     </details>
   {% endif %}
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable" rel="contents">
+    <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="contents">
       {% for content in object_list %}
         <tr about="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}" vocab="{% namespace %}">
           <td class="" style="width:20%; min-height:48px">
