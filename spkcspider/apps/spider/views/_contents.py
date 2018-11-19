@@ -120,7 +120,9 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
 
         if self.scope != "add":
             context["remotelink"] = context["spider_GET"].copy()
-            context["auth_token"] = self.request.auth_token.token
+            context["auth_token"] = None
+            if self.request.auth_token:
+                context["auth_token"] = self.request.auth_token.token
             context["remotelink"] = "{}{}?{}".format(
                 context["hostpart"],
                 reverse("spider_base:ucontent-access", kwargs={
@@ -231,7 +233,9 @@ class ContentIndex(UCTestMixin, ListView):
         context["is_public_view"] = self.usercomponent.public
 
         context["remotelink"] = context["spider_GET"].copy()
-        context["auth_token"] = self.request.auth_token.token
+        context["auth_token"] = None
+        if self.request.auth_token:
+            context["auth_token"] = self.request.auth_token.token
         context["remotelink"] = "{}{}?{}".format(
             context["hostpart"],
             reverse("spider_base:ucontent-list", kwargs={
