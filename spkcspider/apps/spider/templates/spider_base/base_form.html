@@ -4,7 +4,7 @@
 {% endfor %}
 <ul class="w3-ul" rel="spkc:properties">
   {% for field in form.visible_fields %}
-    <li class="{% if field.errors %}w3-pale-red{% endif %}" about="{% bnode %}" typeof="spkc:Property">
+    <li class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
       <div class="">
         <div class="w3-cell w3-padding">
           <data hidden="hidden" property="fieldname">{{field.name}}</data>

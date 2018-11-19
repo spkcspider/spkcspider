@@ -362,7 +362,6 @@ class BaseContent(models.Model):
         kwargs.setdefault("confirm", _("Create"))
         # prevent second button
         kwargs.setdefault("inner_form", True)
-        kwargs.setdefault("include_namespace", False)
         return self.render_form(**kwargs)
 
     def render_update(self, **kwargs):
@@ -375,7 +374,6 @@ class BaseContent(models.Model):
         kwargs.setdefault("confirm", _("Update"))
         # prevent second button
         kwargs.setdefault("inner_form", True)
-        kwargs.setdefault("include_namespace", False)
         return self.render_form(**kwargs)
 
     def render_serialize(self, **kwargs):
@@ -449,7 +447,6 @@ class BaseContent(models.Model):
         kwargs["form"] = self.get_form("view")(
             **self.get_form_kwargs(disable_data=True, **kwargs)
         )
-        kwargs.setdefault("include_namespace", True)
         kwargs.setdefault("legend", _("View"))
         kwargs.setdefault(
             "add_rdf_type",
