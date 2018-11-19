@@ -150,9 +150,28 @@ spkc:hashed a rdfs:Property ;
   rdfs:domain rdfs:Resource ;
   rdfs:range spkc:hash .
 
-spkc:protection a rdfs:Property ;
+spkc:Protection a rdfs:Class ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Protection" ;
+  rdfs:comment "Protection" .
+
+spkc:name a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Protection Name" ;
   rdfs:comment "The name of the protection" ;
+  rdfs:domain rdfs:Protection ;
+  rdfs:range rdfs:Literal .
+
+spkc:protections a rdfs:Property ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Protections" ;
+  rdfs:comment "Protections" ;
   rdfs:domain rdfs:Resource ;
+  rdfs:range spkc:Protection .
+
+spkc:protections:amount a rdfs:Property ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Protection Amount" ;
+  rdfs:comment "Amount of protections" ;
+  rdfs:subPropertyOf spkc:protections ;
   rdfs:range rdfs:Literal .

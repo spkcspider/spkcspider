@@ -73,7 +73,7 @@
             <data hidden="hidden" property="spkc:type">Component</data>
             <data hidden="hidden" property="spkc:strength">{{uc.strength}}</data>
             <data rel="spkc:properties">
-              <data about="{% bnode %}" typeof="spkc:Property">
+              <data typeof="spkc:Property">
                 <data hidden="hidden" property="spkc:name">name</data>
                 {% if uc.is_index %}
                   <span property="spkc:value">{% trans 'Private Component' %}</span>
@@ -81,11 +81,11 @@
                   <span property="spkc:value">{{ uc.name }}</span>{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
                 {% endif %}
               </data>
-              <data hidden="hidden" about="{% bnode %}" typeof="spkc:Property">
+              <data hidden="hidden" typeof="spkc:Property">
                 <data hidden="hidden" property="spkc:name">user</data>
                 <data hidden="hidden" property="spkc:value">{{uc.username}}</data>
               </data>
-              <data hidden="hidden" about="{% bnode %}" typeof="spkc:Property">
+              <data hidden="hidden" typeof="spkc:Property">
                 <data hidden="hidden" property="spkc:name">description</data>
                 <data hidden="hidden" property="spkc:value">{{uc.description|escape}}</data>
               </data>
