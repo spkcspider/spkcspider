@@ -1,7 +1,7 @@
 {% load spider_rdf %}
 {% include "spider_base/form_errors.html" with form=form %}
 <{% if not inner_form %}form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post"{% else %}div{% endif %}>
-  {% for rdftype in add_rdf_type %}
+  {% for rdftype in add_spkc_types %}
     <data property="spkc:type" hidden="hidden">{{rdftype}}</data>
   {% endfor %}
   {% csrf_token %}

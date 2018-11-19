@@ -11,7 +11,7 @@
 spkc:Entity a rdfs:Class ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Entity" ;
-  rdfs:comment "The subject is either a component or a content" .
+  rdfs:comment "A spkc Entity. Contains spkc:Property." .
 
 spkc:type a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
@@ -40,6 +40,12 @@ spkc:Content a rdfs:Class ;
   rdfs:subClassOf spkc:Entity ;
   rdfs:comment "Contains real content." .
 
+
+spkc:Protection a rdfs:Class ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Protection" ;
+  rdfs:subClassOf spkc:Entity ;
+  rdfs:comment "Protection" .
 
 spkc:contents a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
@@ -150,10 +156,6 @@ spkc:hashed a rdfs:Property ;
   rdfs:domain rdfs:Resource ;
   rdfs:range spkc:hash .
 
-spkc:Protection a rdfs:Class ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Protection" ;
-  rdfs:comment "Protection" .
 
 spkc:name a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

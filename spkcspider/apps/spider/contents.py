@@ -449,7 +449,7 @@ class BaseContent(models.Model):
         )
         kwargs.setdefault("legend", _("View"))
         kwargs.setdefault(
-            "add_rdf_type",
+            "add_spkc_types",
             [
                 self.associated.getlist("type", 1)[0],
                 "Content"
