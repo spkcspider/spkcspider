@@ -101,6 +101,8 @@ class CreateEntryForm(forms.ModelForm):
                 _('Require either url or dvfile'),
                 code="missing_parameter"
             )
+        elif ret["dvfile"]:
+            current_size = ret["dvfile"].size
         elif not ret["dvfile"]:
             url = self.cleaned_data["url"]
             url = merge_get_url(url, raw="embed")

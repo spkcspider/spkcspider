@@ -11,9 +11,9 @@ Further features and advantages of spkcspider are:
   * doing so breaches contain only links to data (which can also be protected)
 * Address Data have to changed only on one place if you move. This is especially useful if you move a lot
   Also if you travel and want to buy something on the way.
-* Verification of Data possible.
+* Verification of data is possible.
 * Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
-* Travelling: some people don't respect common rules for privacy. This allows to keep your life private.
+* Travelling: some people don't respect common rules for privacy. This tool allows you to keep your digital life private.
   * You don't have it on the device
   * You can hide your data with the travel mode (against the worst kind of inspectors)
     * Note: traces could be still existent (like "recently-used" feature, bookmarks)
@@ -54,10 +54,9 @@ poetry install
 npm install
 ~~~~
 
-
-## Poetry
+## Setuptools
 ~~~~.sh
-poetry install
+pip install .
 npm install
 ~~~~
 
@@ -142,16 +141,12 @@ There are some special GET parameters for services with special requirements:
 * items can be negated with !foo
 * !!foo escapes a !foo item
 
-verified_by urls should return hashname:hash_hexdigest
+verified_by urls should return last verification date for a hash
 
 # TODO
 * token control
 * finish global referrer mode, remove cruft from anchors
 * improve anchors
-* improve tags
-* paging
-  * special export
-  * pages meta attribute
 * examples
 * tests
 * documentation
@@ -164,7 +159,6 @@ Later:
 * log changes
 * improve protections, add protections
 * complete travel mode
-* color tones for strength
 
 Maybe:
 * use async

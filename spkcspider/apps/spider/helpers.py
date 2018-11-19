@@ -61,7 +61,8 @@ def get_settings_func(name, default):
 
 def add_by_field(dic, field="__name__"):
     def _func(klass):
-        if klass.__name__ not in getattr(
+        # should be able to block real object
+        if "{}.{}".format(klass.__module__, klass.__qualname__) not in getattr(
             settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
         ):
             dic[getattr(klass, field)] = klass

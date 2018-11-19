@@ -192,7 +192,8 @@ DEFAULT_USERCOMPONENTS = {
 
 SPIDER_BLACKLISTED_MODULES = [
     # untested, will fail
-    "spkcspider.apps.spider.models.contents.TravelProtection"
+    "spkcspider.apps.spider.models.contents.TravelProtection",
+    "spkcspider.apps.spider.protections.TravelProtection"
 ]
 
 # how many user components per page
