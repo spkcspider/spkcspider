@@ -137,7 +137,7 @@ class ComponentPublicIndex(ListView):
         g = Graph()
         g.add((meta_ref, spkcgraph["scope"], Literal("list")))
         g.add((
-            meta_ref, spkcgraph["strength"], 0
+            meta_ref, spkcgraph["strength"], Literal(0)
         ))
         for component in context["object_list"]:
             url = urljoin(
