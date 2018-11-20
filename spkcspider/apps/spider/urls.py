@@ -1,6 +1,5 @@
 from django.urls import path
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_page
 
 
 from .views import (
@@ -91,10 +90,9 @@ urlpatterns = [
     ),
     path(
         'ucs/',
-        # 10 minutes cache duration
-        cache_page(600)(ComponentPublicIndex.as_view(
+        ComponentPublicIndex.as_view(
             is_home=False
-        )),
+        ),
         name='ucomponent-listpublic'
     ),
 ]

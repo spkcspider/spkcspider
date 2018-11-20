@@ -77,10 +77,9 @@ urlpatterns += [
     path('robots.txt', cache_page(86400)(robots_view)),
     path(
         '',
-        # 5 minutes cache duration
-        cache_page(300)(ComponentPublicIndex.as_view(
+        ComponentPublicIndex.as_view(
             is_home=True, template_name="spider_base/home.html"
-        )),
+        ),
         name="home"
     ),
     # daily
