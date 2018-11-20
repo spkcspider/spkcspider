@@ -40,7 +40,7 @@
 <script type="text/javascript">
 var remotelink = "{{remotelink|escapejs}}";
 var exportlink = "{{exportlink|escapejs}}";
-var auth_token = "{{auth_token|escapejs}}";
+var auth_token = "{{auth_token|default:''|escapejs}}";
 function open_qrmodal(){
   let _qrcanvas = document.getElementById('qrcanvas');
   let remotelink_link = document.getElementById('remotelink');

@@ -18,14 +18,14 @@
             {% else %}
               <ul class="w3-white">
                 {% for q in field.value %}
-                  <li property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{q}}</li>
+                  <li property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{q|default_if_none:""}}</li>
                 {% endfor %}
               </ul>
             {% endif %}
           {% elif field|widget_type == "url" %}
             <a property="spkc:value" datatype="{{LiteralData.datatype}}" class="w3-white" href={{field.value}}>{{field.name}}</a>
           {% else %}
-            <span property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}" class="w3-white">{{field.value}}</span>
+            <span property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}" class="w3-white">{{field.value|default_if_none:""}}</span>
           {% endif %}
         </div>
       </div>
