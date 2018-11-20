@@ -31,8 +31,8 @@
     </small>
   </div>
 </div>
-<data hidden="hidden" property="spkc:pages:num_pages">{{page_obj.paginator.num_pages}}</data>
-<data hidden="hidden" property="spkc:pages:size_page">{{page_obj.paginator.per_page}}</data>
+<data hidden="hidden" property="spkc:pages:num_pages" datatype="xsd:PositiveInteger">{{page_obj.paginator.num_pages}}</data>
+<data hidden="hidden" property="spkc:pages:size_page" datatype="xsd:PositiveInteger">{{page_obj.paginator.per_page}}</data>
 {% if page_obj.paginator.num_pages > 1 %}
   <form class="w3-center" style="white-space: nowrap; margin-top:40px" method="POST">
     {% csrf_token %}

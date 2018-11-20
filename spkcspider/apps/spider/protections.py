@@ -132,10 +132,10 @@ class BaseProtection(forms.Form):
     def get_strength(self):
         # can provide strength in range 0-4
         # 0 no protection
-        # 1 basic protection
+        # 1 weak protection
         # 2 normal protection
-        # 3 better protection
-        # 4 strong protection
+        # 3 strong protection
+        # 4 reserved for login only, login protection, maybe for other superb
         return 1
 
     @staticmethod
@@ -188,7 +188,7 @@ class FriendProtection(BaseProtection):
     description = _("Limit access to selected users")
 
     def get_strength(self):
-        return 4
+        return 3
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
@@ -233,7 +233,7 @@ class RandomFailProtection(BaseProtection):
             self.fields["instant_fail"].disabled = True
 
     def get_strength(self):
-        if self.cleaned_data["success_rate"] > 90:
+        if self.cleaned_data["success_rate"] > 70:
             return 0
         return 1
 
@@ -254,11 +254,10 @@ class RandomFailProtection(BaseProtection):
 @add_by_field(installed_protections, "name")
 class LoginProtection(BaseProtection):
     name = "login"
-    ptype = ProtectionType.access_control.value
-    ptype += ProtectionType.authentication.value
-    # NEVER allow for computer access only to generate token
+    ptype = ProtectionType.authentication.value
+    ptype += ProtectionType.access_control.value
 
-    description = _("Require login as owner")
+    description = _("Login with user password")
 
     class auth_form(forms.Form):
         use_required_attribute = False
@@ -325,8 +324,10 @@ class PasswordProtection(BaseProtection):
 
     def get_strength(self):
         if self.cleaned_data["min_length"] > 15:
+            return 2
+        if self.cleaned_data["min_length"] > 40:
             return 3
-        return 2
+        return 1
 
     def clean_passwords(self):
         passwords = []
@@ -428,7 +429,7 @@ class TravelProtection(BaseProtection):
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
 
-    description = _("Fail if travel protection is active")
+    description = _("Deny access if valid travel protection is active")
 
     def get_strength(self):
         return 0

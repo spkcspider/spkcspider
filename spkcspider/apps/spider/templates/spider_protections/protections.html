@@ -4,7 +4,7 @@
 {% extract_protections "protections" as protections %}
 <form action="{{ request.get_full_path }}" method="post">
   {% csrf_token %}
-  <data hidden="hidden" property="spkc:protections:amount">{{protections|length}}</data>
+  <data hidden="hidden" property="spkc:protections:amount" datatype="xsd:nonNegativeInteger">{{protections|length}}</data>
   <fieldset rel="protections">
     <legend><h1>{% trans 'Protections' %}</h1></legend>
     <div>

@@ -5,7 +5,7 @@
 @prefix dc: <http://purl.org/dc/elements/1.1/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://www.w3.org/1999/02/22-rdf-syntax-ns#> a owl:Ontology ;
+<https://spkcspider.net/static/schemes/spkcgraph#> a owl:Ontology ;
   dc:title "The spkcgraph format" ;
   dc:description "This is the spkcgraph format used by spkcspider." .
 
@@ -26,7 +26,7 @@ spkc:strength a rdfs:Property ;
   rdfs:label "Strength" ;
   rdfs:comment "The protection strength of an component or content access." ;
   rdfs:domain rdfs:Resource ;
-  rdfs:range rdfs:Literal .
+  rdfs:range xsd:integer .
 
 
 spkc:Component a rdfs:Class ;
@@ -76,9 +76,9 @@ spkc:properties a rdfs:Property ;
   rdf:Bag spkc:Property ;
   rdfs:domain rdfs:Entity .
 
-# maybe replacement
-# spkc:hashedURI a xsd:anyURI ;
-#  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#>  .
+spkc:hashableURI a rdfs:Datatype ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:subClassOf xsd:anyURI .
 
 spkc:value a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
@@ -118,13 +118,13 @@ spkc:action:view a rdfs:Property ;
 spkc:action:update a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "update" ;
-  rdfs:comment "(Optional) Update Resource. Often not defined." ;
+  rdfs:comment "(Optional) Update Resource. In raw mode not defined." ;
   rdfs:range rdfs:Resource .
 
 spkc:action:delete a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "delete" ;
-  rdfs:comment "(Optional) Delete Resource. Often not defined." ;
+  rdfs:comment "(Optional) Delete Resource. In raw mode not defined." ;
   rdfs:range rdfs:Resource .
 
 
@@ -132,13 +132,13 @@ spkc:pages:num_pages a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Amount Pages" ;
   rdfs:comment "The amount of pages. 1 indicates no paging" ;
-  rdfs:range xsd:nonNegativeInteger .
+  rdfs:range xsd:PositiveInteger .
 
 spkc:pages:size_page a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Page Size" ;
   rdfs:comment "The size of the page." ;
-  rdfs:range xsd:nonNegativeInteger .
+  rdfs:range xsd:PositiveInteger .
 
 
 spkc:hash a rdfs:Property ;

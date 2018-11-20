@@ -114,10 +114,12 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 
 ## strength
 * 0: no protection
-* 1-4: protection which can be provided by protections
+* 1-3: protection strength which can be provided by protections
+* 4: login only, user password
 * 5: public attribute not set
-* 6-9: protections + public attribute not set
-* 10: index, can be used in combination with unique attribute to create a component unique to user
+* 6-8: protections + public attribute not set
+* 9: login only, user password + public attribute not set
+* 10: index, can be used in combination with unique per component attribute for unique content per user
 
 # External usage
 

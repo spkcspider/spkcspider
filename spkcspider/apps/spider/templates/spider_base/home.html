@@ -59,7 +59,7 @@
           <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" resource="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" typeof="spkc:Component">
             <td style="width:40%; min-height:48px">
               <data hidden="hidden" property="spkc:type">Component</data>
-              <data hidden="hidden" property="spkc:strength">{{uc.strength}}</data>
+              <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
               <data rel="spkc:properties">
                 <data typeof="spkc:Property">
                   <data hidden="hidden" property="spkc:name">name</data>
@@ -106,7 +106,7 @@
   </div>
   {% endif %}
   {% endblock featured_components %}
-  <data hidden="hidden" property="spkc:strength">0</data>
+  <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">0</data>
   <div class="w3-margin">
     <a href="{% url 'spider_base:ucomponent-listpublic' %}">
       <span class="w3-large w3-text-blue">

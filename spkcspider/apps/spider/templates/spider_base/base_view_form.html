@@ -1,28 +1,31 @@
 {% load i18n widget_tweaks spider_rdf %}
 <ul class="w3-ul" rel="spkc:properties">
   {% for field in form.visible_fields %}
-    <li class="" resource="{% bnode %}" typeof="spkc:Property">
+    {% literalize field as LiteralData %}
+    <li class="" typeof="spkc:Property">
       <div class="">
         <div class="w3-cell w3-padding">
-          <div property="spkc:name" content="{{field.name}}">{{ field.label_tag }}</div>
+          <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.name}}</data>
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
+          <div>{{ field.label_tag }}</div>
           {% if field.field.widget.input_type == "select" %}
             {% if field.field.queryset %}
               <ul class="w3-white">
                 {% for q in field.field.queryset %}
-                  <li><a property="spkc:value" datatype="xsd:anyURI" href="{{q.get_absolute_url}}">{{q}}</a></li>
+                  <li><a property="spkc:value" datatype="{{LiteralData.datatype}}" href="{{q.get_absolute_url}}">{{q}}</a></li>
                 {% endfor %}
               </ul>
             {% else %}
               <ul class="w3-white">
                 {% for q in field.value %}
-                  <li property="spkc:value">{{q}}</li>
+                  <li property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{q}}</li>
                 {% endfor %}
               </ul>
             {% endif %}
           {% elif field|widget_type == "url" %}
-            <a property="spkc:value" datatype="xsd:anyURI" class="w3-white" href={{field.value}}>{{field.name}}</a>
+            <a property="spkc:value" datatype="{{LiteralData.datatype}}" class="w3-white" href={{field.value}}>{{field.name}}</a>
           {% else %}
-            <span property="spkc:value" class="w3-white">{{field.value}}</span>
+            <span property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}" class="w3-white">{{field.value}}</span>
           {% endif %}
         </div>
       </div>

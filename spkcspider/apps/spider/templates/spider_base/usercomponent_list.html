@@ -28,12 +28,12 @@
     <span class="w3-left">
       <a class="w3-block" style="margin-bottom:10px" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
     </span>
-    <data hidden="hidden" property="spkc:strength">0</data>
+    <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">0</data>
     {% else %}
     <span class="w3-left">
       <a class="" href="{% url 'spider_base:ucomponent-listpublic' %}?{{request.GET.urlencode}}">{% trans 'Up (Public)' %}</a>
     </span>
-    <data hidden="hidden" property="spkc:strength">10</data>
+    <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">10</data>
     {% endif %}
     {% if request.user.is_authenticated %}
       <span class="w3-right">
@@ -73,7 +73,7 @@
         <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" resource="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" typeof="spkc:Component">
           <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px" >
             <data hidden="hidden" property="spkc:type">Component</data>
-            <data hidden="hidden" property="spkc:strength">{{uc.strength}}</data>
+            <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
             <data rel="spkc:properties">
               <data typeof="spkc:Property">
                 <data hidden="hidden" property="spkc:name">name</data>

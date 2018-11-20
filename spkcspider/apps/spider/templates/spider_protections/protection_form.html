@@ -1,7 +1,7 @@
 {% load spider_rdf %}
 <span typeof="spkc:Protection">
-  <data hidden="hidden" property="spkc:name">{{name}}</data>
-  <data hidden="hidden" property="spkc:type">Protection</data>
+  <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{name}}</data>
+  <data hidden="hidden" property="spkc:type" datatype="xsd:string">Protection</data>
   <input type="hidden" name="protection_codes" value="{{name}}" />
   {% include "spider_base/base_form.html" %}
 </span>

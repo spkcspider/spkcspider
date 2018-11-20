@@ -1,10 +1,7 @@
 {% load spider_rdf %}
 <fieldset {% if include_namespace %}vocab="{% namespace %}" resource="{{ request.path }}"{% endif %}>
   {% for rdftype in add_spkc_types %}
-  <data resource="{% bnode %}" hidden="hidden">
-    <data property="spkc:name" hidden="hidden">type</data>
-    <data property="spkc:value" hidden="hidden">{{rdftype}}</data>
-  </data>
+    <data property="spkc:type" hidden="hidden">{{rdftype}}</data>
   {% endfor %}
   <legend><h2>{{legend|safe}}</h2></legend>
   {% include "spider_base/base_view_form.html" with form=form %}
