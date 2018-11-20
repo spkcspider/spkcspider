@@ -83,13 +83,26 @@ urlpatterns += [
         name="home"
     ),
     # daily
-    path('sitemap.xml',
-         cache_page(86400)(sitemaps_views.index),
-         {'sitemaps': sitemaps, 'sitemap_url_name': 'sitemaps'}),
+    path(
+        'sitemap.xml',
+        cache_page(86400)(
+            sitemaps_views.index
+        ),
+        {
+            'sitemaps': sitemaps,
+            'sitemap_url_name': 'sitemaps'
+        },
+        name='django.contrib.sitemaps.views.index'
+    ),
     # hourly
-    path('sitemap-<section>.xml',
-         cache_page(3600)(sitemaps_views.sitemap),
-         {'sitemaps': sitemaps}, name='sitemaps'),
+    path(
+        'sitemap-<section>.xml',
+        cache_page(3600)(
+            sitemaps_views.sitemap
+        ),
+        {'sitemaps': sitemaps},
+        name='sitemaps'
+    ),
 ]
 
 if settings.DEBUG:
