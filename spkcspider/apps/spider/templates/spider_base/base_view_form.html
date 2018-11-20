@@ -9,7 +9,7 @@
             {% if field.field.queryset %}
               <ul class="w3-white">
                 {% for q in field.field.queryset %}
-                  <li><a property="spkc:url" href="{{q.get_absolute_url}}">{{q}}</a></li>
+                  <li><a property="spkc:value" datatype="xsd:anyURI" href="{{q.get_absolute_url}}">{{q}}</a></li>
                 {% endfor %}
               </ul>
             {% else %}
@@ -20,7 +20,7 @@
               </ul>
             {% endif %}
           {% elif field|widget_type == "url" %}
-            <a property="spkc:url" class="w3-white" href={{field.value}}>{{field.name}}</a>
+            <a property="spkc:value" datatype="xsd:anyURI" class="w3-white" href={{field.value}}>{{field.name}}</a>
           {% else %}
             <span property="spkc:value" class="w3-white">{{field.value}}</span>
           {% endif %}

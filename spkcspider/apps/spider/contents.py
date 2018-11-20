@@ -266,22 +266,16 @@ class BaseContent(models.Model):
                 ),
                 raw=context["request"].GET["raw"]
             )
-            return (
-                "url",
-                Literal(
-                    url,
-                    datatype=XSD.anyURI,
-                )
+            return Literal(
+                url,
+                datatype=XSD.anyURI,
             )
         elif isinstance(data, File):
             return get_settings_func(
                 "SPIDER_FILE_EMBED_FUNC",
                 "spkcspider.apps.spider.functions.embed_file_default"
             )(name, data, self, context)
-        return (
-            "value",
-            Literal(data)
-        )
+        return Literal(data)
 
     def transform_field(self, name, form, context):
         if self.hashed_fields and name in self.hashed_fields:
@@ -345,11 +339,10 @@ class BaseContent(models.Model):
                 value = [value]
 
             for i in value:
-                type_, encoded = self.map_data(name, i, context)
                 graph.add((
                     value_node,
-                    spkcgraph[type_],
-                    encoded
+                    spkcgraph["value"],
+                    self.map_data(name, i, context)
                 ))
 
     def render_add(self, **kwargs):

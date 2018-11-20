@@ -3,6 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://www.w3.org/1999/02/22-rdf-syntax-ns#> a owl:Ontology ;
   dc:title "The spkcgraph format" ;
@@ -75,11 +76,9 @@ spkc:properties a rdfs:Property ;
   rdf:Bag spkc:Property ;
   rdfs:domain rdfs:Entity .
 
-spkc:url a rdfs:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "value" ;
-  rdfs:comment "Pointer to real resource. If not in graph, it should be dereferenced" ;
-  rdfs:domain spkc:Property .
+# maybe replacement
+# spkc:hashedURI a xsd:anyURI ;
+#  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#>  .
 
 spkc:value a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
@@ -100,14 +99,14 @@ spkc:fieldname a rdfs:Property ;
   rdfs:label "name" ;
   rdfs:comment "(Optional) the original fieldname of a property (in case form is used)." ;
   rdfs:domain spkc:Property ;
-  rdfs:range rdfs:Literal .
+  rdfs:range xsd:string .
 
 spkc:hashable a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "hashable" ;
   rdfs:comment "Should this property be used for hashing/verification?" ;
   rdfs:domain spkc:Property ;
-  rdfs:range rdfs:Literal .
+  rdfs:range xsd:boolean .
 
 
 spkc:action:view a rdfs:Property ;
@@ -133,13 +132,13 @@ spkc:pages:num_pages a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Amount Pages" ;
   rdfs:comment "The amount of pages. 1 indicates no paging" ;
-  rdfs:range rdfs:Literal .
+  rdfs:range xsd:nonNegativeInteger .
 
 spkc:pages:size_page a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Page Size" ;
   rdfs:comment "The size of the page." ;
-  rdfs:range rdfs:Literal .
+  rdfs:range xsd:nonNegativeInteger .
 
 
 spkc:hash a rdfs:Property ;
@@ -152,7 +151,7 @@ spkc:hash a rdfs:Property ;
 spkc:hashed a rdfs:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Hashed Objects" ;
-  rdfs:comment "(Optional) hashed objects. Defined by verifier." ;
+  rdfs:comment "Link to hashed resources. Used by verifier." ;
   rdfs:domain rdfs:Resource ;
   rdfs:range spkc:hash .
 
@@ -176,4 +175,4 @@ spkc:protections:amount a rdfs:Property ;
   rdfs:label "Protection Amount" ;
   rdfs:comment "Amount of protections" ;
   rdfs:subPropertyOf spkc:protections ;
-  rdfs:range rdfs:Literal .
+  rdfs:range xsd:nonNegativeInteger .

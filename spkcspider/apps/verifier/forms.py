@@ -47,13 +47,13 @@ def hash_entry(triple):
 
 
 def yield_hashes(graph, hashable_nodes):
-    for t in graph.triples((None, None, None)):
-        if t[0] in hashable_nodes and t[1] in hashable_predicates:
+    for t in graph.triples((None, spkcgraph["value"], None)):
+        if t[0] in hashable_nodes and t[2].datatype != XSD.anyURI:
             yield hash_entry(t)
 
 
 def yield_hashable_urls(graph, hashable_nodes):
-    for t in graph.triples((None, spkcgraph["url"], None)):
+    for t in graph.triples((None, spkcgraph["value"], XSD.anyURI)):
         if t[0] in hashable_nodes:
             yield t
 
@@ -361,7 +361,7 @@ class CreateEntryForm(forms.ModelForm):
             for chunk in resp.iter_content(BUFFER_SIZE):
                 h.update(chunk)
             # do not use add as it could be corrupted by user
-            # can be provided by user too
+            # (user can provide arbitary data)
             g.set((
                 URIRef(t[2].value),
                 spkcgraph["hash"],
@@ -388,6 +388,13 @@ class CreateEntryForm(forms.ModelForm):
         h = get_hashob()
         for i in hashes:
             h.update(i)
+        # do not use add as it could be corrupted by user
+        # (user can provide arbitary data)
+        g.set((
+            start,
+            spkcgraph["hash"],
+            Literal(h.hexdigest())
+        ))
         self.cleaned_data["hash"] = h.hexdigest()
         # replace dvfile by combined file
         self.cleaned_data["dvfile"] = TemporaryUploadedFile(

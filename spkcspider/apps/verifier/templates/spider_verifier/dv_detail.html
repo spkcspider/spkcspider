@@ -2,7 +2,7 @@
 {% extends "spider_base/base.html" %}
 {% load i18n %}
 {% block content %}
-<table vocab="{{namespace}}" resource="{{ request.get_full_path }}">
+<table vocab="{{namespace}}" resource="{{ request.path }}">
   <thead><tr><th cellspan="2">Results:</th></tr></thead>
   <tr>
     <td>{% trans "Hash:" %}</td>
