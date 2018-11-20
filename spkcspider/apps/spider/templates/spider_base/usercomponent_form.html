@@ -35,6 +35,9 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             {% trans "Contents" %}
           </a>
         </div>
+        <div style="margin-bottom:5px">
+          <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">{% trans 'Link/Export' %}</a>
+        </div>
         <div>
           {% trans "Strength:" %} {{object.strength}}
         </div>
@@ -53,15 +56,6 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     </h1>
   </div>
 
-  {% if form.instance.id %}
-  <div  class="w3-padding">
-    {% trans "Link to Component:" %}
-    <a class="" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
-      {{request.scheme}}://{{request.get_host}}{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}
-    </a>
-
-  </div>
-  {% endif %}
   {% include "spider_base/form_errors.html" with form=form %}
   <form class="w3-padding" action="{{ request.get_full_path }}" encdata="multipart/form-data" method="post">
     {% csrf_token %}
@@ -108,4 +102,11 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       </a>
     {% endif %}
   </form>
+{% endblock %}
+
+{% block outercontent %}
+{% if object %}
+  {% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce as exportlink %}
+  {% include "spider_base/modalpresenter.html" %}
+{% endif %}
 {% endblock %}
