@@ -154,7 +154,8 @@ class ComponentPublicIndex(ListView):
                 ref_component, spkcgraph["type"], Literal("Component")
             ))
             g.add((
-                ref_component, spkcgraph["strength"], component.strength
+                ref_component, spkcgraph["strength"],
+                Literal(component.strength)
             ))
             add_property(
                 g, "name", ref=ref_component, literal=component.__str__()
