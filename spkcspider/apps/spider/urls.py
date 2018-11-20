@@ -92,7 +92,9 @@ urlpatterns = [
     path(
         'ucs/',
         # 10 minutes cache duration
-        cache_page(600)(ComponentPublicIndex.as_view(is_home=False)),
+        cache_page(600)(ComponentPublicIndex.as_view(
+            is_home=False
+        )),
         name='ucomponent-listpublic'
     ),
 ]
