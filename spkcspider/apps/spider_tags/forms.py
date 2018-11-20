@@ -128,11 +128,13 @@ def generate_form(name, layout):
                     selected_dict[splitted[-1]] = i[1]
             return ret
 
-        def save(self):
+        def save(self, commit=True):
             if self.usertag:
                 self.usertag.primary = self.cleaned_data["primary"]
                 self.usertag.tagdata = self.encode_data(self.cleaned_data)
-                self.usertag.save()
+                if commit:
+                    self.usertag.save()
 
             return self.usertag
+
     return _form
