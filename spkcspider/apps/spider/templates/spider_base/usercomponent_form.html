@@ -25,11 +25,6 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Index' %}</a>
     {% if object %}
       <span class="w3-right">
-        {% if not object.is_index %}
-          <div style="margin-bottom:5px">
-            <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name nonce=object.nonce %}">{% trans 'Delete' %}</a>?
-          </div>
-        {% endif %}
         <div style="margin-bottom:5px">
           <a class="" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
             {% trans "Contents" %}
@@ -38,6 +33,11 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         <div style="margin-bottom:5px">
           <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">{% trans 'Link/Export' %}</a>
         </div>
+        {% if not object.is_index %}
+          <div style="margin-bottom:5px">
+            <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name nonce=object.nonce %}">{% trans 'Delete' %}</a>?
+          </div>
+        {% endif %}
         <div>
           {% trans "Strength:" %} {{object.strength}}
         </div>
@@ -106,7 +106,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block outercontent %}
 {% if object %}
-  {% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce as exportlink %}
+  {% url 'spider_base:ucontent-export' id=object.id nonce=object.nonce as exportlink %}
   {% include "spider_base/modalpresenter.html" %}
 {% endif %}
 {% endblock %}

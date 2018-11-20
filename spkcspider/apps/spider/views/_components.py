@@ -398,8 +398,25 @@ class ComponentUpdate(UserTestMixin, UpdateView):
     also_authenticated_users = True
 
     def get_context_data(self, **kwargs):
-        kwargs["available"] = installed_contents.keys()
-        return super().get_context_data(**kwargs)
+        # for create_admin_token
+        self.usercomponent = self.object
+        self.request.auth_token = self.create_admin_token()
+        context = super().get_context_data(**kwargs)
+        context["content_variants"] = (
+            self.object.user_info.allowed_content.all()
+        )
+        context["remotelink"] = context["spider_GET"].copy()
+        context["remotelink"] = "{}{}?{}".format(
+            context["hostpart"],
+            reverse("spider_base:ucontent-list", kwargs={
+                "id": self.usercomponent.id,
+                "nonce": self.usercomponent.nonce
+            }),
+            context["remotelink"].urlencode()
+        )
+        # this is always available
+        context["auth_token"] = self.request.auth_token.token
+        return context
 
     def get_object(self, queryset=None):
         if not queryset:
