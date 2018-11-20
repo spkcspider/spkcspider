@@ -71,7 +71,7 @@ function open_qrmodal(){
   remotelink_link.href = _remotelink;
   remotelink_link.text = _remotelink;
   QRCode.toCanvas(
-    _qrcanvas, _remotelink, {  },
+    _qrcanvas, _remotelink, { errorCorrectionLevel: 'H' },
     function (error) {
       if (error)
         console.error(error)
