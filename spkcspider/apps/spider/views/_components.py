@@ -135,6 +135,7 @@ class ComponentPublicIndex(ListView):
             return super().render_to_response(context)
         meta_ref = URIRef(context["hostpart"] + self.request.path)
         g = Graph()
+        g.namespace_manager.bind("spkc", spkcgraph, replace=True)
         g.add((meta_ref, spkcgraph["scope"], Literal("list")))
         g.add((
             meta_ref, spkcgraph["strength"], Literal(0)
@@ -322,6 +323,7 @@ class ComponentIndex(UCTestMixin, ListView):
             usercomponent__in=context["object_list"]
         )
         g = Graph()
+        g.namespace_manager.bind("spkc", spkcgraph, replace=True)
         p = paginated_contents(
             contents,
             getattr(settings, "SERIALIZED_PER_PAGE", 50),

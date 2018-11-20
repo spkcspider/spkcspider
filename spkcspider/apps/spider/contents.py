@@ -390,6 +390,7 @@ class BaseContent(models.Model):
         }
 
         g = Graph()
+        g.namespace_manager.bind("spkc", spkcgraph, replace=True)
 
         p = paginated_contents(
             AssignedContent.objects.filter(id=self.associated.id),

@@ -343,6 +343,7 @@ class ContentIndex(UCTestMixin, ListView):
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
         g = Graph()
+        g.namespace_manager.bind("spkc", spkcgraph, replace=True)
 
         embed = False
         if (
