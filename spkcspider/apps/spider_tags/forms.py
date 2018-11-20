@@ -65,12 +65,12 @@ def generate_form(name, layout):
                 }
             }
 
-        def __init__(self, *, uc=None, initial=None, usertag=None, **kwargs):
+        def __init__(self, *, uc=None, initial=None, instance=None, **kwargs):
             if not initial:
                 initial = {}
-            self.usertag = usertag
+            self.instance = instance
             _initial = self.encode_initial(initial)
-            _initial["primary"] = getattr(usertag, "primary", False)
+            _initial["primary"] = getattr(instance, "primary", False)
             super().__init__(
                 initial=_initial, **kwargs
             )
@@ -89,8 +89,8 @@ def generate_form(name, layout):
                     field.queryset = field.queryset.filter(**filters)
 
         def clean(self):
-            if self.usertag:
-                self.usertag.full_clean()
+            if self.instance:
+                self.instance.full_clean()
             return super().clean()
 
         @classmethod
@@ -129,12 +129,12 @@ def generate_form(name, layout):
             return ret
 
         def save(self, commit=True):
-            if self.usertag:
-                self.usertag.primary = self.cleaned_data["primary"]
-                self.usertag.tagdata = self.encode_data(self.cleaned_data)
+            if self.instance:
+                self.instance.primary = self.cleaned_data["primary"]
+                self.instance.tagdata = self.encode_data(self.cleaned_data)
                 if commit:
-                    self.usertag.save()
+                    self.instance.save()
 
-            return self.usertag
+            return self.instance
 
     return _form

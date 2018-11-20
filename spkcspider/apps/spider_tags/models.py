@@ -174,12 +174,10 @@ class SpiderTag(BaseContent):
             ret["user"] = self.associated.usercomponent.user
         else:
             ret = super().get_form_kwargs(
-                instance=False,
                 **kwargs
             )
             ret["initial"] = self.tagdata.copy()
             ret["uc"] = self.associated.usercomponent
-            ret["usertag"] = self
         return ret
 
     def encode_verifiers(self):
