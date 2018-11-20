@@ -28,10 +28,12 @@
     <span class="w3-left">
       <a class="w3-block" style="margin-bottom:10px" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
     </span>
+    <data hidden="hidden" property="spkc:strength">0</data>
     {% else %}
     <span class="w3-left">
       <a class="" href="{% url 'spider_base:ucomponent-listpublic' %}?{{request.GET.urlencode}}">{% trans 'Up (Public)' %}</a>
     </span>
+    <data hidden="hidden" property="spkc:strength">10</data>
     {% endif %}
     {% if request.user.is_authenticated %}
       <span class="w3-right">

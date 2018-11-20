@@ -118,6 +118,9 @@ def serialize_component(graph, component, context):
         add_property(
             graph, "token_duration", ref=ref_component, ob=component
         )
+        graph.add((
+            ref_component, spkcgraph["strength"], component.strength
+        ))
     if context.get("uc_namespace", None):
         graph.add((
             context["sourceref"],
