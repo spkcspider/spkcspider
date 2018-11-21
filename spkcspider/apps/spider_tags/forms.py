@@ -128,6 +128,9 @@ def generate_form(name, layout):
                     selected_dict[splitted[-1]] = i[1]
             return ret
 
+        def save_m2m(self):
+            pass
+
         def save(self, commit=True):
             if self.instance:
                 self.instance.primary = self.cleaned_data["primary"]
