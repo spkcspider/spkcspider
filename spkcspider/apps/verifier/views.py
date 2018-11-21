@@ -15,7 +15,6 @@ from rdflib import Literal
 
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
-from .constants import namespace_verifier
 
 
 class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
@@ -89,8 +88,10 @@ class VerifyEntry(DetailView):
     template_name = "spider_verifier/dv_detail.html"
 
     def get_context_data(self, **kwargs):
-        kwargs["namespace"] = namespace_verifier
         kwargs["verified"] = Literal(self.object.checked)
+        kwargs["hash_algorithm"] = getattr(
+            settings, "VERIFICATION_HASH_ALGO", "sha512"
+        )
         return super().get_context_data(**kwargs)
 
 

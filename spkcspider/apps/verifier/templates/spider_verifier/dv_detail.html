@@ -1,12 +1,16 @@
 {# real verifier have to replace this or to depend on spider #}
 {% extends "spider_base/base.html" %}
-{% load i18n %}
+{% load i18n spider_rdf %}
 {% block content %}
-<table vocab="{{namespace}}" resource="{{ request.path }}">
+<table vocab="{% namespace %}" resource="{{ request.path }}">
   <thead><tr><th cellspan="2">Results:</th></tr></thead>
   <tr>
     <td>{% trans "Hash:" %}</td>
     <td property="hash" style="word-break: break-all">{{object.hash}}</td>
+  </tr>
+  <tr>
+    <td>{% trans "Hash Algorithm:" %}</td>
+    <td property="hash.algorithm">{{hash_algorithm}}</td>
   </tr>
   <tr>
     <td>{% trans "Verification State:" %}</td>

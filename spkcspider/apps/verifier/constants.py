@@ -3,10 +3,7 @@
 import hashlib
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
-from rdflib.namespace import Namespace
 
-
-namespace_verifier = Namespace("https://spkcspider.net/schemes/verifier/")
 
 VERIFICATION_CHOICES = [
     ("pending", _("pending")),

@@ -131,14 +131,14 @@ spkc:action:delete a rdf:Property ;
   rdfs:range rdfs:Resource .
 
 
-spkc:pages:num_pages a rdf:value ;
+spkc:pages.num_pages a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Amount Pages" ;
   rdfs:comment "The amount of pages. 1 indicates no paging" ;
   rdfs:domain rdfs:Resource ;
   rdfs:range xsd:PositiveInteger .
 
-spkc:pages:size_page a rdf:value ;
+spkc:pages.size_page a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Page Size" ;
   rdfs:comment "The size of the page." ;
@@ -151,6 +151,13 @@ spkc:hash a rdf:value ;
   rdfs:label "Hash" ;
   rdfs:comment "(Optional) Hash of an external resource in hexadecimal" ;
   rdfs:domain rdfs:Resource ;
+  rdfs:range xsd:string .
+
+spkc:hash.algorithm a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Hash Algorithm" ;
+  rdfs:comment "The hash algorithm used for generating hash" ;
+  rdfs:domain spkc:hash ;
   rdfs:range xsd:string .
 
 spkc:hashed a rdf:Property ;
@@ -175,7 +182,7 @@ spkc:protections a rdf:Property ;
   rdfs:domain rdfs:Resource ;
   rdfs:range spkc:Protection .
 
-spkc:protections:amount a rdf:value ;
+spkc:protections.amount a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Protection Amount" ;
   rdfs:comment "Amount of protections" ;

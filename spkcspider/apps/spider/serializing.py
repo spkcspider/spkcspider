@@ -154,12 +154,12 @@ def serialize_stream(graph, paginator, context, page=1, embed=False):
     if page <= 1:
         graph.add((
             context["sourceref"],
-            spkcgraph["pages:num_pages"],
+            spkcgraph["pages.num_pages"],
             Literal(paginator.num_pages)
         ))
         graph.add((
             context["sourceref"],
-            spkcgraph["pages:size_page"],
+            spkcgraph["pages.size_page"],
             Literal(paginator.per_page)
         ))
     try:

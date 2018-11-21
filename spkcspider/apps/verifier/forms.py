@@ -2,7 +2,6 @@ __all__ = ["CreateEntryForm"]
 
 import logging
 import binascii
-from tempfile import NamedTemporaryFile
 
 from django import forms
 from django.forms import widgets
@@ -20,7 +19,6 @@ from spkcspider.apps.spider.helpers import get_settings_func
 
 from .models import DataVerificationTag
 from .constants import get_hashob, BUFFER_SIZE
-
 
 _source_url_help = _("""
     Url to content or content list to verify
@@ -89,7 +87,7 @@ class CreateEntryForm(forms.ModelForm):
             self.fields["dvfile"].disabled = True
             self.fields["dvfile"].widget = widgets.HiddenInput()
 
-    def _verify_download_size(length, current_size=0):
+    def _verify_download_size(self, length, current_size=0):
         if not length or not length.isdigit():
             return False
         length = int(length)
@@ -172,10 +170,8 @@ class CreateEntryForm(forms.ModelForm):
             for chunk in resp.iter_content(BUFFER_SIZE):
                 _dvfile_scope.write(chunk)
             _dvfile_scope.seek(0, 0)
-        _graph_store = NamedTemporaryFile()
-        g = Graph('Sleepycat', identifier='spkcgraph')
+        g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
-        g.open(_graph_store.name, create=True)
         try:
             g.parse(
                 self.cleaned_data["dvfile"].temporary_file_path(),
@@ -205,7 +201,7 @@ class CreateEntryForm(forms.ModelForm):
             )
         start = tmp[0][0]
         scope = tmp[0][2].toPython()
-        tmp = g.objects((start, spkcgraph["pages:num_pages"], None))
+        tmp = list(g.triples((start, spkcgraph["pages.num_pages"], None)))
         if len(tmp) != 1:
             raise forms.ValidationError(
                 _("invalid graph, pages: %(page)s"),
@@ -215,7 +211,7 @@ class CreateEntryForm(forms.ModelForm):
         pages = tmp[0][2].toPython()
         view_url = None
         if pages > 1:
-            tmp = g.objects((start, spkcgraph["action:view"], None))
+            tmp = g.triples((start, spkcgraph["action:view"], None))
             if len(tmp) != 1:
                 raise forms.ValidationError(
                     _("invalid graph, view url: %(url)s"),
@@ -227,11 +223,9 @@ class CreateEntryForm(forms.ModelForm):
         if scope == "list":
             mtype = "UserComponent"
         else:
-            mtype = list(g.triples(
-                (
-                    start, spkcgraph["type"], None
-                )
-            ))
+            mtype = list(g.triples((
+                start, spkcgraph["type"], None
+            )))
             if len(mtype) > 0:
                 mtype = mtype[0][2].value
             else:
