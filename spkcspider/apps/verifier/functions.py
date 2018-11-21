@@ -1,6 +1,9 @@
 __all__ = [
-    "clean_graph"
+    "clean_graph", "get_hashob"
 ]
+
+import hashlib
+from django.conf import settings
 
 
 def clean_graph(mtype, graph):
@@ -12,3 +15,7 @@ def clean_graph(mtype, graph):
         return "layout"
     else:
         return "content"
+
+
+def get_hashob():
+    return hashlib.new(getattr(settings, "VERIFICATION_HASH_ALGO", "sha512"))

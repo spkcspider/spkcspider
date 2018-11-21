@@ -18,7 +18,8 @@ from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.helpers import get_settings_func
 
 from .models import DataVerificationTag
-from .constants import get_hashob, BUFFER_SIZE
+from .constants import BUFFER_SIZE
+from .functions import get_hashob
 
 _source_url_help = _("""
     Url to content or content list to verify
