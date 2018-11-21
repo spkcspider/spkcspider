@@ -14,14 +14,14 @@ spkc:Entity a rdfs:Class ;
   rdfs:label "Entity" ;
   rdfs:comment "A spkc Entity. Contains spkc:Property." .
 
-spkc:type a rdfs:Property ;
+spkc:type a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "type" ;
   rdfs:comment "The type of an Entity." ;
   rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Literal .
 
-spkc:strength a rdfs:Property ;
+spkc:strength a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Strength" ;
   rdfs:comment "The protection strength of an component or content access." ;
@@ -48,7 +48,7 @@ spkc:Protection a rdfs:Class ;
   rdfs:subClassOf spkc:Entity ;
   rdfs:comment "Protection" .
 
-spkc:contents a rdfs:Property ;
+spkc:contents a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Contents" ;
   rdfs:comment "Set of Contents" ;
@@ -56,7 +56,7 @@ spkc:contents a rdfs:Property ;
   rdfs:domain rdfs:Resource .
 
 
-spkc:components a rdfs:Property ;
+spkc:components a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Components" ;
   rdfs:comment "Set of components" ;
@@ -69,7 +69,7 @@ spkc:Property a rdfs:Class ;
   rdfs:label "Structured Property" ;
   rdfs:comment "Structured Property of an Entity." .
 
-spkc:properties a rdfs:Property ;
+spkc:properties a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Properties" ;
   rdfs:comment "Set of properties" ;
@@ -80,28 +80,28 @@ spkc:hashableURI a rdfs:Datatype ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:subClassOf xsd:anyURI .
 
-spkc:value a rdfs:Property ;
+spkc:value a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "value" ;
-  rdfs:comment "The value of a property, if url, dereferencing is not required" ;
-  rdfs:domain spkc:Property ;
-  rdfs:range rdfs:Datatype .
-
-spkc:name a rdfs:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "name" ;
-  rdfs:comment "The name of a property" ;
+  rdfs:comment "The value of a spkc:property" ;
   rdfs:domain spkc:Property ;
   rdfs:range rdfs:Literal .
 
-spkc:fieldname a rdfs:Property ;
+spkc:name a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "name" ;
+  rdfs:comment "The name of a spkc:property" ;
+  rdfs:domain spkc:Property ;
+  rdfs:range xsd:string .
+
+spkc:fieldname a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "name" ;
   rdfs:comment "(Optional) the original fieldname of a property (in case form is used)." ;
   rdfs:domain spkc:Property ;
   rdfs:range xsd:string .
 
-spkc:hashable a rdfs:Property ;
+spkc:hashable a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "hashable" ;
   rdfs:comment "Should this property be used for hashing/verification?" ;
@@ -109,46 +109,51 @@ spkc:hashable a rdfs:Property ;
   rdfs:range xsd:boolean .
 
 
-spkc:action:view a rdfs:Property ;
+spkc:action:view a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "view" ;
   rdfs:comment "View/Access Resource" ;
+  rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Resource .
 
-spkc:action:update a rdfs:Property ;
+spkc:action:update a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "update" ;
   rdfs:comment "(Optional) Update Resource. In raw mode not defined." ;
+  rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Resource .
 
-spkc:action:delete a rdfs:Property ;
+spkc:action:delete a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "delete" ;
   rdfs:comment "(Optional) Delete Resource. In raw mode not defined." ;
+  rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Resource .
 
 
-spkc:pages:num_pages a rdfs:Property ;
+spkc:pages:num_pages a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Amount Pages" ;
   rdfs:comment "The amount of pages. 1 indicates no paging" ;
+  rdfs:domain rdfs:Resource ;
   rdfs:range xsd:PositiveInteger .
 
-spkc:pages:size_page a rdfs:Property ;
+spkc:pages:size_page a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Page Size" ;
   rdfs:comment "The size of the page." ;
+  rdfs:domain rdfs:Resource ;
   rdfs:range xsd:PositiveInteger .
 
 
-spkc:hash a rdfs:Property ;
+spkc:hash a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Hash" ;
-  rdfs:comment "(Optional) Hash of an external resource" ;
+  rdfs:comment "(Optional) Hash of an external resource in hexadecimal" ;
   rdfs:domain rdfs:Resource ;
-  rdfs:range rdfs:Literal .
+  rdfs:range xsd:string .
 
-spkc:hashed a rdfs:Property ;
+spkc:hashed a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Hashed Objects" ;
   rdfs:comment "Link to hashed resources. Used by verifier." ;
@@ -156,21 +161,21 @@ spkc:hashed a rdfs:Property ;
   rdfs:range spkc:hash .
 
 
-spkc:name a rdfs:Property ;
+spkc:name a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Protection Name" ;
   rdfs:comment "The name of the protection" ;
   rdfs:domain rdfs:Protection ;
   rdfs:range rdfs:Literal .
 
-spkc:protections a rdfs:Property ;
+spkc:protections a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Protections" ;
   rdfs:comment "Protections" ;
   rdfs:domain rdfs:Resource ;
   rdfs:range spkc:Protection .
 
-spkc:protections:amount a rdfs:Property ;
+spkc:protections:amount a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Protection Amount" ;
   rdfs:comment "Amount of protections" ;
