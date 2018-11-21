@@ -15,7 +15,6 @@ from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
-from django.http import JsonResponse
 
 from ..helpers import merge_get_url
 from ..constants import UserContentType, index_names
@@ -279,6 +278,10 @@ class UserTestMixin(AccessMixin):
         context["referrer"] = "https://{}".format(
             self.request.GET["referrer"]
         )
+        if hasattr(self, "get_queryset"):
+            context["object_list"] = self.get_queryset()
+        else:
+            context["object_list"] = self.usercomponent.contents
         if "confirm" in self.request.POST:
             if self.usercomponent.user == self.request.user:
                 authtoken = AuthToken(
@@ -325,20 +328,6 @@ class UserTestMixin(AccessMixin):
                 )
             )
         else:
-            if "raw" in self.request.GET:
-                ret = {
-                    "scope": context["scope"],
-                }
-                if isinstance(self.object, UserComponent):
-                    ret["contents"] = [str(ob) for ob in self.object.contents]
-                else:
-                    ret["contents"] = [str(self.object)]
-                if self.request.is_owner:
-                    # strong authentication
-                    ret["usercomponent"] = self.usercomponent.name
-                else:
-                    ret["usercomponent"] = None
-                return JsonResponse(ret)
             return self.response_class(
                 request=self.request,
                 template=self.get_referrer_template_names(),

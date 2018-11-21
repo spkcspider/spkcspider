@@ -152,6 +152,7 @@ verified_by urls should return last verification date for a hash
 * examples
 * tests
 * documentation
+* bind authtoken to a limitted amount of contents
 
 Later:
 * raw add, update mode

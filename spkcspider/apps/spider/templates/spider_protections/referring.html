@@ -1,12 +1,23 @@
 {% extends "spider_protections/base.html" %}
+{% load i18n %}
 {% block content %}
 <form action="{{ request.get_full_path }}" method="post">
   {% csrf_token %}
   <fieldset>
-    <legend><h1>{% trans 'Access to' %}</h1></legend>
-    <div>
-      TODO
-    </div>
+    <legend><h1>{% trans 'Access to' %}:</h1></legend>
+    <ul class="w3-ul" rel="accessTo">
+      {% if scope == "list" %}
+        <li typeof="spkc:Property"><data hidden="hidden" property="spkc:name">description</data>{% trans 'Component' %}:{% trans 'Description' %}</li>
+        {% if uc.public %}
+          <li typeof="spkc:Property"><data hidden="hidden" property="spkc:name">name</data>{% trans 'Component' %}:{% trans 'Name' %} (<em>{{uc}}</em>)</li>
+        {% endif %}
+        {% for content in object_list %}
+          <li typeof="spkc:Content">{% trans 'Content' %}: {{content}}</li>
+        {% endfor %}
+      {% else %}
+        <li typeof="spkc:Content">{% trans 'Content' %}: {{object}}</li>
+      {% endif %}
+    </ul>
   </fieldset>
   <button class="w3-button w3-grey">
     {% trans 'Confirm Access' %}
