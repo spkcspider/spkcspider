@@ -1,13 +1,27 @@
-.spkc-item{
+.spkc-variant-text{
+  height:100%;
+  width:100%;
+  position:absolute;
+  left:0;
+  top:0;
+}
+.spkc-variant-errcolor{
+  /* dark red */
+  color:#fff!important;
+  background-color:#660000!important;
+}
+
+.spkc-entity-button-text{
   font-size:17px!important;
   width:100%;
   position:absolute;
-  left:1px;
-  bottom:2px;
+  left:0;
+  top:0;
+  vertical-align: middle;
   text-align:center;
 }
 @media (min-width:601px){
-  .spkc-item-button{
+  .spkc-entity-button{
     width:25px;
   }
 }

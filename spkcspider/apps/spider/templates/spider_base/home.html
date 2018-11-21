@@ -84,13 +84,13 @@
             <td class="w3-show-inline-block">
               <div class="w3-bar w3-round-large w3-tiny w3-blue">
                 <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" property="spkc:action:view">
-                  <div class="spkc-item-button"><i class="fa fa-list-ul" aria-label="{% trans 'List' %}" alt="{% trans 'List' %}"></i></div>
-                  <span aria-hidden="true" class="w3-text w3-black spkc-item"><div class="w3-animate-opacity">{% trans 'List' %}</div></span>
+                  <div class="spkc-entity-button"><i class="fa fa-list-ul" aria-label="{% trans 'List' %}" alt="{% trans 'List' %}"></i></div>
+                  <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans 'List' %}</div></div>
                 </a>
                 {% if uc.user == request.user %}
                   <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucomponent-update' name=uc.name nonce=uc.nonce %}" property="spkc:action:update">
-                    <div class="spkc-item-button"><i class="fa fa-edit" aria-label="{% trans 'Edit' %}" alt="{% trans 'Edit' %}"></i></div>
-                    <span aria-hidden="true" class="w3-text w3-black w3-large spkc-item"><div class="w3-animate-opacity">{% trans 'Edit' %}</div></span>
+                    <div class="spkc-entity-button"><i class="fa fa-edit" aria-label="{% trans 'Edit' %}" alt="{% trans 'Edit' %}"></i></div>
+                    <div aria-hidden="true" class="w3-text w3-black w3-large spkc-entity-button-text"><div class="w3-animate-opacity">{% trans 'Edit' %}</div></div>
                   </a>
                 {% endif %}
               </div>
