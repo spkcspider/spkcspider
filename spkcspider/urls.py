@@ -51,7 +51,7 @@ urlpatterns = [
 
 for app in apps.get_app_configs():
     url_path = getattr(
-        app, "url_path",
+        app, "spider_url_path",
         None
     )
     if not url_path:
