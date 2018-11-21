@@ -4,6 +4,6 @@
 </div>
 {% if can_upgrade %}
 <div>
-  <a href="{% url 'spider_base:ucontent-access' id=object.associated.id nonce=object.associated.nonce access='update_user' %}">{% trans "Update" %}</a>
+  <a href="{% url 'spider_base:ucontent-access' id=object.associated.id nonce=object.associated.nonce access='update_user' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
 </div>
 {% endif %}

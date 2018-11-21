@@ -4,10 +4,12 @@ __all__ = ["FileForm", "TextForm", "RawTextForm"]
 import bleach
 from bleach import sanitizer
 
+from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django import forms
 
+from spkcspider.apps.spider.constants.static import index_names
 from spkcspider.apps.spider.helpers import get_settings_func
 from .models import FileFilet, TextFilet
 
@@ -78,6 +80,10 @@ class TextForm(forms.ModelForm):
         model = TextFilet
         fields = ['text', 'name', 'editable_from', 'preview_words']
 
+        widgets = {
+            "editable_from": forms.CheckboxSelectMultiple()
+        }
+
     class Media:
         css = {
             'all': [
@@ -102,14 +108,19 @@ class TextForm(forms.ModelForm):
         if scope in ("add", "update"):
             self.fields["editable_from"].help_text = \
                 _(
-                    "Allow editing from selected components."
-                    "Requires %s protection strength."
+                    "Allow editing from selected components. "
+                    "Requires protection strength >=%s."
                 ) % settings.MIN_STRENGTH_EVELATION
 
+            query = models.Q(pk=self.instance.associated.usercomponent.pk)
+            if scope == "update":
+                query |= models.Q(
+                    contents__references=self.instance.associated
+                )
+            query &= models.Q(strength__gte=settings.MIN_STRENGTH_EVELATION)
+            query &= ~models.Q(name__in=index_names)
             self.fields["editable_from"].queryset = \
-                self.fields["editable_from"].queryset.filter(
-                    user=request.user
-                ).exclude(name__in=("index", "fake_index"))
+                self.fields["editable_from"].queryset.filter(query).distinct()
             return
 
         del self.fields["editable_from"]

@@ -23,7 +23,13 @@
             {% literalize field as LiteralData %}
             <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
           {% endif %}
-          {{ field }}
+          {% block form_widget %}
+          {% if field|widget_type == "checkboxselectmultiple" %}
+          {% render_field field class+="w3-ul" %}
+          {% else %}
+          {% render_field field %}
+          {% endif %}
+          {% endblock form_widget %}
         </div>
         <div class="w3-cell w3-padding">
         {% if field.help_text %}

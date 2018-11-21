@@ -231,10 +231,12 @@ class BaseContent(models.Model):
                 if ret:
                     kwargs["form"].add_error(None, ret)
         if kwargs["form"].is_valid():
+            instance.save()
+            kwargs["form"].save_m2m()
             kwargs["form"] = self.get_form(scope)(
                 **self.get_form_kwargs(
                     scope=scope,
-                    instance=instance.save(),
+                    instance=instance,
                     **kwargs
                 )
             )

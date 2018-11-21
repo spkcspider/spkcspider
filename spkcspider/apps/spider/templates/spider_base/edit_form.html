@@ -4,7 +4,7 @@
   {% for rdftype in add_spkc_types %}
     <data property="spkc:type" hidden="hidden">{{rdftype}}</data>
   {% endfor %}
-  {% csrf_token %}
+  {% if not inner_form %}{% csrf_token %}{% endif %}
   <fieldset>
     <legend><h2>{{legend|safe}}</h2></legend>
     {% include "spider_base/base_form.html" with form=form %}
