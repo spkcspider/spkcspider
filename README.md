@@ -40,7 +40,7 @@ spkcspider: contains spkcspider url detection and wsgi handler
 ## verifier:
 Base reference implementation of a verifier.
 
-spkcspider.apps.verifier: verifier base  WARNING: has verifier_base namespace to not break existing apps
+spkcspider.apps.verifier: verifier base utils WARNING: has spider_verifier namespace to not break existing apps
 
 
 

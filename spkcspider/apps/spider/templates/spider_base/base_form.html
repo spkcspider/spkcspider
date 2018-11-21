@@ -4,18 +4,26 @@
 {% endfor %}
 <ul class="w3-ul" rel="spkc:properties">
   {% for field in form.visible_fields %}
-    {% literalize field as LiteralData %}
     <li class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
       <div class="">
         <div class="w3-cell w3-padding">
-          <data hidden="hidden" property="spkc:fieldname">{{field.name}}</data>
+          <data hidden="hidden" property="spkc:fieldname">{{field.html_name}}</data>
           <data hidden="hidden" property="spkc:name">{{field.name}}</data>
           <div>{{ field.label_tag }}</div>
           {% comment %}
             {% if form.use_required_attribute and not field.required %}
-            <small class="w3-text-grey">(optional)</small>{% endif %}
-          {% endcomment %}<br/>
-          {% render_field field property="spkc:value" datatype=LiteralData.datatype content=LiteralData %}
+            <div class="w3-text-grey w3-tiny">(optional)</div>{% endif %}
+          {% endcomment %}
+          {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
+            {% for q in field.value %}
+              {% literalize q as LiteralData %}
+              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+            {% endfor %}
+          {% else %}
+            {% literalize field as LiteralData %}
+            <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+          {% endif %}
+          {{ field }}
         </div>
         <div class="w3-cell w3-padding">
         {% if field.help_text %}

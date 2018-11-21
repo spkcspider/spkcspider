@@ -9,9 +9,8 @@ from django.utils.translation import gettext
 from .models import PublicKey, AnchorServer, AnchorKey
 # AnchorGov, ID_VERIFIERS
 
-from cryptography import x509
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend_
+from cryptography.hazmat.backends import default_backend as default_backend_
 default_backend = default_backend_()
 
 

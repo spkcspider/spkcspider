@@ -161,7 +161,7 @@ class TextFilet(BaseContent):
         )
     )
 
-    text = models.TextField(default="")
+    text = models.TextField(default="", blank=True)
 
     def __str__(self):
         if not self.id:
