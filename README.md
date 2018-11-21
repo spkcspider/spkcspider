@@ -153,6 +153,7 @@ verified_by urls should return last verification date for a hash
 * tests
 * documentation
 * bind authtoken to a limitted amount of contents
+* make hash algorithm configurable
 
 Later:
 * raw add, update mode

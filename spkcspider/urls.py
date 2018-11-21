@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -49,18 +50,18 @@ urlpatterns = [
 ]
 
 for app in apps.get_app_configs():
-    url_namespace = getattr(app, "url_namespace", None)
-    if url_namespace:
-        url_path = getattr(
-            app, "url_path",
-            url_namespace.replace("spider_", "")+"/"
+    url_path = getattr(
+        app, "url_path",
+        None
+    )
+    if not url_path:
+        continue
+    urlpatterns.append(
+        path(
+            url_path,
+            include("{}.urls".format(app.name))
         )
-        urlpatterns.append(
-            path(
-                url_path,
-                include("{}.urls".format(app.name), namespace=url_namespace)
-            )
-        )
+    )
 
 
 if getattr(settings, "USE_CAPTCHAS", False):

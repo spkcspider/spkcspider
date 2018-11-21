@@ -1,7 +1,10 @@
+__all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
+
 
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import DetailView
-from django.http import HttpResponseRedirect
+from django.views import View
+from django.http import HttpResponseRedirect, HttpResponse
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
 )
@@ -64,8 +67,10 @@ class CreateEntry(CreateView):
 
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()
-        ret["initial"].setdefault({})
-        ret["initial"]["url"] = self.request.get("Referer", "")
+        if "initial" not in ret:
+            # {} not hashable
+            ret["initial"] = {}
+        ret["initial"]["url"] = self.request.META.get("Referer", "")
         return ret
 
     def form_invalid(self, form):
@@ -87,3 +92,15 @@ class VerifyEntry(DetailView):
         kwargs["namespace"] = namespace_verifier
         kwargs["verified"] = Literal(self.object.checked)
         return super().get_context_data(**kwargs)
+
+
+class HashAlgoView(View):
+
+    def get(self, request, *args, **kwargs):
+        algo = getattr(
+            settings, "VERIFICATION_HASH_ALGO", "sha512"
+        )
+        return HttpResponse(
+            content=algo.encode("utf8"),
+            content_type="text/plain"
+        )

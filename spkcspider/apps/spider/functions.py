@@ -15,8 +15,10 @@ from django.shortcuts import redirect
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.conf import settings
-from .signals import failed_guess
 from rdflib import Literal, XSD
+
+from .signals import failed_guess
+from .constants.static import spkcgraph
 
 
 def rate_limit_default(view, request):
@@ -107,7 +109,7 @@ def embed_file_default(name, value, content, context):
             url = "{}{}".format(context["hostpart"], url)
         return Literal(
             url,
-            datatype=XSD.anyURI,
+            datatype=spkcgraph["hashableURI"],
         )
     else:
         # only file filet has files yet
@@ -118,7 +120,7 @@ def embed_file_default(name, value, content, context):
         )
         return Literal(
             url,
-            datatype=XSD.anyURI,
+            datatype=spkcgraph["hashableURI"],
         )
 
 

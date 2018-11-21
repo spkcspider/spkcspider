@@ -10,4 +10,3 @@ class SpiderVerifierConfig(AppConfig):
     verbose_name = 'spkcspider verifier'
     if getattr(settings, "AUTO_INCLUDE_VERIFIER", False):
         url_path = 'verify/'
-        url_namespace = 'spider_verifier'

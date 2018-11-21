@@ -48,12 +48,17 @@ def hash_entry(triple):
 
 def yield_hashes(graph, hashable_nodes):
     for t in graph.triples((None, spkcgraph["value"], None)):
-        if t[0] in hashable_nodes and t[2].datatype != XSD.anyURI:
+        if (
+            t[0] in hashable_nodes and
+            t[2].datatype != spkcgraph["hashableURI"]
+        ):
             yield hash_entry(t)
 
 
 def yield_hashable_urls(graph, hashable_nodes):
-    for t in graph.triples((None, spkcgraph["value"], XSD.anyURI)):
+    for t in graph.triples(
+        (None, spkcgraph["value"], spkcgraph["hashableURI"])
+    ):
         if t[0] in hashable_nodes:
             yield t
 

@@ -16,7 +16,6 @@ from django.conf import settings
 from django.utils.translation import pgettext
 
 from rdflib import Literal, Graph, BNode, URIRef
-from rdflib.namespace import XSD
 
 from .constants import UserContentType, spkcgraph
 from .serializing import paginated_contents, serialize_stream
@@ -270,7 +269,7 @@ class BaseContent(models.Model):
             )
             return Literal(
                 url,
-                datatype=XSD.anyURI,
+                datatype=spkcgraph["hashableURI"],
             )
         elif isinstance(data, File):
             return get_settings_func(
@@ -420,7 +419,7 @@ class BaseContent(models.Model):
 
             uc = kwargs.get("source", self.associated.usercomponent)
             g.add((
-                "strength", spkcgraph["strength"],
+                session_dict["sourceref"], spkcgraph["strength"],
                 Literal(uc.strength)
             ))
 

@@ -16,7 +16,6 @@ class SpiderBaseConfig(AppConfig):
     name = 'spkcspider.apps.spider'
     label = 'spider_base'
     url_path = 'spider/'
-    url_namespace = 'spider_base'
     verbose_name = 'spkcspider base'
 
     def ready(self):

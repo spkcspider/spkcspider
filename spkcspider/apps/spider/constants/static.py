@@ -12,9 +12,7 @@ from rdflib.namespace import Namespace
 
 
 spkcgraph = Namespace("https://spkcspider.net/static/schemes/spkcgraph#")
-# with the import of the package bind new datatype.
-# Should be executed only once
-# bind(spkcgraph["hashableURI"], None)
+# Literal allows arbitary datatypes, use this and don't bind
 
 hex_size_of_bigid = 16
 

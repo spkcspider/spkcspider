@@ -12,7 +12,7 @@ from .views import SignupView, UserUpdateView, UserLoginView, UserLogoutView
 
 app_name = "spider_accounts"
 
-# forget recovery, only authentication
+# no recovery, only authentication
 
 urlpatterns = [
     path('login/', UserLoginView.as_view(), name='login'),
