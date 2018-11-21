@@ -15,7 +15,7 @@ from .signals import (
 class SpiderBaseConfig(AppConfig):
     name = 'spkcspider.apps.spider'
     label = 'spider_base'
-    url_path = 'spider/'
+    spider_url_path = 'spider/'
     verbose_name = 'spkcspider base'
 
     def ready(self):

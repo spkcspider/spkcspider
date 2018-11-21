@@ -7,4 +7,4 @@ class SpiderAccountsConfig(AppConfig):
     name = 'spkcspider.apps.spider_accounts'
     label = 'spider_accounts'
     verbose_name = 'Spkcspider User Model'
-    url_path = "accounts/"
+    spider_url_path = "accounts/"
