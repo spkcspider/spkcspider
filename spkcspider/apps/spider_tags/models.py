@@ -118,10 +118,10 @@ class SpiderTag(BaseContent):
     def __str__(self):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
-        return "%s: %s (%s)" % (
+        return "%s: %s:%s" % (
             self.localize_name("Tag"),
             self.layout.name,
-            self.id
+            self.associated.id
         )
 
     def get_template_name(self, scope):
