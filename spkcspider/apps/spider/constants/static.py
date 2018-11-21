@@ -9,13 +9,12 @@ import enum
 from collections import namedtuple
 
 from rdflib.namespace import Namespace
-from rdflib.term import bind
 
 
 spkcgraph = Namespace("https://spkcspider.net/static/schemes/spkcgraph#")
 # with the import of the package bind new datatype.
 # Should be executed only once
-bind(spkcgraph["hashableURI"], None)
+# bind(spkcgraph["hashableURI"], None)
 
 hex_size_of_bigid = 16
 
