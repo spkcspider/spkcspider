@@ -13,7 +13,9 @@ from spkcspider.apps.spider.constants.static import index_names
 from spkcspider.apps.spider.helpers import get_settings_func
 from .models import FileFilet, TextFilet
 
-tags = sanitizer.ALLOWED_TAGS + ['img', 'p', 'br', 'sub', 'sup']
+tags = sanitizer.ALLOWED_TAGS + [
+    'img', 'p', 'br', 'sub', 'sup', 'h2', 'h3', 'h4'
+]
 protocols = sanitizer.ALLOWED_PROTOCOLS + ['data']
 
 
