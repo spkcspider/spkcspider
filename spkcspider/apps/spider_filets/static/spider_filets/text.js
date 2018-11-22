@@ -7,6 +7,13 @@ jQuery( document ).ready(function( $ ) {
     return;
   trumbowyg_initialized = true;
   $('#id_text').trumbowyg({
+    btnsDef: {
+        // Create a new dropdown
+        image: {
+            dropdown: ['insertImage', 'base64'],
+            ico: 'insertImage'
+        }
+    },
     btns: [
         ['viewHTML'],
         ['historyUndo', 'historyRedo'], // Only supported in Blink browsers
@@ -14,7 +21,7 @@ jQuery( document ).ready(function( $ ) {
         ['strong', 'em', 'del'],
         ['superscript', 'subscript'],
         ['link'],
-        ['insertImage', 'base64'],
+        ['image'],
         ['foreColor', 'backColor'],
         ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
         ['unorderedList', 'orderedList'],
