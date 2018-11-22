@@ -10,7 +10,7 @@ from django.views.generic.base import RedirectView, TemplateView
 from .views import SignupView, UserUpdateView, UserLoginView, UserLogoutView
 
 
-app_name = "spider_accounts"
+app_name = "auth"
 
 # no recovery, only authentication
 
