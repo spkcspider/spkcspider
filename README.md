@@ -152,19 +152,15 @@ verified_by urls should return last verification date for a hash
 * examples
 * tests
 * documentation
-* bind authtoken to a limitted amount of contents
 
 Later:
-* raw add, update mode
+* bind authtoken to a scope
 * create client side script for import (pushing to server, index token for auth?)
 * email to spkcspider transport wrapper (also script)+component
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
 * complete travel mode
-
-Maybe:
-* use async
 
 # Thanks
 
