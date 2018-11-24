@@ -141,11 +141,14 @@ class UserComponent(models.Model):
             name = "index"
         return "<UserComponent: %s: %s>" % (self.username, name)
 
-    def __str__(self):
+    def get_name(self):
         name = self.name
         if name in index_names:
             name = "index"
         return name
+
+    def __str__(self):
+        return self.get_name()
 
     def clean(self):
         _ = gettext

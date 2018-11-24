@@ -47,3 +47,8 @@ def reverse_get(context, name, **kwargs):
 @register.simple_tag()
 def expires_delta(expires):
     return expires-timezone.now()
+
+
+@register.simple_tag()
+def token_expires(usercomponent, token):
+    return token.created + usercomponent.token_duration

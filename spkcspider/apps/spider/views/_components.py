@@ -1,7 +1,7 @@
 
 __all__ = (
     "ComponentIndex", "ComponentPublicIndex", "ComponentCreate",
-    "ComponentUpdate", "ComponentDelete"
+    "ComponentUpdate", "ComponentDelete", "TokenDelete"
 )
 
 from urllib.parse import urljoin
@@ -12,7 +12,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.db import models
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
@@ -23,7 +23,9 @@ from ._core import UserTestMixin, UCTestMixin
 from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
-from ..models import UserComponent, TravelProtection, AssignedContent
+from ..models import (
+    UserComponent, TravelProtection, AssignedContent
+)
 from ..constants import spkcgraph
 from ..serializing import paginated_contents, serialize_stream
 from ..helpers import add_property
@@ -458,6 +460,33 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             self.get_context_data(
                 form=self.get_form_class()(**self.get_form_success_kwargs())
             )
+        )
+
+
+class TokenDelete(UCTestMixin, DeleteView):
+    no_nonce_usercomponent = True
+
+    def get_object(self):
+        return None
+
+    def delete(self, request, *args, **kwargs):
+        f = list(map(int, self.request.POST.getlist("token")))
+        self.usercomponent.filter(
+            id__in=f
+        ).delete()
+        return JsonResponse(
+            [
+                {
+                    "id": i.id,
+                    "expire_date": (
+                        i.created +
+                        self.usercomponent.token_duration
+                    ),
+                    "token": i.token
+
+
+                } for i in self.usercomponent.authtokens
+            ]
         )
 
 
