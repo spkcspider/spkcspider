@@ -20,6 +20,8 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core import validators
 
+from jsonfield import JSONField
+
 from ..helpers import token_nonce, get_settings_func
 from ..constants import (
     ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
@@ -240,6 +242,7 @@ class AuthToken(models.Model):
         max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
         db_index=True
     )
+    extra = JSONField(default={}, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
 
     class Meta:

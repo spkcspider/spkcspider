@@ -15,7 +15,7 @@
     <fieldset>
       <legend><h1>{% trans 'Authenticate with' %}</h1></legend>
       {% extract_protections "protections" as protections %}
-      <div>
+      <div style="overflow-y: auto; max-height:600px">
         {% for prot in protections %}
           <div class="w3-padding">
             <div class="w3-padding w3-card w3-white">

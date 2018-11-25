@@ -24,7 +24,7 @@ from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import (
-    UserComponent, TravelProtection, AssignedContent
+    UserComponent, TravelProtection, AssignedContent, AuthToken
 )
 from ..constants import spkcgraph
 from ..serializing import paginated_contents, serialize_stream
@@ -465,29 +465,52 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
 class TokenDelete(UCTestMixin, DeleteView):
     no_nonce_usercomponent = True
+    also_authenticated_users = True
 
     def get_object(self):
         return None
 
     def delete(self, request, *args, **kwargs):
-        f = list(map(int, self.request.POST.getlist("token")))
-        self.usercomponent.filter(
-            id__in=f
-        ).delete()
-        return JsonResponse(
-            [
+        self.clean_old()
+        query = AuthToken.objects.filter(
+            usercomponent=self.usercomponent,
+            token__in=self.request.POST.getlist("token")
+        )
+        if query.filter(
+            created_by_special_user=self.request.user
+        ).exists():
+            self.request.auth_token = self.create_token(self.request.user)
+        query.delete()
+        del query
+        return self.get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.delete(self, request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        self.clean_old()
+        response = {
+            "tokens": [
                 {
-                    "id": i.id,
-                    "expire_date": (
+                    "expires": (
                         i.created +
                         self.usercomponent.token_duration
-                    ),
+                    ).strftime("%a, %d %b %Y %H:%M:%S %z"),
                     "token": i.token
 
 
-                } for i in self.usercomponent.authtokens
-            ]
-        )
+                } for i in AuthToken.objects.filter(
+                    usercomponent=self.usercomponent
+                )
+            ],
+            "admin": AuthToken.objects.filter(
+                usercomponent=self.usercomponent,
+                created_by_special_user=self.request.user
+            ).first()
+        }
+        if response["admin"]:
+            response["admin"] = response["admin"].token
+        return JsonResponse(response)
 
 
 class ComponentDelete(UserTestMixin, DeleteView):

@@ -112,6 +112,13 @@ class UserTestMixin(AccessMixin):
             return token
         return self.create_token(self.request.user)
 
+    def clean_old(self, expire=None):
+        if not expire:
+            expire = timezone.now()-self.usercomponent.token_duration
+        return self.usercomponent.authtokens.filter(
+            created__lt=expire
+        ).delete()
+
     def test_token(self):
         expire = timezone.now()-self.usercomponent.token_duration
         no_token = self.usercomponent.required_passes == 0
@@ -119,9 +126,7 @@ class UserTestMixin(AccessMixin):
         # token not required
         if not no_token:
             # delete old token, so no confusion happen
-            self.usercomponent.authtokens.filter(
-                created__lt=expire
-            ).delete()
+            self.clean_old(expire)
 
             # generate key if not existent
             if not self.request.session.session_key:

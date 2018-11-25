@@ -56,50 +56,9 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     </h1>
   </div>
   {% if object %}
-    <h2 class="w3-center"></h2>
-    <div>
-      <div class="w3-cell-row w3-padding">
-        <div class="w3-cell">
-
-        </div>
-        <div class="w3-cell">
-        </div>
-        <div class="w3-cell">
-        </div>
-      </div>
-      <form id="token_container" class="w3-padding" onsubmit="delete_token(event);return false;" method="post" target="_blank">
-        {% csrf_token %}
-        <table width="100%">
-          <thead>
-            <tr>
-              <th colspan="3" class="w3-jumbo w3-center">{% trans 'Active Tokens' %}</th>
-            </tr>
-            <tr>
-              <th>{% trans 'Token' %}</th>
-              <th>{% trans 'Valid till' %}</th>
-              <th>{% trans 'Delete' %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for token in object.authtokens.all %}
-              {% token_expires object token as expire_date %}
-              <tr>
-                <td>
-                  {{token.token}}
-                </td>
-                <td>
-                  {{expire_date}}
-                </td>
-                <td>
-                  <input type="checkbox" name="token" value="{{token.id}}"></input>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        <button >{% trans 'Delete' %}</button>
-      </form>
-    </div>
+    <form hidden="hidden" id="deleteForm" onsubmit="return delete_token(event)" method="post" action='{% url "spider_base:token-delete" name=object.name %}'>
+      {% csrf_token %}
+    </form>
   {% endif %}
   {% include "spider_base/form_errors.html" with form=form %}
   <form class="w3-padding" action="{{ request.get_full_path }}" encdata="multipart/form-data" method="post">
@@ -115,6 +74,39 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         {% endif %}
         </h1>
       </legend>
+      <div style="overflow-y: auto; max-height:400px">
+        <table width="100%" id="token_container">
+          <thead>
+            <tr>
+              <th colspan="3" class="w3-center"><h1>{% trans 'Active Tokens' %}</h1></th>
+            </tr>
+            <tr>
+              <th>{% trans 'Token' %}</th>
+              <th>{% trans 'Valid till' %}</th>
+              <th>{% trans 'Delete' %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for token in object.authtokens.all %}
+              {% token_expires object token as expire_date %}
+              <tr>
+                <td>
+                  {{token.token}}
+                </td>
+                <td>
+                  {{expire_date|date:"D, d/m/Y"}}
+                </td>
+                <td>
+                  <input form="deleteForm" type="checkbox" name="token" value="{{token.token}}"></input>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="height:50px">
+        <button class="w3-button w3-grey w3-right w3-hover-red" form="deleteForm">{% trans 'Delete' %}</button>
+      </div>
       {% include "spider_base/base_form.html" with form=form %}
     </fieldset>
     {% if form.instance.id %}
@@ -124,7 +116,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     {% endif %}
     <fieldset>
       <legend><h1>{% trans 'Protections' %}</h1></legend>
-      <div class="">
+      <div style="overflow-y: auto; max-height:600px">
         {% for prot in form.protections %}
           <div class="w3-padding">
             <div class="w3-padding w3-card w3-white">
@@ -137,6 +129,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             <div class="w3-padding w3-card w3-orange">{% trans 'No protections: create component first' %}</div>
           </div>
         {% endfor %}
+      </div>
     </fieldset>
     <button class="w3-button w3-grey">
       {% if form.instance.id %}{% trans "Change" %}{% else %}{% trans "Create" %}{% endif %}
@@ -154,31 +147,56 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   {% url 'spider_base:ucontent-export' id=object.id nonce=object.nonce as exportlink %}
   {% include "spider_base/modalpresenter.html" %}
   <script>
-    function delete_token(event){
+    async function delete_token(event){
+      event.preventDefault()
       let tokens = []
-      for (count = 0; count < event.target.token.length; count++)
-      {
-          if (event.target.token[count].checked == true)
+      if (event.target.token.length){
+        for (let count = 0; count <= event.target.token.length; count++)
+        {
+            if (event.target.token[count].checked == true)
+            {
+                tokens.push(event.target.token[count].value)
+            }
+        }
+      } else {
+          if (event.target.token.checked == true)
           {
-              tokens.push(event.target.token[count].value)
+              tokens.push(event.target.token.value)
           }
       }
-      alert(event.target.csrfmiddlewaretoken.value)
       req = new Request('{% url "spider_base:token-delete" name=object.name %}', {
           method: 'POST',
-          body: {
-            token: tokens
-          },
+          body: new URLSearchParams({
+            "token": tokens
+          }),
           credentials: "same-origin",
           headers: {
-             "X-CSRFToken": event.target.csrfmiddlewaretoken.value
+             "X-CSRFToken": event.target.csrfmiddlewaretoken.value,
          }
       });
-      fetch(req).then(function(response) {
-        let ob = document.getElementById("token_container");
-        ob.deleteTBody();
+      await fetch(req)
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+        let tbody = document.getElementById("token_container").tBodies[0];
+        while(tbody.rows.length != 0) {
+          tbody.deleteRow(0);
+        }
+        for(let i=0; i<data["tokens"].length; i++){
+          let row = tbody.insertRow();
+          let cell1 = row.insertCell()
+          cell1.innerText = data["tokens"][i].token
+          let cell2 = row.insertCell()
+          let date = new Date(data["tokens"][i].expires);
+          // D d M Y
+          cell2.innerText = date.toLocaleDateString("en-GB", {
+            weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
+          })
+          let cell3 = row.insertCell()
+          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" value="${data["tokens"][i].token}"></input>`
+        }
+        auth_token = data["admin"]
       })
-
+      return false;
     };
   </script>
 {% endif %}
