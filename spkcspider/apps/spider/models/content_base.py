@@ -24,7 +24,7 @@ from ..protections import installed_protections
 
 # from ..constants import UserContentType
 from ..helpers import token_nonce
-from ..constants.static import MAX_NONCE_SIZE
+from ..constants.static import MAX_NONCE_SIZE, UserContentType
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +51,10 @@ class ContentVariant(models.Model):
         if self.code not in installed_protections:
             return self.name
         return self.installed_class.localize_name(self.name)
+
+    @property
+    def unique_for_component(self):
+        return UserContentType.unique.value in self.ctype
 
     def __str__(self):
         return self.localize_name()

@@ -27,15 +27,22 @@
 }
 
 .color-fresh-contentvariant{
-  /* pale green */
+  /* pale green more green */
+  color:#000!important;
+  background-color:#d9ffb3!important;
+}
+
+.color-used-contentvariant{
+  /* pale green more blue */
   color:#000!important;
   background-color:#ddffdd!important;
 }
 
-.color-used-contentvariant{
-  /* pale green */
+
+.color-used-and-unique-contentvariant{
+  /* orange */
   color:#000!important;
-  background-color:#d9ffb3!important;
+  background-color:#ffe6b3!important;
 }
 
 

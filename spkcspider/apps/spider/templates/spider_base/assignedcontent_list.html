@@ -101,7 +101,7 @@
               {% endblocktrans %}</span></div></div>
             </div>
             {% else %}
-            <a class="w3-button w3-left-align w3-col s12 m4 l3 {% if variant in content_variants_used %}color-used-contentvariant{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' name=uc.name type=variant.name %}" >
+            <a class="w3-button w3-left-align w3-col s12 m4 l3 {% if variant in content_variants_used %}{% if variant.unique_for_component %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' name=uc.name type=variant.name %}" >
               <b style="margin-right:5px" aria-hidden="true">+</b>{{variant}}
             </a>
             {% endif %}
