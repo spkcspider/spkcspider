@@ -164,6 +164,9 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 ## embeddding function for files in graph, for e.g. linking  # noqa: E266
 # SPIDER_FILE_EMBED_FUNC
 
+## validator function for url requests  # noqa: E266
+# SPIDER_URL_VALIDATOR
+
 ## Enable captchas  # noqa: E266
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True
