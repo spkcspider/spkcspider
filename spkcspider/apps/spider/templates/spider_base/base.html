@@ -145,11 +145,5 @@
     {# e.g. modals #}
     {% block outercontent %}{% endblock %}
 
-    {# Block for body onload functions #}
-    <script type="text/javascript">
-      window.onload = function() {
-          {% block onbodyload %}{% endblock %}
-      };
-    </script>
   </body>
 </html>

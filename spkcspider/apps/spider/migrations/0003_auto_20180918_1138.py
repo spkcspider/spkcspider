@@ -48,6 +48,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='travelprotection',
             name='disallow',
-            field=models.ManyToManyField(limit_choices_to=spkcspider.apps.spider.models.contents.own_components, related_name='travel_protected', to='spider_base.UserComponent'),
+            field=models.ManyToManyField(related_name='travel_protected', to='spider_base.UserComponent'),
         ),
     ]

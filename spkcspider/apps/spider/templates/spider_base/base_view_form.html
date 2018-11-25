@@ -12,23 +12,23 @@
               <ul class="w3-white">
                 {% for q in field.field.queryset %}
                   {% literalize q as LiteralData %}
-                  <li><a property="spkc:value" datatype="{{LiteralData.datatype}}" href="{{q.get_absolute_url}}">{{q}}</a></li>
+                  <li><a property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}" href="{{q.get_absolute_url}}">{{q}}</a></li>
                 {% endfor %}
               </ul>
             {% else %}
               <ul class="w3-white">
                 {% for q in field.value %}
                   {% literalize q as LiteralData %}
-                  <li property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{q|default_if_none:""}}</li>
+                  <li property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}" content="{{LiteralData}}">{{q|default_if_none:""}}</li>
                 {% endfor %}
               </ul>
             {% endif %}
           {% elif field|widget_type == "url" %}
             {% literalize field as LiteralData %}
-            <a property="spkc:value" datatype="{{LiteralData.datatype}}" class="w3-white" href={{field.value}}>{{field.name}}</a>
+            <a property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}" class="w3-white" href={{field.value}}>{{field.name}}</a>
           {% else %}
             {% literalize field as LiteralData %}
-            <span property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}" class="w3-white">{{field.value|default_if_none:""}}</span>
+            <span property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}" content="{{LiteralData}}" class="w3-white">{{field.value|default_if_none:""}}</span>
           {% endif %}
         </div>
       </div>

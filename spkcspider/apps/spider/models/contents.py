@@ -14,7 +14,6 @@ from datetime import timedelta
 from django.db import models
 from django.shortcuts import redirect
 from django.utils.translation import gettext
-from django.conf import settings
 from django.utils import timezone
 from django.contrib.auth.hashers import (
     check_password, make_password
@@ -123,27 +122,15 @@ class LinkContent(BaseContent):
         return self.content.content.render(**kwargs)
 
 
-def own_components():
-    return models.Q(
-        user=models.F("associated_rel__usercomponent__user"),
-        strength__lt=10  # don't disclose other index
-    ) & ~models.Q(
-        travel_protected__in=TravelProtection.objects.get_active()
-    ) & ~models.Q(
-        public=True  # this would easily expose the travel mode
-    )
-
-
 login_choices = [
     (TravelLoginType.none.value, _("No Login protection")),
+
+    (TravelLoginType.fake_login.value, _("Fake login")),
+    # TODO: to prevent circumventing deletion_period, tie to modified
+    (TravelLoginType.wipe.value, _("Wipe")),
+    (TravelLoginType.wipe_user.value, _("Wipe User")),
 ]
-if getattr(settings, "DANGEROUS_TRAVEL_PROTECTIONS", False):
-    login_choices += [
-        (TravelLoginType.fake_login.value, _("Fake login")),
-        # TODO: to prevent circumventing deletion_period, tie to modified
-        (TravelLoginType.wipe.value, _("Wipe")),
-        (TravelLoginType.wipe_user.value, _("Wipe User")),
-    ]
+
 
 _login_protection = _("""
     No Login Protection: normal, default
@@ -206,7 +193,7 @@ class TravelProtection(BaseContent):
 
     disallow = models.ManyToManyField(
         "spider_base.UserComponent", related_name="travel_protected",
-        limit_choices_to=own_components
+        blank=True
     )
 
     def check_password(self, raw_password):

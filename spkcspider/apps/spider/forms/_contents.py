@@ -3,15 +3,20 @@ __all__ = [
 ]
 
 from django import forms
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.hashers import (
     make_password,
 )
 from django.utils.translation import gettext_lazy as _
 
+from ..constants import dangerous_login_choices
 from ..models import LinkContent, TravelProtection
 from ..helpers import token_nonce
+from ..widgets import InfoWidget
 
+
+_extra = '' if settings.DEBUG else '.min'
 
 PROTECTION_CHOICES = [
     ("none", _("No self-protection (not recommended)")),
@@ -48,7 +53,7 @@ class TravelProtectionForm(forms.ModelForm):
     is_fake = None
     _password = None
     password = forms.CharField(
-        label=_("Password"),
+        label=_("Old Password"),
         strip=False,
         widget=forms.PasswordInput,
     )
@@ -56,7 +61,19 @@ class TravelProtectionForm(forms.ModelForm):
         label=_("Self protection"), help_text=_(_self_protection),
         initial="None", choices=PROTECTION_CHOICES
     )
-    protection_arg = forms.CharField(initial="", required=False)
+    token_arg = forms.CharField(
+        label=_("Token"),
+        help_text=_("please export/copy for disabling travel mode"),
+        widget=InfoWidget
+    )
+    new_pw = forms.CharField(
+        initial="", required=False, label=_("New Password"),
+        widget=forms.PasswordInput(),
+    )
+    new_pw2 = forms.CharField(
+        initial="", required=False, label=_("New Password (Retype)"),
+        widget=forms.PasswordInput(),
+    )
 
     class Meta:
         model = TravelProtection
@@ -64,15 +81,41 @@ class TravelProtectionForm(forms.ModelForm):
             "active", "start", "stop", "login_protection", "disallow"
         ]
 
+    class Media:
+        js = [
+            'admin/js/vendor/jquery/jquery%s.js' % _extra,
+            'spider_base/travelprotection.js'
+        ]
+
     def __init__(self, request, uc, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.uc = uc
+
+        q = models.Q(
+            user=self.uc.user,
+            strength__lt=10  # don't disclose other index
+        ) & ~models.Q(
+            travel_protected__in=TravelProtection.objects.get_active()
+        ) & ~models.Q(
+            public=True  # this would easily expose the travel mode
+        )
+
+        if not getattr(settings, "DANGEROUS_TRAVEL_PROTECTIONS", False):
+            self.fields["login_protection"].choices = \
+                filter(
+                    lambda x: x[0] not in dangerous_login_choices,
+                    self.fields["login_protection"].choices
+                )
+
+        self.fields["disallow"].queryset = \
+            self.fields["disallow"].queryset.filter(q)
+
         # elif self.travel_protection.is_active:
         #    for f in self.fields:
         #        f.disabled = True
-        self.fields["protection_arg"].initial = token_nonce(30)
+        self.fields["token_arg"].initial = token_nonce(30)
 
-        if not self.instance.active and not self.instance.hashed_secret:
+        if not self.instance.active or not self.instance.hashed_secret:
             del self.fields["password"]
 
         if self.instance.hashed_secret:
@@ -88,7 +131,9 @@ class TravelProtectionForm(forms.ModelForm):
 
     def is_valid(self):
         isvalid = super().is_valid()
-        if self.instance.active and self.instance.hashed_secret:
+        if not getattr(self, "cleaned_data", None):
+            return False
+        if self.instance.active and "password" in self.fields:
             isvalid = self.instance.check_password(
                 self.cleaned_data["password"]
             )
@@ -99,9 +144,17 @@ class TravelProtectionForm(forms.ModelForm):
         if ret["self_protection"] == "none":
             self._password = False
         if ret["self_protection"] == "pw":
-            self._password = self.cleaned_data["protection_arg"]
+            if self.cleaned_data["new_pw"] != self.cleaned_data["new_pw2"]:
+                self.add_error("new_pw", forms.ValidationError(
+                    _("The two password fields didn't match.")
+                ))
+                self.add_error("new_pw2", forms.ValidationError(
+                    _("The two password fields didn't match.")
+                ))
+            else:
+                self._password = self.cleaned_data["new_pw"]
         elif ret["self_protection"] == "token":
-            self._password = self.fields["protection_arg"].initial
+            self._password = self.fields["token_arg"].initial
         return ret
 
     def save(self, commit=True):

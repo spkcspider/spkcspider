@@ -1,4 +1,4 @@
-__all__ = ["OpenChoiceWidget"]
+__all__ = ["OpenChoiceWidget", "InfoWidget"]
 
 
 from django.forms import widgets
@@ -6,6 +6,11 @@ from django.conf import settings
 
 
 _extra = '' if settings.DEBUG else '.min'
+
+
+class InfoWidget(widgets.Input):
+    template_name = 'spider_base/forms/widgets/info.html'
+    input_type = "info_widget"
 
 
 class Select2Multiple(widgets.SelectMultiple):

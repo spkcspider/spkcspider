@@ -2,7 +2,8 @@
 __all__ = (
     "ProtectionType", "UserContentType", "ProtectionResult",
     "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
-    "TokenCreationError", "index_names", "protected_names", "spkcgraph"
+    "TokenCreationError", "index_names", "protected_names", "spkcgraph",
+    "dangerous_login_choices"
 )
 
 import enum
@@ -71,3 +72,10 @@ class TravelLoginType(str, enum.Enum):
     wipe = "c"
     # wipe user, self destruct user on login, Note: maybe noticable
     wipe_user = "d"
+
+
+dangerous_login_choices = (
+    TravelLoginType.fake_login.value,
+    TravelLoginType.wipe.value,
+    TravelLoginType.wipe_user.value
+)

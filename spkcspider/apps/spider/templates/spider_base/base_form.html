@@ -4,9 +4,9 @@
 {% endfor %}
 <ul class="w3-ul" rel="spkc:properties">
   {% for field in form.visible_fields %}
-    <li class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
+    <li id="{{field.auto_id}}_wrapper" class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
       <div class="">
-        <div class="w3-cell w3-padding">
+        <div  class="w3-cell w3-padding">
           <data hidden="hidden" property="spkc:fieldname">{{field.html_name}}</data>
           <data hidden="hidden" property="spkc:name">{{field.name}}</data>
           <div>{{ field.label_tag }}</div>
@@ -17,15 +17,17 @@
           {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
             {% for q in field.value %}
               {% literalize q as LiteralData %}
-              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}">{{LiteralData}}</data>
             {% endfor %}
           {% else %}
             {% literalize field as LiteralData %}
-            <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+            <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}">{{LiteralData}}</data>
           {% endif %}
           {% block form_widget %}
           {% if field|widget_type == "checkboxselectmultiple" %}
           {% render_field field class+="w3-ul" %}
+          {% elif field|widget_type == "infowidget" %}
+          {% render_field field class+="w3-white" style="padding: 6px 8px;" %}
           {% else %}
           {% render_field field %}
           {% endif %}
