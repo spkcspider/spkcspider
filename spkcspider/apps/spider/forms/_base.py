@@ -11,7 +11,8 @@ from ..models import (
 )
 from ..helpers import token_nonce
 from ..constants import (
-    ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names
+    ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names,
+    protected_names
 )
 
 _help_text = _("""Generate new nonce with variable strength<br/>
@@ -63,9 +64,9 @@ class UserComponentForm(forms.ModelForm):
 
         if self.instance and self.instance.id:
             assigned = self.instance.protections
-            if self.instance.name_protected:
+            if self.instance.name in protected_names:
                 self.fields["name"].disabled = True
-            if self.instance.no_public:
+            if not self.instance.is_public_allowed:
                 self.fields["public"].disabled = True
                 self.fields.pop("featured", None)
             if self.instance.name in index_names:
@@ -112,7 +113,7 @@ class UserComponentForm(forms.ModelForm):
             return
         if not self.instance or not getattr(self.instance, "id", None):
             # TODO: cleanup into protected_names/forbidden_names
-            if self.cleaned_data['name'] in index_names:
+            if self.cleaned_data['name'] in protected_names:
                 raise forms.ValidationError(
                     _('Forbidden Name'),
                     code="forbidden_name"

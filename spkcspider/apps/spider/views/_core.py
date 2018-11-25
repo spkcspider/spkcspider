@@ -1,20 +1,26 @@
-__all__ = ("UserTestMixin", "UCTestMixin")
+__all__ = ("UserTestMixin", "UCTestMixin", "EntityDeletionMixin")
 
 import logging
 import hashlib
 from urllib.parse import urlencode
 
-import requests
-import certifi
+from datetime import timedelta
+
 
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
-from django.http import HttpResponseRedirect, HttpResponseServerError
+from django.http import (
+    HttpResponseRedirect, HttpResponseServerError, HttpResponse
+)
 from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
+
+
+import requests
+import certifi
 
 from ..helpers import merge_get_url
 from ..constants import UserContentType, index_names
@@ -33,6 +39,9 @@ class UserTestMixin(AccessMixin):
         reverse_lazy("auth:login")
     )
 
+    def dispatch_extra(self, request, *args, **kwargs):
+        return None
+
     def dispatch(self, request, *args, **kwargs):
         _ = gettext
         self.request.is_elevated_request = False
@@ -49,10 +58,9 @@ class UserTestMixin(AccessMixin):
             return self.handle_no_permission()
         if isinstance(user_test_result, str):
             return HttpResponseRedirect(redirect_to=user_test_result)
-        if "referrer" in self.request.GET:
-            # don't want to have to clean up, GET is easier
-            assert("token" in self.request.GET)
-            return self.handle_referrer()
+        ret = self.dispatch_extra(request, *args, **kwargs)
+        if ret:
+            return ret
         return super().dispatch(request, *args, **kwargs)
 
     def sanitize_GET(self):
@@ -279,10 +287,19 @@ class UserTestMixin(AccessMixin):
                     urlencode(self.request.GET["referrer"])
                 )
             )
+
         context = self.get_context_data()
-        context["referrer"] = "https://{}".format(
-            self.request.GET["referrer"]
-        )
+        context["referrer"] = merge_get_url(self.request.GET["referrer"])
+        if (
+            not settings.DEBUG and
+            not context["referrer"].startswith("https://")
+        ):
+            return HttpResponse(
+                status=400,
+                content=_('Insecure url scheme: %(url)s') % {
+                    "url": context["referrer"]
+                }
+            )
         if hasattr(self, "get_queryset"):
             context["object_list"] = self.get_queryset()
         else:
@@ -302,9 +319,9 @@ class UserTestMixin(AccessMixin):
                 token = authtoken.token
             else:
                 token = self.request.auth_token.token
-            # www-data is best here, for beeing compatible to webservers
-            # webservers can transfer dictionary to logic (this program) where
-            # json is no problem
+            # application/x-www-form-urlencoded is best here,
+            # for beeing compatible to most webservers
+            # client side rdf is no problem
             ret = requests.post(
                 context["referrer"],
                 data={
@@ -362,3 +379,56 @@ class UCTestMixin(UserTestMixin):
     def put(self, request, *args, **kwargs):
         # for protections
         return self.get(request, *args, **kwargs)
+
+
+class EntityDeletionMixin(UserTestMixin):
+    object = None
+    http_method_names = ['get', 'post', 'delete']
+
+    def get_context_data(self, **kwargs):
+        _time = self.get_required_timedelta()
+        if _time and self.object.deletion_requested:
+            now = timezone.now()
+            if self.object.deletion_requested + _time >= now:
+                kwargs["remaining"] = timedelta(seconds=0)
+            else:
+                kwargs["remaining"] = self.object.deletion_requested+_time-now
+        return super().get_context_data(**kwargs)
+
+    def get_required_timedelta(self):
+        _time = self.object.content.deletion_period
+        if _time:
+            _time = timedelta(seconds=_time)
+        else:
+            _time = timedelta(seconds=0)
+        return _time
+
+    def delete(self, request, *args, **kwargs):
+        # hack for compatibility to ContentRemove
+        if getattr(self.object, "name", "") in index_names:
+            return self.handle_no_permission()
+        _time = self.get_required_timedelta()
+        if _time:
+            now = timezone.now()
+            if self.object.deletion_requested:
+                if self.object.deletion_requested+_time >= now:
+                    return self.get(request, *args, **kwargs)
+            else:
+                self.object.deletion_requested = now
+                self.object.save()
+                return self.get(request, *args, **kwargs)
+        self.object.delete()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def post(self, request, *args, **kwargs):
+        # because forms are screwed (delete not possible)
+        if request.POST.get("action") == "reset":
+            return self.reset(request, *args, **kwargs)
+        elif request.POST.get("action") == "delete":
+            return self.delete(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
+
+    def reset(self, request, *args, **kwargs):
+        self.object.deletion_requested = None
+        self.object.save(update_fields=["deletion_requested"])
+        return HttpResponseRedirect(self.get_success_url())

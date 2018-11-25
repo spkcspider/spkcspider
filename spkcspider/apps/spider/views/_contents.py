@@ -3,9 +3,8 @@
 __all__ = (
     "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
 )
-from datetime import timedelta
 
-from django.views.generic.edit import ModelFormMixin
+from django.views.generic.edit import ModelFormMixin, DeleteView
 from django.views.generic.list import ListView
 from django.views.generic.base import TemplateResponseMixin, View
 from django.shortcuts import get_object_or_404, redirect
@@ -20,8 +19,7 @@ from django.http import Http404
 from rdflib import Graph, Literal, URIRef
 
 
-from ._core import UCTestMixin, UserTestMixin
-from ._components import ComponentDelete
+from ._core import UCTestMixin, EntityDeletionMixin
 from ..models import (
     AssignedContent, ContentVariant, UserComponent
 )
@@ -35,6 +33,7 @@ class ContentBase(UCTestMixin):
     model = AssignedContent
     scope = None
     object = None
+    # use nonce of content object instead
     no_nonce_usercomponent = True
 
     def get_template_names(self):
@@ -75,6 +74,11 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     scope = "access"
     form_class = UserContentForm
     model = AssignedContent
+
+    def dispatch_extra(self, request, *args, **kwargs):
+        if "referrer" in self.request.GET:
+            return self.handle_referrer()
+        return None
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -193,6 +197,11 @@ class ContentIndex(UCTestMixin, ListView):
     scope = "list"
     ordering = ("id",)
     no_nonce_usercomponent = False
+
+    def dispatch_extra(self, request, *args, **kwargs):
+        if "referrer" in self.request.GET:
+            return self.handle_referrer()
+        return None
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -480,16 +489,19 @@ class ContentAdd(ContentBase, ModelFormMixin,
         return super().render_to_response(context)
 
 
-class ContentRemove(ComponentDelete):
+class ContentRemove(EntityDeletionMixin, DeleteView):
     model = AssignedContent
     usercomponent = None
     no_nonce_usercomponent = True
 
     def dispatch(self, request, *args, **kwargs):
         self.usercomponent = self.get_usercomponent()
-        self.user = self.usercomponent.user
         self.object = self.get_object()
-        return UserTestMixin.dispatch(self, request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        kwargs["uc"] = self.usercomponent
+        return super().get_context_data(**kwargs)
 
     def get_success_url(self):
         return reverse(
@@ -498,14 +510,6 @@ class ContentRemove(ComponentDelete):
                 "nonce":  self.usercomponent.nonce
             }
         )
-
-    def get_required_timedelta(self):
-        _time = self.object.content.deletion_period
-        if _time:
-            _time = timedelta(seconds=_time)
-        else:
-            _time = timedelta(seconds=0)
-        return _time
 
     def get_object(self, queryset=None):
         if not queryset:

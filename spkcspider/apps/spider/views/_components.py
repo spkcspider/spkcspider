@@ -6,20 +6,19 @@ __all__ = (
 
 from urllib.parse import urljoin
 
-from datetime import timedelta
 
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.db import models
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
 from rdflib import Graph, Literal, URIRef
 
-from ._core import UserTestMixin, UCTestMixin
+from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
 from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
@@ -513,11 +512,10 @@ class TokenDelete(UCTestMixin, DeleteView):
         return JsonResponse(response)
 
 
-class ComponentDelete(UserTestMixin, DeleteView):
+class ComponentDelete(EntityDeletionMixin, DeleteView):
     model = UserComponent
     fields = []
     object = None
-    http_method_names = ['get', 'post', 'delete']
 
     def dispatch(self, request, *args, **kwargs):
         self.user = self.get_user()
@@ -533,57 +531,14 @@ class ComponentDelete(UserTestMixin, DeleteView):
             }
         )
 
-    def get_required_timedelta(self):
-        # TODO: needs better design
-        _time = getattr(
-            settings, "DELETION_PERIODS_COMPONENTS", {}
-        ).get(self.object.name, None)
-        if _time:
-            _time = timedelta(seconds=_time)
-        else:
-            _time = timedelta(seconds=0)
-        return _time
-
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
-        _time = self.get_required_timedelta()
-        if _time and self.object.deletion_requested:
-            now = timezone.now()
-            if self.object.deletion_requested + _time >= now:
-                kwargs["remaining"] = timedelta(seconds=0)
-            else:
-                kwargs["remaining"] = self.object.deletion_requested+_time-now
         return super().get_context_data(**kwargs)
 
     def delete(self, request, *args, **kwargs):
-        # hack for compatibility to ContentRemove
-        if getattr(self.object, "name", "") in index_names:
+        if self.object.name in index_names:
             return self.handle_no_permission()
-        _time = self.get_required_timedelta()
-        if _time:
-            now = timezone.now()
-            if self.object.deletion_requested:
-                if self.object.deletion_requested+_time >= now:
-                    return self.get(request, *args, **kwargs)
-            else:
-                self.object.deletion_requested = now
-                self.object.save()
-                return self.get(request, *args, **kwargs)
-        self.object.delete()
-        return HttpResponseRedirect(self.get_success_url())
-
-    def post(self, request, *args, **kwargs):
-        # because forms are screwed (delete not possible)
-        if request.POST.get("action") == "reset":
-            return self.reset(request, *args, **kwargs)
-        elif request.POST.get("action") == "delete":
-            return self.delete(request, *args, **kwargs)
-        return super().get(request, *args, **kwargs)
-
-    def reset(self, request, *args, **kwargs):
-        self.object.deletion_requested = None
-        self.object.save(update_fields=["deletion_requested"])
-        return HttpResponseRedirect(self.get_success_url())
+        super().delete(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
         if not queryset:

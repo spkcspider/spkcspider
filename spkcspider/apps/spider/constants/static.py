@@ -2,7 +2,7 @@
 __all__ = (
     "ProtectionType", "UserContentType", "ProtectionResult",
     "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
-    "TokenCreationError", "index_names", "spkcgraph"
+    "TokenCreationError", "index_names", "protected_names", "spkcgraph"
 )
 
 import enum
@@ -28,6 +28,7 @@ class TokenCreationError(Exception):
 
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
 index_names = ["index", "fake_index"]
+protected_names = ["index", "fake_index"]
 
 
 class ProtectionType(str, enum.Enum):

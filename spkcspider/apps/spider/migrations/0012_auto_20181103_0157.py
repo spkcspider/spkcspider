@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='usercomponent',
             name='description',
-            field=models.TextField(blank=True, default='', help_text='Description of user component. Visible if "public".'),
+            field=models.TextField(blank=True, default='', help_text="Description of user component."),
         ),
     ]

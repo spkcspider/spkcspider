@@ -1,6 +1,6 @@
 __all__ = [
     "INITIAL_NONCE_SIZE", "NONCE_CHOICES", "default_uctoken_duration",
-    "protected_names", "force_captcha"
+    "force_captcha"
 ]
 
 import datetime
@@ -24,8 +24,6 @@ force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
 
 # require USE_CAPTCHAS
 force_captcha = (force_captcha and getattr(settings, "USE_CAPTCHAS", False))
-
-protected_names = ["index", "fake_index"]
 
 
 default_uctoken_duration = getattr(

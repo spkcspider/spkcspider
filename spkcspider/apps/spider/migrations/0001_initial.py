@@ -87,7 +87,11 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
                 ('nonce', models.SlugField(db_index=False, default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
-                ('public', models.BooleanField(default=False, help_text='Is public? Can be searched?<br/>Note: Field is maybe blocked by assigned content')),
+                ('public', models.BooleanField(default=False, help_text=(
+                    "Is public? Is listed and searchable?<br/>"
+                    "Note: This field is maybe not deactivatable"
+                    "because of assigned content"
+                ))),
                 ('required_passes', models.PositiveIntegerField(default=0, help_text='How many protection must be passed? Set greater 0 to enable protection based access')),
                 ('name', models.SlugField(db_index=False, help_text='\nName of the component.<br/>\nNote: there are special named components\nwith different protection types and scopes.<br/>\nMost prominent: "index" for authentication\n')),
                 ('created', models.DateTimeField(auto_now_add=True)),

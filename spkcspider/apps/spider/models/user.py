@@ -25,7 +25,7 @@ from jsonfield import JSONField
 from ..helpers import token_nonce, get_settings_func
 from ..constants import (
     ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
-    default_uctoken_duration, protected_names, force_captcha, index_names
+    default_uctoken_duration, force_captcha, index_names
 )
 
 
@@ -79,14 +79,15 @@ class UserComponent(models.Model):
     public = models.BooleanField(
         default=False,
         help_text=_(
-            "Is public? Can be searched?<br/>"
-            "Note: Field is maybe blocked by assigned content"
+            "Is public? Is listed and searchable?<br/>"
+            "Note: This field is maybe not deactivatable"
+            "because of assigned content"
         )
     )
     description = models.TextField(
         default="",
         help_text=_(
-            "Description of user component. Visible if \"public\"."
+            "Description of user component."
         ), blank=True
     )
     required_passes = models.PositiveIntegerField(
@@ -154,6 +155,7 @@ class UserComponent(models.Model):
 
     def clean(self):
         _ = gettext
+        self.public = (self.public and self.is_public_allowed)
         self.featured = (self.featured and self.public)
         assert(self.name not in index_names or self.strength == 10)
         assert(self.name in index_names or self.strength < 10)
@@ -208,16 +210,17 @@ class UserComponent(models.Model):
         return (self.name in index_names)
 
     @property
-    def name_protected(self):
-        """ Is it allowed to change the name """
-        return self.name in protected_names
+    def is_public_allowed(self):
+        """ Can the public attribute be set """
+        return self.name not in index_names and self.contents.filter(
+            strength__lt=5
+        )
 
     @property
-    def no_public(self):
-        """ Can the usercomponent be turned public """
-        return self.name in index_names or self.contents.filter(
-            strength__gte=5
-        )
+    def deletion_period(self):
+        return getattr(
+            settings, "DELETION_PERIODS_COMPONENTS", {}
+        ).get(self.get_name(), None)
 
     def save(self, *args, **kwargs):
         if self.name in index_names and self.public:
