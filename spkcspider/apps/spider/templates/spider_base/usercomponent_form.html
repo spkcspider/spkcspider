@@ -151,7 +151,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       event.preventDefault()
       let tokens = []
       if (event.target.token.length){
-        for (let count = 0; count <= event.target.token.length; count++)
+        for (let count=0; count < event.target.token.length; count++)
         {
             if (event.target.token[count].checked == true)
             {
@@ -181,18 +181,18 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         while(tbody.rows.length != 0) {
           tbody.deleteRow(0);
         }
-        for(let i=0; i<data["tokens"].length; i++){
+        for(let count=0; count<data["tokens"].length; count++){
           let row = tbody.insertRow();
           let cell1 = row.insertCell()
-          cell1.innerText = data["tokens"][i].token
+          cell1.innerText = data["tokens"][count].token
           let cell2 = row.insertCell()
-          let date = new Date(data["tokens"][i].expires);
+          let date = new Date(data["tokens"][count].expires);
           // D d M Y
           cell2.innerText = date.toLocaleDateString("en-GB", {
             weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
           })
           let cell3 = row.insertCell()
-          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" value="${data["tokens"][i].token}"></input>`
+          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" value="${data["tokens"][count].token}"></input>`
         }
         auth_token = data["admin"]
       })

@@ -300,11 +300,10 @@ class UserTestMixin(AccessMixin):
                     "url": context["referrer"]
                 }
             )
-        if hasattr(self, "get_queryset"):
-            context["object_list"] = self.get_queryset()
-        else:
-            context["object_list"] = self.usercomponent.contents
-        if "confirm" in self.request.POST:
+        context["object_list"] = self.object_list
+
+        action = self.request.POST.get("action", None)
+        if action == "confirm":
             if self.usercomponent.user == self.request.user:
                 authtoken = AuthToken(
                     usercomponent=self.usercomponent
@@ -322,15 +321,17 @@ class UserTestMixin(AccessMixin):
             # application/x-www-form-urlencoded is best here,
             # for beeing compatible to most webservers
             # client side rdf is no problem
+            # NOTE: csrf must be disabled or use csrf token from GET,
+            #       here is no way to know the token value
             ret = requests.post(
                 context["referrer"],
                 data={
                     "token": token,
                     "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
-                    "url": "%s%s" % (
+                    "url": merge_get_url("%s%s" % (
                         context["hostpart"],
                         self.request.get_full_path()
-                    )
+                    ), token=None)
                 },
                 verify=certifi.where()
             )
@@ -347,6 +348,13 @@ class UserTestMixin(AccessMixin):
                 redirect_to=merge_get_url(
                     context["referrer"],
                     hash=h.hexdigest()
+                )
+            )
+        elif action == "cancel":
+            return HttpResponseRedirect(
+                redirect_to=merge_get_url(
+                    context["referrer"],
+                    error="canceled"
                 )
             )
         else:

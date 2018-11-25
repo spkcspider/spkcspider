@@ -146,7 +146,6 @@ There are some special GET parameters for services with special requirements:
 verified_by urls should return last verification date for a hash
 
 # TODO
-* finish global referrer mode, remove cruft from anchors
 * improve anchors
 * examples
 * tests

@@ -18,4 +18,6 @@ def clean_graph(mtype, graph):
 
 
 def get_hashob():
-    return hashlib.new(getattr(settings, "VERIFICATION_HASH_ALGO", "sha512"))
+    return hashlib.new(getattr(
+        settings, "VERIFICATION_HASH_ALGO", settings.SPIDER_HASH_ALGORITHM
+    ))

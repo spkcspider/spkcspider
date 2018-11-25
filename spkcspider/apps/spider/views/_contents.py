@@ -77,6 +77,9 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
 
     def dispatch_extra(self, request, *args, **kwargs):
         if "referrer" in self.request.GET:
+            self.object_list = self.model.objects.filter(
+                pk=self.object.pk
+            )
             return self.handle_referrer()
         return None
 
@@ -200,6 +203,7 @@ class ContentIndex(UCTestMixin, ListView):
 
     def dispatch_extra(self, request, *args, **kwargs):
         if "referrer" in self.request.GET:
+            self.object_list = self.get_queryset()
             return self.handle_referrer()
         return None
 
@@ -216,7 +220,7 @@ class ContentIndex(UCTestMixin, ListView):
         return self.get(request, *args, **kwargs)
 
     def get_ordering(self):
-        # ordering will happen here
+        # ordering will happen in serializer
         if self.scope == "export" or "raw" in self.request.GET:
             return None
         return ("id",)

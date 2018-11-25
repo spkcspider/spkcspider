@@ -4,26 +4,65 @@
 <form action="{{ request.get_full_path }}" method="post">
   {% csrf_token %}
   <fieldset>
-    <legend><h1>{% trans 'Access to' %}:</h1></legend>
-    <ul class="w3-ul" rel="accessTo">
-      {% if scope == "list" %}
-        <li typeof="spkc:Property"><data hidden="hidden" property="spkc:name">description</data>{% trans 'Component' %}:{% trans 'Description' %}</li>
-        {% if uc.public %}
-          <li typeof="spkc:Property"><data hidden="hidden" property="spkc:name">name</data>{% trans 'Component' %}:{% trans 'Name' %} (<em>{{uc}}</em>)</li>
-        {% endif %}
-        {% for content in object_list %}
-          <li typeof="spkc:Content">{% trans 'Content' %}: {{content}}</li>
-        {% endfor %}
-      {% else %}
-        <li typeof="spkc:Content">{% trans 'Content' %}: {{object}}</li>
-      {% endif %}
-    </ul>
+    <legend><h1>{% trans 'Allow' %}:</h1></legend>
+    <table class="w3-table-all">
+      <tr>
+        <td class="">
+          {{referrer}}
+        </td>
+      </tr>
+    </table>
   </fieldset>
-  <button class="w3-button w3-grey">
+  <fieldset>
+    <legend><h1>{% trans 'Access to' %}:</h1></legend>
+    <table class="w3-table-all" rel="accessTo">
+      <thead>
+        <tr>
+          <th class="">{% trans 'Scope' %}</th>
+          <th class="">{% trans 'Name' %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if scope == "list" %}
+          <tr>
+            <td class="">{% trans 'Component' %}</td>
+            <td typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name">description</data>{% trans 'Description' %}
+            </td>
+          </tr>
+          {% if uc.public %}
+            <tr>
+              <td class="">{% trans 'Component' %}</td>
+              <td typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name">name</data>{% trans 'Name' %} (<em>{{uc}}</em>)
+              </td>
+            </tr>
+          {% endif %}
+          {% for content in object_list %}
+            <tr>
+              <td class="">{% trans 'Content' %}</td>
+              <td typeof="spkc:Content">
+                <data property="spkc:name">{{content}}</data>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td class="">{% trans 'Content' %}</td>
+            <td typeof="spkc:Content">
+              <data property="spkc:name">{{object}}</data>
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </fieldset>
+  <button name="action" value="confirm" class="w3-button w3-grey">
     {% trans 'Confirm Access' %}
   </button>
-  <a class="w3-button w3-grey" href="{{referrer}}">
+
+  <button name="action" value="cancel" class="w3-button w3-grey">
     {% trans 'Cancel' %}
-  </a>
+  </button>
 </form>
 {% endblock %}
