@@ -1,12 +1,14 @@
 __all__ = [
     "rate_limit_default", "allow_all_filter",
     "embed_file_default", "has_admin_permission",
-    "LimitedTemporaryFileUploadHandler"
+    "LimitedTemporaryFileUploadHandler", "validate_url_default"
 ]
 
 import time
 import base64
 import logging
+from urllib.parse import urlsplit
+
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
 )
@@ -80,6 +82,19 @@ class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
             return True
 
         return content_length <= max_length
+
+
+def validate_url_default(url):
+    url = urlsplit(url)
+    if url.scheme == "https":
+        return True
+    elif url.scheme == "http":
+        # MAKE SURE that you control your dns
+        if url.netloc.endswith(".onion"):
+            return True
+        elif settings.DEBUG:
+            return True
+    return False
 
 
 def embed_file_default(name, value, content, context):

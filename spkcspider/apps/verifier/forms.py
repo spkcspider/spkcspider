@@ -110,12 +110,15 @@ class CreateEntryForm(forms.ModelForm):
         elif not ret["dvfile"]:
             url = self.cleaned_data["url"]
             url = merge_get_url(url, raw="embed")
-            if not settings.DEBUG and not url.startswith("https://"):
+            if not get_settings_func(
+                "SPIDER_URL_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_url_default"
+            )(url):
                 self.add_error(
                     "url", forms.ValidationError(
-                        _('Insecure url scheme: %(url)s'),
+                        _('Insecure url: %(url)s'),
                         params={"url": url},
-                        code="insecure_scheme"
+                        code="insecure_url"
                     )
                 )
                 return
@@ -249,11 +252,16 @@ class CreateEntryForm(forms.ModelForm):
         # retrieve further pages
         for page in range(2, pages+1):
             url = merge_get_url(view_url, raw="embed", page=str(page))
-            if not settings.DEBUG and not url.startswith("https://"):
-                raise forms.ValidationError(
-                    _('Insecure url scheme: %(url)s'),
-                    params={"url": url},
-                    code="insecure_scheme"
+            if not get_settings_func(
+                "SPIDER_URL_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_url_default"
+            )(url):
+                self.add_error(
+                    "url", forms.ValidationError(
+                        _('Insecure url: %(url)s'),
+                        params={"url": url},
+                        code="insecure_url"
+                    )
                 )
                 return
             try:
@@ -333,11 +341,16 @@ class CreateEntryForm(forms.ModelForm):
             if (URIRef(t[2].value), None, None) in g:
                 continue
             url = merge_get_url(t[2].value, raw="embed")
-            if not settings.DEBUG and not url.startswith("https://"):
-                raise forms.ValidationError(
-                    _('Insecure url scheme: %(url)s'),
-                    params={"url": url},
-                    code="insecure_scheme"
+            if not get_settings_func(
+                "SPIDER_URL_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_url_default"
+            )(url):
+                self.add_error(
+                    "url", forms.ValidationError(
+                        _('Insecure url: %(url)s'),
+                        params={"url": url},
+                        code="insecure_url"
+                    )
                 )
                 return
             try:

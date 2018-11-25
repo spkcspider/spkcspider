@@ -22,7 +22,7 @@ from django.utils.translation import gettext
 import requests
 import certifi
 
-from ..helpers import merge_get_url
+from ..helpers import merge_get_url, get_settings_func
 from ..constants import UserContentType, index_names
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
@@ -290,13 +290,13 @@ class UserTestMixin(AccessMixin):
 
         context = self.get_context_data()
         context["referrer"] = merge_get_url(self.request.GET["referrer"])
-        if (
-            not settings.DEBUG and
-            not context["referrer"].startswith("https://")
-        ):
+        if not get_settings_func(
+            "SPIDER_URL_VALIDATOR",
+            "spkcspider.apps.spider.functions.validate_url_default"
+        )(context["referrer"]):
             return HttpResponse(
                 status=400,
-                content=_('Insecure url scheme: %(url)s') % {
+                content=_('Insecure url: %(url)s') % {
                     "url": context["referrer"]
                 }
             )
