@@ -9,6 +9,7 @@ from django.db import models
 from django.utils.translation import gettext
 from django.template.loader import render_to_string
 from django.core.files.base import File
+from django.core.exceptions import NON_FIELD_ERRORS
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.http import HttpResponse
@@ -143,9 +144,9 @@ class BaseContent(models.Model):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
         else:
-            return "%s: %s" % (
+            return "%s:%s" % (
                 self.localize_name(self.associated.ctype.name),
-                self.id
+                self.associated.id
             )
 
     def __repr__(self):
@@ -241,8 +242,13 @@ class BaseContent(models.Model):
             )
 
         else:
-            if parent_form and len(kwargs["form"].errors) > 0:
-                parent_form.add_error(None, kwargs["form"].errors)
+            if (
+                parent_form and
+                len(kwargs["form"].errors.get(NON_FIELD_ERRORS, [])) > 0
+            ):
+                parent_form.add_error(
+                    None, kwargs["form"].errors[NON_FIELD_ERRORS]
+                )
         return (
             render_to_string(
                 self.get_template_name(scope),

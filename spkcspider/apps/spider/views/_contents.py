@@ -198,7 +198,6 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
 class ContentIndex(UCTestMixin, ListView):
     model = AssignedContent
     scope = "list"
-    ordering = ("id",)
     no_nonce_usercomponent = False
 
     def dispatch_extra(self, request, *args, **kwargs):

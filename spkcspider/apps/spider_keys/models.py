@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 _htest = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
 _htest.update(b"test")
 
-_help_text_sig = _(""" Signed identifier """)
+_help_text_sig = _("""Signature of Identifier""")
 
-_help_text_key = _(""" Public Key-Content """)
+_help_text_key = _(""""Public Key"-Content""")
 
 ID_VERIFIERS = {
 
@@ -176,7 +176,9 @@ class AnchorKey(AnchorServer):
     )
     hashed_fields = ["key"]
 
-    signature = models.CharField(max_length=1024, help_text=_help_text_sig)
+    signature = models.CharField(
+        max_length=1024, help_text=_help_text_sig
+    )
 
     appearances = [
         {
