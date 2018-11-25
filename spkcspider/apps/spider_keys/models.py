@@ -180,6 +180,18 @@ class AnchorKey(AnchorServer):
         max_length=1024, help_text=_help_text_sig
     )
 
+    def __str__(self):
+        if not self.id:
+            return super().__str__()
+        st = self.key.get_key_name()
+        if st[1]:
+            st = st[1]
+        else:
+            st = "{}...".format(st[0][:10])
+        if len(self.key.note) > 0:
+            st = "{}: {}".format(st, self.key.note[:20])
+        return "AnchorKey: Key: {}".format(st)
+
     appearances = [
         {
             "name": "AnchorKey",

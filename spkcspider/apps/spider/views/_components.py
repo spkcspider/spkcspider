@@ -403,9 +403,12 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         self.usercomponent = self.object
         self.request.auth_token = self.create_admin_token()
         context = super().get_context_data(**kwargs)
-        context["content_variants"] = (
-            self.object.user_info.allowed_content.all()
-        )
+        context["content_variants"] = \
+            self.usercomponent.user_info.allowed_content.all()
+        context["content_variants_used"] = \
+            self.usercomponent.user_info.allowed_content.filter(
+                assignedcontent__usercomponent=self.usercomponent
+            )
         context["remotelink"] = context["spider_GET"].copy()
         context["remotelink"] = "{}{}?{}".format(
             context["hostpart"],

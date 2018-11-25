@@ -146,13 +146,13 @@ There are some special GET parameters for services with special requirements:
 verified_by urls should return last verification date for a hash
 
 # TODO
-* improve anchors
 * examples
 * tests
 * documentation
 
 Later:
 * bind authtoken to a scope
+* govAnchor
 * create client side script for import (pushing to server, index token for auth?)
 * email to spkcspider transport wrapper (also script)+component
 * textfilet hot reloading

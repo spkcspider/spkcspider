@@ -232,7 +232,7 @@ class AssignedContent(models.Model):
 
             if obj and obj.id != getattr(self, "id", None):
                 raise ValidationError(
-                    message=_("Unique Content already exists."),
+                    message=_("Unique Content already exists"),
                     code='unique_together',
                 )
 

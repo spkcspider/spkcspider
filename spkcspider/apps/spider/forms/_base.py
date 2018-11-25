@@ -15,16 +15,20 @@ from ..constants import (
     protected_names
 )
 
-_help_text = _("""Generate new nonce with variable strength<br/>
+_help_text = _("""Generate a new nonce token with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
 If you have problems with attackers (because they know the nonce),
 you can invalidate it with this option and/or add protections<br/>
-<span style="color:red;">
-Warning: this removes also access for all services you gave the link<br/>
-Warning: if you rely on nonces make sure user component has <em>public</em>
-not set
-</span>
-""")
+<table style="color:red;">
+<tr>
+<td>Warning:</td><td>this removes also access for all services you gave the link<td/>
+</tr>
+<tr>
+<td style="vertical-align: top">Warning:</td><td>public user components disclose nonce, regenerate after removing
+public attribute from component for restoring protection</td>
+</tr>
+</table>
+""")  # noqa: E501
 
 
 class UserComponentForm(forms.ModelForm):
@@ -209,8 +213,7 @@ class UserContentForm(forms.ModelForm):
         error_messages = {
             NON_FIELD_ERRORS: {
                 'unique_together': _(
-                    'AssignedContent type/configuration can '
-                    'only exist once by usercomponent'
+                    "Unique Content already exists"
                 )
             }
         }

@@ -239,9 +239,12 @@ class ContentIndex(UCTestMixin, ListView):
         kwargs["uc"] = self.usercomponent
         context = super().get_context_data(**kwargs)
         if self.usercomponent.user == self.request.user:
-            context["content_variants"] = (
+            context["content_variants"] = \
                 self.usercomponent.user_info.allowed_content.all()
-            )
+            context["content_variants_used"] = \
+                self.usercomponent.user_info.allowed_content.filter(
+                    assignedcontent__usercomponent=self.usercomponent
+                )
         context["is_public_view"] = self.usercomponent.public
 
         context["remotelink"] = context["spider_GET"].copy()
