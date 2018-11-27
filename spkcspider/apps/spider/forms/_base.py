@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent
 )
-from ..helpers import token_nonce
+from ..helpers import create_b64_token
 from ..constants import (
     ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names,
     protected_names
@@ -192,7 +192,7 @@ class UserComponentForm(forms.ModelForm):
                 "Old nonce for Component id:", self.instance.id,
                 "is", self.instance.nonce
             )
-            self.instance.nonce = token_nonce(
+            self.instance.nonce = create_b64_token(
                 int(self.cleaned_data["new_nonce"])
             )
 
@@ -240,7 +240,7 @@ class UserContentForm(forms.ModelForm):
                 "Old nonce for Content id:", self.instance.id,
                 "is", self.instance.nonce
             )
-            self.instance.nonce = token_nonce(
+            self.instance.nonce = create_b64_token(
                 int(self.cleaned_data["new_nonce"])
             )
         return super().save(commit=commit)

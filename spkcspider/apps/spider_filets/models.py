@@ -14,7 +14,7 @@ from django.core.files.storage import default_storage
 
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.helpers import token_nonce, prepare_description
+from spkcspider.apps.spider.helpers import create_b64_token, prepare_description
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def get_file_path(instance, filename):
         ret_path = default_storage.generate_filename(
             posixpath.join(
                 ret, str(instance.associated.usercomponent.user.pk),
-                token_nonce(size), filename
+                create_b64_token(size), filename
             )
         )
         if not default_storage.exists(ret_path):

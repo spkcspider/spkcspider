@@ -22,7 +22,7 @@ from django.core import validators
 
 from jsonfield import JSONField
 
-from ..helpers import token_nonce, get_settings_func
+from ..helpers import create_b64_token, get_settings_func
 from ..constants import (
     ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
     default_uctoken_duration, force_captcha, index_names
@@ -73,7 +73,7 @@ class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
     nonce = models.SlugField(
-        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3,
+        default=create_b64_token, max_length=MAX_NONCE_SIZE*4//3,
         db_index=False
     )
     public = models.BooleanField(
@@ -256,7 +256,7 @@ class AuthToken(models.Model):
     def create_auth_token(self):
         self.token = "{}_{}".format(
             hex(self.usercomponent.id)[2:],
-            token_nonce(getattr(settings, "TOKEN_SIZE", 30))
+            create_b64_token(getattr(settings, "TOKEN_SIZE", 30))
         )
 
     def save(self, *args, **kwargs):

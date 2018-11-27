@@ -23,7 +23,7 @@ from ..contents import installed_contents
 from ..protections import installed_protections
 
 # from ..constants import UserContentType
-from ..helpers import token_nonce
+from ..helpers import create_b64_token
 from ..constants.static import MAX_NONCE_SIZE, UserContentType
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ class AssignedContent(models.Model):
     fake_id = models.BigIntegerField(editable=False, null=True)
     # brute force protection
     nonce = models.SlugField(
-        default=token_nonce, max_length=MAX_NONCE_SIZE*4//3,
+        default=create_b64_token, max_length=MAX_NONCE_SIZE*4//3,
         db_index=False
     )
     # fix linter warning

@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from ..constants import dangerous_login_choices
 from ..models import LinkContent, TravelProtection
-from ..helpers import token_nonce
+from ..helpers import create_b64_token
 from ..widgets import InfoWidget
 
 
@@ -113,7 +113,7 @@ class TravelProtectionForm(forms.ModelForm):
         # elif self.travel_protection.is_active:
         #    for f in self.fields:
         #        f.disabled = True
-        self.fields["token_arg"].initial = token_nonce(30)
+        self.fields["token_arg"].initial = create_b64_token(30)
 
         if not self.instance.active or not self.instance.hashed_secret:
             del self.fields["password"]

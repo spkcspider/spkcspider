@@ -1,5 +1,5 @@
 __all__ = (
-    "token_nonce", "get_settings_func",
+    "create_b64_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
     "merge_get_url", "add_property"
 )
@@ -96,7 +96,7 @@ def extract_app_dicts(app, name, fieldname=None):
     return ndic
 
 
-def token_nonce(size=None):
+def create_b64_token(size=None):
     if not size:
         from .constants.settings import INITIAL_NONCE_SIZE
         size = int(INITIAL_NONCE_SIZE)

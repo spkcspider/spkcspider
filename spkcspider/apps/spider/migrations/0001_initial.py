@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             name='AssignedContent',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('nonce', models.SlugField(db_index=False, default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
+                ('nonce', models.SlugField(db_index=False, default=spkcspider.apps.spider.helpers.create_b64_token, max_length=120)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('deletion_requested', models.DateTimeField(blank=True, default=None, null=True)),
@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
             name='UserComponent',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('nonce', models.SlugField(db_index=False, default=spkcspider.apps.spider.helpers.token_nonce, max_length=120)),
+                ('nonce', models.SlugField(db_index=False, default=spkcspider.apps.spider.helpers.create_b64_token, max_length=120)),
                 ('public', models.BooleanField(default=False, help_text=(
                     "Is public? Is listed and searchable?<br/>"
                     "Note: This field is maybe not deactivatable"
