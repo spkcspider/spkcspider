@@ -33,12 +33,14 @@ main.cond-top-fix{
   .spkc-entity-button{
     width:25px;
   }
-  header.cond-top-fix{
-    top:0;
-    position:fixed;
-  }
-  main.cond-top-fix{
-    margin-top:40px;
+  @media (min-height:300px){
+    header.cond-top-fix{
+      top:0;
+      position:fixed;
+    }
+    main.cond-top-fix{
+      margin-top:40px;
+    }
   }
 }
 
