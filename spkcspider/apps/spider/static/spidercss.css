@@ -20,11 +20,28 @@
   vertical-align: middle;
   text-align:center;
 }
+
+header.cond-top-fix{
+  width:100%;
+  z-index:1;
+}
+
+main.cond-top-fix{
+  margin-top:20px;
+}
 @media (min-width:601px){
   .spkc-entity-button{
     width:25px;
   }
+  header.cond-top-fix{
+    top:0;
+    position:fixed;
+  }
+  main.cond-top-fix{
+    margin-top:40px;
+  }
 }
+
 
 .color-fresh-contentvariant{
   /* pale green more green */
