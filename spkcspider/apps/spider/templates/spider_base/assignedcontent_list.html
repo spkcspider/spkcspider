@@ -42,7 +42,7 @@
         <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">{% trans 'Link/Export' %}</a>
       </div>
       <div>
-        {% trans "Strength:" %} <data property="spkc:strength">{{uc.strength}}</data>
+        {% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
       </div>
     </span>
     <h1 class="w3-center">
