@@ -3,6 +3,7 @@ __all__ = ["KeyForm", "AnchorServerForm", "AnchorKeyForm"]
 
 
 from django import forms
+from django.db import models
 # from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 
@@ -63,6 +64,9 @@ class AnchorKeyForm(forms.ModelForm):
     def __init__(self, scope, **kwargs):
         self.scope = scope
         super().__init__(**kwargs)
+        self.fields["key"].queryset = self.fields["key"].queryset.filter(
+            models.Q(key__contains="-----BEGIN CERTIFICATE-----")
+        )
         if self.scope == "add":
             del self.fields["identifier"]
             del self.fields["signature"]
