@@ -23,6 +23,27 @@ class Select2Multiple(widgets.SelectMultiple):
         js = [
             'node_modules/jquery/dist/jquery%s.js' % _extra,
             'node_modules/select2/dist/js/select2%s.js' % _extra,
+            'spider_base/Select2MultipleWidget.js'
+        ]
+
+    def __init__(self, *, attrs=None, **kwargs):
+        if not attrs:
+            attrs = {"class": ""}
+        attrs.setdefault("class", "")
+        attrs["class"] += " Select2MultipleTarget"
+        super().__init__(attrs=attrs, **kwargs)
+
+
+class OpenChoiceWidget(widgets.SelectMultiple):
+    class Media:
+        css = {
+            'all': [
+                'node_modules/select2/dist/css/select2.min.css'
+            ]
+        }
+        js = [
+            'node_modules/jquery/dist/jquery%s.js' % _extra,
+            'node_modules/select2/dist/js/select2%s.js' % _extra,
             'spider_base/Select2Init.js'
         ]
 
@@ -30,16 +51,7 @@ class Select2Multiple(widgets.SelectMultiple):
         if not attrs:
             attrs = {"class": ""}
         attrs.setdefault("class", "")
-        attrs["class"] += " Select2Target"
-        attrs.setdefault("data-width", 'element')
-        super().__init__(attrs=attrs, **kwargs)
-
-
-class OpenChoiceWidget(Select2Multiple):
-
-    def __init__(self, *, attrs=None, **kwargs):
-        attrs.setdefault("data-tags", "true")
-        attrs.setdefault("data-allow-clear", "true")
+        attrs["class"] += " OpenChoiceTarget"
         super().__init__(attrs=attrs, **kwargs)
 
     def optgroups(self, name, value, attrs=None):

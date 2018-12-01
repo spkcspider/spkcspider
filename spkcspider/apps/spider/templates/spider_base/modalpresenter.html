@@ -15,7 +15,7 @@
       </div>
       <div id="use_access_token_wrapper" style="display:none" class="w3-container w3-cell w3-text-red w3-mobile">
         <label class="w3-left">
-          <input type="checkbox" id="use_access_token" onchange="open_qrmodal()"{% if not request.is_owner %} checked="checked"{% endif %}></input>
+          <input type="checkbox" id="use_access_token" onchange="open_qrmodal()"{% if not request.is_owner %} checked="checked"{% endif %}/>
           {% trans "With access token" %}
         </label>
       </div>
