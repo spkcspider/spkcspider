@@ -86,7 +86,8 @@ class UserComponentForm(forms.ModelForm):
             self.protections = Protection.get_forms(data=data, files=files,
                                                     prefix=prefix,
                                                     assigned=assigned,
-                                                    ptype=ptype)
+                                                    ptype=ptype,
+                                                    request=request)
             self.protections = list(self.protections)
         else:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE

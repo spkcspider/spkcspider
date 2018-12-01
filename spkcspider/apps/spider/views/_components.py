@@ -14,7 +14,6 @@ from django.db import models
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
 from django.urls import reverse
-from django.utils import timezone
 
 from rdflib import Graph, Literal, URIRef
 
@@ -280,18 +279,10 @@ class ComponentIndex(UCTestMixin, ListView):
 
         # doesn't matter if it is same user, lazy
         travel = TravelProtection.objects.get_active()
-        # remove all travel protected if user
+        # remove all travel protected components if not admin
         if self.request.user == self.user:
             searchq &= ~models.Q(
                 travel_protected__in=travel
-            )
-            now = timezone.now()
-            searchq &= ~(
-                # exclude future events
-                models.Q(
-                    contents__modified__lte=now,
-                    contents__info__contains="\ntype=TravelProtection\n"
-                )
             )
         if self.request.session.get("is_fake", False):
             searchq &= ~models.Q(name="index")

@@ -178,6 +178,7 @@ class TravelProtection(BaseContent):
     objects = TravelProtectionManager()
 
     active = models.BooleanField(default=False)
+    is_fake = models.BooleanField(default=False)
     start = models.DateTimeField(default=default_start, null=False)
     # no stop for no termination
     stop = models.DateTimeField(default=default_stop, null=True)

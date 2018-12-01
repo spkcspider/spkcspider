@@ -140,10 +140,15 @@ def embed_file_default(name, value, content, context):
 
 
 def has_admin_permission(self, request):
-    # allow only non faked user with superuser and staff permissions
-    if request.session.get("is_fake", False):
+    # allow only non travel protected user with superuser and staff permissions
+    if not request.user.is_active or not request.user.is_staff:
         return False
-    return request.user.is_active and request.user.is_staff
+    from .models import TravelProtection as TravelProtectionContent
+    if TravelProtectionContent.objects.get_active().filter(
+        usercomponent__user=request.user
+    ).exists():
+        return False
+    return True
 
 
 @never_cache

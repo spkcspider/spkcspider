@@ -90,6 +90,7 @@ class TravelProtectionForm(forms.ModelForm):
     def __init__(self, request, uc, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.uc = uc
+        self.request = request
 
         q = models.Q(
             user=self.uc.user,
@@ -158,6 +159,7 @@ class TravelProtectionForm(forms.ModelForm):
         return ret
 
     def save(self, commit=True):
+        self.instance.is_fake = self.request.session.get("is_fake", False)
         if self._password:
             self.instance.hashed_secret = make_password(self._password)
         if self._password is False:

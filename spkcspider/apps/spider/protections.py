@@ -438,11 +438,12 @@ class TravelProtection(BaseProtection):
     def auth(cls, request, obj, **kwargs):
         if obj:
             from .models import TravelProtection as TravelProtectionContent
-            travel = TravelProtectionContent.objects.get_active().filter(
-                usercomponent__user=obj.usercomponent.user,
-                # only apply to younger TravelProtectionContent
-                modified__gte=obj.modified
-            )
+            travel = TravelProtectionContent.objects.get_active()
+            if request.session.get("is_fake", False):
+                travel = travel.filter(
+                    usercomponent__user=request.user,
+                    is_fake=True
+                )
             if not travel.exists():
                 return True
         return False
