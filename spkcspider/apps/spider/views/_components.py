@@ -79,13 +79,13 @@ class ComponentPublicIndex(ListView):
             else:
                 _item = item
             qob = models.Q(
-                contents__info__icontains="%s" % _item
+                contents__info__icontains=_item
             )
             qob |= models.Q(
-                description__icontains="%s" % _item
+                description__icontains=_item
             )
             qob |= models.Q(
-                name__icontains="%s" % _item
+                name__icontains=_item
             )
             if item.startswith("!!"):
                 searchq |= qob
@@ -236,10 +236,10 @@ class ComponentIndex(UCTestMixin, ListView):
             else:
                 _item = item
             qob = models.Q(
-                contents__info__icontains="%s" % _item
+                contents__info__icontains=_item
             )
             qob |= models.Q(
-                description__icontains="%s" % _item
+                description__icontains=_item
             )
             if _item == "index":
                 qob |= models.Q(
@@ -247,7 +247,7 @@ class ComponentIndex(UCTestMixin, ListView):
                 )
             else:
                 qob |= models.Q(
-                    name__icontains="%s" % _item,
+                    name__icontains=_item,
                     strength__lt=10
                 )
             if item.startswith("!!"):

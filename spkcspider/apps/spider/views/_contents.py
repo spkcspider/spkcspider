@@ -308,15 +308,15 @@ class ContentIndex(UCTestMixin, ListView):
                 continue
             if item.startswith("!!"):
                 searchq |= models.Q(
-                    info__icontains="%s" % item[1:]
+                    info__icontains=item[1:]
                 )
             elif item.startswith("!"):
                 searchq_exc |= models.Q(
-                    info__icontains="%s" % item[1:]
+                    info__icontains=item[1:]
                 )
             else:
                 searchq |= models.Q(
-                    info__icontains="%s" % item
+                    info__icontains=item
                 )
 
         for item in infolist:
