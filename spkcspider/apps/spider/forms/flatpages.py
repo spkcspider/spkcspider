@@ -30,7 +30,7 @@ class FlatpageItemForm(FlatpageForm):
             ]
         }
         js = [
-            'admin/js/vendor/jquery/jquery%s.js' % _extra,
+            'node_modules/jquery/dist/jquery%s.js' % _extra,
             'node_modules/trumbowyg/dist/trumbowyg%s.js' % _extra,
             'node_modules/trumbowyg/dist/plugins/pasteimage/trumbowyg.pasteimage.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/base64/trumbowyg.base64.min.js',  # noqa: E501

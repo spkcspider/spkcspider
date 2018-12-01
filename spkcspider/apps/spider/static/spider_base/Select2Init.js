@@ -6,7 +6,5 @@ jQuery( document ).ready(function( $ ) {
   if (select2_multiple_initialized)
     return;
   select2_multiple_initialized = true;
-  $(".Select2Multiple").select2({
-    width: 'element'
-  });
+  $(".Select2Target").select2();
 })
