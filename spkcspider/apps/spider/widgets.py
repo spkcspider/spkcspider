@@ -44,7 +44,7 @@ class OpenChoiceWidget(widgets.SelectMultiple):
         js = [
             'node_modules/jquery/dist/jquery%s.js' % _extra,
             'node_modules/select2/dist/js/select2%s.js' % _extra,
-            'spider_base/Select2MultipleWidget.js'
+            'spider_base/OpenChoiceWidget.js'
         ]
 
     def __init__(self, *, attrs=None, **kwargs):
