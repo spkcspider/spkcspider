@@ -145,6 +145,11 @@ There are some special GET parameters for services with special requirements:
 
 verified_by urls should return last verification date for a hash
 
+## raw mode
+
+raw mode can follow references even in other components because it is readonly.
+Otherwise security could be compromised.
+
 # TODO
 * examples
 * tests
