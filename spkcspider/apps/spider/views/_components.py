@@ -114,19 +114,18 @@ class ComponentPublicIndex(ListView):
         q = models.Q(public=True)
         if self.is_home:
             q &= models.Q(featured=True)
-        main_query = self.model.objects.prefetch_related(
+        return self.model.objects.prefetch_related(
             "contents"
         ).filter(
             q & searchq & ~searchq_exc & infoq & ~infoq_exc
-        ).order_by(*self.get_ordering()).distinct()
-        return main_query
+        ).distinct().order_by(*self.get_ordering(counter > 0))
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
-    def get_ordering(self):
-        if self.is_home:
-            return ("modified",)
+    def get_ordering(self, issearching=False):
+        if not issearching:
+            return ("strength", "-modified",)
         else:
             return ("name", "user__username")
 
@@ -188,10 +187,13 @@ class ComponentIndex(UCTestMixin, ListView):
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
 
-    def get_ordering(self):
-        # if self.scope != "export":
-        #     return ("modified",)
-        return ("id",)
+    def get_ordering(self, issearching=False):
+        if self.scope == "export":
+            return ("id",)
+        if issearching:
+            # MUST use strength here, elsewise travel mode can be exposed
+            return ("-strength", "name",)
+        return ("-modified",)
 
     def get_context_data(self, **kwargs):
         kwargs["component_user"] = self.user
@@ -239,9 +241,15 @@ class ComponentIndex(UCTestMixin, ListView):
             qob |= models.Q(
                 description__icontains="%s" % _item
             )
-            qob |= models.Q(
-                name__icontains="%s" % _item
-            )
+            if _item == "index":
+                qob |= models.Q(
+                    strength=10
+                )
+            else:
+                qob |= models.Q(
+                    name__icontains="%s" % _item,
+                    strength__lt=10
+                )
             if item.startswith("!!"):
                 searchq |= qob
             elif item.startswith("!"):
@@ -290,9 +298,11 @@ class ComponentIndex(UCTestMixin, ListView):
         else:
             searchq &= ~models.Q(name="fake_index")
 
-        return super().get_queryset().prefetch_related(
+        return self.model.objects.prefetch_related(
             'contents'
-        ).filter(searchq).distinct()
+        ).filter(searchq).distinct().order_by(
+            *self.get_ordering(counter > 0)
+        )
 
     def get_usercomponent(self):
         ucname = "index"

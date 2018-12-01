@@ -218,11 +218,11 @@ class ContentIndex(UCTestMixin, ListView):
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
 
-    def get_ordering(self):
+    def get_ordering(self, issearching=False):
         # ordering will happen in serializer
         if self.scope == "export" or "raw" in self.request.GET:
             return None
-        return ("id",)
+        return ("-modified",)
 
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
@@ -280,7 +280,7 @@ class ContentIndex(UCTestMixin, ListView):
         return self.test_token()
 
     def get_queryset(self):
-        ret = super().get_queryset().filter(usercomponent=self.usercomponent)
+        ret = self.model.objects.filter(usercomponent=self.usercomponent)
 
         searchq = models.Q()
         searchq_exc = models.Q()
@@ -338,7 +338,9 @@ class ContentIndex(UCTestMixin, ListView):
             ids = map(lambda x: int(x), idlist)
             searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
 
-        return ret.filter(searchq & infoq & ~searchq_exc & ~infoq_exc)
+        return ret.filter(
+            searchq & infoq & ~searchq_exc & ~infoq_exc
+        ).order_by(*self.get_ordering(counter > 0))
 
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
