@@ -71,14 +71,9 @@ class AnchorKeyForm(forms.ModelForm):
         _ = gettext
         ret = super().clean()
         try:
-            if "-----BEGIN CERTIFICATE-----" in ret["key"].key:
-                pubkey = serialization.load_pem_public_key(
-                    ret["key"].key.encode("utf-8"), default_backend()
-                )
-            else:
-                pubkey = serialization.load_ssh_public_key(
-                    ret["key"].key.encode("utf-8"), default_backend()
-                )
+            pubkey = serialization.load_pem_public_key(
+                ret["key"].key.encode("utf-8"), default_backend()
+            )
         except exceptions.UnsupportedAlgorithm:
             self.add_error("key", forms.ValidationError(
                 _("key not usable for signing"),
