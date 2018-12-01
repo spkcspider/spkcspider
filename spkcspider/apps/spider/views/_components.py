@@ -128,7 +128,7 @@ class ComponentPublicIndex(ListView):
         if self.is_home:
             return ("modified",)
         else:
-            return ("user", "name")
+            return ("name", "user__username")
 
     def render_to_response(self, context):
         # NEVER: allow embedding, things get too big
