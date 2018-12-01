@@ -16,6 +16,7 @@
       {% endfor %}
     </select>
     <button class="w3-button w3-gray" aria-label="{% trans 'Search' %}"><i class="fa fa-search" aria-hidden="true"></i></button>
+    {# for clearing info as well as search #}
     {% if cur_search or cur_info %}
       <button class="w3-button w3-gray" form="list_clear_form" aria-label="{% trans 'clear' %}">X</button>
     {% endif %}
