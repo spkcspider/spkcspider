@@ -8,6 +8,8 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
 )
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.conf import settings
 from rdflib import Literal
 
@@ -46,6 +48,8 @@ class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
 
 
 class CreateEntry(CreateView):
+    # NOTE: this class is csrf_exempted
+    # reason for this are upload stops and cross post requests
     model = DataVerificationTag
     form_class = CreateEntryForm
     template_name = "spider_verifier/dv_form.html"
@@ -53,6 +57,10 @@ class CreateEntry(CreateView):
         LimitedTemporaryFileUploadHandler
     ]
 
+    # exempt from csrf checks
+    # if you want to enable them mark post with csrf_protect
+    # this allows enforcing upload limits
+    @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         if self.upload_handlers:
             request.upload_handlers = [

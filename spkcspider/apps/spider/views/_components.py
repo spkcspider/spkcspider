@@ -113,11 +113,16 @@ class ComponentPublicIndex(ListView):
         q = models.Q(public=True)
         if self.is_home:
             q &= models.Q(featured=True)
-        return self.model.objects.prefetch_related(
+
+        order = self.get_ordering(counter > 0)
+        ret = self.model.objects.prefetch_related(
             "contents"
         ).filter(
             q & searchq & ~searchq_exc & infoq & ~infoq_exc
-        ).distinct().order_by(*self.get_ordering(counter > 0))
+        ).distinct()
+        if order:
+            ret = ret.order_by(*order)
+        return ret
 
     def get_paginate_by(self, queryset):
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
@@ -188,7 +193,7 @@ class ComponentIndex(UCTestMixin, ListView):
 
     def get_ordering(self, issearching=False):
         if self.scope == "export":
-            return ("id",)
+            return None
         if issearching:
             # MUST use strength here, elsewise travel mode can be exposed
             return ("-strength", "name",)
@@ -289,11 +294,13 @@ class ComponentIndex(UCTestMixin, ListView):
         else:
             searchq &= ~models.Q(name="fake_index")
 
-        return self.model.objects.prefetch_related(
+        order = self.get_ordering(counter > 0)
+        ret = self.model.objects.prefetch_related(
             'contents'
-        ).filter(searchq).distinct().order_by(
-            *self.get_ordering(counter > 0)
-        )
+        ).filter(searchq).distinct()
+        if order:
+            ret = ret.order_by(*order)
+        return ret
 
     def get_usercomponent(self):
         ucname = "index"

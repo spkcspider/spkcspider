@@ -347,9 +347,13 @@ class ContentIndex(UCTestMixin, ListView):
             if ids is not None:
                 searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
 
-        return ret.filter(
+        order = self.get_ordering(counter > 0)
+        ret = ret.filter(
             searchq & infoq & ~searchq_exc & ~infoq_exc
-        ).order_by(*self.get_ordering(counter > 0))
+        )
+        if order:
+            ret = ret.order_by(*order)
+        return ret
 
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:

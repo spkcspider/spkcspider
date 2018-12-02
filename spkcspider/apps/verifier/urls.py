@@ -1,5 +1,4 @@
 from django.urls import path
-from django.views.decorators.csrf import csrf_exempt
 
 
 from .views import CreateEntry, VerifyEntry, HashAlgoView
@@ -18,9 +17,10 @@ urlpatterns = [
         HashAlgoView.as_view(),
         name='hash_algo'
     ),
+    # NOTE: this view is csrf_exempted
     path(
         '',
-        csrf_exempt(CreateEntry.as_view()),
+        CreateEntry.as_view(),
         name='create'
     ),
 
