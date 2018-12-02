@@ -148,7 +148,7 @@ default_layouts["emergency"] = {
             "localize": True,
             "field": "LocalizedChoiceField",
             "choices": [
-                ("", _("")),
+                ("", ""),
                 ("male", _("male")),
                 ("female", _("female")),
                 ("other", _("other")),
