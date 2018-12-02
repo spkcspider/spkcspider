@@ -439,11 +439,10 @@ class TravelProtection(BaseProtection):
         if obj:
             from .models import TravelProtection as TravelProtectionContent
             travel = TravelProtectionContent.objects.get_active()
-            if request.session.get("is_fake", False):
-                travel = travel.filter(
-                    usercomponent__user=request.user,
-                    is_fake=True
-                )
+            # simple: disallow cannot be changed by user in fake mode
+            travel = travel.filter(
+                disallow__contains=obj.usercomponent
+            )
             if not travel.exists():
                 return True
         return False
