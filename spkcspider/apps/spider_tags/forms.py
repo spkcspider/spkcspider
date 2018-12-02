@@ -13,8 +13,14 @@ from django.db import models
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
+import requests
+import certifi
+
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
+from spkcspider.apps.spider.fields import OpenChoiceField
+from spkcspider.apps.spider.fields import OpenChoiceWidget
+from spkcspider.apps.spider.helpers import merge_get_url
 
 
 class TagLayoutForm(forms.ModelForm):
@@ -48,6 +54,17 @@ def generate_form(name, layout):
         "primary",
         forms.BooleanField(required=False, initial=False)
     ))
+    _gen_fields.append((
+        "verified_by",
+        OpenChoiceField(
+            required=False, initial=False,
+            widget=OpenChoiceWidget(
+                attrs={
+                    "style": "min-width: 300px; width:100%"
+                }
+            )
+        )
+    ))
 
     class _form(forms.BaseForm):
         __name__ = name
@@ -55,6 +72,7 @@ def generate_form(name, layout):
         base_fields = declared_fields
         # used in models
         layout_generating_form = True
+        _get_absolute_url_cache = None
 
         class Meta:
             error_messages = {
@@ -65,15 +83,20 @@ def generate_form(name, layout):
                 }
             }
 
-        def __init__(self, *, uc=None, initial=None, instance=None, **kwargs):
+        def __init__(self, instance, *, uc=None, initial=None, **kwargs):
             if not initial:
                 initial = {}
             self.instance = instance
+            self._get_absolute_url_cache = self.instance.get_absolute_url()
             _initial = self.encode_initial(initial)
             _initial["primary"] = getattr(instance, "primary", False)
+            _initial["verified_by"] = getattr(instance, "verified_by", [])
             super().__init__(
                 initial=_initial, **kwargs
             )
+            self.fields["verified_by"].choices = \
+                map(lambda x: (x, x), self.instance.layout.default_verifiers)
+
             for field in self.fields.values():
                 if hasattr(field, "queryset"):
                     filters = {}
@@ -89,9 +112,13 @@ def generate_form(name, layout):
                     field.queryset = field.queryset.filter(**filters)
 
         def clean(self):
-            if self.instance:
-                self.instance.full_clean()
-            return super().clean()
+            super().clean()
+            for i in self.changed_data:
+                if i != "verified_by":
+                    self.instance.verified_by = []
+                    break
+            self.instance.full_clean()
+            return self.cleaned_data
 
         @classmethod
         def encode_initial(cls, initial, prefix="tag", base=None):
@@ -128,8 +155,30 @@ def generate_form(name, layout):
                     selected_dict[splitted[-1]] = i[1]
             return ret
 
+        def send_verify_requests(self, verifier):
+            resp = requests.post(
+                merge_get_url(verifier),
+                data={
+                    "url": self._get_absolute_url_cache
+                },
+                verify=certifi.where()
+            )
+            if resp.status_code == 200:
+                return True
+            return False
+
         def save_m2m(self):
-            pass
+            failed = []
+            for verifier in self.cleaned_data["verified_by"]:
+                if verifier not in self.instance.verified_by:
+                    if not self.send_verify_requests(verifier):
+                        failed.append(verifier)
+
+            self.instance.verified_by = list(filter(
+                lambda x: x not in failed, self.cleaned_data["verified_by"]
+            ))
+            self.instance._content_is_cleaned = True
+            self.instance.save(update_fields=["verified_by"])
 
         def save(self, commit=True):
             if self.instance:
@@ -137,6 +186,7 @@ def generate_form(name, layout):
                 self.instance.tagdata = self.encode_data(self.cleaned_data)
                 if commit:
                     self.instance.save()
+                    self.save_m2m()
 
             return self.instance
 

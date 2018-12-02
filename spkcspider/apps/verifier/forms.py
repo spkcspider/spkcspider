@@ -10,6 +10,8 @@ from django.conf import settings
 from django.core.files.uploadedfile import TemporaryUploadedFile
 
 import requests
+import certifi
+
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import XSD
 
@@ -41,7 +43,7 @@ def hash_entry(triple):
             h.update(triple[2].datatype.encode("utf8"))
         else:
             h.update(XSD.string.encode("utf8"))
-        h.update(triple[2].value.encode("utf8"))
+        h.update(triple[2].encode("utf8"))
     return h.digest()
 
 
@@ -123,7 +125,7 @@ class CreateEntryForm(forms.ModelForm):
                 )
                 return
             try:
-                resp = requests.get(url, stream=True)
+                resp = requests.get(url, stream=True, verify=certifi.where())
             except requests.exceptions.ConnectionError:
                 self.add_error(
                     "url", forms.ValidationError(
@@ -265,7 +267,7 @@ class CreateEntryForm(forms.ModelForm):
                 )
                 return
             try:
-                resp = requests.get(url, stream=True)
+                resp = requests.get(url, stream=True, verify=certifi.where())
             except requests.exceptions.ConnectionError:
                 raise forms.ValidationError(
                     _('invalid url: %(url)s'),
@@ -354,7 +356,7 @@ class CreateEntryForm(forms.ModelForm):
                 )
                 return
             try:
-                resp = requests.get(url, stream=True)
+                resp = requests.get(url, stream=True, verify=certifi.where())
             except requests.exceptions.ConnectionError:
                 raise forms.ValidationError(
                     _('invalid url: %(url)s'),

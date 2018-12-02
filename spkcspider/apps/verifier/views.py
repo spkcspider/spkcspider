@@ -8,8 +8,6 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
 )
-from django.views.decorators.csrf import csrf_protect
-from django.utils.decorators import method_decorator
 from django.conf import settings
 from rdflib import Literal
 
@@ -55,14 +53,12 @@ class CreateEntry(CreateView):
         LimitedTemporaryFileUploadHandler
     ]
 
-    _dispatch = method_decorator(csrf_protect)(CreateView.dispatch)
-
     def dispatch(self, request, *args, **kwargs):
         if self.upload_handlers:
             request.upload_handlers = [
                 i(request) for i in self.upload_handlers
             ]
-        return self._dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()

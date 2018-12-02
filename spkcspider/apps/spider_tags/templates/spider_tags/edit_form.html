@@ -1,14 +1,18 @@
 {% load i18n %}
 {% include "spider_base/edit_form.html" %}
-<table class="w3-border" style="width:100%">
-  <tr><th>{% trans "List of verifiers:" %}</th></tr>
-  {% for verifier in object.layout.default_verifiers %}
-    <tr>
-      <td>
-        <a href="{{verifier}}">
-          {{verifier|truncatechars:"20"}}
-        </a>
-      </td>
-    </tr>
-  {% endfor %}
+<table class=" w3-table-all" style="width:100%">
+  <thead>
+    <tr><th>{% trans "List of verifiers:" %}</th></tr>
+  </thead>
+  <tbody>
+    {% for verifier in form.instance.verified_by %}
+      <tr>
+        <td>
+          <a href="{{verifier}}" style="word-break: break-all">
+            {{verifier}}
+          </a>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
 </table>

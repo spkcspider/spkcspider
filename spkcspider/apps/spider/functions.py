@@ -145,7 +145,7 @@ def has_admin_permission(self, request):
         return False
     from .models import TravelProtection as TravelProtectionContent
     if TravelProtectionContent.objects.get_active().filter(
-        usercomponent__user=request.user
+        associated_rel__usercomponent__user=request.user
     ).exists():
         return False
     return True

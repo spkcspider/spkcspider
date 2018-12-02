@@ -148,6 +148,7 @@ class SpiderTag(BaseContent):
         ret = []
         form = self.layout.get_form()(
             initial=self.tagdata.copy(),
+            instance=self,
             uc=self.associated.usercomponent
         )
         for name, field in form.fields.items():

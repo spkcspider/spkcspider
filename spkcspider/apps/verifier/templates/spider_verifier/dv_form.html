@@ -3,6 +3,11 @@
 {% load i18n spider_rdf %}
 {% block content %}
 <div class="w3-red w3-padding">{% trans "If the graph is too big, the connection is resetted" %}</div>
-{% include "spider_base/edit_form.html" with enctype="multipart/form-data" legend='Send spider or content to verify' confirm='Submit' %}
+<form action="{{ request.get_full_path }}" enctype="multipart/form-data" method="post">
+  {% include "spider_base/edit_form.html" with inner_form=True legend='Send spider or content to verify' %}
+  <button class="w3-button w3-grey">
+    {% trans 'Submit' %}
+  </button>
+</form>
 {% endblock content %}
 {% block main_attributes %}{{block.super}} prefix="spkc: {% namespace %} xsd: http://www.w3.org/2001/XMLSchema#" resource="{{ request.path }}"{% endblock %}
