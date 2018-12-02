@@ -5,12 +5,12 @@ from django.conf import settings
 from django.contrib.flatpages.forms import FlatpageForm
 from django.utils.translation import gettext_lazy as _
 
-_help_text = _("""
-    Example: '/about/contact/'. Make sure to have leading and trailing slashes.
+_help_text = _(
+    """Example: '/about/contact/'. Make sure to have leading and trailing slashes.
     "<br/>Special Urls (ordered by url):<br/>
     /home/heading/*/ : flatpages used for heading on frontpage <br/>
-    /home/main/*/ : flatpages used for general information on frontpage"
-""")
+    /home/main/*/ : flatpages used for general information on frontpage"""
+)
 
 
 _extra = '' if settings.DEBUG else '.min'

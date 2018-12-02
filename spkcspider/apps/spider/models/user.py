@@ -32,12 +32,12 @@ from ..constants import (
 logger = logging.getLogger(__name__)
 
 
-_name_help = _("""
-Name of the component.<br/>
-Note: there are special named components
-with different protection types and scopes.<br/>
-Most prominent: "index" for authentication
-""")
+_name_help = _(
+    "Name of the component.<br/>"
+    "Note: there are special named components "
+    "with different protection types and scopes.<br/>"
+    "Most prominent: \"index\" for authentication"
+)
 
 
 _required_passes_help = _(

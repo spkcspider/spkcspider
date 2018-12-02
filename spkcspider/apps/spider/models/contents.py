@@ -132,19 +132,13 @@ login_choices = [
 ]
 
 
-_login_protection = _("""
-    No Login Protection: normal, default
-    Fake Login: fake login and index (experimental)
-    Wipe: Wipe protected content,
-    except they are protected by a deletion period
-    Wipe User: destroy user on login
-
-
-    <div>
-        Danger: every option other than: "No Login Protection" can screw you.
-        "Fake Login" can trap you in a parallel reality
-    </div>
-""")
+_login_protection = _(
+    "No Login Protection: normal, default<br/>"
+    "Fake Login: fake login and index<br/>"
+    "Wipe: Wipe protected content, "
+    "except they are protected by a deletion period<br/>"
+    "Wipe User: destroy user on login"
+)
 
 
 class TravelProtectionManager(models.Manager):

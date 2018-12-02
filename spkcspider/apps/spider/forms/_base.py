@@ -76,7 +76,7 @@ class UserComponentForm(forms.ModelForm):
             if self.instance.name in index_names:
                 self.fields.pop("featured", None)
                 self.fields["required_passes"].help_text = _(
-                    "How many protections must be passed to login?"
+                    "How many protections must be passed to login?<br/>"
                     "Minimum is 1, no matter what selected"
                 )
                 ptype = ProtectionType.authentication.value

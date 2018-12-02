@@ -27,10 +27,8 @@ PROTECTION_CHOICES = [
 KEEP_CHOICES = [("keep", _("Keep protection"))] + PROTECTION_CHOICES
 
 
-_self_protection = _("""
-    Disallows user to disable travel protection if active.
-    Can be used in connection with "secret" to allow unlocking via secret
-""")
+_self_protection = _("""Disallows user to disable travel protection if active.
+ Can be used in connection with "secret" to allow unlocking via secret""")
 
 
 class LinkForm(forms.ModelForm):

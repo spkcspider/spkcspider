@@ -117,6 +117,10 @@ USE_L10N = True
 
 USE_TZ = True
 
+LOCALE_PATHS = (
+    os.path.join(BASE_DIR, "spkcspider", 'locale'),
+)
+
 
 STATICFILES_DIRS = [
     # add node_modules as node_modules under static

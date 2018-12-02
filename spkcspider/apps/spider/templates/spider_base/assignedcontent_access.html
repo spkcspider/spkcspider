@@ -59,14 +59,14 @@
     <h1 class="w3-center">
       {% if scope == "add" %}
         {% trans object.name as local_name %}
-        {% blocktrans trimmed with name=local_name %}
-          Create Content: <em>{{name}}</em>
-        {% endblocktrans %}
+        {% blocktrans trimmed %}
+          Create Content
+        {% endblocktrans %}: <em>{{local_name}}</em>
       {% elif scope == "update" %}
         {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed %}
           Update
-        {% endblocktrans %} "<b>{{object}}</b>" <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
+        {% endblocktrans %} "<b>{{object}}</b>" <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component' %}: {{uc}}"{% endif %}><em>({{local_name}})</em></small>
       {% else %}
         {% trans object.ctype.name as local_name %}
         <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>

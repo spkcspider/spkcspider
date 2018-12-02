@@ -39,7 +39,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           </div>
         {% endif %}
         <div>
-          {% trans "Strength:" %} {{object.strength}}
+          {% trans "Strength" %}: {{object.strength}}
         </div>
       </span>
     {% endif %}
@@ -48,8 +48,8 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         {% trans 'Change Login Protection' %}
       {% elif object %}
         {% blocktrans trimmed %}
-          Change Component:
-        {% endblocktrans %} <b>{{form.instance}}</b>
+          Change Component
+        {% endblocktrans %}: <b>{{form.instance}}</b>
       {% else %}
         {% trans 'Create new Component' %}
       {% endif %}

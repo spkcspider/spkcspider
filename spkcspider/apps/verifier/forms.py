@@ -23,13 +23,13 @@ from .models import DataVerificationTag
 from .constants import BUFFER_SIZE
 from .functions import get_hashob
 
-_source_url_help = _("""
-    Url to content or content list to verify
-""")
+_source_url_help = _(
+    "Url to content or content list to verify"
+)
 
-_source_file_help = _("""
-    File with data to verify
-""")
+_source_file_help = _(
+    "File with data to verify"
+)
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
 
 
