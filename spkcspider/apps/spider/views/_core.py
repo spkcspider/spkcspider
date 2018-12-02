@@ -2,7 +2,7 @@ __all__ = ("UserTestMixin", "UCTestMixin", "EntityDeletionMixin")
 
 import logging
 import hashlib
-from urllib.parse import urlencode
+from urllib.parse import quote_plus
 
 from datetime import timedelta
 
@@ -33,11 +33,11 @@ class UserTestMixin(AccessMixin):
     no_nonce_usercomponent = False
     also_authenticated_users = False
     allowed_GET_parameters = set(["token", "raw", "protection"])
-    login_url = getattr(
+    login_url = reverse_lazy(getattr(
         settings,
         "LOGIN_URL",
-        reverse_lazy("auth:login")
-    )
+        "auth:login"
+    ))
 
     def dispatch_extra(self, request, *args, **kwargs):
         return None
@@ -284,7 +284,7 @@ class UserTestMixin(AccessMixin):
                 redirect_to="{}?{}={}".format(
                     self.get_login_url(),
                     REDIRECT_FIELD_NAME,
-                    urlencode(self.request.GET["referrer"])
+                    quote_plus(self.request.get_full_path())
                 )
             )
 

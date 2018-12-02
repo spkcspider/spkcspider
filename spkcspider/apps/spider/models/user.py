@@ -214,7 +214,7 @@ class UserComponent(models.Model):
         """ Can the public attribute be set """
         return self.name not in index_names and self.contents.filter(
             strength__lt=5
-        )
+        ).exists()
 
     @property
     def deletion_period(self):

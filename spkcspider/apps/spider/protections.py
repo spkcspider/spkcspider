@@ -109,7 +109,7 @@ class BaseProtection(forms.Form):
     # initial values
     initial = {}
 
-    def __init__(self, protection, ptype, assigned=None, **kwargs):
+    def __init__(self, protection, ptype, request, assigned=None, **kwargs):
         self.protection = protection
         self.ptype = ptype
         if assigned:
