@@ -76,11 +76,15 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
     model = AssignedContent
 
     def dispatch_extra(self, request, *args, **kwargs):
+        ids = self.request.auth_token.extra.get("ids", None)
+        if ids is not None and self.object.id not in ids:
+            return self.handle_no_permission()
         if "referrer" in self.request.GET:
             self.object_list = self.model.objects.filter(
                 pk=self.object.pk
             )
             return self.handle_referrer()
+
         return None
 
     def dispatch(self, request, *args, **kwargs):
@@ -336,6 +340,9 @@ class ContentIndex(UCTestMixin, ListView):
                 infoq |= models.Q(info__contains="\n%s\n" % item)
         if idlist:
             ids = map(lambda x: int(x), idlist)
+            searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
+        ids = self.request.auth_token.extra.get("ids", None)
+        if ids is not None:
             searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
 
         return ret.filter(

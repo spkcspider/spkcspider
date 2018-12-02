@@ -129,4 +129,8 @@ def merge_get_url(_url, **kwargs):
     GET.update(kwargs)
     for item in _strip:
         GET.pop(item, None)
-    return urlunsplit((*urlparsed[:3], urlencode(GET), ""))
+    ret = urlunsplit((*urlparsed[:3], urlencode(GET), ""))
+    # work around url.parse bug 35377
+    if not urlparsed[1]:
+        ret = ret.replace(":///", "://", 1)
+    return ret

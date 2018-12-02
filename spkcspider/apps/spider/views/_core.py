@@ -306,7 +306,12 @@ class UserTestMixin(AccessMixin):
         if action == "confirm":
             if self.usercomponent.user == self.request.user:
                 authtoken = AuthToken(
-                    usercomponent=self.usercomponent
+                    usercomponent=self.usercomponent,
+                    extra={
+                        "ids": list(
+                            self.object_list.values_list("id", flat=True)
+                        )
+                    }
                 )
                 try:
                     authtoken.save()
