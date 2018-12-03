@@ -1,0 +1,168 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-12-03 00:50+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: spkcspider/apps/spider_tags/forms.py:81
+#, python-format
+msgid "Primary layout for \"%s\" exists already"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:12
+msgid "Name"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:19
+msgid "Street/Place"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:26
+msgid "Street Number"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:34
+msgid "City"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:41
+msgid "Post Code"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:49
+msgid "Country Area"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:57
+msgid "Country Code"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:69
+msgid "Address"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:79
+msgid "Titles"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:87
+msgid "First Name"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:94
+msgid "Extra Name"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:102
+msgid "Last Name"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:110
+msgid "ID Documents"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:128
+msgid "Adress Object"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:139
+msgid "Contacts"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:147
+msgid "Biologic Gender"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:152
+msgid "male"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:153
+msgid "female"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:154
+msgid "other"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:160
+msgid "Blood Group"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:174
+msgid "Rhesus Factor"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:186
+msgid "Health Problems"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:190
+msgid "Heart"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:191
+msgid "Diabetes"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:192
+msgid "Lung"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:193
+msgid "Dementia"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:194
+msgid "Social"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:195
+msgid "Phobias"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:201
+msgid "Organ donations in case of death"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:206
+msgid "All organs"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:207
+msgid "Special Organs"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:208
+msgid "Contacts can decide"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:209
+msgid "None"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/layouts.py:216
+msgid "In case of: \"Special Organs\", which?"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/models.py:38
+msgid "Layout exists already"
+msgstr ""
+
+#: spkcspider/apps/spider_tags/templates/spider_tags/edit_form.html:5
+#: spkcspider/apps/spider_tags/templates/spider_tags/view_form.html:4
+msgid "List of verifiers, where the tag was verified"
+msgstr ""

@@ -1,0 +1,125 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-12-03 00:50+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: spkcspider/apps/verifier/constants.py:10
+msgid "pending"
+msgstr ""
+
+#: spkcspider/apps/verifier/constants.py:11
+msgid "verified"
+msgstr ""
+
+#: spkcspider/apps/verifier/constants.py:12
+msgid "rejected"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:27
+msgid "Url to content or content list to verify"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:31 spkcspider/apps/verifier/models.py:32
+msgid "File with data to verify"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:107
+msgid "Require either url or dvfile"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:121 spkcspider/apps/verifier/forms.py:263
+#: spkcspider/apps/verifier/forms.py:352
+#, python-format
+msgid "Insecure url: %(url)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:132 spkcspider/apps/verifier/forms.py:273
+#: spkcspider/apps/verifier/forms.py:362
+#, python-format
+msgid "invalid url: %(url)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:141 spkcspider/apps/verifier/forms.py:280
+#, python-format
+msgid "Retrieval failed: %s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:153 spkcspider/apps/verifier/forms.py:290
+#, python-format
+msgid ""
+"Retrieval failed, no length specified, invalid\n"
+"or too long, length: %(length)s, url: %(url)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:196
+#, python-format
+msgid "not a \"%(format)s\" file"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:204
+#, python-format
+msgid "invalid graph, scopes: %(scope)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:213
+#, python-format
+msgid "invalid graph, pages: %(page)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:223
+#, python-format
+msgid "invalid graph, view url: %(url)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:247
+#, python-format
+msgid "Invalid type: %(type)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:330
+#, python-format
+msgid "%(page)s is not a \"%(format)s\" file"
+msgstr ""
+
+#: spkcspider/apps/verifier/forms.py:369
+#, python-format
+msgid "Retrieval failed: %(reason)s"
+msgstr ""
+
+#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:8
+msgid "Hash:"
+msgstr ""
+
+#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:12
+msgid "Hash Algorithm:"
+msgstr ""
+
+#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:16
+msgid "Verification State:"
+msgstr ""
+
+#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:17
+msgid "unverified"
+msgstr ""
+
+#: spkcspider/apps/verifier/templates/spider_verifier/dv_form.html:5
+msgid "If the graph is too big, the connection is resetted"
+msgstr ""
+
+#: spkcspider/apps/verifier/templates/spider_verifier/dv_form.html:9
+msgid "Submit"
+msgstr ""

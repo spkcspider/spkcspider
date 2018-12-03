@@ -1,0 +1,56 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2018-12-03 00:50+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: spkcspider/apps/spider_keys/forms.py:29
+msgid "Empty Key"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/forms.py:34
+#: spkcspider/apps/spider_keys/models.py:37
+msgid "Private Key"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/forms.py:83
+msgid "key not usable for signing"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/forms.py:107
+msgid "signature incorrect"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/models.py:25
+msgid "Signature of Identifier"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/models.py:27
+msgid "\"Public Key\"-Content"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/models.py:39
+msgid "Not trimmed"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/models.py:41
+msgid "Not a key"
+msgstr ""
+
+#: spkcspider/apps/spider_keys/models.py:57
+msgctxt "content name"
+msgid "Public Key"
+msgstr ""

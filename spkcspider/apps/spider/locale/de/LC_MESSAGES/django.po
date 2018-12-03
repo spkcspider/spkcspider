@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-12-02 22:53+0000\n"
+"POT-Creation-Date: 2018-12-03 00:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,42 +17,41 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-
 #: spkcspider/apps/spider/constants/settings.py:16
 msgid "default ({} Bytes)"
-msgstr "Standard ({} Bytes)"
+msgstr ""
 
 #: spkcspider/apps/spider/constants/settings.py:17
 msgid "low ({} Bytes)"
-msgstr "Niedrig ({} Bytes)"
+msgstr ""
 
 #: spkcspider/apps/spider/constants/settings.py:18
 msgid "medium ({} Bytes)"
-msgstr "Normal ({} Bytes)"
+msgstr ""
 
 #: spkcspider/apps/spider/constants/settings.py:19
 msgid "high ({} Bytes)"
-msgstr "Hoch ({} Bytes)"
+msgstr ""
 
 #: spkcspider/apps/spider/contents.py:213
 msgid "<b>No User Input required</b>"
-msgstr "<b>Keiner Nutzereingabe erforderlich</b>"
+msgstr ""
 
 #: spkcspider/apps/spider/contents.py:359
 #, python-format
 msgid "Add \"%s\""
-msgstr "Füge \"%s\" hinzu"
+msgstr ""
 
 #: spkcspider/apps/spider/contents.py:362
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_form.html:22
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:135
 msgid "Create"
-msgstr "Erstelle"
+msgstr ""
 
 #: spkcspider/apps/spider/contents.py:371
 #, python-format
 msgid "Update \"%s\""
-msgstr "Aktualisiere \"%s\""
+msgstr ""
 
 #: spkcspider/apps/spider/contents.py:374
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_access.html:45
@@ -60,9 +59,8 @@ msgstr "Aktualisiere \"%s\""
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_form.html:24
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:38
 #: spkcspider/apps/spider_accounts/templates/registration/profile.html:6
-#: spkcspider/apps/spider_filets/templates/spider_filets/text.html:7
 msgid "Update"
-msgstr "Aktualisiere"
+msgstr ""
 
 #: spkcspider/apps/spider/contents.py:451
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_access.html:40
@@ -70,7 +68,7 @@ msgstr "Aktualisiere"
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:139
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:140
 msgid "View"
-msgstr "Öffnen"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_base.py:18
 msgid ""
@@ -90,41 +88,25 @@ msgid ""
 "</tr>\n"
 "</table>\n"
 msgstr ""
-"Generiere \"Nonce\" mit flexibler Stärke<br/>\n"
-"Eine \"Nonce\" schützt gegen Bruteforce-Angriffe und gezielte Angreifer<br/>\n"
-"Wenn ein Angreifer die \"Nonce\" weiß, kann jene mit dieser Option geändert werden\n"
-"und/oder es können \"Protections\" hinzugefügt werden<br/>\n"
-"<table style=\"color:red;\">\n"
-"<tr>\n"
-"<td>Warnung:</td><td>diese Option entfernt auch Zugang zu allen Services, die diesen Link verwenden<td/>\n"
-"</tr>\n"
-"<tr>\n"
-"<td style=\"vertical-align: top\">Warnung:</td><td>Öffentliche User-Komponenten "
-"enthüllen \"Nonce\", diese sollte mit dieser Option regeneriert werden, falls die Komponente nicht mehr öffentlich geführt werden soll.\n"
-"Hiermit wird der Schutz durch die \"Nonce\" wiederhergestellt</td>\n"
-"</tr>\n"
-"</table>\n"
 
 #: spkcspider/apps/spider/forms/_base.py:37
 #: spkcspider/apps/spider/forms/_base.py:207
 msgid "New Nonce"
-msgstr "Neue \"Nonce\""
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_base.py:49
 msgid "Name of User Component already exists"
-msgstr "Der Name existiert bereits."
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_base.py:79
 msgid ""
 "How many protections must be passed to login?<br/>Minimum is 1, no matter "
 "what selected"
 msgstr ""
-"Wie viele \"Protections\" müssen für den Login erfüllt werden?<br/>"
-"Minimum ist hier 1"
 
 #: spkcspider/apps/spider/forms/_base.py:123
 msgid "Forbidden Name"
-msgstr "Verbotener Name"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_base.py:145
 #, python-format
@@ -134,46 +116,44 @@ msgstr ""
 #: spkcspider/apps/spider/forms/_base.py:217
 #: spkcspider/apps/spider/models/content_base.py:239
 msgid "Unique Content already exists"
-msgstr "Inhalt, der nur einmal vorkommen darf, existiert bereits"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:22
 msgid "No self-protection (not recommended)"
-msgstr "Kein Selbstschutz (nicht empfohlen)"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:23
 #: spkcspider/apps/spider/protections.py:265
 msgid "Password"
-msgstr "Passwort"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:24
 #: spkcspider/apps/spider/forms/_contents.py:63
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:84
 msgid "Token"
-msgstr "Token"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:27
 msgid "Keep protection"
-msgstr "Reise-Schutz beibehalten"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:30
 msgid ""
 "Disallows user to disable travel protection if active.\n"
 " Can be used in connection with \"secret\" to allow unlocking via secret"
 msgstr ""
-"Verhindere, dass der Nutzer den Reiseschutz deaktivieren kann.\n"
-" Kann in Verbindung mit \"secret\" verwendet werden, um den Reiseschutz mithilfe eines Geheimnis zu deaktivieren."
 
 #: spkcspider/apps/spider/forms/_contents.py:54
 msgid "Old Password"
-msgstr "Altes Reiseschutz-Passwort"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:59
 msgid "Self-protection"
-msgstr "Selbstschutz"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:64
 msgid "please export/copy for disabling travel mode"
-msgstr "Bitte exportieren um den Reiseschutz deaktivieren zu können"
+msgstr ""
 
 #: spkcspider/apps/spider/forms/_contents.py:68
 msgid "New Password"
@@ -195,51 +175,47 @@ msgid ""
 "    /home/heading/*/ : flatpages used for heading on frontpage <br/>\n"
 "    /home/main/*/ : flatpages used for general information on frontpage"
 msgstr ""
-"Beispiel: '/about/contact/'. / am Anfang und Ende des Namens sind wichtig.\n"
-"    \"<br/>Spezielle Namen (alphabetisch geordnet):<br/>\n"
-"    /home/heading/*/ : flatpages, die als Überschrift der Home-Seite verwendet werden<br/>\n"
-"    /home/main/*/ : flatpages, die für generelle Informationen auf der Home-Seite verwendet werden"
 
 #: spkcspider/apps/spider/models/content_base.py:71
 #, python-format
 msgid "%(value)s ends not with \"\\n\""
-msgstr "%(value)s endet nicht mit \"\\n\""
+msgstr ""
 
 #: spkcspider/apps/spider/models/content_base.py:77
 #, python-format
 msgid "%(value)s starts not with \"\\n\""
-msgstr "%(value)s startet nicht mit \"\\n\""
+msgstr ""
 
 #: spkcspider/apps/spider/models/content_base.py:94
 #, python-format
 msgid "flag not unique: %(element)s in %(value)s"
-msgstr "Mehrfachvorkommen von Flag: %(element)s in %(value)s"
+msgstr ""
 
 #: spkcspider/apps/spider/models/content_base.py:221
 msgid "Not an allowed ContentVariant for this user"
-msgstr "Nicht erlaubte Content-Variante"
+msgstr ""
 
 #: spkcspider/apps/spider/models/content_base.py:226
 #: spkcspider/apps/spider/models/user.py:168
 #, python-format
 msgid "Protection strength too low, required: %(strength)s"
-msgstr "Schutzlevel zu niedrig, benötigt wird: %(strength)s"
+msgstr ""
 
 #: spkcspider/apps/spider/models/contents.py:97
 msgid "Create Content Link"
-msgstr "Erstelle Link"
+msgstr ""
 
 #: spkcspider/apps/spider/models/contents.py:102
 msgid "Update Content Link"
-msgstr "Aktualisiere Link"
+msgstr ""
 
 #: spkcspider/apps/spider/models/contents.py:126
 msgid "No Login protection"
-msgstr "Keinen Reise-Login-Schutz"
+msgstr ""
 
 #: spkcspider/apps/spider/models/contents.py:128
 msgid "Fake login"
-msgstr "Fake-Ansicht"
+msgstr ""
 
 #: spkcspider/apps/spider/models/contents.py:130
 msgid "Wipe"
@@ -255,17 +231,14 @@ msgid ""
 ">Wipe: Wipe protected content, except they are protected by a deletion "
 "period<br/>Wipe User: destroy user on login"
 msgstr ""
-"Keinen Reise-Login-Schutz: normaler Login (Standard)<br/>Fake-Ansicht: falscher Login mit falscher Index-Komponente<br/"
-">Wipe: Entferne geschützte Inhalte, bis auf jene, dessen Löschperiode sie vor einer Löschung schützt"
-"<br/>Wipe User: Lösche Nutzer beim Einlogversuch, während der Reiseschutz aktiv ist"
 
 #: spkcspider/apps/spider/models/contents.py:225
 msgid "Create Travel Protection"
-msgstr "Erstelle Reiseschutz"
+msgstr ""
 
 #: spkcspider/apps/spider/models/contents.py:230
 msgid "Update Travel Protection"
-msgstr "Aktualisiere Reiseschutz"
+msgstr ""
 
 #: spkcspider/apps/spider/models/protections.py:196
 msgid ""
@@ -289,7 +262,7 @@ msgstr ""
 
 #: spkcspider/apps/spider/models/user.py:49
 msgid "Appears as featured on \"home\" page"
-msgstr "Wird auf Frontseite als \"featured\" angezeigt"
+msgstr ""
 
 #: spkcspider/apps/spider/models/user.py:82
 msgid ""
@@ -312,7 +285,7 @@ msgstr ""
 
 #: spkcspider/apps/spider/protections.py:80
 msgid "Instant fail"
-msgstr "Sofort-Fail"
+msgstr ""
 
 #: spkcspider/apps/spider/protections.py:81
 msgid ""
@@ -322,19 +295,19 @@ msgstr ""
 
 #: spkcspider/apps/spider/protections.py:181
 msgid "Users"
-msgstr "Nutzer"
+msgstr ""
 
 #: spkcspider/apps/spider/protections.py:188
 msgid "Limit access to selected users"
-msgstr "Limitiere Zugang zu ausgewählten Nutzern"
+msgstr ""
 
 #: spkcspider/apps/spider/protections.py:215
 msgid "Success Rate"
-msgstr "Erfolgsrate"
+msgstr ""
 
 #: spkcspider/apps/spider/protections.py:217
 msgid "Set success rate"
-msgstr "Erfolgsrate anpassen"
+msgstr ""
 
 #: spkcspider/apps/spider/protections.py:223
 msgid ""
@@ -360,7 +333,7 @@ msgstr ""
 
 #: spkcspider/apps/spider/protections.py:318
 msgid "Passwords"
-msgstr "Passwörter"
+msgstr ""
 
 #: spkcspider/apps/spider/protections.py:319
 msgid "One password per line. Every password is stripped."
@@ -449,21 +422,21 @@ msgstr ""
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_access.html:69
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:73
 msgid "User Component"
-msgstr "Komponente"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_access.html:72
 msgid "User Component:"
-msgstr "Komponente:"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_confirm_delete.html:3
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_confirm_delete.html:13
 msgid "Delete Content"
-msgstr "Inhalt löschen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_confirm_delete.html:11
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_confirm_delete.html:11
 msgid "Back"
-msgstr "Zurück"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_confirm_delete.html:21
 msgid ""
@@ -479,90 +452,90 @@ msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_form.html:11
 msgid "Content Settings"
-msgstr "Inhaltseinstellungen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_form.html:30
 msgid "Update Raw Content"
-msgstr "Rohen Inhalt aktualisieren"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:3
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:50
 msgid "Content of:"
-msgstr "Inhalt von:"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:5
 msgid "Content List"
-msgstr "Inhaltsliste"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:31
 msgid "Up (Owned)"
-msgstr "Hoch (Eigene)"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:33
 msgid "up (Public)"
-msgstr "Hoch (Öfffentlich)"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:62
 msgid "Content:"
-msgstr "Inhalt:"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:90
 msgid "Add new content"
-msgstr "Inhalt hinzufügen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:99
 #, python-format
 msgid "Requires Strength: %(required_strength)s"
-msgstr "Schutzlevel benötigt: %(required_strength)s"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:109
 msgid "No Content Variants available."
-msgstr "Keine Inhaltstypen vorhanden"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:131
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list_fragment.html:38
 #, python-format
 msgid "Modified: %(time)s ago"
-msgstr "Modifiziert vor: %(time)s"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:144
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:145
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list_fragment.html:50
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list_fragment.html:51
 msgid "Edit"
-msgstr "Bearbeiten"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:149
 msgid "Del"
-msgstr "Entf"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/assignedcontent_list.html:156
 msgid "No User Content available."
-msgstr "Keine Inhalte verfügbar"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:61
 msgid "Add Component"
-msgstr "Komponente hinzufügen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:65
 msgid "List public Components"
-msgstr "Öffentliche Komponenten"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:69
 msgid "List owned Components"
-msgstr "Eigene Komponenten"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:73
 msgid "List private Content"
-msgstr "Private Inhalte"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:91
 msgid "Profile"
-msgstr "Profil"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:95
 msgid "Security"
-msgstr "Sicherheit"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:100
 msgid "Admin"
@@ -574,7 +547,7 @@ msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:115
 msgid "Register"
-msgstr "Registrierung"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/base.html:121
 msgid "Login"
@@ -582,11 +555,11 @@ msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/form_errors.html:6
 msgid "Please correct the error below."
-msgstr "Bitte den Fehler unten korrigieren"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/form_errors.html:6
 msgid "Please correct the errors below."
-msgstr "Bitte die Fehler unten korrigieren"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/home.html:4
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:29
@@ -595,7 +568,7 @@ msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/home.html:33
 msgid "Welcome to spkcspider"
-msgstr "Willkommen auf der spkcspider"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/home.html:53
 msgid "Featured:"
@@ -603,41 +576,39 @@ msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/home.html:70
 msgid "List public components (spiders)..."
-msgstr "Auflisten aller öffentlichen Kompnenten (Spider)"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/list_footer.html:13
 #: spkcspider/apps/spider/templates/spider_base/list_footer.html:18
 msgid "Search"
-msgstr "Suchen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/list_footer.html:21
 msgid "clear"
-msgstr "Löschen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/list_footer.html:29
 msgid ""
 "Use ! to negate. Use !! to start a search tag with !. Press Enter to confirm "
 "tag. The button with the magnifying glass on the right starts the search."
 msgstr ""
-"Nutze ! zum Negieren. Nutze !! zum Starten eines Suchtags mit !. Drücke Enter zum Bestätigen des Tags "
-"Der Knopf mit der Lupe auf der rechten Seite startet die Suche."
 
 #: spkcspider/apps/spider/templates/spider_base/list_footer.html:53
 msgid "previous"
-msgstr "Vorherige"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/list_footer.html:57
 #, python-format
 msgid "Page %(page)s of %(num_pages)s."
-msgstr "Seite %(page)s von %(num_pages)s."
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:10
 msgid "QR/Export-Mode"
-msgstr "QR/Export-Modus"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:19
 msgid "With access token"
-msgstr "Mit Access-Token"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:26
 msgid "Link"
@@ -650,30 +621,30 @@ msgstr ""
 #: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:32
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:53
 msgid "Export"
-msgstr "Exportieren"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:2
 msgid "Remaining lifetime of token"
-msgstr "Verbleibende Lebenszeit vom Token"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:6
 #: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:26
 #, python-format
 msgid "Days: %(days)s %(hours)sh:%(minutes)sm:%(seconds)ss"
-msgstr "Tage: %(days)s %(hours)sh:%(minutes)sm:%(seconds)ss"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:31
 msgid "Expired"
-msgstr "Ausgelaufen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_confirm_delete.html:3
 #, python-format
 msgid "Delete: %(name)s"
-msgstr "Lösche: %(name)s"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_confirm_delete.html:13
 msgid "Delete User Component:"
-msgstr "Komponente löschen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_confirm_delete.html:21
 msgid ""
@@ -686,12 +657,12 @@ msgstr ""
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:5
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:48
 msgid "Change Login Protection"
-msgstr "Login-Schutzmechanismen ändern"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:6
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:50
 msgid "Change Component"
-msgstr "Komponente änderen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:8
 msgid "Create Component"
@@ -700,97 +671,97 @@ msgstr ""
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:30
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:139
 msgid "Contents"
-msgstr "Inhalte"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:42
 msgid "Strength"
-msgstr "Schutzniveau"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:54
 msgid "Create new Component"
-msgstr "Neue Komponente erstellen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:71
 msgid "Login Protection"
-msgstr "Login Schutz"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:81
 msgid "Active Tokens"
-msgstr "Aktive Token"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:85
 msgid "Valid till"
-msgstr "Gültig bis"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:114
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:135
 msgid "Change"
-msgstr "Ändern"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:118
 #: spkcspider/apps/spider/templates/spider_protections/protections.html:10
 msgid "Protections"
-msgstr "Schutztechniken"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:129
 msgid "No protections: create component first"
-msgstr "Keine Schutztechniken verfügbar: erst die Komponente erstellen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:3
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:60
 msgid "Public Components"
-msgstr "Öffentliche Komponenten"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:5
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:62
 msgid "Owned Components"
-msgstr "Eigene Komponenten"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:7
 #, python-format
 msgid "Component List of %(name)s"
-msgstr "Komponenten-Liste von %(name)s"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:34
 msgid "Up (Public)"
-msgstr "Hoch (Öffentlich)"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:43
 msgid "Add New Component"
-msgstr "Neue Komponente hinzufügen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:48
 msgid "Owned"
-msgstr "Eigene"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:64
 msgid "Component List of"
-msgstr "Komponenten-Liste von"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list_fragment.html:22
 msgid "Private Component"
-msgstr "Private Komponente"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list_fragment.html:45
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list_fragment.html:46
 msgid "List"
-msgstr "Liste"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list_fragment.html:58
 msgid "No Components available."
-msgstr "Keine Komponenten verfügbar"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/protections.html:23
 msgid "Send"
-msgstr "Senden"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:7
 msgid "Allow"
-msgstr "Erlauben"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:17
 msgid "Access to"
-msgstr "Zugriff auf"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:21
 msgid "Scope"
@@ -798,43 +769,40 @@ msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:22
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:37
-#: spkcspider/apps/spider_tags/layouts.py:12
 msgid "Name"
-msgstr "Name"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:28
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:35
 msgid "Component"
-msgstr "Komponente"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:30
 msgid "Description"
-msgstr "Beschreibung"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:43
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:51
 msgid "Content"
-msgstr "Inhalt"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:61
 msgid "Confirm Access"
-msgstr "Zugriff bestätigen"
+msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_protections/referring.html:65
 msgid "Cancel"
-msgstr "Abbruch"
+msgstr ""
 
 #: spkcspider/apps/spider/views/_core.py:55
 #: spkcspider/apps/spider/views/_core.py:321
 msgid "Token creation failed, try again"
-msgstr "Token-Erstellung fehlgeschlagen, bitte erneut probieren"
+msgstr ""
 
 #: spkcspider/apps/spider/views/_core.py:299
-#: spkcspider/apps/verifier/forms.py:121 spkcspider/apps/verifier/forms.py:263
-#: spkcspider/apps/verifier/forms.py:352
 #, python-format
 msgid "Insecure url: %(url)s"
-msgstr "Unsichere url: %(url)s"
+msgstr ""
 
 #: spkcspider/apps/spider_accounts/admin.py:17
 msgid "Personal info"
@@ -850,7 +818,7 @@ msgstr ""
 
 #: spkcspider/apps/spider_accounts/forms.py:32
 msgid "Email Address"
-msgstr "Emial-Adresse"
+msgstr ""
 
 #: spkcspider/apps/spider_accounts/forms.py:33
 msgid "(optional)"
@@ -880,7 +848,7 @@ msgstr ""
 
 #: spkcspider/apps/spider_accounts/templates/registration/login.html:31
 msgid "No account? Signup?"
-msgstr "Keinen Account? Registrieren?"
+msgstr ""
 
 #: spkcspider/apps/spider_accounts/templates/registration/password_change_done.html:10
 msgid "Your password was changed."
@@ -907,334 +875,13 @@ msgstr ""
 #: spkcspider/apps/spider_accounts/templates/registration/signup.html:5
 #: spkcspider/apps/spider_accounts/templates/registration/signup.html:11
 msgid "Sign up"
-msgstr "Registrierung"
+msgstr ""
 
 #: spkcspider/apps/spider_accounts/templates/registration/signup.html:12
 msgid "Already an account? Login?"
-msgstr "Bereits einen Account? Login?"
+msgstr ""
 
 #: spkcspider/apps/spider_accounts/templates/registration/thanks.html:9
 #, python-format
 msgid " Signup successful. Thank you for using %(name)s "
-msgstr "Registrierung erfolgreich. Danke für die Nutzung von %(name)s"
-
-#: spkcspider/apps/spider_filets/forms.py:113
-#, python-format
-msgid ""
-"Allow editing from selected components. Requires protection strength >=%s."
 msgstr ""
-
-#: spkcspider/apps/spider_filets/models.py:123
-msgid "Upload File"
-msgstr ""
-
-#: spkcspider/apps/spider_filets/models.py:128
-msgid "Update File"
-msgstr ""
-
-#: spkcspider/apps/spider_filets/models.py:152
-msgid "Allow editing from selected components."
-msgstr ""
-
-#: spkcspider/apps/spider_filets/models.py:159
-msgid ""
-"How many words from start should be used for search, seo, search machine "
-"preview? (tags are stripped)"
-msgstr ""
-
-#: spkcspider/apps/spider_filets/models.py:221
-#, python-format
-msgid "Update \"%s\" (guest)"
-msgstr "Update \"%s\" (Gast)"
-
-#: spkcspider/apps/spider_filets/templates/spider_filets/file.html:3
-msgid "Download"
-msgstr ""
-
-#: spkcspider/apps/spider_filets/templates/spider_filets/file_form.html:2
-msgid "If the file is too big, the connection is resetted"
-msgstr ""
-
-#: spkcspider/apps/spider_keys/forms.py:29
-msgid "Empty Key"
-msgstr ""
-
-#: spkcspider/apps/spider_keys/forms.py:34
-#: spkcspider/apps/spider_keys/models.py:37
-msgid "Private Key"
-msgstr ""
-
-#: spkcspider/apps/spider_keys/forms.py:83
-msgid "key not usable for signing"
-msgstr ""
-
-#: spkcspider/apps/spider_keys/forms.py:107
-msgid "signature incorrect"
-msgstr ""
-
-#: spkcspider/apps/spider_keys/models.py:25
-msgid "Signature of Identifier"
-msgstr ""
-
-#: spkcspider/apps/spider_keys/models.py:27
-msgid "\"Public Key\"-Content"
-msgstr "\"Public Key\"-Objekt"
-
-#: spkcspider/apps/spider_keys/models.py:39
-msgid "Not trimmed"
-msgstr "Nicht "
-
-#: spkcspider/apps/spider_keys/models.py:41
-msgid "Not a key"
-msgstr "Kein Schlüssel"
-
-#: spkcspider/apps/spider_keys/models.py:57
-msgctxt "content name"
-msgid "Public Key"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/forms.py:81
-#, python-format
-msgid "Primary layout for \"%s\" exists already"
-msgstr "Primäres Layout-Objekt für \"%s\" existiert bereits"
-
-#: spkcspider/apps/spider_tags/layouts.py:19
-msgid "Street/Place"
-msgstr "Straße/Platz"
-
-#: spkcspider/apps/spider_tags/layouts.py:26
-msgid "Street Number"
-msgstr "Straßennummer"
-
-#: spkcspider/apps/spider_tags/layouts.py:34
-msgid "City"
-msgstr "Stadt"
-
-#: spkcspider/apps/spider_tags/layouts.py:41
-msgid "Post Code"
-msgstr "Postleitzahl"
-
-#: spkcspider/apps/spider_tags/layouts.py:49
-msgid "Country Area"
-msgstr "Bundesland/Gebiet"
-
-#: spkcspider/apps/spider_tags/layouts.py:57
-msgid "Country Code"
-msgstr "Ländercode"
-
-#: spkcspider/apps/spider_tags/layouts.py:69
-msgid "Address"
-msgstr "Adresse"
-
-#: spkcspider/apps/spider_tags/layouts.py:79
-msgid "Titles"
-msgstr "Titel"
-
-#: spkcspider/apps/spider_tags/layouts.py:87
-msgid "First Name"
-msgstr "Vorname"
-
-#: spkcspider/apps/spider_tags/layouts.py:94
-msgid "Extra Name"
-msgstr "Extra Namen"
-
-#: spkcspider/apps/spider_tags/layouts.py:102
-msgid "Last Name"
-msgstr "Nachname"
-
-#: spkcspider/apps/spider_tags/layouts.py:110
-msgid "ID Documents"
-msgstr "Identifikations-Papiere"
-
-#: spkcspider/apps/spider_tags/layouts.py:128
-msgid "Adress Object"
-msgstr "Adress-Objekt"
-
-#: spkcspider/apps/spider_tags/layouts.py:139
-msgid "Contacts"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:147
-msgid "Biologic Gender"
-msgstr "Geschlecht"
-
-#: spkcspider/apps/spider_tags/layouts.py:152
-msgid "male"
-msgstr "männlich"
-
-#: spkcspider/apps/spider_tags/layouts.py:153
-msgid "female"
-msgstr "weiblich"
-
-#: spkcspider/apps/spider_tags/layouts.py:154
-msgid "other"
-msgstr "anderes"
-
-#: spkcspider/apps/spider_tags/layouts.py:160
-msgid "Blood Group"
-msgstr "Blutgruppe"
-
-#: spkcspider/apps/spider_tags/layouts.py:174
-msgid "Rhesus Factor"
-msgstr "Rhesus Faktor"
-
-#: spkcspider/apps/spider_tags/layouts.py:186
-msgid "Health Problems"
-msgstr "Gesundheitsprobleme"
-
-#: spkcspider/apps/spider_tags/layouts.py:190
-msgid "Heart"
-msgstr "Herz"
-
-#: spkcspider/apps/spider_tags/layouts.py:191
-msgid "Diabetes"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:192
-msgid "Lung"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:193
-msgid "Dementia"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:194
-msgid "Social"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:195
-msgid "Phobias"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:201
-msgid "Organ donations in case of death"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:206
-msgid "All organs"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:207
-msgid "Special Organs"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:208
-msgid "Contacts can decide"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:209
-msgid "None"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/layouts.py:216
-msgid "In case of: \"Special Organs\", which?"
-msgstr ""
-
-#: spkcspider/apps/spider_tags/models.py:38
-msgid "Layout exists already"
-msgstr "Layout existiert bereits"
-
-#: spkcspider/apps/spider_tags/templates/spider_tags/view_form.html:4
-msgid "List of verifiers, where the tag was verified"
-msgstr "Liste der Verifizierer"
-
-#: spkcspider/apps/verifier/constants.py:10
-msgid "pending"
-msgstr "Ausstehend"
-
-#: spkcspider/apps/verifier/constants.py:11
-msgid "verified"
-msgstr "Verifiziert"
-
-#: spkcspider/apps/verifier/constants.py:12
-msgid "rejected"
-msgstr "Abgelehnt"
-
-#: spkcspider/apps/verifier/forms.py:27
-msgid "Url to content or content list to verify"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:31 spkcspider/apps/verifier/models.py:32
-msgid "File with data to verify"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:107
-msgid "Require either url or dvfile"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:132 spkcspider/apps/verifier/forms.py:273
-#: spkcspider/apps/verifier/forms.py:362
-#, python-format
-msgid "invalid url: %(url)s"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:141 spkcspider/apps/verifier/forms.py:280
-#, python-format
-msgid "Retrieval failed: %s"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:153 spkcspider/apps/verifier/forms.py:290
-#, python-format
-msgid ""
-"Retrieval failed, no length specified, invalid\n"
-"or too long, length: %(length)s, url: %(url)s"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:196
-#, python-format
-msgid "not a \"%(format)s\" file"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:204
-#, python-format
-msgid "invalid graph, scopes: %(scope)s"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:213
-#, python-format
-msgid "invalid graph, pages: %(page)s"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:223
-#, python-format
-msgid "invalid graph, view url: %(url)s"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:247
-#, python-format
-msgid "Invalid type: %(type)s"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:330
-#, python-format
-msgid "%(page)s is not a \"%(format)s\" file"
-msgstr ""
-
-#: spkcspider/apps/verifier/forms.py:369
-#, python-format
-msgid "Retrieval failed: %(reason)s"
-msgstr ""
-
-#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:8
-msgid "Hash:"
-msgstr "Hash:"
-
-#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:12
-msgid "Hash Algorithm:"
-msgstr "Hash-Algorithmus"
-
-#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:16
-msgid "Verification State:"
-msgstr "Verifikations-Status:"
-
-#: spkcspider/apps/verifier/templates/spider_verifier/dv_detail.html:17
-msgid "unverified"
-msgstr "Nicht verifiziert"
-
-#: spkcspider/apps/verifier/templates/spider_verifier/dv_form.html:5
-msgid "If the graph is too big, the connection is resetted"
-msgstr "Wenn die Graph-Datei zu groß ist, wird die Verbindung unterbrochen"
-
-#: spkcspider/apps/verifier/templates/spider_verifier/dv_form.html:9
-msgid "Submit"
-msgstr "Abschicken"
