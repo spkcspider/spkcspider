@@ -1,7 +1,7 @@
 __all__ = ("default_layouts", "initialize_layouts")
 
 from django.utils.translation import gettext_noop as _
-from django.conf import settings
+from spkcspider.apps.spider.helpers import extract_app_dicts
 
 default_layouts = {}
 default_layouts["address"] = {
@@ -227,9 +227,10 @@ def initialize_layouts(apps=None):
     TagLayout = apps.get_model("spider_tags", "TagLayout")
     layouts = default_layouts.copy()
     # create union from all layouts
-    for l in getattr(settings, "TAG_LAYOUT_PATHES", []):
-        module, name = l.rsplit(".", 1)
-        layouts.update(getattr(__import__(module), name))
+    for app in apps.get_app_configs():
+        layouts.update(
+            extract_app_dicts(app, "spider_tag_layouts")
+        )
     # iterate over unionized layouts
     for name, layout_dic in layouts.items():
         tag_layout = TagLayout.objects.get_or_create(
