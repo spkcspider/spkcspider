@@ -2,7 +2,7 @@
 {% include "spider_base/edit_form.html" %}
 <table class=" w3-table-all" style="width:100%">
   <thead>
-    <tr><th>{% trans "List of verifiers:" %}</th></tr>
+    <tr><th>{% trans "List of verifiers, where the tag was verified" %}:</th></tr>
   </thead>
   <tbody>
     {% for verifier in form.instance.verified_by %}

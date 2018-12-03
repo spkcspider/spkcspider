@@ -1,7 +1,7 @@
 {% load i18n %}
 {% include "spider_base/view_form.html" %}
 <table class=" w3-table-all" style="width:100%">
-  <tr><th>{% trans "List of verifiers, where the tag was verified" %}</th></tr>
+  <tr><th>{% trans "List of verifiers, where the tag was verified" %}:</th></tr>
   {% for verifier in object.verified_by %}
     <tr>
       <td>

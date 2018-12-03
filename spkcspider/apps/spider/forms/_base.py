@@ -46,7 +46,7 @@ class UserComponentForm(forms.ModelForm):
         ]
         error_messages = {
             NON_FIELD_ERRORS: {
-                'unique_together': _('UserComponent name already exists')
+                'unique_together': _('Name of User Component already exists')
             }
         }
 

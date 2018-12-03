@@ -56,7 +56,7 @@ class TravelProtectionForm(forms.ModelForm):
         widget=forms.PasswordInput,
     )
     self_protection = forms.ChoiceField(
-        label=_("Self protection"), help_text=_(_self_protection),
+        label=_("Self-protection"), help_text=_(_self_protection),
         initial="None", choices=PROTECTION_CHOICES
     )
     token_arg = forms.CharField(

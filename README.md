@@ -155,15 +155,14 @@ Otherwise security could be compromised.
 * tests
 * documentation
 
-Later:
-* bind authtoken to a scope
+## Later
+* Localisation
 * govAnchor
 * create client side script for import (pushing to server, index token for auth?)
 * email to spkcspider transport wrapper (also script)+component
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
-* complete travel mode
 
 # Thanks
 
