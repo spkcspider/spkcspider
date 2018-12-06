@@ -27,6 +27,11 @@ def literalize(ob, datatype=None):
 
 
 @register.simple_tag()
+def hashable_lit(field):
+    return literalize(getattr(field, "hashable", False))
+
+
+@register.simple_tag()
 def namespace(sub=None):
     if sub:
         return spkcgraph[sub]

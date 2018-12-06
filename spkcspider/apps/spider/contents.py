@@ -284,12 +284,6 @@ class BaseContent(models.Model):
             )(name, data, self, context)
         return Literal(data)
 
-    def transform_field(self, name, form, context):
-        if self.hashed_fields and name in self.hashed_fields:
-            return name, True
-        else:
-            return name, False
-
     def serialize(self, graph, content_ref, context):
         form = self.get_form(context["scope"])(
             **self.get_form_kwargs(
@@ -319,7 +313,7 @@ class BaseContent(models.Model):
                 )
                 continue
             value_node = BNode()
-            newname, hashable = self.transform_field(name, form, context)
+            hashable = getattr(field, "hashable", False)
 
             graph.add((
                 content_ref,
@@ -334,12 +328,12 @@ class BaseContent(models.Model):
             graph.add((
                 value_node,
                 spkcgraph["name"],
-                Literal(newname)
+                Literal(name)
             ))
             graph.add((
                 value_node,
                 spkcgraph["fieldname"],
-                Literal(name)
+                Literal(form.add_prefix(name))
             ))
 
             if not isinstance(value, (list, tuple, models.QuerySet)):

@@ -150,6 +150,7 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
         item = i.copy()
         key, field = item.pop("key", None), item.pop("field", None)
         localize = item.pop("localize", False)
+        nonhashable = item.pop("nonhashable", False)
         if "label" not in item:
             item["label"] = key.replace(_mainprefix, "", 1)
 
@@ -180,7 +181,9 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             if not new_field:
                 logging.warning("Invalid field specified: %s", field)
             else:
-                _base.append((posixpath.join(prefix, key), new_field(**item)))
+                new_field = new_field(**item)
+                setattr(new_field, "hashable", not nonhashable)
+                _base.append((posixpath.join(prefix, key), new_field))
         else:
             logging.warning("Invalid item", i)
     return _base

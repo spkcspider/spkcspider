@@ -47,6 +47,7 @@ class FileForm(forms.ModelForm):
     def __init__(self, request, **kwargs):
         super().__init__(**kwargs)
         self.fields['name'].required = False
+        setattr(self.fields['file'], "hashable", True)
         if request.is_owner:
             self.user = request.user
             return
@@ -152,3 +153,5 @@ class RawTextForm(forms.ModelForm):
 
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
+        setattr(self.fields['name'], "hashable", True)
+        setattr(self.fields['text'], "hashable", True)

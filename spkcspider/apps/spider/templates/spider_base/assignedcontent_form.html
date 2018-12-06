@@ -2,17 +2,23 @@
 {% load i18n spider_rdf %}
 
 {% block render_content %}
+{% if object %}
+  <data hidden="hidden" rel="spkc:properties">
+    <data hidden="hidden" typeof="spkc:Property">
+      <data hidden="hidden" property="spkc:name">name</data>
+      <data hidden="hidden" property="spkc:value">{{object}}</data>
+    </data>
+  </data>
+{% endif %}
 {% include "spider_base/form_errors.html" with form=form %}
-
 <form class="w3-padding" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}
-  <data hidden="hidden" property="type">Content</data>
   <fieldset>
     <legend><h2>{% trans 'Content Settings' %}</h2></legend>
     {% include "spider_base/base_form.html" with form=form %}
   </fieldset>
   {% if content %}
-    <fieldset typeof="{% if scope == 'add' %}add{% else %}update{% endif %}" about="{{ request.path }}">
+    <fieldset>
       <legend><h2>{% if scope == "add" %}{{object}}{% else %}{{object.ctype}}{% endif %}</h2></legend>
       {{content.0|safe}}
     </fieldset>

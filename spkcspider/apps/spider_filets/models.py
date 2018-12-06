@@ -14,7 +14,9 @@ from django.core.files.storage import default_storage
 
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.helpers import create_b64_token, prepare_description
+from spkcspider.apps.spider.helpers import (
+    create_b64_token, prepare_description
+)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,6 @@ def get_file_path(instance, filename):
 @add_content
 class FileFilet(BaseContent):
     appearances = [{"name": "File"}]
-    hashed_fields = ["file"]
 
     name = models.CharField(max_length=255, null=False)
 
@@ -90,7 +91,7 @@ class FileFilet(BaseContent):
             k["scope"] = "raw"
             return self.render_serialize(**k)
         kwargs["object"] = self
-        kwargs["content"] = self.associated
+        kwargs["associated"] = self.associated
         return (
             render_to_string(
                 "spider_filets/file.html", request=kwargs["request"],
@@ -144,7 +145,6 @@ class FileFilet(BaseContent):
 @add_content
 class TextFilet(BaseContent):
     appearances = [{"name": "Text"}]
-    hashed_fields = ["name", "text"]
 
     name = models.CharField(max_length=255, null=False)
     editable_from = models.ManyToManyField(

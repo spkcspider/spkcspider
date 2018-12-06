@@ -50,9 +50,11 @@ class SpiderTagForm(forms.ModelForm):
 
 def generate_form(name, layout):
     _gen_fields = generate_fields(layout, "tag")
+    _temp_field = forms.BooleanField(required=False, initial=False)
+    setattr(_temp_field, "hashable", True)
     _gen_fields.insert(0, (
         "primary",
-        forms.BooleanField(required=False, initial=False)
+        _temp_field
     ))
     _gen_fields.append((
         "verified_by",

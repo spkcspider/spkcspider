@@ -21,6 +21,10 @@ class KeyForm(forms.ModelForm):
         model = PublicKey
         fields = ['key', 'note']
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        setattr(self.fields['key'], "hashable", True)
+
     def clean_key(self):
         _ = gettext
         data = self.cleaned_data['key'].strip()
@@ -38,6 +42,7 @@ class KeyForm(forms.ModelForm):
 
 class AnchorServerForm(forms.ModelForm):
     identifier = forms.CharField(disabled=True)
+    setattr(identifier, "hashable", True)
     scope = ""
 
     class Meta:
@@ -64,6 +69,7 @@ class AnchorKeyForm(forms.ModelForm):
     def __init__(self, scope, **kwargs):
         self.scope = scope
         super().__init__(**kwargs)
+        setattr(self.fields['key'], "hashable", True)
         self.fields["key"].queryset = self.fields["key"].queryset.filter(
             models.Q(key__contains="-----BEGIN CERTIFICATE-----")
         )

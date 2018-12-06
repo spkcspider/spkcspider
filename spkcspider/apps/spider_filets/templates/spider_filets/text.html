@@ -1,6 +1,17 @@
 {% load i18n %}
-<div class="w3-white w3-padding">
-  {{object.text|safe}}
+{% if object %}
+  <data hidden="hidden" rel="spkc:properties">
+    <data hidden="hidden" typeof="spkc:Property">
+      <data hidden="hidden" property="spkc:name">name</data>
+      <data hidden="hidden" property="spkc:value">{{object}}</data>
+      <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
+    </data>
+  </data>
+{% endif %}
+<div class="w3-white w3-padding" typeof="spkc:Property">
+  <data hidden="hidden" property="spkc:name">text</data>
+  <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
+  <data property="spkc:value">{{object.text|safe}}</data>
 </div>
 {% if can_upgrade %}
 <div>
