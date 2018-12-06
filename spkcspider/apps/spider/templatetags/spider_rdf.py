@@ -27,7 +27,7 @@ def literalize(ob, datatype=None):
 
 
 @register.simple_tag()
-def hashable_lit(field):
+def hashable_literalize(field):
     return literalize(getattr(field, "hashable", False))
 
 

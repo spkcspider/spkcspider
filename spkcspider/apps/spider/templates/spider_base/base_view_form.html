@@ -6,7 +6,7 @@
         <div class="w3-cell w3-padding">
           <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.html_name}}</data>
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
-          {% hashable_lit field as hashable %}
+          {% hashable_literalize field as hashable %}
           <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
           <div>{{ field.label_tag }}</div>
           {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
