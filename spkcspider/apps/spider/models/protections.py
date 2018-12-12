@@ -162,16 +162,15 @@ class Protection(models.Model):
 
 def get_limit_choices_assigned_protection():
     # django cannot serialize static, classmethods
+    # possible?????
     index = models.Q(usercomponent__name__in=index_names)
-    ret = models.Q(
+    restriction = models.Q(
         ~index, ptype__contains=ProtectionType.access_control.value
     )
-    ret |= models.Q(
+    restriction |= models.Q(
         index, ptype__contains=ProtectionType.authentication.value
     )
-    return models.Q(
-        ret, code__in=Protection.objects.valid()
-    )
+    return models.Q(code__in=Protection.objects.valid()) & restriction
 
 
 class AssignedProtection(models.Model):
