@@ -26,11 +26,18 @@ from ..serializing import paginated_contents, serialize_stream
 
 
 class ComponentIndexBase(ListView):
+    scope = "list"
+
+    def get_context_data(self, **kwargs):
+        kwargs["scope"] = self.scope
+        return super().get_context_data(**kwargs)
+
     def get_queryset(self):
         searchq = models.Q()
         searchq_exc = models.Q()
         infoq = models.Q()
         infoq_exc = models.Q()
+        order = None
         counter = 0
         max_counter = 30  # against ddos
         if "search" in self.request.POST or "info" in self.request.POST:
@@ -91,7 +98,8 @@ class ComponentIndexBase(ListView):
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
-        order = self.get_ordering(counter > 0)
+        if self.scope != "export" and "raw" not in self.request.GET:
+            order = self.get_ordering(counter > 0)
         ret = self.model.objects.prefetch_related(
             "contents"
         ).filter(
@@ -102,10 +110,7 @@ class ComponentIndexBase(ListView):
         return ret
 
     def get_paginate_by(self, queryset):
-        if (
-            self.scope == "export" or
-            self.request.GET.get("raw", "") == "embed"
-        ):
+        if self.scope == "export" or "raw" in self.request.GET:
             return None
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
@@ -145,7 +150,7 @@ class ComponentIndexBase(ListView):
             ))
             g.add((
                 session_dict["sourceref"], spkcgraph["strength"],
-                Literal(10)
+                Literal(self.source_strength)
             ))
 
         serialize_stream(
@@ -167,7 +172,14 @@ class ComponentIndexBase(ListView):
 class ComponentPublicIndex(ComponentIndexBase):
     model = UserComponent
     is_home = False
+    source_strength = 0
     allowed_GET_parameters = set(["protection", "raw"])
+
+    def dispatch(self, request, *args, **kwargs):
+        self.request.is_elevated_request = False
+        self.request.is_owner = False
+        self.request.auth_token = None
+        return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
         return self.get(request, *args, **kwargs)
@@ -202,9 +214,9 @@ class ComponentPublicIndex(ComponentIndexBase):
 
 class ComponentIndex(UCTestMixin, ComponentIndexBase):
     model = UserComponent
+    source_strength = 10
     also_authenticated_users = True
     no_nonce_usercomponent = True
-    scope = "list"
 
     user = None
 
@@ -216,8 +228,6 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         return self.get(request, *args, **kwargs)
 
     def get_ordering(self, issearching=False):
-        if self.scope == "export":
-            return None
         if issearching:
             # MUST use strength here, elsewise travel mode can be exposed
             return ("-strength", "name",)
