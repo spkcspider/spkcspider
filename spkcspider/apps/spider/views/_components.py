@@ -396,7 +396,7 @@ class TokenDelete(UCTestMixin, DeleteView):
         return None
 
     def delete(self, request, *args, **kwargs):
-        self.clean_old()
+        self.remove_old_tokens()
         query = AuthToken.objects.filter(
             usercomponent=self.usercomponent,
             token__in=self.request.POST.getlist("token")
@@ -413,7 +413,7 @@ class TokenDelete(UCTestMixin, DeleteView):
         return self.delete(self, request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        self.clean_old()
+        self.remove_old_tokens()
         response = {
             "tokens": [
                 {
