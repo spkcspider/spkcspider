@@ -17,7 +17,7 @@ from django.apps import apps
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 from django.urls import reverse
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.core import validators
 
 from jsonfield import JSONField
@@ -51,22 +51,31 @@ _feature_help = _(
 
 
 class UserComponentManager(models.Manager):
-    def get_or_create_component(self, defaults={}, **kwargs):
-        try:
-            return (self.get_queryset().get(**kwargs), False)
-        except ObjectDoesNotExist:
-            defaults.update(kwargs)
-            if defaults["name"] in index_names and force_captcha:
-                defaults["required_passes"] = 2
-                defaults["strength"] = 10
-            elif self.name in index_names:
-                defaults["required_passes"] = 1
-                defaults["strength"] = 10
-            elif defaults["public"]:
-                defaults["strength"] = 0
-            else:
-                defaults["strength"] = 5
-            return (self.create(**defaults), True)
+    def _update_arg_defaults(self, defaults, kwargs):
+        if defaults is None:
+            defaults = {}
+        name = kwargs.get("name", defaults.get("name", None))
+        if name in index_names and force_captcha:
+            defaults["required_passes"] = 2
+            defaults["strength"] = 10
+        elif name in index_names:
+            defaults["required_passes"] = 1
+            defaults["strength"] = 10
+        elif kwargs.get("public", defaults.get("public", False)):
+            defaults["strength"] = 0
+        else:
+            defaults["strength"] = 5
+        return defaults
+
+    def update_or_create(self, defaults=None, **kwargs):
+        return self.get_queryset().update_or_create(
+            defaults=self._update_arg_defaults(defaults, kwargs), **kwargs
+        )
+
+    def get_or_create(self, defaults=None, **kwargs):
+        return self.get_queryset().get_or_create(
+            defaults=self._update_arg_defaults(defaults, kwargs), **kwargs
+        )
 
 
 class UserComponent(models.Model):

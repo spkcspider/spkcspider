@@ -58,9 +58,10 @@ def UpdateSpiderCallback(**_kwargs):
 def InitUserCallback(sender, instance, **kwargs):
     if kwargs.get("raw", False):
         return
-    from .models import UserComponent, Protection, AssignedProtection, UserInfo
+    from .models import UserComponent, Protection, UserInfo
 
-    uc = UserComponent.objects.get_or_create_component(
+    # overloaded get_or_create calculates strength, ...
+    uc = UserComponent.objects.get_or_create(
         defaults={"public": False},
         name="index", user=instance
     )[0]
@@ -68,35 +69,22 @@ def InitUserCallback(sender, instance, **kwargs):
         for name, is_public in getattr(
             settings, "DEFAULT_USERCOMPONENTS", {}
         ).items():
-            # get_or_create_component calculates strength, ...
-            UserComponent.objects.get_or_create_component(
+            # overloaded get_or_create calculates strength, ...
+            UserComponent.objects.get_or_create(
                 defaults={"public": is_public},
                 name=name, user=instance
             )
-    require_save = False
     login = Protection.objects.filter(code="login").first()
     if login:
-        # get_or_create_component calculates strength, ...
-        asp = AssignedProtection.objects.get_or_create(
-            defaults={"active": True},
-            usercomponent=uc, protection=login
+        uc.protections.update_or_create(
+            defaults={"active": True}, protection=login
         )[0]
-        if not asp.active:
-            asp.active = True
-            require_save = True
 
     if getattr(settings, "USE_CAPTCHAS", False):
         captcha = Protection.objects.filter(code="captcha").first()
-        # get_or_create_component calculates strength, ...
-        asp = AssignedProtection.objects.get_or_create(
-            defaults={"active": True},
-            usercomponent=uc, protection=captcha
+        uc.protections.update_or_create(
+            defaults={"active": True}, protection=captcha
         )[0]
-        if not asp.active:
-            asp.active = True
-            require_save = True
-    if require_save:
-        asp.save()
     uinfo = UserInfo.objects.get_or_create(
         user=instance
     )[0]
