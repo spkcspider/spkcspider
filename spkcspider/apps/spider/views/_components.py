@@ -43,9 +43,11 @@ class ComponentIndexBase(ListView):
         if "search" in self.request.POST or "info" in self.request.POST:
             searchlist = self.request.POST.getlist("search")
             infolist = self.request.POST.getlist("info")
+            idlist = self.request.POST.getlist("id")
         else:
             searchlist = self.request.GET.getlist("search")
             infolist = self.request.GET.getlist("info")
+            idlist = self.request.POST.getlist("id")
 
         for item in searchlist:
             if counter > max_counter:
@@ -98,12 +100,22 @@ class ComponentIndexBase(ListView):
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
 
+        if idlist:
+            ids = map(lambda x: int(x), idlist)
+            searchq &= (
+                models.Q(
+                    contents__id__in=ids,
+                    contents__fake_id__isnull=True
+                ) |
+                models.Q(contents__fake_id__in=ids)
+            )
+
         if self.scope != "export" and "raw" not in self.request.GET:
             order = self.get_ordering(counter > 0)
         ret = self.model.objects.prefetch_related(
             "contents"
         ).filter(
-            searchq & ~searchq_exc & infoq & ~infoq_exc
+            searchq & ~searchq_exc & infoq & ~infoq_exc,
         ).distinct()
         if order:
             ret = ret.order_by(*order)

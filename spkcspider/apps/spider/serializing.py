@@ -11,6 +11,7 @@ from django.core.paginator import InvalidPage, Paginator
 from django.utils.translation import gettext as _
 
 from rdflib import URIRef, Literal
+from rdflib.namespace import XSD
 
 
 from .constants.static import spkcgraph
@@ -67,6 +68,10 @@ def serialize_content(graph, content, context, embed=False):
     ))
     add_property(
         graph, "info", ref=ref_content, ob=content
+    )
+    add_property(
+        graph, "id", ref=ref_content, literal=content.get_id(),
+        datatype=XSD.integer
     )
     if embed:
         content.content.serialize(graph, ref_content, context)

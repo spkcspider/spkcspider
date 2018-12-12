@@ -2,14 +2,6 @@
 {% load i18n spider_rdf %}
 
 {% block render_content %}
-{% if object %}
-  <data hidden="hidden" rel="spkc:properties">
-    <data hidden="hidden" typeof="spkc:Property">
-      <data hidden="hidden" property="spkc:name">name</data>
-      <data hidden="hidden" property="spkc:value">{{object}}</data>
-    </data>
-  </data>
-{% endif %}
 {% include "spider_base/form_errors.html" with form=form %}
 <form class="w3-padding" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}

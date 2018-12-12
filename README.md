@@ -127,8 +127,8 @@ There are some special GET parameters for services with special requirements:
 * token=xy: token as GET parameter, if invalid: retrieve token as GET parameter
 * token=prefer: uses invalid mechanic, easier to see what it does
 * raw=true: optimize output for machines
-* raw=embed: embed content, for ContentList only
-* id=id&id=id: limit content ids, for ContentList only
+* raw=embed: embed content
+* id=id&id=id: limit content ids
 * search=foo&search=!notfoo: search case insensitive a string
 * info=foo&info=!notfoo: search info tag in info. Restricts search.
 * protection=false: fail if protections are required

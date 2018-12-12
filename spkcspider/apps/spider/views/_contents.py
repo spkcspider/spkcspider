@@ -341,7 +341,12 @@ class ContentIndex(UCTestMixin, ListView):
                 infoq |= models.Q(info__contains="\n%s\n" % item)
         if idlist:
             ids = map(lambda x: int(x), idlist)
-            searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
+            searchq &= (
+                models.Q(
+                    id__in=ids,
+                    fake_id__isnull=True
+                ) | models.Q(fake_id__in=ids)
+            )
         if getattr(self.request, "auth_token", None):
             ids = self.request.auth_token.extra.get("ids", None)
             if ids is not None:

@@ -77,6 +77,18 @@
         <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
       {% endif %}
     </h1>
+    {% if object %}
+      <data hidden="hidden" rel="spkc:properties">
+        <data hidden="hidden" typeof="spkc:Property">
+          <data hidden="hidden" property="spkc:name">info</data>
+          <data hidden="hidden" property="spkc:value"">{{object.info}}</data>
+        </data>
+        <data hidden="hidden" typeof="spkc:Property">
+          <data hidden="hidden" property="spkc:name">id</data>
+          <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{object.get_id}}</data>
+        </data>
+      </data>
+    {% endif %}
     {% if request.token_expires %}
     <div>
       {% include 'spider_base/token_lifetime.html' with rtime=request.token_expires %}
