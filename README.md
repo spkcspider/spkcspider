@@ -85,6 +85,10 @@ Possibilities how to add utf8 charset to mysql:
 * see: https://docs.djangoproject.com/en/dev/ref/databases/#mysql-notes
 
 
+\_\_old crashes object creation:
+downgrade sqlite3 to 3.25 or upgrade django to 2.1.5/2.0.10
+
+
 # API
 
 Note: there are some migration breaks. Especially to unbreak mysql. Should not happen after tests are integrated
