@@ -19,7 +19,7 @@ from django.utils.translation import pgettext
 from rdflib import Literal, Graph, BNode, URIRef
 
 from .constants import UserContentType, spkcgraph
-from .serializing import paginated_contents, serialize_stream
+from .serializing import paginate_stream, serialize_stream
 from .helpers import merge_get_url, get_settings_func, add_property
 
 
@@ -386,7 +386,7 @@ class BaseContent(models.Model):
         g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
 
-        p = paginated_contents(
+        p = paginate_stream(
             AssignedContent.objects.filter(id=self.associated.id),
             getattr(settings, "SERIALIZED_PER_PAGE", 50),
             getattr(settings, "SERIALIZED_MAX_DEPTH", 20)

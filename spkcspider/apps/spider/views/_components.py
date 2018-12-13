@@ -19,10 +19,10 @@ from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import (
-    UserComponent, TravelProtection, AssignedContent, AuthToken
+    UserComponent, TravelProtection, AuthToken
 )
 from ..constants import spkcgraph
-from ..serializing import paginated_contents, serialize_stream
+from ..serializing import paginate_stream, serialize_stream
 
 
 class ComponentIndexBase(ListView):
@@ -139,15 +139,16 @@ class ComponentIndexBase(ListView):
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
 
-        contents = AssignedContent.objects.filter(
-            usercomponent__in=context["object_list"]
-        )
         g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
-        p = paginated_contents(
-            contents,
+        p = paginate_stream(
+            context["object_list"],
             getattr(settings, "SERIALIZED_PER_PAGE", 50),
-            getattr(settings, "SERIALIZED_MAX_DEPTH", 20)
+            getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
+            contentnize=(
+                self.scope == "export" or
+                self.request.GET.get("raw", "") == "embed"
+            )
         )
         page = 1
         try:

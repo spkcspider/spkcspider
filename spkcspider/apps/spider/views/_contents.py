@@ -26,7 +26,7 @@ from ..models import (
 from ..forms import UserContentForm
 from ..helpers import get_settings_func, add_property
 from ..constants import spkcgraph
-from ..serializing import paginated_contents, serialize_stream
+from ..serializing import paginate_stream, serialize_stream
 
 
 class ContentBase(UCTestMixin):
@@ -387,10 +387,10 @@ class ContentIndex(UCTestMixin, ListView):
         ):
             embed = True
 
-        p = paginated_contents(
+        p = paginate_stream(
             context["object_list"],
             getattr(settings, "SERIALIZED_PER_PAGE", 50),
-            getattr(settings, "SERIALIZED_MAX_DEPTH", 20)
+            getattr(settings, "SERIALIZED_MAX_DEPTH", 5)
         )
         page = 1
         try:

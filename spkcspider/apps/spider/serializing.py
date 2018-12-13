@@ -1,5 +1,5 @@
 __all__ = [
-    "paginated_contents", "serialize_stream"
+    "paginate_stream", "serialize_stream"
 ]
 
 
@@ -78,18 +78,15 @@ def serialize_content(graph, content, context, embed=False):
     return ref_content
 
 
-def serialize_component(graph, component, context):
+def serialize_component(graph, component, context, force=False):
     url_component = urljoin(
         context["hostpart"],
         component.get_absolute_url()
     )
     ref_component = URIRef(url_component)
     if (
-        context["scope"] != "export" and
-        (
-            ref_component != context["sourceref"] or
-            not component.public
-        )
+        not force and
+        ref_component != context["sourceref"]
     ):
         return ref_component
     token = getattr(context["request"], "auth_token", None)
@@ -135,27 +132,37 @@ def serialize_component(graph, component, context):
     return ref_component
 
 
-def paginated_contents(query, page_size, limit_depth=None):
+def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
     from .models import AssignedContent
-    length = len(query)
-    count = 0
-    while True:
-        query = query.union(
-            AssignedContent.objects.filter(referenced_by__in=query)
+    if contentnize and query.model != AssignedContent:
+        query = AssignedContent.objects.filter(
+            usercomponent__in=query
         )
-        if len(query) != length:
-            length = len(query)
-            count += 1
-            if limit_depth and count > limit_depth:
-                logging.warning("Content references exceeded maximal depth")
+    if query.model == AssignedContent:
+        length = len(query)
+        count = 0
+        while True:
+            query = query.union(
+                AssignedContent.objects.filter(referenced_by__in=query)
+            )
+            if len(query) != length:
+                length = len(query)
+                count += 1
+                if limit_depth and count > limit_depth:
+                    logging.warning(
+                        "Content references exceeded maximal depth"
+                    )
+                    break
+            else:
                 break
-        else:
-            break
-    query = query.order_by("usercomponent__id", "id")
+        query = query.order_by("usercomponent__id", "id")
+    else:
+        query = query.order_by("id")
     return Paginator(query, page_size, orphans=0, allow_empty_first_page=True)
 
 
 def serialize_stream(graph, paginator, context, page=1, embed=False):
+    from .models import UserComponent
     if page <= 1:
         graph.add((
             context["sourceref"],
@@ -176,16 +183,22 @@ def serialize_stream(graph, paginator, context, page=1, embed=False):
         })
         logging.exception(exc)
         raise exc
-    if page <= 1 or len(page_view.object_list) == 0:
-        usercomponent = None
-    else:
-        usercomponent = page_view.object_list[0].usercomponent
-    for content in page_view.object_list:
-        if usercomponent != content.usercomponent:
+    if paginator.object_list.model == UserComponent:
+        for component in page_view.object_list:
             serialize_component(
-                graph, content.usercomponent, context
+                graph, component, context, True
             )
-            usercomponent = content.usercomponent
-        serialize_content(
-            graph, content, context, embed=embed
-        )
+    else:
+        if page <= 1 or len(page_view.object_list) == 0:
+            usercomponent = None
+        else:
+            usercomponent = page_view.object_list[0].usercomponent
+        for content in page_view.object_list:
+            if usercomponent != content.usercomponent:
+                serialize_component(
+                    graph, content.usercomponent, context, embed
+                )
+                usercomponent = content.usercomponent
+            serialize_content(
+                graph, content, context, embed=embed
+            )
