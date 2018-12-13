@@ -21,8 +21,11 @@ from ..contents import installed_contents
 from ..models import (
     UserComponent, TravelProtection, AuthToken
 )
-from ..constants import spkcgraph
-from ..serializing import paginate_stream, serialize_stream
+from ..constants.static import spkcgraph
+from ..helpers import merge_get_url
+from ..serializing import (
+    paginate_stream, serialize_stream, serialize_component
+)
 
 
 class ComponentIndexBase(ListView):
@@ -151,6 +154,10 @@ class ComponentIndexBase(ListView):
             )
         )
         page = 1
+        embed = (
+            self.scope == "export" or
+            self.request.GET.get("raw", "") == "embed"
+        )
         try:
             page = int(self.request.GET.get("page", "1"))
         except Exception:
@@ -165,14 +172,27 @@ class ComponentIndexBase(ListView):
                 session_dict["sourceref"], spkcgraph["strength"],
                 Literal(self.source_strength)
             ))
+            token = getattr(session_dict["request"], "auth_token", None)
+            if token:
+                token = token.token
+            url2 = merge_get_url(str(session_dict["sourceref"]), token=token)
+            g.add(
+                (
+                    session_dict["sourceref"],
+                    spkcgraph["action:view"],
+                    URIRef(url2)
+                )
+            )
+            if embed:
+                for component in context["object_list"].filter(
+                    contents__isnull=True
+                ):
+                    serialize_component(g, component, session_dict)
 
         serialize_stream(
             g, p, session_dict,
             page=page,
-            embed=(
-                self.scope == "export" or
-                self.request.GET.get("raw", "") == "embed"
-            )
+            embed=embed
         )
 
         ret = HttpResponse(

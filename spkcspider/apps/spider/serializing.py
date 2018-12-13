@@ -1,5 +1,6 @@
 __all__ = [
-    "paginate_stream", "serialize_stream"
+    "paginate_stream", "serialize_stream", "serialize_content",
+    "serialize_component"
 ]
 
 
@@ -24,26 +25,10 @@ def serialize_content(graph, content, context, embed=False):
         content.get_absolute_url()
     )
     ref_content = URIRef(url_content)
-    url_component = urljoin(
-        context["hostpart"],
-        content.usercomponent.get_absolute_url()
-    )
-    ref_component = URIRef(url_component)
     if (
-        context["scope"] == "export" or
-        (
-            ref_component == context["sourceref"] and
-            content.usercomponent.public
-        )
+        context.get("ac_namespace", None) and
+        context["sourceref"] != ref_content
     ):
-        graph.add(
-            (
-                ref_component,
-                spkcgraph["contents"],
-                ref_content
-            )
-        )
-    if context.get("ac_namespace", None):
         graph.add((
             context["sourceref"],
             context["ac_namespace"],
@@ -78,17 +63,14 @@ def serialize_content(graph, content, context, embed=False):
     return ref_content
 
 
-def serialize_component(graph, component, context, force=False):
+def serialize_component(graph, component, context, visible=True):
     url_component = urljoin(
         context["hostpart"],
         component.get_absolute_url()
     )
     ref_component = URIRef(url_component)
-    if (
-        not force and
-        ref_component != context["sourceref"]
-    ):
-        return ref_component
+    if not visible and ref_component != context["sourceref"]:
+        return None
     token = getattr(context["request"], "auth_token", None)
     if token:
         token = token.token
@@ -123,7 +105,10 @@ def serialize_component(graph, component, context, force=False):
         graph.add((
             ref_component, spkcgraph["strength"], component.strength
         ))
-    if context.get("uc_namespace", None):
+    if (
+        context.get("uc_namespace", None) and
+        context["sourceref"] != ref_component
+    ):
         graph.add((
             context["sourceref"],
             context["uc_namespace"],
@@ -158,7 +143,9 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
         query = query.order_by("usercomponent__id", "id")
     else:
         query = query.order_by("id")
-    return Paginator(query, page_size, orphans=0, allow_empty_first_page=True)
+    return Paginator(
+        query, page_size, orphans=0, allow_empty_first_page=True
+    )
 
 
 def serialize_stream(graph, paginator, context, page=1, embed=False):
@@ -185,20 +172,27 @@ def serialize_stream(graph, paginator, context, page=1, embed=False):
         raise exc
     if paginator.object_list.model == UserComponent:
         for component in page_view.object_list:
-            serialize_component(
-                graph, component, context, True
-            )
+            serialize_component(graph, component, context)
     else:
-        if page <= 1 or len(page_view.object_list) == 0:
-            usercomponent = None
-        else:
-            usercomponent = page_view.object_list[0].usercomponent
+        ref_component = None
+        usercomponent = None
         for content in page_view.object_list:
             if usercomponent != content.usercomponent:
-                serialize_component(
-                    graph, content.usercomponent, context, embed
-                )
                 usercomponent = content.usercomponent
-            serialize_content(
+                ref_component = serialize_component(
+                    graph, usercomponent, context, visible=(
+                        context["scope"] == "export" or
+                        usercomponent.public
+                    )
+                )
+
+            ref_content = serialize_content(
                 graph, content, context, embed=embed
             )
+
+            if ref_component:
+                graph.add((
+                    ref_component,
+                    spkcgraph["contents"],
+                    ref_content
+                ))

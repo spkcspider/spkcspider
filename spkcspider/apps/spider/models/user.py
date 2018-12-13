@@ -221,8 +221,8 @@ class UserComponent(models.Model):
     @property
     def is_public_allowed(self):
         """ Can the public attribute be set """
-        return self.name not in index_names and self.contents.filter(
-            strength__lt=5
+        return self.name not in index_names and not self.contents.filter(
+            strength__gte=5
         ).exists()
 
     @property
