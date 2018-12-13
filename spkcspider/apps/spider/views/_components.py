@@ -192,7 +192,8 @@ class ComponentIndexBase(ListView):
         serialize_stream(
             g, p, session_dict,
             page=page,
-            embed=embed
+            embed=embed,
+            visible=(self.source_strength == 10)
         )
 
         ret = HttpResponse(

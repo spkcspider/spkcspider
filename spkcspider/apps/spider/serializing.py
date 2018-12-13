@@ -69,6 +69,8 @@ def serialize_component(graph, component, context, visible=True):
         component.get_absolute_url()
     )
     ref_component = URIRef(url_component)
+    if component.public:
+        visible = True
     if not visible and ref_component != context["sourceref"]:
         return None
     token = getattr(context["request"], "auth_token", None)
@@ -148,7 +150,9 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
     )
 
 
-def serialize_stream(graph, paginator, context, page=1, embed=False):
+def serialize_stream(
+    graph, paginator, context, page=1, embed=False, visible=False
+):
     from .models import UserComponent
     if page <= 1:
         graph.add((
@@ -180,10 +184,8 @@ def serialize_stream(graph, paginator, context, page=1, embed=False):
             if usercomponent != content.usercomponent:
                 usercomponent = content.usercomponent
                 ref_component = serialize_component(
-                    graph, usercomponent, context, visible=(
-                        context["scope"] == "export" or
-                        usercomponent.public
-                    )
+                    graph, usercomponent, context,
+                    visible=visible
                 )
 
             ref_content = serialize_content(
