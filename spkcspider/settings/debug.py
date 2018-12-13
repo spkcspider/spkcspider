@@ -37,3 +37,13 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+
+# how many user components per page
+COMPONENTS_PER_PAGE = 2
+# how many user contents per page
+CONTENTS_PER_PAGE = 2
+# how many raw/serialized results per page?
+SERIALIZED_PER_PAGE = 2
+# max depth of references
+SERIALIZED_MAX_DEPTH = 5
