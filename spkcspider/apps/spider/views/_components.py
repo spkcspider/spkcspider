@@ -132,6 +132,11 @@ class ComponentIndexBase(ListView):
     def render_to_response(self, context):
         if self.scope != "export" and "raw" not in self.request.GET:
             return super().render_to_response(context)
+
+        embed = (
+            self.scope == "export" or
+            self.request.GET.get("raw", "") == "embed"
+        )
         session_dict = {
             "request": self.request,
             "context": context,
@@ -148,16 +153,9 @@ class ComponentIndexBase(ListView):
             context["object_list"],
             getattr(settings, "SERIALIZED_PER_PAGE", 50),
             getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
-            contentnize=(
-                self.scope == "export" or
-                self.request.GET.get("raw", "") == "embed"
-            )
+            contentnize=embed
         )
         page = 1
-        embed = (
-            self.scope == "export" or
-            self.request.GET.get("raw", "") == "embed"
-        )
         try:
             page = int(self.request.GET.get("page", "1"))
         except Exception:

@@ -120,6 +120,7 @@ def serialize_component(graph, component, context, visible=True):
 
 
 def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
+    # WARNING: AssignedContent method doesn't include empty UserComponents
     from .models import AssignedContent
     if contentnize and query.model != AssignedContent:
         query = AssignedContent.objects.filter(
