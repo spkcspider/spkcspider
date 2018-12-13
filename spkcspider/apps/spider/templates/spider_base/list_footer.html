@@ -49,8 +49,8 @@
       {% endfor %}
     </select>
     {% if page_obj.has_previous %}
-      <button type="submit" formaction="{{searchpath}}&page=1" >&laquo; first</button>
-      <button type="submit" formaction="{{searchpath}}&page={{page_obj.previous_page_number}}" >{% trans "previous" %}</button>
+      <button type="submit" class="w3-button w3-gray" formaction="{% get_searchpath 1 %}" >&laquo; first</button>
+      <button type="submit" class="w3-button w3-gray" formaction="{% get_searchpath page_obj.previous_page_number %}" >{% trans "previous" %}</button>
     {% endif %}
 
     <span class="current">
@@ -60,8 +60,8 @@
     </span>
 
     {% if page_obj.has_next %}
-      <button type="submit" formaction="{{searchpath}}&page={{ page_obj.next_page_number }}">next</button>
-      <button type="submit" formaction="{{searchpath}}&page={{ page_obj.paginator.num_pages }}">last &raquo;</button>
+      <button type="submit" class="w3-button w3-gray" formaction="{% get_searchpath page_obj.next_page_number %}">next</button>
+      <button type="submit" class="w3-button w3-gray" formaction="{% get_searchpath page_obj.paginator.num_pages %}">last &raquo;</button>
     {% endif %}
   </form>
 {% endif %}

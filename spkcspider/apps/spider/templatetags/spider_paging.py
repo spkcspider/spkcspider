@@ -11,7 +11,7 @@ def list_parameters(context, name):
 
 
 @register.simple_tag(takes_context=True)
-def get_searchpath(context):
+def get_searchpath(context, page=None, pagename="page"):
     if "searchpath" in context:
         path = context["searchpath"]
     else:
@@ -19,6 +19,20 @@ def get_searchpath(context):
     san_get = ""
     if "spider_GET" in context:
         san_get = context["spider_GET"].urlencode()
+    if page:
+        if san_get:
+            "{}&{}={}".format(
+                san_get,
+                pagename,
+                page
+            )
+        else:
+            san_get = "{}={}".format(pagename, page)
+    if path[-1] == "?":
+        return "{}{}".format(
+            path,
+            san_get
+        )
     return "{}?{}".format(
         path,
         san_get
