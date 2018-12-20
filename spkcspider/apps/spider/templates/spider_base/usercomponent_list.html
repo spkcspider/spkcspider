@@ -28,7 +28,7 @@
 
 {% block content %}
   {% url 'spider_base:ucomponent-listpublic' as listpublic %}
-  <div>
+  <div class="w3-padding">
     {% if listpublic == request.path %}
     <span class="w3-left">
       <a class="w3-block" style="margin-bottom:10px" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
@@ -72,7 +72,7 @@
       {% endif %}
     </h1>
   </div>
-  <div style="margin-top:20px">
+  <div style="margin-top:20px" class="w3-padding">
     {% include "spider_base/usercomponent_list_fragment.html" %}
   </div>
   <div class="page-manipulation w3-padding" style="margin-top:40px">
