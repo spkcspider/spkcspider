@@ -2,15 +2,19 @@
 {% include "spider_base/view_form.html" %}
 <div class="w3-padding">
   <table class=" w3-table-all" style="width:100%">
-    <tr><th>{% trans "List of verifiers, where the tag was verified" %}:</th></tr>
-    {% for verifier in object.verified_by %}
-      <tr>
-        <td>
-          <a href="{{verifier}}" style="word-break: break-all">
-            {{verifier}}
-          </a>
-        </td>
-      </tr>
-    {% endfor %}
+    <thead>
+      <tr><th>{% trans "List of verifiers, where the tag was verified" %}:</th></tr>
+    </thead>
+    <tbody>
+      {% for verifier in form.instance.verified_by %}
+        <tr>
+          <td>
+            <a href="{{verifier}}" style="word-break: break-all">
+              {{verifier}}
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
