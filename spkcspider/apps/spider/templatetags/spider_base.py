@@ -45,6 +45,11 @@ def reverse_get(context, name, **kwargs):
 
 
 @register.simple_tag()
+def concat_string(*args):
+    return "".join(args)
+
+
+@register.simple_tag()
 def expires_delta(expires):
     return expires-timezone.now()
 

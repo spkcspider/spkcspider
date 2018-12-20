@@ -1,5 +1,5 @@
 {% extends "spider_base/nouc_base.html" %}
-{% load i18n static spider_rdf %}
+{% load i18n static spider_rdf spider_base %}
 {% load flatpages %}
 {% block title %}{% blocktrans trimmed %}
   Home
@@ -28,7 +28,8 @@
 {% block content %}
   {% block frontblock %}
   <div class="w3-padding">
-    {% get_flatpages '/'+LANGUAGE_CODE+'/home/heading/' for request.user as heading_pages %}
+    {% concat_string '/' LANGUAGE_CODE '/home/heading/' as heading_pages_localized %}
+    {% get_flatpages heading_pages_localized for request.user as heading_pages %}
     {% if not heading_pages %}
       {% get_flatpages '/home/heading/' for request.user as heading_pages %}
     {% endif %}
@@ -43,7 +44,8 @@
         {% endblocktrans %}</h1>
       </div>
     {% endfor %}
-    {% get_flatpages '/'+LANGUAGE_CODE+'/home/main/' for request.user as main_pages %}
+    {% concat_string '/' LANGUAGE_CODE '/home/main/' as main_pages_localized %}
+    {% get_flatpages main_pages_localized for request.user as main_pages %}
     {% if not main_pages %}
       {% get_flatpages '/home/main/' for request.user as main_pages %}
     {% endif %}
