@@ -11,6 +11,7 @@ from django import forms
 
 from spkcspider.apps.spider.constants.static import index_names
 from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.apps.spider.widgets import TrumbowygWidget
 from .models import FileFilet, TextFilet
 
 tags = sanitizer.ALLOWED_TAGS + [
@@ -84,27 +85,9 @@ class TextForm(forms.ModelForm):
         fields = ['text', 'name', 'editable_from', 'preview_words']
 
         widgets = {
-            "editable_from": forms.CheckboxSelectMultiple()
+            "editable_from": forms.CheckboxSelectMultiple(),
+            "text": TrumbowygWidget()
         }
-
-    class Media:
-        css = {
-            'all': [
-                'node_modules/trumbowyg/dist/ui/trumbowyg.min.css',
-                'node_modules/trumbowyg/dist/plugins/colors/ui/trumbowyg.colors.css',  # noqa: E501
-                'spider_base/trumbowyg.css',
-                # 'node_modules/trumbowyg/dist/plugins/history/ui/trumbowyg.history.css'  # noqa: E501
-            ]
-        }
-        js = [
-            'node_modules/jquery/dist/jquery%s.js' % _extra,
-            'node_modules/trumbowyg/dist/trumbowyg%s.js' % _extra,
-            'node_modules/trumbowyg/dist/plugins/pasteimage/trumbowyg.pasteimage.min.js',  # noqa: E501
-            'node_modules/trumbowyg/dist/plugins/base64/trumbowyg.base64.min.js',  # noqa: E501
-            'node_modules/trumbowyg/dist/plugins/history/trumbowyg.history.min.js',  # noqa: E501
-            'node_modules/trumbowyg/dist/plugins/colors/trumbowyg.colors.min.js',  # noqa: E501
-            'spider_filets/text.js'
-        ]
 
     def __init__(self, request, source, scope, **kwargs):
         super().__init__(**kwargs)
