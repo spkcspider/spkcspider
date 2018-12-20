@@ -443,13 +443,14 @@ class BaseContent(models.Model):
             **self.get_form_kwargs(disable_data=True, **kwargs)
         )
         kwargs.setdefault("legend", _("View"))
-        kwargs.setdefault(
-            "add_spkc_types",
-            [
-                self.associated.getlist("type", 1)[0],
-                "Content"
-            ]
-        )
+        # not required: done by access template
+        # kwargs.setdefault(
+        #    "add_spkc_types",
+        #    [
+        #        self.associated.getlist("type", 1)[0],
+        #        "Content"
+        #    ]
+        # )
         return (
             render_to_string(
                 self.get_template_name(kwargs["scope"]),
