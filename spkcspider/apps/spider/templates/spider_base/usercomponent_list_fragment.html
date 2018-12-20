@@ -13,24 +13,24 @@
   {% for uc in object_list %}
     <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" resource="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}" typeof="spkc:Component">
       <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px" >
-        <data hidden="hidden" property="spkc:type">Component</data>
+        <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
         <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
         <data rel="spkc:properties">
           <data typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name">name</data>
+            <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
             {% if uc.is_index %}
-              <span property="spkc:value">{% trans 'Private Component' %}</span>
+              <span property="spkc:value" datatype="xsd:string">{% trans 'Private Component' %}</span>
             {% else %}
-              <span property="spkc:value">{{ uc.name }}</span>{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
+              <span property="spkc:value" datatype="xsd:string">{{ uc.name }}</span>{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
             {% endif %}
           </data>
           <data hidden="hidden" typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name">user</data>
-            <data hidden="hidden" property="spkc:value">{{uc.username}}</data>
+            <data hidden="hidden" property="spkc:name" datatype="xsd:string">user</data>
+            <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.username}}</data>
           </data>
           <data hidden="hidden" typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name">description</data>
-            <data hidden="hidden" property="spkc:value">{{uc.description|escape}}</data>
+            <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
+            <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description|escape}}</data>
           </data>
         </data>
       </td>

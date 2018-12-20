@@ -5,15 +5,20 @@
   Home
 {% endblocktrans %}{% endblock %}
 
+{% block public_meta %}
+  {{block.super}}
+  <meta name="description" content="{{SETTINGS.SPIDER_DESCRIPTION|escape}}" />
+{% endblock %}
+
 {% block extrahead %}
 {{block.super}}
-<link rel="stylesheet" href="{% static 'admin/css/vendor/select2/select2.css' %}">
+<link rel="stylesheet" href="{% static 'node_modules/select2/dist/css/select2.min.css' %}">
 {% if DEBUG %}
-  <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-  <script src="{% static 'admin/js/vendor/select2/select2.full.js' %}"></script>
+  <script src="{% static 'node_modules/jquery/dist/jquery.js' %}"></script>
+  <script src="{% static 'node_modules/select2/dist/js/select2.js' %}"></script>
 {% else %}
-  <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
-  <script src="{% static 'admin/js/vendor/select2/select2.full.min.js' %}"></script>
+  <script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+  <script src="{% static 'node_modules/select2/dist/js/select2.min.js' %}"></script>
 {% endif %}
 {% endblock %}
 
@@ -23,7 +28,10 @@
 {% block content %}
   {% block frontblock %}
   <div>
-    {% get_flatpages '/home/heading/' for request.user as heading_pages %}
+    {% get_flatpages '/'+LANGUAGE_CODE+'/home/heading/' for request.user as heading_pages %}
+    {% if not heading_pages %}
+      {% get_flatpages '/home/heading/' for request.user as heading_pages %}
+    {% endif %}
     {% for page in heading_pages %}
       <div>
         {{page.content|safe}}
@@ -35,7 +43,10 @@
         {% endblocktrans %}</h1>
       </div>
     {% endfor %}
-    {% get_flatpages '/home/main/' for request.user as main_pages %}
+    {% get_flatpages '/'+LANGUAGE_CODE+'/home/main/' for request.user as main_pages %}
+    {% if not main_pages %}
+      {% get_flatpages '/home/main/' for request.user as main_pages %}
+    {% endif %}
     {% for page in main_pages %}
       <div class="w3-margin w3-padding w3-white">
         <h3 class="">{{page.title}}</h3>

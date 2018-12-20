@@ -25,7 +25,7 @@
 {% block main_attributes %}resource="{{ request.path }}" typeof="spkc:Content"{% endblock %}
 
 {% block content %}
-  <data hidden="hidden" property="spkc:type">Content</data>
+  <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
   <div class="w3-padding">
     {% if request.user == uc.user or uc.public %}
       {# index is redirected in view #}
@@ -60,19 +60,19 @@
     </span>
     <h1 class="w3-center">
       {% if scope == "add" %}
-        <data hidden="hidden" property="spkc:type">{{object.name}}</data>
+        <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{object.name}}</data>
         {% trans object.name as local_name %}
         {% blocktrans trimmed %}
           Create Content
         {% endblocktrans %}: <em>{{local_name}}</em>
       {% elif scope == "update" %}
-        <data hidden="hidden" property="spkc:type">{{object.ctype.name}}</data>
+        <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{object.ctype.name}}</data>
         {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed %}
           Update
         {% endblocktrans %} "<b>{{object}}</b>" <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component' %}: {{uc}}"{% endif %}><em>({{local_name}})</em></small>
       {% else %}
-        <data hidden="hidden" property="spkc:type">{{object.ctype.name}}</data>
+        <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{object.ctype.name}}</data>
         {% trans object.ctype.name as local_name %}
         <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
       {% endif %}
@@ -80,11 +80,11 @@
     {% if object %}
       <data hidden="hidden" rel="spkc:properties">
         <data hidden="hidden" typeof="spkc:Property">
-          <data hidden="hidden" property="spkc:name">info</data>
-          <data hidden="hidden" property="spkc:value"">{{object.info}}</data>
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
+          <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{object.info}}</data>
         </data>
         <data hidden="hidden" typeof="spkc:Property">
-          <data hidden="hidden" property="spkc:name">id</data>
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">id</data>
           <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{object.get_id}}</data>
         </data>
       </data>

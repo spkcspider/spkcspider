@@ -27,14 +27,14 @@
           <tr>
             <td class="">{% trans 'Component' %}</td>
             <td typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name">description</data>{% trans 'Description' %}
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>{% trans 'Description' %}
             </td>
           </tr>
           {% if uc.public %}
             <tr>
               <td class="">{% trans 'Component' %}</td>
               <td typeof="spkc:Property">
-                <data hidden="hidden" property="spkc:name">name</data>{% trans 'Name' %} (<em>{{uc}}</em>)
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>{% trans 'Name' %} (<em>{{uc}}</em>)
               </td>
             </tr>
           {% endif %}
@@ -42,7 +42,7 @@
             <tr>
               <td class="">{% trans 'Content' %}</td>
               <td typeof="spkc:Content">
-                <data property="spkc:name">{{content}}</data>
+                <data property="spkc:name" datatype="xsd:string">{{content}}</data>
               </td>
             </tr>
           {% endfor %}
@@ -50,7 +50,7 @@
           <tr>
             <td class="">{% trans 'Content' %}</td>
             <td typeof="spkc:Content">
-              <data property="spkc:name">{{object}}</data>
+              <data property="spkc:name" datatype="xsd:string">{{object}}</data>
             </td>
           </tr>
         {% endif %}

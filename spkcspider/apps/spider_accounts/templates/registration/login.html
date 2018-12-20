@@ -27,7 +27,7 @@
       </div>
     </fieldset>
     <button class="w3-button w3-grey" type="submit">Login</button><br/>
-    {% if OPEN_FOR_REGISTRATION %}
+    {% if SETTINGS.OPEN_FOR_REGISTRATION %}
       <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
     {% endif %}
   </form>

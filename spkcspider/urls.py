@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.conf.urls.i18n import i18n_patterns
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -45,8 +46,16 @@ admin.site.has_permission = lambda *args, **kwargs: get_settings_func(
     "spkcspider.apps.spider.functions.has_admin_permission"
 )(admin.site, *args, **kwargs)
 
-urlpatterns = [
+urlpatterns = []
+urlpatterns_i18n = [
     path('admin/', admin.site.urls),
+    path(
+        '',
+        ComponentPublicIndex.as_view(
+            is_home=True, template_name="spider_base/home.html"
+        ),
+        name="home"
+    ),
 ]
 
 for app in apps.get_app_configs():
@@ -56,7 +65,7 @@ for app in apps.get_app_configs():
     )
     if not url_path:
         continue
-    urlpatterns.append(
+    urlpatterns_i18n.append(
         path(
             url_path,
             include("{}.urls".format(app.name))
@@ -68,7 +77,7 @@ if getattr(settings, "USE_CAPTCHAS", False):
     urlpatterns.append(path(r'captcha/', include('captcha.urls')))
 
 if 'django.contrib.flatpages' in settings.INSTALLED_APPS:
-    urlpatterns.append(
+    urlpatterns_i18n.append(
         path('pages/', include('django.contrib.flatpages.urls'))
     )
 
@@ -76,13 +85,6 @@ urlpatterns += [
     # daily
     path('favicon.ico', cache_page(86400)(favicon_view)),
     path('robots.txt', cache_page(86400)(robots_view)),
-    path(
-        '',
-        ComponentPublicIndex.as_view(
-            is_home=True, template_name="spider_base/home.html"
-        ),
-        name="home"
-    ),
     # daily
     path(
         'sitemap.xml',
@@ -104,7 +106,7 @@ urlpatterns += [
         {'sitemaps': sitemaps},
         name='sitemaps'
     ),
-]
+] + i18n_patterns(*urlpatterns_i18n, prefix_default_language=False)
 
 if settings.DEBUG:
     urlpatterns += static(

@@ -1,7 +1,7 @@
 {% load i18n %}
 {% load staticfiles spider_base %}
 <!DOCTYPE html>
-<html>
+<html lang="{{LANGUAGE_CODE}}">
   <head>
     <title>{% block title %}{% endblock %}</title>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -43,7 +43,7 @@
           <i class="fa fa-home" aria-hidden="true"></i>
         </a>
         {% url 'auth:login' as loginpath %}
-        {% if OPEN_FOR_REGISTRATION %}
+        {% if SETTINGS.OPEN_FOR_REGISTRATION %}
           {% url 'auth:signup' as registerpath %}
         {% endif %}
         {% if request.user.is_authenticated %}
@@ -109,7 +109,7 @@
             </div>
           </div>
         {% else %}
-          {% if OPEN_FOR_REGISTRATION %}
+          {% if SETTINGS.OPEN_FOR_REGISTRATION %}
           <a class="w3-bar-item w3-button w3-right" href="{{registerpath}}{% if registerpath != request.path %}?next={{request.path|urlencode}}{% endif %}">
             <i class="fa fa-user-plus" style="margin-right:10px" aria-hidden="true"></i>
             {% trans 'Register' %}

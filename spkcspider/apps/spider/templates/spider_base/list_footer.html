@@ -10,7 +10,7 @@
         <option selected="selected" value="{{elem}}">{{elem}}</option>
       {% endfor %}
     </select>
-    <select name="search" id="search_field_list_footer" data-minimum-results-for-search="1" data-width="80%" data-tags="true" data-placeholder="{% trans 'Search' %}" multiple="multiple">
+    <select name="search" id="search_field_list_footer" multiple="multiple">
       {% for elem in cur_search %}
         <option selected="selected" value="{{elem}}">{{elem}}</option>
       {% endfor %}
@@ -74,7 +74,12 @@ jQuery( document ).ready(function( $ ) {
   if (list_footer_scripts_initialized)
     return;
   list_footer_scripts_initialized = true;
-  $("#search_field_list_footer").select2();
+  $("#search_field_list_footer").select2({
+    tags: true,
+    width: '80%',
+    minimumResultsForSearch: 1,
+    placeholder: '{% trans 'Search' %}'
+  });
 })
 
 </script>

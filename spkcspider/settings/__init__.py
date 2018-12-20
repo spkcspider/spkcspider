@@ -56,6 +56,7 @@ except ImportError:
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -73,8 +74,8 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'spkcspider.apps.spider_accounts.context_processors.'
-                'is_registration_open',
+                'spkcspider.apps.spider.context_processors.settings',
+                'django.template.context_processors.i18n',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -107,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en'
 
 TIME_ZONE = 'UTC'
 
@@ -191,6 +192,9 @@ DEFAULT_USERCOMPONENTS = {
     "home": False,
     "public": True
 }
+
+## Default description  # noqa: E266
+SPIDER_DESCRIPTION = "A spkcspider instance for my personal data."
 
 SPIDER_BLACKLISTED_MODULES = []
 
