@@ -27,7 +27,7 @@
 
 {% block content %}
   {% block frontblock %}
-  <div>
+  <div class="w3-padding">
     {% get_flatpages '/'+LANGUAGE_CODE+'/home/heading/' for request.user as heading_pages %}
     {% if not heading_pages %}
       {% get_flatpages '/home/heading/' for request.user as heading_pages %}
@@ -48,7 +48,7 @@
       {% get_flatpages '/home/main/' for request.user as main_pages %}
     {% endif %}
     {% for page in main_pages %}
-      <div class="w3-margin w3-padding w3-white">
+      <div class="w3-margin w3-padding-small w3-white">
         <h3 class="">{{page.title}}</h3>
         <hr/>
         {{page.content|safe}}
@@ -58,11 +58,9 @@
   {% endblock %}
   {% block featured_components %}
   {% if object_list|length > 0 %}
-  <div>
+  <div class="w3-padding">
     <div>
-      <h2 class="">
-        {% trans "Featured:" %}
-      </h2>
+      <h2>{% trans "Featured:" %}</h2>
     </div>
     <div style="margin-top:20px">
       {% include "spider_base/usercomponent_list_fragment.html" %}
