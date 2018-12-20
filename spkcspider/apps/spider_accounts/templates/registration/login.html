@@ -12,19 +12,17 @@
       {% include "spider_base/base_form.html" with form=form %}
     </fieldset>
 
-    <fieldset>
+    <fieldset style="overflow-y: auto; max-height:600px">
       <legend><h1>{% trans 'Authenticate with' %}</h1></legend>
       {% extract_protections "protections" as protections %}
-      <div style="overflow-y: auto; max-height:600px">
-        {% for prot in protections %}
-          <div class="w3-padding">
-            <div class="w3-padding w3-card w3-white">
-              <h1 class="w3-center">{{prot.1.auth_localize_name}}</h1>
-              {% render_protection prot %}
-            </div>
+      {% for prot in protections %}
+        <div class="protection-wrapping">
+          <div class="w3-padding-small w3-card w3-white">
+            <h1 class="w3-center">{{prot.1.auth_localize_name}}</h1>
+            {% render_protection prot %}
           </div>
-        {% endfor %}
-      </div>
+        </div>
+      {% endfor %}
     </fieldset>
     <button class="w3-button w3-grey" type="submit">Login</button><br/>
     {% if SETTINGS.OPEN_FOR_REGISTRATION %}

@@ -6,18 +6,16 @@
   {% csrf_token %}
   <data hidden="hidden" property="spkc:protections.amount" datatype="xsd:nonNegativeInteger">{{protections|length}}</data>
   <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
-  <fieldset rel="protections">
+  <fieldset rel="protections" style="overflow-y: auto; max-height:600px">
     <legend><h1>{% trans 'Protections' %}</h1></legend>
-    <div style="overflow-y: auto; max-height:600px">
-      {% for prot in protections %}
-        <div class="w3-padding">
-          <div class="w3-padding w3-card w3-white">
-            <h1 class="w3-center">{{prot.1.auth_localize_name}}</h1>
-            {% render_protection prot %}
-          </div>
+    {% for prot in protections %}
+      <div class="protection-wrapping">
+        <div class="w3-padding-small w3-card w3-white">
+          <h1 class="w3-center">{{prot.1.auth_localize_name}}</h1>
+          {% render_protection prot %}
         </div>
-      {% endfor %}
-    </div>
+      </div>
+    {% endfor %}
   </fieldset>
   <button class="w3-button w3-grey">
     {% trans 'Send' %}

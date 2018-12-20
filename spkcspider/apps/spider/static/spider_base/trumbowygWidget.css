@@ -1,4 +1,4 @@
-.trumbowygTarget {
-  color:#000!important;
-  background-color:#fff!important;
+.TrumbowygTargetWrapper {
+  overflow-x: hidden;
+  max-width: 750px;
 }

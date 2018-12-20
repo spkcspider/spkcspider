@@ -1,8 +1,10 @@
 {% load spider_rdf %}
-<fieldset {% if include_namespace %}vocab="{% namespace %}" resource="{{ request.path }}"{% endif %}>
-  {% for rdftype in add_spkc_types %}
-    <data property="spkc:type" hidden="hidden">{{rdftype}}</data>
-  {% endfor %}
-  <legend><h2>{{legend|safe}}</h2></legend>
-  {% include "spider_base/base_view_form.html" with form=form %}
-</fieldset>
+<div class="w3-padding">
+  <fieldset style="width:100%">
+    {% for rdftype in add_spkc_types %}
+      <data property="spkc:type" hidden="hidden">{{rdftype}}</data>
+    {% endfor %}
+    <legend><h2>{{legend|safe}}</h2></legend>
+    {% include "spider_base/base_view_form.html" with form=form %}
+  </fieldset>
+</div>

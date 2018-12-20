@@ -64,7 +64,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   <form class="w3-padding" action="{{ request.get_full_path }}" encdata="multipart/form-data" method="post">
     {% csrf_token %}
     <data hidden="hidden" property="type" datatype="xsd:string">Component</data>
-    <fieldset>
+    <fieldset style="width:100%">
       <legend>
         <h1>
         {% if form.instance.id and form.instance.is_index %}
@@ -75,7 +75,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         </h1>
       </legend>
       <div style="overflow-y: auto; max-height:300px">
-        <table width="100%" id="token_container">
+        <table class="w3-table-all" width="100%" id="token_container">
           <thead>
             <tr>
               <th colspan="3" class="w3-center"><h1>{% trans 'Active Tokens' %}</h1></th>
@@ -114,22 +114,20 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       {% trans "Change" %}
     </button>
     {% endif %}
-    <fieldset>
-      <legend><h1>{% trans 'Protections' %}</h1></legend>
-      <div style="overflow-y: auto; max-height:600px">
-        {% for prot in form.protections %}
-          <div class="w3-padding">
-            <div class="w3-padding w3-card w3-white">
-              <h1 class="w3-center">{{prot}}</h1>
-              {% include "spider_base/base_form.html" with form=prot %}
-            </div>
+    <fieldset style="overflow-y: auto; max-height:600px">
+      <legend style="bottom:100px;"><h1>{% trans 'Protections' %}</h1></legend>
+      {% for prot in form.protections %}
+        <div class="protection-wrapping">
+          <div class="w3-padding-small w3-card w3-white">
+            <h1 class="w3-center">{{prot}}</h1>
+            {% include "spider_base/base_form.html" with form=prot %}
           </div>
-        {% empty%}
-          <div class="w3-padding">
-            <div class="w3-padding w3-card w3-orange">{% trans 'No protections: create component first' %}</div>
-          </div>
-        {% endfor %}
-      </div>
+        </div>
+      {% empty%}
+        <div class="protection-wrapping">
+          <div class="w3-padding-small w3-card w3-orange">{% trans 'No protections: create component first' %}</div>
+        </div>
+      {% endfor %}
     </fieldset>
     <button class="w3-button w3-grey">
       {% if form.instance.id %}{% trans "Change" %}{% else %}{% trans "Create" %}{% endif %}

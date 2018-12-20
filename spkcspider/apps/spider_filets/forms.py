@@ -1,9 +1,6 @@
 __all__ = ["FileForm", "TextForm", "RawTextForm"]
 
 
-import bleach
-from bleach import sanitizer
-
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -11,22 +8,9 @@ from django import forms
 
 from spkcspider.apps.spider.constants.static import index_names
 from spkcspider.apps.spider.helpers import get_settings_func
-from spkcspider.apps.spider.widgets import TrumbowygWidget
+from spkcspider.apps.spider.fields import SanitizedHtmlField
 from .models import FileFilet, TextFilet
 
-tags = sanitizer.ALLOWED_TAGS + [
-    'img', 'p', 'br', 'sub', 'sup', 'h1', 'h2', 'h3', 'h4'
-]
-protocols = sanitizer.ALLOWED_PROTOCOLS + ['data']
-
-
-class FakeList(object):
-    def __contains__(self, value):
-        return True
-
-
-styles = FakeList()
-svg_props = FakeList()
 _extra = '' if settings.DEBUG else '.min'
 
 
@@ -80,13 +64,14 @@ class FileForm(forms.ModelForm):
 
 
 class TextForm(forms.ModelForm):
+    text = SanitizedHtmlField()
+
     class Meta:
         model = TextFilet
         fields = ['text', 'name', 'editable_from', 'preview_words']
 
         widgets = {
-            "editable_from": forms.CheckboxSelectMultiple(),
-            "text": TrumbowygWidget()
+            "editable_from": forms.CheckboxSelectMultiple()
         }
 
     def __init__(self, request, source, scope, **kwargs):
@@ -118,15 +103,6 @@ class TextForm(forms.ModelForm):
             allow_edit = True
 
         self.fields["text"].disabled = not allow_edit
-
-    def clean_text(self):
-        return bleach.clean(
-            self.cleaned_data['text'],
-            tags=tags,
-            attributes=check_attrs_func,
-            protocols=protocols,
-            styles=styles,
-        )
 
 
 class RawTextForm(forms.ModelForm):

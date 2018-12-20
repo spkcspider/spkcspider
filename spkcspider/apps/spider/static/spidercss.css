@@ -44,6 +44,9 @@ main.cond-top-fix{
   }
 }
 
+.protection-wrapping{
+  padding: 4px 0px 4px 0px;
+}
 
 .color-fresh-contentvariant{
   /* pale green more green */

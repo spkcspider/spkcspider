@@ -216,7 +216,6 @@ class TextFilet(BaseContent):
             if kwargs["request"].is_elevated_request:
                 kwargs["can_upgrade"] = True
                 if kwargs["scope"] == "update_user":
-                    kwargs["include_namespace"] = True
                     kwargs["legend"] = \
                         _("Update \"%s\" (guest)") % self.__str__()
                     return self.render_update(**kwargs)

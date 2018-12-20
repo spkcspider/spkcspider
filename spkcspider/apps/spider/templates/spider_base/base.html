@@ -125,7 +125,7 @@
         </div>
       </header>
       {% endblock headerbar %}
-      <main class="cond-top-fix {% block main_classes %}w3-padding{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
+      <main class="cond-top-fix {% block main_classes %}{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
       {% block messages %}
           {% if messages %}
           <ul class="messagelist">{% for message in messages %}

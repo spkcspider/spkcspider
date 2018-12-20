@@ -35,6 +35,8 @@ class Select2Multiple(widgets.SelectMultiple):
 
 
 class TrumbowygWidget(widgets.Textarea):
+    template_name = 'spider_base/forms/widgets/trumbowygwidget.html'
+
     class Media:
         css = {
             'all': [
@@ -54,20 +56,36 @@ class TrumbowygWidget(widgets.Textarea):
             'node_modules/trumbowyg/dist/plugins/preformatted/trumbowyg.preformatted.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/insertaudio/trumbowyg.insertaudio.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/pasteimage/trumbowyg.pasteimage.min.js',  # noqa: E501
+            'node_modules/trumbowyg/dist/plugins/lineheight/trumbowyg.lineheight.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/base64/trumbowyg.base64.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/history/trumbowyg.history.min.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/colors/trumbowyg.colors.min.js',  # noqa: E501
-            #'node_modules/trumbowyg/dist/plugins/resizimg/trumbowyg.resizimg.js',  # noqa: E501
+            # 'node_modules/trumbowyg/dist/plugins/resizimg/trumbowyg.resizimg.js',  # noqa: E501
             'node_modules/trumbowyg/dist/plugins/table/trumbowyg.table.min.js',
             'spider_base/trumbowygWidget.js',
         ]
 
-    def __init__(self, *, attrs=None, **kwargs):
+    def __init__(self, *, attrs=None, wrapper_attrs=None, **kwargs):
         if not attrs:
             attrs = {"class": ""}
+        if not wrapper_attrs:
+            wrapper_attrs = {"class": ""}
         attrs.setdefault("class", "")
+        wrapper_attrs.setdefault("class", "")
         attrs["class"] += " TrumbowygTarget"
+        wrapper_attrs["class"] += " TrumbowygTargetWrapper"
+        self.wrapper_attrs = wrapper_attrs.copy()
         super().__init__(attrs=attrs, **kwargs)
+
+    def __deepcopy__(self, memo):
+        obj = super().__deepcopy__(memo)
+        obj.wrapper_attrs = self.wrapper_attrs.copy()
+        return obj
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        context['widget']['wrapper_attrs'] = self.wrapper_attrs
+        return context
 
 
 class OpenChoiceWidget(widgets.SelectMultiple):

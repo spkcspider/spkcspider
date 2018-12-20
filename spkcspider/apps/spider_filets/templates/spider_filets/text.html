@@ -8,13 +8,15 @@
     </data>
   </data>
 {% endif %}
-<div class="w3-white w3-padding" typeof="spkc:Property">
-  <data hidden="hidden" property="spkc:name">text</data>
-  <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-  <data property="spkc:value">{{object.text|safe}}</data>
+<div class="w3-padding">
+  <div class="w3-white" typeof="spkc:Property">
+    <data hidden="hidden" property="spkc:name">text</data>
+    <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
+    <data property="spkc:value">{{object.text|safe}}</data>
+  </div>
 </div>
 {% if can_upgrade %}
-<div>
+<div class="w3-padding">
   <a href="{% url 'spider_base:ucontent-access' id=object.associated.id nonce=object.associated.nonce access='update_user' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
 </div>
 {% endif %}
