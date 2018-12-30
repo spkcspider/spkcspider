@@ -1,4 +1,4 @@
-__all__ = ["SpiderBaseConfig"]
+__all__ = ["SpiderBaseConfig", "installed_componentfeatures"]
 
 from django.apps import AppConfig
 from django.db.models.signals import post_migrate, post_save, post_delete
@@ -10,6 +10,8 @@ from .signals import (
     UpdateSpiderCallback, InitUserCallback,
     update_dynamic, TriggerUpdate, RemoveTokensLogout, CleanupCallback
 )
+
+installed_componentfeatures = {}
 
 
 class SpiderBaseConfig(AppConfig):

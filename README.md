@@ -158,6 +158,7 @@ Otherwise security could be compromised.
 * examples
 * tests
 * documentation
+* WebConfig
 
 ## Later
 * Localisation

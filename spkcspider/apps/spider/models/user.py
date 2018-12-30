@@ -22,6 +22,7 @@ from django.core import validators
 
 from jsonfield import JSONField
 
+from .. import installed_componentfeatures
 from ..helpers import create_b64_token, get_settings_func
 from ..constants import (
     ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
@@ -78,6 +79,26 @@ class UserComponentManager(models.Manager):
         )
 
 
+class ComponentFeature(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
+    code = models.CharField(max_length=10)
+
+    @property
+    def installed_class(self):
+        return installed_componentfeatures[self.code]
+
+    def __str__(self):
+        return self.localize_name()
+
+    def __repr__(self):
+        return "<ComponentFeature: %s>" % self.__str__()
+
+    def localize_name(self):
+        if self.code not in installed_componentfeatures:
+            return self.code
+        return self.installed_class.localize_name(self.code)
+
+
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
@@ -125,11 +146,17 @@ class UserComponent(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     )
+    features = models.ManyToManyField(
+        ComponentFeature, related_name="supports", blank=True
+    )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
 
     # only admin
     featured = models.BooleanField(default=False, help_text=_feature_help)
+
+    # available features of Component
+    avail_features = models.CharField(default=True, max_length=10)
 
     token_duration = models.DurationField(
         default=default_uctoken_duration,
@@ -252,15 +279,10 @@ class AuthToken(models.Model):
     #  16 = usercomponent.id in hexadecimal
     token = models.SlugField(
         max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
-        db_index=True
+        db_index=True, unique=True
     )
     extra = JSONField(default={}, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
-
-    class Meta:
-        unique_together = [
-            ("usercomponent", "token")
-        ]
 
     def create_auth_token(self):
         self.token = "{}_{}".format(

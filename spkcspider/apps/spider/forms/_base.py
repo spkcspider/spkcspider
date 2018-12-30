@@ -6,6 +6,7 @@ from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
+from ..apps import installed_componentfeatures
 from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent
 )
@@ -37,12 +38,18 @@ class UserComponentForm(forms.ModelForm):
         label=_("New Nonce"), help_text=_help_text,
         required=False, initial="", choices=NONCE_CHOICES
     )
+    features = forms.ChoiceField(
+        label=_("Available Features"), help_text=_help_text,
+        required=False, initial="", choices=list(
+            map(lambda x: (x.code, x.__str__), installed_componentfeatures)
+        )
+    )
 
     class Meta:
         model = UserComponent
         fields = [
-            'name', 'featured', 'public', 'description', 'required_passes',
-            'token_duration',
+            'name', 'description', 'features', 'featured', 'public',
+            'required_passes', 'token_duration',
         ]
         error_messages = {
             NON_FIELD_ERRORS: {

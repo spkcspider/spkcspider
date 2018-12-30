@@ -1,4 +1,6 @@
-__all__ = ("UserTestMixin", "UCTestMixin", "EntityDeletionMixin")
+__all__ = (
+    "UserTestMixin", "UCTestMixin", "EntityDeletionMixin", "ReferrerMixin"
+)
 
 import logging
 import hashlib
@@ -274,6 +276,27 @@ class UserTestMixin(AccessMixin):
             content_type=self.content_type
         )
 
+    def get_noperm_template_names(self):
+        return "spider_protections/protections.html"
+
+
+class UCTestMixin(UserTestMixin):
+    usercomponent = None
+
+    def dispatch(self, request, *args, **kwargs):
+        self.usercomponent = self.get_usercomponent()
+        return super(UCTestMixin, self).dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        # for protections
+        return self.get(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        # for protections
+        return self.get(request, *args, **kwargs)
+
+
+class ReferrerMixin(object):
     def handle_referrer(self):
         _ = gettext
         if (
@@ -310,7 +333,8 @@ class UserTestMixin(AccessMixin):
                     extra={
                         "ids": list(
                             self.object_list.values_list("id", flat=True)
-                        )
+                        ),
+                        "referrer": context["referrer"]
                     }
                 )
                 try:
@@ -373,25 +397,6 @@ class UserTestMixin(AccessMixin):
 
     def get_referrer_template_names(self):
         return "spider_protections/referring.html"
-
-    def get_noperm_template_names(self):
-        return "spider_protections/protections.html"
-
-
-class UCTestMixin(UserTestMixin):
-    usercomponent = None
-
-    def dispatch(self, request, *args, **kwargs):
-        self.usercomponent = self.get_usercomponent()
-        return super(UCTestMixin, self).dispatch(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        # for protections
-        return self.get(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        # for protections
-        return self.get(request, *args, **kwargs)
 
 
 class EntityDeletionMixin(UserTestMixin):

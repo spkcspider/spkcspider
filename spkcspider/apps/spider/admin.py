@@ -6,7 +6,6 @@ from .models import (
     ContentVariant, UserInfo
 )
 
-# Register your models here.
 
 @admin.register(AssignedContent)
 class UserContentAdmin(admin.ModelAdmin):
@@ -116,8 +115,8 @@ class UserComponentAdmin(admin.ModelAdmin):
     ]
     actions = ["feature", "unfeature"]
     fields = [
-        'user', 'name', 'created', 'modified', 'featured', 'public',
-        'strength', 'description', 'nonce', 'required_passes',
+        'user', 'name', 'created', 'modified', 'description', 'features',
+        'featured', 'public', 'strength', 'nonce', 'required_passes',
         'deletion_requested', 'token_duration'
     ]
     readonly_fields = ['created', 'modified', 'featured', 'strength']

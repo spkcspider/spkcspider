@@ -19,7 +19,7 @@ from django.http import Http404
 from rdflib import Graph, Literal, URIRef
 
 
-from ._core import UCTestMixin, EntityDeletionMixin
+from ._core import UCTestMixin, EntityDeletionMixin, ReferrerMixin
 from ..models import (
     AssignedContent, ContentVariant, UserComponent
 )
@@ -70,7 +70,9 @@ class ContentBase(UCTestMixin):
         return self.test_token()
 
 
-class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
+class ContentAccess(
+    ReferrerMixin, ContentBase, ModelFormMixin, TemplateResponseMixin, View
+):
     scope = "access"
     form_class = UserContentForm
     model = AssignedContent
@@ -200,7 +202,7 @@ class ContentAccess(ContentBase, ModelFormMixin, TemplateResponseMixin, View):
         )
 
 
-class ContentIndex(UCTestMixin, ListView):
+class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
     model = AssignedContent
     scope = "list"
     no_nonce_usercomponent = False
