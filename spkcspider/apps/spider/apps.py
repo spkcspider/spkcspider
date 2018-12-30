@@ -11,6 +11,7 @@ from .signals import (
     update_dynamic, TriggerUpdate, RemoveTokensLogout, CleanupCallback
 )
 
+
 installed_componentfeatures = {}
 
 
@@ -31,6 +32,9 @@ class SpiderBaseConfig(AppConfig):
         for app in apps.get_app_configs():
             installed_protections.update(
                 extract_app_dicts(app, "spider_protections", "name")
+            )
+            installed_componentfeatures.update(
+                extract_app_dicts(app, "spider_features")
             )
 
         user_logged_out.connect(

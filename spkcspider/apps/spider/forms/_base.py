@@ -6,6 +6,7 @@ from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
+from ..widgets import Select2Multiple
 from ..apps import installed_componentfeatures
 from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent
@@ -39,10 +40,11 @@ class UserComponentForm(forms.ModelForm):
         required=False, initial="", choices=NONCE_CHOICES
     )
     features = forms.ChoiceField(
-        label=_("Available Features"), help_text=_help_text,
+        label=_("Available Features"),
         required=False, initial="", choices=list(
             map(lambda x: (x.code, x.__str__), installed_componentfeatures)
-        )
+        ),
+        widget=Select2Multiple
     )
 
     class Meta:

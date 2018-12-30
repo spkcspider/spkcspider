@@ -22,7 +22,7 @@ from django.core import validators
 
 from jsonfield import JSONField
 
-from .. import installed_componentfeatures
+# from ..apps import installed_componentfeatures
 from ..helpers import create_b64_token, get_settings_func
 from ..constants import (
     ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
@@ -83,9 +83,9 @@ class ComponentFeature(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     code = models.CharField(max_length=10)
 
-    @property
-    def installed_class(self):
-        return installed_componentfeatures[self.code]
+    # @property
+    # def installed_class(self):
+    #     return installed_componentfeatures[self.code]
 
     def __str__(self):
         return self.localize_name()
@@ -94,9 +94,11 @@ class ComponentFeature(models.Model):
         return "<ComponentFeature: %s>" % self.__str__()
 
     def localize_name(self):
-        if self.code not in installed_componentfeatures:
-            return self.code
-        return self.installed_class.localize_name(self.code)
+        _ = gettext
+        # if self.code not in installed_componentfeatures:
+        #     return self.code
+        return _(self.code)
+        # return self.installed_class.localize_name(self.code)
 
 
 class UserComponent(models.Model):

@@ -14,7 +14,7 @@ from django.views.generic.edit import FormView
 
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
-from spkcspider.apps.spider.models import Authtoken
+from spkcspider.apps.spider.models import AuthToken
 
 from .models import WebConfig
 from .forms import WebConfigForm
@@ -39,7 +39,7 @@ class WebConfigForm(UCTestMixin, FormView):
         if not token:
             raise Http404()
         self.request.authtoken = get_object_or_404(
-            Authtoken,
+            AuthToken,
             token=token,
             usercomponent__features__code="webconfig",
         )
@@ -67,9 +67,14 @@ class WebConfigForm(UCTestMixin, FormView):
         return HttpResponse("post to field: \"config\"", status=400)
 
     def render_to_response(self, context):
+        obj = self.get_object()
         field = context["form"].fields["config"]
         raw_value = context["form"].initial.get("config", None)
         value = field.to_python(raw_value)
-        return HttpResponse(
+        ret = HttpResponse(
             value, content_type="text/plain"
         )
+        ret["X-SPIDER-URL"] = obj.url
+        ret["X-SPIDER-MODIFIED"] = obj.modified
+        ret["X-SPIDER-CREATED"] = obj.created
+        return ret

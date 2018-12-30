@@ -8,3 +8,6 @@ class SpiderWebCfgConfig(AppConfig):
     label = 'spider_webcfg'
     spider_url_path = 'webcfg/'
     verbose_name = 'spkcspider WebConfig'
+    spider_features = {
+        "webconfig": None
+    }

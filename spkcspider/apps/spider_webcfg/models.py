@@ -15,7 +15,7 @@ class WebConfig(models.Model):
     #     max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
     #     db_index=True
     # )
-    url = models.UrlField(max_length=800)
+    url = models.URLField(max_length=800)
     config = models.TextField(default="", blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)

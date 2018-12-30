@@ -6,6 +6,7 @@ INSTALLED_APPS += [
     'spkcspider.apps.spider_filets',
     'spkcspider.apps.spider_keys',
     'spkcspider.apps.spider_tags',
+    'spkcspider.apps.spider_webcfg',
     # ONLY for tests and REAL verifiers=companies verifing data
     'spkcspider.apps.verifier',
 ]
