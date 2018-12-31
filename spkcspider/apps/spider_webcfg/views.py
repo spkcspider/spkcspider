@@ -14,7 +14,9 @@ from django.views.generic.edit import FormView
 
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
-from spkcspider.apps.spider.models import AuthToken, AssignedContent
+from spkcspider.apps.spider.models import (
+    AuthToken, AssignedContent, ContentVariant
+)
 
 from .models import WebConfig
 from .forms import WebConfigForm
@@ -41,7 +43,7 @@ class WebConfigForm(UCTestMixin, FormView):
         self.request.authtoken = get_object_or_404(
             AuthToken,
             token=token,
-            usercomponent__features__code="webconfig",
+            usercomponent__features__name="WebConfig",
         )
         if "referrer" not in self.request.authtoken.extra:
             raise Http404()
@@ -66,7 +68,10 @@ class WebConfigForm(UCTestMixin, FormView):
         if ret:
             return ret.content
         associated = AssignedContent(
-            usercomponent=self.usercomponent
+            usercomponent=self.usercomponent,
+            ctype=ContentVariant.objects.get(
+                name="WebConfig"
+            )
         )
         ret = self.model.create_static(associated)
         ret.url = self.request.authtoken.extra["referrer"]

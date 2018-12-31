@@ -11,7 +11,7 @@ class WebConfig(BaseContent):
     appearances = [
         {
             "name": "WebConfig",
-            "ctype": UserContentType.unique | UserContentType.feature,
+            "ctype": UserContentType.unique + UserContentType.feature,
             "strength": 10
         }
     ]

@@ -113,7 +113,9 @@ class AssignedContent(models.Model):
     # ctype is here extended: VariantObject with abilities, name, model_name
     ctype = models.ForeignKey(
         ContentVariant, editable=False, null=True,
-        on_delete=models.SET_NULL
+        on_delete=models.SET_NULL, limit_choices_to=~models.Q(
+            ctype__contains=UserContentType.feature.value
+        )
     )
 
     # creator = models.ForeignKey(
