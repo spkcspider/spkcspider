@@ -44,7 +44,11 @@ class UserComponentForm(forms.ModelForm):
         required=False, initial="", queryset=ContentVariant.objects.filter(
             ctype__contains=UserContentType.feature.value
         ),
-        widget=Select2Multiple
+        widget=Select2Multiple(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
     )
 
     class Meta:
