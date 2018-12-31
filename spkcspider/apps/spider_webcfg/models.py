@@ -21,6 +21,7 @@ class WebConfig(BaseContent):
     #     db_index=True
     # )
     url = models.URLField(max_length=800)
+    creation_url = models.URLField()
     config = models.TextField(default="", blank=True)
 
     def get_form_kwargs(self, **kwargs):

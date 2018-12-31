@@ -1,7 +1,7 @@
 from django.urls import path
 
 
-from .views import WebConfigForm
+from .views import WebConfigView
 
 app_name = "spider_webcfg"
 
@@ -12,7 +12,7 @@ app_name = "spider_webcfg"
 urlpatterns = [
     path(
         '',
-        WebConfigForm.as_view(),
-        name='webconfig-form'
+        WebConfigView.as_view(),
+        name='webconfig-view'
     )
 ]

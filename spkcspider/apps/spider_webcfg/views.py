@@ -1,8 +1,5 @@
-__all__ = ("WebConfigForm",)
+__all__ = ("WebConfigView",)
 
-import logging
-
-from django.conf import settings
 from django.http import Http404
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -10,7 +7,7 @@ from django.http.response import HttpResponse
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django.views.generic.edit import FormView
+from django.views import View
 
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
@@ -19,12 +16,10 @@ from spkcspider.apps.spider.models import (
 )
 
 from .models import WebConfig
-from .forms import WebConfigForm
 
 
-class WebConfigForm(UCTestMixin, FormView):
+class WebConfigView(UCTestMixin, View):
     model = WebConfig
-    form_class = WebConfigForm
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -75,24 +70,30 @@ class WebConfigForm(UCTestMixin, FormView):
         )
         ret = self.model.create_static(associated)
         ret.url = self.request.authtoken.extra["referrer"]
-        ret.clean()
+        ret.creation_url = "{}{}".format(
+            self.request.get_host(), self.request.path
+        )
+        ret.full_clean()
         ret.save()
         return ret
 
-    def form_invalid(self, form):
-        if settings.DEBUG:
-            logging.warning("errors: %s", form.errors)
-        return HttpResponse("post to field: \"config\"", status=400)
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        return self.render_to_response(None)
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.config = self.request.body
+        # a full_clean is here not required
+        self.object.clean()
+        self.object.save()
+        return self.render_to_response(None)
 
     def render_to_response(self, context):
-        obj = self.get_object()
-        field = context["form"].fields["config"]
-        raw_value = context["form"].initial.get("config", None)
-        value = field.to_python(raw_value)
         ret = HttpResponse(
-            value, content_type="text/plain"
+            self.object.config, content_type="text/plain"
         )
-        ret["X-SPIDER-URL"] = obj.url
-        ret["X-SPIDER-MODIFIED"] = obj.modified
-        ret["X-SPIDER-CREATED"] = obj.created
+        ret["X-SPIDER-URL"] = self.object.url
+        ret["X-SPIDER-MODIFIED"] = self.object.modified
+        ret["X-SPIDER-CREATED"] = self.object.created
         return ret
