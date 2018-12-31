@@ -7,14 +7,14 @@ from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
 from ..widgets import Select2Multiple
-from ..apps import installed_componentfeatures
 from ..models import (
-    AssignedProtection, Protection, UserComponent, AssignedContent
+    AssignedProtection, Protection, UserComponent, AssignedContent,
+    ContentVariant
 )
 from ..helpers import create_b64_token
 from ..constants import (
     ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names,
-    protected_names
+    protected_names, UserContentType
 )
 
 _help_text = _("""Generate a new nonce token with variable strength<br/>
@@ -39,10 +39,10 @@ class UserComponentForm(forms.ModelForm):
         label=_("New Nonce"), help_text=_help_text,
         required=False, initial="", choices=NONCE_CHOICES
     )
-    features = forms.ChoiceField(
+    features = forms.ModelMultipleChoiceField(
         label=_("Available Features"),
-        required=False, initial="", choices=list(
-            map(lambda x: (x.code, x.__str__), installed_componentfeatures)
+        required=False, initial="", queryset=ContentVariant.objects.filter(
+            ctype__contains=UserContentType.feature.value
         ),
         widget=Select2Multiple
     )

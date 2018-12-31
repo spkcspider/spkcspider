@@ -34,7 +34,7 @@ class ContentVariant(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # usercontent abilities/requirements
     ctype = models.CharField(
-        max_length=10, default=""
+        max_length=10, default="",
     )
     code = models.CharField(max_length=255)
     name = models.SlugField(max_length=50, unique=True, db_index=True)

@@ -32,20 +32,6 @@ def CleanupCallback(sender, instance, **kwargs):
             instance.content.delete(False)
 
 
-def initialize_component_features(apps=None):
-    from .apps import installed_componentfeatures
-    if not apps:
-        from django.apps import apps
-    installed = list(installed_componentfeatures.keys())
-    ComponentFeature = apps.get_model("spider_base", "ComponentFeature")
-    for i in installed:
-        ComponentFeature.objects.get_or_create(code=i)
-    invalid_models = ComponentFeature.objects.exclude(code__in=installed)
-    if invalid_models.exists():
-        print("Invalid content, please update or remove them:",
-              ["{}:{}".format(t.code, t.name) for t in invalid_models])
-
-
 def UpdateSpiderCallback(**_kwargs):
     # provided apps argument lacks model function support
     # so use this
@@ -54,7 +40,6 @@ def UpdateSpiderCallback(**_kwargs):
     from .protections import initialize_protection_models
     initialize_content_models(apps)
     initialize_protection_models(apps)
-    initialize_component_features(apps)
 
     # regenerate info field
     AssignedContent = apps.get_model("spider_base", "AssignedContent")

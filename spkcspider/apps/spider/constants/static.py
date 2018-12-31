@@ -48,7 +48,8 @@ class ProtectionType(str, enum.Enum):
 
 
 class UserContentType(str, enum.Enum):
-    # a, b not required anymore
+    feature = "a"
+    # b not required anymore
     # update content is without form/for form updates it is not rendered
     # required for still beeing able to update elemental parameters
     raw_update = "c"

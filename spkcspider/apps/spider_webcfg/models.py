@@ -1,12 +1,20 @@
 __all__ = ["WebConfig"]
 
 from django.db import models
-from spkcspider.apps.spider.contents import BaseContent
 
-# from ..constants import MAX_NONCE_SIZE, hex_size_of_bigid
+from spkcspider.apps.spider.constants.static import UserContentType
+from spkcspider.apps.spider.contents import BaseContent, add_content
 
 
+@add_content
 class WebConfig(BaseContent):
+    appearances = [
+        {
+            "name": "WebConfig",
+            "ctype": UserContentType.unique | UserContentType.feature,
+            "strength": 10
+        }
+    ]
 
     # key = models.SlugField(
     #     max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,

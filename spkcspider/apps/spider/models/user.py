@@ -25,7 +25,8 @@ from jsonfield import JSONField
 # from ..apps import installed_componentfeatures
 from ..helpers import create_b64_token, get_settings_func
 from ..constants import (
-    ProtectionType, MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError,
+    ProtectionType, ContentType, MAX_NONCE_SIZE, hex_size_of_bigid,
+    TokenCreationError,
     default_uctoken_duration, force_captcha, index_names
 )
 
@@ -79,28 +80,6 @@ class UserComponentManager(models.Manager):
         )
 
 
-class ComponentFeature(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
-    code = models.CharField(max_length=10)
-
-    # @property
-    # def installed_class(self):
-    #     return installed_componentfeatures[self.code]
-
-    def __str__(self):
-        return self.localize_name()
-
-    def __repr__(self):
-        return "<ComponentFeature: %s>" % self.__str__()
-
-    def localize_name(self):
-        _ = gettext
-        # if self.code not in installed_componentfeatures:
-        #     return self.code
-        return _(self.code)
-        # return self.installed_class.localize_name(self.code)
-
-
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
@@ -149,7 +128,10 @@ class UserComponent(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     )
     features = models.ManyToManyField(
-        ComponentFeature, related_name="supports", blank=True
+        "spider_base.ContentVariant", related_name="supports", blank=True,
+        limit_choices_to=models.Q(
+            ctype__contains=ContentType.feature.value
+        )
     )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
