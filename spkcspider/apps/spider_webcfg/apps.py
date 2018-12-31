@@ -9,5 +9,5 @@ class SpiderWebCfgConfig(AppConfig):
     spider_url_path = 'webcfg/'
     verbose_name = 'spkcspider WebConfig'
     spider_features = {
-        "webconfig": None
+        "webconfig": "spkcspider.apps.spider_webcfg.models.WebConfig"
     }

@@ -70,138 +70,6 @@ class ContentBase(UCTestMixin):
         return self.test_token()
 
 
-class ContentAccess(
-    ReferrerMixin, ContentBase, ModelFormMixin, TemplateResponseMixin, View
-):
-    scope = "access"
-    form_class = UserContentForm
-    model = AssignedContent
-
-    def dispatch_extra(self, request, *args, **kwargs):
-        if getattr(self.request, "auth_token", None):
-            ids = self.request.auth_token.extra.get("ids", None)
-            if ids is not None and self.object.id not in ids:
-                return self.handle_no_permission()
-        if "referrer" in self.request.GET:
-            self.object_list = self.model.objects.filter(
-                pk=self.object.pk
-            )
-            return self.handle_referrer()
-
-        return None
-
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            self.object = self.get_object()
-            return super().dispatch(request, *args, **kwargs)
-        except Http404:
-            return get_settings_func(
-                "RATELIMIT_FUNC",
-                "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
-
-    def get(self, request, *args, **kwargs):
-        context = {"form": None}
-        if self.scope == "update":
-            context["form"] = self.get_form()
-        return self.render_to_response(self.get_context_data(**context))
-
-    def post(self, request, *args, **kwargs):
-        context = {"form": None}
-        # other than update have no form
-        if self.scope == "update":
-            context["form"] = self.get_form()
-            if context["form"].is_valid():
-                self.object = context["form"].save()
-                # nonce changed => path has changed
-                if self.object.nonce != self.kwargs["nonce"]:
-                    return redirect(
-                        'spider_base:ucontent-access',
-                        id=self.object.id,
-                        nonce=self.object.nonce, access="update"
-                    )
-                context["form"] = self.get_form_class()(
-                    **self.get_form_success_kwargs()
-                )
-        return self.render_to_response(self.get_context_data(**context))
-
-    def get_context_data(self, **kwargs):
-        kwargs["is_public_view"] = (
-            self.usercomponent.public and
-            self.scope not in ("add", "update", "update_raw")
-        )
-        context = super().get_context_data(**kwargs)
-
-        if self.scope != "add":
-            context["remotelink"] = context["spider_GET"].copy()
-            context["auth_token"] = None
-            if self.request.auth_token:
-                context["auth_token"] = self.request.auth_token.token
-            context["remotelink"] = "{}{}?{}".format(
-                context["hostpart"],
-                reverse("spider_base:ucontent-access", kwargs={
-                    "id": self.object.id,
-                    "nonce": self.object.nonce,
-                    "access": "view"
-                }),
-                context["remotelink"].urlencode()
-            )
-        return context
-
-    def get_form_success_kwargs(self):
-        """Return the keyword arguments for instantiating the form."""
-        return {
-            'initial': self.get_initial(),
-            'instance': self.object,
-            'prefix': self.get_prefix()
-        }
-
-    def test_func(self):
-        if self.scope not in ["update", "raw_update", "export"]:
-            return super().test_func()
-        # give user and staff the ability to update Content
-        # except it is protected, in this case only the user can update
-        # reason: admins could be tricked into malicious updates
-        # for index the same reason as for add
-        uncritically = self.usercomponent.name != "index"
-        if self.has_special_access(staff=uncritically, superuser=uncritically):
-            self.request.auth_token = self.create_admin_token()
-            return True
-        return False
-
-    def render_to_response(self, context):
-        rendered = self.object.content.render(
-            **context
-        )
-        # return response if content returned response
-        # useful for redirects and raw update
-        if isinstance(rendered, HttpResponseBase):
-            return rendered
-
-        context["content"] = rendered
-        return super().render_to_response(context)
-
-    def get_usercomponent(self):
-        if self.object:
-            return self.object.usercomponent
-        return self.get_object().usercomponent
-
-    def get_user(self):
-        return self.usercomponent.user
-
-    def get_object(self, queryset=None):
-        if not queryset:
-            queryset = self.get_queryset()
-        return get_object_or_404(
-            queryset.select_related(
-                "usercomponent", "usercomponent__user",
-                "usercomponent__user__spider_info"
-            ),
-            id=self.kwargs["id"],
-            nonce=self.kwargs["nonce"]
-        )
-
-
 class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
     model = AssignedContent
     scope = "list"
@@ -515,6 +383,138 @@ class ContentAdd(ContentBase, ModelFormMixin,
                 nonce=ucontent.nonce, access="update"
             )
         return super().render_to_response(context)
+
+
+class ContentAccess(
+    ReferrerMixin, ContentBase, ModelFormMixin, TemplateResponseMixin, View
+):
+    scope = "access"
+    form_class = UserContentForm
+    model = AssignedContent
+
+    def dispatch_extra(self, request, *args, **kwargs):
+        if getattr(self.request, "auth_token", None):
+            ids = self.request.auth_token.extra.get("ids", None)
+            if ids is not None and self.object.id not in ids:
+                return self.handle_no_permission()
+        if "referrer" in self.request.GET:
+            self.object_list = self.model.objects.filter(
+                pk=self.object.pk
+            )
+            return self.handle_referrer()
+
+        return None
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return get_settings_func(
+                "RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
+
+    def get(self, request, *args, **kwargs):
+        context = {"form": None}
+        if self.scope == "update":
+            context["form"] = self.get_form()
+        return self.render_to_response(self.get_context_data(**context))
+
+    def post(self, request, *args, **kwargs):
+        context = {"form": None}
+        # other than update have no form
+        if self.scope == "update":
+            context["form"] = self.get_form()
+            if context["form"].is_valid():
+                self.object = context["form"].save()
+                # nonce changed => path has changed
+                if self.object.nonce != self.kwargs["nonce"]:
+                    return redirect(
+                        'spider_base:ucontent-access',
+                        id=self.object.id,
+                        nonce=self.object.nonce, access="update"
+                    )
+                context["form"] = self.get_form_class()(
+                    **self.get_form_success_kwargs()
+                )
+        return self.render_to_response(self.get_context_data(**context))
+
+    def get_context_data(self, **kwargs):
+        kwargs["is_public_view"] = (
+            self.usercomponent.public and
+            self.scope not in ("add", "update", "update_raw")
+        )
+        context = super().get_context_data(**kwargs)
+
+        if self.scope != "add":
+            context["remotelink"] = context["spider_GET"].copy()
+            context["auth_token"] = None
+            if self.request.auth_token:
+                context["auth_token"] = self.request.auth_token.token
+            context["remotelink"] = "{}{}?{}".format(
+                context["hostpart"],
+                reverse("spider_base:ucontent-access", kwargs={
+                    "id": self.object.id,
+                    "nonce": self.object.nonce,
+                    "access": "view"
+                }),
+                context["remotelink"].urlencode()
+            )
+        return context
+
+    def get_form_success_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        return {
+            'initial': self.get_initial(),
+            'instance': self.object,
+            'prefix': self.get_prefix()
+        }
+
+    def test_func(self):
+        if self.scope not in ["update", "raw_update", "export"]:
+            return super().test_func()
+        # give user and staff the ability to update Content
+        # except it is protected, in this case only the user can update
+        # reason: admins could be tricked into malicious updates
+        # for index the same reason as for add
+        uncritically = self.usercomponent.name != "index"
+        if self.has_special_access(staff=uncritically, superuser=uncritically):
+            self.request.auth_token = self.create_admin_token()
+            return True
+        return False
+
+    def render_to_response(self, context):
+        rendered = self.object.content.render(
+            **context
+        )
+        # return response if content returned response
+        # useful for redirects and raw update
+        if isinstance(rendered, HttpResponseBase):
+            return rendered
+
+        context["content"] = rendered
+        return super().render_to_response(context)
+
+    def get_usercomponent(self):
+        if self.object:
+            return self.object.usercomponent
+        return self.get_object().usercomponent
+
+    def get_user(self):
+        return self.usercomponent.user
+
+    def get_object(self, queryset=None):
+        if not queryset:
+            queryset = self.get_queryset()
+        return get_object_or_404(
+            queryset.select_related(
+                "usercomponent", "usercomponent__user",
+                "usercomponent__user__spider_info"
+            ),
+            id=self.kwargs["id"],
+            nonce=self.kwargs["nonce"]
+        )
 
 
 class ContentRemove(EntityDeletionMixin, DeleteView):

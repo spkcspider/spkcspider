@@ -9,4 +9,13 @@ class WebConfigForm(forms.ModelForm):
 
     class Meta:
         model = WebConfig
-        fields = ['config']  # , 'created', 'modified', 'url']
+        fields = ['config', 'url']
+
+    def __init__(self, *, scope=None, user=None, **kwargs):
+        super().__init__(**kwargs)
+        if scope not in ("add", "update", "export"):
+            del self.fields["url"]
+            if scope is not None:
+                del self.fields["config"]
+        elif scope is not None and not user.is_superuser and not user.is_staff:
+            self.fields["config"].disabled = True

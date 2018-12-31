@@ -74,9 +74,7 @@ def add_by_field(dic, field="__name__"):
 def extract_app_dicts(app, name, fieldname=None):
     ndic = {}
     for (key, value) in getattr(app, name, _empty_dict).items():
-        if value is None:
-            ndic[key] = value
-        elif inspect.isclass(value):
+        if inspect.isclass(value):
             if "{}.{}".format(
                 value.__module__, value.__qualname__
             ) not in getattr(

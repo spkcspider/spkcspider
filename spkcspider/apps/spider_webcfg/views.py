@@ -14,7 +14,7 @@ from django.views.generic.edit import FormView
 
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
-from spkcspider.apps.spider.models import AuthToken
+from spkcspider.apps.spider.models import AuthToken, AssignedContent
 
 from .models import WebConfig
 from .forms import WebConfigForm
@@ -57,9 +57,22 @@ class WebConfigForm(UCTestMixin, FormView):
         return self.usercomponent.user
 
     def get_object(self, queryset=None):
-        return self.usercomponent.webconfig.get_or_create(
-            url=self.request.authtoken.extra["referrer"]
+        ret = self.usercomponent.contents.filter(
+            info__contains="\ntype=webconfig\nurl={}\n".format(
+                self.request.authtoken.extra["referrer"].replace("\n", "%0A")
+            ),
+            usercomponent=self.usercomponent
+        ).first()
+        if ret:
+            return ret.content
+        associated = AssignedContent(
+            usercomponent=self.usercomponent
         )
+        ret = self.model.create_static(associated)
+        ret.url = self.request.authtoken.extra["referrer"]
+        ret.clean()
+        ret.save()
+        return ret
 
     def form_invalid(self, form):
         if settings.DEBUG:

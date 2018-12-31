@@ -1,21 +1,32 @@
 __all__ = ["WebConfig"]
 
 from django.db import models
+from spkcspider.apps.spider.contents import BaseContent
 
 # from ..constants import MAX_NONCE_SIZE, hex_size_of_bigid
 
 
-class WebConfig(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
-    usercomponent = models.ForeignKey(
-        "spider_base.UserComponent", on_delete=models.CASCADE,
-        related_name="webconfigs", null=False, blank=False
-    )
+class WebConfig(BaseContent):
+
     # key = models.SlugField(
     #     max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
     #     db_index=True
     # )
     url = models.URLField(max_length=800)
     config = models.TextField(default="", blank=True)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    modified = models.DateTimeField(auto_now=True, editable=False)
+
+    def get_form_kwargs(self, **kwargs):
+        ret = super().get_form_kwargs(**kwargs)
+        ret["scope"] = kwargs["scope"]
+        ret["user"] = kwargs["request"].user
+        return ret
+
+    def get_form(self, scope):
+        from .forms import WebConfigForm as f
+        return f
+
+    def get_info(self):
+        ret = super().get_info(primary=True)
+        return "{}url={}\n".format(
+            ret, self.url.replace("\n", "%0A")
+        )
