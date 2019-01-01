@@ -38,23 +38,14 @@ class ComponentIndexBase(ListView):
     def get_queryset(self):
         searchq = models.Q()
         searchq_exc = models.Q()
-        infoq = models.Q()
-        infoq_exc = models.Q()
-        # exclude unlisted content in search, except if owner and raw
-        if not (
-            self.request.is_owner and self.scope in ["export", "raw"]
-        ):
-            infoq_exc |= models.Q(contents__info__contains="\nunlisted\n")
         order = None
         counter = 0
         max_counter = 30  # against ddos
         if "search" in self.request.POST or "info" in self.request.POST:
             searchlist = self.request.POST.getlist("search")
-            infolist = self.request.POST.getlist("info")
             idlist = self.request.POST.getlist("id")
         else:
             searchlist = self.request.GET.getlist("search")
-            infolist = self.request.GET.getlist("info")
             idlist = self.request.POST.getlist("id")
 
         for item in searchlist:
@@ -63,18 +54,30 @@ class ComponentIndexBase(ListView):
             counter += 1
             if len(item) == 0:
                 continue
+            use_info = False
             if item.startswith("!!"):
                 _item = item[1:]
+            elif item.startswith("__"):
+                _item = item[1:]
+            elif item.startswith("!_"):
+                _item = item[2:]
+                use_info = True
             elif item.startswith("!"):
                 _item = item[1:]
+            elif item.startswith("_"):
+                _item = item[1:]
+                use_info = True
             else:
                 _item = item
-            qob = models.Q(
-                contents__info__icontains=_item
-            )
-            qob |= models.Q(
-                description__icontains=_item
-            )
+            if use_info:
+                qob = models.Q(contents__info__contains="\n%s\n" % _item)
+            else:
+                qob = models.Q(
+                    contents__info__icontains=_item
+                )
+                qob |= models.Q(
+                    description__icontains=_item
+                )
             if _item == "index":
                 qob |= models.Q(
                     strength=10
@@ -91,22 +94,16 @@ class ComponentIndexBase(ListView):
             else:
                 searchq |= qob
 
-        for item in infolist:
-            if counter > max_counter:
-                break
-            counter += 1
-            if len(item) == 0:
-                continue
-            if item.startswith("!!"):
-                infoq |= models.Q(contents__info__contains="\n%s\n" % item[1:])
-            elif item.startswith("!"):
-                infoq_exc |= models.Q(
-                    contents__info__contains="\n%s\n" % item[1:]
-                )
-            else:
-                infoq |= models.Q(contents__info__contains="\n%s\n" % item)
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
+
+        # list only unlisted if explicity requested or export is used
+        # ComponentPublicIndex doesn't allow unlisted in any case
+        # this is enforced by setting "is_special_user" to False
+        if not (
+            self.request.is_special_user and "_unlisted" in searchlist
+        ) or self.scope == "export":
+            searchq_exc |= models.Q(contents__info__contains="\nunlisted\n")
 
         if idlist:
             ids = map(lambda x: int(x), idlist)
@@ -122,9 +119,7 @@ class ComponentIndexBase(ListView):
             order = self.get_ordering(counter > 0)
         ret = self.model.objects.prefetch_related(
             "contents"
-        ).filter(
-            searchq & ~searchq_exc & infoq & ~infoq_exc,
-        ).distinct()
+        ).filter(searchq & ~searchq_exc).distinct()
         if order:
             ret = ret.order_by(*order)
         return ret
@@ -215,6 +210,7 @@ class ComponentPublicIndex(ComponentIndexBase):
     def dispatch(self, request, *args, **kwargs):
         self.request.is_elevated_request = False
         self.request.is_owner = False
+        self.request.is_special_user = False
         self.request.auth_token = None
         return super().dispatch(request, *args, **kwargs)
 

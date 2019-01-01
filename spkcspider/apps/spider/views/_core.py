@@ -48,6 +48,7 @@ class UserTestMixin(AccessMixin):
         _ = gettext
         self.request.is_elevated_request = False
         self.request.is_owner = False
+        self.request.is_special_user = False
         self.request.auth_token = None
         try:
             user_test_result = self.test_func()
@@ -203,16 +204,19 @@ class UserTestMixin(AccessMixin):
         if self.request.user == self.usercomponent.user:
             self.request.is_elevated_request = True
             self.request.is_owner = True
+            self.request.is_special_user = True
             return True
         # remove user special state if is_fake
         if self.request.session.get("is_fake", False):
             return False
         if superuser and self.request.user.is_superuser:
             self.request.is_elevated_request = True
+            self.request.is_special_user = True
             return True
         if staff and self.request.user.is_staff:
             if not staff_perm or self.request.user.has_perm(staff_perm):
                 self.request.is_elevated_request = True
+                self.request.is_special_user = True
                 return True
         return False
 

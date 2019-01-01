@@ -134,18 +134,22 @@ There are some special GET parameters for services with special requirements:
 * raw=embed: embed content
 * id=id&id=id: limit content ids
 * search=foo&search=!notfoo: search case insensitive a string
-* info=foo&info=!notfoo: search info tag in info. Restricts search.
+* search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
 * referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if strength > 0
 * [embed_big=true]: only staff and superuser can use it. Overrides maximal size of files which are embedded
 
-## search and info parameters
+## search parameters
 
 * search also searches UserComponents name and description fields
 * can only be used with "list"-views
 * items can be negated with !foo
+* strict infofield search can be activated with =
 * !!foo escapes a !foo item
+* \_\_foo escapes a =foo item
+* != negates a strict infofield search
+* \_unlisted is a special search: it lists with "unlisted" marked contents
 
 verified_by urls should return last verification date for a hash
 

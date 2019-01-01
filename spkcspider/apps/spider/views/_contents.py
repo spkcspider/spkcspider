@@ -111,6 +111,9 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
                     assignedcontent__usercomponent=self.usercomponent
                 )
         context["is_public_view"] = self.usercomponent.public
+        context["has_unlisted"] = self.usercomponent.contents.filter(
+            info__contains="\nunlisted\n"
+        ).exists()
 
         context["remotelink"] = context["spider_GET"].copy()
         context["auth_token"] = None
@@ -149,8 +152,6 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
 
         searchq = models.Q()
         searchq_exc = models.Q()
-        infoq = models.Q()
-        infoq_exc = models.Q()
 
         counter = 0
         # against ddos
@@ -158,11 +159,9 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
 
         if "search" in self.request.POST or "info" in self.request.POST:
             searchlist = self.request.POST.getlist("search")
-            infolist = self.request.POST.getlist("info")
             idlist = self.request.POST.getlist("id")
         else:
             searchlist = self.request.GET.getlist("search")
-            infolist = self.request.GET.getlist("info")
             idlist = self.request.GET.getlist("id")
 
         for item in searchlist:
@@ -171,34 +170,34 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
             counter += 1
             if len(item) == 0:
                 continue
+            use_info = False
             if item.startswith("!!"):
-                searchq |= models.Q(
-                    info__icontains=item[1:]
-                )
+                _item = item[1:]
+            elif item.startswith("__"):
+                _item = item[1:]
+            elif item.startswith("!_"):
+                _item = item[2:]
+                use_info = True
             elif item.startswith("!"):
-                searchq_exc |= models.Q(
-                    info__icontains=item[1:]
-                )
+                _item = item[1:]
+            elif item.startswith("_"):
+                _item = item[1:]
+                use_info = True
             else:
-                searchq |= models.Q(
-                    info__icontains=item
+                _item = item
+            if use_info:
+                qob = models.Q(info__contains="\n%s\n" % _item)
+            else:
+                qob = models.Q(
+                    info__icontains=_item
                 )
-
-        for item in infolist:
-            if counter > max_counter:
-                break
-            counter += 1
-            if len(item) == 0:
-                continue
-
             if item.startswith("!!"):
-                infoq |= models.Q(info__contains="\n%s\n" % item[1:])
+                searchq |= qob
             elif item.startswith("!"):
-                infoq_exc |= models.Q(
-                    info__contains="\n%s\n" % item[1:]
-                )
+                searchq_exc |= qob
             else:
-                infoq |= models.Q(info__contains="\n%s\n" % item)
+                searchq |= qob
+
         if idlist:
             ids = map(lambda x: int(x), idlist)
             searchq &= (
@@ -212,16 +211,14 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
             if ids is not None:
                 searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
 
-        order = self.get_ordering(counter > 0)
-        ret = ret.filter(
-            searchq & infoq & ~searchq_exc & ~infoq_exc
-        )
+        # list only unlisted if explicity requested or export
         if not (
-            self.request.is_owner and self.scope in ["export", "raw"]
-        ):
-            ret = ret.exclude(
-                info__contains="\nunlisted\n"
-            )
+            self.request.is_special_user and "_unlisted" in searchlist
+        ) or self.scope == "export":
+            searchq_exc |= models.Q(info__contains="\nunlisted\n")
+        order = self.get_ordering(counter > 0)
+        # distinct required?
+        ret = ret.filter(searchq & ~searchq_exc).distinct()
         if order:
             ret = ret.order_by(*order)
         return ret
