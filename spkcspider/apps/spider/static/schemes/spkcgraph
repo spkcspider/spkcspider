@@ -85,7 +85,7 @@ spkc:hashableURI a rdfs:Datatype ;
 spkc:value a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "value" ;
-  rdfs:comment "The value of a spkc:property" ;
+  rdfs:comment "The value of spkc:properties" ;
   rdfs:domain spkc:Property ;
   rdfs:range rdfs:Literal .
 
@@ -118,9 +118,16 @@ spkc:action:view a rdf:Property ;
   rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Resource .
 
+spkc:action:feature a rdf:Property ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "feature url" ;
+  rdfs:comment "Access Feature" ;
+  rdfs:domain spkc:Entity ;
+  rdfs:range rdfs:Resource .
+
 spkc:action:update a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "update" ;
+  rdfs:label "update url" ;
   rdfs:comment "(Optional) Update Resource. In raw mode not defined." ;
   rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Resource .
@@ -132,6 +139,12 @@ spkc:action:delete a rdf:Property ;
   rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Resource .
 
+spkc:feature:name a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "feature name" ;
+  rdfs:comment "Annotates Feature Url with name" ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range rdf:string .
 
 spkc:pages.num_pages a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

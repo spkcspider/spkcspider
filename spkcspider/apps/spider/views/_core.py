@@ -25,7 +25,7 @@ import requests
 import certifi
 
 from ..helpers import merge_get_url, get_settings_func
-from ..constants import UserContentType, index_names
+from ..constants import VariantType, index_names
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
 )
@@ -74,7 +74,7 @@ class UserTestMixin(AccessMixin):
         return GET
 
     def get_context_data(self, **kwargs):
-        kwargs["raw_update_type"] = UserContentType.raw_update.value
+        kwargs["raw_update_type"] = VariantType.raw_update.value
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )

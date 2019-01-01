@@ -14,7 +14,7 @@ from ..models import (
 from ..helpers import create_b64_token
 from ..constants import (
     ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names,
-    protected_names, UserContentType
+    protected_names, VariantType
 )
 
 _help_text = _("""Generate a new nonce token with variable strength<br/>
@@ -40,9 +40,9 @@ class UserComponentForm(forms.ModelForm):
         required=False, initial="", choices=NONCE_CHOICES
     )
     features = forms.ModelMultipleChoiceField(
-        label=_("Available Features"),
-        required=False, initial="", queryset=ContentVariant.objects.filter(
-            ctype__contains=UserContentType.feature.value
+        label=_("Component Features"), required=False, initial="",
+        queryset=ContentVariant.objects.filter(
+            ctype__contains=VariantType.feature.value
         ),
         widget=Select2Multiple(
             attrs={
@@ -87,6 +87,7 @@ class UserComponentForm(forms.ModelForm):
                 self.fields["public"].disabled = True
                 self.fields.pop("featured", None)
             if self.instance.name in index_names:
+                self.fields.pop("features", None)
                 self.fields.pop("featured", None)
                 self.fields["required_passes"].help_text = _(
                     "How many protections must be passed to login?<br/>"

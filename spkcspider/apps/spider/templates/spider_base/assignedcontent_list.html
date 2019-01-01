@@ -28,18 +28,26 @@
 <div>
   <div class="w3-padding">
     {% if request.user == uc.user %}
-      <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Up (Owned)' %}</a>
+      <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">
+        <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
+      </a>
     {% else %}
-      <a class="w3-left" href="{% url 'spider_base:ucomponent-listpublic' %}">{% trans 'up (Public)' %}</a>
+      <a class="w3-left" href="{% url 'spider_base:ucomponent-listpublic' %}">
+        <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Public' %}
+      </a>
     {% endif %}
-    <span class="w3-right">
+    <span class="w3-right w3-left-align">
       {% if request.user == uc.user %}
       <div style="margin-bottom:5px" class="actionbar_user">
-        <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.get_name nonce=uc.nonce %}">{% trans 'Update' %}</a>
+        <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.get_name nonce=uc.nonce %}">
+          <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Update' %}
+        </a>
       </div>
       {% endif %}
       <div style="margin-bottom:5px">
-        <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">{% trans 'Link/Export' %}</a>
+        <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
+          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
+        </a>
       </div>
       <div>
         {% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
@@ -64,6 +72,11 @@
         {% endblocktrans %}
       {% endif %}
     </h1>
+    {% for f in uc.features.all %}
+      <data hidden="hidden" property="spkc:action:feature" about="{{f.installed_class.action_url}}">
+        <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{f.name}}</data>
+      </data>
+    {% endfor %}
     <data hidden="hidden" rel="spkc:properties">
       <data hidden="hidden" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
@@ -82,13 +95,12 @@
     {% endif %}
   </div>
   {% list_parameters "search" as cur_search %}
-  {% list_parameters "info" as cur_info %}
-  {% if uc.user == request.user and not cur_search and not cur_info %}
+  {% if uc.user == request.user and not cur_search %}
     <details class="w3-margin" style="margin-bottom:30px" {% if object_list|length < 2 %}open="open"{% endif %}>
       <summary class="w3-button w3-hover-dark-grey w3-black">
-        <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
+        <i class="fas fa-plus" style="margin-right:10px" aria-hidden="true"></i>
         {% trans 'Add new content' %}
-        <i class="fa fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
+        <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
       </summary>
       <div class="w3-padding w3-border">
         <div class="w3-row">
@@ -111,6 +123,19 @@
         </div>
       </div>
     </details>
+  {% endif %}
+
+  {% if uc.features.exists %}
+  <div class="w3-padding">
+    <details open="open" class="w3-white w3-padding w3-border">
+      <summary class=""><h4>{% trans 'Active Component Features' %}:<i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i></h4></summary>
+      <div>
+        {% for f in uc.features.all %}
+          <span class="w3-padding" style="display:inline-block;white-space:nowrap;">{{f}}{% if not forloop.last %}, {% endif %}</span>
+        {% endfor %}
+      </div>
+    </details>
+  </div>
   {% endif %}
   <div class="w3-margin">
     <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="spkc:contents">
@@ -140,16 +165,16 @@
             <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
               <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" property="spkc:action:view">
-                <div class="spkc-entity-button"><i class="fa fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
+                <div class="spkc-entity-button"><i class="fas fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "View" %}</div></div>
               </a>
               {% if uc.user == request.user  %}
               <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}" property="spkc:action:update">
-                <div class="spkc-entity-button"><i class="fa fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
+                <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
               </a>
               <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="spkc:action:delete">
-                <div class="spkc-entity-button"><i class="fa fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
+                <div class="spkc-entity-button"><i class="fas fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Del" %}</div></div>
               </a>
               {% endif %}

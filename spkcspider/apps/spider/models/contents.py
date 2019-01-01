@@ -22,7 +22,7 @@ from django.utils.translation import gettext_lazy as _
 
 from ..contents import BaseContent, add_content
 from ..constants.static import (
-    TravelLoginType, UserContentType
+    TravelLoginType, VariantType
 )
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class LinkContent(BaseContent):
     appearances = [{
         "name": "Link",
-        "ctype": UserContentType.raw_update.value
+        "ctype": VariantType.raw_update.value
     }]
 
     content = models.ForeignKey(
@@ -165,7 +165,7 @@ class TravelProtection(BaseContent):
         {
             "name": "TravelProtection",
             "strength": 10,
-            # "ctype": UserContentType.unique.value
+            # "ctype": VariantType.unique.value
         }
     ]
 

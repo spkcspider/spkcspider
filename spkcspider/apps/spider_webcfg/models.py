@@ -2,7 +2,7 @@ __all__ = ["WebConfig"]
 
 from django.db import models
 
-from spkcspider.apps.spider.constants.static import UserContentType
+from spkcspider.apps.spider.constants.static import VariantType
 from spkcspider.apps.spider.contents import BaseContent, add_content
 
 
@@ -11,7 +11,7 @@ class WebConfig(BaseContent):
     appearances = [
         {
             "name": "WebConfig",
-            "ctype": UserContentType.unique + UserContentType.feature,
+            "ctype": VariantType.unique + VariantType.feature,
             "strength": 10
         }
     ]

@@ -36,26 +36,28 @@
     <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">0</data>
     {% else %}
     <span class="w3-left">
-      <a class="" href="{% url 'spider_base:ucomponent-listpublic' %}?{{request.GET.urlencode}}">{% trans 'Up (Public)' %}</a>
+      <a class="" href="{% url 'spider_base:ucomponent-listpublic' %}?{{request.GET.urlencode}}">
+        <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Public' %}
+      </a>
     </span>
     <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">10</data>
     {% endif %}
     {% if request.user.is_authenticated %}
-      <span class="w3-right">
+      <span class="w3-right w3-left-align">
         <div style="margin-bottom:10px">
           <a href="{% url 'spider_base:ucomponent-create' %}">
-            <i class="fa fa-plus" style="margin-right:10px" aria-hidden="true"></i>
+            <i class="fas fa-plus" style="margin-right:10px" aria-hidden="true"></i>
             {% trans 'Add New Component' %}
           </a>
         </div>
         {% if listpublic == request.path %}
-          <div style="text-align:right;">
-            <a href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Owned' %}</a>
+          <div>
+            <i class="fas fa-ul" style="margin-right:10px" aria-hidden="true"></i><a href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Owned' %}</a>
           </div>
         {% else %}
-          <div style="text-align:right;">
+          <div>
             <a href="{% url 'spider_base:ucomponent-export' user=request.user %}">
-              {% trans 'Export' %}
+              <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Export' %}
             </a>
           </div>
         {% endif %}

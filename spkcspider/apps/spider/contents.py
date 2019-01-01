@@ -18,7 +18,7 @@ from django.utils.translation import pgettext
 
 from rdflib import Literal, Graph, BNode, URIRef
 
-from .constants import UserContentType, spkcgraph
+from .constants import VariantType, spkcgraph
 from .serializing import paginate_stream, serialize_stream
 from .helpers import merge_get_url, get_settings_func, add_property
 
@@ -63,6 +63,11 @@ def initialize_content_models(apps=None):
         for dic in appearances:
             assert dic["name"] not in forbidden_names, \
                 "Forbidden content name: %" % dic["name"]
+
+            assert (
+                VariantType.feature.value not in dic.get("ctype", "") or
+                BaseContent.get_absolute_url is not val.get_absolute_url
+            ), "Feature doesn't overwrite get_absolute_url: %" % dic["name"]
             if update:
                 variant = ContentVariant.objects.get_or_create(
                     defaults=dic, code=code
@@ -422,6 +427,21 @@ class BaseContent(models.Model):
                 session_dict["sourceref"], spkcgraph["strength"],
                 Literal(uc.strength)
             ))
+            if kwargs["scope"] != "export":
+                for feature in uc.features.all():
+                    ref_feature = URIRef(
+                        feature.installed_class.action_url()
+                    )
+                    g.add((
+                        session_dict["sourceref"],
+                        spkcgraph["action:feature"],
+                        ref_feature
+                    ))
+                    g.add((
+                        ref_feature,
+                        spkcgraph["feature:name"],
+                        feature.name
+                    ))
 
         ret = HttpResponse(
             g.serialize(format="turtle"),
@@ -475,11 +495,11 @@ class BaseContent(models.Model):
         # passing down these parameters not neccessary
         if unique is None:
             unique = (
-                UserContentType.unique.value in self.associated.ctype.ctype
+                VariantType.unique.value in self.associated.ctype.ctype
             )
         if unlisted is None:
             unlisted = (
-                UserContentType.feature.value in self.associated.ctype.ctype
+                VariantType.feature.value in self.associated.ctype.ctype
             )
         idtag = "primary\n"
         # simulates beeing not unique, by adding id

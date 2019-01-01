@@ -22,9 +22,9 @@ from django.core import validators
 from ..contents import installed_contents
 from ..protections import installed_protections
 
-# from ..constants import UserContentType
+# from ..constants import VariantType
 from ..helpers import create_b64_token
-from ..constants.static import MAX_NONCE_SIZE, UserContentType
+from ..constants.static import MAX_NONCE_SIZE, VariantType
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class ContentVariant(models.Model):
 
     @property
     def unique_for_component(self):
-        return UserContentType.unique.value in self.ctype
+        return VariantType.unique.value in self.ctype
 
     def __str__(self):
         return self.localize_name()
@@ -114,7 +114,7 @@ class AssignedContent(models.Model):
     ctype = models.ForeignKey(
         ContentVariant, editable=False, null=True,
         on_delete=models.SET_NULL, limit_choices_to=~models.Q(
-            ctype__contains=UserContentType.feature.value
+            ctype__contains=VariantType.feature.value
         )
     )
 

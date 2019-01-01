@@ -15,7 +15,7 @@ from rdflib import URIRef, Literal
 from rdflib.namespace import XSD
 
 
-from .constants.static import spkcgraph
+from .constants.static import spkcgraph, VariantType
 from .helpers import merge_get_url, add_property
 
 
@@ -39,6 +39,13 @@ def serialize_content(graph, content, context, embed=False):
     if token:
         token = token.token
     url2 = merge_get_url(url_content, token=token)
+    if VariantType.feature.value in content.associated.ctype.ctype:
+        graph.add((
+            ref_content,
+            spkcgraph["type"],
+            Literal("Feature")
+        ))
+
     graph.add(
         (
             ref_content,
@@ -105,8 +112,13 @@ def serialize_component(graph, component, context, visible=True):
             graph, "token_duration", ref=ref_component, ob=component
         )
         graph.add((
-            ref_component, spkcgraph["strength"], component.strength
+            ref_component, spkcgraph["strength"], Literal(component.strength)
         ))
+        for feature in component.features.all():
+            add_property(
+                graph, "features", ref=ref_component,
+                literal=feature.name
+            )
     if (
         context.get("uc_namespace", None) and
         context["sourceref"] != ref_component
@@ -177,7 +189,13 @@ def serialize_stream(
         raise exc
     if paginator.object_list.model == UserComponent:
         for component in page_view.object_list:
-            serialize_component(graph, component, context)
+            ref_component = serialize_component(graph, component, context)
+            if ref_component:
+                for feature in component.features:
+                    add_property(
+                        graph, "features", ref=ref_component,
+                        literal=feature.name
+                    )
     else:
         ref_component = None
         usercomponent = None
@@ -188,6 +206,21 @@ def serialize_stream(
                     graph, usercomponent, context,
                     visible=visible
                 )
+                if ref_component and context["scope"] != "export":
+                    for feature in usercomponent.features.all():
+                        ref_feature = URIRef(
+                            feature.installed_class.action_url()
+                        )
+                        graph.add((
+                            ref_component,
+                            spkcgraph["action:feature"],
+                            ref_feature
+                        ))
+                        graph.add((
+                            ref_feature,
+                            spkcgraph["feature:name"],
+                            feature.name
+                        ))
 
             ref_content = serialize_content(
                 graph, content, context, embed=embed

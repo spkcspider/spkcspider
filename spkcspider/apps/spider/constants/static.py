@@ -1,6 +1,6 @@
 
 __all__ = (
-    "ProtectionType", "UserContentType", "ProtectionResult",
+    "ProtectionType", "VariantType", "ProtectionResult",
     "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
     "TokenCreationError", "index_names", "protected_names", "spkcgraph",
     "dangerous_login_choices"
@@ -47,7 +47,7 @@ class ProtectionType(str, enum.Enum):
     # The only real recovery is by staff and only if there is a secret
 
 
-class UserContentType(str, enum.Enum):
+class VariantType(str, enum.Enum):
     # allow outside applications push content to spiders
     # adds by default unlisted attribute
     # appears in features of userComponent

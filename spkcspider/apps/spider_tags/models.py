@@ -9,7 +9,7 @@ from jsonfield import JSONField
 
 
 from spkcspider.apps.spider.contents import (
-    BaseContent, add_content, UserContentType
+    BaseContent, add_content, VariantType
 )
 
 from spkcspider.apps.spider.models import AssignedContent
@@ -60,7 +60,7 @@ class UserTagLayout(BaseContent):
     appearances = [
         {
             "name": "TagLayout",
-            "ctype": UserContentType.unique.value,
+            "ctype": VariantType.unique.value,
             "strength": 10
         }
     ]

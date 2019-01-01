@@ -25,7 +25,7 @@ from jsonfield import JSONField
 # from ..apps import installed_componentfeatures
 from ..helpers import create_b64_token, get_settings_func
 from ..constants import (
-    ProtectionType, UserContentType, MAX_NONCE_SIZE, hex_size_of_bigid,
+    ProtectionType, VariantType, MAX_NONCE_SIZE, hex_size_of_bigid,
     TokenCreationError,
     default_uctoken_duration, force_captcha, index_names
 )
@@ -130,7 +130,7 @@ class UserComponent(models.Model):
     features = models.ManyToManyField(
         "spider_base.ContentVariant", related_name="supports", blank=True,
         limit_choices_to=models.Q(
-            ctype__contains=UserContentType.feature.value
+            ctype__contains=VariantType.feature.value
         )
     )
     created = models.DateTimeField(auto_now_add=True, editable=False)
@@ -313,7 +313,7 @@ class UserInfo(models.Model):
         )
         # remove features before filtering allowed content
         for variant in ContentVariant.objects.exclude(
-            ctype__contains=UserContentType.feature.value
+            ctype__contains=VariantType.feature.value
         ):
             if cfilterfunc(self.user, variant):
                 allowed.append(variant)

@@ -12,7 +12,7 @@ from django.utils.translation import pgettext
 
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.constants import UserContentType
+from spkcspider.apps.spider.constants import VariantType
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ def valid_pkey_properties(key):
 @add_content
 class PublicKey(BaseContent):
     appearances = [
-        {"name": "PublicKey", "ctype": UserContentType.unique.value}
+        {"name": "PublicKey", "ctype": VariantType.unique.value}
     ]
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
@@ -136,7 +136,7 @@ class AnchorServer(BaseContent):
     appearances = [
         {
             "name": "AnchorServer",
-            "ctype": UserContentType.anchor.value,
+            "ctype": VariantType.anchor.value,
             "strength": 7
         }
     ]
@@ -194,7 +194,7 @@ class AnchorKey(AnchorServer):
     appearances = [
         {
             "name": "AnchorKey",
-            "ctype": UserContentType.anchor+UserContentType.unique,
+            "ctype": VariantType.anchor+VariantType.unique,
             "strength": 7
         }
     ]
@@ -217,7 +217,7 @@ class AnchorGov(object):
     appearances = [
         {
             "name": "AnchorGov",
-            "ctype": UserContentType.anchor+UserContentType.unique,
+            "ctype": VariantType.anchor+VariantType.unique,
             "strength": 7
         }
     ]

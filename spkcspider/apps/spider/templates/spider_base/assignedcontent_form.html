@@ -24,7 +24,7 @@
   </button>
   {% if scope == "update" and raw_update_type in object.ctype.ctype %}
     <a class="w3-button w3-grey" onclick="if(document.readyState === 'complete'){open_qrmodal_raw_update();}; return false;" href="#">
-      <i class="fa fa-settings" aria-hidden="true"></i>
+      <i class="fas fa-settings" aria-hidden="true"></i>
       {% trans 'Update Raw Content' %}
     </a>
   {% endif %}
@@ -40,7 +40,7 @@
 
 {% block outercontent %}
 {{block.super}}
-{# FIXME: fix not availabe UserContentType #}
+{# FIXME: fix not availabe VariantType #}
 {% if scope == "update" and raw_update_type in object.ctype.ctype %}
   {% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='raw_update' as raw_updatelink %}
   <script type="text/javascript">
