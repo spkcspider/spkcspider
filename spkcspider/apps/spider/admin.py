@@ -8,7 +8,7 @@ from .models import (
 
 
 @admin.register(AssignedContent)
-class UserContentAdmin(admin.ModelAdmin):
+class AssignedContentAdmin(admin.ModelAdmin):
     fields = ['info', 'created', 'modified', 'deletion_requested', 'nonce']
     readonly_fields = [
         'info', 'created', 'modified'
@@ -25,7 +25,7 @@ class UserContentAdmin(admin.ModelAdmin):
         # obj is UserComponent
         if obj.usercomponent.name == "index":
             return request.user.has_perm("{}.delete_{}".format(n, m))
-        return request.user.has_perm("spider_base.delete_usercontent")
+        return request.user.has_perm("spider_base.delete_assignedcontent")
 
     def has_view_permission(self, request, obj=None):
         if request.user.is_superuser:
@@ -33,7 +33,7 @@ class UserContentAdmin(admin.ModelAdmin):
         # obj is UserComponent
         if not obj or obj.usercomponent.name == "index":
             return False
-        return request.user.has_perm("spider_base.view_usercontent")
+        return request.user.has_perm("spider_base.view_assignedcontent")
 
     def has_change_permission(self, request, obj=None):
         if not request.user.is_active:
@@ -43,7 +43,7 @@ class UserContentAdmin(admin.ModelAdmin):
             return False
         if request.user.is_superuser:
             return True
-        return request.user.has_perm("spider_base.change_usercontent")
+        return request.user.has_perm("spider_base.change_assignedcontent")
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -65,7 +65,7 @@ class AssignedProtectionInline(admin.TabularInline):
         return False
 
 
-class UserContentInline(admin.TabularInline):
+class ContentInline(admin.TabularInline):
     model = AssignedContent
     fields = [
         'info', 'created', 'modified', 'deletion_requested', 'nonce'
@@ -110,7 +110,7 @@ class UserContentInline(admin.TabularInline):
 @admin.register(UserComponent)
 class UserComponentAdmin(admin.ModelAdmin):
     inlines = [
-        UserContentInline,
+        ContentInline,
         AssignedProtectionInline,
     ]
     actions = ["feature", "unfeature"]

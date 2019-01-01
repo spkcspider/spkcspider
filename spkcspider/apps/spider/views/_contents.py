@@ -25,7 +25,7 @@ from ..models import (
 )
 from ..forms import UserContentForm
 from ..helpers import get_settings_func, add_property
-from ..constants import spkcgraph
+from ..constants.static import spkcgraph
 from ..serializing import paginate_stream, serialize_stream
 
 
@@ -58,16 +58,6 @@ class ContentBase(UCTestMixin):
         kwargs["uc"] = self.usercomponent
         kwargs["enctype"] = "multipart/form-data"
         return super().get_context_data(**kwargs)
-
-    def test_func(self):
-        if self.has_special_access(staff=(self.usercomponent.name != "index"),
-                                   superuser=True):
-            self.request.auth_token = self.create_admin_token()
-            return True
-        # block view on special objects for non user and non superusers
-        if self.usercomponent.name == "index":
-            return False
-        return self.test_token()
 
 
 class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
@@ -226,6 +216,12 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
         ret = ret.filter(
             searchq & infoq & ~searchq_exc & ~infoq_exc
         )
+        if not (
+            self.request.is_owner and self.scope in ["export", "raw"]
+        ):
+            ret = ret.exclude(
+                info__contains="\nunlisted\n"
+            )
         if order:
             ret = ret.order_by(*order)
         return ret
@@ -472,16 +468,26 @@ class ContentAccess(
         }
 
     def test_func(self):
-        if self.scope not in ["update", "raw_update", "export"]:
-            return super().test_func()
         # give user and staff the ability to update Content
-        # except it is protected, in this case only the user can update
+        # except it is index, in this case only the user can update
         # reason: admins could be tricked into malicious updates
         # for index the same reason as for add
         uncritically = self.usercomponent.name != "index"
-        if self.has_special_access(staff=uncritically, superuser=uncritically):
+        staff_perm = "spider_base.view_assignedcontent"
+        if self.scope in ["update", "raw_update"]:
+            staff_perm = "spider_base.update_assignedcontent"
+        if self.has_special_access(
+            staff=uncritically, superuser=uncritically,
+            staff_perm=staff_perm
+        ):
             self.request.auth_token = self.create_admin_token()
             return True
+        # if not special or owner: block access to unlisted
+        # use Http404 for this
+        if "\nunlisted\n" in self.object.info:
+            raise Http404()
+        if self.scope not in ["update", "raw_update", "export"]:
+            return self.test_token()
         return False
 
     def render_to_response(self, context):

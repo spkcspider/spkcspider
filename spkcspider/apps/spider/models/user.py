@@ -311,7 +311,10 @@ class UserInfo(models.Model):
             "ALLOWED_CONTENT_FILTER",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )
-        for variant in ContentVariant.objects.all():
+        # remove features before filtering allowed content
+        for variant in ContentVariant.objects.exclude(
+            ctype__contains=UserContentType.feature.value
+        ):
             if cfilterfunc(self.user, variant):
                 allowed.append(variant)
         # save not required, m2m field

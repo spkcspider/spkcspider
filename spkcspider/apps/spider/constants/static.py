@@ -48,6 +48,9 @@ class ProtectionType(str, enum.Enum):
 
 
 class UserContentType(str, enum.Enum):
+    # allow outside applications push content to spiders
+    # adds by default unlisted attribute
+    # appears in features of userComponent
     feature = "a"
     # b not required anymore
     # update content is without form/for form updates it is not rendered
@@ -57,7 +60,7 @@ class UserContentType(str, enum.Enum):
     # d,e,f,g not assigned
 
     # is content unique for usercomponent
-    # together with confidential: unique for user
+    # together with strength level 10: unique for user
     unique = "h"
     # can be used as anchor, hash is automatically embedded
     anchor = "i"

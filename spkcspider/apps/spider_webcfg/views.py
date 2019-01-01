@@ -55,7 +55,7 @@ class WebConfigView(UCTestMixin, View):
 
     def get_object(self, queryset=None):
         ret = self.usercomponent.contents.filter(
-            info__contains="\ntype=webconfig\nurl={}\n".format(
+            info__contains="\nmodel=webconfig\nurl={}\n".format(
                 self.request.authtoken.extra["referrer"].replace("\n", "%0A")
             ),
             usercomponent=self.usercomponent

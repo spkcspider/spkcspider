@@ -40,6 +40,11 @@ class ComponentIndexBase(ListView):
         searchq_exc = models.Q()
         infoq = models.Q()
         infoq_exc = models.Q()
+        # exclude unlisted content in search, except if owner and raw
+        if not (
+            self.request.is_owner and self.scope in ["export", "raw"]
+        ):
+            infoq_exc |= models.Q(contents__info__contains="\nunlisted\n")
         order = None
         counter = 0
         max_counter = 30  # against ddos

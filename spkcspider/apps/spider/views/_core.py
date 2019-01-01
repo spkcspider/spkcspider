@@ -195,7 +195,9 @@ class UserTestMixin(AccessMixin):
             return True
         return False
 
-    def has_special_access(self, user=True, staff=False, superuser=True):
+    def has_special_access(
+        self, user=True, staff=False, superuser=True, staff_perm=None
+    ):
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
         if self.request.user == self.usercomponent.user:
@@ -209,8 +211,9 @@ class UserTestMixin(AccessMixin):
             self.request.is_elevated_request = True
             return True
         if staff and self.request.user.is_staff:
-            self.request.is_elevated_request = True
-            return True
+            if not staff_perm or self.request.user.has_perm(staff_perm):
+                self.request.is_elevated_request = True
+                return True
         return False
 
     def get_user(self):

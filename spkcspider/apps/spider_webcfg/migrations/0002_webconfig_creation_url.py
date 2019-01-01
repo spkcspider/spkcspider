@@ -13,7 +13,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='webconfig',
             name='creation_url',
-            field=models.URLField(default='https://spkcspider.net/'),
+            field=models.URLField(
+                default='https://spkcspider.net/', editable=False
+            ),
             preserve_default=False,
         ),
     ]

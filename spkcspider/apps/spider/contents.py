@@ -470,30 +470,32 @@ class BaseContent(models.Model):
         else:
             return self.render_view(**kwargs)
 
-    def get_info(self, unique=False):
-        # unique=False shortcuts for get_info overwrites
+    def get_info(self, unique=None, unlisted=None):
+        # unique=None, feature=None shortcuts for get_info overwrites
         # passing down these parameters not neccessary
-        if not unique:
+        if unique is None:
             unique = (
                 UserContentType.unique.value in self.associated.ctype.ctype
             )
-        if unique:
-            return "\ncode=%s\ntype=%s\nprimary\n" % \
-                (
-                    self._meta.model_name,
-                    self.associated.ctype.name,
-                )
-        else:
-            # simulates beeing not unique, by adding id
-            assignedid = "None"  # placeholder
+        if unlisted is None:
+            unlisted = (
+                UserContentType.feature.value in self.associated.ctype.ctype
+            )
+        idtag = "primary\n"
+        # simulates beeing not unique, by adding id
+        if not unique:
+            idtag = "id=None\n"  # placeholder
             if getattr(self.associated, "id", None):
-                assignedid = self.associated.id
-            return "\ncode=%s\ntype=%s\nid=%s\n" % \
-                (
-                    self._meta.model_name,
-                    self.associated.ctype.name,
-                    assignedid
-                )
+                idtag = "id={}\n".format(self.associated.id)
+        unlistedtag = ""
+        if unlisted:
+            unlistedtag = "unlisted\n"
+        return "\nmodel={}\ntype={}\n{}{}".format(
+            self._meta.model_name,
+            self.associated.ctype.name,
+            idtag,
+            unlistedtag
+        )
 
     def full_clean(self, **kwargs):
         # checked with clean
