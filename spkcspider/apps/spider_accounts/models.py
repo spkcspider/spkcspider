@@ -33,6 +33,3 @@ class SpiderUser(AbstractUser):
 
     class Meta(AbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
-
-    # def get_absolute_url(self):
-    #    return reverse_lazy()

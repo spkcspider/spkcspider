@@ -160,6 +160,10 @@ class BaseContent(models.Model):
     def get_size(self):
         return 0
 
+    @classmethod
+    def action_url(cls):
+        raise NotImplementedError
+
     def get_strength(self):
         """ get required strength """
         return self.associated.ctype.strength

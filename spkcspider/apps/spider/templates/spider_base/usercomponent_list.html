@@ -31,7 +31,9 @@
   <div class="w3-padding">
     {% if listpublic == request.path %}
     <span class="w3-left">
-      <a class="w3-block" style="margin-bottom:10px" href="{% url 'home' %}?{{request.GET.urlencode}}">{% trans 'Home' %}</a>
+      <a class="w3-block" style="margin-bottom:10px" href="{% url 'home' %}?{{request.GET.urlencode}}">
+        <i class="fas fa-home" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Home' %}
+      </a>
     </span>
     <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">0</data>
     {% else %}
@@ -52,7 +54,9 @@
         </div>
         {% if listpublic == request.path %}
           <div>
-            <i class="fas fa-ul" style="margin-right:10px" aria-hidden="true"></i><a href="{% url 'spider_base:ucomponent-list' %}">{% trans 'Owned' %}</a>
+            <a href="{% url 'spider_base:ucomponent-list' %}">
+              <i class="fas fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
+            </a>
           </div>
         {% else %}
           <div>
