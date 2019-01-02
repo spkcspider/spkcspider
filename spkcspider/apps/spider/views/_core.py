@@ -359,18 +359,26 @@ class ReferrerMixin(object):
             # client side rdf is no problem
             # NOTE: csrf must be disabled or use csrf token from GET,
             #       here is no way to know the token value
-            ret = requests.post(
-                context["referrer"],
-                data={
-                    "token": token,
-                    "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
-                    "url": merge_get_url("%s%s" % (
-                        context["hostpart"],
-                        self.request.get_full_path()
-                    ), token=None)
-                },
-                verify=certifi.where()
-            )
+            try:
+                ret = requests.post(
+                    context["referrer"],
+                    data={
+                        "token": token,
+                        "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
+                        "url": merge_get_url("%s%s" % (
+                            context["hostpart"],
+                            self.request.get_full_path()
+                        ), token=None)
+                    },
+                    verify=certifi.where()
+                )
+            except requests.exceptions.SSLError:
+                return HttpResponse(
+                    status=400,
+                    content=_('insecure url: %(url)s') % {
+                        "url": context["referrer"]
+                    }
+                )
             if ret.status_code not in (200, 201):
                 return HttpResponseRedirect(
                     redirect_to=merge_get_url(
@@ -383,7 +391,8 @@ class ReferrerMixin(object):
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
-                    hash=h.hexdigest()
+                    hash=h.hexdigest(),
+                    algorithm=settings.SPIDER_HASH_ALGORITHM
                 )
             )
         elif action == "cancel":
