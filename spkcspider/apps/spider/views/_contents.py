@@ -25,7 +25,7 @@ from ..models import (
 )
 from ..forms import UserContentForm
 from ..helpers import get_settings_func, add_property
-from ..constants.static import spkcgraph
+from ..constants.static import spkcgraph, VariantType
 from ..serializing import paginate_stream, serialize_stream
 
 
@@ -105,10 +105,14 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
         context = super().get_context_data(**kwargs)
         if self.usercomponent.user == self.request.user:
             context["content_variants"] = \
-                self.usercomponent.user_info.allowed_content.all()
+                self.usercomponent.user_info.allowed_content.exclude(
+                    ctype__contains=VariantType.feature.value
+                )
             context["content_variants_used"] = \
                 self.usercomponent.user_info.allowed_content.filter(
                     assignedcontent__usercomponent=self.usercomponent
+                ).exclude(
+                    ctype__contains=VariantType.feature.value
                 )
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(

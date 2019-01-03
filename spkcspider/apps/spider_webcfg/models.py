@@ -13,7 +13,7 @@ class WebConfig(BaseContent):
         {
             "name": "WebConfig",
             "ctype": VariantType.unique + VariantType.feature,
-            "strength": 10
+            "strength": 5
         }
     ]
 
@@ -39,7 +39,7 @@ class WebConfig(BaseContent):
         return f
 
     def get_info(self):
-        ret = super().get_info(primary=True)
+        ret = super().get_info(unique=True)
         return "{}url={}\n".format(
             ret, self.url.replace("\n", "%0A")
         )

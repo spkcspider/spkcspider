@@ -8,18 +8,19 @@ from urllib.parse import parse_qs, urlsplit
 
 class ReferrerServer(HTTPServer):
     tokens = None
+    unverified = None
     runthread = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.tokens = []
+        self.tokens = {}
+        self.unverified = {}
         self.runthread = threading.Thread(target=self.serve_forever)
         self.runthread.daemon = True
         self.runthread.run()
 
 
 class ReferrerHandler(BaseHTTPRequestHandler):
-    secret = None
     query = None
 
     def do_POST(self):
@@ -27,30 +28,59 @@ class ReferrerHandler(BaseHTTPRequestHandler):
         if not length:
             self.send_error(400)
             return
-        self.secret = self.rfile.read(int(length))
+
+        self.query = parse_qs(self.rfile.read(int(length)))
+        print(self.query)
+
+        algo = self.query.get(
+            b"hash_algorithm", [b"sha512"]
+        )[0].decode("ascii")
+        h = hashlib.new(algo)
+        h.update(self.query[b"token"][0])
+        hdigest = h.hexdigest()
+
+        self.server.unverified[hdigest] = {
+            "token": self.query[b"token"][0].decode("ascii"),
+            "referrer": self.headers.get("Referer", "None"),
+            "digest": hdigest
+        }
+        self.send_response(200)
+        self.end_headers()
 
     def do_GET(self):
-        sp = urlsplit(self.address_string())
+        sp = urlsplit(self.path)
         self.query = parse_qs(sp.query)
         # check secret
-        if not self.secret:
-            hdigest = "None"
-        else:
-            h = hashlib.new(self.query.get("algorithm", "sha512"))
-            h.update(self.secret)
-            hdigest = h.hexdigest()
 
         if "hash" not in self.query:
-            answer = "Hash: {}\nnothing, unrelated query".format(hdigest)
+            answer = "Hash: None\nnothing, unrelated query"
             answer = answer.encode("utf8")
             self.send_response(200)
             self.send_header("Content-Type", "text/plain")
             self.send_header("Content-Length", "{}".format(len(answer)))
             self.end_headers()
             self.wfile.write(answer)
-        elif hdigest == self.query["hash"]:
-            self.server.tokens.append(self.secret)
-            answer = "Hash: {}\nsuccess".format(hdigest)
+        elif self.query["hash"][0] in self.server.unverified:
+            self.server.tokens[self.query["hash"][0]] = \
+                self.server.unverified.pop(self.query["hash"][0])
+            answer = "Token: {}\nHash: {}\nReferrer: {}\nsuccess".format(
+                self.server.tokens[self.query["hash"][0]]["token"],
+                self.query["hash"][0],
+                self.server.tokens[self.query["hash"][0]]["referrer"]
+            )
+            answer = answer.encode("utf8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Content-Length", "{}".format(len(answer)))
+            self.end_headers()
+            self.wfile.write(answer)
+        elif self.query["hash"][0] in self.server.tokens:
+            answer = "Token: {}\nHash: {}\nReferrer: {}\nalready verified".\
+                format(
+                    self.server.tokens[self.query["hash"][0]]["token"],
+                    self.query["hash"][0],
+                    self.server.tokens[self.query["hash"][0]]["referrer"]
+                )
             answer = answer.encode("utf8")
             self.send_response(200)
             self.send_header("Content-Type", "text/plain")

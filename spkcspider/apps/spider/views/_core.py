@@ -365,17 +365,26 @@ class ReferrerMixin(object):
                     data={
                         "token": token,
                         "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
-                        "url": merge_get_url("%s%s" % (
+                    },
+                    headers={
+                        "Referer": merge_get_url("%s%s" % (
                             context["hostpart"],
                             self.request.get_full_path()
-                        ), token=None)
+                        ), token=None, referrer=None, raw=None)
                     },
                     verify=certifi.where()
                 )
             except requests.exceptions.SSLError:
                 return HttpResponse(
                     status=400,
-                    content=_('insecure url: %(url)s') % {
+                    content=_('doesn\'t support ssl: %(url)s') % {
+                        "url": context["referrer"]
+                    }
+                )
+            except Exception:
+                return HttpResponse(
+                    status=400,
+                    content=_('failure: %(url)s') % {
                         "url": context["referrer"]
                     }
                 )
@@ -391,8 +400,7 @@ class ReferrerMixin(object):
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
-                    hash=h.hexdigest(),
-                    algorithm=settings.SPIDER_HASH_ALGORITHM
+                    hash=h.hexdigest()
                 )
             )
         elif action == "cancel":

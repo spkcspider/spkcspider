@@ -31,7 +31,7 @@
       <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{f.name}}</data>
     </data>
   {% endfor %}
-  <div class="w3-padding">
+  <div class="w3-padding" style="height:120px">
     {% if request.user == uc.user or uc.public %}
       {# index is redirected in view #}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">

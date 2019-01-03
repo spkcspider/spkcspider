@@ -10,4 +10,6 @@ class Command(BaseCommand):
         results = update_dynamic.send_robust(self)
         for (receiver, result) in results:
             if isinstance(result, Exception):
-                logging.exception(result)
+                logging.error(
+                    "%s failed", receiver, exc_info=result
+                )

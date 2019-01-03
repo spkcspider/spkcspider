@@ -21,7 +21,7 @@ from ..contents import installed_contents
 from ..models import (
     UserComponent, TravelProtection, AuthToken
 )
-from ..constants.static import spkcgraph
+from ..constants.static import spkcgraph, VariantType
 from ..helpers import merge_get_url
 from ..serializing import (
     paginate_stream, serialize_stream, serialize_component
@@ -348,10 +348,14 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         self.request.auth_token = self.create_admin_token()
         context = super().get_context_data(**kwargs)
         context["content_variants"] = \
-            self.usercomponent.user_info.allowed_content.all()
+            self.usercomponent.user_info.allowed_content.exclude(
+                ctype__contains=VariantType.feature.value
+            )
         context["content_variants_used"] = \
             self.usercomponent.user_info.allowed_content.filter(
                 assignedcontent__usercomponent=self.usercomponent
+            ).exclude(
+                ctype__contains=VariantType.feature.value
             )
         context["remotelink"] = context["spider_GET"].copy()
         context["remotelink"] = "{}{}?{}".format(
@@ -420,7 +424,7 @@ class TokenDelete(UCTestMixin, DeleteView):
         self.remove_old_tokens()
         query = AuthToken.objects.filter(
             usercomponent=self.usercomponent,
-            token__in=self.request.POST.getlist("token")
+            token__in=self.request.POST.getlist("token[]")
         )
         if query.filter(
             created_by_special_user=self.request.user

@@ -139,9 +139,6 @@ class UserComponent(models.Model):
     # only admin
     featured = models.BooleanField(default=False, help_text=_feature_help)
 
-    # available features of Component
-    avail_features = models.CharField(default=True, max_length=10)
-
     token_duration = models.DurationField(
         default=default_uctoken_duration,
         null=False
@@ -311,10 +308,7 @@ class UserInfo(models.Model):
             "ALLOWED_CONTENT_FILTER",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )
-        # remove features before filtering allowed content
-        for variant in ContentVariant.objects.exclude(
-            ctype__contains=VariantType.feature.value
-        ):
+        for variant in ContentVariant.objects.all():
             if cfilterfunc(self.user, variant):
                 allowed.append(variant)
         # save not required, m2m field

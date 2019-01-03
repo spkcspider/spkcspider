@@ -167,6 +167,7 @@ Otherwise security could be compromised.
 ## Later
 * Localisation
 * govAnchor
+* messages instead error
 * create client side script for import (pushing to server, index token for auth?)
 * email to spkcspider transport wrapper (also script)+component
 * textfilet hot reloading

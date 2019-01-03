@@ -53,6 +53,9 @@ class WebConfigView(UCTestMixin, View):
     def get_user(self):
         return self.usercomponent.user
 
+    def test_func(self):
+        return True
+
     def get_object(self, queryset=None):
         ret = self.usercomponent.contents.filter(
             info__contains="\nmodel=webconfig\nurl={}\n".format(
@@ -68,11 +71,12 @@ class WebConfigView(UCTestMixin, View):
                 name="WebConfig"
             )
         )
-        ret = self.model.create_static(associated)
+        ret = self.model.static_create(associated)
         ret.url = self.request.authtoken.extra["referrer"]
-        ret.creation_url = "{}{}".format(
-            self.request.get_host(), self.request.path
+        ret.creation_url = "{}://{}{}".format(
+            self.request.scheme, self.request.get_host(), self.request.path
         )
+        print(ret.creation_url)
         ret.full_clean()
         ret.save()
         return ret

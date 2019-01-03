@@ -63,11 +63,6 @@ def initialize_content_models(apps=None):
         for dic in appearances:
             assert dic["name"] not in forbidden_names, \
                 "Forbidden content name: %" % dic["name"]
-
-            assert (
-                VariantType.feature.value not in dic.get("ctype", "") or
-                BaseContent.get_absolute_url is not val.get_absolute_url
-            ), "Feature doesn't overwrite get_absolute_url: %" % dic["name"]
             if update:
                 variant = ContentVariant.objects.get_or_create(
                     defaults=dic, code=code

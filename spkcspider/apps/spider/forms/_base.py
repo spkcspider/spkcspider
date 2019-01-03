@@ -6,7 +6,6 @@ from django import forms
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
-from ..widgets import Select2Multiple
 from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent,
     ContentVariant
@@ -14,7 +13,7 @@ from ..models import (
 from ..helpers import create_b64_token
 from ..constants import (
     ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names,
-    protected_names, VariantType
+    protected_names
 )
 
 _help_text = _("""Generate a new nonce token with variable strength<br/>
@@ -39,17 +38,6 @@ class UserComponentForm(forms.ModelForm):
         label=_("New Nonce"), help_text=_help_text,
         required=False, initial="", choices=NONCE_CHOICES
     )
-    features = forms.ModelMultipleChoiceField(
-        label=_("Component Features"), required=False, initial="",
-        queryset=ContentVariant.objects.filter(
-            ctype__contains=VariantType.feature.value
-        ),
-        widget=Select2Multiple(
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
-        )
-    )
 
     class Meta:
         model = UserComponent
@@ -61,6 +49,9 @@ class UserComponentForm(forms.ModelForm):
             NON_FIELD_ERRORS: {
                 'unique_together': _('Name of User Component already exists')
             }
+        }
+        widgets = {
+            'features': forms.CheckboxSelectMultiple,
         }
 
     def __init__(self, request, data=None, files=None, auto_id='id_%s',
@@ -78,6 +69,11 @@ class UserComponentForm(forms.ModelForm):
             request.user.has_perm('spider_base.can_feature')
         ) or request.session.get("is_fake", False):
             self.fields['featured'].disabled = True
+
+        self.fields["features"].queryset = \
+            self.fields["features"].queryset.intersection(
+                request.user.spider_info.allowed_content.all()
+            )
 
         if self.instance and self.instance.id:
             assigned = self.instance.protections
@@ -177,6 +173,20 @@ class UserComponentForm(forms.ModelForm):
             else:
                 strengths = 0
             self.cleaned_data["strength"] += max(strengths, fail_strength)
+        # make features clearable
+        if "features" not in self.data:
+            self.cleaned_data["features"] = ContentVariant.objects.none()
+        q = self.cleaned_data["features"].filter(
+            strength__gt=self.cleaned_data["strength"]
+        )
+        if q.exists():
+            self.add_error("features", forms.ValidationError(
+                _(
+                    "selected features require "
+                    "higher protection strength"
+                ),
+                code="unsufficient_strength"
+            ))
         return self.cleaned_data
 
     def _save_protections(self):

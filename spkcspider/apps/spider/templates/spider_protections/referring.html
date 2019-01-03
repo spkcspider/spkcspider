@@ -1,7 +1,7 @@
 {% extends "spider_protections/base.html" %}
 {% load i18n %}
 {% block content %}
-<form action="{{ request.get_full_path }}" method="post">
+<form class="w3-padding" action="{{ request.get_full_path }}" method="post">
   {% csrf_token %}
   <fieldset>
     <legend><h1>{% trans 'Allow' %}:</h1></legend>
