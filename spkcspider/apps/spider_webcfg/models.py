@@ -13,7 +13,7 @@ class WebConfig(BaseContent):
         {
             "name": "WebConfig",
             "ctype": VariantType.unique + VariantType.feature,
-            "strength": 5
+            "strength": 0
         }
     ]
 
