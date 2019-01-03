@@ -73,7 +73,7 @@ class UserComponentForm(forms.ModelForm):
         self.fields["features"].queryset = \
             self.fields["features"].queryset.intersection(
                 request.user.spider_info.allowed_content.all()
-            )
+            ).order_by("name")
 
         if self.instance and self.instance.id:
             assigned = self.instance.protections
@@ -174,7 +174,7 @@ class UserComponentForm(forms.ModelForm):
                 strengths = 0
             self.cleaned_data["strength"] += max(strengths, fail_strength)
         # make features clearable
-        if "features" not in self.data:
+        if "features" not in self.cleaned_data:
             self.cleaned_data["features"] = ContentVariant.objects.none()
         min_strength = 0
         # filter doesn't work here

@@ -196,6 +196,20 @@ def serialize_stream(
                         graph, "features", ref=ref_component,
                         literal=feature.name
                     )
+                    if context["scope"] != "export":
+                        uri = feature.installed_class.action_url()
+                        if uri:
+                            ref_feature = URIRef(uri)
+                            graph.add((
+                                ref_component,
+                                spkcgraph["action:feature"],
+                                ref_feature
+                            ))
+                            graph.add((
+                                ref_feature,
+                                spkcgraph["feature:name"],
+                                Literal(feature.name)
+                            ))
     else:
         ref_component = None
         usercomponent = None
@@ -206,21 +220,27 @@ def serialize_stream(
                     graph, usercomponent, context,
                     visible=visible
                 )
-                if ref_component and context["scope"] != "export":
+                if ref_component:
                     for feature in usercomponent.features.all():
-                        ref_feature = URIRef(
-                            feature.installed_class.action_url()
+                        add_property(
+                            graph, "features", ref=ref_component,
+                            literal=feature.name
                         )
-                        graph.add((
-                            ref_component,
-                            spkcgraph["action:feature"],
-                            ref_feature
-                        ))
-                        graph.add((
-                            ref_feature,
-                            spkcgraph["feature:name"],
-                            feature.name
-                        ))
+
+                        if context["scope"] != "export":
+                            uri = feature.installed_class.action_url()
+                            if uri:
+                                ref_feature = URIRef(uri)
+                                graph.add((
+                                    ref_component,
+                                    spkcgraph["action:feature"],
+                                    ref_feature
+                                ))
+                                graph.add((
+                                    ref_feature,
+                                    spkcgraph["feature:name"],
+                                    Literal(feature.name)
+                                ))
 
             ref_content = serialize_content(
                 graph, content, context, embed=embed

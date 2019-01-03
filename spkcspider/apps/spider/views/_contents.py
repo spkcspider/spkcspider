@@ -67,8 +67,11 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
 
     def dispatch_extra(self, request, *args, **kwargs):
         if "referrer" in self.request.GET:
-            self.object_list = self.get_queryset()
-            return self.handle_referrer()
+            if self.usercomponent.features.filter(
+                name="Referring"
+            ).exists():
+                self.object_list = self.get_queryset()
+                return self.handle_referrer()
         return None
 
     def dispatch(self, request, *args, **kwargs):
@@ -395,10 +398,13 @@ class ContentAccess(
             if ids is not None and self.object.id not in ids:
                 return self.handle_no_permission()
         if "referrer" in self.request.GET:
-            self.object_list = self.model.objects.filter(
-                pk=self.object.pk
-            )
-            return self.handle_referrer()
+            if self.usercomponent.features.filter(
+                name="Referring"
+            ).exists():
+                self.object_list = self.model.objects.filter(
+                    pk=self.object.pk
+                )
+                return self.handle_referrer()
 
         return None
 

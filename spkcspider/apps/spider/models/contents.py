@@ -29,6 +29,25 @@ logger = logging.getLogger(__name__)
 
 
 @add_content
+class ReferreringFeature(BaseContent):
+    appearances = [
+        {
+            "name": "Referring",
+            "ctype": VariantType.feature.value,
+            "strength": 0
+        },
+        {
+            "name": "PermissiveTokens",
+            "ctype": VariantType.feature.value,
+            "strength": 5
+        }
+    ]
+
+    class Meta:
+        abstract = True
+
+
+@add_content
 class LinkContent(BaseContent):
     appearances = [{
         "name": "Link",

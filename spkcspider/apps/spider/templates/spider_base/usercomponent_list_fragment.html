@@ -32,6 +32,12 @@
             <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
             <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description|escape}}</data>
           </data>
+          {% for f in uc.features.all %}
+            <data hidden="hidden" typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{f.name}}</data>
+            </data>
+          {% endfor %}
         </data>
       </td>
       <td>

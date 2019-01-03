@@ -92,7 +92,7 @@ class UserTestMixin(AccessMixin):
         GET["token"] = self.request.auth_token.token
         return "?".join((self.request.path, GET.urlencode()))
 
-    def create_token(self, special_user=None):
+    def create_token(self, special_user=None, extra=None):
         session_key = None
         if "token" not in self.request.GET:
             session_key = self.request.session.session_key
@@ -101,6 +101,8 @@ class UserTestMixin(AccessMixin):
             session_key=session_key,
             created_by_special_user=special_user
         )
+        if extra:
+            token.extra = extra
         token.save()
         return token
 
@@ -132,7 +134,7 @@ class UserTestMixin(AccessMixin):
 
     def test_token(self):
         expire = timezone.now()-self.usercomponent.token_duration
-        no_token = self.usercomponent.required_passes == 0
+        no_token = (self.usercomponent.required_passes == 0)
 
         # token not required
         if not no_token:
@@ -164,7 +166,7 @@ class UserTestMixin(AccessMixin):
                 if (
                     self.usercomponent.strength >=
                     settings.MIN_STRENGTH_EVELATION
-                ):
+                ) and not token.extra.get("weak", False):
                     self.request.is_elevated_request = True
                 return True
 
@@ -179,20 +181,29 @@ class UserTestMixin(AccessMixin):
         if self.request.protections is True:
             # token not required
             if no_token:
-                return True
+                #
+                if self.usercomponent.strength < 5:
+                    return True
+                if not self.usercomponent.features.filter(
+                    name="PermissiveTokens"
+                ):
+                    return True
+                token = self.create_token(extra={"weak": True})
+            else:
+                # is_elevated_request requires token
+                if (
+                    self.usercomponent.strength >=
+                    settings.MIN_STRENGTH_EVELATION
+                ):
+                    self.request.is_elevated_request = True
 
-            token = self.create_token()
+                token = self.create_token(extra={"weak": False})
 
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
             self.request.auth_token = token
             if "token" in self.request.GET:
                 return self.replace_token()
-            if (
-                self.usercomponent.strength >=
-                settings.MIN_STRENGTH_EVELATION
-            ):
-                self.request.is_elevated_request = True
             return True
         return False
 
@@ -334,6 +345,7 @@ class ReferrerMixin(object):
 
         action = self.request.POST.get("action", None)
         if action == "confirm":
+            # create only new token when admin token
             if self.usercomponent.user == self.request.user:
                 authtoken = AuthToken(
                     usercomponent=self.usercomponent,
@@ -341,7 +353,8 @@ class ReferrerMixin(object):
                         "ids": list(
                             self.object_list.values_list("id", flat=True)
                         ),
-                        "referrer": context["referrer"]
+                        "referrer": context["referrer"],
+                        "weak": False
                     }
                 )
                 try:
@@ -353,7 +366,11 @@ class ReferrerMixin(object):
                     )
                 token = authtoken.token
             else:
+                # recycle token
+                # NOTE: one token, one referrer
                 token = self.request.auth_token.token
+                token.extra["referrer"] = context["referrer"]
+                token.save()
             # application/x-www-form-urlencoded is best here,
             # for beeing compatible to most webservers
             # client side rdf is no problem

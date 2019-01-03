@@ -27,15 +27,13 @@ This project can either be used as a standalone project (clone repo) or as a set
 ## spider:
 For spiders and contents
 
-spkcspider.apps.spider: store User Components, common base, WARNING: has spider_base namespace to not break existing apps
-
-spkcspider.apps.spideraccounts: user implementation suitable for the spiders. You can supply your own user model instead.
-
-spkcspider.apps.spidertags: verified information tags and
-
-spkcspider.apps.spiderkeys: store public keys
-
-spkcspider: contains spkcspider url detection and wsgi handler
+* spkcspider.apps.spider: store User Components, common base, WARNING: has spider_base namespace to not break existing apps
+* spkcspider.apps.spider_accounts: user implementation suitable for the spiders. You can supply your own user model instead.
+* spkcspider.apps.spider_tags: verified information tags
+* spkcspider.apps.spider_keys: Public keys and anchors
+* spkcspider.apps.spider_filets: File and Text Content types
+* spkcspider.apps.spider_webcfg: WebConfig Feature
+* spkcspider: contains spkcspider url detection and wsgi handler
 
 ## verifier:
 Base reference implementation of a verifier.
@@ -137,7 +135,7 @@ There are some special GET parameters for services with special requirements:
 * search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
-* referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if strength > 0
+* referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if Referring Feature is active
 * [embed_big=true]: only staff and superuser can use it. Overrides maximal size of files which are embedded
 
 ## search parameters
@@ -158,11 +156,17 @@ verified_by urls should return last verification date for a hash
 raw mode can follow references even in other components because it is readonly.
 Otherwise security could be compromised.
 
+## Important Features
+
+* Referring: Allow referrer GET parameter
+* PermissiveTokens: Protection-strength 5 creates tokens (allows externs to use referrer with strength 5 and reissue tokens)
+
+
 # TODO
 * examples
 * tests
 * documentation
-* WebConfig
+* investigate why features field is not clearable and defaults to all possible features
 
 ## Later
 * Localisation

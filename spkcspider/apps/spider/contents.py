@@ -157,7 +157,7 @@ class BaseContent(models.Model):
 
     @classmethod
     def action_url(cls):
-        raise NotImplementedError
+        return None
 
     def get_strength(self):
         """ get required strength """
@@ -426,21 +426,26 @@ class BaseContent(models.Model):
                 session_dict["sourceref"], spkcgraph["strength"],
                 Literal(uc.strength)
             ))
-            if kwargs["scope"] != "export":
+            if not uc.public:
                 for feature in uc.features.all():
-                    ref_feature = URIRef(
-                        feature.installed_class.action_url()
+                    add_property(
+                        g, "features", ref=session_dict["sourceref"],
+                        literal=feature.name
                     )
-                    g.add((
-                        session_dict["sourceref"],
-                        spkcgraph["action:feature"],
-                        ref_feature
-                    ))
-                    g.add((
-                        ref_feature,
-                        spkcgraph["feature:name"],
-                        feature.name
-                    ))
+                    if kwargs["scope"] != "export":
+                        uri = feature.installed_class.action_url()
+                        if uri:
+                            ref_feature = URIRef(uri)
+                            g.add((
+                                session_dict["sourceref"],
+                                spkcgraph["action:feature"],
+                                ref_feature
+                            ))
+                            g.add((
+                                ref_feature,
+                                spkcgraph["feature:name"],
+                                Literal(feature.name)
+                            ))
 
         ret = HttpResponse(
             g.serialize(format="turtle"),
