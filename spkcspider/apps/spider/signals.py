@@ -28,7 +28,7 @@ def CleanupCallback(sender, instance, **kwargs):
             instance.usercomponent.user.spider_info.update_quota(
                 -instance.get_size()
             )
-        if instance.fake_id is None:
+        if instance.fake_id is None and instance.content:
             instance.content.delete(False)
 
 

@@ -57,27 +57,28 @@ class WebConfigView(UCTestMixin, View):
         return True
 
     def get_object(self, queryset=None):
-        ret = self.usercomponent.contents.filter(
-            info__contains="\nmodel=webconfig\nurl={}\n".format(
+        variant = ContentVariant.objects.get(
+            name="WebConfig"
+        )
+        ret = AssignedContent.objects.filter(
+            info__contains="\nurl={}\n".format(
                 self.request.authtoken.extra["referrer"].replace("\n", "%0A")
             ),
-            usercomponent=self.usercomponent
+            usercomponent=self.usercomponent,
+            ctype=variant
         ).first()
         if ret:
             return ret.content
         associated = AssignedContent(
             usercomponent=self.usercomponent,
-            ctype=ContentVariant.objects.get(
-                name="WebConfig"
-            )
+            ctype=variant
         )
         ret = self.model.static_create(associated)
         ret.url = self.request.authtoken.extra["referrer"]
         ret.creation_url = "{}://{}{}".format(
             self.request.scheme, self.request.get_host(), self.request.path
         )
-        print(ret.creation_url)
-        ret.full_clean()
+        ret.clean()
         ret.save()
         return ret
 
@@ -87,7 +88,7 @@ class WebConfigView(UCTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.object.config = self.request.body
+        self.object.config = self.request.body.decode("ascii", "ignore")
         # a full_clean is here not required
         self.object.clean()
         self.object.save()
@@ -98,6 +99,6 @@ class WebConfigView(UCTestMixin, View):
             self.object.config, content_type="text/plain"
         )
         ret["X-SPIDER-URL"] = self.object.url
-        ret["X-SPIDER-MODIFIED"] = self.object.modified
-        ret["X-SPIDER-CREATED"] = self.object.created
+        ret["X-SPIDER-MODIFIED"] = self.object.associated.modified
+        ret["X-SPIDER-CREATED"] = self.object.associated.created
         return ret

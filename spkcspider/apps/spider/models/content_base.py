@@ -113,9 +113,7 @@ class AssignedContent(models.Model):
     # ctype is here extended: VariantObject with abilities, name, model_name
     ctype = models.ForeignKey(
         ContentVariant, editable=False, null=True,
-        on_delete=models.SET_NULL, limit_choices_to=~models.Q(
-            ctype__contains=VariantType.feature.value
-        )
+        on_delete=models.SET_NULL
     )
 
     # creator = models.ForeignKey(
@@ -187,6 +185,8 @@ class AssignedContent(models.Model):
         return self.id
 
     def get_size(self):
+        if not self.content:
+            return 0
         return self.content.get_size()
 
     def get_flag(self, flag):

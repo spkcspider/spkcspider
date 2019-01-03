@@ -176,15 +176,17 @@ class UserComponentForm(forms.ModelForm):
         # make features clearable
         if "features" not in self.data:
             self.cleaned_data["features"] = ContentVariant.objects.none()
-        q = self.cleaned_data["features"].filter(
-            strength__gt=self.cleaned_data["strength"]
-        )
-        if q.exists():
+        min_strength = 0
+        # filter doesn't work here
+        for i in self.cleaned_data["features"]:
+            if i.strength > min_strength:
+                min_strength = i.strength
+        if self.cleaned_data["strength"] < min_strength:
             self.add_error("features", forms.ValidationError(
                 _(
                     "selected features require "
-                    "higher protection strength"
-                ),
+                    "higher protection strength: %s"
+                ) % min_strength,
                 code="unsufficient_strength"
             ))
         return self.cleaned_data
