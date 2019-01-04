@@ -48,20 +48,20 @@
     {% if request.user.is_authenticated %}
       <span class="w3-right w3-left-align">
         <div style="margin-bottom:10px">
-          <a href="{% url 'spider_base:ucomponent-create' %}">
+          <a rel="nofollow" href="{% url 'spider_base:ucomponent-create' %}">
             <i class="fas fa-plus" style="margin-right:10px" aria-hidden="true"></i>
             {% trans 'Add New Component' %}
           </a>
         </div>
         {% if listpublic == request.path %}
           <div>
-            <a href="{% url 'spider_base:ucomponent-list' %}">
+            <a rel="nofollow" href="{% url 'spider_base:ucomponent-list' %}">
               <i class="fas fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
             </a>
           </div>
         {% else %}
           <div>
-            <a href="{% url 'spider_base:ucomponent-export' user=request.user %}">
+            <a rel="nofollow" href="{% url 'spider_base:ucomponent-export' user=request.user %}">
               <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Export' %}
             </a>
           </div>

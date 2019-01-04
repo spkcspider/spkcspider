@@ -123,7 +123,7 @@
               {% endblocktrans %}</span></div></div>
             </div>
             {% else %}
-            <a class="w3-button w3-left-align w3-col s12 m4 l3 {% if variant in content_variants_used %}{% if variant.unique_for_component %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' name=uc.name type=variant.name %}" >
+            <a rel="nofollow" class="w3-button w3-left-align w3-col s12 m4 l3 {% if variant in content_variants_used %}{% if variant.unique_for_component %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' name=uc.name type=variant.name %}" >
               <b style="margin-right:5px" aria-hidden="true">+</b>{{variant}}
             </a>
             {% endif %}
@@ -179,11 +179,11 @@
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "View" %}</div></div>
               </a>
               {% if uc.user == request.user  %}
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}" property="spkc:action:update">
+              <a rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}" property="spkc:action:update">
                 <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
               </a>
-              <a class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="spkc:action:delete">
+              <a rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="spkc:action:delete">
                 <div class="spkc-entity-button"><i class="fas fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Del" %}</div></div>
               </a>
