@@ -3,12 +3,12 @@ __all__ = ["UserComponentForm", "UserContentForm"]
 from statistics import mean
 
 from django import forms
+from django.db import models
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
 from ..models import (
-    AssignedProtection, Protection, UserComponent, AssignedContent,
-    ContentVariant
+    AssignedProtection, Protection, UserComponent, AssignedContent
 )
 from ..helpers import create_b64_token
 from ..constants import (
@@ -70,9 +70,11 @@ class UserComponentForm(forms.ModelForm):
         ) or request.session.get("is_fake", False):
             self.fields['featured'].disabled = True
 
+        valid_cids = request.user.spider_info.allowed_content.all()
+        valid_cids = valid_cids.values_list("id", flat=True)
         self.fields["features"].queryset = \
-            self.fields["features"].queryset.intersection(
-                request.user.spider_info.allowed_content.all()
+            self.fields["features"].queryset.filter(
+                id__in=valid_cids
             ).order_by("name")
 
         if self.instance and self.instance.id:
@@ -173,15 +175,11 @@ class UserComponentForm(forms.ModelForm):
             else:
                 strengths = 0
             self.cleaned_data["strength"] += max(strengths, fail_strength)
-        # make features clearable
-        if "features" not in self.cleaned_data:
-            self.cleaned_data["features"] = ContentVariant.objects.none()
-        min_strength = 0
-        # filter doesn't work here
-        for i in self.cleaned_data["features"]:
-            if i.strength > min_strength:
-                min_strength = i.strength
-        if self.cleaned_data["strength"] < min_strength:
+        min_strength = self.cleaned_data["features"].filter(
+            strength__gt=self.cleaned_data["strength"]
+        ).aggregate(m=models.Max("strength"))["m"]
+        # min_strength is None if no features are higher than allowed
+        if min_strength:
             self.add_error("features", forms.ValidationError(
                 _(
                     "selected features require "

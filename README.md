@@ -166,7 +166,6 @@ Otherwise security could be compromised.
 * examples
 * tests
 * documentation
-* investigate why features field is not clearable and defaults to all possible features
 
 ## Later
 * Localisation
