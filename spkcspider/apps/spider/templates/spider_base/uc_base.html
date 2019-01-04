@@ -1,6 +1,16 @@
 {% extends "spider_base/base.html" %}
 {% load spider_rdf %}
 
+
+{% block public_meta %}
+  {{block.super}}
+  {% if uc.featured or uc.user.is_superuser or uc.user.is_staff %}
+    <meta name="robots" content="allow">
+  {% else %}
+    <meta name="robots" content="nofollow">
+  {% endif %}
+{% endblock %}
+
 {% block context_actions %}
 {{block.super}}
 {% endblock context_actions %}

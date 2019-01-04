@@ -30,7 +30,7 @@ class ContentSitemap(GenericSitemap):
         from .models import AssignedContent
         self.queryset = AssignedContent.objects.filter(
             usercomponent__public=True
-        )
+        ).exclude(info__contains="_unlisted")
 
 
 class HomeSitemap(Sitemap):

@@ -7,13 +7,11 @@
     <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
     <meta name="application-name" content="spkcspider"/>
     {% if is_public_view %}
-      {% block public_meta %}
-        <meta name="robots" content="allow" />
-      {% endblock %}
+      {% block public_meta %}{% endblock %}
     {% else %}
       <meta http-equiv="cache-control" content="no-store, no-cache, must-revalidate"/>
       <meta http-equiv="expires" content="0">
-      <meta name="robots" content="noindex,nofollow">
+      <meta name="robots" content="noindex,nofollow,noarchive">
     {% endif %}
 
     <meta name="viewport" content="{% block viewport %}width=device-width, initial-scale=1.0{% endblock %}">

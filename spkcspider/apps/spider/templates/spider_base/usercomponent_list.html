@@ -11,6 +11,7 @@
 
 {% block public_meta %}
   {{block.super}}
+  <meta name="robots" content="allow" />
   <meta name="description" content="{{SETTINGS.SPIDER_DESCRIPTION|escape}}" />
 {% endblock %}
 
