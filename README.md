@@ -166,6 +166,7 @@ Otherwise security could be compromised.
 * examples
 * tests
 * documentation
+* for serverless apps: add referrer mode to allow them fetching tokens (maybe precalculate token)
 
 ## Later
 * Localisation
