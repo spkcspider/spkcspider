@@ -43,6 +43,12 @@ spkc:Content a rdfs:Class ;
   rdfs:subClassOf spkc:Entity ;
   rdfs:comment "Contains real content." .
 
+spkc:Feature a rdfs:Class ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Feature" ;
+  rdfs:subClassOf spkc:Entity ;
+  rdfs:comment "Contains Feature." .
+
 
 spkc:Protection a rdfs:Class ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
@@ -78,6 +84,13 @@ spkc:properties a rdf:Property ;
   rdf:Bag spkc:Property ;
   rdfs:domain rdfs:Entity .
 
+spkc:accessTo a rdf:Property ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "AccessTo" ;
+  rdfs:comment "Set of Entities which can be accessed" ;
+  rdf:Bag rdfs:Entity ;
+  rdfs:domain rdfs:Resource .
+
 spkc:hashableURI a rdfs:Datatype ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:subClassOf xsd:anyURI .
@@ -92,8 +105,10 @@ spkc:value a rdf:value ;
 spkc:name a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "name" ;
-  rdfs:comment "The name of a spkc:property" ;
+  rdfs:comment "The name of a spkc:property, protection" ;
   rdfs:domain spkc:Property ;
+  rdfs:domain spkc:Protection ;
+  rdfs:domain spkc:Entity ;
   rdfs:range xsd:string .
 
 spkc:fieldname a rdf:value ;
@@ -182,13 +197,6 @@ spkc:hashed a rdf:Property ;
   rdfs:domain rdfs:Resource ;
   rdfs:range spkc:hash .
 
-
-spkc:name a rdf:Property ;
-  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
-  rdfs:label "Protection Name" ;
-  rdfs:comment "The name of the protection" ;
-  rdfs:domain rdfs:Protection ;
-  rdfs:range rdfs:Literal .
 
 spkc:protections a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

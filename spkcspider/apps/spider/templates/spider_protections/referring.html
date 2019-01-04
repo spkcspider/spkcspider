@@ -13,7 +13,7 @@
       </tr>
     </table>
   </fieldset>
-  <fieldset>
+  <fieldset style="overflow-y: auto; max-height:600px">
     <legend><h1>{% trans 'Access to' %}:</h1></legend>
     <table class="w3-table-all" rel="accessTo">
       <thead>
@@ -54,6 +54,14 @@
             </td>
           </tr>
         {% endif %}
+        {% for f in uc.features.all %}
+          <tr>
+            <td class="">{% trans 'Feature' %}</td>
+            <td typeof="spkc:Feature">
+              <data property="spkc:name" datatype="xsd:string" content="{{f.name}}">{{f}}</data>
+            </td>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </fieldset>
