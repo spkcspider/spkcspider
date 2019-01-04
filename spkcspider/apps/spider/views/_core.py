@@ -34,7 +34,7 @@ from ..models import (
 class UserTestMixin(AccessMixin):
     no_nonce_usercomponent = False
     also_authenticated_users = False
-    allowed_GET_parameters = set(["token", "raw", "protection"])
+    preserved_GET_parameters = set(["token", "protection"])
     login_url = reverse_lazy(getattr(
         settings,
         "LOGIN_URL",
@@ -69,7 +69,7 @@ class UserTestMixin(AccessMixin):
     def sanitize_GET(self):
         GET = self.request.GET.copy()
         for key in list(GET.keys()):
-            if key not in self.allowed_GET_parameters:
+            if key not in self.preserved_GET_parameters:
                 GET.pop(key, None)
         return GET
 
@@ -315,6 +315,68 @@ class UCTestMixin(UserTestMixin):
 
 
 class ReferrerMixin(object):
+    _ = gettext
+
+    def refer_with_post(self, context, token):
+        _ = gettext
+        # application/x-www-form-urlencoded is best here,
+        # for beeing compatible to most webservers
+        # client side rdf is no problem
+        # NOTE: csrf must be disabled or use csrf token from GET,
+        #       here is no way to know the token value
+        try:
+            ret = requests.post(
+                context["referrer"],
+                data={
+                    "token": token.token,
+                    "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
+                },
+                headers={
+                    "Referer": merge_get_url("%s%s" % (
+                        context["hostpart"],
+                        self.request.get_full_path()
+                    ), token=None, referrer=None, raw=None)
+                },
+                verify=certifi.where()
+            )
+        except requests.exceptions.SSLError:
+            return HttpResponse(
+                status=400,
+                content=_('doesn\'t support ssl: %(url)s') % {
+                    "url": context["referrer"]
+                }
+            )
+        except Exception:
+            return HttpResponse(
+                status=400,
+                content=_('failure: %(url)s') % {
+                    "url": context["referrer"]
+                }
+            )
+        if ret.status_code not in (200, 201):
+            return HttpResponseRedirect(
+                redirect_to=merge_get_url(
+                    context["referrer"],
+                    error="post_failed"
+                )
+            )
+        h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
+        h.update(token.token.encode("ascii", "ignore"))
+        return HttpResponseRedirect(
+            redirect_to=merge_get_url(
+                context["referrer"],
+                hash=h.hexdigest()
+            )
+        )
+
+    def refer_with_get(self, context, token):
+        return HttpResponseRedirect(
+            redirect_to=merge_get_url(
+                context["referrer"],
+                token=token.token
+            )
+        )
+
     def handle_referrer(self):
         _ = gettext
         if (
@@ -364,62 +426,18 @@ class ReferrerMixin(object):
                     return HttpResponseServerError(
                         _("Token creation failed, try again")
                     )
-                token = authtoken.token
+                token = authtoken
             else:
                 # recycle token
                 # NOTE: one token, one referrer
                 token = self.request.auth_token.token
                 token.extra["referrer"] = context["referrer"]
                 token.save()
-            # application/x-www-form-urlencoded is best here,
-            # for beeing compatible to most webservers
-            # client side rdf is no problem
-            # NOTE: csrf must be disabled or use csrf token from GET,
-            #       here is no way to know the token value
-            try:
-                ret = requests.post(
-                    context["referrer"],
-                    data={
-                        "token": token,
-                        "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
-                    },
-                    headers={
-                        "Referer": merge_get_url("%s%s" % (
-                            context["hostpart"],
-                            self.request.get_full_path()
-                        ), token=None, referrer=None, raw=None)
-                    },
-                    verify=certifi.where()
-                )
-            except requests.exceptions.SSLError:
-                return HttpResponse(
-                    status=400,
-                    content=_('doesn\'t support ssl: %(url)s') % {
-                        "url": context["referrer"]
-                    }
-                )
-            except Exception:
-                return HttpResponse(
-                    status=400,
-                    content=_('failure: %(url)s') % {
-                        "url": context["referrer"]
-                    }
-                )
-            if ret.status_code not in (200, 201):
-                return HttpResponseRedirect(
-                    redirect_to=merge_get_url(
-                        context["referrer"],
-                        error="post_failed"
-                    )
-                )
-            h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
-            h.update(token.encode("ascii", "ignore"))
-            return HttpResponseRedirect(
-                redirect_to=merge_get_url(
-                    context["referrer"],
-                    hash=h.hexdigest()
-                )
-            )
+                token = token
+            if self.request.GET.get("sl", "") == "true":
+                return self.refer_with_get(context, token)
+            return self.refer_with_post(context, token)
+
         elif action == "cancel":
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(

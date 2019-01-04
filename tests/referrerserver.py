@@ -30,7 +30,7 @@ class ReferrerHandler(BaseHTTPRequestHandler):
             return
 
         self.query = parse_qs(self.rfile.read(int(length)))
-        print(self.query)
+        self.log_message("query: %s", str(self.query))
 
         algo = self.query.get(
             b"hash_algorithm", [b"sha512"]
@@ -52,7 +52,19 @@ class ReferrerHandler(BaseHTTPRequestHandler):
         self.query = parse_qs(sp.query)
         # check secret
 
-        if "hash" not in self.query:
+        if "token" in self.query and "hash" not in self.query:
+            answer = (
+                "Token: {}\nserver-less success"
+            ).format(
+                self.query["token"][0]
+            )
+            answer = answer.encode("utf8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Content-Length", "{}".format(len(answer)))
+            self.end_headers()
+            self.wfile.write(answer)
+        elif "hash" not in self.query:
             answer = "Hash: None\nnothing, unrelated query"
             answer = answer.encode("utf8")
             self.send_response(200)

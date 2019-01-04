@@ -128,7 +128,7 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 There are some special GET parameters for services with special requirements:
 * token=xy: token as GET parameter, if invalid: retrieve token as GET parameter
 * token=prefer: uses invalid mechanic, easier to see what it does
-* raw=true: optimize output for machines
+* raw=true: optimize output for machines, use turtle format
 * raw=embed: embed content
 * id=id&id=id: limit content ids
 * search=foo&search=!notfoo: search case insensitive a string
@@ -136,7 +136,8 @@ There are some special GET parameters for services with special requirements:
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
 * referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if Referring Feature is active
-* [embed_big=true]: only staff and superuser can use it. Overrides maximal size of files which are embedded
+  * sl=true: server-less referrer mode: if "true" token is transferred as GET parameter and no POST request is made (less secure as client sees token)
+* embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
 
 ## search parameters
 
@@ -166,7 +167,6 @@ Otherwise security could be compromised.
 * examples
 * tests
 * documentation
-* for serverless apps: add referrer mode to allow them fetching tokens (maybe precalculate token)
 
 ## Later
 * Localisation

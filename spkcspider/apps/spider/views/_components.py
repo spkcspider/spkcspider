@@ -205,7 +205,7 @@ class ComponentPublicIndex(ComponentIndexBase):
     model = UserComponent
     is_home = False
     source_strength = 0
-    allowed_GET_parameters = set(["protection", "raw"])
+    preserved_GET_parameters = set(["protection"])
 
     def dispatch(self, request, *args, **kwargs):
         self.request.is_elevated_request = False
@@ -226,7 +226,7 @@ class ComponentPublicIndex(ComponentIndexBase):
         GET = self.request.GET.copy()
         # parameters preserved in search
         for key in list(GET.keys()):
-            if key not in self.allowed_GET_parameters:
+            if key not in self.preserved_GET_parameters:
                 GET.pop(key, None)
         kwargs["spider_GET"] = GET
         return super().get_context_data(**kwargs)

@@ -19,9 +19,12 @@ class ComponentSitemap(GenericSitemap):
         )
 
 
-class ContentSitemap(ComponentSitemap):
+class ContentSitemap(GenericSitemap):
     priority = 0.7
     changefreq = "hourly"
+    date_field = "modified"
+    if not settings.DEBUG:
+        protocol = "https"
 
     def __init__(self):
         from .models import AssignedContent
