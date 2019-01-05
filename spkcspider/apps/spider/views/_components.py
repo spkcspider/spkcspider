@@ -424,12 +424,19 @@ class TokenDelete(UCTestMixin, DeleteView):
         self.remove_old_tokens()
         query = AuthToken.objects.filter(
             usercomponent=self.usercomponent,
-            token__in=self.request.POST.getlist("token[]")
+            token__in=self.request.POST.getlist("tokens")
         )
+        # replace active admin token
         if query.filter(
             created_by_special_user=self.request.user
         ).exists():
-            self.request.auth_token = self.create_token(self.request.user)
+            self.request.auth_token = self.create_token(
+                self.request.user,
+                extra={
+                    "weak": False,
+                    "strength": 10
+                }
+            )
         query.delete()
         del query
         return self.get(request, *args, **kwargs)

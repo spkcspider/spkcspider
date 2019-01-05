@@ -11,8 +11,7 @@ from django.http import Http404
 from django.core.paginator import InvalidPage, Paginator
 from django.utils.translation import gettext as _
 
-from rdflib import URIRef, Literal
-from rdflib.namespace import XSD
+from rdflib import URIRef, Literal, XSD
 
 
 from .constants.static import spkcgraph, VariantType

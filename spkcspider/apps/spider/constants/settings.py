@@ -1,6 +1,6 @@
 __all__ = [
     "INITIAL_NONCE_SIZE", "NONCE_CHOICES", "default_uctoken_duration",
-    "force_captcha"
+    "force_captcha", "VALID_INTENTIONS"
 ]
 
 import datetime
@@ -19,6 +19,10 @@ NONCE_CHOICES = [
     ("30", _("high ({} Bytes)")),
 ]
 
+VALID_INTENTIONS = set(getattr(
+    settings, "SPIDER_VALID_INTENTIONS",
+    ["payment"]
+))
 
 force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
 

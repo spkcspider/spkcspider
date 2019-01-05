@@ -172,7 +172,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       }
       let body = new URLSearchParams();
       for(let count=0; count < tokens.length; count++){
-        body.append("token[]", tokens[count]);
+        body.append("tokens", tokens[count]);
       }
       req = new Request('{% url "spider_base:token-delete" name=object.name %}', {
           method: 'POST',

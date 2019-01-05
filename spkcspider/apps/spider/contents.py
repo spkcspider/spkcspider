@@ -16,7 +16,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 
-from rdflib import Literal, Graph, BNode, URIRef
+from rdflib import Literal, Graph, BNode, URIRef, XSD
 
 from .constants import VariantType, spkcgraph
 from .serializing import paginate_stream, serialize_stream
@@ -381,6 +381,7 @@ class BaseContent(models.Model):
         session_dict = {
             "request": kwargs["request"],
             "context": kwargs,
+            "payments_allowed": kwargs["payments_allowed"],
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
             "ac_namespace": spkcgraph["contents"],
@@ -426,26 +427,41 @@ class BaseContent(models.Model):
                 session_dict["sourceref"], spkcgraph["strength"],
                 Literal(uc.strength)
             ))
-            if not uc.public:
-                for feature in uc.features.all():
-                    add_property(
-                        g, "features", ref=session_dict["sourceref"],
-                        literal=feature.name
-                    )
-                    if kwargs["scope"] != "export":
-                        uri = feature.installed_class.action_url()
-                        if uri:
-                            ref_feature = URIRef(uri)
-                            g.add((
-                                session_dict["sourceref"],
-                                spkcgraph["action:feature"],
-                                ref_feature
-                            ))
-                            g.add((
-                                ref_feature,
-                                spkcgraph["feature:name"],
-                                Literal(feature.name)
-                            ))
+            if kwargs["referrer"]:
+                g.add((
+                    session_dict["sourceref"],
+                    spkcgraph["referrer"],
+                    Literal(kwargs["referrer"], datatype=XSD.anyURI)
+                ))
+            if kwargs["token_strength"]:
+                add_property(
+                    g, "token_strength", ref=session_dict["sourceref"],
+                    literal=kwargs["token_strength"]
+                )
+            for intention in kwargs["intentions"]:
+                add_property(
+                    g, "intentions", ref=session_dict["sourceref"],
+                    literal=intention, datatype=XSD.string
+                )
+            for feature in uc.features.all():
+                add_property(
+                    g, "features", ref=session_dict["sourceref"],
+                    literal=feature.name
+                )
+                if kwargs["scope"] != "export":
+                    uri = feature.installed_class.action_url()
+                    if uri:
+                        ref_feature = URIRef(uri)
+                        g.add((
+                            session_dict["sourceref"],
+                            spkcgraph["action:feature"],
+                            ref_feature
+                        ))
+                        g.add((
+                            ref_feature,
+                            spkcgraph["feature:name"],
+                            Literal(feature.name)
+                        ))
 
         ret = HttpResponse(
             g.serialize(format="turtle"),

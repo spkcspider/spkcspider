@@ -16,7 +16,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 
 
-from rdflib import Graph, Literal, URIRef
+from rdflib import Graph, Literal, URIRef, XSD
 
 
 from ._core import UCTestMixin, EntityDeletionMixin, ReferrerMixin
@@ -288,6 +288,22 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
                 spkcgraph["strength"],
                 Literal(self.usercomponent.strength)
             ))
+            if context["referrer"]:
+                g.add((
+                    session_dict["sourceref"],
+                    spkcgraph["referrer"],
+                    Literal(context["referrer"], datatype=XSD.anyURI)
+                ))
+            if context["token_strength"]:
+                add_property(
+                    g, "token_strength", ref=session_dict["sourceref"],
+                    literal=context["token_strength"]
+                )
+            for intention in context["intentions"]:
+                add_property(
+                    g, "intentions", ref=session_dict["sourceref"],
+                    literal=intention, datatype=XSD.string
+                )
 
         serialize_stream(
             g, p, session_dict,

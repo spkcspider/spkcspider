@@ -1,7 +1,7 @@
 __all__ = (
     "create_b64_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
-    "merge_get_url", "add_property"
+    "merge_get_url", "add_property", "is_decimal"
 )
 
 
@@ -24,6 +24,22 @@ from .constants.static import MAX_NONCE_SIZE, spkcgraph
 _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
+
+
+def is_decimal(inp, precision=None, allow_sign=False):
+    prec_start = None
+    if len(inp) == 0:
+        return False
+    if inp[0] == "-" and allow_sign:
+        inp = inp[1:]
+    for count, i in enumerate(inp):
+        if i == "." and prec_start is None:
+            prec_start = count
+        elif not i.isdigit():
+            return False
+    return (
+        None in (precision, prec_start) or len(inp)-prec_start-1 <= precision
+    )
 
 
 def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):

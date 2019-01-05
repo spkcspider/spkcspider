@@ -7,10 +7,16 @@
     <legend><h1>{% trans 'Allow' %}:</h1></legend>
     <table class="w3-table-all">
       <tr>
-        <td class="">
-          {{referrer}}
-        </td>
+        <td class="">{{referrer}}</td>
       </tr>
+      {% if use_for_payments %}
+        <tr class="w3-orange">
+          <td>
+            <data hidden="hidden" property="spkc:payments_allowed" datatype="xsd:boolean">true</data>
+            {% trans 'Warning: this referrer wants access to payments' %}
+          </td>
+        </tr>
+      {% endif %}
     </table>
   </fieldset>
   <fieldset style="overflow-y: auto; max-height:600px">
@@ -23,6 +29,14 @@
         </tr>
       </thead>
       <tbody>
+        {% for intention in intentions %}
+          <tr class="w3-orange">
+            <td class="">{% trans 'Global' %}</td>
+            <td typeof="spkc:Intention">
+              <data property="spkc:name" datatype="xsd:string">{{intention}}</data>
+            </td>
+          </tr>
+        {% endfor %}
         {% if scope == "list" %}
           <tr>
             <td class="">{% trans 'Component' %}</td>
