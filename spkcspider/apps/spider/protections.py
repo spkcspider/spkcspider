@@ -257,12 +257,12 @@ class LoginProtection(BaseProtection):
     ptype = ProtectionType.authentication.value
     ptype += ProtectionType.access_control.value
 
-    description = _("Login with user password")
+    description = _("Use Login password")
 
     class auth_form(forms.Form):
         use_required_attribute = False
         password = forms.CharField(
-            label=_("Password"),
+            label=_("Login Password"),
             strip=False,
             widget=forms.PasswordInput,
         )
@@ -303,13 +303,13 @@ class PasswordProtection(BaseProtection):
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
 
-    description = _("Protect with passwords")
+    description = _("Protect with extra passwords")
     prefix = "protection_passwords"
 
     class auth_form(forms.Form):
         use_required_attribute = False
         password2 = forms.CharField(
-            label=_("Password 2"),
+            label=_("Extra Password"),
             strip=False,
             widget=forms.PasswordInput,
         )
@@ -330,18 +330,20 @@ class PasswordProtection(BaseProtection):
         return 1
 
     def clean_passwords(self):
-        passwords = []
+        passwords = set()
         for i in self.cleaned_data["passwords"].split("\n"):
             newpw = i.strip()
             if len(newpw) > 0:
-                passwords.append(newpw)
+                passwords.add(newpw)
         return "\n".join(passwords)
 
     def clean(self):
         ret = super().clean()
+        # prevents user self lockout
         if ProtectionType.authentication.value in self.ptype and \
            self.cleaned_data["passwords"] == "":
             self.cleaned_data["active"] = False
+
         min_length = None
         for pw in self.cleaned_data["passwords"].split("\n"):
             lenpw = len(pw)
@@ -354,7 +356,9 @@ class PasswordProtection(BaseProtection):
     def auth(cls, request, obj, **kwargs):
         retfalse = cls.auth_form()
         if not obj:
-            retfalse.fields["password2"].label = _("Password 2 (if required)")
+            retfalse.fields["password2"].label = _(
+                "Extra Password (if required)"
+            )
             return retfalse
         password = request.POST.get("password", "")
         password2 = request.POST.get("password2", "")
