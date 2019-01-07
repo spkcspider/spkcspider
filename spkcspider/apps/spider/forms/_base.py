@@ -145,7 +145,9 @@ class UserComponentForm(forms.ModelForm):
             self.cleaned_data["strength"] += 5
 
         if self.instance and getattr(self.instance, "id", None):
+            # instant fail strength
             fail_strength = 0
+            # regular protections strength
             amount_regular = 0
             strengths = []
             for protection in self.protections:

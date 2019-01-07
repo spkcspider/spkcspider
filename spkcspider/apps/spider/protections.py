@@ -262,7 +262,7 @@ class LoginProtection(BaseProtection):
     class auth_form(forms.Form):
         use_required_attribute = False
         password = forms.CharField(
-            label=_("Login Password"),
+            label=_("Password"),
             strip=False,
             widget=forms.PasswordInput,
         )
