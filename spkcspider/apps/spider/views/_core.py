@@ -25,7 +25,9 @@ import requests
 import certifi
 
 from ..helpers import merge_get_url, get_settings_func
-from ..constants import VariantType, index_names, VALID_INTENTIONS
+from ..constants import (
+    VariantType, index_names, VALID_INTENTIONS
+)
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
 )
@@ -414,14 +416,15 @@ class ReferrerMixin(object):
         # first check if makeing a intention is allowed
 
         # First error: may not be used with sl:
-        #  we want a secure payments and other intentions
+        #  this way rogue client based attacks are prevented
         if context["is_serverless"]:
             return False
+
+        # Second error: use of weak tokens and components
         if token is None:
             if self.usercomponent.strength < 5:
                 return False
             return True
-        # Second error: use of weak tokens
         if (
             token.extra.get("strength", 0) < 5 or
             token.extra.get("weak", False)
@@ -455,9 +458,6 @@ class ReferrerMixin(object):
 
         context = self.get_context_data()
         context["intentions"] = set(self.request.GET.getlist("intention"))
-        context["use_for_payments"] = (
-            "payment" in context["intentions"]
-        )
         context["is_serverless"] = (
             self.request.GET.get("sl", "") == "true"
         )

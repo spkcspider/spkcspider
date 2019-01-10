@@ -14,16 +14,28 @@ class UserManager(CoreUserManager):
 
 # Create your models here.
 
+def default_quota_spider_user_local():
+    return getattr(settings, "SPIDER_USER_QUOTA_LOCAL", None)
+
+
+def default_quota_spider_user_remote():
+    return getattr(settings, "SPIDER_USER_QUOTA_REMOTE", None)
+
 
 class SpiderUser(AbstractUser):
+    """ A reference User Implementation suitable for spkcspider """
     REQUIRED_FIELDS = []
     SAFE_FIELDS = ['email', 'password']
     if getattr(settings, 'ALLOW_USERNAME_CHANGE', False):
         SAFE_FIELDS.insert(0, 'username')
 
     # optional quota
-    quota = models.PositiveIntegerField(
-        null=True, blank=True, default=None,
+    quota_local = models.PositiveIntegerField(
+        null=True, blank=True, default=default_quota_spider_user_local,
+        help_text=_("Quota in Bytes, null to use standard")
+    )
+    quota_remote = models.PositiveIntegerField(
+        null=True, blank=True, default=default_quota_spider_user_remote,
         help_text=_("Quota in Bytes, null to use standard")
     )
     # first_name,last_name are used in the UserForm so don't remove them

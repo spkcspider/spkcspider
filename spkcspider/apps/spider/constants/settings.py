@@ -21,7 +21,7 @@ NONCE_CHOICES = [
 
 VALID_INTENTIONS = set(getattr(
     settings, "SPIDER_VALID_INTENTIONS",
-    ["payment"]
+    ["payment", "login"]
 ))
 
 force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)

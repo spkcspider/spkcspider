@@ -9,11 +9,25 @@
       <tr>
         <td class="">{{referrer}}</td>
       </tr>
-      {% if use_for_payments %}
+      {% if not referrer.isascii %}
+        <tr class="w3-red">
+          <td>
+            {% trans 'Warning: this referrer may conceal his identity with unicode' %}
+          </td>
+        </tr>
+      {% endif %}
+      {% if "login" in
+      {% if "payment" in intentions %}
         <tr class="w3-orange">
           <td>
-            <data hidden="hidden" property="spkc:payments_allowed" datatype="xsd:boolean">true</data>
             {% trans 'Warning: this referrer wants access to payments' %}
+          </td>
+        </tr>
+      {% endif %}
+      {% if "login" in intentions %}
+        <tr class="w3-green">
+          <td>
+            {% trans 'Login into: ' %}{{referrer}}
           </td>
         </tr>
       {% endif %}

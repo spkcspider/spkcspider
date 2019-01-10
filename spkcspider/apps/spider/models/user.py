@@ -196,11 +196,15 @@ class UserComponent(models.Model):
             **kwargs
         )
 
-    def get_size(self):
-        size_ = 0
+    def get_accumulated_size(self):
+        _local_size = 0
+        _remote_size = 0
         for elem in self.contents.all():
-            size_ += elem.get_size()
-        return size_
+            if VariantType.feature.value in elem.ctype.ctype:
+                _remote_size += elem.get_size()
+            else:
+                _local_size += elem.get_size()
+        return _local_size, _remote_size
 
     def get_absolute_url(self):
         return reverse(
@@ -296,7 +300,8 @@ class UserInfo(models.Model):
     allowed_content = models.ManyToManyField(
         "spider_base.ContentVariant", related_name="+", editable=False
     )
-    used_space = models.BigIntegerField(default=0, editable=False)
+    used_space_local = models.BigIntegerField(default=0, editable=False)
+    used_space_remote = models.BigIntegerField(default=0, editable=False)
 
     class Meta:
         default_permissions = []
@@ -314,24 +319,32 @@ class UserInfo(models.Model):
         # save not required, m2m field
         self.allowed_content.set(allowed)
 
-    def update_used_space(self):
-        size_ = 0
-        for u in self.user.usercomponent_set.all():
-            size_ += u.get_size()
-        self.used_space = size_
+    def calculate_used_space(self):
+        from .models import AssignedContent
+        self.used_space_local = 0
+        self.used_space_remote = 0
+        for c in AssignedContent.objects.filter(
+            usercomponent__user=self.user
+        ):
+            if VariantType.feature.value in c.ctype.ctype:
+                self.used_space_remote += c.get_size()
+            else:
+                self.used_space_local += c.get_size()
 
-    def update_quota(self, size_diff):
-        quota = getattr(settings, "FIELDNAME_QUOTA", None)
-        if quota:
-            quota = getattr(self.user, quota, None)
-        if not quota:
-            quota = getattr(settings, "DEFAULT_QUOTA_USER", None)
-        if quota and self.used_space + size_diff > quota:
-            return ValidationError(
+    def update_with_quota(self, size_diff, quota_type):
+        fname = "used_space_{}".format(quota_type)
+        qval = getattr(self, fname)
+        quota = get_settings_func(
+            "SPIDER_GET_QUOTA",
+            "spkcspider.apps.spider.functions.get_quota"
+        )(self.user, quota_type)
+        # if over quota: reducing size is always good and should never fail
+        if quota and size_diff > 0 and qval + size_diff > quota:
+            raise ValidationError(
                 _("Exceeds quota by %(diff)s Bytes"),
                 code='quota_exceeded',
                 params={'diff': size_diff},
             )
-        else:
-            self.used_space += size_diff
-            self.save()
+        setattr(
+            self, fname, models.F(fname)+size_diff
+        )

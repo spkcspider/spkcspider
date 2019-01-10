@@ -1,7 +1,8 @@
 __all__ = [
     "rate_limit_default", "allow_all_filter",
     "embed_file_default", "has_admin_permission",
-    "LimitedTemporaryFileUploadHandler", "validate_url_default"
+    "LimitedTemporaryFileUploadHandler", "validate_url_default",
+    "get_quota"
 ]
 
 import time
@@ -27,13 +28,19 @@ def rate_limit_default(view, request):
     results = failed_guess.send_robust(sender=view, request=request)
     for (receiver, result) in results:
         if isinstance(result, Exception):
-            logging.exception(result)
+            logging.error(
+                "%s failed", receiver, exc_info=result
+            )
     time.sleep(1)
     raise Http404()
 
 
 def allow_all_filter(*args, **kwargs):
     return True
+
+
+def get_quota(user, quota_type):
+    return getattr(user, "quota_{}".format(quota_type), None)
 
 
 class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):

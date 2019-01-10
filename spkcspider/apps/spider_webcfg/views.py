@@ -2,6 +2,7 @@ __all__ = ("WebConfigView",)
 
 from django.http import Http404
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.http.response import HttpResponse
 
@@ -14,7 +15,6 @@ from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
     AuthToken, AssignedContent, ContentVariant
 )
-
 from .models import WebConfig
 
 
@@ -88,15 +88,26 @@ class WebConfigView(UCTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.object.config = self.request.body.decode("ascii", "ignore")
+        old_size = self.object.get_size()
+        self.object.config = self.request.body.decode(
+            "ascii", "backslashreplace"
+        )
         # a full_clean is here not required
         self.object.clean()
+        try:
+            self.object.update_used_space(old_size-self.object.get_size())
+        except ValidationError as exc:
+            return HttpResponse(
+                str(exc), status_code=400
+            )
         self.object.save()
         return self.render_to_response(None)
 
     def render_to_response(self, context):
         ret = HttpResponse(
-            self.object.config, content_type="text/plain"
+            self.object.config.encode(
+                "ascii", "backslashreplace"
+            ), content_type="text/plain"
         )
         ret["X-SPIDER-URL"] = self.object.url
         ret["X-SPIDER-MODIFIED"] = self.object.associated.modified

@@ -5,11 +5,12 @@ __all__ = (
 import logging
 from urllib.parse import urljoin
 from django.apps import apps as django_apps
-from django.db import models
+from django.db import models, transaction
 from django.utils.translation import gettext
 from django.template.loader import render_to_string
 from django.core.files.base import File
 from django.core.exceptions import NON_FIELD_ERRORS
+from django.core.exceptions import ValidationError
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.http import HttpResponse
@@ -211,13 +212,29 @@ class BaseContent(models.Model):
             return 'spider_base/base_form.html'
         return 'spider_base/view_form.html'
 
+    def update_used_space(self, size_diff):
+        if size_diff == 0:
+            return
+        f = "local"
+        if VariantType.feature.value in self.associated.ctype.ctype:
+            f = "remote"
+        with transaction.atomic():
+            self.associated.usercomponent.user_info.update_with_quota(
+                    size_diff, f
+                )
+            self.associated.usercomponent.user_info.save(
+                update_fields=[
+                    "used_space_local", "used_space_remote"
+                ]
+            )
+
     def render_form(self, scope, **kwargs):
         _ = gettext
         if scope == "add":
             kwargs["form_empty_message"] = _("<b>No User Input required</b>")
-            size_diff = 0
+            old_size = 0
         else:
-            size_diff = self.get_size()
+            old_size = self.get_size()
         parent_form = kwargs.get("form", None)
         kwargs["form"] = self.get_form(scope)(
             **self.get_form_kwargs(
@@ -227,13 +244,12 @@ class BaseContent(models.Model):
         )
         if kwargs["form"].is_valid():
             instance = kwargs["form"].save(False)
-            size_diff = kwargs["form"].instance.get_size() - size_diff
-            if size_diff != 0:
-                ret = self.associated.usercomponent.user_info.update_quota(
-                    size_diff
+            try:
+                self.update_used_space(
+                    kwargs["form"].instance.get_size() - old_size
                 )
-                if ret:
-                    kwargs["form"].add_error(None, ret)
+            except ValidationError as exc:
+                kwargs["form"].add_error(None, exc)
         if kwargs["form"].is_valid():
             instance.save()
             kwargs["form"].save_m2m()

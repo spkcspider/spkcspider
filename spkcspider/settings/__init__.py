@@ -183,9 +183,12 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # RATELIMIT_FUNC_CONTENTS
 # FILET_FILE_DIR
 # FILE_NONCE_SIZE
-# DEFAULT_QUOTA_USER
-# user fieldname of quota
-FIELDNAME_QUOTA = "quota"
+# SPIDER_GET_QUOTA
+# SPIDER_USER_QUOTA_LOCAL
+# SPIDER_USER_QUOTA_REMOTE
+
+## count content from foreign users (e.g. Webcfg to user quota)  # noqa: E266
+# SPIDER_COUNT_REMOTE_CONTENT
 
 # usercomponents created with user
 DEFAULT_USERCOMPONENTS = {

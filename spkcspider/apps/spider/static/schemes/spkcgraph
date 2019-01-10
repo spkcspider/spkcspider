@@ -49,6 +49,11 @@ spkc:Feature a rdfs:Class ;
   rdfs:subClassOf spkc:Entity ;
   rdfs:comment "Contains Feature." .
 
+spkc:Intention a rdfs:Class ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Intention" ;
+  rdfs:comment "What can be done with referred token." .
+
 
 spkc:Protection a rdfs:Class ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

@@ -26,7 +26,7 @@ class WebConfig(BaseContent):
         return reverse("spider_webcfg:webconfig-view")
 
     def get_size(self):
-        return len(self.config.encode("utf8"))
+        return len(self.config)
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)

@@ -1,7 +1,9 @@
 __all__ = ["SpiderBaseConfig"]
 
 from django.apps import AppConfig
-from django.db.models.signals import post_migrate, post_save, post_delete
+from django.db.models.signals import (
+    post_migrate, post_save, post_delete
+)
 from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth import get_user_model
 from django.conf import settings
