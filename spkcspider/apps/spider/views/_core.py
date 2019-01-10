@@ -361,28 +361,31 @@ class ReferrerMixin(object):
         # NOTE: csrf must be disabled or use csrf token from GET,
         #       here is no way to know the token value
         try:
+            d = {
+                "token": token.token,
+                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM
+            }
+            if context["payload"]:
+                d["payload"] = context["payload"]
             ret = requests.post(
                 context["referrer"],
-                data={
-                    "token": token.token,
-                    "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
-                },
+                data=d,
                 headers={
                     "Referer": merge_get_url(
                         "%s%s" % (
                             context["hostpart"],
-                            self.request.get_full_path()
-                        ),
-                        token=None, referrer=None, raw=None, intention=None,
-                        sl=None
+                            self.request.path
+                        )
+                        # not required anymore, payload
+                        # token=None, referrer=None, raw=None, intention=None,
+                        # sl=None, payload=None
                     )
                 },
                 verify=certifi.where()
             )
-            if "account_deletion" in context["intentions"]:
-                if ret.status_code == 403 and ret.reason == "stop_deletion":
-                    # stop deletion
-                    return False
+            if ret.status_code == 403 and ret.reason == "stop":
+                # stop action and warn
+                return False
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:
             logging.info(
@@ -392,7 +395,8 @@ class ReferrerMixin(object):
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
-                    error="post_ssl_failed"
+                    status="post_failed",
+                    error="ssl"
                 )
             )
         except Exception as exc:
@@ -401,7 +405,8 @@ class ReferrerMixin(object):
                 return HttpResponseRedirect(
                     redirect_to=merge_get_url(
                         context["referrer"],
-                        info="post_not_available"
+                        status="post_not_available",
+                        payload=context["payload"]
                     )
                 )
             logging.info(
@@ -411,7 +416,8 @@ class ReferrerMixin(object):
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
-                    error="post_failed"
+                    status="post_failed",
+                    error=""
                 )
             )
         h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
@@ -419,6 +425,7 @@ class ReferrerMixin(object):
         return HttpResponseRedirect(
             redirect_to=merge_get_url(
                 context["referrer"],
+                status="success",
                 hash=h.hexdigest()
             )
         )
@@ -427,7 +434,8 @@ class ReferrerMixin(object):
         return HttpResponseRedirect(
             redirect_to=merge_get_url(
                 context["referrer"],
-                token=token.token
+                token=token.token,
+                payload=context["payload"]
             )
         )
 
@@ -484,6 +492,7 @@ class ReferrerMixin(object):
 
         context = self.get_context_data()
         context["intentions"] = set(self.request.GET.getlist("intention"))
+        context["payload"] = self.request.GET.get("intention", None)
         context["is_serverless"] = (
             self.request.GET.get("sl", "") == "true"
         )
@@ -542,40 +551,40 @@ class ReferrerMixin(object):
             if context["is_serverless"]:
                 return self.refer_with_get(context, token)
             ret = self.refer_with_post(context, token)
-            if (
-                "account_deletion" in context["intentions"] and
-                ret is not False
-            ):
-                results = remote_account_deletion.send_robust(
-                    sender=UserComponent,
-                    instance=self.usercomponent,
-                    remote=context["referrer"],
-                    token=token.token
-                )
-                for (receiver, result) in results:
-                    if isinstance(result, Exception):
-                        logging.error(
-                            "%s failed", receiver, exc_info=result
-                        )
+            if ret is not False:
+                if "account_deletion" in context["intentions"]:
+                    results = remote_account_deletion.send_robust(
+                        sender=UserComponent,
+                        instance=self.usercomponent,
+                        remote=context["referrer"],
+                        token=token.token
+                    )
+                    for (receiver, result) in results:
+                        if isinstance(result, Exception):
+                            logging.error(
+                                "%s failed", receiver, exc_info=result
+                            )
                 return ret
             else:
                 logging.critical(
-                    "!!! someone tried to delete: \"%s\" !!!",
+                    "!!! someone tried to misuse referrer: \"%s\" !!!",
                     context["referrer"]
                 )
                 token.delete()
                 return HttpResponse(
                     status=400,
-                    content=_('WARNING: someone tried to delete: %s') % {
-                        "url": context["referrer"]
-                    }
+                    content=_(
+                        'WARNING: someone tried to '
+                        'misuse referrer: %s'
+                    ) % context["referrer"]
                 )
 
         elif action == "cancel":
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
-                    error="canceled"
+                    status="canceled",
+                    payload=context["payload"]
                 )
             )
         else:
@@ -584,11 +593,9 @@ class ReferrerMixin(object):
                 if self.usercomponent.user != self.request.user:
                     token = self.request.auth_token
                 if not self.check_refer_intentions(context, token):
-                    return HttpResponseRedirect(
-                        redirect_to=merge_get_url(
-                            context["referrer"],
-                            error="intentions_incorrect"
-                        )
+                    return HttpResponse(
+                        status=400,
+                        content=_('Error: intentions incorrect')
                     )
             return self.response_class(
                 request=self.request,
