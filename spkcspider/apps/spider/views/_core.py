@@ -355,7 +355,6 @@ class ReferrerMixin(object):
         return super().get_context_data(**kwargs)
 
     def refer_with_post(self, context, token):
-        _ = gettext
         # application/x-www-form-urlencoded is best here,
         # for beeing compatible to most webservers
         # client side rdf is no problem
@@ -380,21 +379,31 @@ class ReferrerMixin(object):
                 },
                 verify=certifi.where()
             )
-        except requests.exceptions.SSLError:
-            return HttpResponse(
-                status=400,
-                content=_('doesn\'t support ssl: %(url)s') % {
-                    "url": context["referrer"]
-                }
+            ret.raise_for_status()
+        except requests.exceptions.SSLError as exc:
+            logging.warning(
+                "referrer: \"%s\" has a broken ssl configuration",
+                context["referrer"], exc_info=exc
             )
-        except Exception:
-            return HttpResponse(
-                status=400,
-                content=_('failure: %(url)s') % {
-                    "url": context["referrer"]
-                }
+            return HttpResponseRedirect(
+                redirect_to=merge_get_url(
+                    context["referrer"],
+                    error="post_ssl_failed"
+                )
             )
-        if ret.status_code not in (200, 201):
+        except Exception as exc:
+            # for serverless systems
+            if "account_deletion" in context["intentions"]:
+                return HttpResponseRedirect(
+                    redirect_to=merge_get_url(
+                        context["referrer"],
+                        info="post_not_available"
+                    )
+                )
+            logging.info(
+                "post failed: \"%s\" failed",
+                context["referrer"], exc_info=exc
+            )
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
@@ -502,7 +511,7 @@ class ReferrerMixin(object):
                     }
                 )
             else:
-                # recycle token
+                # repurpose token
                 # NOTE: one token, one referrer
                 token = self.request.auth_token
             if context["intentions"]:
