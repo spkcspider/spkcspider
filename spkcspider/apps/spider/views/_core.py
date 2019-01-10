@@ -383,9 +383,6 @@ class ReferrerMixin(object):
                 },
                 verify=certifi.where()
             )
-            if ret.status_code == 403 and ret.reason == "stop":
-                # stop action and warn
-                return False
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:
             logging.info(
@@ -400,15 +397,6 @@ class ReferrerMixin(object):
                 )
             )
         except Exception as exc:
-            # for serverless systems
-            if "account_deletion" in context["intentions"]:
-                return HttpResponseRedirect(
-                    redirect_to=merge_get_url(
-                        context["referrer"],
-                        status="post_not_available",
-                        payload=context["payload"]
-                    )
-                )
             logging.info(
                 "post failed: \"%s\" failed",
                 context["referrer"], exc_info=exc
@@ -420,6 +408,7 @@ class ReferrerMixin(object):
                     error=""
                 )
             )
+        context["post_success"] = True
         h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
         h.update(token.token.encode("ascii", "ignore"))
         return HttpResponseRedirect(
@@ -440,8 +429,6 @@ class ReferrerMixin(object):
         )
 
     def check_refer_intentions(self, context, token=None):
-        # first check if makeing a intention is allowed
-
         # First error: may not be used with sl:
         #  this way rogue client based attacks are prevented
         if context["is_serverless"]:
@@ -450,14 +437,20 @@ class ReferrerMixin(object):
         # Second error: invalid intentions or combinations
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
-        # account_deletion must be specified alone
-        if (
-            "account_deletion" in context["intentions"] and
-            len(context["intentions"]) > 1
-        ):
-            return False
+        if "account_deletion" in context["intentions"]:
+            # account_deletion must be specified alone
+            if len(context["intentions"]) > 1:
+                return False
+            # also check real referrer (only here critical)
+            if (
+                token is None and
+                not context["referrer"].startswith(
+                    self.request.get("Referer")
+                )
+            ):
+                return False
 
-        # Third error: use of weak tokens and components
+        # Third error: use of weak tokens or components
         if token is None:
             if self.usercomponent.strength < 5:
                 return False
@@ -467,12 +460,10 @@ class ReferrerMixin(object):
             token.extra.get("weak", False)
         ):
             return False
-        # Fourth reason: token was reused
-        old = token.extra.get("referrer", None)
-        if old is not None:
+        # check if token was reused
+        if token.referrer is not None:
             return False
-        old = token.extra.get("intentions", None)
-        if old is not None:
+        if token.extra.get("intentions", None) is not None:
             return False
         return True
 
@@ -550,34 +541,24 @@ class ReferrerMixin(object):
 
             if context["is_serverless"]:
                 return self.refer_with_get(context, token)
+            context["post_success"] = False
             ret = self.refer_with_post(context, token)
-            if ret is not False:
-                if "account_deletion" in context["intentions"]:
-                    results = remote_account_deletion.send_robust(
-                        sender=UserComponent,
-                        instance=self.usercomponent,
-                        remote=context["referrer"],
-                        token=token.token
-                    )
-                    for (receiver, result) in results:
-                        if isinstance(result, Exception):
-                            logging.error(
-                                "%s failed", receiver, exc_info=result
-                            )
-                return ret
-            else:
-                logging.critical(
-                    "!!! someone tried to misuse referrer: \"%s\" !!!",
-                    context["referrer"]
+            if (
+                context["post_success"] and
+                "account_deletion" in context["intentions"]
+            ):
+                results = remote_account_deletion.send_robust(
+                    sender=UserComponent,
+                    instance=self.usercomponent,
+                    remote=context["referrer"],
+                    token=token.token
                 )
-                token.delete()
-                return HttpResponse(
-                    status=400,
-                    content=_(
-                        'WARNING: someone tried to '
-                        'misuse referrer: %s'
-                    ) % context["referrer"]
-                )
+                for (receiver, result) in results:
+                    if isinstance(result, Exception):
+                        logging.error(
+                            "%s failed", receiver, exc_info=result
+                        )
+            return ret
 
         elif action == "cancel":
             return HttpResponseRedirect(
