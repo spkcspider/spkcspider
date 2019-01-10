@@ -61,6 +61,9 @@ def serialize_content(graph, content, context, embed=False):
         graph, "info", ref=ref_content, ob=content
     )
     add_property(
+        graph, "priority", ref=ref_content, ob=content
+    )
+    add_property(
         graph, "id", ref=ref_content, literal=content.get_id(),
         datatype=XSD.integer
     )
@@ -149,7 +152,7 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
                 count += 1
                 if limit_depth and count > limit_depth:
                     logging.warning(
-                        "Content references exceeded maximal depth"
+                        "Content references exceeded allowed depth"
                     )
                     break
             else:
@@ -213,6 +216,10 @@ def serialize_stream(
         ref_component = None
         usercomponent = None
         for content in page_view.object_list:
+            # leads to possible duplicate usercomponents among multiple pages
+            # but every graph is complete
+            # and is safer in case a site splits between
+            # two different components
             if usercomponent != content.usercomponent:
                 usercomponent = content.usercomponent
                 ref_component = serialize_component(

@@ -59,6 +59,11 @@ class LinkContent(BaseContent):
         on_delete=models.CASCADE
     )
 
+    push = models.BooleanField(
+        blank=True, default=False,
+        help_text=_("Push Link to top.")
+    )
+
     def __str__(self):
         if getattr(self, "content", None):
             return "Link: <%s>" % self.content
@@ -73,6 +78,13 @@ class LinkContent(BaseContent):
 
     def get_strength(self):
         return self.content.content.get_strength()
+
+    def get_priority(self):
+        priority = self.content.content.get_priority()
+        # pin to top
+        if self.pin and priority < 1:
+            return 1
+        return priority
 
     def get_strength_link(self):
         # don't allow links linking on links
@@ -224,6 +236,10 @@ class TravelProtection(BaseContent):
 
     def get_strength_link(self):
         return 5
+
+    def get_priority(self):
+        # pin to top with higher priority
+        return 2
 
     def get_form(self, scope):
         from ..forms import TravelProtectionForm

@@ -102,7 +102,7 @@ class ComponentIndexBase(ListView):
         # this is enforced by setting "is_special_user" to False
         if not (
             self.request.is_special_user and "_unlisted" in searchlist
-        ) or self.scope == "export":
+        ) or self.scope != "export":
             searchq_exc |= models.Q(contents__info__contains="\nunlisted\n")
 
         if idlist:

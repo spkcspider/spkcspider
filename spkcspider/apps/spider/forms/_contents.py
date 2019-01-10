@@ -35,7 +35,7 @@ class LinkForm(forms.ModelForm):
 
     class Meta:
         model = LinkContent
-        fields = ['content']
+        fields = ['content', 'push']
 
     def __init__(self, uc, **kwargs):
         super().__init__(**kwargs)

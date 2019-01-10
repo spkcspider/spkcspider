@@ -28,6 +28,10 @@ class WebConfig(BaseContent):
     def get_size(self):
         return len(self.config)
 
+    def get_priority(self):
+        # low priority
+        return -10
+
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
         ret["scope"] = kwargs["scope"]

@@ -152,6 +152,10 @@ class TextFilet(BaseContent):
         help_text=_("Allow editing from selected components."),
         blank=True
     )
+    push = models.BooleanField(
+        blank=True, default=False,
+        help_text=_("Push TextFilet to top.")
+    )
 
     preview_words = models.PositiveIntegerField(
         default=0,
@@ -167,6 +171,12 @@ class TextFilet(BaseContent):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
         return self.name
+
+    def get_priority(self):
+        # pin to top
+        if self.pin:
+            return 1
+        return 0
 
     def get_template_name(self, scope):
         # view update form

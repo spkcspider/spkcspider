@@ -156,6 +156,9 @@ class BaseContent(models.Model):
     def get_size(self):
         return 0
 
+    def get_priority(self):
+        return 0
+
     @classmethod
     def action_url(cls):
         return None
@@ -563,6 +566,7 @@ class BaseContent(models.Model):
             self._associated_tmp.content = self
         assignedcontent = self.associated
         assignedcontent.info = self.get_info()
+        assignedcontent.priority = self.get_priority()
         assignedcontent.strength = self.get_strength()
         assignedcontent.strength_link = self.get_strength_link()
         assignedcontent.full_clean(exclude=["content"])

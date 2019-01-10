@@ -68,7 +68,7 @@ class TextForm(forms.ModelForm):
 
     class Meta:
         model = TextFilet
-        fields = ['text', 'name', 'editable_from', 'preview_words']
+        fields = ['text', 'name', 'push', 'editable_from', 'preview_words']
 
         widgets = {
             "editable_from": forms.CheckboxSelectMultiple()

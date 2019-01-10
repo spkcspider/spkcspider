@@ -115,6 +115,7 @@ class AssignedContent(models.Model):
         ContentVariant, editable=False, null=True,
         on_delete=models.SET_NULL
     )
+    priority = models.SmallIntegerField(default=0, blank=True)
 
     # creator = models.ForeignKey(
     #    settings.AUTH_USER_MODEL, editable=False, null=True,

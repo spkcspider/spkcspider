@@ -90,7 +90,7 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
         # ordering will happen in serializer
         if self.scope == "export" or "raw" in self.request.GET:
             return None
-        return ("-modified",)
+        return ("-priority", "-modified")
 
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
@@ -218,10 +218,16 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
             if ids is not None:
                 searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
 
-        # list only unlisted if explicity requested or export
-        if not (
-            self.request.is_special_user and "_unlisted" in searchlist
-        ) or self.scope == "export":
+        # list only unlisted if explicity requested or export or:
+        # if it has high priority (only for special users)
+        # listing prioritized, unlisted content is different to the broader
+        # search
+        if self.request.is_special_user:
+            if "_unlisted" not in searchlist and not self.scope == "export":
+                searchq_exc |= models.Q(
+                    info__contains="\nunlisted\n", priority__lte=0
+                )
+        else:
             searchq_exc |= models.Q(info__contains="\nunlisted\n")
         order = self.get_ordering(counter > 0)
         # distinct required?
