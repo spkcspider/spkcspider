@@ -24,13 +24,13 @@ def TriggerUpdate(sender, **_kwargs):
             )
 
 
-def DeleteAssociatedTokens(sender, instance, remote, **kwargs):
+def DeleteAssociatedTokens(sender, instance, remote, token, **kwargs):
     from .models import AuthToken
-    # remove access to features (only account_deletion token exists)
+    # remove access to features (only account_deletion token remains)
     AuthToken.objects.filter(
         usercomponent=instance,
         referrer=remote
-    ).delete()
+    ).exclude(token=token).delete()
 
 
 def CleanupCallback(sender, instance, **kwargs):

@@ -379,9 +379,13 @@ class ReferrerMixin(object):
                 },
                 verify=certifi.where()
             )
+            if "account_deletion" in context["intentions"]:
+                if ret.status_code == 403 and ret.reason == "stop_deletion":
+                    # stop deletion
+                    return False
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:
-            logging.warning(
+            logging.info(
                 "referrer: \"%s\" has a broken ssl configuration",
                 context["referrer"], exc_info=exc
             )
@@ -526,18 +530,6 @@ class ReferrerMixin(object):
             else:
                 token.extra["intentions"] = []
             token.referrer = context["referrer"]
-
-            if "account_deletion" in context["intentions"]:
-                results = remote_account_deletion.send_robust(
-                    sender=UserComponent,
-                    instance=self.usercomponent,
-                    remote=context["referrer"]
-                )
-                for (receiver, result) in results:
-                    if isinstance(result, Exception):
-                        logging.error(
-                            "%s failed", receiver, exc_info=result
-                        )
             # after cleanup, save deletion token
             try:
                 token.save()
@@ -549,7 +541,35 @@ class ReferrerMixin(object):
 
             if context["is_serverless"]:
                 return self.refer_with_get(context, token)
-            return self.refer_with_post(context, token)
+            ret = self.refer_with_post(context, token)
+            if (
+                "account_deletion" in context["intentions"] and
+                ret is not False
+            ):
+                results = remote_account_deletion.send_robust(
+                    sender=UserComponent,
+                    instance=self.usercomponent,
+                    remote=context["referrer"],
+                    token=token.token
+                )
+                for (receiver, result) in results:
+                    if isinstance(result, Exception):
+                        logging.error(
+                            "%s failed", receiver, exc_info=result
+                        )
+                return ret
+            else:
+                logging.critical(
+                    "!!! someone tried to delete: \"%s\" !!!",
+                    context["referrer"]
+                )
+                token.delete()
+                return HttpResponse(
+                    status=400,
+                    content=_('WARNING: someone tried to delete: %s') % {
+                        "url": context["referrer"]
+                    }
+                )
 
         elif action == "cancel":
             return HttpResponseRedirect(
