@@ -140,7 +140,7 @@ There are some special GET parameters for services with special requirements:
   * payload=<foo>: passed on successfull requests (including post), e.g. for sessionid  
   * intention=payment: referrer can initiate payments (referrer sends link along with payment informations to payment provider which allows the user to confirm the transaction with a second kind of authentication)
   * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
-  * intention=account_deletion: initiates account deletion on referrer, all related web configs are also removed, must not appear with other intentions
+  * intention=account_deletion: initiates account deletion on referrer, all related features are also removed; must not appear with other intentions and require the post path (this means: either server based systems or server-less systems implementing post stub)
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
 
 ## search parameters
