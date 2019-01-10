@@ -40,7 +40,12 @@ class WebConfigView(UCTestMixin, View):
             token=token,
             usercomponent__features__name="WebConfig",
         )
-        if "referrer" not in self.request.authtoken.extra:
+        if (
+            not self.request.authtoken.referrer or
+            "account_deletion" in self.request.authtoken.extra.get(
+                "intentions", []
+            )
+        ):
             raise Http404()
         usercomponent = self.request.authtoken.usercomponent
         expire = timezone.now()-usercomponent.token_duration
@@ -62,7 +67,7 @@ class WebConfigView(UCTestMixin, View):
         )
         ret = AssignedContent.objects.filter(
             info__contains="\nurl={}\n".format(
-                self.request.authtoken.extra["referrer"].replace("\n", "%0A")
+                self.request.authtoken.referrer.replace("\n", "%0A")
             ),
             usercomponent=self.usercomponent,
             ctype=variant
@@ -74,7 +79,7 @@ class WebConfigView(UCTestMixin, View):
             ctype=variant
         )
         ret = self.model.static_create(associated)
-        ret.url = self.request.authtoken.extra["referrer"]
+        ret.url = self.request.authtoken.referrer
         ret.creation_url = "{}://{}{}".format(
             self.request.scheme, self.request.get_host(), self.request.path
         )

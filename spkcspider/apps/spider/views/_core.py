@@ -25,6 +25,7 @@ import requests
 import certifi
 
 from ..helpers import merge_get_url, get_settings_func
+from ..signals import remote_account_deletion
 from ..constants import (
     VariantType, index_names, VALID_INTENTIONS
 )
@@ -167,6 +168,11 @@ class UserTestMixin(AccessMixin):
                     session_key=self.request.session.session_key
                 ).first()
             if token:
+                # cannot access resources with an account_deletion key
+                if "account_deletion" in self.request.auth_token.extra.get(
+                    "intentions", []
+                ):
+                    return False
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
                 self.request.auth_token = token
@@ -420,7 +426,17 @@ class ReferrerMixin(object):
         if context["is_serverless"]:
             return False
 
-        # Second error: use of weak tokens and components
+        # Second error: invalid intentions or combinations
+        if not context["intentions"].issubset(VALID_INTENTIONS):
+            return False
+        # account_deletion must be specified alone
+        if (
+            "account_deletion" in context["intentions"] and
+            len(context["intentions"]) > 1
+        ):
+            return False
+
+        # Third error: use of weak tokens and components
         if token is None:
             if self.usercomponent.strength < 5:
                 return False
@@ -430,15 +446,12 @@ class ReferrerMixin(object):
             token.extra.get("weak", False)
         ):
             return False
-        # Third reason: token was reused
+        # Fourth reason: token was reused
         old = token.extra.get("referrer", None)
         if old is not None:
             return False
         old = token.extra.get("intentions", None)
         if old is not None:
-            return False
-        # Fourth reason: invalid intention
-        if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
         return True
 
@@ -503,8 +516,20 @@ class ReferrerMixin(object):
                 token.extra["intentions"] = list(context["intentions"])
             else:
                 token.extra["intentions"] = []
-            token.extra["referrer"] = context["referrer"]
+            token.referrer = context["referrer"]
 
+            if "account_deletion" in context["intentions"]:
+                results = remote_account_deletion.send_robust(
+                    sender=UserComponent,
+                    instance=self.usercomponent,
+                    remote=context["referrer"]
+                )
+                for (receiver, result) in results:
+                    if isinstance(result, Exception):
+                        logging.error(
+                            "%s failed", receiver, exc_info=result
+                        )
+            # after cleanup, save deletion token
             try:
                 token.save()
             except TokenCreationError as e:
@@ -512,6 +537,7 @@ class ReferrerMixin(object):
                 return HttpResponseServerError(
                     _("Token creation failed, try again")
                 )
+
             if context["is_serverless"]:
                 return self.refer_with_get(context, token)
             return self.refer_with_post(context, token)

@@ -137,7 +137,9 @@ There are some special GET parameters for services with special requirements:
 * protection=xy&protection=yx...: protections to use
 * referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if Referring Feature is active
   * sl=true: server-less referrer mode: if "true" token is transferred as GET parameter and no POST request is made (less secure as client sees token)
-  * intention=payment: link can be used for payments (referrer sends link along with payment informations to payment provider which allows the user to confirm the transaction with a second kind of authentication)
+  * intention=payment: referrer can initiate payments (referrer sends link along with payment informations to payment provider which allows the user to confirm the transaction with a second kind of authentication)
+  * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
+  * intention=account_deletion: initiates account deletion on referrer, all related web configs are also removed, must not appear with other intentions
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
 
 ## search parameters

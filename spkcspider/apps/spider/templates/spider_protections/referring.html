@@ -16,6 +16,13 @@
           </td>
         </tr>
       {% endif %}
+      {% if not referrer.isascii %}
+        <tr class="w3-red">
+          <td>
+            {% trans 'Warning: initiate remote account deletion of referrer. ARE YOU SURE?' %}
+          </td>
+        </tr>
+      {% endif %}
       {% if "login" in
       {% if "payment" in intentions %}
         <tr class="w3-orange">

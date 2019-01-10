@@ -266,6 +266,9 @@ class AuthToken(models.Model):
         max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
         db_index=True, unique=True
     )
+    referrer = models.URLField(
+        max_length=400, blank=True, null=True
+    )
     extra = JSONField(default={}, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
 

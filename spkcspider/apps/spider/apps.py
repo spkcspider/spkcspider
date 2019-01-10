@@ -24,6 +24,7 @@ class SpiderBaseConfig(AppConfig):
         from .models import (
             AssignedContent, UserComponent
         )
+        from .signals import DeleteAssociatedTokens, remote_account_deletion
 
         from django.apps import apps
         from .protections import installed_protections
@@ -32,6 +33,9 @@ class SpiderBaseConfig(AppConfig):
             installed_protections.update(
                 extract_app_dicts(app, "spider_protections", "name")
             )
+        remote_account_deletion.connect(
+            DeleteAssociatedTokens, dispatch_uid="delete_associated_tokens"
+        )
 
         user_logged_out.connect(
             RemoveTokensLogout, dispatch_uid="delete_token_logout"

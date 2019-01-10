@@ -17,7 +17,7 @@ class WebConfig(BaseContent):
         }
     ]
 
-    url = models.URLField(max_length=800)
+    url = models.URLField(max_length=400)
     creation_url = models.URLField(editable=False)
     config = models.TextField(default="", blank=True)
 
