@@ -26,7 +26,7 @@ import certifi
 
 from ..helpers import merge_get_url, get_settings_func
 from ..constants import (
-    VariantType, index_names, VALID_INTENTIONS
+    VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS
 )
 from ..models import (
     UserComponent, AuthToken, TokenCreationError
@@ -105,12 +105,13 @@ class UserTestMixin(AccessMixin):
             d["session_key"] = self.request.session.session_key
 
         token = None
+        # if persist try to find old token
         if "persist" in self.request.GET.getlist("intention"):
             if self.request.GET.get("referrer", None) is None:
                 return False
-            referrer = merge_get_url(self.request.GET["referrer"])
             token = AuthToken.objects.filter(
-                usercomponent=self.usercomponent, referrer=referrer,
+                usercomponent=self.usercomponent,
+                referrer=merge_get_url(self.request.GET["referrer"]),
                 persist=True
             ).first()
             if token:
@@ -142,7 +143,6 @@ class UserTestMixin(AccessMixin):
         return self.create_token(
             self.request.user,
             extra={
-                "weak": False,
                 "strength": 10
             }
         )
@@ -158,6 +158,21 @@ class UserTestMixin(AccessMixin):
         expire = timezone.now()-self.usercomponent.token_duration
         tokenstring = self.request.GET.get("token", None)
         no_token = (self.usercomponent.required_passes == 0)
+        if "intention" in self.request.GET:
+            if not VALID_INTENTIONS.issuperset(
+                self.request.GET.getlist("intention")
+            ):
+                return False
+
+            if not self.usercomponent.can_auth:
+                return HttpResponseRedirect(
+                    redirect_to="{}?{}={}".format(
+                        self.get_login_url(),
+                        REDIRECT_FIELD_NAME,
+                        quote_plus(self.request.get_full_path())
+                    )
+                )
+            no_token = False
 
         # token not required
         if not no_token or tokenstring:
@@ -192,6 +207,10 @@ class UserTestMixin(AccessMixin):
                     settings.MIN_STRENGTH_EVELATION
                 ):
                     self.request.is_elevated_request = True
+                if self.request.auth_token.extra.get("strength", 0) >= 4:
+                    self.request.is_elevated_request = True
+                    self.request.is_special_user = True
+                    self.request.is_owner = True
                 return True
 
         protection_codes = None
@@ -202,20 +221,26 @@ class UserTestMixin(AccessMixin):
             request=self.request, scope=self.scope,
             protection_codes=protection_codes
         )
-        if self.request.protections is True:
+        if isinstance(self.request.protections, int):
             # token not required
             if no_token:
                 return True
-            # is_elevated_request requires token
-            if (
-                self.usercomponent.strength >=
-                settings.MIN_STRENGTH_EVELATION
-            ):
-                self.request.is_elevated_request = True
 
             token = self.create_token(
-                strength=self.usercomponent.strength
+                extra={
+                    "strength": self.request.protection
+                }
             )
+
+            # is_elevated_request requires token
+            if (
+                self.usercomponent.strength >= settings.MIN_STRENGTH_EVELATION
+            ):
+                self.request.is_elevated_request = True
+            if self.request.auth_token.extra.get("strength", 0) >= 4:
+                self.request.is_elevated_request = True
+                self.request.is_special_user = True
+                self.request.is_owner = True
 
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
@@ -425,21 +450,31 @@ class ReferrerMixin(object):
         )
 
     def check_refer_intentions(self, context, token=None):
-        # First error: may not be used with sl:
-        #  this way rogue client based attacks are prevented
-        if context["is_serverless"]:
-            return False
-
-        # Second error: invalid intentions or combinations
+        # First error: invalid intentions
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
+        # only one main intention
+        if len(context["intentions"].difference(VALID_SUB_INTENTIONS)) <= 1:
+            return False
+        # persist, sl can be serverless other not
+        #  this way rogue client based attacks are prevented
+        if "persist" not in context["intentions"]:
+            if context["is_serverless"] and len(context["intentions"]) == 1:
+                return False
+
         if not token:
             return True
-        # check if token was reused
-        if token.referrer is not None:
-            return False
-        if token.extra.get("intentions", None) is not None:
-            return False
+        if "persist" in context["intentions"]:
+            # cannot add sl intention
+            if "intentions" in token.extra:
+                if "sl" in context["intentions"].difference(
+                    token.extra["intentions"]
+                ):
+                    return False
+        else:
+            # check if token was reused
+            if token.referrer:
+                return False
         return True
 
     def handle_referrer(self):
@@ -458,10 +493,8 @@ class ReferrerMixin(object):
 
         context = self.get_context_data()
         context["intentions"] = set(self.request.GET.getlist("intention"))
-        context["payload"] = self.request.GET.get("intention", None)
-        context["is_serverless"] = (
-            self.request.GET.get("sl", "") == "true"
-        )
+        context["payload"] = self.request.GET.get("payload", None)
+        context["is_serverless"] = "sl" in context["intentions"]
         context["referrer"] = merge_get_url(self.request.GET["referrer"])
         if not get_settings_func(
             "SPIDER_URL_VALIDATOR",
@@ -482,10 +515,6 @@ class ReferrerMixin(object):
                 token = AuthToken(
                     usercomponent=self.usercomponent,
                     extra={
-                        "ids": list(
-                            self.object_list.values_list("id", flat=True)
-                        ),
-                        "weak": False,
                         "strength": 10
                     }
                 )
@@ -504,8 +533,15 @@ class ReferrerMixin(object):
                 token.extra["intentions"] = list(context["intentions"])
             else:
                 token.extra["intentions"] = []
+
+            if "search" in context["intentions"]:
+                token.extra["search"] = self.request.GET.getlist("search")
+            else:
+                token.extra["ids"] = list(
+                    self.object_list.values_list("id", flat=True)
+                )
             token.referrer = context["referrer"]
-            # after cleanup, save deletion token
+            # after cleanup, save
             try:
                 token.save()
             except TokenCreationError as e:
@@ -518,6 +554,8 @@ class ReferrerMixin(object):
                 return self.refer_with_get(context, token)
             context["post_success"] = False
             ret = self.refer_with_post(context, token)
+            if not context["post_success"]:
+                token.delete()
             return ret
 
         elif action == "cancel":

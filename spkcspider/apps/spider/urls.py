@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 
 from .views import (
     ComponentIndex, ComponentPublicIndex, ComponentCreate,
-    ComponentUpdate, ComponentDelete, TokenDelete
+    ComponentUpdate, ComponentDelete, TokenDelete, TokenDeletionRequest
 )
 from .views import (
     ContentAdd, ContentIndex, ContentAccess, ContentRemove
@@ -61,6 +61,11 @@ urlpatterns = [
         'token/delete/<str:name>/',
         login_required(TokenDelete.as_view()),
         name='token-delete'
+    ),
+    path(
+        'token/delete-request/',
+        login_required(TokenDeletionRequest.as_view()),
+        name='token-delete-request'
     ),
 
     path(

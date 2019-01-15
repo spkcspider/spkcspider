@@ -70,7 +70,7 @@ class SpiderAuthBackend(ModelBackend):
                     ptype=ProtectionType.authentication.value,
                     protection_codes=protection_codes
                 )
-                if request.protections is True:  # should never happen
+                if isinstance(request.protections, int):  # should never happen
                     return None
             else:
                 if uc_fake:
@@ -79,7 +79,7 @@ class SpiderAuthBackend(ModelBackend):
                         ptype=ProtectionType.authentication.value,
                         protection_codes=protection_codes
                     )
-                    if request.protections is True:
+                    if isinstance(request.protections, int):
                         request.session["is_fake"] = True
                         return uc_fake.user
                 protections = uc.auth(

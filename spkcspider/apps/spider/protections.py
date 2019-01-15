@@ -135,8 +135,9 @@ class BaseProtection(forms.Form):
         # 1 weak protection
         # 2 normal protection
         # 3 strong protection
-        # 4 reserved for login only, login protection, maybe for other superb
-        return 1
+        # 4 reserved for login only, can be returned to auth user
+        # tuple for min max
+        return (1, 1)
 
     @staticmethod
     def extract_form_kwargs(request):
@@ -153,7 +154,7 @@ class BaseProtection(forms.Form):
         if hasattr(cls, "auth_form"):
             form = cls.auth_form(**cls.extract_form_kwargs(request))
             if form.is_valid():
-                return True
+                return self.get_strength()
             return form
         return False
 
@@ -188,7 +189,7 @@ class FriendProtection(BaseProtection):
     description = _("Limit access to selected users")
 
     def get_strength(self):
-        return 3
+        return (3, 3)
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
@@ -199,7 +200,7 @@ class FriendProtection(BaseProtection):
                 obj.data["users"]
             )
         ):
-            return True
+            return 3
         else:
             return False
 
@@ -234,8 +235,8 @@ class RandomFailProtection(BaseProtection):
 
     def get_strength(self):
         if self.cleaned_data["success_rate"] > 70:
-            return 0
-        return 1
+            return (0, 0)
+        return (1, 1)
 
     @classmethod
     def localize_name(cls, name=None):
@@ -245,7 +246,7 @@ class RandomFailProtection(BaseProtection):
     def auth(cls, request, obj, **kwargs):
         if obj and obj.data.get("success_rate", None):
             if _sysrand.randrange(1, 101) <= obj.data["success_rate"]:
-                return True
+                return 0
             elif obj.data.get("use_404", False):
                 raise Http404()
         return False
@@ -275,7 +276,7 @@ class LoginProtection(BaseProtection):
             self.fields["active"].disabled = True
 
     def get_strength(self):
-        return 4
+        return (3, 3)
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
@@ -287,7 +288,7 @@ class LoginProtection(BaseProtection):
             if authenticate(
                 request, username=username, password=password, nospider=True
             ):
-                return True
+                return 3
         return cls.auth_form()
 
     @classmethod
@@ -320,12 +321,18 @@ class PasswordProtection(BaseProtection):
         initial=""
     )
 
-    def get_strength(self):
-        if self.cleaned_data["min_length"] > 15:
+    def eval_strength(self, length):
+        if length > 15:
             return 2
-        if self.cleaned_data["min_length"] > 40:
+        if length > 40:
             return 3
         return 1
+
+    def get_strength(self):
+        return self.eval_strength(
+            self.cleaned_data["min_length"],
+            self.cleaned_data["max_length"]
+        )
 
     def clean_passwords(self):
         passwords = set()
@@ -343,11 +350,16 @@ class PasswordProtection(BaseProtection):
             self.cleaned_data["active"] = False
 
         min_length = None
+        max_length = None
+
         for pw in self.cleaned_data["passwords"].split("\n"):
             lenpw = len(pw)
             if not min_length or lenpw < min_length:
                 min_length = lenpw
-        ret["min_length"] = lenpw
+            if not max_length or lenpw > max_length:
+                max_length = lenpw
+        ret["min_length"] = min_length
+        ret["max_length"] = max_length
         return ret
 
     @classmethod
@@ -359,13 +371,17 @@ class PasswordProtection(BaseProtection):
             )
             return retfalse
         success = False
+        max_length = 0
         for password in request.POST.getlist("password")[:2]:
             for pw in obj.data["passwords"].split("\n"):
                 if constant_time_compare(pw, password):
                     success = True
+            if success:
+                max_length = max(len(password), max_length)
 
-        if success:
-            return True
+
+        if success is not False:
+            return self.eval_strength(max_length)
         return retfalse
 
 

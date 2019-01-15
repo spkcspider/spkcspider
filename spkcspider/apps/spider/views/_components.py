@@ -1,7 +1,7 @@
 
 __all__ = (
     "ComponentIndex", "ComponentPublicIndex", "ComponentCreate",
-    "ComponentUpdate", "ComponentDelete", "TokenDelete"
+    "ComponentUpdate", "ComponentDelete"
 )
 
 from django.views.generic.list import ListView
@@ -19,7 +19,7 @@ from ..constants.static import index_names
 from ..forms import UserComponentForm
 from ..contents import installed_contents
 from ..models import (
-    UserComponent, TravelProtection, AuthToken
+    UserComponent, TravelProtection
 )
 from ..constants.static import spkcgraph, VariantType
 from ..helpers import merge_get_url
@@ -413,63 +413,6 @@ class ComponentUpdate(UserTestMixin, UpdateView):
                 form=self.get_form_class()(**self.get_form_success_kwargs())
             )
         )
-
-
-class TokenDelete(UCTestMixin, DeleteView):
-    no_nonce_usercomponent = True
-    also_authenticated_users = True
-
-    def get_object(self):
-        return None
-
-    def delete(self, request, *args, **kwargs):
-        self.remove_old_tokens()
-        query = AuthToken.objects.filter(
-            usercomponent=self.usercomponent,
-            id__in=self.request.POST.getlist("tokens")
-        )
-        # replace active admin token
-        if query.filter(
-            created_by_special_user=self.request.user
-        ).exists():
-            self.request.auth_token = self.create_token(
-                self.request.user,
-                extra={
-                    "strength": 10
-                }
-            )
-        query.delete()
-        del query
-        return self.get(request, *args, **kwargs)
-
-    def post(self, request, *args, **kwargs):
-        return self.delete(self, request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        self.remove_old_tokens()
-        response = {
-            "tokens": [
-                {
-                    "expires": None if i.persist else (
-                        i.created +
-                        self.usercomponent.token_duration
-                    ).strftime("%a, %d %b %Y %H:%M:%S %z"),
-                    "referrer": i.referrer if i.referrer else "",
-                    "name": str(i),
-                    "id": i.id
-                } for i in AuthToken.objects.filter(
-                    usercomponent=self.usercomponent
-                )
-            ],
-            "admin": AuthToken.objects.filter(
-                usercomponent=self.usercomponent,
-                created_by_special_user=self.request.user
-            ).first()
-        }
-        if response["admin"]:
-            # don't censor, required in modal presenter
-            response["admin"] = response["admin"].token
-        return JsonResponse(response)
 
 
 class ComponentDelete(EntityDeletionMixin, DeleteView):

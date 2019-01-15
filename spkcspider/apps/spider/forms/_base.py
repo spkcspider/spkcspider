@@ -43,7 +43,7 @@ class UserComponentForm(forms.ModelForm):
         model = UserComponent
         fields = [
             'name', 'description', 'features', 'featured', 'public',
-            'required_passes', 'token_duration',
+            'required_passes', 'token_duration'
         ]
         error_messages = {
             NON_FIELD_ERRORS: {
@@ -150,6 +150,7 @@ class UserComponentForm(forms.ModelForm):
             # regular protections strength
             amount_regular = 0
             strengths = []
+            max_prot_strength = 0
             for protection in self.protections:
                 if not protection.cleaned_data.get("active", False):
                     continue
@@ -160,11 +161,17 @@ class UserComponentForm(forms.ModelForm):
                         params={"name": protection}
                     )
                 if protection.cleaned_data.get("instant_fail", False):
+                    s = protection.get_strength()
+                    if s[1] > max_prot_strength:
+                        max_prot_strength = s[1]
                     fail_strength = max(
-                        fail_strength, protection.get_strength()
+                        fail_strength, s[0]
                     )
                 else:
-                    strengths.append(protection.get_strength())
+                    s = protection.get_strength()
+                    if s[1] > max_prot_strength:
+                        max_prot_strength = s[1]
+                    strengths.append(s[0])
                     amount_regular += 1
             strengths.sort()
             if self.cleaned_data["required_passes"] > 0:
@@ -177,6 +184,7 @@ class UserComponentForm(forms.ModelForm):
             else:
                 strengths = 0
             self.cleaned_data["strength"] += max(strengths, fail_strength)
+            self.cleaned_data["can_auth"] = max_prot_strength >= 4
         min_strength = self.cleaned_data["features"].filter(
             strength__gt=self.cleaned_data["strength"]
         ).aggregate(m=models.Max("strength"))["m"]
@@ -224,6 +232,7 @@ class UserComponentForm(forms.ModelForm):
             )
 
         self.instance.strength = self.cleaned_data["strength"]
+        self.instance.can_auth = self.cleaned_data["can_auth"]
         return super().save(commit=commit)
 
 

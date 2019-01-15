@@ -144,6 +144,8 @@ class UserComponent(models.Model):
     # only admin
     featured = models.BooleanField(default=False, help_text=_feature_help)
 
+    can_auth = models.BooleanField(default=False, editable=False)
+
     token_duration = models.DurationField(
         default=default_uctoken_duration,
         null=False

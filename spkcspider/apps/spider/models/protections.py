@@ -77,6 +77,7 @@ class Protection(models.Model):
     def auth_query(cls, request, query, required_passes=1, **kwargs):
         initial_required_passes = required_passes
         ret = []
+        max_result = 0
         for item in query:
             obj = None
             _instant_fail = False
@@ -92,11 +93,16 @@ class Protection(models.Model):
                 required_passes=initial_required_passes, **kwargs
             )
             if _instant_fail:  # instant_fail does not reduce required_passes
-                if result is not True:  # False or form
+                if not isinstance(result,  int):  # False or form
                     # set limit unreachable
                     required_passes = len(query)
-            elif result is True:
+                else:
+                    if result > max_result:
+                        max_result = result
+            elif isinstance(result,  int):
                 required_passes -= 1
+                if result > max_result:
+                    max_result = result
             if result is not False:  # False will be not rendered
                 ret.append(ProtectionResult(result, item))
         # after side effects like raise Http404
@@ -108,7 +114,7 @@ class Protection(models.Model):
         # don't require lower limit this way and
         # against timing attacks
         if required_passes <= 0:
-            return True
+            return max_result
         return ret
 
     @classmethod
