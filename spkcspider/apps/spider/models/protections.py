@@ -4,18 +4,21 @@ namespace: spider_base
 
 """
 
-__all__ = ["Protection", "AssignedProtection"]
+__all__ = ["Protection", "AssignedProtection", "AuthToken"]
 
 import logging
 
 from django.db import models
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_variables
 
 from jsonfield import JSONField
 
+from ..constants import MAX_NONCE_SIZE, hex_size_of_bigid
+from ..helpers import create_b64_token
 from ..protections import installed_protections
-from ..constants import ProtectionType, ProtectionResult, index_names
+from ..constants.static import ProtectionType, ProtectionResult, index_names
 
 logger = logging.getLogger(__name__)
 
@@ -252,3 +255,51 @@ class AssignedProtection(models.Model):
     @property
     def user(self):
         return self.usercomponent.user
+
+
+class AuthToken(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
+    usercomponent = models.ForeignKey(
+        "spider_base.UserComponent", on_delete=models.CASCADE,
+        related_name="authtokens"
+    )
+    persist = models.BooleanField(blank=True, default=False, db_index=True)
+    # brute force protection
+    #  16 = usercomponent.id in hexadecimal
+    token = models.SlugField(
+        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
+        db_index=True, unique=True
+    )
+    referrer = models.URLField(
+        max_length=400, blank=True, null=True
+    )
+    created_by_special_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+        related_name="+", blank=True, null=True
+    )
+    session_key = models.CharField(max_length=40, null=True)
+    extra = JSONField(default={}, blank=True)
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+
+    def __str__(self):
+        return "{}...".format(self.token[:-_striptoken])
+
+    def create_auth_token(self):
+        self.token = "{}_{}".format(
+            hex(self.usercomponent.id)[2:],
+            create_b64_token(getattr(settings, "TOKEN_SIZE", 30))
+        )
+
+    def save(self, *args, **kwargs):
+        for i in range(0, 1000):
+            if i >= 999:
+                raise TokenCreationError(
+                    'A possible infinite loop was detected'
+                )
+            self.create_auth_token()
+            try:
+                self.validate_unique()
+                break
+            except ValidationError:
+                pass
+        super().save(*args, **kwargs)

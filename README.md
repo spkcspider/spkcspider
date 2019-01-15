@@ -171,6 +171,24 @@ Otherwise security could be compromised.
 * examples
 * tests
 * documentation
+* get_size returns tuple with affected quota
+* make quota type overridable (maybe add extra nonsaved quota: other)
+* AuthToken overhaul
+  * Remove PermissiveTokens, add access by PersistentToken
+  * require for account_deletion PersistentToken (and rework referrer system)
+  * referrer intention=persist for allowing saving data and creating persistToken
+  * AuthToken: search parameters (replace ids, replace search parameters for every access), add persist field or reuse referrer field for persistence
+  * intention=ask-permission, for asking user to update their search parameter filter (maybe)
+  * add ProxyModels: PersistentToken, VisitorToken by using QuerySet as_manager
+  * referring: add form field with search parameters (user can add/remove filter like he wants)
+    * should hide/show elements (update dynamically?)
+
+* add auth strength (generated dynamically by passed tests, return numbers instead true)
+  * repurpose levels 4, 9 as special login for owner
+  * form strength check returns tuple with minimal and maximal strength of protection (can be used to determinate if protections can be used for authentication)
+  * add intention=auth to trigger authlike access control check (add usercompont field which saves if this is possible)
+* use duplicate password fields and check all of the supplied passwords (up to 2 pws?)
+
 
 ## Later
 * Localisation

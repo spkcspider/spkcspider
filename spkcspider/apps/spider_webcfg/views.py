@@ -79,7 +79,7 @@ class WebConfigView(UCTestMixin, View):
             ctype=variant
         )
         ret = self.model.static_create(associated)
-        ret.url = self.request.authtoken.referrer
+        ret.token = self.request.authtoken
         ret.creation_url = "{}://{}{}".format(
             self.request.scheme, self.request.get_host(), self.request.path
         )
@@ -114,7 +114,7 @@ class WebConfigView(UCTestMixin, View):
                 "ascii", "backslashreplace"
             ), content_type="text/plain"
         )
-        ret["X-SPIDER-URL"] = self.object.url
+        ret["X-SPIDER-URL"] = self.object.token.referrer
         ret["X-SPIDER-MODIFIED"] = self.object.associated.modified
         ret["X-SPIDER-CREATED"] = self.object.associated.created
         return ret

@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 @add_content
-class ReferreringFeature(BaseContent):
+class AbstractFeatures(BaseContent):
     appearances = [
         {
             "name": "Referring",
@@ -37,9 +37,9 @@ class ReferreringFeature(BaseContent):
             "strength": 0
         },
         {
-            "name": "PermissiveTokens",
+            "name": "PersistentTokens",
             "ctype": VariantType.feature.value,
-            "strength": 5
+            "strength": 0
         }
     ]
 

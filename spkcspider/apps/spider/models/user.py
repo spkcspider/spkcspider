@@ -6,7 +6,7 @@ namespace: spider_base
 
 __all__ = [
     "UserComponent", "UserComponentManager", "TokenCreationError",
-    "AuthToken", "UserInfo"
+    "UserInfo"
 ]
 
 import logging
@@ -32,6 +32,11 @@ from ..constants import (
 
 
 logger = logging.getLogger(__name__)
+
+
+_striptoken = getattr(settings, "TOKEN_SIZE", 30)*4//3
+# show 1/3 of token
+_striptoken = _striptoken-_striptoken//3
 
 
 _name_help = _(
@@ -246,50 +251,6 @@ class UserComponent(models.Model):
     def save(self, *args, **kwargs):
         if self.name in index_names and self.public:
             self.public = False
-        super().save(*args, **kwargs)
-
-
-class AuthToken(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
-    usercomponent = models.ForeignKey(
-        UserComponent, on_delete=models.CASCADE,
-        related_name="authtokens"
-    )
-    created_by_special_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name="+", blank=True, null=True
-    )
-    session_key = models.CharField(max_length=40, null=True)
-    # brute force protection
-    #  16 = usercomponent.id in hexadecimal
-    token = models.SlugField(
-        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
-        db_index=True, unique=True
-    )
-    referrer = models.URLField(
-        max_length=400, blank=True, null=True
-    )
-    extra = JSONField(default={}, blank=True)
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-
-    def create_auth_token(self):
-        self.token = "{}_{}".format(
-            hex(self.usercomponent.id)[2:],
-            create_b64_token(getattr(settings, "TOKEN_SIZE", 30))
-        )
-
-    def save(self, *args, **kwargs):
-        for i in range(0, 1000):
-            if i >= 999:
-                raise TokenCreationError(
-                    'A possible infinite loop was detected'
-                )
-            self.create_auth_token()
-            try:
-                self.validate_unique()
-                break
-            except ValidationError:
-                pass
         super().save(*args, **kwargs)
 
 

@@ -25,7 +25,6 @@ import requests
 import certifi
 
 from ..helpers import merge_get_url, get_settings_func
-from ..signals import remote_account_deletion
 from ..constants import (
     VariantType, index_names, VALID_INTENTIONS
 )
@@ -96,16 +95,30 @@ class UserTestMixin(AccessMixin):
         return "?".join((self.request.path, GET.urlencode()))
 
     def create_token(self, special_user=None, extra=None):
-        session_key = None
+        d = {
+            "usercomponent": self.usercomponent,
+            "session_key": None,
+            "created_by_special_user": special_user,
+            "extra": {}
+        }
         if "token" not in self.request.GET:
-            session_key = self.request.session.session_key
-        token = AuthToken(
-            usercomponent=self.usercomponent,
-            session_key=session_key,
-            created_by_special_user=special_user
-        )
+            d["session_key"] = self.request.session.session_key
+
+        token = None
+        if "persist" in self.request.GET.getlist("intention"):
+            if self.request.GET.get("referrer", None) is None:
+                return False
+            referrer = merge_get_url(self.request.GET["referrer"])
+            token = AuthToken.objects.filter(
+                usercomponent=self.usercomponent, referrer=referrer,
+                persist=True
+            ).first()
+            if token:
+                token.create_auth_token()
+        if not token:
+            token = AuthToken(**d)
         if extra:
-            token.extra = extra
+            token.extra.update(extra)
         token.save()
         return token
 
@@ -138,7 +151,7 @@ class UserTestMixin(AccessMixin):
         if not expire:
             expire = timezone.now()-self.usercomponent.token_duration
         return self.usercomponent.authtokens.filter(
-            created__lt=expire
+            created__lt=expire, persist=False
         ).delete()
 
     def test_token(self):
@@ -168,11 +181,6 @@ class UserTestMixin(AccessMixin):
                     session_key=self.request.session.session_key
                 ).first()
             if token:
-                # cannot access resources with an account_deletion key
-                if "account_deletion" in self.request.auth_token.extra.get(
-                    "intentions", []
-                ):
-                    return False
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
                 self.request.auth_token = token
@@ -182,7 +190,7 @@ class UserTestMixin(AccessMixin):
                 if (
                     self.usercomponent.strength >=
                     settings.MIN_STRENGTH_EVELATION
-                ) and not token.extra.get("weak", False):
+                ):
                     self.request.is_elevated_request = True
                 return True
 
@@ -197,29 +205,17 @@ class UserTestMixin(AccessMixin):
         if self.request.protections is True:
             # token not required
             if no_token:
-                #
-                if self.usercomponent.strength < 5:
-                    return True
-                if not self.usercomponent.features.filter(
-                    name="PermissiveTokens"
-                ):
-                    return True
-                token = self.create_token(
-                    extra={"weak": True},
-                    strength=self.usercomponent.strength
-                )
-            else:
-                # is_elevated_request requires token
-                if (
-                    self.usercomponent.strength >=
-                    settings.MIN_STRENGTH_EVELATION
-                ):
-                    self.request.is_elevated_request = True
+                return True
+            # is_elevated_request requires token
+            if (
+                self.usercomponent.strength >=
+                settings.MIN_STRENGTH_EVELATION
+            ):
+                self.request.is_elevated_request = True
 
-                token = self.create_token(
-                    extra={"weak": False},
-                    strength=self.usercomponent.strength
-                )
+            token = self.create_token(
+                strength=self.usercomponent.strength
+            )
 
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
@@ -437,29 +433,8 @@ class ReferrerMixin(object):
         # Second error: invalid intentions or combinations
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
-        if "account_deletion" in context["intentions"]:
-            # account_deletion must be specified alone
-            if len(context["intentions"]) > 1:
-                return False
-            # also check real referrer (only here critical)
-            if (
-                token is None and
-                not context["referrer"].startswith(
-                    self.request.get("Referer")
-                )
-            ):
-                return False
-
-        # Third error: use of weak tokens or components
-        if token is None:
-            if self.usercomponent.strength < 5:
-                return False
+        if not token:
             return True
-        if (
-            token.extra.get("strength", 0) < 5 or
-            token.extra.get("weak", False)
-        ):
-            return False
         # check if token was reused
         if token.referrer is not None:
             return False
@@ -543,21 +518,6 @@ class ReferrerMixin(object):
                 return self.refer_with_get(context, token)
             context["post_success"] = False
             ret = self.refer_with_post(context, token)
-            if (
-                context["post_success"] and
-                "account_deletion" in context["intentions"]
-            ):
-                results = remote_account_deletion.send_robust(
-                    sender=UserComponent,
-                    instance=self.usercomponent,
-                    remote=context["referrer"],
-                    token=token.token
-                )
-                for (receiver, result) in results:
-                    if isinstance(result, Exception):
-                        logging.error(
-                            "%s failed", receiver, exc_info=result
-                        )
             return ret
 
         elif action == "cancel":

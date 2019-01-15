@@ -26,6 +26,8 @@ from ..protections import installed_protections
 from ..helpers import create_b64_token
 from ..constants.static import MAX_NONCE_SIZE, VariantType
 
+from .base import BaseInfoModel
+
 logger = logging.getLogger(__name__)
 
 
@@ -63,40 +65,7 @@ class ContentVariant(models.Model):
         return "<ContentVariant: %s>" % self.__str__()
 
 
-def info_field_validator(value):
-    _ = gettext
-    prefixed_value = "\n%s" % value
-    if value[-1] != "\n":
-        raise ValidationError(
-            _('%(value)s ends not with "\\n"'),
-            code="syntax",
-            params={'value': value},
-        )
-    if value[0] != "\n":
-        raise ValidationError(
-            _('%(value)s starts not with "\\n"'),
-            code="syntax",
-            params={'value': value},
-        )
-    # check elements
-    for elem in value[:-1].split("\n"):
-        f = elem.find("=")
-        # no flag => allow multiple instances
-        if f != -1:
-            continue
-        counts = 0
-        counts += prefixed_value.count("\n%s\n" % elem)
-        # check: is flag used as key in key, value storage
-        counts += prefixed_value.count("\n%s=" % elem)
-        assert(counts > 0)
-        if counts > 1:
-            raise ValidationError(
-                _('flag not unique: %(element)s in %(value)s'),
-                params={'element': elem, 'value': value},
-            )
-
-
-class AssignedContent(models.Model):
+class AssignedContent(BaseInfoModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     fake_id = models.BigIntegerField(editable=False, null=True)
     # brute force protection
@@ -127,17 +96,6 @@ class AssignedContent(models.Model):
     deletion_requested = models.DateTimeField(
         null=True, blank=True, default=None
     )
-    # for extra information over content, admin only editing
-    # format: \nflag1\nflag2\nfoo=true\nfoo2=xd\n...\nendfoo=xy\n
-    # every section must start and end with \n every keyword must be unique and
-    # in this format: keyword=
-    # no unneccessary spaces!
-    # flags:
-    #  primary: primary content of type for usercomponent
-    info = models.TextField(
-        null=False, editable=False,
-        validators=[info_field_validator]
-    )
     # required protection strength (real)
     strength = models.PositiveSmallIntegerField(
         default=0, validators=[validators.MaxValueValidator(10)],
@@ -161,6 +119,9 @@ class AssignedContent(models.Model):
         "spider_base.AssignedContent", related_name="referenced_by",
         editable=False
     )
+    # info extra flags:
+    #  primary: primary content of type for usercomponent
+    #  unlisted:
 
     class Meta:
         unique_together = [
@@ -189,30 +150,6 @@ class AssignedContent(models.Model):
         if not self.content:
             return 0
         return self.content.get_size()
-
-    def get_flag(self, flag):
-        if self.info and "\n%s\n" % flag in self.info:
-            return True
-        return False
-
-    def getlist(self, key, amount=None):
-        info = self.info
-        ret = []
-        pstart = info.find("\n%s=" % key)
-        while pstart != -1:
-            tmpstart = pstart+len(key)+2
-            pend = info.find("\n", tmpstart)
-            if pend == -1:
-                raise Exception(
-                    "Info field error: doesn't end with \"\\n\": \"%s\"" %
-                    info
-                )
-            ret.append(info[tmpstart:pend])
-            pstart = info.find("\n%s=" % key, pend)
-            # if amount=0 => bool(amount) == false
-            if amount and amount <= len(ret):
-                break
-        return ret
 
     def clean(self):
         _ = gettext

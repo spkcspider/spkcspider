@@ -36,21 +36,31 @@ class ContentBase(UCTestMixin):
     # use nonce of content object instead
     no_nonce_usercomponent = True
 
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return get_settings_func(
+                "RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
+
     def get_template_names(self):
         if self.scope in ("add", "update"):
             return ['spider_base/assignedcontent_form.html']
+        elif self.scope == "list":
+            return ['spider_base/assignedcontent_list.html']
         else:
             return ['spider_base/assignedcontent_access.html']
 
-    def dispatch(self, request, *args, **kwargs):
-        _scope = kwargs.get("access", None)
-        if self.scope == "access":
-            # special scopes which should be not available as url parameter
-            # raw is also deceptive because view and raw=? = raw scope
-            if _scope in ["add", "list", "raw"]:
-                raise PermissionDenied("Deceptive scopes")
-            self.scope = _scope
-        return super().dispatch(request, *args, **kwargs)
+    def get_ordering(self, issearching=False):
+        if self.scope != "list":
+            # export: also serializer, other scopes: only one object, overhead
+            return None
+        # ordering will happen in serializer
+        if "raw" in self.request.GET:
+            return None
+        return ("-priority", "-modified")
 
     def get_context_data(self, **kwargs):
         kwargs["request"] = self.request
@@ -59,8 +69,108 @@ class ContentBase(UCTestMixin):
         kwargs["enctype"] = "multipart/form-data"
         return super().get_context_data(**kwargs)
 
+    def get_queryset(self):
+        ret = self.model.objects.filter(usercomponent=self.usercomponent)
+        # skip search if user and single object
+        if self.scope in ("add", "update", "update_raw"):
+            return ret
 
-class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
+        searchq = models.Q()
+        searchq_exc = models.Q()
+
+        counter = 0
+        # against ddos
+        max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 60)
+
+        searchlist = []
+        idlist = []
+
+        if getattr(self.request, "auth_token", None):
+            idlist += self.request.auth_token.extra.get("ids", [])
+            searchlist += self.request.auth_token.extra.get("filter", [])
+
+
+        if self.scope == "list":
+            if "search" in self.request.POST or "id" in self.request.POST:
+                searchlist += self.request.POST.getlist("search")
+                idlist += self.request.POST.getlist("id")
+            else:
+                searchlist += self.request.GET.getlist("search")
+                idlist += self.request.GET.getlist("id")
+        elif self.scope not in ("add", "update", "update_raw"):
+            searchlist += self.request.GET.getlist("search")
+
+        for item in searchlist:
+            if counter > max_counter:
+                break
+            counter += 1
+            if len(item) == 0:
+                continue
+            use_info = False
+            if item.startswith("!!"):
+                _item = item[1:]
+            elif item.startswith("__"):
+                _item = item[1:]
+            elif item.startswith("!_"):
+                _item = item[2:]
+                use_info = True
+            elif item.startswith("!"):
+                _item = item[1:]
+            elif item.startswith("_"):
+                _item = item[1:]
+                use_info = True
+            else:
+                _item = item
+            if use_info:
+                qob = models.Q(info__contains="\n%s\n" % _item)
+            else:
+                qob = models.Q(
+                    info__icontains=_item
+                )
+            if item.startswith("!!"):
+                searchq |= qob
+            elif item.startswith("!"):
+                searchq_exc |= qob
+            else:
+                searchq |= qob
+
+        if idlist:
+            # idlist contains int and str entries
+            try:
+                ids = map(lambda x: int(x), idlist)
+            except ValueError:
+                # deny any access in case of an incorrect id
+                ids = []
+
+            searchq &= (
+                models.Q(
+                    id__in=ids,
+                    fake_id__isnull=True
+                ) | models.Q(fake_id__in=ids)
+            )
+
+        # list only unlisted if explicity requested or export or:
+        # if it has high priority (only for special users)
+        # listing prioritized, unlisted content is different to the broader
+        # search
+        if self.request.is_special_user:
+            # all other scopes than list can show here _unlisted
+            # this includes export
+            if  self.scope == "list" and "_unlisted" not in searchlist:
+                searchq_exc |= models.Q(
+                    info__contains="\nunlisted\n", priority__lte=0
+                )
+        else:
+            searchq_exc |= models.Q(info__contains="\nunlisted\n")
+        order = self.get_ordering(counter > 0)
+        # distinct required?
+        ret = ret.filter(searchq & ~searchq_exc).distinct()
+        if order:
+            ret = ret.order_by(*order)
+        return ret
+
+
+class ContentIndex(ReferrerMixin, ContentBase, ListView):
     model = AssignedContent
     scope = "list"
     no_nonce_usercomponent = False
@@ -74,23 +184,6 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
                 return self.handle_referrer()
         return None
 
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            return super().dispatch(request, *args, **kwargs)
-        except Http404:
-            return get_settings_func(
-                "RATELIMIT_FUNC",
-                "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
-
-    def post(self, request, *args, **kwargs):
-        return self.get(request, *args, **kwargs)
-
-    def get_ordering(self, issearching=False):
-        # ordering will happen in serializer
-        if self.scope == "export" or "raw" in self.request.GET:
-            return None
-        return ("-priority", "-modified")
 
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
@@ -103,8 +196,6 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
         )
 
     def get_context_data(self, **kwargs):
-        kwargs["scope"] = self.scope
-        kwargs["uc"] = self.usercomponent
         context = super().get_context_data(**kwargs)
         if self.usercomponent.user == self.request.user:
             context["content_variants"] = \
@@ -153,88 +244,6 @@ class ContentIndex(ReferrerMixin, UCTestMixin, ListView):
             return False
 
         return self.test_token()
-
-    def get_queryset(self):
-        ret = self.model.objects.filter(usercomponent=self.usercomponent)
-
-        searchq = models.Q()
-        searchq_exc = models.Q()
-
-        counter = 0
-        # against ddos
-        max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 30)
-
-        if "search" in self.request.POST or "info" in self.request.POST:
-            searchlist = self.request.POST.getlist("search")
-            idlist = self.request.POST.getlist("id")
-        else:
-            searchlist = self.request.GET.getlist("search")
-            idlist = self.request.GET.getlist("id")
-
-        for item in searchlist:
-            if counter > max_counter:
-                break
-            counter += 1
-            if len(item) == 0:
-                continue
-            use_info = False
-            if item.startswith("!!"):
-                _item = item[1:]
-            elif item.startswith("__"):
-                _item = item[1:]
-            elif item.startswith("!_"):
-                _item = item[2:]
-                use_info = True
-            elif item.startswith("!"):
-                _item = item[1:]
-            elif item.startswith("_"):
-                _item = item[1:]
-                use_info = True
-            else:
-                _item = item
-            if use_info:
-                qob = models.Q(info__contains="\n%s\n" % _item)
-            else:
-                qob = models.Q(
-                    info__icontains=_item
-                )
-            if item.startswith("!!"):
-                searchq |= qob
-            elif item.startswith("!"):
-                searchq_exc |= qob
-            else:
-                searchq |= qob
-
-        if idlist:
-            ids = map(lambda x: int(x), idlist)
-            searchq &= (
-                models.Q(
-                    id__in=ids,
-                    fake_id__isnull=True
-                ) | models.Q(fake_id__in=ids)
-            )
-        if getattr(self.request, "auth_token", None):
-            ids = self.request.auth_token.extra.get("ids", None)
-            if ids is not None:
-                searchq &= (models.Q(id__in=ids) | models.Q(fake_id__in=ids))
-
-        # list only unlisted if explicity requested or export or:
-        # if it has high priority (only for special users)
-        # listing prioritized, unlisted content is different to the broader
-        # search
-        if self.request.is_special_user:
-            if "_unlisted" not in searchlist and not self.scope == "export":
-                searchq_exc |= models.Q(
-                    info__contains="\nunlisted\n", priority__lte=0
-                )
-        else:
-            searchq_exc |= models.Q(info__contains="\nunlisted\n")
-        order = self.get_ordering(counter > 0)
-        # distinct required?
-        ret = ret.filter(searchq & ~searchq_exc).distinct()
-        if order:
-            ret = ret.order_by(*order)
-        return ret
 
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
@@ -415,10 +424,11 @@ class ContentAccess(
     model = AssignedContent
 
     def dispatch_extra(self, request, *args, **kwargs):
-        if getattr(self.request, "auth_token", None):
-            ids = self.request.auth_token.extra.get("ids", None)
-            if ids is not None and self.object.id not in ids:
-                return self.handle_no_permission()
+        # done in get_queryset
+        # if getattr(self.request, "auth_token", None):
+        #     ids = self.request.auth_token.extra.get("ids", None)
+        #     if ids is not None and self.object.id not in ids:
+        #         return self.handle_no_permission()
         if "referrer" in self.request.GET:
             if self.usercomponent.features.filter(
                 name="Referring"
@@ -431,14 +441,13 @@ class ContentAccess(
         return None
 
     def dispatch(self, request, *args, **kwargs):
-        try:
-            self.object = self.get_object()
-            return super().dispatch(request, *args, **kwargs)
-        except Http404:
-            return get_settings_func(
-                "RATELIMIT_FUNC",
-                "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+        _scope = kwargs["access"]
+        # special scopes which should be not available as url parameter
+        # raw is also deceptive because view and raw=? = raw scope
+        if _scope in ["add", "list", "raw"]:
+            raise PermissionDenied("Deceptive scopes")
+        self.scope = _scope
+        return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         context = {"form": None}
@@ -532,23 +541,34 @@ class ContentAccess(
         return super().render_to_response(context)
 
     def get_usercomponent(self):
-        if self.object:
-            return self.object.usercomponent
-        return self.get_object().usercomponent
+        q = models.Q(
+            id=self.kwargs["id"],
+            fake_id__isnull=True
+        ) | models.Q(fake_id=self.kwargs["id"])
+        q &= models.Q(nonce=self.kwargs["nonce"])
+        return get_object_or_404(
+            UserComponent.objects.prefetch_related("protections"),
+            contents=q
+        )
 
     def get_user(self):
         return self.usercomponent.user
 
     def get_object(self, queryset=None):
+        # can bypass idlist and searchlist with own queryset arg
         if not queryset:
             queryset = self.get_queryset()
+
+        q = models.Q(
+            id=self.kwargs["id"],
+            fake_id__isnull=True
+        ) | models.Q(fake_id=self.kwargs["id"])
+        q &= models.Q(nonce=self.kwargs["nonce"])
         return get_object_or_404(
             queryset.select_related(
                 "usercomponent", "usercomponent__user",
                 "usercomponent__user__spider_info"
-            ),
-            id=self.kwargs["id"],
-            nonce=self.kwargs["nonce"]
+            ).filter(q)
         )
 
 

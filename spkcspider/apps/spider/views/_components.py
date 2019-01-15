@@ -40,13 +40,15 @@ class ComponentIndexBase(ListView):
         searchq_exc = models.Q()
         order = None
         counter = 0
-        max_counter = 30  # against ddos
-        if "search" in self.request.POST or "info" in self.request.POST:
+        # against ddos
+        max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 60)
+
+        if "search" in self.request.POST or "id" in self.request.POST:
             searchlist = self.request.POST.getlist("search")
             idlist = self.request.POST.getlist("id")
         else:
             searchlist = self.request.GET.getlist("search")
-            idlist = self.request.POST.getlist("id")
+            idlist = self.request.GET.getlist("id")
 
         for item in searchlist:
             if counter > max_counter:
@@ -424,7 +426,7 @@ class TokenDelete(UCTestMixin, DeleteView):
         self.remove_old_tokens()
         query = AuthToken.objects.filter(
             usercomponent=self.usercomponent,
-            token__in=self.request.POST.getlist("tokens")
+            id__in=self.request.POST.getlist("tokens")
         )
         # replace active admin token
         if query.filter(
@@ -433,7 +435,6 @@ class TokenDelete(UCTestMixin, DeleteView):
             self.request.auth_token = self.create_token(
                 self.request.user,
                 extra={
-                    "weak": False,
                     "strength": 10
                 }
             )
@@ -449,13 +450,13 @@ class TokenDelete(UCTestMixin, DeleteView):
         response = {
             "tokens": [
                 {
-                    "expires": (
+                    "expires": None if i.persist else (
                         i.created +
                         self.usercomponent.token_duration
                     ).strftime("%a, %d %b %Y %H:%M:%S %z"),
-                    "token": i.token
-
-
+                    "referrer": i.referrer if i.referrer else "",
+                    "name": str(i),
+                    "id": i.id
                 } for i in AuthToken.objects.filter(
                     usercomponent=self.usercomponent
                 )
@@ -466,6 +467,7 @@ class TokenDelete(UCTestMixin, DeleteView):
             ).first()
         }
         if response["admin"]:
+            # don't censor, required in modal presenter
             response["admin"] = response["admin"].token
         return JsonResponse(response)
 

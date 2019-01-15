@@ -1,7 +1,6 @@
 __all__ = (
     "UpdateSpiderCallback", "InitUserCallback",
-    "update_dynamic", "failed_guess", "RemoveTokensLogout", "CleanupCallback",
-    "remote_account_deletion", "DeleteAssociatedTokens"
+    "update_dynamic", "failed_guess", "RemoveTokensLogout", "CleanupCallback"
 )
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
@@ -10,7 +9,6 @@ from .constants.static import VariantType
 import logging
 
 update_dynamic = Signal(providing_args=[])
-remote_account_deletion = Signal(providing_args=[])
 # failed guess of combination from id, nonce
 failed_guess = Signal(providing_args=[])
 
@@ -22,15 +20,6 @@ def TriggerUpdate(sender, **_kwargs):
             logging.error(
                 "%s failed", receiver, exc_info=result
             )
-
-
-def DeleteAssociatedTokens(sender, instance, remote, token, **kwargs):
-    from .models import AuthToken
-    # remove access to features (only account_deletion token remains)
-    AuthToken.objects.filter(
-        usercomponent=instance,
-        referrer=remote
-    ).exclude(token=token).delete()
 
 
 def CleanupCallback(sender, instance, **kwargs):

@@ -90,7 +90,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             </tr>
             <tr>
               <th>{% trans 'Token' %}</th>
-              <th>{% trans 'Valid till' %}</th>
+              <th>{% trans 'Valid till/Referrer' %}</th>
               <th>{% trans 'Delete' %}</th>
             </tr>
           </thead>
@@ -99,13 +99,17 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
               {% token_expires object token as expire_date %}
               <tr>
                 <td>
-                  {{token.token}}
+                  {{token}}
                 </td>
                 <td>
-                  {{expire_date|date:"D, d/m/Y"}}
+                  {% if token.persist %}
+                    {{token.referrer}}
+                  {% else %}
+                    {{expire_date|date:"D, d/m/Y"}}<br/>{{token.referrer}}
+                  {% endif %}
                 </td>
                 <td>
-                  <input form="deleteForm" type="checkbox" name="token" value="{{token.token}}"></input>
+                  <input form="deleteForm" type="checkbox" name="token" value="{{token.id}}"></input>
                 </td>
               </tr>
             {% endfor %}
@@ -192,16 +196,21 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         for(let count=0; count<data["tokens"].length; count++){
           let row = tbody.insertRow();
           let cell1 = row.insertCell()
-          cell1.innerText = data["tokens"][count].token
+          cell1.innerText = data["tokens"][count].name
           let cell2 = row.insertCell()
-          let date = new Date(data["tokens"][count].expires);
-          // D d M Y
-          cell2.innerText = date.toLocaleDateString("en-GB", {
-            weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
-          })
+          if (!data["tokens"][count].expires){
+            cell2.innerText = data["tokens"][count].referrer
+          } else {
+            let date = new Date(data["tokens"][count].expires);
+            // D d M Y
+            cell2.innerText = date.toLocaleDateString("en-GB", {
+              weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
+            })+"<br/>"+data["tokens"][count].referrer
+          }
           let cell3 = row.insertCell()
-          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" value="${data["tokens"][count].token}"></input>`
+          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" value="${data["tokens"][count].id}"></input>`
         }
+        // renew authtoken of modalpresenter
         auth_token = data["admin"]
       })
       return false;

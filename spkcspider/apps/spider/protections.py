@@ -283,14 +283,12 @@ class LoginProtection(BaseProtection):
             return cls.auth_form()
 
         username = obj.usercomponent.username
-        password = request.POST.get("password", None)
-        if authenticate(
-            request, username=username, password=password,
-            nospider=True
-        ):
-            return True
-        else:
-            return cls.auth_form()
+        for password in request.POST.getlist("password")[:2]:
+            if authenticate(
+                request, username=username, password=password, nospider=True
+            ):
+                return True
+        return cls.auth_form()
 
     @classmethod
     def auth_localize_name(cls, name=None):
@@ -308,7 +306,7 @@ class PasswordProtection(BaseProtection):
 
     class auth_form(forms.Form):
         use_required_attribute = False
-        password2 = forms.CharField(
+        password = forms.CharField(
             label=_("Extra Password"),
             strip=False,
             widget=forms.PasswordInput,
@@ -356,18 +354,15 @@ class PasswordProtection(BaseProtection):
     def auth(cls, request, obj, **kwargs):
         retfalse = cls.auth_form()
         if not obj:
-            retfalse.fields["password2"].label = _(
+            retfalse.fields["password"].label = _(
                 "Extra Password (if required)"
             )
             return retfalse
-        password = request.POST.get("password", "")
-        password2 = request.POST.get("password2", "")
         success = False
-        for pw in obj.data["passwords"].split("\n"):
-            if constant_time_compare(pw, password):
-                success = True
-            if constant_time_compare(pw, password2):
-                success = True
+        for password in request.POST.getlist("password")[:2]:
+            for pw in obj.data["passwords"].split("\n"):
+                if constant_time_compare(pw, password):
+                    success = True
 
         if success:
             return True

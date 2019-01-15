@@ -17,7 +17,10 @@ class WebConfig(BaseContent):
         }
     ]
 
-    url = models.URLField(max_length=400)
+    token = models.ForeignKey(
+        "spider_base.AuthToken", limit_choices_to={"persist": True},
+        on_delete=models.CASCADE
+    )
     creation_url = models.URLField(editable=False)
     config = models.TextField(default="", blank=True)
 
