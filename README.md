@@ -170,16 +170,16 @@ Otherwise security could be compromised.
 * examples
 * tests
 * documentation
-* get_size returns tuple with affected quota
-* make quota type overridable (maybe add extra nonsaved quota: other)
 
 
 ## Later
+* make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
 * govAnchor
 * messages instead error
 * create client side script for import (pushing to server, index token for auth?)
-* email to spkcspider transport wrapper (also script)+component
+* encrypted files/text
+* email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
