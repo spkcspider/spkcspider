@@ -187,7 +187,6 @@ class UserTestMixin(AccessMixin):
             if token:
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
-                self.request.auth_token = token
                 # case will never enter
                 # if not token.session_key and "token" not in self.request.GET:
                 #     return self.replace_token()
@@ -196,12 +195,13 @@ class UserTestMixin(AccessMixin):
                     settings.MIN_STRENGTH_EVELATION
                 ):
                     self.request.is_elevated_request = True
-                if self.request.auth_token.extra.get("prot_strength", 0) >= 4:
+                if token.extra.get("prot_strength", 0) >= 4:
                     self.request.is_elevated_request = True
                     self.request.is_special_user = True
                     self.request.is_owner = True
                     # like a login
                     self.request.user = self.usercomponent.user
+                self.request.auth_token = token
                 return True
 
         protection_codes = None
@@ -226,7 +226,7 @@ class UserTestMixin(AccessMixin):
                 }
             )
 
-            if self.request.auth_token.extra.get("prot_strength", 0) >= 4:
+            if token.extra.get("prot_strength", 0) >= 4:
                 self.request.is_elevated_request = True
                 self.request.is_special_user = True
                 self.request.is_owner = True
@@ -451,7 +451,7 @@ class ReferrerMixin(object):
             token.extra["capture"] = self.request.GET.get("capture", "false")
             if token.extra["capture"] not in ("true", "false"):
                 return False
-            # FIXME: Decimal most probably not serializable 
+            # FIXME: Decimal most probably not serializable
             token.extra["amount"] =  get_settings_func(
                 "SPIDER_PAYMENT_VALIDATOR",
                 "spkcspider.apps.spider.functions.validate_payment_default"
