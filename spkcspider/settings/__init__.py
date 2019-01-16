@@ -168,6 +168,9 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 ## validator function for url requests  # noqa: E266
 # SPIDER_URL_VALIDATOR
 
+## validator function for payment intentions
+# SPIDER_PAYMENT_VALIDATOR
+
 ## Enable captchas  # noqa: E266
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True

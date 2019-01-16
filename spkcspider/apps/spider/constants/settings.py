@@ -23,7 +23,7 @@ VALID_INTENTIONS = set(getattr(
     settings, "SPIDER_VALID_INTENTIONS",
     ["auth", "login", "persist", "payment", "sl", "search"]
 ))
-VALID_SUB_INTENTIONS = set(["payment", "sl", "search"])
+VALID_SUB_INTENTIONS = set(["sl", "search"])
 
 force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
 

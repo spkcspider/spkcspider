@@ -4,6 +4,7 @@ __all__ = (
 
 import logging
 import hashlib
+from decimal import Decimal
 from urllib.parse import quote_plus
 
 from datetime import timedelta
@@ -439,10 +440,25 @@ class ReferrerMixin(object):
             )
         )
 
-    def check_refer_intentions(self, context, token=None):
+    def clean_refer_intentions(self, context, token=None):
         # First error: invalid intentions
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
+
+        if "payment" in context["intentions"]:
+            token.extra["CUR"] = self.request.GET.get("cur", "").upper()
+            token.extra["amount"] = self.request.GET.get("amount", "false")
+            token.extra["capture"] = self.request.GET.get("capture", "false")
+            if token.extra["capture"] not in ("true", "false"):
+                return False
+            # FIXME: Decimal most probably not serializable 
+            token.extra["amount"] =  get_settings_func(
+                "SPIDER_PAYMENT_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_payment_default"
+            )(token.extra["amount"], token.extra["CUR"])
+            if token.extra["amount"] is None:
+                return False
+
         # auth is only for requesting quasi login
         if "auth" in context["intentions"]:
             return False
@@ -545,7 +561,8 @@ class ReferrerMixin(object):
 
             # set to zero as prot_strength can elevate perms
             token.extra["prot_strength"] = 0
-            if not self.check_refer_intentions(context, token):
+
+            if not self.clean_refer_intentions(context, token):
                 return HttpResponseRedirect(
                     redirect_to=merge_get_url(
                         context["referrer"],
@@ -615,7 +632,7 @@ class ReferrerMixin(object):
 
             if oldtoken:
                 context["old_search"] = oldtoken.extra.get("search", [])
-            if not self.check_refer_intentions(context, token):
+            if not self.clean_refer_intentions(context, token):
                 return HttpResponse(
                     status=400,
                     content=_('Error: intentions incorrect')

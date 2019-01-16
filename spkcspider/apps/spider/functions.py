@@ -2,7 +2,7 @@ __all__ = [
     "rate_limit_default", "allow_all_filter",
     "embed_file_default", "has_admin_permission",
     "LimitedTemporaryFileUploadHandler", "validate_url_default",
-    "get_quota"
+    "get_quota", "validate_payment_default"
 ]
 
 import time
@@ -41,6 +41,12 @@ def allow_all_filter(*args, **kwargs):
 
 def get_quota(user, quota_type):
     return getattr(user, "quota_{}".format(quota_type), None)
+
+
+def validate_payment_default(amountstr, cur):
+    if len(cur) != 3:
+        return None
+    return Decimal(amountstr)
 
 
 class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
