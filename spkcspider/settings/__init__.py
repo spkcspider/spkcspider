@@ -215,4 +215,7 @@ SERIALIZED_MAX_DEPTH = 5
 # how many search parameters are allowed
 MAX_SEARCH_PARAMETERS = 30
 
+# ease deploy
+UPDATE_DYNAMIC_AFTER_MIGRATION = True
+
 SITE_ID = 1
