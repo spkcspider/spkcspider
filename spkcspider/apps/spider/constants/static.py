@@ -52,7 +52,9 @@ class VariantType(str, enum.Enum):
     # adds by default unlisted attribute
     # appears in features of userComponent
     feature = "a"
-    # b not required anymore
+    # use persistent token
+    #  can be used for some kind of federation
+    persist = "b"
     # update content is without form/for form updates it is not rendered
     # required for still beeing able to update elemental parameters
     raw_update = "c"

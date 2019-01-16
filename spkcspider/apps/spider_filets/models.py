@@ -173,8 +173,8 @@ class TextFilet(BaseContent):
         return self.name
 
     def get_priority(self):
-        # pin to top
-        if self.pin:
+        # push to top
+        if self.push:
             return 1
         return 0
 

@@ -104,20 +104,7 @@ class UserTestMixin(AccessMixin):
         if "token" not in self.request.GET:
             d["session_key"] = self.request.session.session_key
 
-        token = None
-        # if persist try to find old token
-        if "persist" in self.request.GET.getlist("intention"):
-            if self.request.GET.get("referrer", None) is None:
-                return False
-            token = AuthToken.objects.filter(
-                usercomponent=self.usercomponent,
-                referrer=merge_get_url(self.request.GET["referrer"]),
-                persist=True
-            ).first()
-            if token:
-                token.create_auth_token()
-        if not token:
-            token = AuthToken(**d)
+        token = AuthToken(**d)
         if extra:
             token.extra.update(extra)
         token.save()
@@ -207,10 +194,12 @@ class UserTestMixin(AccessMixin):
                     settings.MIN_STRENGTH_EVELATION
                 ):
                     self.request.is_elevated_request = True
-                if self.request.auth_token.extra.get("strength", 0) >= 4:
+                if self.request.auth_token.extra.get("prot_strength", 0) >= 4:
                     self.request.is_elevated_request = True
                     self.request.is_special_user = True
                     self.request.is_owner = True
+                    # like a login
+                    self.request.user = self.usercomponent.user
                 return True
 
         protection_codes = None
@@ -221,26 +210,26 @@ class UserTestMixin(AccessMixin):
             request=self.request, scope=self.scope,
             protection_codes=protection_codes
         )
-        if isinstance(self.request.protections, int):
+        if type(self.request.protections) is int:
+            if self.usercomponent.strength >= settings.MIN_STRENGTH_EVELATION:
+                self.request.is_elevated_request = True
             # token not required
             if no_token:
                 return True
 
             token = self.create_token(
                 extra={
-                    "strength": self.request.protection
+                    "strength": self.usercomponent.strength,
+                    "prot_strength": self.request.protections
                 }
             )
 
-            # is_elevated_request requires token
-            if (
-                self.usercomponent.strength >= settings.MIN_STRENGTH_EVELATION
-            ):
-                self.request.is_elevated_request = True
-            if self.request.auth_token.extra.get("strength", 0) >= 4:
+            if self.request.auth_token.extra.get("prot_strength", 0) >= 4:
                 self.request.is_elevated_request = True
                 self.request.is_special_user = True
                 self.request.is_owner = True
+                # like a login
+                self.request.user = self.usercomponent.user
 
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
@@ -338,7 +327,7 @@ class UserTestMixin(AccessMixin):
         )
 
     def get_noperm_template_names(self):
-        return "spider_protections/protections.html"
+        return "spider_base/protections/protections.html"
 
 
 class UCTestMixin(UserTestMixin):
@@ -453,13 +442,21 @@ class ReferrerMixin(object):
         # First error: invalid intentions
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
-        # only one main intention
-        if len(context["intentions"].difference(VALID_SUB_INTENTIONS)) <= 1:
+        # auth is only for requesting quasi login
+        if "auth" in context["intentions"]:
             return False
-        # persist, sl can be serverless other not
+        # maximal one main intention
+        if len(context["intentions"].difference(VALID_SUB_INTENTIONS)) > 1:
+            return False
+        # "persist" or default can be serverless other intentions not
         #  this way rogue client based attacks are prevented
-        if "persist" not in context["intentions"]:
-            if context["is_serverless"] and len(context["intentions"]) == 1:
+        if "persist" in context["intentions"]:
+            if not self.usercomponent.features.filter(
+                name="Persistence"
+            ).exists():
+                return False
+        else:
+            if context["is_serverless"] and len(context["intentions"]) != 1:
                 return False
 
         if not token:
@@ -496,6 +493,7 @@ class ReferrerMixin(object):
         context["payload"] = self.request.GET.get("payload", None)
         context["is_serverless"] = "sl" in context["intentions"]
         context["referrer"] = merge_get_url(self.request.GET["referrer"])
+        context["old_search"] = []
         if not get_settings_func(
             "SPIDER_URL_VALIDATOR",
             "spkcspider.apps.spider.functions.validate_url_default"
@@ -510,32 +508,56 @@ class ReferrerMixin(object):
 
         action = self.request.POST.get("action", None)
         if action == "confirm":
-            # create only new token when admin token
-            if self.usercomponent.user == self.request.user:
-                token = AuthToken(
+            token = None
+            # if persist try to find old token
+            if "persist" in context["intentions"]:
+                token = AuthToken.objects.filter(
                     usercomponent=self.usercomponent,
-                    extra={
-                        "strength": 10
-                    }
-                )
-            else:
-                # repurpose token
-                # NOTE: one token, one referrer
-                token = self.request.auth_token
-            if context["intentions"]:
-                if not self.check_refer_intentions(context, token):
-                    return HttpResponseRedirect(
-                        redirect_to=merge_get_url(
-                            context["referrer"],
-                            error="intentions_incorrect"
-                        )
-                    )
-                token.extra["intentions"] = list(context["intentions"])
-            else:
-                token.extra["intentions"] = []
+                    referrer=context["referrer"],
+                    persist=True
+                ).first()
+                if token:
+                    token.create_auth_token()
 
+            # create only new token when admin token and not persisted token
+            if self.usercomponent.user == self.request.user:
+                if token:
+                    token.extra["strength"] = 10
+                else:
+                    token = AuthToken(
+                        usercomponent=self.usercomponent,
+                        extra={
+                            "strength": 10
+                        }
+                    )
+            else:
+                if token:
+                    # delete old token
+                    self.request.auth_token.delete()
+                    # and steal token value
+                    token.token = self.request.auth_token.token
+                else:
+                    # repurpose token
+                    # NOTE: one token, one referrer
+                    token = self.request.auth_token
+
+            # set to zero as prot_strength can elevate perms
+            token.extra["prot_strength"] = 0
+            if not self.check_refer_intentions(context, token):
+                return HttpResponseRedirect(
+                    redirect_to=merge_get_url(
+                        context["referrer"],
+                        error="intentions_incorrect"
+                    )
+                )
+            token.extra["intentions"] = list(context["intentions"])
+
+            if "persist" in context["intentions"]:
+                token.persist = True
+
+            token.extra["search"] = self.request.POST.getlist("search")
             if "search" in context["intentions"]:
-                token.extra["search"] = self.request.GET.getlist("search")
+                token.extra.pop("ids", None)
             else:
                 token.extra["ids"] = list(
                     self.object_list.values_list("id", flat=True)
@@ -567,15 +589,29 @@ class ReferrerMixin(object):
                 )
             )
         else:
-            if context["intentions"]:
-                token = None
-                if self.usercomponent.user != self.request.user:
-                    token = self.request.auth_token
-                if not self.check_refer_intentions(context, token):
-                    return HttpResponse(
-                        status=400,
-                        content=_('Error: intentions incorrect')
-                    )
+            token = None
+            oldtoken = None
+            # use later reused token early
+            if self.usercomponent.user != self.request.user:
+                token = self.request.auth_token
+            # don't re-add search parameters, only initialize
+            if (
+                self.request.method != "POST" and
+                "persist" in context["intentions"]
+            ):
+                oldtoken = AuthToken.objects.filter(
+                    usercomponent=self.usercomponent,
+                    referrer=context["referrer"],
+                    persist=True
+                ).first()
+
+            if oldtoken:
+                context["old_search"] = oldtoken.extra.get("search", [])
+            if not self.check_refer_intentions(context, token):
+                return HttpResponse(
+                    status=400,
+                    content=_('Error: intentions incorrect')
+                )
             return self.response_class(
                 request=self.request,
                 template=self.get_referrer_template_names(),
@@ -585,7 +621,7 @@ class ReferrerMixin(object):
             )
 
     def get_referrer_template_names(self):
-        return "spider_protections/referring.html"
+        return "spider_base/protections/referring.html"
 
 
 class EntityDeletionMixin(UserTestMixin):

@@ -699,7 +699,7 @@ msgid "Change"
 msgstr ""
 
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_form.html:118
-#: spkcspider/apps/spider/templates/spider_protections/protections.html:10
+#: spkcspider/apps/spider/templates/spider_base/protections/protections.html:10
 msgid "Protections"
 msgstr ""
 
@@ -751,46 +751,46 @@ msgstr ""
 msgid "No Components available."
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/protections.html:23
+#: spkcspider/apps/spider/templates/spider_base/protections/protections.html:23
 msgid "Send"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:7
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:7
 msgid "Allow"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:17
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:17
 msgid "Access to"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:21
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:21
 msgid "Scope"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:22
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:37
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:22
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:37
 msgid "Name"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:28
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:35
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:28
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:35
 msgid "Component"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:30
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:30
 msgid "Description"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:43
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:51
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:43
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:51
 msgid "Content"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:61
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:61
 msgid "Confirm Access"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_protections/referring.html:65
+#: spkcspider/apps/spider/templates/spider_base/protections/referring.html:65
 msgid "Cancel"
 msgstr ""
 

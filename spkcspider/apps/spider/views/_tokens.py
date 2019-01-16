@@ -5,6 +5,7 @@ __all__ = (
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic.edit import DeleteView
+from django.http import JsonResponse, HttpResponseRedirect
 
 from ._core import UCTestMixin, EntityDeletionMixin
 from ..models import AuthToken
@@ -71,6 +72,7 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
     no_nonce_usercomponent = True
     also_authenticated_users = True
     model = AuthToken
+    template_name = "spider_base/protections/authtoken_confirm_delete.html"
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -99,6 +101,15 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
 
         return get_object_or_404(
             queryset,
-            token=self.request.GET.get("delete", None),
-            persistent=True
+            token=self.request.GET.get("delete", ""),
+            persist=True
         )
+
+    def delete(self, request, *args, **kwargs):
+        self.object.delete()
+        return HttpResponseRedirect(
+            redirect_to=self.object.referrer
+        )
+
+    def post(self, request, *args, **kwargs):
+        return self.delete(request, *args, **kwargs)

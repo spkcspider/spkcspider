@@ -70,7 +70,7 @@ class ContentBase(UCTestMixin):
         return super().get_context_data(**kwargs)
 
     def get_queryset(self):
-        ret = self.model.objects.filter(usercomponent=self.usercomponent)
+        ret = self.model.objects.all()
         # skip search if user and single object
         if self.scope in ("add", "update", "update_raw"):
             return ret
@@ -177,13 +177,14 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 
     def dispatch_extra(self, request, *args, **kwargs):
         if "referrer" in self.request.GET:
-            if self.usercomponent.features.filter(
-                name="Referring"
-            ).exists():
-                self.object_list = self.get_queryset()
-                return self.handle_referrer()
+            self.object_list = self.get_queryset()
+            return self.handle_referrer()
         return None
 
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            usercomponent=self.usercomponent
+        )
 
     def get_usercomponent(self):
         query = {"id": self.kwargs["id"]}
@@ -197,13 +198,13 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.usercomponent.user == self.request.user:
+        if self.request.is_owner:
             context["content_variants"] = \
-                self.usercomponent.user_info.allowed_content.exclude(
+                self.request.user.spider_info.allowed_content.exclude(
                     ctype__contains=VariantType.feature.value
                 )
             context["content_variants_used"] = \
-                self.usercomponent.user_info.allowed_content.filter(
+                self.request.user.spider_info.allowed_content.filter(
                     assignedcontent__usercomponent=self.usercomponent
                 ).exclude(
                     ctype__contains=VariantType.feature.value
@@ -350,14 +351,15 @@ class ContentAdd(ContentBase, ModelFormMixin,
         self.object = self.get_object()
         return self.render_to_response(self.get_context_data())
 
+    def get_queryset(self):
+        # use requesting user as base if he can add this type of content
+        return self.request.user.spider_info.allowed_content.exclude(
+            ctype__contains=VariantType.feature.value
+        )
+
     def test_func(self):
         # test if user and check if user is allowed to create content
-        if (
-            self.has_special_access(user=True, superuser=False) and
-            self.usercomponent.user_info.allowed_content.filter(
-                name=self.kwargs["type"]
-            ).exists()
-        ):
+        if self.has_special_access(user=True, superuser=False):
             return True
         return False
 
@@ -430,13 +432,10 @@ class ContentAccess(
         #     if ids is not None and self.object.id not in ids:
         #         return self.handle_no_permission()
         if "referrer" in self.request.GET:
-            if self.usercomponent.features.filter(
-                name="Referring"
-            ).exists():
-                self.object_list = self.model.objects.filter(
-                    pk=self.object.pk
-                )
-                return self.handle_referrer()
+            self.object_list = self.model.objects.filter(
+                pk=self.object.pk
+            )
+            return self.handle_referrer()
 
         return None
 
@@ -450,12 +449,14 @@ class ContentAccess(
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
         context = {"form": None}
         if self.scope == "update":
             context["form"] = self.get_form()
         return self.render_to_response(self.get_context_data(**context))
 
     def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
         context = {"form": None}
         # other than update have no form
         if self.scope == "update":
@@ -542,13 +543,13 @@ class ContentAccess(
 
     def get_usercomponent(self):
         q = models.Q(
-            id=self.kwargs["id"],
-            fake_id__isnull=True
-        ) | models.Q(fake_id=self.kwargs["id"])
-        q &= models.Q(nonce=self.kwargs["nonce"])
+            contents__id=self.kwargs["id"],
+            contents__fake_id__isnull=True
+        ) | models.Q(contents__fake_id=self.kwargs["id"])
+        q &= models.Q(contents__nonce=self.kwargs["nonce"])
         return get_object_or_404(
             UserComponent.objects.prefetch_related("protections"),
-            contents=q
+            q
         )
 
     def get_user(self):

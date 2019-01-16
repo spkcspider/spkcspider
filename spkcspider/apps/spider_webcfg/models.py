@@ -12,7 +12,9 @@ class WebConfig(BaseContent):
     appearances = [
         {
             "name": "WebConfig",
-            "ctype": VariantType.unique + VariantType.feature,
+            "ctype": (
+                VariantType.unique + VariantType.feature + VariantType.persist
+            ),
             "strength": 0
         }
     ]
@@ -48,5 +50,5 @@ class WebConfig(BaseContent):
     def get_info(self):
         ret = super().get_info(unique=True)
         return "{}url={}\n".format(
-            ret, self.url.replace("\n", "%0A")
+            ret, self.token.referrer.replace("\n", "%0A")
         )

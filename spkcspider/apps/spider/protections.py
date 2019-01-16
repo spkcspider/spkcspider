@@ -260,6 +260,10 @@ class LoginProtection(BaseProtection):
 
     description = _("Use Login password")
 
+    allow_auth = forms.BooleanField(
+        label=_("Component authentication"), required=False
+    )
+
     class auth_form(forms.Form):
         use_required_attribute = False
         password = forms.CharField(
@@ -276,7 +280,7 @@ class LoginProtection(BaseProtection):
             self.fields["active"].disabled = True
 
     def get_strength(self):
-        return (3, 3)
+        return (3, 4 if self.allow_auth else 3)
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
@@ -288,6 +292,8 @@ class LoginProtection(BaseProtection):
             if authenticate(
                 request, username=username, password=password, nospider=True
             ):
+                if obj.data.get("allow_auth", False):
+                    return 4
                 return 3
         return cls.auth_form()
 
@@ -304,6 +310,12 @@ class PasswordProtection(BaseProtection):
 
     description = _("Protect with extra passwords")
     prefix = "protection_passwords"
+
+    # TODO: mark single pws for auth
+    allow_auth = forms.BooleanField(
+        label=_("Component authentication"), required=False,
+        help_text=_("(with strong passwords)")
+    )
 
     class auth_form(forms.Form):
         use_required_attribute = False
@@ -380,8 +392,12 @@ class PasswordProtection(BaseProtection):
                 max_length = max(len(password), max_length)
 
 
-        if success is not False:
-            return self.eval_strength(max_length)
+        if success:
+            ret = self.eval_strength(max_length)
+            if obj.data.get("allow_auth", False):
+                if ret >= 2:
+                    return 4
+                return ret
         return retfalse
 
 
@@ -421,7 +437,7 @@ if getattr(settings, "USE_CAPTCHAS", False):
                         _("captcha is for login required (admin setting)")
 
         def get_strength(self):
-            return 1
+            return (1, 1)
 
         @classmethod
         def localize_name(cls, name=None):
@@ -433,7 +449,7 @@ if getattr(settings, "USE_CAPTCHAS", False):
                 return cls.auth_form()
             form = cls.auth_form(**cls.extract_form_kwargs(request))
             if request.method != "GET" and form.is_valid():
-                return True
+                return 1
             return form
 
 
@@ -447,7 +463,7 @@ class TravelProtection(BaseProtection):
     description = _("Deny access if valid travel protection is active")
 
     def get_strength(self):
-        return 0
+        return (0, 0)
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
@@ -459,5 +475,5 @@ class TravelProtection(BaseProtection):
                 disallow__contains=obj.usercomponent
             )
             if not travel.exists():
-                return True
+                return 0
         return False

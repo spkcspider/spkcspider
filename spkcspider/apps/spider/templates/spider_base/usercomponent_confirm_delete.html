@@ -12,7 +12,7 @@
     <h1 class="w3-center">
       {% blocktrans trimmed %}
         Delete User Component:
-      {% endblocktrans %} <em>{{object.content}}</em>
+      {% endblocktrans %} <em>{{object.name}}</em>
     </h1>
   </div>
 
@@ -26,6 +26,23 @@
       {% endblocktrans %}
     </div>
   </div>
+
+  <table class="w3-table-all">
+    <thead>
+      <tr>
+        <th class="">{% trans 'Deleted Content' %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for content in object.contents %}
+        <tr>
+          <td>
+            {{content}}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
   <div class="w3-bar w3-black w3-container">
     {% if not remaining or remaining == 0 %}

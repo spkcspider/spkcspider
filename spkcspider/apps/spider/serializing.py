@@ -38,7 +38,7 @@ def serialize_content(graph, content, context, embed=False):
     if token:
         token = token.token
     url2 = merge_get_url(url_content, token=token)
-    if VariantType.feature.value in content.associated.ctype.ctype:
+    if VariantType.feature.value in content.ctype.ctype:
         graph.add((
             ref_content,
             spkcgraph["type"],
@@ -199,9 +199,12 @@ def serialize_stream(
                         literal=feature.name
                     )
                     if context["scope"] != "export":
-                        uri = feature.installed_class.action_url()
-                        if uri:
-                            ref_feature = URIRef(uri)
+                        url_feature = urljoin(
+                            context["hostpart"],
+                            feature.installed_class.action_url()
+                        )
+                        if url_feature:
+                            ref_feature = URIRef(url_feature)
                             graph.add((
                                 ref_component,
                                 spkcgraph["action:feature"],
@@ -234,9 +237,12 @@ def serialize_stream(
                         )
 
                         if context["scope"] != "export":
-                            uri = feature.installed_class.action_url()
-                            if uri:
-                                ref_feature = URIRef(uri)
+                            url_feature = urljoin(
+                                context["hostpart"],
+                                feature.installed_class.action_url()
+                            )
+                            if url_feature:
+                                ref_feature = URIRef(url_feature)
                                 graph.add((
                                     ref_component,
                                     spkcgraph["action:feature"],

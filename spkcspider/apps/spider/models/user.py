@@ -34,10 +34,6 @@ from ..constants import (
 logger = logging.getLogger(__name__)
 
 
-_striptoken = getattr(settings, "TOKEN_SIZE", 30)*4//3
-# show 1/3 of token
-_striptoken = _striptoken-_striptoken//3
-
 
 _name_help = _(
     "Name of the component.<br/>"
@@ -273,20 +269,24 @@ class UserInfo(models.Model):
         default_permissions = []
 
     def calculate_allowed_content(self):
+        from ..contents import installed_contents
         ContentVariant = apps.get_model("spider_base.ContentVariant")
         allowed = []
         cfilterfunc = get_settings_func(
             "ALLOWED_CONTENT_FILTER",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )
-        for variant in ContentVariant.objects.all():
+        # Content types which are not "installed" should be removed/never used
+        for variant in ContentVariant.objects.filter(
+            code__in=installed_contents
+        ):
             if cfilterfunc(self.user, variant):
                 allowed.append(variant)
         # save not required, m2m field
         self.allowed_content.set(allowed)
 
     def calculate_used_space(self):
-        from .models import AssignedContent
+        from . import AssignedContent
         self.used_space_local = 0
         self.used_space_remote = 0
         for c in AssignedContent.objects.filter(

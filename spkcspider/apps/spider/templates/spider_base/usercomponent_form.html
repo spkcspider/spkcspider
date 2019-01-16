@@ -105,7 +105,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
                   {% if token.persist %}
                     {{token.referrer}}
                   {% else %}
-                    {{expire_date|date:"D, d/m/Y"}}<br/>{{token.referrer}}
+                    {{expire_date|date:"D, d/m/Y"}}{% if token.referrer %}<br/>{{token.referrer}}{% endif %}
                   {% endif %}
                 </td>
                 <td>
@@ -205,7 +205,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             // D d M Y
             cell2.innerText = date.toLocaleDateString("en-GB", {
               weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
-            })+"<br/>"+data["tokens"][count].referrer
+            })+"\n"+data["tokens"][count].referrer
           }
           let cell3 = row.insertCell()
           cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" value="${data["tokens"][count].id}"></input>`

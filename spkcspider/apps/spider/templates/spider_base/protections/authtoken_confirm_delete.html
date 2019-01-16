@@ -1,0 +1,35 @@
+{% extends "spider_base/protections/base.html" %}
+{% load i18n %}
+{% block title %}{% blocktrans trimmed %}
+  Delete AuthToken
+{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<div class="">
+  <div class="w3-padding">
+    {# index is redirected in view #}
+    <a class="w3-left" href="{{object.referrer}}">{% trans 'Back' %}</a>
+    <h1 class="w3-center">
+      {% blocktrans trimmed %}
+        Delete AuthToken
+      {% endblocktrans %}: <em>{{object}}</em>
+    </h1>
+  </div>
+
+  <div class="w3-padding">
+    <div class="w3-content w3-center w3-red w3-xlarge" style="margin-bottom:20px">
+      {% blocktrans trimmed with name=object %}
+        Warning: this deletes this token and all depending persisted data.<br/>
+        Go back if you don't want to do this.<br/>
+      {% endblocktrans %}
+    </div>
+  </div>
+
+  <div class="w3-bar w3-black w3-container">
+    <form method="post" action="{{request.get_full_path}}">
+      {% csrf_token %}
+      <button class="w3-bar-item w3-hover-yellow w3-button w3-red">{% trans 'Delete' %}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

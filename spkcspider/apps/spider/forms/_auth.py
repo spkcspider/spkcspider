@@ -16,8 +16,7 @@ from ..models import (
 
 class SpiderAuthForm(AuthenticationForm):
     password = None
-    # can authenticate only with SpiderAuthBackend
-    # or descendants, so ignore others
+    # can authenticate only with specialized backend(s) so ignore others
     auth_backend = SpiderAuthBackend()
 
     def __init__(self, *args, **kwargs):
@@ -34,7 +33,8 @@ class SpiderAuthForm(AuthenticationForm):
         # if this works, something is wrong
         # protections should match username from POST with the ones of the
         # usercomponent (which is available in clean)
-        assert(self.request.protections is not True)
+        assert type(self.request.protections) is not int,\
+            "login evaluates to success without data"
 
     def clean(self):
         username = self.cleaned_data.get('username')

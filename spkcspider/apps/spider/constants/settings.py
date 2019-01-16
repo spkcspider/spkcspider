@@ -21,7 +21,7 @@ NONCE_CHOICES = [
 
 VALID_INTENTIONS = set(getattr(
     settings, "SPIDER_VALID_INTENTIONS",
-    ["login", "persist", "payment", "sl", "search"]
+    ["auth", "login", "persist", "payment", "sl", "search"]
 ))
 VALID_SUB_INTENTIONS = set(["payment", "sl", "search"])
 

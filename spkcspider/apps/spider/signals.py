@@ -43,7 +43,7 @@ def CleanupCallback(sender, instance, **kwargs):
                 -instance.get_size(), f
             )
             # because of F expressions no atomic is required
-            instance.user.spider_info.save(
+            instance.usercomponent.user.spider_info.save(
                 update_fields=["used_space_local", "used_space_remote"]
             )
         if instance.fake_id is None and instance.content:

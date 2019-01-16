@@ -67,6 +67,8 @@ def info_field_validator(value):
         )
     # check elements
     for elem in value.split("\n"):
+        if elem == "":
+            continue
         f = elem.find("=")
         # no flag => allow multiple instances
         if f != -1:
@@ -75,7 +77,7 @@ def info_field_validator(value):
         counts += value.count("\n%s\n" % elem)
         # check: is flag used as key in key, value storage
         counts += value.count("\n%s=" % elem)
-        assert(counts > 0)
+        assert counts > 0, value
         if counts > 1:
             raise ValidationError(
                 _('flag not unique: %(element)s in %(value)s'),

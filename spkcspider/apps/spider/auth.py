@@ -70,7 +70,7 @@ class SpiderAuthBackend(ModelBackend):
                     ptype=ProtectionType.authentication.value,
                     protection_codes=protection_codes
                 )
-                if isinstance(request.protections, int):  # should never happen
+                if type(request.protections) is int:  # should never happen
                     return None
             else:
                 if uc_fake:
@@ -79,19 +79,21 @@ class SpiderAuthBackend(ModelBackend):
                         ptype=ProtectionType.authentication.value,
                         protection_codes=protection_codes
                     )
-                    if isinstance(request.protections, int):
+                    if type(request.protections) is int:
                         request.session["is_fake"] = True
                         return uc_fake.user
+                # don't overwrite request.protections yet to serve fake version
+                # in case the real login doesn't work either
                 protections = uc.auth(
                     request, scope="auth",
                     ptype=ProtectionType.authentication.value,
                     protection_codes=protection_codes
                 )
-                if protections is True:
+                if type(protections) is int:
                     request.protections = protections
                     request.session["is_fake"] = False
                     return uc.user
-                # overwrite uc_fakes protections with cached protections
+                # there was no fake so set protections
                 if not uc_fake:
                     request.protections = protections
         except Http404:

@@ -9,8 +9,8 @@ from django.db import models, transaction
 from django.utils.translation import gettext
 from django.template.loader import render_to_string
 from django.core.files.base import File
-from django.core.exceptions import NON_FIELD_ERRORS
-from django.core.exceptions import ValidationError
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.db.utils import IntegrityError
 
 from django.contrib.contenttypes.fields import GenericRelation
 from django.http import HttpResponse
@@ -61,18 +61,28 @@ def initialize_content_models(apps=None):
         update = False
         if len(appearances) == 1:
             update = True
+
         for dic in appearances:
+            require_save = False
             assert dic["name"] not in forbidden_names, \
                 "Forbidden content name: %" % dic["name"]
-            if update:
-                variant = ContentVariant.objects.get_or_create(
-                    defaults=dic, code=code
-                )[0]
-            else:
-                variant = ContentVariant.objects.get_or_create(
-                    defaults=dic, code=code, name=dic["name"]
-                )[0]
-            require_save = False
+            try:
+                with transaction.atomic():
+                    if update:
+                        variant = ContentVariant.objects.get_or_create(
+                            defaults=dic, code=code
+                        )[0]
+                    else:
+                        variant = ContentVariant.objects.get_or_create(
+                            defaults=dic, code=code, name=dic["name"]
+                        )[0]
+
+            except IntegrityError:
+                # renamed model = code changed
+                variant = ContentVariant.objects.get(name=dic["name"])
+                variant.code = code
+                require_save = True
+
             for key in _attribute_list:
                 val = dic.get(
                     key, variant._meta.get_field(key).get_default()
@@ -86,7 +96,7 @@ def initialize_content_models(apps=None):
     invalid_models = ContentVariant.objects.exclude(all_content)
     if invalid_models.exists():
         print("Invalid content, please update or remove them:",
-              ["{}:{}".format(t.code, t.name) for t in invalid_models])
+              ["\"{}\":{}".format(t.code, t.name) for t in invalid_models])
 
 
 class BaseContent(models.Model):

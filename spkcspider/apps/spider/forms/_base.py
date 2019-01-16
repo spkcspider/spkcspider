@@ -8,15 +8,16 @@ from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
 from ..models import (
-    AssignedProtection, Protection, UserComponent, AssignedContent
+    AssignedProtection, Protection, UserComponent, AssignedContent,
+    ContentVariant
 )
 from ..helpers import create_b64_token
 from ..constants import (
-    ProtectionType, NONCE_CHOICES, INITIAL_NONCE_SIZE, index_names,
-    protected_names
+    ProtectionType, VariantType, NONCE_CHOICES, INITIAL_NONCE_SIZE,
+    index_names, protected_names
 )
 
-_help_text = _("""Generate a new nonce token with variable strength<br/>
+_help_text_nonce = _("""Generate a new nonce token with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
 If you have problems with attackers (because they know the nonce),
 you can invalidate it with this option and/or add protections<br/>
@@ -32,10 +33,14 @@ public attribute from component for restoring protection</td>
 """)  # noqa: E501
 
 
+_help_text_features = _("""
+Note: persistent Features (=features which use a persistent token) require and enable "Persistence"
+""")  # noqa: E501
+
 class UserComponentForm(forms.ModelForm):
     protections = None
     new_nonce = forms.ChoiceField(
-        label=_("New Nonce"), help_text=_help_text,
+        label=_("New Nonce"), help_text=_help_text_nonce,
         required=False, initial="", choices=NONCE_CHOICES
     )
 
@@ -50,8 +55,11 @@ class UserComponentForm(forms.ModelForm):
                 'unique_together': _('Name of User Component already exists')
             }
         }
+        help_texts = {
+            'features': _help_text_features,
+        }
         widgets = {
-            'features': forms.CheckboxSelectMultiple,
+            'features': forms.CheckboxSelectMultiple(),
         }
 
     def __init__(self, request, data=None, files=None, auto_id='id_%s',
@@ -70,12 +78,10 @@ class UserComponentForm(forms.ModelForm):
         ) or request.session.get("is_fake", False):
             self.fields['featured'].disabled = True
 
-        valid_cids = request.user.spider_info.allowed_content.all()
-        valid_cids = valid_cids.values_list("id", flat=True)
-        self.fields["features"].queryset = \
-            self.fields["features"].queryset.filter(
-                id__in=valid_cids
-            ).order_by("name")
+        self.fields["features"].queryset = (
+            self.fields["features"].queryset &
+            request.user.spider_info.allowed_content.all()
+        ).order_by("name")
 
         if self.instance and self.instance.id:
             assigned = self.instance.protections
@@ -138,6 +144,7 @@ class UserComponentForm(forms.ModelForm):
         for protection in self.protections:
             protection.full_clean()
         self.cleaned_data["strength"] = 0
+        max_prot_strength = 0
         if self.cleaned_data["name"] in index_names:
             self.cleaned_data["strength"] = 10
             return ret
@@ -150,7 +157,6 @@ class UserComponentForm(forms.ModelForm):
             # regular protections strength
             amount_regular = 0
             strengths = []
-            max_prot_strength = 0
             for protection in self.protections:
                 if not protection.cleaned_data.get("active", False):
                     continue
@@ -184,7 +190,14 @@ class UserComponentForm(forms.ModelForm):
             else:
                 strengths = 0
             self.cleaned_data["strength"] += max(strengths, fail_strength)
-            self.cleaned_data["can_auth"] = max_prot_strength >= 4
+        self.cleaned_data["can_auth"] = max_prot_strength >= 4
+        if any(map(
+            lambda x: VariantType.persist.value in x.ctype,
+            self.cleaned_data["features"]
+        )):
+            self.cleaned_data["features"] |= ContentVariant.objects.filter(
+                name="Persistence"
+            )
         min_strength = self.cleaned_data["features"].filter(
             strength__gt=self.cleaned_data["strength"]
         ).aggregate(m=models.Max("strength"))["m"]
@@ -239,7 +252,7 @@ class UserComponentForm(forms.ModelForm):
 class UserContentForm(forms.ModelForm):
     prefix = "content_control"
     new_nonce = forms.ChoiceField(
-        label=_("New Nonce"), help_text=_(_help_text),
+        label=_("New Nonce"), help_text=_help_text_nonce,
         required=False, initial="", choices=NONCE_CHOICES
     )
 

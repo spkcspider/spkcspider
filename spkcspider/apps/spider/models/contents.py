@@ -15,6 +15,7 @@ from django.db import models
 from django.shortcuts import redirect
 from django.utils.translation import gettext
 from django.utils import timezone
+from django.urls import reverse
 from django.contrib.auth.hashers import (
     check_password, make_password
 )
@@ -29,22 +30,21 @@ logger = logging.getLogger(__name__)
 
 
 @add_content
-class AbstractFeatures(BaseContent):
+class PersistenceFeature(BaseContent):
     appearances = [
         {
-            "name": "Referring",
+            "name": "Persistence",
             "ctype": VariantType.feature.value,
             "strength": 0
         },
-        {
-            "name": "PersistentTokens",
-            "ctype": VariantType.feature.value,
-            "strength": 0
-        }
     ]
 
     class Meta:
         abstract = True
+
+    @classmethod
+    def action_url(cls):
+        return reverse("spider_base:token-delete-request")
 
 
 @add_content

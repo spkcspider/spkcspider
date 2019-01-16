@@ -1,5 +1,18 @@
-{% extends "spider_protections/base.html" %}
-{% load i18n %}
+{% extends "spider_base/protections/base.html" %}
+{% load i18n static spider_paging %}
+
+{% block extrahead %}
+{{block.super}}
+<link rel="stylesheet" href="{% static 'node_modules/select2/dist/css/select2.min.css' %}">
+{% if DEBUG %}
+  <script src="{% static 'node_modules/jquery/dist/jquery.js' %}"></script>
+  <script src="{% static 'node_modules/select2/dist/js/select2.js' %}"></script>
+{% else %}
+  <script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
+  <script src="{% static 'node_modules/select2/dist/js/select2.min.js' %}"></script>
+{% endif %}
+{% endblock %}
+
 {% block content %}
 <form class="w3-padding" action="{{ request.get_full_path }}" method="post">
   {% csrf_token %}
@@ -10,29 +23,35 @@
         <td class="">{{referrer}}</td>
       </tr>
       {% if not referrer.isascii %}
-        <tr class="w3-red">
+        <tr class="w3-red w3-xlarge">
           <td>
             {% trans 'Warning: this referrer may conceal his identity with unicode' %}
           </td>
         </tr>
       {% endif %}
-      {% if not referrer.isascii %}
-        <tr class="w3-red">
-          <td>
-            {% trans 'Warning: initiate remote account deletion of referrer. ARE YOU SURE?' %}
-          </td>
-        </tr>
-      {% endif %}
-      {% if "login" in
       {% if "payment" in intentions %}
-        <tr class="w3-orange">
+        <tr class="w3-red w3-large">
           <td>
             {% trans 'Warning: this referrer wants access to payments' %}
           </td>
         </tr>
       {% endif %}
+      {% if "search" in intentions %}
+        <tr class="w3-light-blue">
+          <td>
+            {% trans 'This referrer applies the filter live instead of using a snapshot of ids' %}
+          </td>
+        </tr>
+      {% endif %}
+      {% if "persist" in intentions %}
+        <tr class="w3-light-blue">
+          <td>
+            {% trans 'This referrer wants to persist data' %}
+          </td>
+        </tr>
+      {% endif %}
       {% if "login" in intentions %}
-        <tr class="w3-green">
+        <tr class="w3-light-blue">
           <td>
             {% trans 'Login into: ' %}{{referrer}}
           </td>
@@ -54,7 +73,13 @@
           <tr class="w3-orange">
             <td class="">{% trans 'Global' %}</td>
             <td typeof="spkc:Intention">
-              <data property="spkc:name" datatype="xsd:string">{{intention}}</data>
+              <data property="spkc:name" datatype="xsd:string" content="{{intention}}">
+                {% if intention == "sl" %}
+                  serverless (sl)
+                {% else %}
+                  {{intention}}
+                {% endif %}
+              </data>
             </td>
           </tr>
         {% endfor %}
@@ -100,6 +125,30 @@
       </tbody>
     </table>
   </fieldset>
+  <div>
+    <h4>{% trans 'Filter' %}</h4>
+    <div style="white-space: nowrap;">
+      <select name="search" id="scope_filter" multiple="multiple">
+        {% list_parameters "search" old_search as cur_search %}
+        {% for elem in cur_search %}
+          <option selected="selected" value="{{elem}}">{{elem}}</option>
+        {% endfor %}
+      </select>
+      <button name="action" value="" class="w3-button w3-grey">
+        {% trans 'Refresh' %}
+      </button>
+    </div>
+  </div>
+  <div class="w3-text-grey w3-padding">
+    <small>
+      {% blocktrans trimmed %}
+        Use ! to negate. Use !! to start a filter tag with !. Press Enter to confirm tag.<br/>
+        Use _ to start strict filter tag. Escape with __.<br/>
+        Use !_ to start negated strict filter tag.
+      {% endblocktrans %}
+    </small>
+  </div>
+
   <button name="action" value="confirm" class="w3-button w3-grey">
     {% trans 'Confirm Access' %}
   </button>
@@ -108,4 +157,26 @@
     {% trans 'Cancel' %}
   </button>
 </form>
+{% endblock %}
+
+
+{% block outercontent %}
+<script>
+jQuery.noConflict();
+var scope_filter_scripts_initialized = false;
+
+jQuery( document ).ready(function( $ ) {
+  if (scope_filter_scripts_initialized)
+    return;
+  scope_filter_scripts_initialized = true;
+  $("#scope_filter").select2({
+    tags: true,
+    width: '70%',
+    allowClear: true,
+    placeholder: '{% trans "Filter" %}'
+  });
+})
+
+</script>
+
 {% endblock %}

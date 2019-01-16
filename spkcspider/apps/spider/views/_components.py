@@ -8,7 +8,7 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.db import models
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.conf import settings
 from django.urls import reverse
 

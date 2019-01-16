@@ -112,7 +112,7 @@
         {% trans 'Add new content' %}
         <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
       </summary>
-      <div class="w3-padding w3-border">
+      <div class="w3-border">
         <div class="w3-row">
           {% for variant in content_variants %}
             {% if uc.strength < variant.strength %}
@@ -137,14 +137,14 @@
 
   {% if uc.features.exists %}
   <div class="w3-padding">
-    <details open="open" class="w3-white w3-padding w3-border">
-      <summary class=""><h4>{% trans 'Active Component Features' %}:<i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i></h4></summary>
+    <div class="w3-white w3-padding">
+      <h4>{% trans 'Active Component Features' %}:</h4>
       <div>
         {% for f in uc.features.all %}
-          <span class="w3-padding" style="display:inline-block;white-space:nowrap;">{{f}}{% if not forloop.last %}, {% endif %}</span>
+          <span class="" style="display:inline-block;white-space:nowrap;">{{f}}{% if not forloop.last %}, {% endif %}</span>
         {% endfor %}
       </div>
-    </details>
+    </div>
   </div>
   {% endif %}
   <div class="w3-margin">

@@ -135,12 +135,11 @@ There are some special GET parameters for services with special requirements:
 * search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
-* referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: works only if Referring Feature is active
-  * sl=true: server-less referrer mode: if "true" token is transferred as GET parameter and no POST request is made (less secure as client sees token)
+* referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: persistent features (e.g. WebCfg) work only if "Persistence" Feature is active
+  * intention=sl: server-less referrer mode: token is transferred as GET parameter and no POST request is made (less secure as client sees token)
   * payload=<foo>: passed on successfull requests (including post), e.g. for sessionid  
   * intention=payment: referrer can initiate payments (referrer sends link along with payment informations to payment provider which allows the user to confirm the transaction with a second kind of authentication)
   * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
-  * intention=account_deletion: initiates account deletion on referrer, all related features are also removed; must not appear with other intentions and require the post path (this means: either server based systems or server-less systems implementing post stub)
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
 
 ## search parameters
@@ -163,8 +162,8 @@ Otherwise security could be compromised.
 
 ## Important Features
 
-* Referring: Allow referrer GET parameter
-* PermissiveTokens: Protection-strength 5 creates tokens (allows externs to use referrer with strength 5 and reissue tokens)
+* Persistence: Allow referrer to save data (used and activated by persistent features)
+* WebConfig: Allow remote websites to save config data on your server (requires Persistence)
 
 
 # TODO
@@ -173,21 +172,6 @@ Otherwise security could be compromised.
 * documentation
 * get_size returns tuple with affected quota
 * make quota type overridable (maybe add extra nonsaved quota: other)
-* AuthToken overhaul
-  * Remove PermissiveTokens, add access by PersistentToken
-  * require for account_deletion PersistentToken (and rework referrer system)
-  * referrer intention=persist for allowing saving data and creating persistToken
-  * AuthToken: search parameters (replace ids, replace search parameters for every access), add persist field or reuse referrer field for persistence
-  * intention=ask-permission, for asking user to update their search parameter filter (maybe)
-  * add ProxyModels: PersistentToken, VisitorToken by using QuerySet as_manager
-  * referring: add form field with search parameters (user can add/remove filter like he wants)
-    * should hide/show elements (update dynamically?)
-
-* add auth strength (generated dynamically by passed tests, return numbers instead true)
-  * repurpose levels 4, 9 as special login for owner
-  * form strength check returns tuple with minimal and maximal strength of protection (can be used to determinate if protections can be used for authentication)
-  * add intention=auth to trigger authlike access control check (add usercompont field which saves if this is possible)
-* use duplicate password fields and check all of the supplied passwords (up to 2 pws?)
 
 
 ## Later

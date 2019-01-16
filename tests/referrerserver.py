@@ -54,7 +54,7 @@ class ReferrerHandler(BaseHTTPRequestHandler):
 
         if "token" in self.query and "hash" not in self.query:
             answer = (
-                "Token: {}\nserver-less success"
+                "Token: {}\nserverless success"
             ).format(
                 self.query["token"][0]
             )

@@ -24,7 +24,7 @@ def render_protection(context, protectiontup):
         ctx["form"] = protection.auth_form(**ctx["data"])
     template_name = getattr(protection, "template_name")
     if not template_name:
-        template_name = "spider_protections/protection_form.html"
+        template_name = "spider_base/protections/protection_form.html"
 
     return render_to_string(
         template_name, context=ctx, request=context["request"]

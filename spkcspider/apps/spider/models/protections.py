@@ -23,6 +23,10 @@ from ..constants.static import ProtectionType, ProtectionResult, index_names
 logger = logging.getLogger(__name__)
 
 
+_striptoken = getattr(settings, "TOKEN_SIZE", 30)*4//3
+# show 1/3 of token
+_striptoken = _striptoken-_striptoken//3
+
 class ProtectionManager(models.Manager):
     def invalid(self):
         return self.get_queryset().exclude(code__in=installed_protections)
@@ -74,6 +78,7 @@ class Protection(models.Model):
         )
 
     @classmethod
+    @sensitive_variables("kwargs")
     def auth_query(cls, request, query, required_passes=1, **kwargs):
         initial_required_passes = required_passes
         ret = []
@@ -93,13 +98,13 @@ class Protection(models.Model):
                 required_passes=initial_required_passes, **kwargs
             )
             if _instant_fail:  # instant_fail does not reduce required_passes
-                if not isinstance(result,  int):  # False or form
+                if type(result) is not int:  # False or form
                     # set limit unreachable
                     required_passes = len(query)
                 else:
                     if result > max_result:
                         max_result = result
-            elif isinstance(result,  int):
+            elif type(result) is int:
                 required_passes -= 1
                 if result > max_result:
                     max_result = result
@@ -111,13 +116,14 @@ class Protection(models.Model):
                 initial_required_passes > 0
            ):
             return False
-        # don't require lower limit this way and
-        # against timing attacks
+        # don't require lower limit this way
+        #   against timing attacks
         if required_passes <= 0:
             return max_result
         return ret
 
     @classmethod
+    @sensitive_variables("kwargs")
     def authall(cls, request, required_passes=1,
                 ptype=ProtectionType.authentication.value,
                 protection_codes=None, **kwargs):
