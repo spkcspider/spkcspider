@@ -280,7 +280,7 @@ class LoginProtection(BaseProtection):
             self.fields["active"].disabled = True
 
     def get_strength(self):
-        return (3, 4 if self.allow_auth else 3)
+        return (3, 4 if self.cleaned_data.get("allow_auth", False) else 3)
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
