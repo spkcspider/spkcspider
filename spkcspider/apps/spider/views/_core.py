@@ -154,13 +154,6 @@ class UserTestMixin(AccessMixin):
             ):
                 return False
             minstrength = 4
-
-            if not self.usercomponent.can_auth:
-                return "{}?{}={}".format(
-                    self.get_login_url(),
-                    REDIRECT_FIELD_NAME,
-                    quote_plus(self.request.get_full_path())
-                )
             no_token = False
 
         # token not required
@@ -195,6 +188,20 @@ class UserTestMixin(AccessMixin):
                     self.request.is_owner = True
                 self.request.auth_token = token
                 return True
+
+        # if result is impossible and token invalid try to login
+        if minstrength >= 4 and not self.usercomponent.can_auth:
+            # remove token and redirect
+            return "{}?{}={}".format(
+                self.get_login_url(),
+                REDIRECT_FIELD_NAME,
+                quote_plus(
+                    merge_get_url(
+                        self.request.get_full_path(),
+                        token=None
+                    )
+                )
+            )
 
         protection_codes = None
         if "protection" in self.request.GET:
