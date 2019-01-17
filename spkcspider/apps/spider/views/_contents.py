@@ -88,7 +88,6 @@ class ContentBase(UCTestMixin):
             idlist += self.request.auth_token.extra.get("ids", [])
             searchlist += self.request.auth_token.extra.get("filter", [])
 
-
         if self.scope == "list":
             if "search" in self.request.POST or "id" in self.request.POST:
                 searchlist += self.request.POST.getlist("search")
@@ -155,7 +154,7 @@ class ContentBase(UCTestMixin):
         if self.request.is_special_user:
             # all other scopes than list can show here _unlisted
             # this includes export
-            if  self.scope == "list" and "_unlisted" not in searchlist:
+            if self.scope == "list" and "_unlisted" not in searchlist:
                 searchq_exc |= models.Q(
                     info__contains="\nunlisted\n", priority__lte=0
                 )

@@ -129,11 +129,13 @@ There are some special GET parameters for services with special requirements:
 * search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
+* intention=auth: try to login with UserComponent authentication (falls back to login redirect)
 * referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: persistent features (e.g. WebCfg) work only if "Persistence" Feature is active
   * intention=sl: server-less referrer mode: token is transferred as GET parameter and no POST request is made (less secure as client sees token)
   * payload=<foo>: passed on successfull requests (including post), e.g. for sessionid  
   * intention=payment: referrer can initiate payments  
   * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
+  * intention=persist: referrer can persist data on webserver
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
 
 ## payment intention

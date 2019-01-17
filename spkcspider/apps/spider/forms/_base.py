@@ -37,6 +37,7 @@ _help_text_features = _("""
 Note: persistent Features (=features which use a persistent token) require and enable "Persistence"
 """)  # noqa: E501
 
+
 class UserComponentForm(forms.ModelForm):
     protections = None
     new_nonce = forms.ChoiceField(

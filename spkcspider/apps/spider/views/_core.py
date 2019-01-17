@@ -4,7 +4,6 @@ __all__ = (
 
 import logging
 import hashlib
-from decimal import Decimal
 from urllib.parse import quote_plus
 
 from datetime import timedelta
@@ -157,12 +156,10 @@ class UserTestMixin(AccessMixin):
             minstrength = 4
 
             if not self.usercomponent.can_auth:
-                return HttpResponseRedirect(
-                    redirect_to="{}?{}={}".format(
-                        self.get_login_url(),
-                        REDIRECT_FIELD_NAME,
-                        quote_plus(self.request.get_full_path())
-                    )
+                return "{}?{}={}".format(
+                    self.get_login_url(),
+                    REDIRECT_FIELD_NAME,
+                    quote_plus(self.request.get_full_path())
                 )
             no_token = False
 
@@ -187,7 +184,7 @@ class UserTestMixin(AccessMixin):
                 token = self.usercomponent.authtokens.filter(
                     session_key=self.request.session.session_key
                 ).first()
-            if token:
+            if token and token.extra.get("prot_strength", 0) >= minstrength:
                 self.request.token_expires = \
                     token.created+self.usercomponent.token_duration
                 # case will never enter
@@ -208,12 +205,12 @@ class UserTestMixin(AccessMixin):
             protection_codes=protection_codes
         )
         if (
-            type(self.request.protections) is int and #  because: False==0
+            type(self.request.protections) is int and  # because: False==0
             self.request.protections >= minstrength
         ):
             # token not required
             if no_token:
-                return self.request.protections
+                return True
 
             token = self.create_token(
                 extra={
@@ -480,7 +477,7 @@ class ReferrerMixin(object):
         if not token:
             return True
 
-        ####### with token ########
+        ####### with token ########  # noqa: 266E
         if "payment" in context["intentions"]:
             # set
             token.pay_amount = pay_amount
