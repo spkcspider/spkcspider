@@ -21,7 +21,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         from spkcspider.apps.spider.models import AuthToken
-        q = AuthToken.objects.filter(persist=False)
+        q = AuthToken.objects.filter(persist=-1)
         if options['days']:
             dt = datetime.datetime.now() - \
                 datetime.timedelta(days=int(options['days']))

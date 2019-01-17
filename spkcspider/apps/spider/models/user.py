@@ -20,19 +20,14 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core import validators
 
-from jsonfield import JSONField
-
-# from ..apps import installed_componentfeatures
 from ..helpers import create_b64_token, get_settings_func
 from ..constants import (
-    ProtectionType, VariantType, MAX_NONCE_SIZE, hex_size_of_bigid,
-    TokenCreationError,
+    ProtectionType, VariantType, MAX_NONCE_SIZE, TokenCreationError,
     default_uctoken_duration, force_captcha, index_names
 )
 
 
 logger = logging.getLogger(__name__)
-
 
 
 _name_help = _(
@@ -133,6 +128,12 @@ class UserComponent(models.Model):
         limit_choices_to=models.Q(
             ctype__contains=VariantType.feature.value
         )
+    )
+    primary_anchor = models.ForeignKey(
+        "spider_base.AssignedContent", related_name="+", null=True, blank=True,
+        limit_choices_to=models.Q(
+            info__contains="\nanchor\n"
+        ), on_delete=models.SET_NULL
     )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)

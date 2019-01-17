@@ -549,6 +549,10 @@ class BaseContent(models.Model):
             unlisted = (
                 VariantType.feature.value in self.associated.ctype.ctype
             )
+        anchortag = ""
+        if VariantType.anchor.value in self.associated.ctype.ctype:
+            anchortag = "anchor\n"
+
         idtag = "primary\n"
         # simulates beeing not unique, by adding id
         if not unique:
@@ -558,10 +562,11 @@ class BaseContent(models.Model):
         unlistedtag = ""
         if unlisted:
             unlistedtag = "unlisted\n"
-        return "\nmodel={}\ntype={}\n{}{}".format(
+        return "\nmodel={}\ntype={}\n{}{}{}".format(
             self._meta.model_name,
             self.associated.ctype.name,
             idtag,
+            anchortag,
             unlistedtag
         )
 

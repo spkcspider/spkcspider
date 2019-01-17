@@ -6,7 +6,6 @@ from django import forms
 from django.apps import apps
 from django.utils.translation import gettext
 
-from spkcspider.apps.spider.constants import VariantType
 from spkcspider.apps.spider.helpers import add_by_field
 from spkcspider.apps.spider.models import TravelProtection
 
@@ -118,8 +117,9 @@ class AnchorField(forms.ModelChoiceField):
             self.limit_to_user = "usercomponent__user"
 
         travel = TravelProtection.objects.get_active()
+        # can also use Links to anchor as anchor
         kwargs["queryset"] = AssignedContent.objects.filter(
-            ctype__ctype__contains=VariantType.anchor.value,
+            info__contains="\nanchor\n",
             **kwargs.pop("limit_choices_to", {})
         ).exclude(
             usercomponent__travel_protected__in=travel

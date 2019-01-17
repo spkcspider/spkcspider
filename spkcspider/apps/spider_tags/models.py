@@ -20,7 +20,12 @@ CACHE_FORMS = {}
 
 class TagLayout(models.Model):
     name = models.SlugField(max_length=255, null=False)
-    layout = JSONField(default={})
+    # shall it be unique for a component?
+    unique = models.BooleanField(default=False, blank=True)
+    layout = JSONField(
+        default=[],
+        help_text=_("Field list in JSON format")
+    )
     default_verifiers = JSONField(default=[], blank=True)
     usertag = models.OneToOneField(
         "spider_tags.UserTagLayout", on_delete=models.CASCADE,

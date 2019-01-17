@@ -84,7 +84,7 @@ class LinkContent(BaseContent):
     def get_priority(self):
         priority = self.content.content.get_priority()
         # pin to top
-        if self.pin and priority < 1:
+        if self.push and priority < 1:
             return 1
         return priority
 

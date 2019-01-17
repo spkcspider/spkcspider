@@ -7,15 +7,17 @@ namespace: spider_base
 __all__ = ["Protection", "AssignedProtection", "AuthToken"]
 
 import logging
+from decimal import Decimal
 
 from django.db import models
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_variables
 
 from jsonfield import JSONField
 
-from ..constants import MAX_NONCE_SIZE, hex_size_of_bigid
+from ..constants import MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError
 from ..helpers import create_b64_token
 from ..protections import installed_protections
 from ..constants.static import ProtectionType, ProtectionResult, index_names
@@ -26,6 +28,7 @@ logger = logging.getLogger(__name__)
 _striptoken = getattr(settings, "TOKEN_SIZE", 30)*4//3
 # show 1/3 of token
 _striptoken = _striptoken-_striptoken//3
+
 
 class ProtectionManager(models.Manager):
     def invalid(self):
@@ -275,7 +278,8 @@ class AuthToken(models.Model):
         "spider_base.UserComponent", on_delete=models.CASCADE,
         related_name="authtokens"
     )
-    persist = models.BooleanField(blank=True, default=False, db_index=True)
+    # -1=false,0=usercomponent,1-...=anchor
+    persist = models.BigIntegerField(blank=True, default=-1, db_index=True)
     # brute force protection
     #  16 = usercomponent.id in hexadecimal
     token = models.SlugField(
@@ -302,6 +306,7 @@ class AuthToken(models.Model):
             hex(self.usercomponent.id)[2:],
             create_b64_token(getattr(settings, "TOKEN_SIZE", 30))
         )
+
     def _pay_amount_get(self):
         if self._pay_amount is not None:
             return self._pay_amount
@@ -321,7 +326,6 @@ class AuthToken(models.Model):
         self.extra["pay_amount"] = str(self._pay_amount)
 
     pay_amount = property(_pay_amount_get, _pay_amount_set)
-
 
     def save(self, *args, **kwargs):
         for i in range(0, 1000):

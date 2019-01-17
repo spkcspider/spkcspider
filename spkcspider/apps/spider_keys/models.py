@@ -137,7 +137,7 @@ class AnchorServer(BaseContent):
         {
             "name": "AnchorServer",
             "ctype": VariantType.anchor.value,
-            "strength": 7
+            "strength": 0
         }
     ]
     hashed_fields = ["identifier"]
@@ -145,6 +145,9 @@ class AnchorServer(BaseContent):
     def get_form(self, scope):
         from .forms import AnchorServerForm
         return AnchorServerForm
+
+    def get_priority(self):
+        return -10
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
@@ -195,7 +198,7 @@ class AnchorKey(AnchorServer):
         {
             "name": "AnchorKey",
             "ctype": VariantType.anchor+VariantType.unique,
-            "strength": 7
+            "strength": 0
         }
     ]
 

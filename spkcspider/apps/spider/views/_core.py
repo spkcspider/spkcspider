@@ -16,6 +16,7 @@ from django.http import (
     HttpResponseRedirect, HttpResponseServerError, HttpResponse
 )
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse_lazy
@@ -141,7 +142,7 @@ class UserTestMixin(AccessMixin):
         if not expire:
             expire = timezone.now()-self.usercomponent.token_duration
         return self.usercomponent.authtokens.filter(
-            created__lt=expire, persist=False
+            created__lt=expire, persist=-1
         ).delete()
 
     def test_token(self, minstrength=0):
@@ -497,8 +498,11 @@ class ReferrerMixin(object):
                     token.extra["intentions"]
                 ):
                     return False
-            # set persist is true
-            token.persist = True
+            # set persist = true, (false=-1)
+            token.persist = 0
+            # if possible, pin to anchor
+            if self.usercomponent.primary_anchor:
+                token.persist = self.usercomponent.primary_anchor.id
         else:
             # check if token was reused
             if token.referrer:
@@ -541,15 +545,22 @@ class ReferrerMixin(object):
         action = self.request.POST.get("action", None)
         if action == "confirm":
             token = None
+            persistfind = Q(persist=0, usercomponent=self.usercomponent)
+            persistfind |= Q(
+                persist__in=self.usercomponent.contents.filter(
+                    info__contains="\nanchor\n"
+                ).values_list("id", flat=True)
+            )
             # if persist try to find old token
             if "persist" in context["intentions"]:
                 token = AuthToken.objects.filter(
-                    usercomponent=self.usercomponent,
-                    referrer=context["referrer"],
-                    persist=True
+                    persistfind,
+                    referrer=context["referrer"]
                 ).first()
                 if token:
                     token.create_auth_token()
+                    # migrate usercomponent
+                    token.usercomponent = self.usercomponent
 
             # create only new token when admin token and not persisted token
             if self.usercomponent.user == self.request.user:
@@ -635,10 +646,15 @@ class ReferrerMixin(object):
                 self.request.method != "POST" and
                 "persist" in context["intentions"]
             ):
+                persistfind = Q(persist=0, usercomponent=self.usercomponent)
+                persistfind |= Q(
+                    persist__in=self.usercomponent.contents.filter(
+                        info__contains="\nanchor\n"
+                    ).values_list("id", flat=True)
+                )
                 oldtoken = AuthToken.objects.filter(
-                    usercomponent=self.usercomponent,
+                    persistfind,
                     referrer=context["referrer"],
-                    persist=True
                 ).first()
 
             if oldtoken:

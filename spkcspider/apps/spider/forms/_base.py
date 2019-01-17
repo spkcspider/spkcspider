@@ -91,6 +91,10 @@ class UserComponentForm(forms.ModelForm):
             if not self.instance.is_public_allowed:
                 self.fields["public"].disabled = True
                 self.fields.pop("featured", None)
+            self.fields["primary_anchor"].queryset = \
+                self.fields["primary_anchor"].queryset.filter(
+                    usercomponent=self.instance
+                )
             if self.instance.name in index_names:
                 self.fields.pop("features", None)
                 self.fields.pop("featured", None)
@@ -109,6 +113,7 @@ class UserComponentForm(forms.ModelForm):
                                                     request=request)
             self.protections = list(self.protections)
         else:
+            self.fields.pop("primary_anchor", None)
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
             self.fields["new_nonce"].choices = \
                 self.fields["new_nonce"].choices[1:]

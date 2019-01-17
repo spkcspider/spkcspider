@@ -102,7 +102,7 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
         return get_object_or_404(
             queryset,
             token=self.request.GET.get("delete", ""),
-            persist=True
+            persist__gte=0
         )
 
     def delete(self, request, *args, **kwargs):
