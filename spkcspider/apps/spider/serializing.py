@@ -96,6 +96,15 @@ def serialize_component(graph, component, context, visible=True):
         spkcgraph["type"],
         Literal("Component")
     ))
+    if component.primary_anchor:
+        url_content = urljoin(
+            context["hostpart"],
+            component.primary_anchor.get_absolute_url()
+        )
+        add_property(
+            graph, "primary_anchor", ref=ref_component,
+            literal=url_content, datatype=XSD.anyURI
+        )
     if component.public or context["scope"] == "export":
         add_property(
             graph, "user", ref=ref_component, literal=component.username

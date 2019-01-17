@@ -86,6 +86,13 @@
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
         <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description}}</data>
       </data>
+
+      {% if uc.primary_anchor %}
+      <data hidden="hidden" typeof="spkc:Property">
+        <data hidden="hidden" property="spkc:name" datatype="xsd:string">primary_anchor</data>
+        <data hidden="hidden" property="spkc:value" datatype="xsd:anyURI">{{hostpart}}{{uc.primary_anchor.get_absolute_url}}</data>
+      </data>
+      {% endif %}
       {% for f in uc.features.all %}
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>

@@ -477,9 +477,21 @@ class BaseContent(models.Model):
                     literal=feature.name
                 )
                 if kwargs["scope"] != "export":
-                    uri = feature.installed_class.action_urls()
-                    if uri:
-                        ref_feature = URIRef(uri)
+                    if uc.primary_anchor:
+                        url_content = urljoin(
+                            session_dict["hostpart"],
+                            uc.primary_anchor.get_absolute_url()
+                        )
+                        add_property(
+                            g, "primary_anchor", ref=session_dict["sourceref"],
+                            literal=url_content, datatype=XSD.anyURI
+                        )
+                    for uri in feature.installed_class.action_urls():
+                        url_feature = urljoin(
+                            session_dict["hostpart"],
+                            uri
+                        )
+                        ref_feature = URIRef(url_feature)
                         g.add((
                             session_dict["sourceref"],
                             spkcgraph["action:feature"],

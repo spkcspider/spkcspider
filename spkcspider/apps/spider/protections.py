@@ -154,7 +154,7 @@ class BaseProtection(forms.Form):
         if hasattr(cls, "auth_form"):
             form = cls.auth_form(**cls.extract_form_kwargs(request))
             if form.is_valid():
-                return self.get_strength()
+                return 1
             return form
         return False
 
@@ -333,7 +333,8 @@ class PasswordProtection(BaseProtection):
         initial=""
     )
 
-    def eval_strength(self, length):
+    @staticmethod
+    def eval_strength(length):
         if length > 15:
             return 2
         if length > 40:
@@ -391,9 +392,8 @@ class PasswordProtection(BaseProtection):
             if success:
                 max_length = max(len(password), max_length)
 
-
         if success:
-            ret = self.eval_strength(max_length)
+            ret = cls.eval_strength(max_length)
             if obj.data.get("allow_auth", False):
                 if ret >= 2:
                     return 4

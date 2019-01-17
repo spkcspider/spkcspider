@@ -100,6 +100,13 @@
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
           <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{object.info}}</data>
         </data>
+        {% if uc.primary_anchor %}
+        <data hidden="hidden" typeof="spkc:Property">
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">primary_anchor</data>
+          <data hidden="hidden" property="spkc:value" datatype="xsd:anyURI">{{hostpart}}{{uc.primary_anchor.get_absolute_url}}</data>
+        </data>
+        {% endif %}
+
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">id</data>
           <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{object.get_id}}</data>
