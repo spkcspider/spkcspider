@@ -45,7 +45,8 @@ class PersistenceFeature(BaseContent):
     @classmethod
     def action_urls(cls):
         return [
-            (reverse("spider_base:token-delete-request"), "delete-request")
+            (reverse("spider_base:token-renew"), "renew-token")
+            (reverse("spider_base:token-delete-request"), "delete-token")
         ]
 
 

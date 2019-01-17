@@ -1,7 +1,6 @@
 __all__ = ("WebConfigView",)
 
 from django.http import Http404
-from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.http.response import HttpResponse
@@ -13,7 +12,7 @@ from django.views import View
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
-    AuthToken, AssignedContent, ContentVariant
+    AuthToken, AssignedContent
 )
 from .models import WebConfig
 
@@ -35,24 +34,19 @@ class WebConfigView(UCTestMixin, View):
         token = self.request.GET.get("token", None)
         if not token:
             raise Http404()
-        self.request.authtoken = get_object_or_404(
+        self.request.auth_token = get_object_or_404(
             AuthToken,
             token=token,
-            usercomponent__features__name="WebConfig",
+            persist__gte=0
         )
         if (
-            not self.request.authtoken.referrer or
-            "account_deletion" in self.request.authtoken.extra.get(
+            not self.request.auth_token.referrer or
+            "persist" in self.request.auth_token.extra.get(
                 "intentions", []
             )
         ):
             raise Http404()
-        usercomponent = self.request.authtoken.usercomponent
-        expire = timezone.now()-usercomponent.token_duration
-        if self.request.authtoken.created < expire:
-            self.request.authtoken.delete()
-            self.request.authtoken = None
-            raise Http404()
+        usercomponent = self.request.auth_token.usercomponent
         return usercomponent
 
     def get_user(self):
@@ -62,15 +56,13 @@ class WebConfigView(UCTestMixin, View):
         return True
 
     def get_object(self, queryset=None):
-        variant = ContentVariant.objects.get(
+        variant = self.usercomponent.features.filter(
             name="WebConfig"
-        )
-        ret = AssignedContent.objects.filter(
-            info__contains="\nurl={}\n".format(
-                self.request.authtoken.referrer.replace("\n", "%0A")
-            ),
-            usercomponent=self.usercomponent,
-            ctype=variant
+        ).first()
+        if not variant:
+            raise Http404()
+        ret = WebConfig.objects.filter(
+            token=self.request.auth_token
         ).first()
         if ret:
             return ret.content
@@ -89,11 +81,12 @@ class WebConfigView(UCTestMixin, View):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.render_to_response(None)
+        return self.render_to_response(self.object.config)
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         old_size = self.object.get_size()
+        oldconfig = self.object.config
         self.object.config = self.request.body.decode(
             "ascii", "backslashreplace"
         )
@@ -106,11 +99,11 @@ class WebConfigView(UCTestMixin, View):
                 str(exc), status_code=400
             )
         self.object.save()
-        return self.render_to_response(None)
+        return self.render_to_response(oldconfig)
 
-    def render_to_response(self, context):
+    def render_to_response(self, config):
         ret = HttpResponse(
-            self.object.config.encode(
+            config.encode(
                 "ascii", "backslashreplace"
             ), content_type="text/plain"
         )

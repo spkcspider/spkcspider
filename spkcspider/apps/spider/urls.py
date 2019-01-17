@@ -4,10 +4,15 @@ from django.contrib.auth.decorators import login_required
 
 from .views import (
     ComponentIndex, ComponentPublicIndex, ComponentCreate,
-    ComponentUpdate, ComponentDelete, TokenDelete, TokenDeletionRequest
+    ComponentUpdate, ComponentDelete
 )
+
 from .views import (
     ContentAdd, ContentIndex, ContentAccess, ContentRemove
+)
+
+from .views import (
+    TokenDelete, TokenDeletionRequest, TokenRenewal
 )
 
 app_name = "spider_base"
@@ -64,8 +69,13 @@ urlpatterns = [
     ),
     path(
         'token/delete-request/',
-        login_required(TokenDeletionRequest.as_view()),
+        TokenDeletionRequest.as_view(),
         name='token-delete-request'
+    ),
+    path(
+        'token/renew/',
+        TokenRenewal.as_view(),
+        name='token-renew'
     ),
 
     path(

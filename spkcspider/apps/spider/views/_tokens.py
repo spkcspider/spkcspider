@@ -1,15 +1,28 @@
 __all__ = (
-    "TokenDelete", "TokenDeletionRequest"
+    "TokenDelete", "TokenDeletionRequest", "TokenRenewal"
 )
 
-from django.http import Http404
+import logging
+
 from django.shortcuts import get_object_or_404
 from django.views.generic.edit import DeleteView
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import (
+    Http404, HttpResponseServerError, JsonResponse, HttpResponseRedirect,
+    HttpResponse
+)
 
-from ._core import UCTestMixin, EntityDeletionMixin
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+
+import requests
+import certifi
+
+from ._core import UCTestMixin
 from ..models import AuthToken
 from ..helpers import get_settings_func
+from ..constants.static import TokenCreationError
+
 
 class TokenDelete(UCTestMixin, DeleteView):
     no_nonce_usercomponent = True
@@ -113,3 +126,101 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
 
     def post(self, request, *args, **kwargs):
         return self.delete(request, *args, **kwargs)
+
+
+class TokenRenewal(UCTestMixin, View):
+    model = AuthToken
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return get_settings_func(
+                "RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
+
+    def get_usercomponent(self):
+        token = self.request.POST.get("token", None)
+        if not token:
+            raise Http404()
+        self.request.auth_token = get_object_or_404(
+            AuthToken,
+            token=token,
+            persist__gte=0,
+            referrer__isnull=False
+        )
+        if (
+            not self.request.auth_token.referrer or
+            "persist" in self.request.auth_token.extra.get(
+                "intentions", []
+            )
+        ):
+            raise Http404()
+        usercomponent = self.request.auth_token.usercomponent
+        return usercomponent
+
+    def get_user(self):
+        return self.usercomponent.user
+
+    def test_func(self):
+        return True
+
+    def update_with_post(self):
+        # application/x-www-form-urlencoded is best here,
+        # for beeing compatible to most webservers
+        # client side rdf is no problem
+        # NOTE: csrf must be disabled or use csrf token from GET,
+        #       here is no way to know the token value
+        try:
+            d = {
+                "token": self.request.auth_token.token,
+                "renew": "true"
+            }
+            if "payload" in self.request.POST:
+                d["payload"] = self.request.POST["payload"]
+            ret = requests.post(
+                self.request.auth_token.referrer,
+                data=d,
+                headers={
+                    "Referer": "%s://%s" % (
+                        self.request.scheme,
+                        self.request.path
+                    )
+                },
+                verify=certifi.where()
+            )
+            ret.raise_for_status()
+        except requests.exceptions.SSLError as exc:
+            logging.info(
+                "referrer: \"%s\" has a broken ssl configuration",
+                self.request.auth_token.referrer, exc_info=exc
+            )
+            return False
+        except Exception as exc:
+            logging.info(
+                "post failed: \"%s\" failed",
+                self.request.auth_token.referrer, exc_info=exc
+            )
+            return False
+        return True
+
+    def post(self, request, *args, **kwargs):
+        self.request.auth_token.create_token()
+        if "sl" not in self.request.extra.get("intentions", []):
+            pass
+        try:
+            self.request.auth_token.save()
+        except TokenCreationError as e:
+            logging.exception(e)
+            return HttpResponseServerError(
+                "Token update failed, try again"
+            )
+        if "sl" not in self.request.extra.get("intentions", []):
+            return HttpResponse(status_code=200)
+        return HttpResponse(
+            self.request.auth_token.token.encode(
+                "ascii"
+            ), content_type="text/plain"
+        )

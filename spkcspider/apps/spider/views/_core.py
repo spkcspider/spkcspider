@@ -28,11 +28,10 @@ import certifi
 
 from ..helpers import merge_get_url, get_settings_func
 from ..constants import (
-    VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS
+    VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS,
+    TokenCreationError
 )
-from ..models import (
-    UserComponent, AuthToken, TokenCreationError
-)
+from ..models import UserComponent, AuthToken
 
 
 class UserTestMixin(AccessMixin):
@@ -149,7 +148,8 @@ class UserTestMixin(AccessMixin):
         expire = timezone.now()-self.usercomponent.token_duration
         tokenstring = self.request.GET.get("token", None)
         no_token = (self.usercomponent.required_passes == 0)
-        if "intention" in self.request.GET:
+        if "intention" in self.request.GET or "referrer" in self.request.GET:
+            # validate early, before auth
             if not VALID_INTENTIONS.issuperset(
                 self.request.GET.getlist("intention")
             ):
@@ -376,7 +376,8 @@ class ReferrerMixin(object):
         try:
             d = {
                 "token": token.token,
-                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM
+                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
+                "renew": "false"
             }
             if context["payload"]:
                 d["payload"] = context["payload"]
@@ -446,6 +447,10 @@ class ReferrerMixin(object):
         pay_amount = None
         capture = None
         # First error: invalid intentions
+        #  this is the second time the validation will be executed
+        #    in case test_token path is used
+        #  this is the first time the validation will be executed
+        #    in case has_special_access path is used
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
 
@@ -457,7 +462,6 @@ class ReferrerMixin(object):
             if capture not in ("true", "false"):
                 return False
             # return decimal, str or None
-            # token.pay_amount is property
             pay_amount = get_settings_func(
                 "SPIDER_PAYMENT_VALIDATOR",
                 "spkcspider.apps.spider.functions.clean_payment_default"
