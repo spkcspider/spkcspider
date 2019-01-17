@@ -124,7 +124,7 @@ There are some special GET parameters for services with special requirements:
 * token=prefer: uses invalid mechanic, easier to see what it does
 * raw=true: optimize output for machines, use turtle format
 * raw=embed: embed content
-* id=id&id=id: limit content ids
+* id=id&id=id: limit content ids (Content lists only)
 * search=foo&search=!notfoo: search case insensitive a string
 * search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).
 * protection=false: fail if protections are required
@@ -132,9 +132,21 @@ There are some special GET parameters for services with special requirements:
 * referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: persistent features (e.g. WebCfg) work only if "Persistence" Feature is active
   * intention=sl: server-less referrer mode: token is transferred as GET parameter and no POST request is made (less secure as client sees token)
   * payload=<foo>: passed on successfull requests (including post), e.g. for sessionid  
-  * intention=payment: referrer can initiate payments (referrer sends link along with payment informations to payment provider which allows the user to confirm the transaction with a second kind of authentication)
+  * intention=payment: referrer can initiate payments  
   * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
+
+## payment intention
+
+Should have a second auth e.g. pw on payment provider
+
+Requires GET parameter
+* cur=<currency>: currency code
+* amount=<decimalamount|inf>: how much can the referrer maximal request
+
+Optionally:
+* capture=<true/false>
+
 
 ## search parameters
 

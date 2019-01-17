@@ -38,17 +38,25 @@ class ComponentIndexBase(ListView):
     def get_queryset(self):
         searchq = models.Q()
         searchq_exc = models.Q()
+        notsearch = models.Q()
+
         order = None
         counter = 0
         # against ddos
         max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 60)
 
-        if "search" in self.request.POST or "id" in self.request.POST:
+        if "search" in self.request.POST:
             searchlist = self.request.POST.getlist("search")
-            idlist = self.request.POST.getlist("id")
         else:
             searchlist = self.request.GET.getlist("search")
-            idlist = self.request.GET.getlist("id")
+
+        # list only unlisted if explicity requested or export is used
+        # ComponentPublicIndex doesn't allow unlisted in any case
+        # this is enforced by setting "is_special_user" to False
+        if not (
+            self.request.is_special_user and "_unlisted" in searchlist
+        ) and self.scope != "export":
+            notsearch = ~models.Q(contents__info__contains="\nunlisted\n")
 
         for item in searchlist:
             if counter > max_counter:
@@ -89,6 +97,8 @@ class ComponentIndexBase(ListView):
                     name__icontains=_item,
                     strength__lt=10
                 )
+            # exclude unlisted from searchterms
+            qob &= notsearch
             if item.startswith("!!"):
                 searchq |= qob
             elif item.startswith("!"):
@@ -98,24 +108,6 @@ class ComponentIndexBase(ListView):
 
         if self.request.GET.get("protection", "") == "false":
             searchq &= models.Q(required_passes=0)
-
-        # list only unlisted if explicity requested or export is used
-        # ComponentPublicIndex doesn't allow unlisted in any case
-        # this is enforced by setting "is_special_user" to False
-        if not (
-            self.request.is_special_user and "_unlisted" in searchlist
-        ) or self.scope != "export":
-            searchq_exc |= models.Q(contents__info__contains="\nunlisted\n")
-
-        if idlist:
-            ids = map(lambda x: int(x), idlist)
-            searchq &= (
-                models.Q(
-                    contents__id__in=ids,
-                    contents__fake_id__isnull=True
-                ) |
-                models.Q(contents__fake_id__in=ids)
-            )
 
         if self.scope != "export" and "raw" not in self.request.GET:
             order = self.get_ordering(counter > 0)
@@ -244,7 +236,7 @@ class ComponentPublicIndex(ComponentIndexBase):
         if not issearching:
             return ("strength", "-modified",)
         else:
-            return ("name", "user__username")
+            return ("strength", "name", "user__username")
 
 
 class ComponentIndex(UCTestMixin, ComponentIndexBase):
@@ -263,6 +255,8 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         return self.get(request, *args, **kwargs)
 
     def get_ordering(self, issearching=False):
+        if self.scope == "export":
+            return None
         if issearching:
             # MUST use strength here, elsewise travel mode can be exposed
             return ("-strength", "name",)
@@ -347,10 +341,32 @@ class ComponentUpdate(UserTestMixin, UpdateView):
     form_class = UserComponentForm
     also_authenticated_users = True
 
-    def get_context_data(self, **kwargs):
-        # for create_admin_token
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
         self.usercomponent = self.object
-        self.request.auth_token = self.create_admin_token()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+
+    def test_func(self):
+        if self.has_special_access(
+            user_by_login=True
+        ):
+            # for create_admin_token
+            self.request.auth_token = self.create_admin_token()
+            return True
+        return False
+
+    def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["content_variants"] = \
             self.usercomponent.user_info.allowed_content.exclude(

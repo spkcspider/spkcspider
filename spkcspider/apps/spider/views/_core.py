@@ -437,24 +437,27 @@ class ReferrerMixin(object):
         )
 
     def clean_refer_intentions(self, context, token=None):
+        currency = None
+        pay_amount = None
+        capture = None
         # First error: invalid intentions
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
 
         if "payment" in context["intentions"]:
-            token.extra["CUR"] = self.request.GET.get("cur", "").upper()
-            if not token.extra["CUR"]:
+            currency = self.request.GET.get("cur", "").upper()
+            if not currency:
                 return False
-            token.extra["capture"] = self.request.GET.get("capture", "false")
-            if token.extra["capture"] not in ("true", "false"):
+            capture = self.request.GET.get("capture", "false")
+            if capture not in ("true", "false"):
                 return False
             # return decimal, str or None
             # token.pay_amount is property
-            token.pay_amount = get_settings_func(
+            pay_amount = get_settings_func(
                 "SPIDER_PAYMENT_VALIDATOR",
                 "spkcspider.apps.spider.functions.clean_payment_default"
-            )(self.request.GET.get("ammount", None), token.extra["CUR"])
-            if token.pay_amount is None:
+            )(self.request.GET.get("ammount", None), currency)
+            if pay_amount is None:
                 return False
 
         # auth is only for requesting quasi login
@@ -476,6 +479,13 @@ class ReferrerMixin(object):
 
         if not token:
             return True
+
+        ####### with token ########
+        if "payment" in context["intentions"]:
+            # set
+            token.pay_amount = pay_amount
+            token.extra["CUR"] = currency
+            token.extra["capture"] = (capture == "true")
         if "persist" in context["intentions"]:
             # cannot add sl intention
             if "intentions" in token.extra:
@@ -483,6 +493,8 @@ class ReferrerMixin(object):
                     token.extra["intentions"]
                 ):
                     return False
+            # set persist is true
+            token.persist = True
         else:
             # check if token was reused
             if token.referrer:
@@ -569,11 +581,8 @@ class ReferrerMixin(object):
                 )
             token.extra["intentions"] = list(context["intentions"])
 
-            if "persist" in context["intentions"]:
-                token.persist = True
-
-            token.extra["search"] = self.request.POST.getlist("search")
-            if "search" in context["intentions"]:
+            token.extra["filter"] = self.request.POST.getlist("search")
+            if "live" in context["intentions"]:
                 token.extra.pop("ids", None)
             else:
                 token.extra["ids"] = list(

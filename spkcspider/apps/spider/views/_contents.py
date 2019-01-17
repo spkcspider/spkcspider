@@ -4,9 +4,8 @@ __all__ = (
     "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
 )
 
-from django.views.generic.edit import ModelFormMixin, DeleteView
+from django.views.generic.edit import DeleteView, UpdateView, CreateView
 from django.views.generic.list import ListView
-from django.views.generic.base import TemplateResponseMixin, View
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.http.response import HttpResponseBase, HttpResponse
@@ -176,6 +175,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     no_nonce_usercomponent = False
 
     def dispatch_extra(self, request, *args, **kwargs):
+        # only owner can use referring feature
         if "referrer" in self.request.GET and self.request.is_owner:
             self.object_list = self.get_queryset()
             return self.handle_referrer()
@@ -232,8 +232,9 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         staff_perm = not self.usercomponent.is_index
         if staff_perm:
             staff_perm = "spider_base.view_usercomponent"
+        # user token is tested later
         if self.has_special_access(
-            user_by_login=True, user_by_token=True,
+            user_by_login=True, user_by_token=False,
             staff=staff_perm, superuser=True
         ):
             self.request.auth_token = self.create_admin_token()
@@ -340,8 +341,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         return ret
 
 
-class ContentAdd(ContentBase, ModelFormMixin,
-                 TemplateResponseMixin, View):
+class ContentAdd(ContentBase, CreateView):
     scope = "add"
     model = ContentVariant
     also_authenticated_users = True
@@ -423,9 +423,7 @@ class ContentAdd(ContentBase, ModelFormMixin,
         return super().render_to_response(context)
 
 
-class ContentAccess(
-    ReferrerMixin, ContentBase, ModelFormMixin, TemplateResponseMixin, View
-):
+class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
     scope = "access"
     form_class = UserContentForm
     model = AssignedContent
@@ -522,19 +520,17 @@ class ContentAccess(
             staff_perm = "spider_base.view_assignedcontent"
             if self.scope in ["update", "raw_update"]:
                 staff_perm = "spider_base.update_assignedcontent"
+        # user token is tested later
         if self.has_special_access(
             staff=staff_perm, superuser=uncritically,
-            user_by_token=True, user_by_login=True
+            user_by_token=False, user_by_login=True
         ):
             self.request.auth_token = self.create_admin_token()
             return True
-        # if not special or owner: block access to unlisted
-        # use Http404 for this
-        if "\nunlisted\n" in self.object.info:
-            raise Http404()
+        minstrength = 0
         if self.scope not in ["update", "raw_update", "export"]:
-            return self.test_token()
-        return False
+            minstrength = 4
+        return self.test_token(minstrength)
 
     def render_to_response(self, context):
         rendered = self.object.content.render(
