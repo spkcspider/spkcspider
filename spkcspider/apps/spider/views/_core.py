@@ -15,6 +15,7 @@ from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
 from django.http import (
     HttpResponseRedirect, HttpResponseServerError, HttpResponse
 )
+from django.db import transaction
 from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse_lazy
@@ -505,6 +506,7 @@ class ReferrerMixin(object):
                 }
             )
         context["object_list"] = self.object_list
+        delete_auth_token = False
 
         action = self.request.POST.get("action", None)
         if action == "confirm":
@@ -532,9 +534,9 @@ class ReferrerMixin(object):
                     )
             else:
                 if token:
-                    # delete old token
-                    self.request.auth_token.delete()
-                    # and steal token value
+                    # slate auth token for destruction
+                    delete_auth_token = True
+                    # steal token value
                     token.token = self.request.auth_token.token
                 else:
                     # repurpose token
@@ -565,7 +567,13 @@ class ReferrerMixin(object):
             token.referrer = context["referrer"]
             # after cleanup, save
             try:
-                token.save()
+                with transaction.atomic():
+                    # must be done here, elsewise other token can (unlikely)
+                    # catch token, better be safe
+                    if delete_auth_token:
+                        # delete old token
+                        self.request.auth_token.delete()
+                    token.save()
             except TokenCreationError as e:
                 logging.exception(e)
                 return HttpResponseServerError(
