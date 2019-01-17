@@ -210,9 +210,9 @@ class ComponentPublicIndex(ComponentIndexBase):
     preserved_GET_parameters = set(["protection"])
 
     def dispatch(self, request, *args, **kwargs):
-        self.request.is_elevated_request = False
         self.request.is_owner = False
         self.request.is_special_user = False
+        self.request.is_staff = False
         self.request.auth_token = None
         return super().dispatch(request, *args, **kwargs)
 
@@ -276,7 +276,10 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         return super().get_context_data(**kwargs)
 
     def test_func(self):
-        if self.has_special_access(staff=True):
+        if self.has_special_access(
+            user_by_login=True, user_by_token=False,
+            staff="spider_base.view_usercomponent", superuser=True
+        ):
             return True
         return False
 
@@ -286,7 +289,7 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         # doesn't matter if it is same user, lazy
         travel = TravelProtection.objects.get_active()
         # remove all travel protected components if not admin
-        if self.request.user == self.user:
+        if self.request.is_owner:
             q &= ~models.Q(
                 travel_protected__in=travel
             )

@@ -85,9 +85,9 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
             )(self, request)
 
     def test_func(self):
-        staff_perm = "spider_base.delete_authtoken"
         if self.has_special_access(
-            staff=True, superuser=True, staff_perm=staff_perm
+            user_by_token=True, user_by_login=True,
+            superuser=True, staff="spider_base.delete_authtoken"
         ):
             return True
         return self.test_token()

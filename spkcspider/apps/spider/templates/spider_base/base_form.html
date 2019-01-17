@@ -5,8 +5,8 @@
 <ul class="w3-ul" rel="spkc:properties">
   {% for field in form.visible_fields %}
     <li id="{{field.auto_id}}_wrapper" class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
-      <div class="">
-        <div  class="w3-cell w3-padding">
+      <div>
+        <div class="{% if field.help_text %}w3-cell {% endif %}w3-padding">
           <data hidden="hidden" property="spkc:fieldname">{{field.html_name}}</data>
           <data hidden="hidden" property="spkc:name">{{field.name}}</data>
           {% hashable_literalize field as hashable %}
@@ -35,11 +35,11 @@
           {% endif %}
           {% endblock form_widget %}
         </div>
-        <div class="w3-cell w3-padding">
         {% if field.help_text %}
-          <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+          <div class="w3-cell w3-padding">
+            <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+          </div>
         {% endif %}
-        </div>
       </div>
       {% if field.errors %}
         <div class="w3-text-red">

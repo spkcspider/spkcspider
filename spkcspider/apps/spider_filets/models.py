@@ -223,12 +223,11 @@ class TextFilet(BaseContent):
         if kwargs["scope"] != "add" and self.editable_from.filter(
             pk=source.pk
         ).exists():
-            if kwargs["request"].is_elevated_request:
-                kwargs["can_upgrade"] = True
-                if kwargs["scope"] == "update_user":
-                    kwargs["legend"] = \
-                        _("Update \"%s\" (guest)") % self.__str__()
-                    return self.render_update(**kwargs)
+            kwargs["can_upgrade"] = True
+            if kwargs["scope"] == "update_user":
+                kwargs["legend"] = \
+                    _("Update \"%s\" (guest)") % self.__str__()
+                return self.render_update(**kwargs)
         return super().render(**kwargs)
 
     def render_view(self, **kwargs):

@@ -94,16 +94,10 @@ Note: there are some migration breaks. Especially to unbreak mysql. Should not h
 
 ## authentication/privileges
 
-* request.is_elevated_request:
-  * Fullfilled if:
-    * user has some privileges: owner, staff, admin
-    * passed protections of strength >= MIN_STRENGTH_EVELATION = 2 by default
-  * Purpose:
-    * protect bad protected content
-
-
+* request.is_staff: requesting user used staff rights to access view (not true in ComponentPublicIndex)
 * request.is_owner: requesting user owns the components
-* request.protections: True: enough protections were fullfilled, list: protections which failed, False: no access, no matter what
+* request.is_special_user: requesting user owns the components or is_staff
+* request.protections: int: enough protections were fullfilled, max strength, list: protections which failed, False: no access, no matter what
 
 ## Special Scopes
 

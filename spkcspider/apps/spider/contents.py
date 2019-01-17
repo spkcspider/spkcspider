@@ -410,7 +410,6 @@ class BaseContent(models.Model):
         session_dict = {
             "request": kwargs["request"],
             "context": kwargs,
-            "payments_allowed": kwargs["payments_allowed"],
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
             "ac_namespace": spkcgraph["contents"],

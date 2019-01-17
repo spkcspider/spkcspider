@@ -45,7 +45,6 @@ class TrumbowygWidget(widgets.Textarea):
                 'node_modules/trumbowyg/dist/plugins/colors/ui/trumbowyg.colors.css',  # noqa: E501
                 # 'node_modules/trumbowyg/dist/plugins/history/ui/trumbowyg.history.css'  # noqa: E501
                 # 'node_modules/jquery-resizable/resizable.css',
-                'spider_base/trumbowygWidget.css',
             ]
         }
         js = [

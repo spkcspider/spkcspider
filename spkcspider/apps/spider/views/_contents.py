@@ -176,7 +176,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     no_nonce_usercomponent = False
 
     def dispatch_extra(self, request, *args, **kwargs):
-        if "referrer" in self.request.GET:
+        if "referrer" in self.request.GET and self.request.is_owner:
             self.object_list = self.get_queryset()
             return self.handle_referrer()
         return None
@@ -229,9 +229,12 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         return context
 
     def test_func(self):
+        staff_perm = not self.usercomponent.is_index
+        if staff_perm:
+            staff_perm = "spider_base.view_usercomponent"
         if self.has_special_access(
-            staff=(not self.usercomponent.is_index),
-            superuser=True
+            user_by_login=True, user_by_token=True,
+            staff=staff_perm, superuser=True
         ):
             self.request.auth_token = self.create_admin_token()
             return True
@@ -359,7 +362,9 @@ class ContentAdd(ContentBase, ModelFormMixin,
 
     def test_func(self):
         # test if user and check if user is allowed to create content
-        if self.has_special_access(user=True, superuser=False):
+        if self.has_special_access(
+            user_by_login=True, user_by_token=True, superuser=False
+        ):
             return True
         return False
 
@@ -431,7 +436,7 @@ class ContentAccess(
         #     ids = self.request.auth_token.extra.get("ids", None)
         #     if ids is not None and self.object.id not in ids:
         #         return self.handle_no_permission()
-        if "referrer" in self.request.GET:
+        if "referrer" in self.request.GET and self.request.is_owner:
             self.object_list = self.model.objects.filter(
                 pk=self.object.pk
             )
@@ -512,12 +517,14 @@ class ContentAccess(
         # reason: admins could be tricked into malicious updates
         # for index the same reason as for add
         uncritically = self.usercomponent.name != "index"
-        staff_perm = "spider_base.view_assignedcontent"
-        if self.scope in ["update", "raw_update"]:
-            staff_perm = "spider_base.update_assignedcontent"
+        staff_perm = uncritically
+        if staff_perm:
+            staff_perm = "spider_base.view_assignedcontent"
+            if self.scope in ["update", "raw_update"]:
+                staff_perm = "spider_base.update_assignedcontent"
         if self.has_special_access(
-            staff=uncritically, superuser=uncritically,
-            staff_perm=staff_perm
+            staff=staff_perm, superuser=uncritically,
+            user_by_token=True, user_by_login=True
         ):
             self.request.auth_token = self.create_admin_token()
             return True

@@ -36,11 +36,11 @@ jQuery( document ).ready(function( $ ) {
     },
     btns: [
         ['viewHTML'],
-        ['historyUndo', 'historyRedo'], // Only supported in Blink browsers
+        ['historyUndo', 'historyRedo'],
         ['formatting', 'textmarkup', 'foreColor', 'backColor', 'removeformat'],
+        ['emoji', 'link', 'insert'],
         ['justify'],
         ['table','horizontalRule'],
-        ['link', 'insert', 'emoji'],
         ['lists', 'lineheight'],
         ['fullscreen']
     ],

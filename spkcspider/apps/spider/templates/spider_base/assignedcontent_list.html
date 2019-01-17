@@ -27,7 +27,7 @@
 {% block content %}
 <div>
   <div class="w3-padding">
-    {% if request.user == uc.user %}
+    {% if request.user == uc.user or request.is_staff %}
       <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">
         <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
       </a>
@@ -37,7 +37,7 @@
       </a>
     {% endif %}
     <span class="w3-right w3-left-align">
-      {% if request.user == uc.user %}
+      {% if request.is_special_user %}
       <div style="margin-bottom:5px" class="actionbar_user">
         <a class="" href="{% url 'spider_base:ucomponent-update' name=uc.get_name nonce=uc.nonce %}">
           <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Update' %}
@@ -165,7 +165,7 @@
             </data>
           </td>
           <td>
-            {% if uc.public or request.user == uc.user %}
+            {% if uc.public or request.is_special_user %}
               {% blocktrans trimmed with time=content.modified|timesince %}
               Modified: {{time}} ago
               {% endblocktrans %}
@@ -209,7 +209,7 @@
 {% endblock %}
 
 {% block outercontent %}
-{% if request.user == uc.user %}
+{% if request.is_owner %}
 {% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce as exportlink %}
 {% endif %}
 {% include "spider_base/modalpresenter.html" %}

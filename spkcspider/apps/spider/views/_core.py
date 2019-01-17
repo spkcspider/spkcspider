@@ -50,9 +50,9 @@ class UserTestMixin(AccessMixin):
 
     def dispatch(self, request, *args, **kwargs):
         _ = gettext
-        self.request.is_elevated_request = False
         self.request.is_owner = False
         self.request.is_special_user = False
+        self.request.is_staff = False
         self.request.auth_token = None
         try:
             user_test_result = self.test_func()
@@ -85,9 +85,11 @@ class UserTestMixin(AccessMixin):
         kwargs["spider_GET"] = self.sanitize_GET()
         return super().get_context_data(**kwargs)
 
-    # by default only owner can access view
+    # by default only owner with login can access view
     def test_func(self):
-        if self.has_special_access(staff=False, superuser=False):
+        if self.has_special_access(
+            user_by_login=True
+        ):
             return True
         return False
 
@@ -143,7 +145,7 @@ class UserTestMixin(AccessMixin):
             created__lt=expire, persist=False
         ).delete()
 
-    def test_token(self):
+    def test_token(self, minstrength=0):
         expire = timezone.now()-self.usercomponent.token_duration
         tokenstring = self.request.GET.get("token", None)
         no_token = (self.usercomponent.required_passes == 0)
@@ -152,6 +154,7 @@ class UserTestMixin(AccessMixin):
                 self.request.GET.getlist("intention")
             ):
                 return False
+            minstrength = 4
 
             if not self.usercomponent.can_auth:
                 return HttpResponseRedirect(
@@ -190,17 +193,9 @@ class UserTestMixin(AccessMixin):
                 # case will never enter
                 # if not token.session_key and "token" not in self.request.GET:
                 #     return self.replace_token()
-                if (
-                    self.usercomponent.strength >=
-                    settings.MIN_STRENGTH_EVELATION
-                ):
-                    self.request.is_elevated_request = True
                 if token.extra.get("prot_strength", 0) >= 4:
-                    self.request.is_elevated_request = True
                     self.request.is_special_user = True
                     self.request.is_owner = True
-                    # like a login
-                    self.request.user = self.usercomponent.user
                 self.request.auth_token = token
                 return True
 
@@ -212,12 +207,13 @@ class UserTestMixin(AccessMixin):
             request=self.request, scope=self.scope,
             protection_codes=protection_codes
         )
-        if type(self.request.protections) is int:
-            if self.usercomponent.strength >= settings.MIN_STRENGTH_EVELATION:
-                self.request.is_elevated_request = True
+        if (
+            type(self.request.protections) is int and #  because: False==0
+            self.request.protections >= minstrength
+        ):
             # token not required
             if no_token:
-                return True
+                return self.request.protections
 
             token = self.create_token(
                 extra={
@@ -227,11 +223,8 @@ class UserTestMixin(AccessMixin):
             )
 
             if token.extra.get("prot_strength", 0) >= 4:
-                self.request.is_elevated_request = True
                 self.request.is_special_user = True
                 self.request.is_owner = True
-                # like a login
-                self.request.user = self.usercomponent.user
 
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
@@ -242,26 +235,29 @@ class UserTestMixin(AccessMixin):
         return False
 
     def has_special_access(
-        self, user=True, staff=False, superuser=True, staff_perm=None
+        self, user_by_login=True, user_by_token=False,
+        staff=False, superuser=False
     ):
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
-        if self.request.user == self.usercomponent.user:
-            self.request.is_elevated_request = True
-            self.request.is_owner = True
-            self.request.is_special_user = True
+        if user_by_login and self.request.user == self.usercomponent.user:
+                self.request.is_owner = True
+                self.request.is_special_user = True
+                return True
+        if user_by_token and self.test_token(4):
             return True
+
         # remove user special state if is_fake
         if self.request.session.get("is_fake", False):
             return False
         if superuser and self.request.user.is_superuser:
-            self.request.is_elevated_request = True
             self.request.is_special_user = True
+            self.request.is_staff = True
             return True
         if staff and self.request.user.is_staff:
-            if not staff_perm or self.request.user.has_perm(staff_perm):
-                self.request.is_elevated_request = True
+            if type(staff) is bool or self.request.user.has_perm(staff):
                 self.request.is_special_user = True
+                self.request.is_staff = True
                 return True
         return False
 
@@ -447,16 +443,18 @@ class ReferrerMixin(object):
 
         if "payment" in context["intentions"]:
             token.extra["CUR"] = self.request.GET.get("cur", "").upper()
-            token.extra["amount"] = self.request.GET.get("amount", "false")
+            if not token.extra["CUR"]:
+                return False
             token.extra["capture"] = self.request.GET.get("capture", "false")
             if token.extra["capture"] not in ("true", "false"):
                 return False
-            # FIXME: Decimal most probably not serializable
-            token.extra["amount"] =  get_settings_func(
+            # return decimal, str or None
+            # token.pay_amount is property
+            token.pay_amount = get_settings_func(
                 "SPIDER_PAYMENT_VALIDATOR",
-                "spkcspider.apps.spider.functions.validate_payment_default"
-            )(token.extra["amount"], token.extra["CUR"])
-            if token.extra["amount"] is None:
+                "spkcspider.apps.spider.functions.clean_payment_default"
+            )(self.request.GET.get("ammount", None), token.extra["CUR"])
+            if token.pay_amount is None:
                 return False
 
         # auth is only for requesting quasi login

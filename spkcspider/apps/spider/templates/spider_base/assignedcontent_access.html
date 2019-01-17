@@ -34,14 +34,14 @@
     {% endif %}
   {% endfor %}
   <div class="w3-padding" style="height:120px">
-    {% if request.user == uc.user or uc.public %}
+    {% if request.is_special_user or uc.public %}
       {# index is redirected in view #}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">
         <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Index' %}
       </a>
     {% endif %}
     <span class="w3-right">
-      {% if scope != "add" and request.user == uc.user %}
+      {% if scope != "add" and request.is_special_user %}
       <div class="actionbar_user w3-left-align" style="margin-bottom:5px">
         {% if scope != "view" %}
           <div style="margin-bottom:5px">
@@ -136,7 +136,7 @@
 {% endblock %}
 
 {% block outercontent %}
-{% if request.user == uc.user %}
+{% if request.is_owner %}
 {% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='export' as exportlink %}
 {% endif %}
 {% if scope != "add" %}

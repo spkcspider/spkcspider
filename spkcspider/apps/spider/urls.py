@@ -95,7 +95,7 @@ urlpatterns = [
     ),
     path(
         'content/remove/<slug:user>/<str:name>/<int:id>/<slug:nonce>/',
-        login_required(ContentRemove.as_view()),
+        ContentRemove.as_view(),
         name='ucontent-remove'
     ),
     path(

@@ -292,6 +292,7 @@ class AuthToken(models.Model):
     session_key = models.CharField(max_length=40, null=True)
     extra = JSONField(default={}, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
+    _pay_amount = None
 
     def __str__(self):
         return "{}...".format(self.token[:-_striptoken])
@@ -301,6 +302,26 @@ class AuthToken(models.Model):
             hex(self.usercomponent.id)[2:],
             create_b64_token(getattr(settings, "TOKEN_SIZE", 30))
         )
+    def _pay_amount_get(self):
+        if self._pay_amount is not None:
+            return self._pay_amount
+        ret = self.extra.get("pay_amount", None)
+        if isinstance(ret, str):
+            return Decimal(ret)
+        return None
+
+    def _pay_amount_set(self, value):
+        if value is None:
+            self._pay_amount = value
+            self.extra.pop("pay_amount", None)
+            return
+        if not isinstance(value, Decimal):
+            value = Decimal(value)
+        self._pay_amount = value
+        self.extra["pay_amount"] = str(self._pay_amount)
+
+    pay_amount = property(_pay_amount_get, _pay_amount_set)
+
 
     def save(self, *args, **kwargs):
         for i in range(0, 1000):
