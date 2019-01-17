@@ -199,11 +199,12 @@ def serialize_stream(
                         literal=feature.name
                     )
                     if context["scope"] != "export":
-                        url_feature = urljoin(
-                            context["hostpart"],
-                            feature.installed_class.action_url()
-                        )
-                        if url_feature:
+                        for url_feature, name in \
+                              feature.installed_class.action_urls():
+                            url_feature = urljoin(
+                                context["hostpart"],
+                                url_feature
+                            )
                             ref_feature = URIRef(url_feature)
                             graph.add((
                                 ref_component,
@@ -213,7 +214,7 @@ def serialize_stream(
                             graph.add((
                                 ref_feature,
                                 spkcgraph["feature:name"],
-                                Literal(feature.name)
+                                Literal(name)
                             ))
     else:
         ref_component = None
@@ -237,11 +238,12 @@ def serialize_stream(
                         )
 
                         if context["scope"] != "export":
-                            url_feature = urljoin(
-                                context["hostpart"],
-                                feature.installed_class.action_url()
-                            )
-                            if url_feature:
+                            for url_feature, name in \
+                                  feature.installed_class.action_urls():
+                                url_feature = urljoin(
+                                    context["hostpart"],
+                                    url_feature
+                                )
                                 ref_feature = URIRef(url_feature)
                                 graph.add((
                                     ref_component,
@@ -251,7 +253,7 @@ def serialize_stream(
                                 graph.add((
                                     ref_feature,
                                     spkcgraph["feature:name"],
-                                    Literal(feature.name)
+                                    Literal(name)
                                 ))
 
             ref_content = serialize_content(

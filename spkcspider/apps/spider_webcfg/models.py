@@ -27,8 +27,10 @@ class WebConfig(BaseContent):
     config = models.TextField(default="", blank=True)
 
     @classmethod
-    def action_url(cls):
-        return reverse("spider_webcfg:webconfig-view")
+    def action_urls(cls):
+        return [
+            (reverse("spider_webcfg:webconfig-view"), "webcfg")
+        ]
 
     def get_size(self):
         return len(self.config)

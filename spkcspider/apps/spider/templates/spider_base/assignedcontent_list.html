@@ -75,11 +75,11 @@
       {% endif %}
     </h1>
     {% for f in uc.features.all %}
-      {% if f.installed_class.action_url %}
-        <data hidden="hidden" typeof="spkc:action:feature" resource="{{f.installed_class.action_url}}">
-          <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{f.name}}</data>
+      {% for actionurl, name in f.installed_class.action_urls %}
+        <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{actionurl}}">
+          <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{name}}</data>
         </data>
-      {% endif %}
+      {% endfor %}
     {% endfor %}
     <data hidden="hidden" rel="spkc:properties">
       <data hidden="hidden" typeof="spkc:Property">

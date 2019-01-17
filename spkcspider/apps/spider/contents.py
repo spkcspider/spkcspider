@@ -170,8 +170,8 @@ class BaseContent(models.Model):
         return 0
 
     @classmethod
-    def action_url(cls):
-        return None
+    def action_urls(cls):
+        return []
 
     def get_strength(self):
         """ get required strength """
@@ -477,7 +477,7 @@ class BaseContent(models.Model):
                     literal=feature.name
                 )
                 if kwargs["scope"] != "export":
-                    uri = feature.installed_class.action_url()
+                    uri = feature.installed_class.action_urls()
                     if uri:
                         ref_feature = URIRef(uri)
                         g.add((

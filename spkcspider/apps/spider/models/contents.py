@@ -43,8 +43,10 @@ class PersistenceFeature(BaseContent):
         abstract = True
 
     @classmethod
-    def action_url(cls):
-        return reverse("spider_base:token-delete-request")
+    def action_urls(cls):
+        return [
+            (reverse("spider_base:token-delete-request"), "delete-request")
+        ]
 
 
 @add_content
