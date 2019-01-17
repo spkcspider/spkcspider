@@ -33,6 +33,7 @@
         <tr class="w3-red w3-large">
           <td>
             {% trans 'Warning: this referrer wants access to payments' %}
+            {% trans 'Amount:'%}{{request.GET.amount}}{{request.GET.cur|upper}}
           </td>
         </tr>
       {% endif %}
