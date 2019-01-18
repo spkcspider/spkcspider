@@ -40,9 +40,9 @@ class ComponentTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=str(response.content, "utf8"), format="html")
-        self.assertEqual(len(list(
-            g.triples((None, spkcgraph["contents"], None))
-        )), 0)
+        self.assertEqual(sum(
+            1 for _ in g.triples((None, spkcgraph["components"], None))
+        ), 0)
 
         # try to update
         updateurl = reverse(
@@ -71,17 +71,17 @@ class ComponentTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=str(response.content, "utf8"), format="html")
-        self.assertEqual(len(list(
-            g.triples((None, spkcgraph["components"], None))
-        )), 3)
+        self.assertEqual(sum(
+            1 for _ in g.triples((None, spkcgraph["components"], None))
+        ), 3)
         response = self.client.get('/spider/ucs/?page=2')
         # Check that the response is 200 OK.
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=str(response.content, "utf8"), format="html")
-        self.assertEqual(len(list(
-            g.triples((None, spkcgraph["components"], None))
-        )), 1)
+        self.assertEqual(sum(
+            1 for _ in g.triples((None, spkcgraph["components"], None))
+        ), 1)
 
         # Issue a GET request.
         response = self.client.get('/spider/ucs/?raw=true')
@@ -90,9 +90,9 @@ class ComponentTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=str(response.content, "ascii"), format="turtle")
-        self.assertEqual(len(list(
-            g.triples((None, spkcgraph["components"], None))
-        )), 3)
+        self.assertEqual(sum(
+            1 for _ in g.triples((None, spkcgraph["components"], None))
+        ), 3)
 
         # Issue a GET request.
         response = self.client.get('/spider/ucs/?raw=true&page=2')
@@ -101,9 +101,11 @@ class ComponentTest(TransactionTestCase):
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=str(response.content, "ascii"), format="turtle")
-        self.assertEqual(len(list(
-            g.triples((None, spkcgraph["components"], None))
-        )), 1)
+        self.assertEqual(
+            sum(
+                1 for _ in g.triples((None, spkcgraph["components"], None))
+            ), 1
+        )
 
     def test_contents(self):
         self.assertTrue(self.user.usercomponent_set.get(name="public"))

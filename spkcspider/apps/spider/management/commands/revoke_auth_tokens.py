@@ -23,8 +23,13 @@ class Command(BaseCommand):
             help='Delete tokens of referrer',
         )
         parser.add_argument(
-            '--persist', action='store', dest='anchor', default=None,
-            help='Delete tokens of anchor id, with "all": persistent tokens',
+            '--anchor', action='store', dest='anchor', default=None,
+            help=(
+                'Delete tokens of anchor id:\n'
+                '0/"component" for component,\n'
+                '"all":  all tokens,\n'
+                '"persist": persistent tokens'
+            ),
         )
 
     def handle(self, oldest=None, days=None, anchor=None, **options):
@@ -33,12 +38,18 @@ class Command(BaseCommand):
 
         if options['referrer']:
             q = q.filter(referrer=options["referrer"])
-            if anchor == "all":
+            if anchor == "all" or not anchor:
                 pass
-            elif anchor:
-                q = q.filter(persist=int(anchor))
-            else:
+            elif anchor == "component":
+                q = q.filter(persist=0)
+            elif anchor == "persist":
                 q = q.filter(persist__gte=0)
+            else:
+                q = q.filter(persist=int(anchor))
+        elif anchor == "component":
+            q = q.filter(persist=0)
+        elif anchor == "persist":
+            q = q.filter(persist__gte=0)
         elif anchor == "all":
             pass
         elif anchor:
@@ -56,4 +67,4 @@ class Command(BaseCommand):
             )[:int(oldest)]
             # recreate Query
             q = AuthToken.objects.filter(id__in=ids)
-        print(q.delete()[0])
+        self.stdout.write("count: %s\n" % q.delete()[0])

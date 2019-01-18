@@ -7,9 +7,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from spkcspider.apps.spider.signals import update_dynamic
+        self.log = logging.getLogger(__name__)
+        for handler in self.log.handlers:
+            self.log.removeHandler(handler)
+        self.log.addHandler(logging.StreamHandler(self.stdout))
         results = update_dynamic.send_robust(self)
         for (receiver, result) in results:
             if isinstance(result, Exception):
-                logging.error(
+                self.log.error(
                     "%s failed", receiver, exc_info=result
                 )
