@@ -1,3 +1,5 @@
+import unittest
+
 from django.test import TransactionTestCase
 from django.test import Client
 from django.db.utils import IntegrityError
@@ -8,6 +10,7 @@ from rdflib import Graph
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.models import UserComponent
+from spkcspider.apps.spider.signals import update_dynamic
 # Create your tests here.
 
 
@@ -107,6 +110,47 @@ class ComponentTest(TransactionTestCase):
             ), 1
         )
 
+    @unittest.expectedFailure
     def test_contents(self):
-        self.assertTrue(self.user.usercomponent_set.get(name="public"))
-        self.assertTrue(self.user.usercomponent_set.get(name="home"))
+        update_dynamic.send_robust(self)
+        public = self.user.usercomponent_set.get(name="public")
+        home = self.user.usercomponent_set.get(name="home")
+
+        self.client.login(username="testuser1", password="abc")
+
+        # try to create
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "name": "home",
+                "type": "AnchorServer"
+            }
+        )
+
+        response = self.client.post(createurl)
+        # Check that the response is redirect.
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(home.contents.count(), 1)
+
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "name": "public",
+                "type": "AnchorServer"
+            }
+        )
+        response = self.client.post(createurl)
+        # Check that the response is redirect
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(public.contents.count(), 1)
+
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "name": "public",
+                "type": "TravelProtection"
+            }
+        )
+        response = self.client.post(createurl)
+        # Check that the response is 200 OK.
+        self.assertEqual(response.status_code, 404)
