@@ -41,10 +41,10 @@ DATABASES = {
 
 
 # how many user components per page
-COMPONENTS_PER_PAGE = 2
+COMPONENTS_PER_PAGE = 3
 # how many user contents per page
-CONTENTS_PER_PAGE = 2
+CONTENTS_PER_PAGE = 3
 # how many raw/serialized results per page?
-SERIALIZED_PER_PAGE = 2
+SERIALIZED_PER_PAGE = 3
 # max depth of references
 SERIALIZED_MAX_DEPTH = 5

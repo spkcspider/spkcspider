@@ -202,7 +202,7 @@ def serialize_stream(
         for component in page_view.object_list:
             ref_component = serialize_component(graph, component, context)
             if ref_component:
-                for feature in component.features:
+                for feature in component.features.all():
                     add_property(
                         graph, "features", ref=ref_component,
                         literal=feature.name
