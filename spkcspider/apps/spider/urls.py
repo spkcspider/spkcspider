@@ -63,7 +63,7 @@ urlpatterns = [
         name='ucomponent-delete'
     ),
     path(
-        'token/delete/<str:name>/',
+        'token/delete/<str:user>/<str:name>/',
         login_required(TokenDelete.as_view()),
         name='token-delete'
     ),
