@@ -33,6 +33,8 @@ class ComponentTest(TransactionTestCase):
         self.assertEqual(indexurl, index.get_absolute_url())
         response = self.client.get(indexurl)
         self.assertEqual(response.status_code, 302)
+        target = "{}?next={}".format(reverse("auth:login"), indexurl)
+        self.assertRedirects(response, target)
         self.client.login(username="testuser1", password="abc")
         response = self.client.get(indexurl)
         self.assertEqual(response.status_code, 200)
@@ -41,6 +43,17 @@ class ComponentTest(TransactionTestCase):
         self.assertEqual(len(list(
             g.triples((None, spkcgraph["contents"], None))
         )), 0)
+
+        # try to update
+        updateurl = reverse(
+            "spider_base:ucomponent-update",
+            kwargs={
+                "name": "index",
+                "nonce": index.nonce
+            }
+        )
+        response = self.client.get(updateurl)
+        self.assertEqual(response.status_code, 200)
 
     def test_public(self):
         for i in range(1, 4):
