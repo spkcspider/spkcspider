@@ -87,7 +87,7 @@ class UserComponent(models.Model):
         default=False,
         help_text=_(
             "Is public? Is listed and searchable?<br/>"
-            "Note: This field is maybe not deactivatable"
+            "Note: This field is maybe not deactivatable "
             "because of assigned content"
         )
     )
@@ -130,10 +130,15 @@ class UserComponent(models.Model):
         )
     )
     primary_anchor = models.ForeignKey(
-        "spider_base.AssignedContent", related_name="+", null=True, blank=True,
-        limit_choices_to=models.Q(
-            info__contains="\nanchor\n"
-        ), on_delete=models.SET_NULL
+        "spider_base.AssignedContent", related_name="primary_anchor_for",
+        null=True, blank=True,
+        limit_choices_to={
+            "info__contains": "\nanchor\n",
+        }, on_delete=models.SET_NULL,
+        help_text=_(
+            "Select main identyifing anchor. Also used for attaching "
+            "persisting tokens (elsewise they are attached to component)"
+        )
     )
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)

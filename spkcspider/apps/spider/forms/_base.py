@@ -48,8 +48,8 @@ class UserComponentForm(forms.ModelForm):
     class Meta:
         model = UserComponent
         fields = [
-            'name', 'description', 'features', 'featured', 'public',
-            'required_passes', 'token_duration'
+            'name', 'description', 'public', 'featured',
+            'features', 'primary_anchor', 'required_passes', 'token_duration'
         ]
         error_messages = {
             NON_FIELD_ERRORS: {

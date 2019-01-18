@@ -3,6 +3,8 @@ __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
 import logging
+from functools import lru_cache
+
 from urllib.parse import urljoin
 from django.apps import apps as django_apps
 from django.db import models, transaction
@@ -19,7 +21,7 @@ from django.utils.translation import pgettext
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD
 
-from .constants import VariantType, spkcgraph
+from .constants.static import VariantType, spkcgraph, ActionUrl
 from .serializing import paginate_stream, serialize_stream
 from .helpers import merge_get_url, get_settings_func, add_property
 
@@ -172,6 +174,14 @@ class BaseContent(models.Model):
     @classmethod
     def action_urls(cls):
         return []
+
+    @classmethod
+    @lru_cache(typed=True)
+    def cached_action_urls(cls):
+        return list(map(
+            lambda x: ActionUrl(*x),
+            cls.action_urls()
+        ))
 
     def get_strength(self):
         """ get required strength """
@@ -486,7 +496,8 @@ class BaseContent(models.Model):
                             g, "primary_anchor", ref=session_dict["sourceref"],
                             literal=url_content, datatype=XSD.anyURI
                         )
-                    for uri in feature.installed_class.action_urls():
+                    for uri, name in \
+                            feature.installed_class.cached_action_urls():
                         url_feature = urljoin(
                             session_dict["hostpart"],
                             uri
@@ -500,7 +511,7 @@ class BaseContent(models.Model):
                         g.add((
                             ref_feature,
                             spkcgraph["feature:name"],
-                            Literal(feature.name)
+                            Literal(name)
                         ))
 
         ret = HttpResponse(

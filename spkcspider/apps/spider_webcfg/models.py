@@ -3,7 +3,7 @@ __all__ = ["WebConfig"]
 from django.db import models
 from django.urls import reverse
 
-from spkcspider.apps.spider.constants.static import VariantType
+from spkcspider.apps.spider.constants.static import VariantType, ActionUrl
 from spkcspider.apps.spider.contents import BaseContent, add_content
 
 
@@ -29,7 +29,7 @@ class WebConfig(BaseContent):
     @classmethod
     def action_urls(cls):
         return [
-            (reverse("spider_webcfg:webconfig-view"), "webcfg")
+            ActionUrl(reverse("spider_webcfg:webconfig-view"), "webcfg")
         ]
 
     def get_size(self):

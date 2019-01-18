@@ -59,7 +59,7 @@ class TokenDelete(UCTestMixin, DeleteView):
         response = {
             "tokens": [
                 {
-                    "expires": None if i.persist else (
+                    "expires": None if i.persist >= 0 else (
                         i.created +
                         self.usercomponent.token_duration
                     ).strftime("%a, %d %b %Y %H:%M:%S %z"),
@@ -212,8 +212,8 @@ class TokenRenewal(UCTestMixin, View):
             pass
         try:
             self.request.auth_token.save()
-        except TokenCreationError as e:
-            logging.exception(e)
+        except TokenCreationError:
+            logging.exception("Token creation failed")
             return HttpResponseServerError(
                 "Token update failed, try again"
             )

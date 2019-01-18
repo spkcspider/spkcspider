@@ -24,21 +24,21 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block content %}
   <div class="w3-padding" style="height:120px">
-    <a class="w3-left" href="{% url 'spider_base:ucomponent-list' %}">
-      <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
-    </a>
+    <span class="w3-left">
+    {% if object %}
+      <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
+        <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans "Contents" %}
+      </a>
+    {% endif %}
+      <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-list' %}">
+        <i class="fas {% if object %}fa-angle-double-up{% else %}fa-arrow-up{% endif %}" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
+      </a>
+    </span>
     {% if object %}
       <span class="w3-right w3-left-align">
-        <div style="margin-bottom:5px">
-          <a class="" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
-            <i class="fas fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>{% trans "Contents" %}
-          </a>
-        </div>
-        <div style="margin-bottom:5px">
-          <a class="" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
-            <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
-          </a>
-        </div>
+        <a class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
+          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
+        </a>
         {% if not object.is_index %}
           <div style="margin-bottom:5px">
             <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name nonce=object.nonce %}">
@@ -47,7 +47,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           </div>
         {% endif %}
         <div>
-          {% trans "Strength" %}: {{object.strength}}
+          <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength" %}: <data property="spkc:strength" datatype="xsd:integer">{{object.strength}}</data>
         </div>
       </span>
     {% endif %}
@@ -102,22 +102,31 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
                   {{token}}
                 </td>
                 <td>
-                  {% if token.persist %}
-                    {{token.referrer}}
+                  {% if token.persist >= 0 %}
+                    <span class="w3-center">&infin;</span><br/>{{token.referrer}}
                   {% else %}
                     {{expire_date|date:"D, d/m/Y"}}{% if token.referrer %}<br/>{{token.referrer}}{% endif %}
                   {% endif %}
                 </td>
                 <td>
-                  <input form="deleteForm" type="checkbox" name="token" value="{{token.id}}"></input>
+                  <input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="{{token.id}}"></input>
                 </td>
               </tr>
             {% endfor %}
           </tbody>
+        <tbody>
+          <tr class="w3-light-grey">
+            <td></td><td></td>
+            <td>
+              {# onchange would be also triggered by reset, so use click instead #}
+              <input style="margin-left:10px" id="deleteAllSelector" type="checkbox" onclick='toggleAll(this);'></input>
+            </td>
+          </tr>
+        </tbody>
         </table>
       </div>
       <div style="height:50px">
-        <button class="w3-button w3-grey w3-right w3-hover-red" form="deleteForm">{% trans 'Delete' %}</button>
+        <button class="w3-button w3-grey w3-right w3-hover-red" form="deleteForm"><i class="fas fa-trash" aria-hidden="true" style="margin-right:10px"></i>{% trans 'Delete' %}</button>
       </div>
       {% include "spider_base/base_form.html" with form=form %}
     </fieldset>
@@ -157,6 +166,39 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   {% url 'spider_base:ucontent-export' id=object.id nonce=object.nonce as exportlink %}
   {% include "spider_base/modalpresenter.html" %}
   <script>
+    let allselector=document.getElementById("deleteAllSelector");
+    let deleteform=document.getElementById("deleteForm");
+    async function toggleAll(caller){
+      let state=caller.checked;
+
+      if (deleteform.token.length){
+        for (let count=0; count < deleteform.token.length; count++){
+          deleteform.token[count].checked = state;
+        }
+      } else {
+        deleteform.token.checked = state;
+      }
+    }
+    async function updateAllSelector(caller){
+      let state = true;
+      if (caller === null || caller.checked==true){
+        if (deleteform.token.length){
+          for (let count=0; count < deleteform.token.length; count++)
+          {
+            if (deleteform.token[count].checked == false)
+            {
+              state=false;
+              break;
+            }
+          }
+        } else {
+          state = deleteform.token.checked;
+        }
+      } else {
+        state=false;
+      }
+      allselector.checked = state;
+    }
     async function delete_token(event){
       event.preventDefault()
       let tokens = []
@@ -199,17 +241,18 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           cell1.innerText = data["tokens"][count].name
           let cell2 = row.insertCell()
           if (!data["tokens"][count].expires){
-            cell2.innerText = data["tokens"][count].referrer
+            cell2.innerText = `\u221E\n${encodeURI(data["tokens"][count].referrer)}`
           } else {
             let date = new Date(data["tokens"][count].expires);
             // D d M Y
-            cell2.innerText = date.toLocaleDateString("en-GB", {
+            cell2.innerText = `${date.toLocaleDateString("en-GB", {
               weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
-            })+"\n"+data["tokens"][count].referrer
+            })}\n${data["tokens"][count].referrer}`
           }
           let cell3 = row.insertCell()
-          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" value="${data["tokens"][count].id}"></input>`
+          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
         }
+        allselector.checked = false;
         // renew authtoken of modalpresenter
         auth_token = data["admin"]
       })

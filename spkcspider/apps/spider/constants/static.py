@@ -3,7 +3,7 @@ __all__ = (
     "ProtectionType", "VariantType", "ProtectionResult",
     "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
     "TokenCreationError", "index_names", "protected_names", "spkcgraph",
-    "dangerous_login_choices"
+    "dangerous_login_choices", "ActionUrl"
 )
 
 import enum
@@ -28,6 +28,7 @@ class TokenCreationError(Exception):
 
 
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
+ActionUrl = namedtuple("ActionUrl", ["url", "name"])
 index_names = ["index", "fake_index"]
 protected_names = ["index", "fake_index"]
 

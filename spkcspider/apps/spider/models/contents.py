@@ -23,7 +23,7 @@ from django.utils.translation import gettext_lazy as _
 
 from ..contents import BaseContent, add_content
 from ..constants.static import (
-    TravelLoginType, VariantType
+    TravelLoginType, VariantType, ActionUrl
 )
 
 logger = logging.getLogger(__name__)
@@ -45,8 +45,14 @@ class PersistenceFeature(BaseContent):
     @classmethod
     def action_urls(cls):
         return [
-            (reverse("spider_base:token-renew"), "renew-token")
-            (reverse("spider_base:token-delete-request"), "delete-token")
+            ActionUrl(
+                reverse("spider_base:token-renew"),
+                "renew-token"
+            ),
+            ActionUrl(
+                reverse("spider_base:token-delete-request"),
+                "delete-token"
+            )
         ]
 
 
@@ -59,7 +65,10 @@ class LinkContent(BaseContent):
 
     content = models.ForeignKey(
         "spider_base.AssignedContent", related_name="+",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        limit_choices_to={
+            "strength_link__lte": 10,
+        }
     )
 
     push = models.BooleanField(

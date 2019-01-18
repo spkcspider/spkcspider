@@ -356,7 +356,6 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         else:
             return self.form_invalid(form)
 
-
     def test_func(self):
         if self.has_special_access(
             user_by_login=True
@@ -418,6 +417,12 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def form_valid(self, form):
         self.object = form.save()
+        persist = 0
+        if self.object.primary_anchor:
+            persist = self.object.primary_anchor.id
+        self.object.authtokens.filter(persist__gte=0).update(
+            persist=persist
+        )
         if (
             self.kwargs["nonce"] != self.object.nonce or
             self.kwargs["name"] != self.object.name

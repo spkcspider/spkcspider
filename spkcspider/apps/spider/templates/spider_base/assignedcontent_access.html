@@ -27,9 +27,9 @@
 {% block content %}
   <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
   {% for f in uc.features.all %}
-    {% for actionurl,name in f.installed_class.action_urls %}
-      <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{actionurl}}">
-        <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{name}}</data>
+    {% for action in f.installed_class.cached_action_urls %}
+      <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
+        <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{action.name}}</data>
       </data>
     {% endfor %}
   {% endfor %}
@@ -44,35 +44,29 @@
       {% if scope != "add" and request.is_special_user %}
       <div class="actionbar_user w3-left-align" style="margin-bottom:5px">
         {% if scope != "view" %}
-          <div style="margin-bottom:5px">
-            <a href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{spider_GET.urlencode}}">
-              <i class="fas fa-eye" style="margin-right:10px" aria-hidden="true"></i>{% trans "View" %}
-            </a>
-          </div>
+          <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{spider_GET.urlencode}}">
+            <i class="fas fa-eye" style="margin-right:10px" aria-hidden="true"></i>{% trans "View" %}
+          </a>
         {% endif %}
         {% if scope != "update" %}
-          <div style="margin-bottom:5px">
-            <a rel="nofollow" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='update' %}?{{spider_GET.urlencode}}">
-              <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans "Update" %}
-            </a>
-          </div>
+          <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='update' %}?{{spider_GET.urlencode}}">
+            <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans "Update" %}
+          </a>
         {% endif %}
         <div style="margin-bottom:5px">
           <a rel="nofollow" href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
             <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
-          </a>
+          </a>?
         </div>
       </div>
       {% endif %}
       {% if scope != "add" %}
-      <div style="margin-bottom:5px;">
-        <a rel="nofollow" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
+        <a rel="nofollow" class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
           <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
         </a>
-      </div>
       {% endif %}
-      <div style="text-align:right">
-        {% trans "Strength:" %} {{uc.strength}}
+      <div>
+        <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
       </div>
     </span>
     <h1 class="w3-center">

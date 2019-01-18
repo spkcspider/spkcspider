@@ -157,9 +157,8 @@ class AssignedContent(BaseInfoModel):
             name=self.ctype.name
         ).exists():
             raise ValidationError(
-                _(
-                    'Not an allowed ContentVariant for this user'
-                )
+                message=_('Not an allowed ContentVariant for this user'),
+                code='disallowed_contentvariant'
             )
         if self.strength > self.usercomponent.strength:
             raise ValidationError(

@@ -55,8 +55,8 @@ class UserTestMixin(AccessMixin):
         self.request.auth_token = None
         try:
             user_test_result = self.test_func()
-        except TokenCreationError as e:
-            logging.exception(e)
+        except TokenCreationError:
+            logging.exception("Token creation failed")
             return HttpResponseServerError(
                 _("Token creation failed, try again")
             )
@@ -617,8 +617,8 @@ class ReferrerMixin(object):
                         # delete old token
                         self.request.auth_token.delete()
                     token.save()
-            except TokenCreationError as e:
-                logging.exception(e)
+            except TokenCreationError:
+                logging.exception("Token creation failed")
                 return HttpResponseServerError(
                     _("Token creation failed, try again")
                 )

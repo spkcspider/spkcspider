@@ -1,5 +1,5 @@
 __all__ = (
-    "UpdateSpiderCallback", "InitUserCallback",
+    "UpdateSpiderCallback", "InitUserCallback", "UpdateAnchorCallback",
     "update_dynamic", "failed_guess", "RemoveTokensLogout", "CleanupCallback"
 )
 from django.dispatch import Signal
@@ -20,6 +20,7 @@ def TriggerUpdate(sender, **_kwargs):
             logging.error(
                 "%s failed", receiver, exc_info=result
             )
+    logging.info("Update of dynamic content completed")
 
 
 def CleanupCallback(sender, instance, **kwargs):
@@ -48,6 +49,18 @@ def CleanupCallback(sender, instance, **kwargs):
             )
         if instance.fake_id is None and instance.content:
             instance.content.delete(False)
+
+
+def UpdateAnchorCallback(sender, instance, **kwargs):
+    from django.apps import apps
+    AuthToken = apps.get_model("spider_base", "AuthToken")
+    if instance.primary_anchor_for:
+        if "\nanchor\n" not in instance.info:
+            AuthToken.objects.filter(
+                persist=instance.id
+            ).update(persist=0)
+        if instance.primary_anchor_for != instance.usercomponent:
+            instance.primary_anchor_for.clear()
 
 
 def UpdateSpiderCallback(**_kwargs):
