@@ -179,7 +179,8 @@ class AdvancedComponentTest(TransactionWebTest):
         )
         form = self.app.get(createurlindex).forms[0]
         form.action = createurlindex
-        form['name'] = "public"
+        form['usercomponent'] = public.id
+        form['text'] = "foobar"
         response = form.submit().follow()
         # cross posting is possible but causes a redirect back to right path
         # here a correction
