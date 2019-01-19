@@ -286,7 +286,7 @@ class UserTestMixin(AccessMixin):
     def get_usercomponent(self):
         ucname = self.kwargs["name"]
         if ucname in index_names:
-            if self.request.session["is_fake"]:
+            if self.request.session.get("is_fake", False):
                 ucname = "fake_index"
             else:
                 ucname = "index"

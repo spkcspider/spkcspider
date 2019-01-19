@@ -1,0 +1,45 @@
+[
+  {
+    "model": "spider_accounts.SpiderUser",
+    "pk": 1,
+    "fields": {
+      "username": "testuser1"
+    }
+  },
+  {
+    "model": "spider_base.UserComponent",
+    "pk": 2,
+    "fields": {
+      "name": "index",
+      "user": 1,
+      "public": false,
+      "required_passes": 1,
+      "created": "2014-03-17T17:41:28+00:00",
+      "modified": "2018-03-16T17:41:28+00:00"
+    }
+  },
+  {
+    "model": "spider_base.UserComponent",
+    "pk": 3,
+    "fields": {
+      "name": "home",
+      "user": 1,
+      "public": false,
+      "required_passes": 0,
+      "created": "2014-03-17T17:41:28+00:00",
+      "modified": "2018-03-16T17:41:28+00:00"
+    }
+  },
+  {
+    "model": "spider_base.UserComponent",
+    "pk": 4,
+    "fields": {
+      "name": "public",
+      "user": 1,
+      "public": true,
+      "required_passes": 0,
+      "created": "2014-03-17T17:41:28+00:00",
+      "modified": "2018-03-16T17:41:28+00:00"
+    }
+  }
+]

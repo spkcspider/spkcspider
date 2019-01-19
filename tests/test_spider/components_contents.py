@@ -1,6 +1,7 @@
-import unittest
+# import unittest
 
 from django.test import TransactionTestCase
+from django_webtest import TransactionWebTest
 from django.test import Client
 from django.db.utils import IntegrityError
 from django.urls import reverse
@@ -9,17 +10,21 @@ from rdflib import Graph
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
-from spkcspider.apps.spider.models import UserComponent
+from spkcspider.apps.spider.models import UserComponent, AssignedContent
 from spkcspider.apps.spider.signals import update_dynamic
 # Create your tests here.
 
 
-class ComponentTest(TransactionTestCase):
+class BasicComponentTest(TransactionTestCase):
     def setUp(self):
         self.client = Client(secure=True, enforce_csrf_checks=True)
         self.user = SpiderUser.objects.create_user(
             username="testuser1", password="abc", is_active=True
         )
+
+    def test_welcome(self):
+        self.user.usercomponent_set.get(name="public")
+        self.user.usercomponent_set.get(name="home")
 
     def test_index(self):
         index = self.user.usercomponent_set.filter(name="index").first()
@@ -110,13 +115,22 @@ class ComponentTest(TransactionTestCase):
             ), 1
         )
 
-    @unittest.expectedFailure
-    def test_contents(self):
-        update_dynamic.send_robust(self)
-        public = self.user.usercomponent_set.get(name="public")
-        home = self.user.usercomponent_set.get(name="home")
 
-        self.client.login(username="testuser1", password="abc")
+class AdvancedComponentTest(TransactionWebTest):
+    fixtures = ['test_default.json']
+
+    def setUp(self):
+        self.user = SpiderUser.objects.get(
+            username="testuser1"
+        )
+        update_dynamic.send_robust(self)
+
+    def test_contents(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        self.assertTrue(home)
+        public = self.user.usercomponent_set.filter(name="home").first()
+        self.assertTrue(public)
+        self.app.set_user("testuser1")
 
         # try to create
         createurl = reverse(
@@ -126,10 +140,9 @@ class ComponentTest(TransactionTestCase):
                 "type": "AnchorServer"
             }
         )
-
-        response = self.client.post(createurl)
-        # Check that the response is redirect.
-        self.assertEqual(response.status_code, 302)
+        form = self.app.get(createurl).forms[0]
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(home.contents.count(), 1)
 
         createurl = reverse(
@@ -139,9 +152,9 @@ class ComponentTest(TransactionTestCase):
                 "type": "AnchorServer"
             }
         )
-        response = self.client.post(createurl)
-        # Check that the response is redirect
-        self.assertEqual(response.status_code, 302)
+        form = self.app.get(createurl).forms[0]
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(public.contents.count(), 1)
 
         createurl = reverse(
@@ -151,6 +164,24 @@ class ComponentTest(TransactionTestCase):
                 "type": "TravelProtection"
             }
         )
-        response = self.client.post(createurl)
-        # Check that the response is 200 OK.
+        response = self.app.get(createurl, expect_errors=True, status=404)
         self.assertEqual(response.status_code, 404)
+
+        return
+        ################################
+
+        createurlindex = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "name": "index",
+                "type": "Text"
+            }
+        )
+        form = self.app.get(createurlindex).forms[0]
+        form.action = createurlindex
+        form['name'] = "public"
+        response = form.submit().follow()
+        # cross posting is possible but causes a redirect back to right path
+        # here a correction
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(AssignedContent.objects.count(), 1)

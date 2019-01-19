@@ -168,7 +168,7 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 ## validator function for url requests  # noqa: E266
 # SPIDER_URL_VALIDATOR
 
-## validator function for payment intentions
+## validator function for payment intentions  # noqa: E266
 # SPIDER_PAYMENT_VALIDATOR
 
 ## Enable captchas  # noqa: E266

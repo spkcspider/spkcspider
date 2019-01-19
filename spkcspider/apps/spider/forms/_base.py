@@ -275,14 +275,14 @@ class UserContentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.instance.usercomponent.user
-        query = UserComponent.objects.filter(user=user)
-        self.fields["usercomponent"].queryset = query
 
         self.fields["new_nonce"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),
             self.fields["new_nonce"].choices
         )
+        user = self.instance.usercomponent.user
+        query = UserComponent.objects.filter(user=user)
+        self.fields["usercomponent"].queryset = query
 
         if not self.instance.id:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE

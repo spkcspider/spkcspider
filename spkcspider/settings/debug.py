@@ -1,6 +1,6 @@
 # flake8: noqa
 
-from spkcspider.settings import *  # noqa: F403
+from spkcspider.settings import *  # noqa: F403, F401
 
 INSTALLED_APPS += [
     'spkcspider.apps.spider_filets',
@@ -12,7 +12,6 @@ INSTALLED_APPS += [
 ]
 
 # Verifier specific options, not required
-AUTO_INCLUDE_VERIFIER = True
 VERIFIER_ALLOW_FILE_UPLOAD = True
 # 40 mb maximal size
 VERIFIER_MAX_SIZE_ACCEPTED = 40000000
@@ -48,3 +47,8 @@ CONTENTS_PER_PAGE = 3
 SERIALIZED_PER_PAGE = 3
 # max depth of references
 SERIALIZED_MAX_DEPTH = 5
+
+# specify fixtures directory for tests
+FIXTURE_DIRS = [
+    "tests/fixtures/"
+]

@@ -3,7 +3,6 @@
 from django.utils.timezone import now
 
 from django.contrib import admin
-from django.conf import settings
 from django.contrib.auth import get_permission_codename
 
 from .models import DataVerificationTag
@@ -11,6 +10,7 @@ from .models import DataVerificationTag
 # Register your models here.
 
 
+@admin.register(DataVerificationTag)
 class DataVerificationTagAdmin(admin.ModelAdmin):
     view_on_site = True
     list_display = ('hash', "checked", 'verification_state')
@@ -49,7 +49,3 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
         if 'verification_state' in form.changed_data:
             obj.checked = now()
         return super().save_model(request, obj, form, change)
-
-
-if getattr(settings, "AUTO_INCLUDE_VERIFIER", False):
-    admin.register(DataVerificationTag)(DataVerificationTagAdmin)
