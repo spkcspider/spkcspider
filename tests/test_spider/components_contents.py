@@ -181,8 +181,17 @@ class AdvancedComponentTest(TransactionWebTest):
         form.action = createurlindex
         form['usercomponent'] = public.id
         form['text'] = "foobar"
-        response = form.submit().follow()
+        response = form.submit()
+        location = response.location
+        response = response.follow()
         # cross posting is possible but causes a redirect back to right path
         # here a correction
         self.assertEqual(response.status_code, 200)
         self.assertEqual(AssignedContent.objects.count(), 1)
+        url = AssignedContent.objects.first().get_absolute_url("update")
+        self.assertEqual(location, url)
+        form = response.forms[0]
+        self.assertEqual(form["text"], "foobar")
+        form['text'] = "foobart"
+        response = form.submit().follow()
+        self.assertEqual(response.forms[0]["text"], "foobart")
