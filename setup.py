@@ -22,6 +22,7 @@ debug_requirements = [
     "Werkzeug",
     "pyOpenSSL",
     "django-extensions",
+    "django-webtest"
 ]
 
 # install_requirements += debug_requirements

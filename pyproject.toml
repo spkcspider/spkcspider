@@ -2,7 +2,7 @@
 name = "spkcspider"
 description = ""
 version = "0.1"
-authors = []
+authors = [""]
 
 [tool.poetry.dependencies]
 python = ">=3.5"
@@ -21,3 +21,4 @@ django-widget-tweaks = "*"
 django-extensions = '*'
 Werkzeug = '*'
 pyOpenSSL = '*'
+django-webtest = '*'
