@@ -161,6 +161,7 @@ class AnchorServer(BaseContent):
         """ returns id of content, server """
         # security: id can only be faked by own server
         # this should never happen, except with access to server
+        # why @?: to be scheme independent and keep id abstract
         ret = "{}@{}".format(
             getattr(self.associated, "id", None),
             request.get_host()
