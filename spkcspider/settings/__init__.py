@@ -190,8 +190,8 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # SPIDER_USER_QUOTA_LOCAL
 # SPIDER_USER_QUOTA_REMOTE
 
-## count content from foreign users (e.g. Webcfg to user quota)  # noqa: E266
-# SPIDER_COUNT_REMOTE_CONTENT
+##  Use subpath to create ids for identifiers # noqa: E266
+# SPIDER_ID_USE_SUBPATH
 
 # usercomponents created with user
 DEFAULT_USERCOMPONENTS = {

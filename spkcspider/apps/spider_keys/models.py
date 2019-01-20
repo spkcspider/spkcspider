@@ -161,10 +161,13 @@ class AnchorServer(BaseContent):
         """ returns id of content, server """
         # security: id can only be faked by own server
         # this should never happen, except with access to server
-        return "{}@{}".format(
+        ret = "{}@{}".format(
             getattr(self.associated, "id", None),
             request.get_host()
         )
+        if getattr(settings, "SPIDER_ID_USE_SUBPATH", False):
+            ret += request.path[:request.path.rfind(request.path_info)]
+        return ret
 
 
 @add_content
