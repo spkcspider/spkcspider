@@ -1,6 +1,7 @@
 __all__ = (
-    "UpdateSpiderCallback", "InitUserCallback", "UpdateAnchorCallback",
-    "update_dynamic", "failed_guess", "RemoveTokensLogout", "CleanupCallback"
+    "UpdateSpiderCallback", "InitUserCallback", "UpdateAnchorContent",
+    "UpdateAnchorComponent", "update_dynamic", "failed_guess",
+    "RemoveTokensLogout", "CleanupCallback"
 )
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
@@ -9,8 +10,9 @@ from .constants.static import VariantType
 import logging
 
 update_dynamic = Signal(providing_args=[])
+move_persistent = Signal(providing_args=["anchor", "to"])
 # failed guess of combination from id, nonce
-failed_guess = Signal(providing_args=[])
+failed_guess = Signal(providing_args=["request"])
 
 
 def TriggerUpdate(sender, **_kwargs):
@@ -51,16 +53,45 @@ def CleanupCallback(sender, instance, **kwargs):
             instance.content.delete(False)
 
 
-def UpdateAnchorCallback(sender, instance, **kwargs):
+def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
+    if raw:
+        return
     from django.apps import apps
     AuthToken = apps.get_model("spider_base", "AuthToken")
     if instance.primary_anchor_for:
         if "\nanchor\n" not in instance.info:
+            # don't call signals, be explicit with bulk=True (default)
+            instance.primary_anchor_for.clear(bulk=True)
+            # update here
             AuthToken.objects.filter(
                 persist=instance.id
             ).update(persist=0)
-        if instance.primary_anchor_for != instance.usercomponent:
-            instance.primary_anchor_for.clear()
+
+
+def UpdateAnchorComponent(sender, instance, raw=False, **kwargs):
+    if raw:
+        return
+    from django.apps import apps
+    AuthToken = apps.get_model("spider_base", "AuthToken")
+    UserComponent = apps.get_model("spider_base", "UserComponent")
+    old = UserComponent.objects.filter(pk=instance.pk)
+    if old and old.primary_anchor != instance.primary_anchor:
+        if instance.primary_anchor:
+            AuthToken.objects.filter(
+                persist=old.primary_anchor.id
+            ).update(persist=instance.primary_anchor.id)
+        else:
+            AuthToken.objects.filter(
+                persist=old.primary_anchor.id
+            ).update(persist=0)
+
+
+def UpdatePersistent(sender, anchor, to, **kwargs):
+    from django.apps import apps
+    AssignedContent = apps.get_model("spider_base", "AssignedContent")
+    AssignedContent.filter(
+        info__contains="\nanchor={}\n".format(anchor)
+    ).update(usercomponent=to)
 
 
 def UpdateSpiderCallback(**_kwargs):
@@ -89,8 +120,8 @@ def UpdateSpiderCallback(**_kwargs):
             row.spider_info.save()
 
 
-def InitUserCallback(sender, instance, **kwargs):
-    if kwargs.get("raw", False):
+def InitUserCallback(sender, instance, raw=False, **kwargs):
+    if raw:
         return
     from .models import UserComponent, Protection, UserInfo
 

@@ -561,8 +561,9 @@ class BaseContent(models.Model):
         else:
             return self.render_view(**kwargs)
 
-    def get_info(self, unique=None, unlisted=None):
+    def get_info(self, unique=None, unlisted=None, anchor=None):
         # unique=None, feature=None shortcuts for get_info overwrites
+        # anchor is either: anchor or link to anchor
         # passing down these parameters not neccessary
         if unique is None:
             unique = (
@@ -572,8 +573,11 @@ class BaseContent(models.Model):
             unlisted = (
                 VariantType.feature.value in self.associated.ctype.ctype
             )
+
         anchortag = ""
-        if VariantType.anchor.value in self.associated.ctype.ctype:
+        if anchor is not None:
+            anchortag = "anchor={}\n".format(anchor)
+        elif VariantType.anchor.value in self.associated.ctype.ctype:
             anchortag = "anchor\n"
 
         idtag = "primary\n"

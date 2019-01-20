@@ -20,7 +20,7 @@ class WebConfig(BaseContent):
     ]
 
     token = models.ForeignKey(
-        "spider_base.AuthToken", limit_choices_to={"persist": True},
+        "spider_base.AuthToken", limit_choices_to={"persist__gte": 0},
         on_delete=models.CASCADE
     )
     creation_url = models.URLField(editable=False)
@@ -50,7 +50,7 @@ class WebConfig(BaseContent):
         return f
 
     def get_info(self):
-        ret = super().get_info(unique=True)
+        ret = super().get_info(unique=True, anchor=self.token.persist)
         return "{}url={}\n".format(
             ret, self.token.referrer.replace("\n", "%0A")
         )

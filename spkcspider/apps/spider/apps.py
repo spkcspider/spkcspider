@@ -2,15 +2,16 @@ __all__ = ["SpiderBaseConfig"]
 
 from django.apps import AppConfig
 from django.db.models.signals import (
-    post_migrate, post_save, post_delete
+    post_migrate, post_save, pre_save, post_delete
 )
 from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from .helpers import extract_app_dicts
 from .signals import (
-    UpdateSpiderCallback, InitUserCallback, UpdateAnchorCallback,
-    update_dynamic, TriggerUpdate, RemoveTokensLogout, CleanupCallback
+    UpdateSpiderCallback, InitUserCallback, UpdateAnchorContent,
+    UpdateAnchorComponent, update_dynamic, TriggerUpdate, RemoveTokensLogout,
+    CleanupCallback
 )
 
 
@@ -36,9 +37,13 @@ class SpiderBaseConfig(AppConfig):
         user_logged_out.connect(
             RemoveTokensLogout, dispatch_uid="delete_token_logout"
         )
+        pre_save.connect(
+            UpdateAnchorComponent, sender=UserComponent,
+            dispatch_uid="spider_update_anchors_component"
+        )
         post_save.connect(
-            UpdateAnchorCallback, sender=AssignedContent,
-            dispatch_uid="spider_update_anchors"
+            UpdateAnchorContent, sender=AssignedContent,
+            dispatch_uid="spider_update_anchors_content"
         )
 
         # order important for next two

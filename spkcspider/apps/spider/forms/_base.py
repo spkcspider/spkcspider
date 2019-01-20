@@ -1,5 +1,6 @@
 __all__ = ["UserComponentForm", "UserContentForm"]
 
+import logging
 from statistics import mean
 
 from django import forms
@@ -9,13 +10,14 @@ from django.utils.translation import gettext_lazy as _
 
 from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent,
-    ContentVariant
+    ContentVariant, AuthToken
 )
 from ..helpers import create_b64_token
 from ..constants import (
     ProtectionType, VariantType, NONCE_CHOICES, INITIAL_NONCE_SIZE,
     index_names, protected_names
 )
+from ..signals import move_persistent
 
 _help_text_nonce = _("""Generate a new nonce token with variable strength<br/>
 Nonces protect against bruteforce and attackers<br/>
@@ -261,6 +263,14 @@ class UserContentForm(forms.ModelForm):
         label=_("New Nonce"), help_text=_help_text_nonce,
         required=False, initial="", choices=NONCE_CHOICES
     )
+    migrate_primary_anchor = forms.BooleanField(
+        label=_("Migrate primary anchor"),
+        help_text=_(
+            "Migrate primary anchor and all dependencies like tokens. "
+            "Elsewise anchor tokens on usercomponent"
+        ),
+        required=False, initial=True
+    )
 
     class Meta:
         model = AssignedContent
@@ -284,10 +294,48 @@ class UserContentForm(forms.ModelForm):
         query = UserComponent.objects.filter(user=user)
         self.fields["usercomponent"].queryset = query
 
-        if not self.instance.id:
+        show_primary_anchor_mig = False
+        if self.instance.id:
+            if self.instance.primary_anchor_for:
+                show_primary_anchor_mig = True
+        else:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
             self.fields["new_nonce"].choices = \
                 self.fields["new_nonce"].choices[1:]
+
+        if not show_primary_anchor_mig:
+            del self.fields["migrate_primary_anchor"]
+
+    def update_anchor(self):
+        if not self.instance.primary_anchor_for:
+            return
+        if self.instance.primary_anchor_for == self.instance.usercomponent:
+            return
+        if self.cleaned_data.get("migrate_primary_anchor", False):
+            # no signals
+            self.instance.primary_anchor_for.set(
+                self.instance.usercomponent, bulk=True
+            )
+            AuthToken.objects.filter(
+                persist=self.instance.id
+            ).update(usercomponent=self.instance.usercomponent)
+            # this is how to move persistent content
+            results = move_persistent.send_robust(
+                AuthToken, anchor=self.instance.id,
+                to=self.instance.usercomponent
+            )
+            for (receiver, result) in results:
+                if isinstance(result, Exception):
+                    logging.error(
+                        "%s failed", receiver, exc_info=result
+                    )
+        else:
+            self.instance.primary_anchor_for.clear(bulk=False)
+            # token migrate to component via signal
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        self.update_anchor()
 
     def save(self, commit=True):
         if self.cleaned_data["new_nonce"] != "":
@@ -298,4 +346,7 @@ class UserContentForm(forms.ModelForm):
             self.instance.nonce = create_b64_token(
                 int(self.cleaned_data["new_nonce"])
             )
-        return super().save(commit=commit)
+        ret = super().save(commit=commit)
+        if commit:
+            self.update_anchor()
+        return ret
