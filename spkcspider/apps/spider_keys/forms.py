@@ -83,6 +83,7 @@ class AnchorKeyForm(forms.ModelForm):
                 initial=self.instance.key.key,
                 widget=forms.TextArea
             )
+            setattr(self.fields['key'], "hashable", True)
 
     def clean(self):
         _ = gettext
