@@ -19,11 +19,6 @@ class WebConfig(BaseContent):
         }
     ]
 
-    token = models.ForeignKey(
-        "spider_base.AuthToken", limit_choices_to={"persist__gte": 0},
-        on_delete=models.CASCADE
-    )
-    creation_url = models.URLField(editable=False)
     config = models.TextField(default="", blank=True)
 
     @classmethod

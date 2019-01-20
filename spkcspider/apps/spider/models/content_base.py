@@ -68,6 +68,10 @@ class ContentVariant(models.Model):
 class AssignedContent(BaseInfoModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     fake_id = models.BigIntegerField(editable=False, null=True)
+    persist_token = models.ForeignKey(
+        "spider_base.AuthToken", blank=True, null=True,
+        limit_choices_to={"persist__gte": 0}, on_delete=models.CASCADE
+    )
     # brute force protection
     nonce = models.SlugField(
         default=create_b64_token, max_length=MAX_NONCE_SIZE*4//3,
@@ -153,6 +157,13 @@ class AssignedContent(BaseInfoModel):
 
     def clean(self):
         _ = gettext
+        if VariantType.persist.value in self.ctype.ctype:
+            if not self.persist_token:
+                raise ValidationError(
+                    _('Persistent token required'),
+                    code="persist",
+                )
+
         if not self.usercomponent.user_info.allowed_content.filter(
             name=self.ctype.name
         ).exists():

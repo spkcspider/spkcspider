@@ -59,22 +59,20 @@ class WebConfigView(UCTestMixin, View):
         variant = self.usercomponent.features.filter(
             name="WebConfig"
         ).first()
+        # can only access feature if activated even WebConfig exists already
         if not variant:
             raise Http404()
-        ret = WebConfig.objects.filter(
-            token=self.request.auth_token
+        ret = AssignedContent.objects.filter(
+            persist_token=self.request.auth_token
         ).first()
         if ret:
             return ret.content
         associated = AssignedContent(
             usercomponent=self.usercomponent,
-            ctype=variant
+            ctype=variant,
+            persist_token=self.request.auth_token
         )
         ret = self.model.static_create(associated)
-        ret.token = self.request.authtoken
-        ret.creation_url = "{}://{}{}".format(
-            self.request.scheme, self.request.get_host(), self.request.path
-        )
         ret.clean()
         ret.save()
         return ret

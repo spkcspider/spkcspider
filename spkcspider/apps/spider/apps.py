@@ -11,7 +11,7 @@ from .helpers import extract_app_dicts
 from .signals import (
     UpdateSpiderCallback, InitUserCallback, UpdateAnchorContent,
     UpdateAnchorComponent, update_dynamic, TriggerUpdate, RemoveTokensLogout,
-    CleanupCallback
+    CleanupCallback, MovePersistentCallback, move_persistent
 )
 
 
@@ -23,7 +23,7 @@ class SpiderBaseConfig(AppConfig):
 
     def ready(self):
         from .models import (
-            AssignedContent, UserComponent
+            AssignedContent, UserComponent, AuthToken
         )
 
         from django.apps import apps
@@ -44,6 +44,10 @@ class SpiderBaseConfig(AppConfig):
         post_save.connect(
             UpdateAnchorContent, sender=AssignedContent,
             dispatch_uid="spider_update_anchors_content"
+        )
+        move_persistent.connect(
+            MovePersistentCallback, sender=AuthToken,
+            dispatch_uid="spider_move_persistent"
         )
 
         # order important for next two

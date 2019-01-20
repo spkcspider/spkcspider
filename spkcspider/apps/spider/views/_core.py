@@ -502,6 +502,12 @@ class ReferrerMixin(object):
                     token.extra["intentions"]
                 ):
                     return False
+            if "persist_url" not in token.extra:
+                token.extra["persist_url"] = "{}://{}{}".format(
+                    self.request.scheme,
+                    self.request.get_host(),
+                    self.request.path
+                )
             # set persist = true, (false=-1)
             token.persist = 0
             # if possible, pin to anchor

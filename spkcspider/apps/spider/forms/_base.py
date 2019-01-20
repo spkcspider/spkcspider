@@ -318,12 +318,15 @@ class UserContentForm(forms.ModelForm):
             self.instance.primary_anchor_for.set(
                 self.instance.usercomponent, bulk=True
             )
-            AuthToken.objects.filter(
+            tokens = AuthToken.objects.filter(
                 persist=self.instance.id
-            ).update(usercomponent=self.instance.usercomponent)
+            )
+            tokens.update(
+                usercomponent=self.instance.usercomponent,
+            )
             # this is how to move persistent content
             results = move_persistent.send_robust(
-                AuthToken, anchor=self.instance.id,
+                AuthToken, tokens=tokens,
                 to=self.instance.usercomponent
             )
             for (receiver, result) in results:

@@ -1,7 +1,8 @@
 __all__ = (
     "UpdateSpiderCallback", "InitUserCallback", "UpdateAnchorContent",
     "UpdateAnchorComponent", "update_dynamic", "failed_guess",
-    "RemoveTokensLogout", "CleanupCallback"
+    "RemoveTokensLogout", "CleanupCallback",
+    "MovePersistentCallback", "move_persistent"
 )
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
@@ -10,7 +11,7 @@ from .constants.static import VariantType
 import logging
 
 update_dynamic = Signal(providing_args=[])
-move_persistent = Signal(providing_args=["anchor", "to"])
+move_persistent = Signal(providing_args=["tokens", "to"])
 # failed guess of combination from id, nonce
 failed_guess = Signal(providing_args=["request"])
 
@@ -89,11 +90,11 @@ def UpdateAnchorComponent(sender, instance, raw=False, **kwargs):
             ).update(persist=0)
 
 
-def UpdatePersistent(sender, anchor, to, **kwargs):
+def MovePersistentCallback(sender, tokens, to, **kwargs):
     from django.apps import apps
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
-    AssignedContent.filter(
-        info__contains="\nanchor={}\n".format(anchor)
+    AssignedContent.objects.filter(
+        persist_token__in=tokens
     ).update(usercomponent=to)
 
 
