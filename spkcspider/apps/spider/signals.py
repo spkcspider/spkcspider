@@ -58,7 +58,7 @@ def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
         return
     from django.apps import apps
     AuthToken = apps.get_model("spider_base", "AuthToken")
-    if instance.primary_anchor_for:
+    if instance.primary_anchor_for.exists():
         if "\nanchor\n" not in instance.info:
             # don't call signals, be explicit with bulk=True (default)
             instance.primary_anchor_for.clear(bulk=True)
@@ -74,11 +74,14 @@ def UpdateAnchorComponent(sender, instance, raw=False, **kwargs):
     from django.apps import apps
     AuthToken = apps.get_model("spider_base", "AuthToken")
     UserComponent = apps.get_model("spider_base", "UserComponent")
-    old = UserComponent.objects.filter(pk=instance.pk)
+    old = UserComponent.objects.filter(pk=instance.pk).first()
     if old and old.primary_anchor != instance.primary_anchor:
         if instance.primary_anchor:
+            persist = 0
+            if old.primary_anchor:
+                persist = old.primary_anchor.id
             AuthToken.objects.filter(
-                persist=old.primary_anchor.id
+                persist=persist
             ).update(persist=instance.primary_anchor.id)
         else:
             AuthToken.objects.filter(

@@ -140,7 +140,6 @@ class AnchorServer(BaseContent):
             "strength": 0
         }
     ]
-    hashed_fields = ["identifier"]
 
     def get_form(self, scope):
         from .forms import AnchorServerForm
@@ -171,7 +170,6 @@ class AnchorServer(BaseContent):
 @add_content
 class AnchorKey(AnchorServer):
     """ domain name of pc, signed """
-    hashed_fields = ["key"]
 
     key = models.ForeignKey(
         PublicKey, on_delete=models.CASCADE, related_name="+",

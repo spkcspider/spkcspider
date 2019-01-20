@@ -266,10 +266,11 @@ class UserContentForm(forms.ModelForm):
     migrate_primary_anchor = forms.BooleanField(
         label=_("Migrate primary anchor"),
         help_text=_(
-            "Migrate primary anchor and all dependencies like tokens. "
-            "Elsewise anchor tokens on usercomponent"
+            "Set as primary anchor on target component. "
+            "Move tokens and all persistent dependencies. "
+            "Elsewise anchor tokens and other dependencies on usercomponent."
         ),
-        required=False, initial=True
+        required=False, initial=False
     )
 
     class Meta:
@@ -296,7 +297,7 @@ class UserContentForm(forms.ModelForm):
 
         show_primary_anchor_mig = False
         if self.instance.id:
-            if self.instance.primary_anchor_for:
+            if self.instance.primary_anchor_for.exists():
                 show_primary_anchor_mig = True
         else:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
@@ -307,7 +308,7 @@ class UserContentForm(forms.ModelForm):
             del self.fields["migrate_primary_anchor"]
 
     def update_anchor(self):
-        if not self.instance.primary_anchor_for:
+        if not self.instance.primary_anchor_for.exists():
             return
         if self.instance.primary_anchor_for == self.instance.usercomponent:
             return

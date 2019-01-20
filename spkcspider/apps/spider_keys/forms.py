@@ -70,12 +70,19 @@ class AnchorKeyForm(forms.ModelForm):
         self.scope = scope
         super().__init__(**kwargs)
         setattr(self.fields['key'], "hashable", True)
-        self.fields["key"].queryset = self.fields["key"].queryset.filter(
-            models.Q(key__contains="-----BEGIN CERTIFICATE-----")
-        )
         if self.scope == "add":
             del self.fields["identifier"]
             del self.fields["signature"]
+
+        if self.scope in ("add", "update"):
+            self.fields["key"].queryset = self.fields["key"].queryset.filter(
+                models.Q(key__contains="-----BEGIN CERTIFICATE-----")
+            )
+        else:
+            self.fields["key"] = forms.CharField(
+                initial=self.instance.key.key,
+                widget=forms.TextArea
+            )
 
     def clean(self):
         _ = gettext

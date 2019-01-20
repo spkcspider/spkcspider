@@ -19,7 +19,7 @@ jQuery( document ).ready(function( $ ) {
     if(event.target.value == "pw"){
       $("#id_new_pw_wrapper").show();
       $("#id_new_pw2_wrapper").show();
-    }else {
+    } else {
       $("#id_new_pw_wrapper").hide();
       $("#id_new_pw2_wrapper").hide();
     }

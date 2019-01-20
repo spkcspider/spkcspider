@@ -67,6 +67,23 @@
       exportlink_link.style.display = "none";
       document.getElementById('qrpresenter').style.display='block';
     }
+
+  {% if scope == "update" and object.primary_anchor_for.exists %}
+
+    var component_select = document.getElementById('id_content_control-usercomponent');
+    var component_select_hider = document.getElementById('id_content_control-migrate_primary_anchor_wrapper');
+    if(component_select.value == "{{uc.id}}"){
+      component_select_hider.classList.add("w3-hide")
+    }
+    component_select.addEventListener("change", function(event){
+      if(event.target.value == "{{uc.id}}"){
+        component_select_hider.classList.add("w3-hide");
+      }else {
+        component_select_hider.classList.remove("w3-hide");
+      }
+    }, true)
+  {% endif %}
+
   </script>
 {% endif %}
 {% endblock %}
