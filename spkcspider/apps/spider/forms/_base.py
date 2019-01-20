@@ -268,7 +268,8 @@ class UserContentForm(forms.ModelForm):
         help_text=_(
             "Set as primary anchor on target component. "
             "Move tokens and all persistent dependencies. "
-            "Elsewise anchor tokens and other dependencies on usercomponent."
+            "Elsewise anchor persistent tokens on the component and leave the "
+            "dependencies untouched."
         ),
         required=False, initial=False
     )
