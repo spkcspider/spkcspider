@@ -502,12 +502,6 @@ class ReferrerMixin(object):
                     token.extra["intentions"]
                 ):
                     return False
-            if "persist_url" not in token.extra:
-                token.extra["persist_url"] = "{}://{}{}".format(
-                    self.request.scheme,
-                    self.request.get_host(),
-                    self.request.path
-                )
             # set persist = true, (false=-1)
             token.persist = 0
             # if possible, pin to anchor
@@ -517,6 +511,13 @@ class ReferrerMixin(object):
             # check if token was reused
             if token.referrer:
                 return False
+
+        if "initial_referrer_url" not in token.extra:
+            token.extra["initial_referrer_url"] = "{}://{}{}".format(
+                self.request.scheme,
+                self.request.get_host(),
+                self.request.path
+            )
         return True
 
     def handle_referrer(self):
