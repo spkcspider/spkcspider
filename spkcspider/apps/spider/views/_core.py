@@ -508,7 +508,7 @@ class ReferrerMixin(object):
             if self.usercomponent.primary_anchor:
                 token.persist = self.usercomponent.primary_anchor.id
         else:
-            # check if token was reused
+            # check if token was reused if not persisted
             if token.referrer:
                 return False
 
