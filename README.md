@@ -155,9 +155,9 @@ Optionally:
 * search also searches UserComponents name and description fields
 * can only be used with "list"-views
 * items can be negated with !foo
-* strict infofield search can be activated with =
+* strict infofield search can be activated with _
 * !!foo escapes a !foo item
-* \_\_foo escapes a =foo item
+* \_\_foo escapes a \_foo item
 * != negates a strict infofield search
 * \_unlisted is a special search: it lists with "unlisted" marked contents
 
@@ -195,5 +195,5 @@ Otherwise security could be compromised.
 # Thanks
 
 * Default theme uses Font Awesome by Dave Gandy - http://fontawesome.io
-* Some fields and TextField use Trumbowyg by Alexander Demode
+* Some text fields use Trumbowyg by Alexander Demode
 * Django team for their excellent product
