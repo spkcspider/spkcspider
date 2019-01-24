@@ -293,7 +293,12 @@ class UserContentForm(forms.ModelForm):
             self.fields["new_nonce"].choices
         )
         user = self.instance.usercomponent.user
-        query = UserComponent.objects.filter(user=user)
+
+        if request.session.get("is_fake", False):
+            q = ~models.Q(name="index")
+        else:
+            q = ~models.Q(name="fake_index")
+        query = UserComponent.objects.filter(q, user=user)
         self.fields["usercomponent"].queryset = query
 
         show_primary_anchor_mig = False
@@ -307,6 +312,8 @@ class UserContentForm(forms.ModelForm):
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
             self.fields["new_nonce"].choices = \
                 self.fields["new_nonce"].choices[1:]
+        if request.user != user and not request.is_staff:
+            self.fields["usercomponent"].disabled = True
 
         if not show_primary_anchor_mig:
             del self.fields["migrate_primary_anchor"]
