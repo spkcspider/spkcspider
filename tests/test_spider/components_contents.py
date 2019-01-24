@@ -10,7 +10,7 @@ from rdflib import Graph
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
-from spkcspider.apps.spider.models import UserComponent, AssignedContent
+from spkcspider.apps.spider.models import UserComponent
 from spkcspider.apps.spider.signals import update_dynamic
 # Create your tests here.
 
@@ -128,7 +128,7 @@ class AdvancedComponentTest(TransactionWebTest):
     def test_contents(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
-        public = self.user.usercomponent_set.filter(name="home").first()
+        public = self.user.usercomponent_set.filter(name="public").first()
         self.assertTrue(public)
         self.app.set_user("testuser1")
 
@@ -167,9 +167,6 @@ class AdvancedComponentTest(TransactionWebTest):
         response = self.app.get(createurl, expect_errors=True, status=404)
         self.assertEqual(response.status_code, 404)
 
-        return
-        ################################
-
         createurlindex = reverse(
             "spider_base:ucontent-add",
             kwargs={
@@ -179,19 +176,22 @@ class AdvancedComponentTest(TransactionWebTest):
         )
         form = self.app.get(createurlindex).forms[0]
         form.action = createurlindex
-        form['usercomponent'] = public.id
+        form['content_control-usercomponent'] = public.id
         form['text'] = "foobar"
+        form['name'] = "name"
         response = form.submit()
         location = response.location
         response = response.follow()
-        # cross posting is possible but causes a redirect back to right path
-        # here a correction
+        # should redirect to public component
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(AssignedContent.objects.count(), 1)
-        url = AssignedContent.objects.first().get_absolute_url("update")
+        self.assertEqual(public.contents.count(), 2)
+        url = public.contents.get(
+            info__contains="\nname=name\n"
+        ).get_absolute_url("update")
         self.assertEqual(location, url)
         form = response.forms[0]
-        self.assertEqual(form["text"], "foobar")
+        self.assertEqual(form["text"].value, "foobar")
         form['text'] = "foobart"
-        response = form.submit().follow()
-        self.assertEqual(response.forms[0]["text"], "foobart")
+        form['name'] = "hubert"
+        response = form.submit()
+        self.assertEqual(response.forms[0]["text"].value, "foobart")

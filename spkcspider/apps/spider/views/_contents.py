@@ -368,28 +368,28 @@ class ContentAdd(ContentBase, CreateView):
         return False
 
     def get_context_data(self, **kwargs):
-        kwargs["user_content"] = AssignedContent(
+        kwargs["content_type"] = self.object.installed_class
+        kwargs["form"] = self.get_form()
+        return super().get_context_data(**kwargs)
+
+    def get_form(self, allow_data=True):
+        assigned = AssignedContent(
             usercomponent=self.usercomponent,
             ctype=self.object
         )
-        kwargs["content_type"] = self.object.installed_class
         form_kwargs = {
-            "instance": kwargs["user_content"],
+            "instance": assigned,
+            "request": self.request,
             "initial": {
                 "usercomponent": self.usercomponent
             }
         }
-        if self.request.method in ('POST', 'PUT'):
+        if allow_data and self.request.method in ('POST', 'PUT'):
             form_kwargs.update({
                 'data': self.request.POST,
                 # 'files': self.request.FILES,
             })
-        kwargs["form"] = UserContentForm(**form_kwargs)
-        return super().get_context_data(**kwargs)
-
-    def get_form(self):
-        # should never be called
-        raise NotImplementedError
+        return UserContentForm(**form_kwargs)
 
     def get_object(self, queryset=None):
         if not queryset:
@@ -401,7 +401,11 @@ class ContentAdd(ContentBase, CreateView):
         return get_object_or_404(queryset, qquery)
 
     def render_to_response(self, context):
-        ucontent = context.pop("user_content")
+        # only true if data
+        if context["form"].is_valid():
+            ucontent = context["form"].save(commit=False)
+        else:
+            ucontent = context["form"].instance
         ob = context["content_type"].static_create(
             associated=ucontent, **context
         )
@@ -472,6 +476,8 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
                         id=self.object.id,
                         nonce=self.object.nonce, access="update"
                     )
+                # use correct usercomponent
+                self.usercomponent = context["form"].instance.usercomponent
                 context["form"] = self.get_form_class()(
                     **self.get_form_success_kwargs()
                 )
@@ -505,8 +511,15 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return {
             'initial': self.get_initial(),
             'instance': self.object,
+            'request': self.request,
             'prefix': self.get_prefix()
         }
+
+    def get_form_kwargs(self):
+        """Return the keyword arguments for instantiating the form."""
+        ret = super().get_form_kwargs()
+        ret["request"] = self.request
+        return ret
 
     def test_func(self):
         # give user and staff the ability to update Content

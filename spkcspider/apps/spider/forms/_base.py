@@ -285,7 +285,7 @@ class UserContentForm(forms.ModelForm):
             }
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.fields["new_nonce"].choices = map(
@@ -298,7 +298,10 @@ class UserContentForm(forms.ModelForm):
 
         show_primary_anchor_mig = False
         if self.instance.id:
-            if self.instance.primary_anchor_for.exists():
+            if request.user != user:
+                self.fields["usercomponent"].disabled = True
+            elif self.instance.primary_anchor_for.exists():
+                # can only migrate if a) created, b) real user
                 show_primary_anchor_mig = True
         else:
             self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
@@ -343,11 +346,12 @@ class UserContentForm(forms.ModelForm):
         self.update_anchor()
 
     def save(self, commit=True):
-        if self.cleaned_data["new_nonce"] != "":
-            print(
-                "Old nonce for Content id:", self.instance.id,
-                "is", self.instance.nonce
-            )
+        if self.cleaned_data.get("new_nonce", ""):
+            if self.instance.id:
+                print(
+                    "Old nonce for Content id:", self.instance.id,
+                    "is", self.instance.nonce
+                )
             self.instance.nonce = create_b64_token(
                 int(self.cleaned_data["new_nonce"])
             )
