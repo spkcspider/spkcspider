@@ -244,10 +244,11 @@ class UserComponentForm(forms.ModelForm):
 
     def save(self, commit=True):
         if self.cleaned_data["new_nonce"] != "":
-            print(
-                "Old nonce for Component id:", self.instance.id,
-                "is", self.instance.nonce
-            )
+            if self.instance.id:
+                print(
+                    "Old nonce for Component id:", self.instance.id,
+                    "is", self.instance.nonce
+                )
             self.instance.nonce = create_b64_token(
                 int(self.cleaned_data["new_nonce"])
             )

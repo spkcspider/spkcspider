@@ -15,13 +15,11 @@ from django.urls import reverse
 from rdflib import Graph, Literal, URIRef
 
 from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
-from ..constants.static import index_names
+from ..constants.static import spkcgraph, VariantType, index_names
 from ..forms import UserComponentForm
-from ..contents import installed_contents
 from ..models import (
     UserComponent, TravelProtection
 )
-from ..constants.static import spkcgraph, VariantType
 from ..helpers import merge_get_url
 from ..serializing import (
     paginate_stream, serialize_stream, serialize_component
@@ -324,10 +322,6 @@ class ComponentCreate(UserTestMixin, CreateView):
             query["name"] = "index"
         query["user"] = self.get_user()
         return get_object_or_404(UserComponent, **query)
-
-    def get_context_data(self, **kwargs):
-        kwargs["available"] = installed_contents.keys()
-        return super().get_context_data(**kwargs)
 
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()
