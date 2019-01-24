@@ -303,9 +303,10 @@ class UserContentForm(forms.ModelForm):
 
         show_primary_anchor_mig = False
         if self.instance.id:
-            if request.user != user:
-                self.fields["usercomponent"].disabled = True
-            elif self.instance.primary_anchor_for.exists():
+            if (
+                request.user == user and
+                self.instance.primary_anchor_for.exists()
+            ):
                 # can only migrate if a) created, b) real user
                 show_primary_anchor_mig = True
         else:
@@ -313,7 +314,7 @@ class UserContentForm(forms.ModelForm):
             self.fields["new_nonce"].choices = \
                 self.fields["new_nonce"].choices[1:]
         if request.user != user and not request.is_staff:
-            self.fields["usercomponent"].disabled = True
+            del self.fields["usercomponent"]
 
         if not show_primary_anchor_mig:
             del self.fields["migrate_primary_anchor"]
