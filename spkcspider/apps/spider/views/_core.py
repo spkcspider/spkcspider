@@ -29,7 +29,7 @@ import certifi
 from ..helpers import merge_get_url, get_settings_func
 from ..constants import (
     VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS,
-    TokenCreationError
+    TokenCreationError, ProtectionType
 )
 from ..models import UserComponent, AuthToken
 
@@ -148,6 +148,7 @@ class UserTestMixin(AccessMixin):
         expire = timezone.now()-self.usercomponent.token_duration
         tokenstring = self.request.GET.get("token", None)
         no_token = (self.usercomponent.required_passes == 0)
+        ptype = ProtectionType.access_control.value
         if "intention" in self.request.GET or "referrer" in self.request.GET:
             # validate early, before auth
             if not VALID_INTENTIONS.issuperset(
@@ -156,6 +157,8 @@ class UserTestMixin(AccessMixin):
                 return False
             minstrength = 4
             no_token = False
+        if minstrength >= 4:
+            ptype = ProtectionType.authentication.value
 
         # token not required
         if not no_token or tokenstring:
@@ -210,7 +213,7 @@ class UserTestMixin(AccessMixin):
         # execute protections for side effects even no_token
         self.request.protections = self.usercomponent.auth(
             request=self.request, scope=self.scope,
-            protection_codes=protection_codes
+            protection_codes=protection_codes, ptype=ptype
         )
         if (
             type(self.request.protections) is int and  # because: False==0

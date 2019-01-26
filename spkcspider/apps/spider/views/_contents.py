@@ -198,12 +198,13 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.is_owner:
+            # request.user is maybe anonymous
             context["content_variants"] = \
-                self.request.user.spider_info.allowed_content.exclude(
+                self.usercomponent.user.spider_info.allowed_content.exclude(
                     ctype__contains=VariantType.feature.value
                 )
             context["content_variants_used"] = \
-                self.request.user.spider_info.allowed_content.filter(
+                self.usercomponent.user.spider_info.allowed_content.filter(
                     assignedcontent__usercomponent=self.usercomponent
                 ).exclude(
                     ctype__contains=VariantType.feature.value
@@ -241,13 +242,13 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_index:
             return False
-        # export is only available for user and superuser
-        if self.scope == "export":
-            # if self.request.user.is_staff:
-            #     return True
-            return False
+        # export is only available for user and staff with permission
 
-        return self.test_token()
+        minstrength = 0
+        if self.scope in ["export"]:
+            minstrength = 4
+
+        return self.test_token(minstrength)
 
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
@@ -355,9 +356,14 @@ class ContentAdd(ContentBase, CreateView):
 
     def get_queryset(self):
         # use requesting user as base if he can add this type of content
-        return self.request.user.spider_info.allowed_content.exclude(
-            ctype__contains=VariantType.feature.value
-        )
+        if self.request.user.is_authenticated:
+            return self.request.user.spider_info.allowed_content.exclude(
+                ctype__contains=VariantType.feature.value
+            )
+        else:
+            return self.usercomponent.user.spider_info.allowed_content.exclude(
+                ctype__contains=VariantType.feature.value
+            )
 
     def test_func(self):
         # test if user and check if user is allowed to create content
@@ -469,6 +475,8 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             context["form"] = self.get_form()
             if context["form"].is_valid():
                 self.object = context["form"].save(commit=True)
+                # use correct usercomponent
+                self.usercomponent = context["form"].instance.usercomponent
         return self.render_to_response(self.get_context_data(**context))
 
     def get_context_data(self, **kwargs):
@@ -528,13 +536,11 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             self.request.auth_token = self.create_admin_token()
             return True
         minstrength = 0
-        if self.scope not in ["update", "raw_update", "export"]:
+        if self.scope in ["update", "raw_update", "export"]:
             minstrength = 4
         return self.test_token(minstrength)
 
     def render_to_response(self, context):
-        # use correct usercomponent
-        self.usercomponent = context["form"].instance.usercomponent
         rendered = self.object.content.render(
             **context
         )

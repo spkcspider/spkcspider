@@ -36,6 +36,42 @@ class FeaturesTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
+    def test_update_perm(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+
+        with self.subTest(msg="Auth Protections inactive"):
+            purl = "{}?intention=auth".format(
+                home.get_absolute_url()
+            )
+            response = self.app.get(purl)
+            # check redirect
+            self.assertEqual(response.status_code, 302)
+            target = "{}?next=".format(reverse("auth:login"))
+            self.assertTrue(response.location.startswith(target))
+        updateurl = reverse(
+            "spider_base:ucomponent-update",
+            kwargs={
+                "name": "home",
+                "nonce": home.nonce
+            }
+        )
+        form = self.app.get(updateurl, user="testuser1").forms["componentForm"]
+        form.set("protections_login-active", True)
+        form.set("protections_login-allow_auth", True)
+        response = form.submit(user="testuser1")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(home.protections.all().count(), 1)
+
+        with self.subTest(msg="Auth Protections active"):
+            purl = "{}?intention=auth".format(
+                home.get_absolute_url()
+            )
+            response = self.app.get(purl)
+            # check pw check
+            self.assertEqual(response.status_code, 200)
+            # import pdb;pdb.set_trace()
+            pass
+
     def test_persistent(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
@@ -43,6 +79,16 @@ class FeaturesTest(TransactionWebTest):
             ctype__contains=VariantType.feature.value
         ).values_list("name", "id"))
         self.app.set_user("testuser1")
+
+        with self.subTest(msg="Persist inactive"):
+            with override_settings(DEBUG=True):
+                purl = "{}?intention=persist&referrer=http://{}:{}".format(
+                    home.get_absolute_url(),
+                    *self.refserver.socket.getsockname()
+                )
+                response = self.app.get(purl, expect_errors=True, status=400)
+                # invalid so check that error
+                self.assertEqual(response.status_code, 400)
 
         updateurl = reverse(
             "spider_base:ucomponent-update",

@@ -247,8 +247,8 @@ class AssignedProtection(models.Model):
                     len(query.exclude(instant_fail=True))
                 ), 1
             )
-        elif usercomponent.name in index_names:
-            # enforce a minimum of required_passes, if index
+        elif ptype == ProtectionType.authentication.value:
+            # enforce a minimum of required_passes, if auth (e.g. index)
             required_passes = 1
         else:
             required_passes = 0

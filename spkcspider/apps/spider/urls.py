@@ -85,17 +85,17 @@ urlpatterns = [
     ),
     path(
         'ucs/export/<int:id>/<slug:nonce>/',
-        login_required(ContentIndex.as_view(scope="export")),
+        ContentIndex.as_view(scope="export"),
         name='ucontent-export'
     ),
-    # path(
-    #     'ucs/add/<slug:user>/<slug:name>/<slug:type>/',
-    #     ContentAdd.as_view(),
-    #     name='ucontent-add'
-    # ),
+    path(
+        'ucs/add/<str:user>/<str:name>/<slug:type>/',
+        ContentAdd.as_view(),
+        name='ucontent-add'
+    ),
     path(
         'ucs/add/<str:name>/<slug:type>/',
-        login_required(ContentAdd.as_view()),
+        ContentAdd.as_view(),
         name='ucontent-add'
     ),
     path(
