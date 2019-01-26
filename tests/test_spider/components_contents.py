@@ -125,6 +125,13 @@ class AdvancedComponentTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
+    def test_private(self):
+        private = self.user.usercomponent_set.create(
+            name="privat",
+            required_passes=1
+        )
+        self.assertEqual(private.strength, 9)
+
     def test_contents(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
@@ -191,7 +198,9 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(location, url)
         form = response.forms[0]
         self.assertEqual(form["text"].value, "foobar")
+        form['content_control-new_nonce'] = "12"
         form['text'] = "foobart"
         form['name'] = "hubert"
-        response = form.submit()
+        response = form.submit().follow()
+        response.showbrowser()
         self.assertEqual(response.forms[0]["text"].value, "foobart")

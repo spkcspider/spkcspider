@@ -49,9 +49,12 @@ _feature_help = _(
 
 
 class UserComponentManager(models.Manager):
-    def _update_arg_defaults(self, defaults, kwargs):
+    def _update_args(self, defaults, kwargs):
         if defaults is None:
             defaults = {}
+
+        if kwargs is None:
+            kwargs = defaults
         name = kwargs.get("name", defaults.get("name", None))
         if name in index_names and force_captcha:
             defaults["required_passes"] = 2
@@ -60,19 +63,36 @@ class UserComponentManager(models.Manager):
             defaults["required_passes"] = 1
             defaults["strength"] = 10
         elif kwargs.get("public", defaults.get("public", False)):
-            defaults["strength"] = 0
+            if kwargs.get(
+                "required_passes",
+                defaults.get("required_passes", 0)
+            ) == 0:
+                defaults["strength"] = 0
+            else:
+                defaults["strength"] = 4
         else:
-            defaults["strength"] = 5
+            if kwargs.get(
+                "required_passes",
+                defaults.get("required_passes", 0)
+            ) == 0:
+                defaults["strength"] = 5
+            else:
+                defaults["strength"] = 9
         return defaults
+
+    def create(self, **kwargs):
+        return self.get_queryset().create(
+            **self._update_args(kwargs, None)
+        )
 
     def update_or_create(self, defaults=None, **kwargs):
         return self.get_queryset().update_or_create(
-            defaults=self._update_arg_defaults(defaults, kwargs), **kwargs
+            defaults=self._update_args(defaults, kwargs), **kwargs
         )
 
     def get_or_create(self, defaults=None, **kwargs):
         return self.get_queryset().get_or_create(
-            defaults=self._update_arg_defaults(defaults, kwargs), **kwargs
+            defaults=self._update_args(defaults, kwargs), **kwargs
         )
 
 

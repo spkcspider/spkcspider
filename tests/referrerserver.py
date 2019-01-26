@@ -17,7 +17,6 @@ class ReferrerServer(HTTPServer):
         self.unverified = {}
         self.runthread = threading.Thread(target=self.serve_forever)
         self.runthread.daemon = True
-        self.runthread.run()
 
 
 class ReferrerHandler(BaseHTTPRequestHandler):
@@ -110,4 +109,5 @@ def create_referrer_server(addrtup):
 
 if __name__ == "__main__":
     s = create_referrer_server(("127.0.0.1", 8001))
+    s.runthread.start()
     s.runthread.join()

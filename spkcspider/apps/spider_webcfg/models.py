@@ -45,7 +45,7 @@ class WebConfig(BaseContent):
         return f
 
     def get_info(self):
-        ret = super().get_info(unique=True, anchor=self.token.persist)
+        ret = super().get_info(unique=True)
         return "{}url={}\n".format(
-            ret, self.token.referrer.replace("\n", "%0A")
+            ret, self.associated.persist_token.referrer.replace("\n", "%0A")
         )

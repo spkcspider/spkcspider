@@ -41,7 +41,10 @@ def CleanupCallback(sender, instance, **kwargs):
     elif sender._meta.model_name == "assignedcontent":
         if instance.usercomponent and instance.usercomponent.user:
             f = "local"
-            if VariantType.feature.value in instance.ctype.ctype:
+            if (
+                instance.ctype and
+                VariantType.feature.value in instance.ctype.ctype
+            ):
                 f = "remote"
             instance.usercomponent.user.spider_info.update_with_quota(
                 -instance.get_size(), f

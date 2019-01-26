@@ -7,6 +7,13 @@
     }
   },
   {
+    "model": "spider_accounts.SpiderUser",
+    "pk": 2,
+    "fields": {
+      "username": "testuser2"
+    }
+  },
+  {
     "model": "spider_base.UserComponent",
     "pk": 2,
     "fields": {

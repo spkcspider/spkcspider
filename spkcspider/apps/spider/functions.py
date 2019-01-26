@@ -8,6 +8,7 @@ __all__ = [
 import time
 import base64
 import logging
+from decimal import Decimal
 from urllib.parse import urlsplit
 
 from django.core.files.uploadhandler import (

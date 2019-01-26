@@ -468,19 +468,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         if self.scope == "update":
             context["form"] = self.get_form()
             if context["form"].is_valid():
-                self.object = context["form"].save()
-                # nonce changed => path has changed
-                if self.object.nonce != self.kwargs["nonce"]:
-                    return redirect(
-                        'spider_base:ucontent-access',
-                        id=self.object.id,
-                        nonce=self.object.nonce, access="update"
-                    )
-                # use correct usercomponent
-                self.usercomponent = context["form"].instance.usercomponent
-                context["form"] = self.get_form_class()(
-                    **self.get_form_success_kwargs()
-                )
+                self.object = context["form"].save(commit=True)
         return self.render_to_response(self.get_context_data(**context))
 
     def get_context_data(self, **kwargs):
@@ -545,13 +533,31 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return self.test_token(minstrength)
 
     def render_to_response(self, context):
+        # use correct usercomponent
+        self.usercomponent = context["form"].instance.usercomponent
         rendered = self.object.content.render(
             **context
         )
-        # return response if content returned response
-        # useful for redirects and raw update
-        if isinstance(rendered, HttpResponseBase):
-            return rendered
+
+        if self.scope == "update":
+            # nonce changed => path has changed
+            if self.object.nonce != self.kwargs["nonce"]:
+                return redirect(
+                    'spider_base:ucontent-access',
+                    id=self.object.id,
+                    nonce=self.object.nonce, access="update"
+                )
+
+            if context["form"].is_valid():
+                context["form"] = self.get_form_class()(
+                    **self.get_form_success_kwargs()
+                )
+        else:
+            # return response if content returned response
+            # useful for redirects and raw update
+            # only allow for non-update
+            if isinstance(rendered, HttpResponseBase):
+                return rendered
 
         context["content"] = rendered
         return super().render_to_response(context)
