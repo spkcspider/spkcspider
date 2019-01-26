@@ -156,7 +156,7 @@ class UserTestMixin(AccessMixin):
             no_token = False
             ptype = ProtectionType.authentication.value
 
-        # token not required
+        # token not (always) required
         if not no_token or tokenstring:
             # delete old token, so no confusion happen
             self.remove_old_tokens(expire)
@@ -192,6 +192,7 @@ class UserTestMixin(AccessMixin):
         # if result is impossible and token invalid try to login
         if minstrength >= 4 and not self.usercomponent.can_auth:
             # remove token and redirect
+            # login_url can be also on a different host => merge_get_url
             target = "{}?{}={}".format(
                 self.get_login_url(),
                 REDIRECT_FIELD_NAME,
