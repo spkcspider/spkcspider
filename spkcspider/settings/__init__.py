@@ -202,7 +202,10 @@ DEFAULT_USERCOMPONENTS = {
 ## Default description  # noqa: E266
 SPIDER_DESCRIPTION = "A spkcspider instance for my personal data."
 
-SPIDER_BLACKLISTED_MODULES = []
+SPIDER_BLACKLISTED_MODULES = [
+    "spkcspider.apps.spider.models.contents.TravelProtection",
+    "spkcspider.apps.spider.protections.TravelProtection",
+]
 
 # how many user components per page
 COMPONENTS_PER_PAGE = 25

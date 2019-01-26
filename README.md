@@ -180,7 +180,10 @@ Otherwise security could be compromised.
 * documentation
 
 
+
+
 ## Later
+* Fix TravelProtection, remove fake_index
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
 * govAnchor
@@ -191,6 +194,11 @@ Otherwise security could be compromised.
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
+
+
+### Reimplement TravelProtection
+* can hide and fake contents
+* no fake_index anymore
 
 # Thanks
 
