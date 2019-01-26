@@ -8,13 +8,13 @@ from urllib.parse import quote_plus
 
 from datetime import timedelta
 
-
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
 from django.http import (
     HttpResponseRedirect, HttpResponseServerError, HttpResponse
 )
+from django.http.response import HttpResponseBase
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -60,10 +60,11 @@ class UserTestMixin(AccessMixin):
             return HttpResponseServerError(
                 _("Token creation failed, try again")
             )
-        if not user_test_result:
+        if isinstance(user_test_result, HttpResponseBase):
+            return user_test_result
+        elif not user_test_result:
             return self.handle_no_permission()
-        if isinstance(user_test_result, str):
-            return HttpResponseRedirect(redirect_to=user_test_result)
+
         ret = self.dispatch_extra(request, *args, **kwargs)
         if ret:
             return ret
@@ -95,7 +96,9 @@ class UserTestMixin(AccessMixin):
     def replace_token(self):
         GET = self.request.GET.copy()
         GET["token"] = self.request.auth_token.token
-        return "?".join((self.request.path, GET.urlencode()))
+        return HttpResponseRedirect(
+            redirect_to="?".join((self.request.path, GET.urlencode()))
+        )
 
     def create_token(self, special_user=None, extra=None):
         d = {
@@ -149,15 +152,8 @@ class UserTestMixin(AccessMixin):
         tokenstring = self.request.GET.get("token", None)
         no_token = (self.usercomponent.required_passes == 0)
         ptype = ProtectionType.access_control.value
-        if "intention" in self.request.GET or "referrer" in self.request.GET:
-            # validate early, before auth
-            if not VALID_INTENTIONS.issuperset(
-                self.request.GET.getlist("intention")
-            ):
-                return False
-            minstrength = 4
-            no_token = False
         if minstrength >= 4:
+            no_token = False
             ptype = ProtectionType.authentication.value
 
         # token not required
@@ -196,7 +192,7 @@ class UserTestMixin(AccessMixin):
         # if result is impossible and token invalid try to login
         if minstrength >= 4 and not self.usercomponent.can_auth:
             # remove token and redirect
-            return "{}?{}={}".format(
+            target = "{}?{}={}".format(
                 self.get_login_url(),
                 REDIRECT_FIELD_NAME,
                 quote_plus(
@@ -206,6 +202,7 @@ class UserTestMixin(AccessMixin):
                     )
                 )
             )
+            return HttpResponseRedirect(redirect_to=target)
 
         protection_codes = None
         if "protection" in self.request.GET:
@@ -252,7 +249,7 @@ class UserTestMixin(AccessMixin):
                 self.request.is_owner = True
                 self.request.is_special_user = True
                 return True
-        if user_by_token and self.test_token(4):
+        if user_by_token and self.test_token(4) is True:
             return True
 
         # remove user special state if is_fake
@@ -369,6 +366,24 @@ class ReferrerMixin(object):
                 "intentions", []
             ))
         return super().get_context_data(**kwargs)
+
+    def test_token(self, minstrength):
+        if "intention" in self.request.GET or "referrer" in self.request.GET:
+            # validate early, before auth
+            intentions = set(self.request.GET.getlist("intention"))
+            if not VALID_INTENTIONS.issuperset(
+                intentions
+            ):
+                return HttpResponse(
+                    "invalid intentions", status=400
+                )
+            # maximal one main intention
+            if len(intentions.difference(VALID_SUB_INTENTIONS)) > 1:
+                return HttpResponse(
+                    "invalid intentions", status=400
+                )
+            minstrength = 4
+        return super().test_token(minstrength)
 
     def refer_with_post(self, context, token):
         # application/x-www-form-urlencoded is best here,

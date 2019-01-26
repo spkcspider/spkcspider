@@ -93,6 +93,14 @@ class FeaturesTest(TransactionWebTest):
                 "details"
             ))
 
+        with self.subTest(msg="invalid intentions"):
+            purl = "{}?intention=auth&intention=payment&token=prefer".format(
+                home.get_absolute_url()
+            )
+            response = self.app.get(purl, expect_errors=True, status=400)
+            # 404 on error
+            self.assertEqual(response.status_code, 400)
+
     def test_persistent(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
