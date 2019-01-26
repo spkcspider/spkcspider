@@ -27,6 +27,9 @@ class BasicComponentTest(TransactionTestCase):
         self.user.usercomponent_set.get(name="home")
 
     def test_index(self):
+        SpiderUser.objects.create_user(
+            username="testuser2", password="abc", is_active=True
+        )
         index = self.user.usercomponent_set.filter(name="index").first()
         self.assertTrue(index)
         with self.assertRaises(IntegrityError):
@@ -43,6 +46,9 @@ class BasicComponentTest(TransactionTestCase):
         self.assertEqual(response.status_code, 302)
         target = "{}?next={}".format(reverse("auth:login"), indexurl)
         self.assertRedirects(response, target)
+        self.client.login(username="testuser2", password="abc")
+        response = self.client.get(indexurl, expect_errors=True, status=403)
+        self.assertEqual(response.status_code, 403)
         self.client.login(username="testuser1", password="abc")
         response = self.client.get(indexurl)
         self.assertEqual(response.status_code, 200)
@@ -202,5 +208,4 @@ class AdvancedComponentTest(TransactionWebTest):
         form['text'] = "foobart"
         form['name'] = "hubert"
         response = form.submit().follow()
-        response.showbrowser()
         self.assertEqual(response.forms[0]["text"].value, "foobart")
