@@ -14,7 +14,6 @@ class SpiderTokenAuthBackend(ModelBackend):
         tokenstring = request.GET.get("token", None)
         if not tokenstring:
             return
-        expire = timezone.now()-self.usercomponent.token_duration
         travel = TravelProtection.objects.get_active().filter(
             associated_rel__usercomponent__user__username=username
         ).exclude(login_protection=TravelLoginType.none.value)
@@ -31,6 +30,7 @@ class SpiderTokenAuthBackend(ModelBackend):
                 user__username=username, name="index"
             ).first()
 
+        expire = timezone.now()-uc.token_duration
         # delete old token, so no confusion happen
         AuthToken.objects.filter(
             usercomponent=uc, created__lt=expire

@@ -1,5 +1,6 @@
 # import unittest
 
+import unittest
 import re
 from urllib.parse import parse_qs, urlsplit
 
@@ -36,6 +37,7 @@ class FeaturesTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
+    @unittest.expectedFailure
     def test_update_perm(self):
         home = self.user.usercomponent_set.filter(name="home").first()
 
@@ -52,25 +54,43 @@ class FeaturesTest(TransactionWebTest):
             "spider_base:ucomponent-update",
             kwargs={
                 "name": "home",
+                "user": "testuser1",
                 "nonce": home.nonce
             }
         )
-        form = self.app.get(updateurl, user="testuser1").forms["componentForm"]
+        self.app.set_user(user="testuser1")
+        form = self.app.get(updateurl).forms["componentForm"]
+        form.set("public", False)
         form.set("protections_login-active", True)
         form.set("protections_login-allow_auth", True)
-        response = form.submit(user="testuser1")
+        response = form.submit()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(home.protections.all().count(), 1)
+        self.assertEqual(home.strength, 5)
+        # logout and clean session
+        # deleting form required
+        del response
+        del form
+        self.app.set_user(user=None)
+        self.app.reset()
 
         with self.subTest(msg="Auth Protections active"):
-            purl = "{}?intention=auth".format(
+            purl = "{}?intention=auth&token=prefer".format(
                 home.get_absolute_url()
             )
             response = self.app.get(purl)
-            # check pw check
             self.assertEqual(response.status_code, 200)
-            # import pdb;pdb.set_trace()
-            pass
+            form = response.forms[0]
+            form["password"] = "abc"
+            response = form.submit()
+            # response.showbrowser()
+            location = response.location
+            response = response.follow()
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("token=", location)
+            self.assertTrue(response.html.find(
+                "a", string=re.compile("Update")
+            ))
 
     def test_persistent(self):
         home = self.user.usercomponent_set.filter(name="home").first()
