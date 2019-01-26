@@ -1,6 +1,5 @@
 # import unittest
 
-import unittest
 import re
 from urllib.parse import parse_qs, urlsplit
 
@@ -37,7 +36,6 @@ class FeaturesTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
-    @unittest.expectedFailure
     def test_update_perm(self):
         home = self.user.usercomponent_set.filter(name="home").first()
 
@@ -73,6 +71,9 @@ class FeaturesTest(TransactionWebTest):
         del form
         self.app.set_user(user=None)
         self.app.reset()
+        # set pw
+        self.user.set_password("abc")
+        self.user.save()
 
         with self.subTest(msg="Auth Protections active"):
             purl = "{}?intention=auth&token=prefer".format(
@@ -89,7 +90,7 @@ class FeaturesTest(TransactionWebTest):
             self.assertEqual(response.status_code, 200)
             self.assertIn("token=", location)
             self.assertTrue(response.html.find(
-                "a", string=re.compile("Update")
+                "details"
             ))
 
     def test_persistent(self):
