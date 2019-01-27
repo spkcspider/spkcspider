@@ -15,8 +15,6 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    replaces = [('spider_base', '0002_linkcontent'), ('spider_base', '0003_auto_20180812_1855'), ('spider_base', '0004_auto_20180812_1922'), ('spider_base', '0005_auto_20180818_1310'), ('spider_base', '0006_auto_20180818_1506'), ('spider_base', '0007_userinfo'), ('spider_base', '0008_auto_20180824_0646'), ('spider_base', '0009_auto_20180830_1331')]
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('contenttypes', '0002_remove_content_type_name'),
