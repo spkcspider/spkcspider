@@ -28,11 +28,12 @@ def get_file_path(instance, filename):
     size = getattr(settings, "FILE_NONCE_SIZE", 45)
     # try 100 times to find free filename
     # but should not take more than 1 try
+    # IMPORTANT: strip . to prevent creation of htaccess files or similar
     for _i in range(0, 100):
         ret_path = default_storage.generate_filename(
             posixpath.join(
                 ret, str(instance.associated.usercomponent.user.pk),
-                create_b64_token(size), filename
+                create_b64_token(size), filename.lstrip(".")
             )
         )
         if not default_storage.exists(ret_path):
