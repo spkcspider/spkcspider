@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "spkcspider"
-description = ""
+description = "Safe online identity"
 version = "0.1"
-authors = [""]
+authors = ["Alexander K."]
 
 [tool.poetry.dependencies]
 python = ">=3.5"
