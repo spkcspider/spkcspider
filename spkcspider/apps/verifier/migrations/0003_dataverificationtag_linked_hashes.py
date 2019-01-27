@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='dataverificationtag',
             name='linked_hashes',
-            field=jsonfield.fields.JSONField(blank=True, default={}),
+            field=jsonfield.fields.JSONField(blank=True, default=dict),
         ),
     ]

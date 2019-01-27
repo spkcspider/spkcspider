@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='spidertag',
             name='tagdata',
-            field=jsonfield.fields.JSONField(blank=True, default={}),
+            field=jsonfield.fields.JSONField(blank=True, default=dict),
         ),
         migrations.AlterField(
             model_name='spidertag',
             name='verified_by',
-            field=jsonfield.fields.JSONField(blank=True, default=[]),
+            field=jsonfield.fields.JSONField(blank=True, default=list),
         ),
     ]

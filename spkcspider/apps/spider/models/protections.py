@@ -204,7 +204,7 @@ class AssignedProtection(models.Model):
         on_delete=models.CASCADE, editable=False
     )
     # data for protection
-    data = JSONField(default={}, null=False)
+    data = JSONField(default=dict, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     active = models.BooleanField(default=True)
@@ -294,7 +294,7 @@ class AuthToken(models.Model):
         related_name="+", blank=True, null=True
     )
     session_key = models.CharField(max_length=40, null=True)
-    extra = JSONField(default={}, blank=True)
+    extra = JSONField(default=dict, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     _pay_amount = None
 

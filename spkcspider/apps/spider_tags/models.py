@@ -23,10 +23,10 @@ class TagLayout(models.Model):
     # shall it be unique for a component?
     unique = models.BooleanField(default=False, blank=True)
     layout = JSONField(
-        default=[],
+        default=list,
         help_text=_("Field list in JSON format")
     )
-    default_verifiers = JSONField(default=[], blank=True)
+    default_verifiers = JSONField(default=list, blank=True)
     usertag = models.OneToOneField(
         "spider_tags.UserTagLayout", on_delete=models.CASCADE,
         related_name="layout", null=True, blank=True
@@ -115,8 +115,8 @@ class SpiderTag(BaseContent):
         TagLayout, related_name="tags", on_delete=models.PROTECT,
 
     )
-    tagdata = JSONField(default={}, blank=True)
-    verified_by = JSONField(default=[], blank=True)
+    tagdata = JSONField(default=dict, blank=True)
+    verified_by = JSONField(default=list, blank=True)
     primary = models.BooleanField(default=False, blank=True)
 
     def __str__(self):

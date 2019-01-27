@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
             name='SpiderTag',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('tagdata', jsonfield.fields.JSONField(default={})),
-                ('verified_by', jsonfield.fields.JSONField(default=[])),
+                ('tagdata', jsonfield.fields.JSONField(default=dict)),
+                ('verified_by', jsonfield.fields.JSONField(default=list)),
                 ('primary', models.BooleanField(default=False)),
             ],
             options={
@@ -31,8 +31,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.SlugField(max_length=255)),
-                ('layout', jsonfield.fields.JSONField(default=[])),
-                ('default_verifiers', jsonfield.fields.JSONField(default=[])),
+                ('layout', jsonfield.fields.JSONField(default=list)),
+                ('default_verifiers', jsonfield.fields.JSONField(default=list)),
             ],
         ),
         migrations.CreateModel(

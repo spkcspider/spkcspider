@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='taglayout',
             name='default_verifiers',
-            field=jsonfield.fields.JSONField(blank=True, default=[]),
+            field=jsonfield.fields.JSONField(blank=True, default=list),
         ),
     ]

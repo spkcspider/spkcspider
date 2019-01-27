@@ -19,6 +19,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='taglayout',
             name='layout',
-            field=jsonfield.fields.JSONField(default=[], help_text='Field list in JSON format'),
+            field=jsonfield.fields.JSONField(default=list, help_text='Field list in JSON format'),
         ),
     ]

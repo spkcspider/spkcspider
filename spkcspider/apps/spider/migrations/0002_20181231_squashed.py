@@ -133,7 +133,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='authtoken',
             name='extra',
-            field=jsonfield.fields.JSONField(blank=True, default={}),
+            field=jsonfield.fields.JSONField(blank=True, default=dict),
         ),
         migrations.AlterField(
             model_name='travelprotection',

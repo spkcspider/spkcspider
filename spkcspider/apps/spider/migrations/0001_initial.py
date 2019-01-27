@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
             name='AssignedProtection',
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('data', jsonfield.fields.JSONField(default={})),
+                ('data', jsonfield.fields.JSONField(default=dict)),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('active', models.BooleanField(default=True)),
