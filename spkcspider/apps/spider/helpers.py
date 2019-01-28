@@ -1,5 +1,5 @@
 __all__ = (
-    "create_b64_token", "get_settings_func",
+    "create_b64_token", "create_id_b64_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
     "merge_get_url", "add_property", "is_decimal"
 )
@@ -18,6 +18,7 @@ from importlib import import_module
 from rdflib import Literal, BNode
 
 from django.conf import settings
+from django.db import models
 from .constants.static import MAX_NONCE_SIZE, spkcgraph
 
 # for not spamming sets
@@ -122,7 +123,20 @@ def create_b64_token(size=None):
         raise Exception("SPIDER_NONCE_SIZE must be multiple of 3")
     return base64.urlsafe_b64encode(
         os.urandom(size)
-    ).decode('ascii')
+    ).rstrip("=").decode('ascii')
+
+
+def create_id_b64_token(size=None, idfield="id"):
+    if not size:
+        from .constants.settings import INITIAL_NONCE_SIZE
+        size = int(INITIAL_NONCE_SIZE)
+    if size > MAX_NONCE_SIZE:
+        logging.warning("Nonce too big")
+    if size % 3 != 0:
+        raise Exception("SPIDER_NONCE_SIZE must be multiple of 3")
+    return models.F(idfield) + "-" + base64.urlsafe_b64encode(
+        os.urandom(size)
+    ).rstrip("=").decode('ascii')
 
 
 _cleanstr = re.compile(r'<+.*>+')

@@ -186,8 +186,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         )
 
     def get_usercomponent(self):
-        query = {"id": self.kwargs["id"]}
-        query["nonce"] = self.kwargs["nonce"]
+        query = {"token": self.kwargs["token"]}
         return get_object_or_404(
             UserComponent.objects.select_related(
                 "user", "user__spider_info",
@@ -426,8 +425,8 @@ class ContentAdd(ContentBase, CreateView):
         if getattr(ob, "id", None):
             assert(hasattr(ucontent, "id") and ucontent.usercomponent)
             return redirect(
-                'spider_base:ucontent-access', id=ucontent.id,
-                nonce=ucontent.nonce, access="update"
+                'spider_base:ucontent-access',
+                token=ucontent.token, access="update"
             )
         return super().render_to_response(context)
 

@@ -282,8 +282,9 @@ class AuthToken(models.Model):
     persist = models.BigIntegerField(blank=True, default=-1, db_index=True)
     # brute force protection
     #  16 = usercomponent.id in hexadecimal
+    #  +1 for seperator
     token = models.SlugField(
-        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid,
+        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid+1,
         db_index=True, unique=True
     )
     referrer = models.URLField(

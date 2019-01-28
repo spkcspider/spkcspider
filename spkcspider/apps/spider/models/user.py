@@ -20,10 +20,10 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core import validators
 
-from ..helpers import create_b64_token, get_settings_func
+from ..helpers import create_b64_token, get_settings_func, create_id_b64_token
 from ..constants import (
     ProtectionType, VariantType, MAX_NONCE_SIZE, TokenCreationError,
-    default_uctoken_duration, force_captcha, index_names
+    default_uctoken_duration, force_captcha, index_names, hex_size_of_bigid
 )
 
 
@@ -102,6 +102,13 @@ class UserComponent(models.Model):
     nonce = models.SlugField(
         default=create_b64_token, max_length=MAX_NONCE_SIZE*4//3,
         db_index=False
+    )
+    # brute force protection and identifier, replaces nonce
+    #  16 = usercomponent.id in hexadecimal
+    #  +1 for seperator
+    token = models.SlugField(
+        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid+1,
+        db_index=True, unique=True, default=create_id_b64_token
     )
     public = models.BooleanField(
         default=False,

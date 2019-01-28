@@ -30,6 +30,7 @@ def info_and(*args, **kwargs):
             )
     return q
 
+
 def info_or(*args, **kwargs):
     q = models.Q()
     for query in args:
@@ -84,11 +85,11 @@ def info_field_validator(value):
                 params={'element': elem, 'value': value},
             )
 
+
 class BaseInfoModel(models.Model):
 
     class Meta:
         abstract = True
-
 
     # for extra information over content, admin only editing
     # format: \nflag1\nflag2\nfoo=true\nfoo2=xd\n...\nendfoo=xy\n

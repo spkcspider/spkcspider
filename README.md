@@ -186,9 +186,8 @@ Otherwise security could be compromised.
 * documentation
 
 
-
-
 ## Later
+* offloadable verifier
 * Fix TravelProtection, remove fake_index
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation

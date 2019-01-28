@@ -12,7 +12,7 @@ from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent,
     ContentVariant, AuthToken
 )
-from ..helpers import create_b64_token
+from ..helpers import create_b64_id_token
 from ..constants import (
     ProtectionType, VariantType, NONCE_CHOICES, INITIAL_NONCE_SIZE,
     index_names, protected_names
@@ -247,9 +247,9 @@ class UserComponentForm(forms.ModelForm):
             if self.instance.id:
                 print(
                     "Old nonce for Component id:", self.instance.id,
-                    "is", self.instance.nonce
+                    "is", self.instance.token
                 )
-            self.instance.nonce = create_b64_token(
+            self.instance.create_b64_id_token = create_b64_id_token(
                 int(self.cleaned_data["new_nonce"])
             )
 
@@ -359,9 +359,9 @@ class UserContentForm(forms.ModelForm):
             if self.instance.id:
                 print(
                     "Old nonce for Content id:", self.instance.id,
-                    "is", self.instance.nonce
+                    "is", self.instance.token
                 )
-            self.instance.nonce = create_b64_token(
+            self.instance.token = create_b64_id_token(
                 int(self.cleaned_data["new_nonce"])
             )
         ret = super().save(commit=commit)
