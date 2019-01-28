@@ -20,7 +20,7 @@ from jsonfield import JSONField
 from ..constants import (
     MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError
 )
-from ..helpers import create_b64_token, validator_token
+from ..helpers import create_b64_id_token, validator_token
 from ..protections import installed_protections
 from ..constants.static import ProtectionType, ProtectionResult, index_names
 
@@ -308,9 +308,8 @@ class AuthToken(models.Model):
         return "{}...".format(self.token[:-_striptoken])
 
     def create_auth_token(self):
-        self.token = "{}_{}".format(
-            hex(self.usercomponent.id)[2:],
-            create_b64_token(getattr(settings, "TOKEN_SIZE", 30))
+        self.token = create_b64_id_token(
+            self.usercomponent.id, "_", getattr(settings, "TOKEN_SIZE", 30)
         )
 
     def _pay_amount_get(self):

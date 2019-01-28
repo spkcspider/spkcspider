@@ -85,7 +85,7 @@ class UserComponentManager(models.Manager):
             **self._update_args(kwargs, None)
         )
         if not ret.token:
-            ret.token = create_b64_id_token(ret.id)
+            ret.token = create_b64_id_token(ret.id, "/")
             ret.save(update_fields=["token"])
         return ret
 
@@ -94,7 +94,7 @@ class UserComponentManager(models.Manager):
             defaults=self._update_args(defaults, kwargs), **kwargs
         )
         if not ret[0].token:
-            ret[0].token = create_b64_id_token(ret[0].id)
+            ret[0].token = create_b64_id_token(ret[0].id, "/")
             ret[0].save(update_fields=["token"])
         return ret
 
@@ -103,7 +103,7 @@ class UserComponentManager(models.Manager):
             defaults=self._update_args(defaults, kwargs), **kwargs
         )
         if not ret[0].token:
-            ret[0].token = create_b64_id_token(ret[0].id)
+            ret[0].token = create_b64_id_token(ret[0].id, "/")
             ret[0].save(update_fields=["token"])
         return ret
 

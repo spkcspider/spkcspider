@@ -119,12 +119,12 @@ def UpdateSpiderCallback(**_kwargs):
         # works only with django.apps.apps
         row.info = row.content.get_info()
         if not row.token:
-            row.token = create_b64_id_token(row.id)
+            row.token = create_b64_id_token(row.id, "/")
         row.save(update_fields=['info', "token"])
 
     for row in UserComponent.objects.all():
         if not row.token:
-            row.token = create_b64_id_token(row.id)
+            row.token = create_b64_id_token(row.id, "/")
             row.save(update_fields=["token"])
 
     for row in get_user_model().objects.prefetch_related(

@@ -12,7 +12,6 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.models import UserComponent
 from spkcspider.apps.spider.signals import update_dynamic
-from spkcspider.apps.spider.helpers import create_b64_token
 # Create your tests here.
 
 
@@ -62,6 +61,7 @@ class BasicComponentTest(TransactionTestCase):
         updateurl = reverse(
             "spider_base:ucomponent-update",
             kwargs={
+                "user": self.user,
                 "name": "index",
                 "token": index.token
             }

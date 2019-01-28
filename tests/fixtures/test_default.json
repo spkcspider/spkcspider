@@ -21,7 +21,7 @@
       "user": 1,
       "public": false,
       "required_passes": 1,
-      "token": "2_3893892wsdjszewe78dsds9weo",
+      "token": "2/3893892wsdjszewe78dsds9weo",
       "strength": 10,
       "created": "2014-03-17T17:41:28+00:00",
       "modified": "2018-03-16T17:41:28+00:00"
@@ -35,7 +35,7 @@
       "user": 1,
       "public": false,
       "required_passes": 0,
-      "token": "3_3893892wsdjszewe789weo",
+      "token": "3/3893892wsdjszewe789weo",
       "strength": 5,
       "created": "2014-03-17T17:41:28+00:00",
       "modified": "2018-03-16T17:41:28+00:00"
@@ -49,7 +49,7 @@
       "user": 1,
       "public": true,
       "required_passes": 0,
-      "token": "4_3893892wsdjszewe789weo",
+      "token": "4/3893892wsdjszewe789weo",
       "strength": 0,
       "created": "2014-03-17T17:41:28+00:00",
       "modified": "2018-03-16T17:41:28+00:00"

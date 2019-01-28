@@ -641,7 +641,8 @@ class BaseContent(models.Model):
                 # set token
                 if not assignedcontent.token:
                     assignedcontent.token = create_b64_id_token(
-                        assignedcontent.id
+                        assignedcontent.id,
+                        "/"
                     )
                 # second save required
                 assignedcontent.save(update_fields=["info", "token"])

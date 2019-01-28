@@ -57,7 +57,7 @@ class WebConfigView(UCTestMixin, View):
 
     def get_object(self, queryset=None):
         variant = self.usercomponent.features.filter(
-            name="WebConfig"
+            name="WebReference"
         ).first()
         # can only access feature if activated even WebConfig exists already
         if not variant:
@@ -113,6 +113,7 @@ class WebConfigView(UCTestMixin, View):
 
 class WebReferenceView(UCTestMixin, View):
     model = WebReference
+    variant = None
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -149,17 +150,11 @@ class WebReferenceView(UCTestMixin, View):
             name="WebReference"
         ).first()
         # can only access feature if activated even WebConfig exists already
-        if not variant:
+        if not self.variant:
             raise Http404()
-        ret = AssignedContent.objects.filter(
-            persist_token=self.request.auth_token
-        ).first()
-        if ret:
-            return ret.content
         associated = AssignedContent(
             usercomponent=self.usercomponent,
             ctype=variant,
-            persist_token=self.request.auth_token
         )
         ret = self.model.static_create(associated)
         ret.clean()

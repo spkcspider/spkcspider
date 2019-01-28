@@ -133,7 +133,7 @@ def create_b64_token(size=None):
     ).decode('ascii').rstrip("=")
 
 
-def create_b64_id_token(id, size=None, sep="_"):
+def create_b64_id_token(id, sep="_", size=None):
     return sep.join((hex(id)[2:], create_b64_token(size)))
 
 

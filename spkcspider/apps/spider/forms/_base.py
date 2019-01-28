@@ -248,7 +248,7 @@ class UserComponentForm(forms.ModelForm):
                     "is", self.instance.token
                 )
             self.instance.token = create_b64_id_token(
-                self.instance.id, int(self.cleaned_data["new_nonce"])
+                self.instance.id, "/", int(self.cleaned_data["new_nonce"])
             )
             self.instance.save(update_fields=["token"])
 
@@ -360,7 +360,7 @@ class UserContentForm(forms.ModelForm):
                     "is", self.instance.token
                 )
             self.instance.token = create_b64_id_token(
-                self.instance.id, int(self.cleaned_data["new_nonce"])
+                self.instance.id, "/", int(self.cleaned_data["new_nonce"])
             )
             self.instance.save(update_fields=["token"])
 

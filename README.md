@@ -202,6 +202,12 @@ Otherwise security could be compromised.
 * improve protections, add protections
 
 
+### Implement Emails/messaging
+* implement webreferences
+* WebReference on an "email" object is an "email"
+* Webreferences can contain cache
+* can optionally contain tags used for encryption and/or refcounting for automatic deletion
+
 ### Reimplement TravelProtection
 * hide contents
 * fake_index?
