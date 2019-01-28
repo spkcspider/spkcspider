@@ -188,7 +188,7 @@ Otherwise security could be compromised.
 
 ## Later
 * offloadable verifier
-* Fix TravelProtection, remove fake_index
+* Fix TravelProtection
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
 * govAnchor
@@ -203,8 +203,10 @@ Otherwise security could be compromised.
 
 
 ### Reimplement TravelProtection
-* can hide and fake contents
-* no fake_index anymore
+* hide contents
+* fake_index?
+* also: encrypt pws
+
 
 # Thanks
 

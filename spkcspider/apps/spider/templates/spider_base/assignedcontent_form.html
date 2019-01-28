@@ -30,7 +30,7 @@
   {% endif %}
 
   {% if scope != "add" %}
-    <a class="w3-right" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{request.GET.urlencode}}">
+    <a class="w3-right" href="{% url 'spider_base:ucontent-access' token=object.token access='view' %}?{{request.GET.urlencode}}">
       {% trans "View" %}
     </a>
   {% endif %}
@@ -42,7 +42,7 @@
 {{block.super}}
 {# FIXME: fix not availabe VariantType #}
 {% if scope == "update" and raw_update_type in object.ctype.ctype %}
-  {% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='raw_update' as raw_updatelink %}
+  {% url 'spider_base:ucontent-access' token=object.token access='raw_update' as raw_updatelink %}
   <script type="text/javascript">
     var raw_updatelink = "{{hostpart}}{{raw_updatelink}}";
     function open_qrmodal_raw_update(){

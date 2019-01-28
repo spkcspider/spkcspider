@@ -12,7 +12,7 @@ from django.views import View
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
-    AuthToken, AssignedContent
+    AuthToken, AssignedContent, UserComponent
 )
 from .models import WebConfig, WebReference
 
@@ -127,16 +127,15 @@ class WebReferenceView(UCTestMixin, View):
     def get_usercomponent(self):
         token = self.request.GET.get("token", None)
         if not token:
-            id = self.request.GET.get("id", None)
-            if not id:
-                raise Http404()
-            nonce = self.request.GET.get("nonce", None)
-            if not nonce:
-                raise Http404()
-        self.request.auth_token = get_object_or_404(
-            AuthToken,
+            raise Http404()
+        self.request.auth_token = AuthToken.objects.filter(
             token=token
-        )
+        ).first()
+        if not self.request.auth_token:
+            return get_object_or_404(
+                UserComponent,
+                token=token,
+            )
         return self.request.auth_token.usercomponent
 
     def get_user(self):

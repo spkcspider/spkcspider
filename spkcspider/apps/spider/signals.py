@@ -8,11 +8,12 @@ from django.dispatch import Signal
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from .constants.static import VariantType
+from .helpers import create_b64_id_token
 import logging
 
 update_dynamic = Signal(providing_args=[])
 move_persistent = Signal(providing_args=["tokens", "to"])
-# failed guess of combination from id, nonce
+# failed guess of token
 failed_guess = Signal(providing_args=["request"])
 
 
@@ -55,6 +56,14 @@ def CleanupCallback(sender, instance, **kwargs):
             )
         if instance.fake_id is None and instance.content:
             instance.content.delete(False)
+
+
+def CreateToken(sender, instance, raw=False, **kwargs):
+    if raw:
+        return
+    if not instance.token:
+        instance.token = create_b64_id_token(instance.id)
+        instance.save(update_fields=["token"])
 
 
 def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
@@ -113,10 +122,18 @@ def UpdateSpiderCallback(**_kwargs):
 
     # regenerate info field
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
+    UserComponent = apps.get_model("spider_base", "UserComponent")
     for row in AssignedContent.objects.all():
         # works only with django.apps.apps
         row.info = row.content.get_info()
-        row.save(update_fields=['info'])
+        if not row.token:
+            row.token = create_b64_id_token(row.id)
+        row.save(update_fields=['info', "token"])
+
+    for row in UserComponent.objects.all():
+        if not row.token:
+            row.token = create_b64_id_token(row.id)
+            row.save(update_fields=["token"])
 
     for row in get_user_model().objects.prefetch_related(
         "spider_info", "usercomponent_set", "usercomponent_set__contents"

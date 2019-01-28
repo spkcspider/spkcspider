@@ -17,8 +17,10 @@ from django.views.decorators.debug import sensitive_variables
 
 from jsonfield import JSONField
 
-from ..constants import MAX_NONCE_SIZE, hex_size_of_bigid, TokenCreationError
-from ..helpers import create_b64_token
+from ..constants import (
+    MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError
+)
+from ..helpers import create_b64_token, validator_token
 from ..protections import installed_protections
 from ..constants.static import ProtectionType, ProtectionResult, index_names
 
@@ -282,10 +284,13 @@ class AuthToken(models.Model):
     persist = models.BigIntegerField(blank=True, default=-1, db_index=True)
     # brute force protection
     #  16 = usercomponent.id in hexadecimal
-    #  +1 for seperator
-    token = models.SlugField(
-        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid+1,
-        db_index=True, unique=True
+    #  +2 for seperators
+    token = models.CharField(
+        max_length=MAX_TOKEN_B64_SIZE+hex_size_of_bigid+2,
+        db_index=True, unique=True,
+        validators=[
+            validator_token
+        ]
     )
     referrer = models.URLField(
         max_length=400, blank=True, null=True

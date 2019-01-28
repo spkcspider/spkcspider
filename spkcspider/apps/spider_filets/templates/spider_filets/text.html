@@ -17,6 +17,6 @@
 </div>
 {% if can_upgrade %}
 <div class="w3-padding">
-  <a href="{% url 'spider_base:ucontent-access' id=object.associated.id nonce=object.associated.nonce access='update_user' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
+  <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_user' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
 </div>
 {% endif %}

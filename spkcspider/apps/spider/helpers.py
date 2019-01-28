@@ -1,7 +1,7 @@
 __all__ = (
-    "create_b64_token", "create_id_b64_token", "get_settings_func",
+    "create_b64_token", "create_b64_id_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
-    "merge_get_url", "add_property", "is_decimal"
+    "merge_get_url", "add_property", "is_decimal", "validator_token"
 )
 
 
@@ -18,13 +18,22 @@ from importlib import import_module
 from rdflib import Literal, BNode
 
 from django.conf import settings
-from django.db import models
-from .constants.static import MAX_NONCE_SIZE, spkcgraph
+from django.core import validators
+from django.utils.translation import gettext_lazy as _
+
+from .constants.static import MAX_TOKEN_SIZE, spkcgraph
 
 # for not spamming sets
 _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
+
+
+validator_token = validators.RegexValidator(
+    r'^[-a-zA-Z0-9_/]+\Z',
+    _("Enter a valid token."),
+    'invalid'
+)
 
 
 def is_decimal(inp, precision=None, allow_sign=False):
@@ -117,26 +126,15 @@ def create_b64_token(size=None):
     if not size:
         from .constants.settings import INITIAL_NONCE_SIZE
         size = int(INITIAL_NONCE_SIZE)
-    if size > MAX_NONCE_SIZE:
+    if size > MAX_TOKEN_SIZE:
         logging.warning("Nonce too big")
-    if size % 3 != 0:
-        raise Exception("SPIDER_NONCE_SIZE must be multiple of 3")
     return base64.urlsafe_b64encode(
         os.urandom(size)
-    ).rstrip("=").decode('ascii')
+    ).decode('ascii').rstrip("=")
 
 
-def create_id_b64_token(size=None, idfield="id"):
-    if not size:
-        from .constants.settings import INITIAL_NONCE_SIZE
-        size = int(INITIAL_NONCE_SIZE)
-    if size > MAX_NONCE_SIZE:
-        logging.warning("Nonce too big")
-    if size % 3 != 0:
-        raise Exception("SPIDER_NONCE_SIZE must be multiple of 3")
-    return models.F(idfield) + "-" + base64.urlsafe_b64encode(
-        os.urandom(size)
-    ).rstrip("=").decode('ascii')
+def create_b64_id_token(id, size=None, sep="_"):
+    return sep.join((hex(id)[2:], create_b64_token(size)))
 
 
 _cleanstr = re.compile(r'<+.*>+')

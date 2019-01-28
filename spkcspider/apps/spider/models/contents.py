@@ -153,8 +153,7 @@ class LinkContent(BaseContent):
         elif kwargs["scope"] == "raw_update":
             return redirect(
                 'spider_base:ucontent-access',
-                id=self.content.id,
-                nonce=self.content.nonce,
+                token=self.content.token,
                 access='update'
             )
         elif kwargs["scope"] == "export":

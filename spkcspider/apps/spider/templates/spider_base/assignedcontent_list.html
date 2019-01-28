@@ -39,7 +39,7 @@
     </span>
     <span class="w3-right w3-left-align">
       {% if request.user == uc.user or request.is_staff %}
-        <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-update' name=uc.get_name nonce=uc.nonce %}">
+        <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-update' name=uc.get_name token=uc.token %}">
           <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Update' %}
         </a>
       {% endif %}
@@ -154,7 +154,7 @@
   <div class="w3-margin">
     <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="spkc:contents">
       {% for content in object_list %}
-        <tr resource="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}" typeof="spkc:Content">
+        <tr resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
           <td class="" style="width:40%; min-height:48px" rel="spkc:properties">
             <span>
               <span>{{ content.content|truncatechars:50 }}</span>
@@ -178,16 +178,16 @@
           <td class="w3-show-inline-block">
             <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a style="{% if request.is_special_user  %}width:33%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='view' %}?{{spider_GET.urlencode}}" property="spkc:action:view">
+              <a style="{% if request.is_special_user  %}width:33%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='view' %}?{{spider_GET.urlencode}}" property="spkc:action:view">
                 <div class="spkc-entity-button"><i class="fas fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "View" %}</div></div>
               </a>
               {% if request.is_special_user  %}
-              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' id=content.id nonce=content.nonce access='update' %}?{{spider_GET.urlencode}}" property="spkc:action:update">
+              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='update' %}?{{spider_GET.urlencode}}" property="spkc:action:update">
                 <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
               </a>
-              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name id=content.id  nonce=content.nonce %}" property="spkc:action:delete">
+              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-remove' user=content.usercomponent.username name=content.usercomponent.name token=content.token %}" property="spkc:action:delete">
                 <div class="spkc-entity-button"><i class="fas fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Del" %}</div></div>
               </a>
@@ -214,7 +214,7 @@
 
 {% block outercontent %}
 {% if request.is_owner %}
-{% url 'spider_base:ucontent-export' id=uc.id nonce=uc.nonce as exportlink %}
+{% url 'spider_base:ucontent-export' token=uc.token as exportlink %}
 {% with exportlink=exportlink|add:"?"|add:spider_GET.urlencode %}
 {% include "spider_base/modalpresenter.html" %}
 {% endwith %}

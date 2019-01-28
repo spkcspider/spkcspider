@@ -53,7 +53,7 @@ class FeaturesTest(TransactionWebTest):
             kwargs={
                 "name": "home",
                 "user": "testuser1",
-                "nonce": home.nonce
+                "token": home.token
             }
         )
         self.app.set_user(user="testuser1")
@@ -123,7 +123,7 @@ class FeaturesTest(TransactionWebTest):
             "spider_base:ucomponent-update",
             kwargs={
                 "name": "home",
-                "nonce": home.nonce
+                "token": home.token
             }
         )
         form = self.app.get(updateurl).forms["componentForm"]

@@ -12,6 +12,7 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.models import UserComponent
 from spkcspider.apps.spider.signals import update_dynamic
+from spkcspider.apps.spider.helpers import create_b64_token
 # Create your tests here.
 
 
@@ -37,8 +38,7 @@ class BasicComponentTest(TransactionTestCase):
         indexurl = reverse(
             "spider_base:ucontent-list",
             kwargs={
-                "nonce": index.nonce,
-                "id": index.id
+                "token": index.token,
             }
         )
         self.assertEqual(indexurl, index.get_absolute_url())
@@ -63,7 +63,7 @@ class BasicComponentTest(TransactionTestCase):
             "spider_base:ucomponent-update",
             kwargs={
                 "name": "index",
-                "nonce": index.nonce
+                "token": index.token
             }
         )
         response = self.client.get(updateurl)

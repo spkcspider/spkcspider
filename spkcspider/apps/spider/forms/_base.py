@@ -241,18 +241,18 @@ class UserComponentForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self._save_protections()
-
-    def save(self, commit=True):
         if self.cleaned_data["new_nonce"] != "":
-            if self.instance.id:
+            if self.instance.token:
                 print(
                     "Old nonce for Component id:", self.instance.id,
                     "is", self.instance.token
                 )
-            self.instance.create_b64_id_token = create_b64_id_token(
-                int(self.cleaned_data["new_nonce"])
+            self.instance.token = create_b64_id_token(
+                self.instance.id, int(self.cleaned_data["new_nonce"])
             )
+            self.instance.save(update_fields=["token"])
 
+    def save(self, commit=True):
         self.instance.strength = self.cleaned_data["strength"]
         self.instance.can_auth = self.cleaned_data["can_auth"]
         return super().save(commit=commit)
@@ -353,17 +353,18 @@ class UserContentForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self.update_anchor()
-
-    def save(self, commit=True):
         if self.cleaned_data.get("new_nonce", ""):
-            if self.instance.id:
+            if self.instance.token:
                 print(
                     "Old nonce for Content id:", self.instance.id,
                     "is", self.instance.token
                 )
             self.instance.token = create_b64_id_token(
-                int(self.cleaned_data["new_nonce"])
+                self.instance.id, int(self.cleaned_data["new_nonce"])
             )
+            self.instance.save(update_fields=["token"])
+
+    def save(self, commit=True):
         ret = super().save(commit=commit)
         if commit:
             self.update_anchor()

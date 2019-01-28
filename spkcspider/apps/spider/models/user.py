@@ -20,9 +20,9 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core import validators
 
-from ..helpers import create_b64_token, get_settings_func, create_id_b64_token
+from ..helpers import get_settings_func, validator_token, create_b64_id_token
 from ..constants import (
-    ProtectionType, VariantType, MAX_NONCE_SIZE, TokenCreationError,
+    ProtectionType, VariantType, MAX_TOKEN_B64_SIZE, TokenCreationError,
     default_uctoken_duration, force_captcha, index_names, hex_size_of_bigid
 )
 
@@ -81,34 +81,49 @@ class UserComponentManager(models.Manager):
         return defaults
 
     def create(self, **kwargs):
-        return self.get_queryset().create(
+        ret = self.get_queryset().create(
             **self._update_args(kwargs, None)
         )
+        if not ret.token:
+            ret.token = create_b64_id_token(ret.id)
+            ret.save(update_fields=["token"])
+        return ret
 
     def update_or_create(self, defaults=None, **kwargs):
-        return self.get_queryset().update_or_create(
+        ret = self.get_queryset().update_or_create(
             defaults=self._update_args(defaults, kwargs), **kwargs
         )
+        if not ret[0].token:
+            ret[0].token = create_b64_id_token(ret[0].id)
+            ret[0].save(update_fields=["token"])
+        return ret
 
     def get_or_create(self, defaults=None, **kwargs):
-        return self.get_queryset().get_or_create(
+        ret = self.get_queryset().get_or_create(
             defaults=self._update_args(defaults, kwargs), **kwargs
         )
+        if not ret[0].token:
+            ret[0].token = create_b64_id_token(ret[0].id)
+            ret[0].save(update_fields=["token"])
+        return ret
 
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection
     nonce = models.SlugField(
-        default=create_b64_token, max_length=MAX_NONCE_SIZE*4//3,
-        db_index=False
+        null=True, max_length=MAX_TOKEN_B64_SIZE,
+        db_index=False, blank=True
     )
     # brute force protection and identifier, replaces nonce
     #  16 = usercomponent.id in hexadecimal
     #  +1 for seperator
-    token = models.SlugField(
-        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid+1,
-        db_index=True, unique=True, default=create_id_b64_token
+    token = models.CharField(
+        max_length=(MAX_TOKEN_B64_SIZE)+hex_size_of_bigid+2,
+        db_index=True, unique=True, null=True, blank=True,
+        validators=[
+            validator_token
+        ]
     )
     public = models.BooleanField(
         default=False,
@@ -246,7 +261,7 @@ class UserComponent(models.Model):
         return reverse(
             "spider_base:ucontent-list",
             kwargs={
-                "id": self.id, "nonce": self.nonce
+                "token": self.token
             }
         )
 

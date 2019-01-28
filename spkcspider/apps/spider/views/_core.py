@@ -35,7 +35,7 @@ from ..models import UserComponent, AuthToken
 
 
 class UserTestMixin(AccessMixin):
-    no_nonce_usercomponent = False
+    no_token_usercomponent = False
     also_authenticated_users = False
     preserved_GET_parameters = set(["token", "protection"])
     login_url = reverse_lazy(getattr(
@@ -295,8 +295,8 @@ class UserTestMixin(AccessMixin):
             "name": ucname,
             "user": self.get_user()
         }
-        if not self.no_nonce_usercomponent:
-            query["nonce"] = self.kwargs["nonce"]
+        if not self.no_token_usercomponent:
+            query["token"] = self.kwargs["token"]
         return get_object_or_404(
             UserComponent.objects.prefetch_related(
                 "authtokens", "protections"

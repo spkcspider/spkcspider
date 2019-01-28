@@ -23,7 +23,9 @@ from rdflib import Literal, Graph, BNode, URIRef, XSD
 
 from .constants.static import VariantType, spkcgraph, ActionUrl
 from .serializing import paginate_stream, serialize_stream
-from .helpers import merge_get_url, get_settings_func, add_property
+from .helpers import (
+    merge_get_url, get_settings_func, add_property, create_b64_id_token
+)
 
 
 installed_contents = {}
@@ -300,8 +302,8 @@ class BaseContent(models.Model):
             kwargs["form"].media
         )
 
-    def get_absolute_url(self):
-        return self.associated.get_absolute_url()
+    def get_absolute_url(self, scope="view"):
+        return self.associated.get_absolute_url(scope)
 
     def get_references(self):
         return []
@@ -636,20 +638,25 @@ class BaseContent(models.Model):
                         assignedcontent.id
                     ), 1
                 )
+                # set token
+                if not assignedcontent.token:
+                    assignedcontent.token = create_b64_id_token(
+                        assignedcontent.id
+                    )
                 # second save required
-                assignedcontent.save(update_fields=["info"])
+                assignedcontent.save(update_fields=["info", "token"])
         # needs id first
         assignedcontent.references.set(self.get_references())
         # update fakes
-        fakes = self.associated_rel.filter(fake_id__isnull=False)
-        fakes.update(
-            info=assignedcontent.info,
-            strength=assignedcontent.strength,
-            strength_link=assignedcontent.strength_link,
-            nonce=assignedcontent.nonce
-        )
+        # fakes = self.associated_rel.filter(fake_id__isnull=False)
+        # fakes.update(
+        #     info=assignedcontent.info,
+        #     strength=assignedcontent.strength,
+        #     strength_link=assignedcontent.strength_link,
+        #     nonce=assignedcontent.nonce
+        # )
         # update references of fakes
-        for i in fakes:
-            i.references.set(assignedcontent.references)
+        # for i in fakes:
+        #     i.references.set(assignedcontent.references)
         # require cleaning again
         self._content_is_cleaned = False

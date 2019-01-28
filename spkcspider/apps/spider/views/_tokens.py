@@ -25,7 +25,7 @@ from ..constants.static import TokenCreationError
 
 
 class TokenDelete(UCTestMixin, DeleteView):
-    no_nonce_usercomponent = True
+    no_token_usercomponent = True
     also_authenticated_users = True
 
     def get_object(self):
@@ -82,7 +82,7 @@ class TokenDelete(UCTestMixin, DeleteView):
 
 
 class TokenDeletionRequest(UCTestMixin, DeleteView):
-    no_nonce_usercomponent = True
+    no_token_usercomponent = True
     also_authenticated_users = True
     model = AuthToken
     template_name = "spider_base/protections/authtoken_confirm_delete.html"

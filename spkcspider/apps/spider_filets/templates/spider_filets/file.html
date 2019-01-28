@@ -2,5 +2,5 @@
 <div class="w3-padding" typeof="spkc:Property">
   <data hidden="hidden" property="spkc:name">file</data>
   <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-  <a property="spkc:value" href="{% url 'spider_base:ucontent-access' id=associated.id nonce=associated.nonce access='download' %}?{{spider_GET.urlencode}}">{% trans "Download" %}</a>
+  <a property="spkc:value" href="{% url 'spider_base:ucontent-access' token=associated.token access='download' %}?{{spider_GET.urlencode}}">{% trans "Download" %}</a>
 </div>

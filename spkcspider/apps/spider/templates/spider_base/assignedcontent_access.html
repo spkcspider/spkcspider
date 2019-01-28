@@ -36,7 +36,7 @@
   <div class="w3-padding" style="height:120px">
     {% if request.is_special_user or uc.public %}
       {# index is redirected in view #}
-      <a class="w3-left" href="{% url 'spider_base:ucontent-list' id=uc.id nonce=uc.nonce %}?{{request.GET.urlencode}}">
+      <a class="w3-left" href="{% url 'spider_base:ucontent-list' token=uc.token %}?{{request.GET.urlencode}}">
         <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Index' %}
       </a>
     {% endif %}
@@ -44,17 +44,17 @@
       {% if scope != "add" and request.is_special_user %}
       <div class="actionbar_user w3-left-align" style="margin-bottom:5px">
         {% if scope != "view" %}
-          <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='view' %}?{{spider_GET.urlencode}}">
+          <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' token=object.token access='view' %}?{{spider_GET.urlencode}}">
             <i class="fas fa-eye" style="margin-right:10px" aria-hidden="true"></i>{% trans "View" %}
           </a>
         {% endif %}
         {% if scope != "update" %}
-          <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='update' %}?{{spider_GET.urlencode}}">
+          <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' token=object.token access='update' %}?{{spider_GET.urlencode}}">
             <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans "Update" %}
           </a>
         {% endif %}
         <div style="margin-bottom:5px">
-          <a rel="nofollow" href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name nonce=object.nonce id=object.id %}">
+          <a rel="nofollow" href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name token=object.token %}">
             <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
           </a>?
         </div>
@@ -138,7 +138,7 @@
 
 {% block outercontent %}
 {% if request.is_owner %}
-{% url 'spider_base:ucontent-access' id=object.id nonce=object.nonce access='export' as exportlink %}
+{% url 'spider_base:ucontent-access' token=object.token access='export' as exportlink %}
 {% endif %}
 {% if scope != "add" %}
   {# remotelink generated in view #}

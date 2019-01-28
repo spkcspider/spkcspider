@@ -67,7 +67,9 @@ class PublicKey(BaseContent):
         # PEM key
         split = self.key.split("\n")
         if len(split) > 1:
-            return (self.key, None)
+            return (self.associated.getlist(
+                "hash:%s" % settings.SPIDER_HASH_ALGORITHM, 1
+            )[0], None)
 
         # ssh key
         split = self.key.rsplit(" ", 1)
@@ -101,7 +103,7 @@ class PublicKey(BaseContent):
         kwargs["algo"] = settings.SPIDER_HASH_ALGORITHM
         kwargs["hash"] = self.associated.getlist(
             "hash:%s" % settings.SPIDER_HASH_ALGORITHM, 1
-        )[0].split("=", 1)[1]
+        )[0]
         return (
             render_to_string(
                 "spider_keys/key.html", request=kwargs["request"],

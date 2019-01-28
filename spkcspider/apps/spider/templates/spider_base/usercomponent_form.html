@@ -26,7 +26,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   <div class="w3-padding" style="height:120px">
     <span class="w3-left">
     {% if object %}
-      <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
+      <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-list' token=object.token %}">
         <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans "Contents" %}
       </a>
     {% endif %}
@@ -41,7 +41,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         </a>
         {% if not object.is_index %}
           <div style="margin-bottom:5px">
-            <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name nonce=object.nonce %}">
+            <a href="{% url 'spider_base:ucomponent-delete' user=object.user name=object.name token=object.token %}">
               <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
             </a>?
           </div>
@@ -154,7 +154,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       {% if form.instance.id %}{% trans "Change" %}{% else %}{% trans "Create" %}{% endif %}
     </button>
     {% if object %}
-      <a class="w3-right" href="{% url 'spider_base:ucontent-list' id=object.id nonce=object.nonce %}">
+      <a class="w3-right" href="{% url 'spider_base:ucontent-list' token=object.token %}">
         {% trans "Contents" %}
       </a>
     {% endif %}
@@ -163,7 +163,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block outercontent %}
 {% if object %}
-  {% url 'spider_base:ucontent-export' id=object.id nonce=object.nonce as exportlink %}
+  {% url 'spider_base:ucontent-export' token=object.token as exportlink %}
   {% include "spider_base/modalpresenter.html" %}
   <script>
     let allselector=document.getElementById("deleteAllSelector");

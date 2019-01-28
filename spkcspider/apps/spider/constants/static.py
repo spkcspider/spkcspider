@@ -1,7 +1,8 @@
 
 __all__ = (
     "ProtectionType", "VariantType", "ProtectionResult",
-    "TravelLoginType", "MAX_NONCE_SIZE", "hex_size_of_bigid",
+    "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
+    "hex_size_of_bigid",
     "TokenCreationError", "index_names", "protected_names", "spkcgraph",
     "dangerous_login_choices", "ActionUrl"
 )
@@ -17,10 +18,12 @@ spkcgraph = Namespace("https://spkcspider.net/static/schemes/spkcgraph#")
 
 hex_size_of_bigid = 16
 
-MAX_NONCE_SIZE = 90
+MAX_TOKEN_SIZE = 90
 
-if MAX_NONCE_SIZE % 3 != 0:
-    raise Exception("MAX_NONCE_SIZE must be multiple of 3")
+if MAX_TOKEN_SIZE % 3 != 0:
+    raise Exception("MAX_TOKEN_SIZE must be multiple of 3")
+
+MAX_TOKEN_B64_SIZE = MAX_TOKEN_SIZE*4//3
 
 
 class TokenCreationError(Exception):

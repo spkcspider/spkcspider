@@ -23,8 +23,10 @@ from ..contents import installed_contents
 from ..protections import installed_protections
 
 # from ..constants import VariantType
-from ..helpers import create_b64_token, create_id_b64_token
-from ..constants.static import MAX_NONCE_SIZE, VariantType, hex_size_of_bigid
+from ..helpers import validator_token
+from ..constants.static import (
+    MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid
+)
 
 from .base import BaseInfoModel
 
@@ -74,15 +76,18 @@ class AssignedContent(BaseInfoModel):
     )
     # brute force protection
     nonce = models.SlugField(
-        default=create_b64_token, max_length=MAX_NONCE_SIZE*4//3,
-        db_index=False
+        null=True, max_length=MAX_TOKEN_B64_SIZE,
+        db_index=False, blank=True
     )
     # brute force protection and identifier, replaces nonce
     #  16 = usercomponent.id in hexadecimal
     #  +1 for seperator
-    token = models.SlugField(
-        max_length=(MAX_NONCE_SIZE*4//3)+hex_size_of_bigid+1,
-        db_index=True, unique=True, default=create_id_b64_token
+    token = models.CharField(
+        max_length=(MAX_TOKEN_B64_SIZE)+hex_size_of_bigid+2,
+        db_index=True, unique=True, null=True, blank=True,
+        validators=[
+            validator_token
+        ]
     )
     # fix linter warning
     objects = models.Manager()
@@ -200,5 +205,5 @@ class AssignedContent(BaseInfoModel):
     def get_absolute_url(self, scope="view"):
         return reverse(
             "spider_base:ucontent-access",
-            kwargs={"id": self.id, "nonce": self.nonce, "access": scope}
+            kwargs={"token": self.token, "access": scope}
         )

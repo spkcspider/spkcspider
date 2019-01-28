@@ -32,8 +32,8 @@ class ContentBase(UCTestMixin):
     model = AssignedContent
     scope = None
     object = None
-    # use nonce of content object instead
-    no_nonce_usercomponent = True
+    # use token of content object instead
+    no_token_usercomponent = True
 
     def dispatch(self, request, *args, **kwargs):
         try:
@@ -171,7 +171,7 @@ class ContentBase(UCTestMixin):
 class ContentIndex(ReferrerMixin, ContentBase, ListView):
     model = AssignedContent
     scope = "list"
-    no_nonce_usercomponent = False
+    no_token_usercomponent = False
 
     def dispatch_extra(self, request, *args, **kwargs):
         # only owner can use referring feature
@@ -220,8 +220,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         context["remotelink"] = "{}{}?{}".format(
             context["hostpart"],
             reverse("spider_base:ucontent-list", kwargs={
-                "id": self.usercomponent.id,
-                "nonce": self.usercomponent.nonce
+                "token": self.usercomponent.token
             }),
             context["remotelink"].urlencode()
         )
@@ -493,8 +492,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             context["remotelink"] = "{}{}?{}".format(
                 context["hostpart"],
                 reverse("spider_base:ucontent-access", kwargs={
-                    "id": self.object.id,
-                    "nonce": self.object.nonce,
+                    "token": self.object.token,
                     "access": "view"
                 }),
                 context["remotelink"].urlencode()
@@ -545,12 +543,11 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         )
 
         if self.scope == "update":
-            # nonce changed => path has changed
-            if self.object.nonce != self.kwargs["nonce"]:
+            # token changed => path has changed
+            if self.object.token != self.kwargs["token"]:
                 return redirect(
                     'spider_base:ucontent-access',
-                    id=self.object.id,
-                    nonce=self.object.nonce, access="update"
+                    token=self.object.token, access="update"
                 )
 
             if context["form"].is_valid():
@@ -568,14 +565,9 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return super().render_to_response(context)
 
     def get_usercomponent(self):
-        q = models.Q(
-            contents__id=self.kwargs["id"],
-            contents__fake_id__isnull=True
-        ) | models.Q(contents__fake_id=self.kwargs["id"])
-        q &= models.Q(contents__nonce=self.kwargs["nonce"])
         return get_object_or_404(
             UserComponent.objects.prefetch_related("protections"),
-            q
+            contents__token=self.kwargs["token"]
         )
 
     def get_user(self):
@@ -586,11 +578,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         if not queryset:
             queryset = self.get_queryset()
 
-        q = models.Q(
-            id=self.kwargs["id"],
-            fake_id__isnull=True
-        ) | models.Q(fake_id=self.kwargs["id"])
-        q &= models.Q(nonce=self.kwargs["nonce"])
+        q = models.Q(token=self.kwargs["token"])
         return get_object_or_404(
             queryset.select_related(
                 "usercomponent", "usercomponent__user",
@@ -602,7 +590,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 class ContentRemove(EntityDeletionMixin, DeleteView):
     model = AssignedContent
     usercomponent = None
-    no_nonce_usercomponent = True
+    no_token_usercomponent = True
 
     def dispatch(self, request, *args, **kwargs):
         self.usercomponent = self.get_usercomponent()
@@ -616,8 +604,7 @@ class ContentRemove(EntityDeletionMixin, DeleteView):
     def get_success_url(self):
         return reverse(
             "spider_base:ucontent-list", kwargs={
-                "id": self.usercomponent.id,
-                "nonce":  self.usercomponent.nonce
+                "token": self.usercomponent.token,
             }
         )
 
@@ -626,5 +613,5 @@ class ContentRemove(EntityDeletionMixin, DeleteView):
             queryset = self.get_queryset()
         return get_object_or_404(
             queryset, usercomponent=self.usercomponent,
-            id=self.kwargs["id"], nonce=self.kwargs["nonce"]
+            token=self.kwargs["token"]
         )

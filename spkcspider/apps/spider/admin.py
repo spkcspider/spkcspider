@@ -9,7 +9,7 @@ from .models import (
 
 @admin.register(AssignedContent)
 class AssignedContentAdmin(admin.ModelAdmin):
-    fields = ['info', 'created', 'modified', 'deletion_requested', 'nonce']
+    fields = ['info', 'created', 'modified', 'deletion_requested', 'token']
     readonly_fields = [
         'info', 'created', 'modified'
     ]
@@ -68,13 +68,13 @@ class AssignedProtectionInline(admin.TabularInline):
 class ContentInline(admin.TabularInline):
     model = AssignedContent
     fields = [
-        'info', 'created', 'modified', 'deletion_requested', 'nonce'
+        'info', 'created', 'modified', 'deletion_requested', 'token'
     ]
     readonly_fields = [
         'info', 'created', 'modified'
     ]
     # until fixed:
-    readonly_fields += ['deletion_requested', 'nonce']
+    readonly_fields += ['deletion_requested', 'token']
     show_change_link = True
     extra = 0
     # content is not visible
@@ -116,7 +116,7 @@ class UserComponentAdmin(admin.ModelAdmin):
     actions = ["feature", "unfeature"]
     fields = [
         'user', 'name', 'created', 'modified', 'description', 'features',
-        'featured', 'public', 'strength', 'nonce', 'required_passes',
+        'featured', 'public', 'strength', 'token', 'required_passes',
         'deletion_requested', 'token_duration'
     ]
     readonly_fields = ['created', 'modified', 'featured', 'strength']

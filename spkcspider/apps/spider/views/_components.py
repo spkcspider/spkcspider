@@ -241,7 +241,7 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
     model = UserComponent
     source_strength = 10
     also_authenticated_users = True
-    no_nonce_usercomponent = True
+    no_token_usercomponent = True
 
     user = None
 
@@ -304,13 +304,13 @@ class ComponentCreate(UserTestMixin, CreateView):
     model = UserComponent
     form_class = UserComponentForm
     also_authenticated_users = True
-    no_nonce_usercomponent = True
+    no_token_usercomponent = True
 
     def get_success_url(self):
         return reverse(
             "spider_base:ucomponent-update", kwargs={
                 "name": self.object.name,
-                "nonce": self.object.nonce
+                "token": self.object.token
             }
         )
 
@@ -375,8 +375,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         context["remotelink"] = "{}{}?{}".format(
             context["hostpart"],
             reverse("spider_base:ucontent-list", kwargs={
-                "id": self.usercomponent.id,
-                "nonce": self.usercomponent.nonce
+                "token": self.usercomponent.token
             }),
             context["remotelink"].urlencode()
         )
@@ -392,7 +391,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
                 "protections",
             ),
             user=self.get_user(), name=self.kwargs["name"],
-            nonce=self.kwargs["nonce"]
+            token=self.kwargs["token"]
         )
 
     def get_form_kwargs(self):
@@ -418,13 +417,13 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             persist=persist
         )
         if (
-            self.kwargs["nonce"] != self.object.nonce or
+            self.kwargs["token"] != self.object.token or
             self.kwargs["name"] != self.object.name
         ):
             return redirect(
                 "spider_base:ucomponent-update",
                 name=self.object.name,
-                nonce=self.object.nonce
+                token=self.object.token
             )
         return self.render_to_response(
             self.get_context_data(
@@ -466,5 +465,5 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
             queryset = self.get_queryset()
         return get_object_or_404(
             queryset, user=self.user, name=self.kwargs["name"],
-            nonce=self.kwargs["nonce"]
+            token=self.kwargs["token"]
         )

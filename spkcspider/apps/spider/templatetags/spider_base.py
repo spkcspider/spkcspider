@@ -29,7 +29,7 @@ def update_component(context, name):
         # use index here to disguise that it is something else
         return reverse("spider_base:ucomponent-update", kwargs={
             "name": name,
-            "nonce": index.nonce
+            "token": index.token
         })
     return ""
 
