@@ -309,6 +309,7 @@ class ComponentCreate(UserTestMixin, CreateView):
     def get_success_url(self):
         return reverse(
             "spider_base:ucomponent-update", kwargs={
+                "user": self.object.username,
                 "name": self.object.name,
                 "token": self.object.token
             }

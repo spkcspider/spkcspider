@@ -123,7 +123,8 @@ class FeaturesTest(TransactionWebTest):
             "spider_base:ucomponent-update",
             kwargs={
                 "name": "home",
-                "token": home.token
+                "token": home.token,
+                "user": home.username
             }
         )
         form = self.app.get(updateurl).forms["componentForm"]

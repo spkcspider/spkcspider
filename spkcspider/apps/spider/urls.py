@@ -53,11 +53,6 @@ urlpatterns = [
         name='ucomponent-update'
     ),
     path(
-        'ucs/update/<str:name>/<path:token>/',
-        login_required(ComponentUpdate.as_view()),
-        name='ucomponent-update'
-    ),
-    path(
         'ucs/delete/<slug:user>/<str:name>/<path:token>/',
         login_required(ComponentDelete.as_view()),
         name='ucomponent-delete'
