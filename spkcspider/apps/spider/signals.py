@@ -58,14 +58,6 @@ def CleanupCallback(sender, instance, **kwargs):
             instance.content.delete(False)
 
 
-def CreateToken(sender, instance, raw=False, **kwargs):
-    if raw:
-        return
-    if not instance.token:
-        instance.token = create_b64_id_token(instance.id)
-        instance.save(update_fields=["token"])
-
-
 def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
     if raw:
         return

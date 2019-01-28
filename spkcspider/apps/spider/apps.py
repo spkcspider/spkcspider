@@ -12,7 +12,6 @@ from .signals import (
     UpdateSpiderCallback, InitUserCallback, UpdateAnchorContent,
     UpdateAnchorComponent, update_dynamic, TriggerUpdate, RemoveTokensLogout,
     CleanupCallback, MovePersistentCallback, move_persistent
-    # , CreateToken
 )
 
 
@@ -46,14 +45,6 @@ class SpiderBaseConfig(AppConfig):
             UpdateAnchorContent, sender=AssignedContent,
             dispatch_uid="spider_update_anchors_content"
         )
-        # post_save.connect(
-        #     CreateToken, sender=AssignedContent,
-        #     dispatch_uid="spider_create_token_content"
-        # )
-        # post_save.connect(
-        #     CreateToken, sender=UserComponent,
-        #     dispatch_uid="spider_create_token_component"
-        # )
         move_persistent.connect(
             MovePersistentCallback, sender=AuthToken,
             dispatch_uid="spider_move_persistent"
