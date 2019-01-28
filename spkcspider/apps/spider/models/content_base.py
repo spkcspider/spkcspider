@@ -98,11 +98,6 @@ class AssignedContent(BaseInfoModel):
         "spider_base.AuthToken", blank=True, null=True,
         limit_choices_to={"persist__gte": 0}, on_delete=models.CASCADE
     )
-    # brute force protection
-    nonce = models.SlugField(
-        null=True, max_length=MAX_TOKEN_B64_SIZE,
-        db_index=False, blank=True
-    )
     # brute force protection and identifier, replaces nonce
     #  16 = usercomponent.id in hexadecimal
     #  +1 for seperator

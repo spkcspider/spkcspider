@@ -110,11 +110,6 @@ class UserComponentManager(models.Manager):
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
-    # brute force protection
-    nonce = models.SlugField(
-        null=True, max_length=MAX_TOKEN_B64_SIZE,
-        db_index=False, blank=True
-    )
     # brute force protection and identifier, replaces nonce
     #  16 = usercomponent.id in hexadecimal
     #  +1 for seperator
