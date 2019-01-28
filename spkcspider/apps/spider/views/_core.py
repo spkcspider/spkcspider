@@ -35,7 +35,6 @@ from ..models import UserComponent, AuthToken
 
 
 class UserTestMixin(AccessMixin):
-    no_token_usercomponent = False
     also_authenticated_users = False
     preserved_GET_parameters = set(["token", "protection"])
     login_url = reverse_lazy(getattr(
@@ -270,7 +269,6 @@ class UserTestMixin(AccessMixin):
     def get_user(self):
         """ Get user from user field or request """
         if (
-                self.also_authenticated_users and
                 "user" not in self.kwargs and
                 self.request.user.is_authenticated
            ):
@@ -292,11 +290,8 @@ class UserTestMixin(AccessMixin):
             else:
                 ucname = "index"
         query = {
-            "name": ucname,
-            "user": self.get_user()
+            "token": self.kwargs["token"]
         }
-        if not self.no_token_usercomponent:
-            query["token"] = self.kwargs["token"]
         return get_object_or_404(
             UserComponent.objects.prefetch_related(
                 "authtokens", "protections"

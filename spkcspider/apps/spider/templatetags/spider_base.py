@@ -23,14 +23,11 @@ def update_component(context, name):
     if ucname == "index" and context["request"].session.get("is_fake", False):
         ucname = "fake_index"
     if context["request"].user.is_authenticated:
-        index = context["request"].user.usercomponent_set.get(
+        uc = context["request"].user.usercomponent_set.only("token").get(
             name=ucname
         )
-        # use index here to disguise that it is something else
         return reverse("spider_base:ucomponent-update", kwargs={
-            "user": index.username,
-            "name": name,
-            "token": index.token
+            "token": uc.token
         })
     return ""
 

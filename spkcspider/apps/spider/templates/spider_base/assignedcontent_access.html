@@ -54,7 +54,7 @@
           </a>
         {% endif %}
         <div style="margin-bottom:5px">
-          <a rel="nofollow" href="{% url 'spider_base:ucontent-remove' user=uc.username name=uc.name token=object.token %}">
+          <a rel="nofollow" href="{% url 'spider_base:ucontent-remove' token=object.token %}">
             <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
           </a>?
         </div>

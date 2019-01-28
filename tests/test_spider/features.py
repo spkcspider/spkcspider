@@ -51,8 +51,6 @@ class FeaturesTest(TransactionWebTest):
         updateurl = reverse(
             "spider_base:ucomponent-update",
             kwargs={
-                "name": "home",
-                "user": "testuser1",
                 "token": home.token
             }
         )
@@ -122,9 +120,7 @@ class FeaturesTest(TransactionWebTest):
         updateurl = reverse(
             "spider_base:ucomponent-update",
             kwargs={
-                "name": "home",
-                "token": home.token,
-                "user": home.username
+                "token": home.token
             }
         )
         form = self.app.get(updateurl).forms["componentForm"]

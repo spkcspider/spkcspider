@@ -315,15 +315,6 @@ class ComponentCreate(UserTestMixin, CreateView):
             }
         )
 
-    def get_usercomponent(self):
-        query = {}
-        if self.request.session.get("is_fake", False):
-            query["name"] = "fake_index"
-        else:
-            query["name"] = "index"
-        query["user"] = self.get_user()
-        return get_object_or_404(UserComponent, **query)
-
     def get_form_kwargs(self):
         ret = super().get_form_kwargs()
         ret["instance"] = self.model(user=self.get_user())
@@ -391,7 +382,6 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             queryset.prefetch_related(
                 "protections",
             ),
-            user=self.get_user(), name=self.kwargs["name"],
             token=self.kwargs["token"]
         )
 
@@ -417,10 +407,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         self.object.authtokens.filter(persist__gte=0).update(
             persist=persist
         )
-        if (
-            self.kwargs["token"] != self.object.token or
-            self.kwargs["name"] != self.object.name
-        ):
+        if self.kwargs["token"] != self.object.token:
             return redirect(
                 "spider_base:ucomponent-update",
                 name=self.object.name,
@@ -439,9 +426,9 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
     object = None
 
     def dispatch(self, request, *args, **kwargs):
-        self.user = self.get_user()
         self.object = self.get_object()
         self.usercomponent = self.object
+        self.user = self.get_user()
         return super().dispatch(request, *args, **kwargs)
 
     def get_success_url(self):
@@ -461,10 +448,12 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
             return self.handle_no_permission()
         super().delete(request, *args, **kwargs)
 
+    def get_usercomponent(self):
+        return self.object
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(
-            queryset, user=self.user, name=self.kwargs["name"],
-            token=self.kwargs["token"]
+            queryset, token=self.kwargs["token"]
         )

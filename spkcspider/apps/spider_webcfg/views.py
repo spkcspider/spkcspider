@@ -49,9 +49,6 @@ class WebConfigView(UCTestMixin, View):
         usercomponent = self.request.auth_token.usercomponent
         return usercomponent
 
-    def get_user(self):
-        return self.usercomponent.user
-
     def test_func(self):
         return True
 
@@ -138,9 +135,6 @@ class WebReferenceView(UCTestMixin, View):
                 token=token,
             )
         return self.request.auth_token.usercomponent
-
-    def get_user(self):
-        return self.usercomponent.user
 
     def test_func(self):
         return True

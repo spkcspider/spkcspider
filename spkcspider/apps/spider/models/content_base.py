@@ -23,7 +23,7 @@ from ..contents import installed_contents
 from ..protections import installed_protections
 
 # from ..constants import VariantType
-from ..helpers import validator_token
+from ..helpers import validator_token, create_b64_id_token
 from ..constants.static import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid
 )
@@ -67,6 +67,30 @@ class ContentVariant(models.Model):
         return "<ContentVariant: %s>" % self.__str__()
 
 
+class UserContentManager(models.Manager):
+
+    def create(self, **kwargs):
+        ret = self.get_queryset().create(**kwargs)
+        if not ret.token:
+            ret.token = create_b64_id_token(ret.id, "/")
+            ret.save(update_fields=["token"])
+        return ret
+
+    def update_or_create(self, **kwargs):
+        ret = self.get_queryset().update_or_create(**kwargs)
+        if not ret[0].token:
+            ret[0].token = create_b64_id_token(ret[0].id, "/")
+            ret[0].save(update_fields=["token"])
+        return ret
+
+    def get_or_create(self, defaults=None, **kwargs):
+        ret = self.get_queryset().get_or_create(**kwargs)
+        if not ret[0].token:
+            ret[0].token = create_b64_id_token(ret[0].id, "/")
+            ret[0].save(update_fields=["token"])
+        return ret
+
+
 class AssignedContent(BaseInfoModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     fake_id = models.BigIntegerField(editable=False, null=True)
@@ -89,8 +113,7 @@ class AssignedContent(BaseInfoModel):
             validator_token
         ]
     )
-    # fix linter warning
-    objects = models.Manager()
+    objects = UserContentManager()
     usercomponent = models.ForeignKey(
         "spider_base.UserComponent", on_delete=models.CASCADE,
         related_name="contents", null=False, blank=False

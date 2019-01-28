@@ -8,7 +8,7 @@
 <div>
   <div class="w3-padding">
     {# index is redirected in view #}
-    <a class="w3-left" href="{% url 'spider_base:ucomponent-update' user=uc.username name=object.name token=object.token %}">{% trans 'Back' %}</a>
+    <a class="w3-left" href="{% url 'spider_base:ucomponent-update' token=object.token %}">{% trans 'Back' %}</a>
     <h1 class="w3-center">
       {% blocktrans trimmed %}
         Delete User Component:

@@ -61,8 +61,6 @@ class BasicComponentTest(TransactionTestCase):
         updateurl = reverse(
             "spider_base:ucomponent-update",
             kwargs={
-                "user": self.user,
-                "name": "index",
                 "token": index.token
             }
         )
@@ -139,6 +137,7 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(private.strength, 9)
 
     def test_contents(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
         public = self.user.usercomponent_set.filter(name="public").first()
@@ -149,7 +148,7 @@ class AdvancedComponentTest(TransactionWebTest):
         createurl = reverse(
             "spider_base:ucontent-add",
             kwargs={
-                "name": "home",
+                "token": home.token,
                 "type": "AnchorServer"
             }
         )
@@ -161,7 +160,7 @@ class AdvancedComponentTest(TransactionWebTest):
         createurl = reverse(
             "spider_base:ucontent-add",
             kwargs={
-                "name": "public",
+                "token": public.token,
                 "type": "AnchorServer"
             }
         )
@@ -173,7 +172,7 @@ class AdvancedComponentTest(TransactionWebTest):
         createurl = reverse(
             "spider_base:ucontent-add",
             kwargs={
-                "name": "public",
+                "token": public.token,
                 "type": "TravelProtection"
             }
         )
@@ -183,7 +182,7 @@ class AdvancedComponentTest(TransactionWebTest):
         createurlindex = reverse(
             "spider_base:ucontent-add",
             kwargs={
-                "name": "index",
+                "token": index.token,
                 "type": "Text"
             }
         )

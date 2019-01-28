@@ -395,6 +395,12 @@ class ContentAdd(ContentBase, CreateView):
             })
         return UserContentForm(**form_kwargs)
 
+    def get_usercomponent(self):
+        return get_object_or_404(
+            UserComponent.objects.prefetch_related("protections"),
+            token=self.kwargs["token"]
+        )
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
@@ -570,9 +576,6 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             contents__token=self.kwargs["token"]
         )
 
-    def get_user(self):
-        return self.usercomponent.user
-
     def get_object(self, queryset=None):
         # can bypass idlist and searchlist with own queryset arg
         if not queryset:
@@ -590,11 +593,10 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 class ContentRemove(EntityDeletionMixin, DeleteView):
     model = AssignedContent
     usercomponent = None
-    no_token_usercomponent = True
 
     def dispatch(self, request, *args, **kwargs):
-        self.usercomponent = self.get_usercomponent()
         self.object = self.get_object()
+        self.usercomponent = self.get_usercomponent()
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -608,10 +610,12 @@ class ContentRemove(EntityDeletionMixin, DeleteView):
             }
         )
 
+    def get_usercomponent(self):
+        return self.object.usercomponent
+
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
         return get_object_or_404(
-            queryset, usercomponent=self.usercomponent,
-            token=self.kwargs["token"]
+            queryset, token=self.kwargs["token"]
         )

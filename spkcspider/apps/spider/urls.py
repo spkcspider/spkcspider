@@ -28,6 +28,11 @@ urlpatterns = [
         name='ucomponent-export'
     ),
     path(
+        'ucs/user/export/',
+        login_required(ComponentIndex.as_view(scope="export")),
+        name='ucomponent-export'
+    ),
+    path(
         'ucs/user/<slug:user>/',
         login_required(ComponentIndex.as_view()),
         name='ucomponent-list'
@@ -48,17 +53,17 @@ urlpatterns = [
         name='ucomponent-create'
     ),
     path(
-        'ucs/update/<slug:user>/<str:name>/<path:token>/',
+        'ucs/update/<path:token>/',
         login_required(ComponentUpdate.as_view()),
         name='ucomponent-update'
     ),
     path(
-        'ucs/delete/<slug:user>/<str:name>/<path:token>/',
+        'ucs/delete/<path:token>/',
         login_required(ComponentDelete.as_view()),
         name='ucomponent-delete'
     ),
     path(
-        'token/delete/<str:user>/<str:name>/',
+        'token/delete/<path:token>/',
         login_required(TokenDelete.as_view()),
         name='token-delete'
     ),
@@ -84,12 +89,7 @@ urlpatterns = [
         name='ucontent-export'
     ),
     path(
-        'ucs/add/<str:user>/<str:name>/<slug:type>/',
-        ContentAdd.as_view(),
-        name='ucontent-add'
-    ),
-    path(
-        'ucs/add/<str:name>/<slug:type>/',
+        'ucs/add/<path:token>/<slug:type>/',
         ContentAdd.as_view(),
         name='ucontent-add'
     ),
@@ -99,7 +99,7 @@ urlpatterns = [
         name='ucontent-access'
     ),
     path(
-        'content/remove/<slug:user>/<str:name>/<path:token>/',
+        'content/remove/<path:token>/',
         ContentRemove.as_view(),
         name='ucontent-remove'
     ),
