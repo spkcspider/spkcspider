@@ -218,6 +218,7 @@ SERIALIZED_MAX_DEPTH = 5
 # how many search parameters are allowed
 MAX_SEARCH_PARAMETERS = 30
 
+# disable when importing backup
 # ease deploy
 UPDATE_DYNAMIC_AFTER_MIGRATION = True
 

@@ -86,6 +86,12 @@ Possibilities how to add utf8 charset to mysql:
 \_\_old crashes object creation:
 downgrade sqlite3 to 3.25 or upgrade django to 2.1.5/2.0.10
 
+importing data:
+
+set:
+UPDATE_DYNAMIC_AFTER_MIGRATION = False
+before importing data (with loaddata), update dynamic creates data
+
 
 # API
 
@@ -191,6 +197,7 @@ Otherwise security could be compromised.
 * create client side script for import (pushing to server, index token for auth?)
 * encrypted files/text
 * email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
+  * delta chat integration
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
