@@ -5,6 +5,8 @@ from django_webtest import TransactionWebTest
 from django.test import Client
 from django.db.utils import IntegrityError
 from django.urls import reverse
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 
 from rdflib import Graph
 
@@ -135,9 +137,121 @@ class AdvancedComponentTest(TransactionWebTest):
             required_passes=1
         )
         self.assertEqual(private.strength, 9)
+        # try to create
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": private.token,
+                "type": "AnchorServer"
+            }
+        )
+        listurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": private.token,
+                "type": "AnchorServer"
+            }
+        )
+        self.app.set_user("testuser1")
+        with self.subTest("test access own resources"):
+            response = self.app.get(listurl)
+            self.assertEqual(response.status_code, 200)
+            response = self.app.get(createurl)
+            self.assertEqual(response.status_code, 200)
+
+        # check that other non admins have no access
+        self.app.set_user("testuser2")
+        with self.subTest("test access foreign resources"):
+            response = self.app.get(listurl, expect_errors=True, status=403)
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get(createurl, expect_errors=True, status=403)
+            self.assertEqual(response.status_code, 403)
+
+        SpiderUser.objects.filter(
+            username="testuser2"
+        ).update(is_staff=True)
+        # still require permission
+        with self.subTest("test access foreign resources as staff"):
+            response = self.app.get(listurl, expect_errors=True, status=403)
+            self.assertEqual(response.status_code, 403)
+            response = self.app.get(createurl, expect_errors=True, status=403)
+            self.assertEqual(response.status_code, 403)
+
+        user2 = SpiderUser.objects.filter(
+            username="testuser2"
+        ).first()
+
+        content_type = ContentType.objects.get_for_model(UserComponent)
+        permission = Permission.objects.get(
+            codename='view_usercomponent',
+            content_type=content_type,
+        )
+        user2.user_permissions.add(permission)
+        with self.subTest("test access foreign resources with permission"):
+            self.assertTrue(user2.has_perm('spider_base.view_usercomponent'))
+            # has permission now
+            # response = self.app.get(listurl)
+            # self.assertEqual(response.status_code, 200)
+            response = self.app.get(createurl, expect_errors=True, status=403)
+            self.assertEqual(response.status_code, 403)
+
+        # check superuser
+        self.user.is_superuser = True
+        self.user.save()
+
+        private = user2.usercomponent_set.create(
+            name="privat",
+            required_passes=1
+        )
+        self.assertEqual(private.strength, 9)
+        # try to create
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": private.token,
+                "type": "AnchorServer"
+            }
+        )
+        listurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": private.token,
+                "type": "AnchorServer"
+            }
+        )
+        self.app.set_user("testuser1")
+
+        with self.subTest("test access foreign resources as superuser"):
+            response = self.app.get(listurl)
+            self.assertEqual(response.status_code, 200)
+            response = self.app.get(createurl, expect_errors=True, status=403)
+            self.assertEqual(response.status_code, 403)
+
+    def test_token(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        self.assertTrue(home)
+        updateurl = reverse(
+            "spider_base:ucomponent-update",
+            kwargs={
+                "token": home.token,
+            }
+        )
+        self.app.set_user("testuser1")
+        form = self.app.get(updateurl).forms["deleteForm"]
+        response = form.submit()
+        self.assertEqual(response.status_code, 200)
+
+        self.app.set_user("testuser2")
+        response = self.app.get(updateurl, expect_errors=True, status=403)
+        self.assertEqual(response.status_code, 403)
+        response = form.submit().maybe_follow()
+        self.assertEqual(response.status_code, 403)
+
+        # TODO check deletion
 
     def test_contents(self):
         index = self.user.usercomponent_set.filter(name="index").first()
+        self.assertTrue(index)
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
         public = self.user.usercomponent_set.filter(name="public").first()
