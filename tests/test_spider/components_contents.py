@@ -196,8 +196,9 @@ class AdvancedComponentTest(TransactionWebTest):
             self.assertEqual(response.status_code, 403)
 
         # check superuser
-        self.user.is_superuser = True
-        self.user.save()
+        SpiderUser.objects.filter(
+            username="testuser1"
+        ).update(is_superuser=True)
 
         private = user2.usercomponent_set.create(
             name="privat",
@@ -213,10 +214,9 @@ class AdvancedComponentTest(TransactionWebTest):
             }
         )
         listurl = reverse(
-            "spider_base:ucontent-add",
+            "spider_base:ucontent-list",
             kwargs={
-                "token": private.token,
-                "type": "AnchorServer"
+                "token": private.token
             }
         )
         self.app.set_user("testuser1")
@@ -244,7 +244,7 @@ class AdvancedComponentTest(TransactionWebTest):
         self.app.set_user("testuser2")
         response = self.app.get(updateurl, expect_errors=True, status=403)
         self.assertEqual(response.status_code, 403)
-        response = form.submit().maybe_follow()
+        response = form.submit(expect_errors=True, status=403).maybe_follow()
         self.assertEqual(response.status_code, 403)
 
         # TODO check deletion
