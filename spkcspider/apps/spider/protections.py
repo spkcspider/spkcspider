@@ -15,6 +15,7 @@ from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
+from django.views.decorators.debug import sensitive_variables
 
 from .helpers import add_by_field
 from django.utils.crypto import constant_time_compare
@@ -283,6 +284,7 @@ class LoginProtection(BaseProtection):
         return (3, 4 if self.cleaned_data.get("allow_auth", False) else 3)
 
     @classmethod
+    @sensitive_variables("password")
     def auth(cls, request, obj, **kwargs):
         if not obj:
             return cls.auth_form()
@@ -376,6 +378,7 @@ class PasswordProtection(BaseProtection):
         return ret
 
     @classmethod
+    @sensitive_variables("password", "pw")
     def auth(cls, request, obj, **kwargs):
         retfalse = cls.auth_form()
         if not obj:

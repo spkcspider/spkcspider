@@ -281,7 +281,7 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         # doesn't matter if it is same user, lazy
         travel = TravelProtection.objects.get_active()
         # remove all travel protected components if not admin
-        if self.request.is_owner:
+        if not self.request.is_staff:
             q &= ~models.Q(
                 travel_protected__in=travel
             )
@@ -289,7 +289,9 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
             q &= ~models.Q(name="index")
         else:
             q &= ~models.Q(name="fake_index")
-        return query.filter(q)
+        return query.filter(
+            q, user=self.user
+        )
 
     def get_usercomponent(self):
         ucname = "index"
