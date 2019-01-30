@@ -358,12 +358,16 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         context["content_variants"] = \
             self.usercomponent.user_info.allowed_content.exclude(
                 ctype__contains=VariantType.feature.value
+            ).exclude(
+                ctype__contains=VariantType.unlisted.value
             )
         context["content_variants_used"] = \
             self.usercomponent.user_info.allowed_content.filter(
                 assignedcontent__usercomponent=self.usercomponent
             ).exclude(
                 ctype__contains=VariantType.feature.value
+            ).exclude(
+                ctype__contains=VariantType.unlisted.value
             )
         context["remotelink"] = context["spider_GET"].copy()
         context["remotelink"] = "{}{}?{}".format(

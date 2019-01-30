@@ -49,17 +49,32 @@ class PublicKey(BaseContent):
 
     key = models.TextField(editable=True, validators=[valid_pkey_properties])
     note = models.TextField(max_length=100, default="", null=False, blank=True)
+    use_for_encryption = models.BooleanField(
+        blank=True, default=True,
+        help_text=_("Use for encryption not for signing.")
+    )
 
     @classmethod
     def localize_name(cls, name):
         return pgettext("content name", "Public Key")
+
+    def clean(self):
+        if self._associated_tmp:
+            self._associated_tmp.content = self
+        if self.anchorkey and self.use_for_encryption:
+            raise ValidationError(
+                _('Cannot use PublicKey for Signing and Encryption'),
+                code="encryption_and_signing"
+            )
+        super().clean()
 
     def get_info(self):
         ret = super().get_info()
         key = self.get_key_name()[0]
         h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
         h.update(key.encode("ascii", "ignore"))
-        return "%shash:%s=%s\n" % (
+        # don't put use_for_encryption state here; this would break unique
+        return "%shash:%s=%s\n%s" % (
             ret, settings.SPIDER_HASH_ALGORITHM, h.hexdigest()
         )
 
@@ -177,9 +192,11 @@ class AnchorServer(BaseContent):
 class AnchorKey(AnchorServer):
     """ domain name of pc, signed """
 
-    key = models.ForeignKey(
-        PublicKey, on_delete=models.CASCADE, related_name="+",
-        help_text=_help_text_key
+    key = models.OneToOneField(
+        PublicKey, on_delete=models.CASCADE, related_name="anchorkey",
+        help_text=_help_text_key, limit_choices_to={
+            "use_for_encryption": False
+        }
     )
 
     signature = models.CharField(

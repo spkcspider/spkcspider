@@ -317,7 +317,7 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(location, url)
         form = response.forms[0]
         self.assertEqual(form["text"].value, "foobar")
-        form['content_control-new_nonce'] = "12"
+        form['content_control-new_static_token'] = "12"
         form['text'] = "foobart"
         form['name'] = "hubert"
         response = form.submit().follow()

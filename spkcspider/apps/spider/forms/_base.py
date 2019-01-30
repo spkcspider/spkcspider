@@ -14,21 +14,22 @@ from ..models import (
 )
 from ..helpers import create_b64_id_token
 from ..constants import (
-    ProtectionType, VariantType, NONCE_CHOICES, INITIAL_NONCE_SIZE,
+    ProtectionType, VariantType, STATIC_TOKEN_CHOICES,
+    INITIAL_STATIC_TOKEN_SIZE,
     index_names, protected_names
 )
 from ..signals import move_persistent
 
-_help_text_nonce = _("""Generate a new nonce token with variable strength<br/>
-Nonces protect against bruteforce and attackers<br/>
-If you have problems with attackers (because they know the nonce),
+_help_text_static_token = _("""Generate a new static token with variable strength<br/>
+Tokens protect against bruteforce and attackers<br/>
+If you have problems with attackers (because they know the token),
 you can invalidate it with this option and/or add protections<br/>
 <table style="color:red;">
 <tr>
 <td>Warning:</td><td>this removes also access for all services you gave the link<td/>
 </tr>
 <tr>
-<td style="vertical-align: top">Warning:</td><td>public user components disclose nonce, regenerate after removing
+<td style="vertical-align: top">Warning:</td><td>public user components disclose static token, regenerate after removing
 public attribute from component for restoring protection</td>
 </tr>
 </table>
@@ -42,9 +43,9 @@ Note: persistent Features (=features which use a persistent token) require and e
 
 class UserComponentForm(forms.ModelForm):
     protections = None
-    new_nonce = forms.ChoiceField(
-        label=_("New Nonce"), help_text=_help_text_nonce,
-        required=False, initial="", choices=NONCE_CHOICES
+    new_static_token = forms.ChoiceField(
+        label=_("New static token"), help_text=_help_text_static_token,
+        required=False, initial="", choices=STATIC_TOKEN_CHOICES
     )
 
     class Meta:
@@ -71,9 +72,9 @@ class UserComponentForm(forms.ModelForm):
             *args, data=data, files=files, auto_id=auto_id,
             prefix=prefix, **kwargs
         )
-        self.fields["new_nonce"].choices = map(
+        self.fields["new_static_token"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),
-            self.fields["new_nonce"].choices
+            self.fields["new_static_token"].choices
         )
         if not (
             request.user.is_superuser or
@@ -116,9 +117,9 @@ class UserComponentForm(forms.ModelForm):
             self.protections = list(self.protections)
         else:
             self.fields.pop("primary_anchor", None)
-            self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
-            self.fields["new_nonce"].choices = \
-                self.fields["new_nonce"].choices[1:]
+            self.fields["new_static_token"].initial = INITIAL_STATIC_TOKEN_SIZE
+            self.fields["new_static_token"].choices = \
+                self.fields["new_static_token"].choices[1:]
             self.protections = []
             self.fields["required_passes"].initial = 1
 
@@ -241,14 +242,15 @@ class UserComponentForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self._save_protections()
-        if self.cleaned_data["new_nonce"] != "":
+        if self.cleaned_data["new_static_token"] != "":
             if self.instance.token:
                 print(
                     "Old nonce for Component id:", self.instance.id,
                     "is", self.instance.token
                 )
             self.instance.token = create_b64_id_token(
-                self.instance.id, "/", int(self.cleaned_data["new_nonce"])
+                self.instance.id, "/",
+                int(self.cleaned_data["new_static_token"])
             )
             self.instance.save(update_fields=["token"])
 
@@ -260,9 +262,9 @@ class UserComponentForm(forms.ModelForm):
 
 class UserContentForm(forms.ModelForm):
     prefix = "content_control"
-    new_nonce = forms.ChoiceField(
-        label=_("New Nonce"), help_text=_help_text_nonce,
-        required=False, initial="", choices=NONCE_CHOICES
+    new_static_token = forms.ChoiceField(
+        label=_("New static token"), help_text=_help_text_static_token,
+        required=False, initial="", choices=STATIC_TOKEN_CHOICES
     )
     migrate_primary_anchor = forms.BooleanField(
         label=_("Migrate primary anchor"),
@@ -289,9 +291,9 @@ class UserContentForm(forms.ModelForm):
     def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["new_nonce"].choices = map(
+        self.fields["new_static_token"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),
-            self.fields["new_nonce"].choices
+            self.fields["new_static_token"].choices
         )
         user = self.instance.usercomponent.user
 
@@ -311,9 +313,9 @@ class UserContentForm(forms.ModelForm):
                 # can only migrate if a) created, b) real user
                 show_primary_anchor_mig = True
         else:
-            self.fields["new_nonce"].initial = INITIAL_NONCE_SIZE
-            self.fields["new_nonce"].choices = \
-                self.fields["new_nonce"].choices[1:]
+            self.fields["new_static_token"].initial = INITIAL_STATIC_TOKEN_SIZE
+            self.fields["new_static_token"].choices = \
+                self.fields["new_static_token"].choices[1:]
         if request.user != user and not request.is_staff:
             del self.fields["usercomponent"]
 
@@ -353,14 +355,15 @@ class UserContentForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self.update_anchor()
-        if self.cleaned_data.get("new_nonce", ""):
+        if self.cleaned_data.get("new_static_token", ""):
             if self.instance.token:
                 print(
                     "Old nonce for Content id:", self.instance.id,
                     "is", self.instance.token
                 )
             self.instance.token = create_b64_id_token(
-                self.instance.id, "/", int(self.cleaned_data["new_nonce"])
+                self.instance.id, "/",
+                int(self.cleaned_data["new_static_token"])
             )
             self.instance.save(update_fields=["token"])
 

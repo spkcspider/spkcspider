@@ -19,11 +19,13 @@ from .models import PublicKey, AnchorServer, AnchorKey
 class KeyForm(forms.ModelForm):
     class Meta:
         model = PublicKey
-        fields = ['key', 'note']
+        fields = ['key', 'use_for_encryption', 'note']
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         setattr(self.fields['key'], "hashable", True)
+        if self.instance.anchorkey:
+            self.fields['use_for_encryption'].disabled = True
 
     def clean_key(self):
         _ = gettext

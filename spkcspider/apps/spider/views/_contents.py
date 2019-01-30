@@ -201,12 +201,16 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             context["content_variants"] = \
                 self.usercomponent.user.spider_info.allowed_content.exclude(
                     ctype__contains=VariantType.feature.value
+                ).exclude(
+                    ctype__contains=VariantType.unlisted.value
                 )
             context["content_variants_used"] = \
                 self.usercomponent.user.spider_info.allowed_content.filter(
                     assignedcontent__usercomponent=self.usercomponent
                 ).exclude(
                     ctype__contains=VariantType.feature.value
+                ).exclude(
+                    ctype__contains=VariantType.unlisted.value
                 )
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(

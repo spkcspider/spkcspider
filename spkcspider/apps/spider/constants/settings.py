@@ -1,5 +1,6 @@
 __all__ = [
-    "INITIAL_NONCE_SIZE", "NONCE_CHOICES", "default_uctoken_duration",
+    "INITIAL_STATIC_TOKEN_SIZE", "STATIC_TOKEN_CHOICES",
+    "default_uctoken_duration",
     "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS"
 ]
 
@@ -9,11 +10,13 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 
-INITIAL_NONCE_SIZE = str(getattr(settings, "INITIAL_NONCE_SIZE", 12))
+INITIAL_STATIC_TOKEN_SIZE = str(
+    getattr(settings, "SPIDER_INITIAL_STATIC_TOKEN_SIZE", 12)
+)
 
-NONCE_CHOICES = [
+STATIC_TOKEN_CHOICES = [
     ("", ""),
-    (INITIAL_NONCE_SIZE, _("default ({} Bytes)")),
+    (INITIAL_STATIC_TOKEN_SIZE, _("default ({} Bytes)")),
     ("3", _("low ({} Bytes)")),
     ("12", _("medium ({} Bytes)")),
     ("30", _("high ({} Bytes)")),

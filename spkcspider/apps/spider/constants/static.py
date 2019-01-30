@@ -55,6 +55,8 @@ class VariantType(str, enum.Enum):
     # allow outside applications push content to spiders
     # adds by default unlisted attribute
     # appears in features of userComponent
+    # counts as foreign content
+    # don't list as content variant for user
     feature = "a"
     # use persistent token
     #  can be used for some kind of federation
@@ -63,7 +65,10 @@ class VariantType(str, enum.Enum):
     # required for still beeing able to update elemental parameters
     raw_update = "c"
     # raw_add not required, archieved by returning response
-    # d,e,f,g not assigned
+    # don't list as contentvariant for user (for computer only stuff)
+    #  works like unlisted in info field, just for ContentVariants
+    unlisted = "d"
+    # e,f,g not assigned
 
     # is content unique for usercomponent
     # together with strength level 10: unique for user

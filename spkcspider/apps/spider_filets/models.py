@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 def get_file_path(instance, filename):
     ret = getattr(settings, "FILET_FILE_DIR", "file_filet")
-    size = getattr(settings, "FILE_NONCE_SIZE", 45)
+    size = getattr(settings, "FILE_SALT_SIZE", 45)
     # try 100 times to find free filename
     # but should not take more than 1 try
     # IMPORTANT: strip . to prevent creation of htaccess files or similar

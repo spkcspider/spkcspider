@@ -1,4 +1,4 @@
-__all__ = ("WebConfigView",)
+__all__ = ("WebReferenceView",)
 
 from django.http import Http404
 from django.core.exceptions import ValidationError
@@ -12,13 +12,14 @@ from django.views import View
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
-    AuthToken, AssignedContent
+    AuthToken, AssignedContent, UserComponent
 )
-from .models import WebConfig
+from .models import WebReference
 
 
-class WebConfigView(UCTestMixin, View):
-    model = WebConfig
+class WebReferenceView(UCTestMixin, View):
+    model = WebReference
+    variant = None
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -34,20 +35,15 @@ class WebConfigView(UCTestMixin, View):
         token = self.request.GET.get("token", None)
         if not token:
             raise Http404()
-        self.request.auth_token = get_object_or_404(
-            AuthToken,
-            token=token,
-            persist__gte=0
-        )
-        if (
-            not self.request.auth_token.referrer or
-            "persist" in self.request.auth_token.extra.get(
-                "intentions", []
+        self.request.auth_token = AuthToken.objects.filter(
+            token=token
+        ).first()
+        if not self.request.auth_token:
+            return get_object_or_404(
+                UserComponent,
+                token=token,
             )
-        ):
-            raise Http404()
-        usercomponent = self.request.auth_token.usercomponent
-        return usercomponent
+        return self.request.auth_token.usercomponent
 
     def test_func(self):
         return True
@@ -57,17 +53,11 @@ class WebConfigView(UCTestMixin, View):
             name="WebReference"
         ).first()
         # can only access feature if activated even WebConfig exists already
-        if not variant:
+        if not self.variant:
             raise Http404()
-        ret = AssignedContent.objects.filter(
-            persist_token=self.request.auth_token
-        ).first()
-        if ret:
-            return ret.content
         associated = AssignedContent(
             usercomponent=self.usercomponent,
             ctype=variant,
-            persist_token=self.request.auth_token
         )
         ret = self.model.static_create(associated)
         ret.clean()
@@ -102,7 +92,4 @@ class WebConfigView(UCTestMixin, View):
                 "ascii", "backslashreplace"
             ), content_type="text/plain"
         )
-        ret["X-SPIDER-URL"] = self.object.token.referrer
-        ret["X-SPIDER-MODIFIED"] = self.object.associated.modified
-        ret["X-SPIDER-CREATED"] = self.object.associated.created
         return ret

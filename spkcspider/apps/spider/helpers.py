@@ -124,8 +124,8 @@ def extract_app_dicts(app, name, fieldname=None):
 
 def create_b64_token(size=None):
     if not size:
-        from .constants.settings import INITIAL_NONCE_SIZE
-        size = int(INITIAL_NONCE_SIZE)
+        from django.conf import settings
+        size = getattr(settings, "TOKEN_SIZE", 30)
     if size > MAX_TOKEN_SIZE:
         logging.warning("Nonce too big")
     return base64.urlsafe_b64encode(
