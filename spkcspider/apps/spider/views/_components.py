@@ -190,6 +190,7 @@ class ComponentIndexBase(ListView):
             g.serialize(format="turtle"),
             content_type="text/turtle;charset=utf-8"
         )
+        ret["Access-Control-Allow-Origin"] = "*"
         return ret
 
 

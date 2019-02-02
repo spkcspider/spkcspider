@@ -523,6 +523,8 @@ class BaseContent(models.Model):
 
         if session_dict.get("expires", None):
             ret['X-Token-Expires'] = session_dict["expires"]
+        # allow cors requests for raw
+        ret["Access-Control-Allow-Origin"] = "*"
         return ret
 
     def render_view(self, **kwargs):

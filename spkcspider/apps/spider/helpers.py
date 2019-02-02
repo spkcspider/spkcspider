@@ -1,7 +1,8 @@
 __all__ = (
     "create_b64_token", "create_b64_id_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
-    "merge_get_url", "add_property", "is_decimal", "validator_token"
+    "merge_get_url", "add_property", "is_decimal", "validator_token",
+    "extract_host"
 )
 
 
@@ -147,8 +148,24 @@ def prepare_description(raw_html, amount=0):
     return _whitespsplit.split(text, amount)
 
 
+_check_scheme = re.compile(r'^[a-z]+://')
+
+
+def extract_host(url):
+    url = url.lstrip(":/")
+    if _check_scheme.search(url) is None:
+        urlparsed = urlsplit("://".join(("https", url)))
+    else:
+        urlparsed = urlsplit(url)
+    return "://".join(urlparsed[:2])
+
+
 def merge_get_url(_url, **kwargs):
-    urlparsed = urlsplit(_url, scheme="https")
+    _url = _url.lstrip(":/")
+    if not _check_scheme.search(_url) is None:
+        urlparsed = urlsplit("://".join(("https", _url)))
+    else:
+        urlparsed = urlsplit(_url)
     _strip = []
     for i in kwargs.keys():
         if not kwargs[i]:
@@ -158,7 +175,4 @@ def merge_get_url(_url, **kwargs):
     for item in _strip:
         GET.pop(item, None)
     ret = urlunsplit((*urlparsed[:3], urlencode(GET), ""))
-    # work around url.parse bug 35377
-    if not urlparsed[1]:
-        ret = ret.replace(":///", "://", 1)
     return ret

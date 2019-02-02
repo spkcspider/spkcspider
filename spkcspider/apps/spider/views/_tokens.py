@@ -20,7 +20,7 @@ import certifi
 
 from ._core import UCTestMixin
 from ..models import AuthToken
-from ..helpers import get_settings_func
+from ..helpers import get_settings_func, extract_host
 from ..constants.static import TokenCreationError
 
 
@@ -149,16 +149,22 @@ class TokenRenewal(UCTestMixin, View):
         )
         if (
             not self.request.auth_token.referrer or
-            "persist" in self.request.auth_token.extra.get(
+            "persist" not in self.request.auth_token.extra.get(
                 "intentions", []
             )
         ):
             raise Http404()
-        usercomponent = self.request.auth_token.usercomponent
-        return usercomponent
+        return self.request.auth_token.usercomponent
 
     def test_func(self):
         return True
+
+    def options(self, request, *args, **kwargs):
+        ret = super().options()
+        ret["Access-Control-Allow-Origin"] = \
+            extract_host(self.request.auth_token.referrer)
+        ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+        return ret
 
     def update_with_post(self):
         # application/x-www-form-urlencoded is best here,
@@ -201,19 +207,39 @@ class TokenRenewal(UCTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         self.request.auth_token.create_token()
-        if "sl" not in self.request.extra.get("intentions", []):
-            pass
-        try:
-            self.request.auth_token.save()
-        except TokenCreationError:
+        success = True
+        if "sl" in self.request.extra.get("intentions", []):
+            # only the original referer can access this
+            success = (
+                self.request["Referer"] == self.request.auth_token.referrer
+            )
+        else:
+            # if not serverless:
+            # you cannot steal a token because it is bound to a domain
+            # damage can be only done in persisted data
+            success = self.update_with_post()
+        if success:
+            try:
+                self.request.auth_token.save()
+            except TokenCreationError:
+                success = False
+        if not success:
             logging.exception("Token creation failed")
             return HttpResponseServerError(
                 "Token update failed, try again"
             )
-        if "sl" not in self.request.extra.get("intentions", []):
-            return HttpResponse(status_code=200)
-        return HttpResponse(
-            self.request.auth_token.token.encode(
-                "ascii"
-            ), content_type="text/plain"
-        )
+        if "sl" in self.request.extra.get("intentions", []):
+            ret = HttpResponse(
+                self.request.auth_token.token.encode(
+                    "ascii"
+                ), content_type="text/plain"
+            )
+            ret["Access-Control-Allow-Origin"] = \
+                self.request.auth_token.referrer
+        else:
+            ret = HttpResponse(status_code=200)
+        # no sl: simplifies update logic for thirdparty web servers
+        # sl: safety (but anyway checked by referer check)
+        ret["Access-Control-Allow-Origin"] = \
+            extract_host(self.request.auth_token.referrer)
+        return ret

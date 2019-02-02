@@ -717,6 +717,12 @@ class EntityDeletionMixin(UserTestMixin):
             _time = timedelta(seconds=0)
         return _time
 
+    def options(self, request, *args, **kwargs):
+        ret = super().options()
+        ret["Access-Control-Allow-Origin"] = self.request.get_host()
+        ret["Access-Control-Allow-Methods"] = "POST, GET, DELETE, OPTIONS"
+        return ret
+
     def delete(self, request, *args, **kwargs):
         # hack for compatibility to ContentRemove
         if getattr(self.object, "name", "") in index_names:
@@ -736,6 +742,7 @@ class EntityDeletionMixin(UserTestMixin):
 
     def post(self, request, *args, **kwargs):
         # because forms are screwed (delete not possible)
+        # UPDATE: delete works if allowed in CORS
         if request.POST.get("action") == "reset":
             return self.reset(request, *args, **kwargs)
         elif request.POST.get("action") == "delete":
