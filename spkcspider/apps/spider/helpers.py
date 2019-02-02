@@ -148,7 +148,7 @@ def prepare_description(raw_html, amount=0):
     return _whitespsplit.split(text, amount)
 
 
-_check_scheme = re.compile(r'^[a-z]+://')
+_check_scheme = re.compile(r'^[a-z]+://', re.I)
 
 
 def extract_host(url):
