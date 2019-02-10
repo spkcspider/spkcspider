@@ -1,4 +1,4 @@
-__all__ = ["literalize", "namespace"]
+__all__ = ["literalize", "spkc_namespace"]
 
 from django import template
 from django.forms import BoundField
@@ -32,7 +32,7 @@ def hashable_literalize(field):
 
 
 @register.simple_tag()
-def namespace(sub=None):
+def spkc_namespace(sub=None):
     if sub:
         return spkcgraph[sub]
     return spkcgraph

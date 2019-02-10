@@ -18,4 +18,4 @@
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4 color-front-{{uc.strength}}{% endblock %}
 {% block body_class %}{{block.super}} color-back-{{uc.strength}}{% endblock %}
-{% block main_attributes %}{{block.super}} prefix="spkc: {% namespace %} xsd: http://www.w3.org/2001/XMLSchema#" resource="{{hostpart}}{{ request.path }}"{% endblock %}
+{% block main_attributes %}{{block.super}} prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema#" resource="{{hostpart}}{{ request.path }}"{% endblock %}

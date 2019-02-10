@@ -1,12 +1,15 @@
 {% extends "registration/base.html" %}
-{% load i18n static spider_protections %}
+{% load i18n static spider_protections spider_rdf %}
 {% extract_protections "protections" as protections %}
+
+{% block main_attributes %}{{block.super}} prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema#" resource="{{hostpart}}{{ request.path }}"{% endblock %}
 
 {% block content %}
   <h2>Login</h2>
-  {{form.media}}
-  <form action="{{ request.get_full_path }}" method="post">
+  <form action="{{ request.get_full_path }}" name="SPKCLoginForm" method="post">
     {% csrf_token %}
+    <data hidden="hidden" property="spkc:protections.amount" datatype="xsd:nonNegativeInteger">{{protections|length}}</data>
+    <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">10</data>
     <input type="hidden" name="next" value="{{ next }}" />
     <fieldset>
       {% include "spider_base/base_form.html" with form=form %}

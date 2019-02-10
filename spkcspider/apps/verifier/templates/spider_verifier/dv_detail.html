@@ -2,7 +2,7 @@
 {% extends "spider_base/base.html" %}
 {% load i18n spider_rdf %}
 {% block content %}
-<table vocab="{% namespace %}" resource="{{ request.path }}">
+<table vocab="{% spkc_namespace %}" resource="{{ request.path }}">
   <thead><tr><th cellspan="2">Results:</th></tr></thead>
   <tr>
     <td>{% trans "Hash:" %}</td>

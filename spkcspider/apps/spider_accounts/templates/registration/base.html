@@ -1,15 +1,10 @@
 {% extends "spider_base/base.html" %}
 
 {% block robots %}none{% endblock %}
-{% block base_style %}
-{{block.super}}
-{% endblock %}
 
-{% block main_classes %}{{block.super}} w3-padding w3-content w3-card-4 w3-pale-red{% endblock %}
+{% block extrahead %}
+{{block.super}}{% if form %}
+{{form.media|safe}}{% endif %}
+{% endblock extrahead %}
 
-
-
-{% block content %}
-  {% include "spkcspider/form_errors.html" %}
-  {{block.super}}
-{% endblock %}
+{% block main_classes %}{{block.super}} w3-padding w3-content w3-card-4 w3-pale-red{% endblock main_classes %}

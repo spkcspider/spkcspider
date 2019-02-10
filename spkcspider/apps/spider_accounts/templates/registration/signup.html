@@ -5,6 +5,7 @@
   <h2>{% trans 'Sign up' %}</h2>
   <form action="{{ app_path }}" method="post">
     {% csrf_token %}
+    {# don't annotate (correctly) for making it harder for bots #}
     <fieldset>
       {% include "spider_base/base_form.html" with form=form %}
     </fieldset>
