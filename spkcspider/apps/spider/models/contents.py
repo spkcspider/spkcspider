@@ -135,22 +135,22 @@ class LinkContent(BaseContent):
             ret = self.content.content.get_form_kwargs(**kwargs)
         return ret
 
-    def action_view(self, **kwargs):
+    def access_view(self, **kwargs):
         kwargs["source"] = self
         kwargs["uc"] = self.content.usercomponent
-        return super().action_view(**kwargs)
+        return super().access_view(**kwargs)
 
-    def action_add(self, **kwargs):
+    def access_add(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Create Content Link")
-        return super().action_add(**kwargs)
+        return super().access_add(**kwargs)
 
-    def action_update(self, **kwargs):
+    def access_update(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Update Content Link")
-        return super().action_update(**kwargs)
+        return super().access_update(**kwargs)
 
-    def action_raw_update(self, **kwargs):
+    def access_raw_update(self, **kwargs):
         return redirect(
             'spider_base:ucontent-access',
             token=self.content.token,
@@ -261,20 +261,20 @@ class TravelProtection(BaseContent):
         ret["request"] = kwargs["request"]
         return ret
 
-    def action_add(self, **kwargs):
+    def access_add(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Create Travel Protection")
-        return super().action_add(**kwargs)
+        return super().access_add(**kwargs)
 
-    def action_update(self, **kwargs):
+    def access_update(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Update Travel Protection")
-        return super().action_update(**kwargs)
+        return super().access_update(**kwargs)
 
-    def action_view(self, **kwargs):
+    def access_view(self, **kwargs):
         return ""
 
-    def action_deactivate(self, **kwargs):
+    def access_deactivate(self, **kwargs):
         if self.hashed_secret:
             if not self.check_password(
                 kwargs["request"].GET.get("travel", "")

@@ -93,10 +93,10 @@ class UserTagLayout(BaseContent):
                     i.disabled = True
             return ret
 
-    def action_add(self, **kwargs):
+    def access_add(self, **kwargs):
         if not hasattr(self, "layout"):
             self.layout = TagLayout(usertag=self)
-        return super().action_add(**kwargs)
+        return super().access_add(**kwargs)
 
     def get_form_kwargs(self, **kwargs):
         kwargs["instance"] = self.layout

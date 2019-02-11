@@ -87,7 +87,7 @@ class FileFilet(BaseContent):
         kwargs["enctype"] = "multipart/form-data"
         return super().render_form(**kwargs)
 
-    def action_view(self, **kwargs):
+    def access_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["associated"] = self.associated
         return (
@@ -98,7 +98,7 @@ class FileFilet(BaseContent):
             ""
         )
 
-    def action_download(self, **kwargs):
+    def access_download(self, **kwargs):
         if getattr(settings, "DIRECT_FILE_DOWNLOAD", False):
             response = HttpResponseRedirect(
                 self.file.url,
@@ -117,15 +117,15 @@ class FileFilet(BaseContent):
             'attachment; filename=%s' % html.escape(name)
         return response
 
-    def action_add(self, **kwargs):
+    def access_add(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Upload File")
-        return super().action_add(**kwargs)
+        return super().access_add(**kwargs)
 
-    def action_update(self, **kwargs):
+    def access_update(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Update File")
-        return super().action_update(**kwargs)
+        return super().access_update(**kwargs)
 
     def save(self, *args, **kw):
         if self.pk is not None:
@@ -220,10 +220,10 @@ class TextFilet(BaseContent):
             if kwargs["scope"] == "update_user":
                 kwargs["legend"] = \
                     _("Update \"%s\" (guest)") % self.__str__()
-                return self.action_update(**kwargs)
+                return self.access_update(**kwargs)
         return super().render(**kwargs)
 
-    def action_view(self, **kwargs):
+    def access_view(self, **kwargs):
 
         kwargs["object"] = self
         kwargs["content"] = self.associated

@@ -521,7 +521,7 @@ class BaseContent(models.Model):
         ret["Access-Control-Allow-Origin"] = "*"
         return ret
 
-    def action_view(self, **kwargs):
+    def access_view(self, **kwargs):
         _ = gettext
 
         kwargs["form"] = self.get_form("view")(
@@ -545,7 +545,7 @@ class BaseContent(models.Model):
             kwargs["form"].media
         )
 
-    def action_add(self, **kwargs):
+    def access_add(self, **kwargs):
         _ = gettext
         kwargs.setdefault(
             "legend",
@@ -557,7 +557,7 @@ class BaseContent(models.Model):
         kwargs.setdefault("inner_form", True)
         return self.render_form(**kwargs)
 
-    def action_update(self, **kwargs):
+    def access_update(self, **kwargs):
         _ = gettext
         kwargs.setdefault(
             "legend",
@@ -569,23 +569,23 @@ class BaseContent(models.Model):
         kwargs.setdefault("inner_form", True)
         return self.render_form(**kwargs)
 
-    def action_export(self, **kwargs):
+    def access_export(self, **kwargs):
         return self.render_serialize(**kwargs)
 
-    def action_default(self, **kwargs):
+    def access_default(self, **kwargs):
         raise Http404()
 
-    action_raw_update = action_default
+    access_raw_update = access_default
 
     def render(self, **kwargs):
-        func = self.action_default
+        func = self.access_default
         if kwargs["scope"] == "view" and "raw" in kwargs["request"].GET:
             kwargs["scope"] = "raw"
             return self.render_serialize(**kwargs)
         elif kwargs["scope"] in default_abilities:
-            func = getattr(self, "action_{}".format(kwargs["scope"]))
+            func = getattr(self, "access_{}".format(kwargs["scope"]))
         elif kwargs["scope"] in self.abilities:
-            func = getattr(self, "action_{}".format(kwargs["scope"]))
+            func = getattr(self, "access_{}".format(kwargs["scope"]))
         return func(**kwargs)
 
     def get_info(self, unique=None, unlisted=None):
