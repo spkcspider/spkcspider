@@ -145,10 +145,12 @@ class UserTestMixin(AccessMixin):
             created__lt=expire, persist=-1
         ).delete()
 
-    def test_token(self, minstrength=0):
+    def test_token(self, minstrength=0, force_token=False):
         expire = timezone.now()-self.usercomponent.token_duration
         tokenstring = self.request.GET.get("token", None)
-        no_token = (self.usercomponent.required_passes == 0)
+        no_token = (
+            self.usercomponent.required_passes == 0 and not force_token
+        )
         ptype = ProtectionType.access_control.value
         if minstrength >= 4:
             no_token = False
@@ -357,7 +359,7 @@ class ReferrerMixin(object):
             ))
         return super().get_context_data(**kwargs)
 
-    def test_token(self, minstrength):
+    def test_token(self, minstrength, force_token=False):
         if "intention" in self.request.GET or "referrer" in self.request.GET:
             # validate early, before auth
             intentions = set(self.request.GET.getlist("intention"))
@@ -367,13 +369,22 @@ class ReferrerMixin(object):
                 return HttpResponse(
                     "invalid intentions", status=400
                 )
-            # maximal one main intention
-            if len(intentions.difference(VALID_SUB_INTENTIONS)) > 1:
-                return HttpResponse(
-                    "invalid intentions", status=400
-                )
-            minstrength = 4
-        return super().test_token(minstrength)
+            if "domain" in intentions:
+                # domain mode must be used alone
+                if len(intentions) > 1:
+                    return HttpResponse(
+                        "invalid intentions", status=400
+                    )
+                # requires token
+                force_token = True
+            else:
+                # maximal one main intention
+                if len(intentions.difference(VALID_SUB_INTENTIONS)) > 1:
+                    return HttpResponse(
+                        "invalid intentions", status=400
+                    )
+                minstrength = 4
+        return super().test_token(minstrength, force_token)
 
     def refer_with_post(self, context, token):
         # application/x-www-form-urlencoded is best here,
@@ -427,7 +438,7 @@ class ReferrerMixin(object):
                 redirect_to=merge_get_url(
                     context["referrer"],
                     status="post_failed",
-                    error=""
+                    error="other"
                 )
             )
         context["post_success"] = True
@@ -449,6 +460,15 @@ class ReferrerMixin(object):
                 payload=context["payload"]
             )
         )
+
+    def clean_domain_upgrade(self, context, token):
+        if not token or token.created_by_special_user:
+            return False
+        if not context["intentions"].issubset(VALID_INTENTIONS):
+            return False
+        if len(context["intentions"]) != 1:
+            return False
+        return True
 
     def clean_refer_intentions(self, context, token=None):
         currency = None
@@ -562,27 +582,51 @@ class ReferrerMixin(object):
         delete_auth_token = False
 
         action = self.request.POST.get("action", None)
-        if action == "confirm":
+        if "domain" in context["intentions"]:
+            token = self.request.auth_token
+            if not self.clean_domain_upgrade(context, token):
+                return HttpResponse(
+                    status=400,
+                    content=_('Invalid token')
+                )
+            token.create_auth_token()
+            try:
+                token.save()
+            except TokenCreationError:
+                logging.exception("Token creation failed")
+                return HttpResponseServerError(
+                    _("Token creation failed, try again")
+                )
+            context["post_success"] = False
+            ret = self.refer_with_post(context, token)
+            if not context["post_success"]:
+                token.delete()
+            return ret
+        elif action == "confirm":
             token = None
-            persistfind = Q(persist=0, usercomponent=self.usercomponent)
-            persistfind |= Q(
-                persist__in=self.usercomponent.contents.filter(
-                    info__contains="\nanchor\n"
-                ).values_list("id", flat=True)
-            )
+            hasoldtoken = False
             # if persist try to find old token
             if "persist" in context["intentions"]:
+                persistfind = Q(persist=0, usercomponent=self.usercomponent)
+                persistfind |= Q(
+                    persist__in=self.usercomponent.contents.filter(
+                        info__contains="\nanchor\n"
+                    ).values_list("id", flat=True)
+                )
                 token = AuthToken.objects.filter(
                     persistfind,
                     referrer=context["referrer"]
                 ).first()
                 if token:
+                    hasoldtoken = True
                     token.create_auth_token()
                     # migrate usercomponent
                     token.usercomponent = self.usercomponent
 
             # create only new token when admin token and not persisted token
             if self.usercomponent.user == self.request.user:
+                # boost strength if user is owner
+                # token is not auth_token
                 if token:
                     token.extra["strength"] = 10
                 else:
@@ -642,7 +686,7 @@ class ReferrerMixin(object):
                 return self.refer_with_get(context, token)
             context["post_success"] = False
             ret = self.refer_with_post(context, token)
-            if not context["post_success"]:
+            if not context["post_success"] and not hasoldtoken:
                 token.delete()
             return ret
 

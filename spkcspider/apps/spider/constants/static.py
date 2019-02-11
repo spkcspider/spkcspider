@@ -60,6 +60,7 @@ class VariantType(str, enum.Enum):
     feature = "a"
     # use persistent token
     #  can be used for some kind of federation
+    #  warning: if token is deleted persisted content is deleted
     persist = "b"
     # update content is without form/for form updates it is not rendered
     # required for still beeing able to update elemental parameters
@@ -68,6 +69,8 @@ class VariantType(str, enum.Enum):
     # don't list as contentvariant for user (for computer only stuff)
     #  works like unlisted in info field, just for ContentVariants
     unlisted = "d"
+    # activates domain mode
+    domain_mode = "e"
     # e,f,g not assigned
 
     # is content unique for usercomponent

@@ -136,13 +136,19 @@ There are some special GET parameters for services with special requirements:
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
 * intention=auth: try to login with UserComponent authentication (falls back to login redirect)
-* referrer=<url>: send token to referrer, client verifies with hash that he has control. Note: persistent features (e.g. WebCfg) work only if "Persistence" Feature is active
-  * intention=sl: server-less referrer mode: token is transferred as GET parameter and no POST request is made (less secure as client sees token)
+* referrer=<url>: activate referrer mode
+  * intention=domain: domain verify referrer mode
+  * intention=sl: server-less referrer mode
   * payload=<foo>: passed on successfull requests (including post), e.g. for sessionid  
   * intention=payment: referrer can initiate payments  
   * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
   * intention=persist: referrer can persist data on webserver
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
+
+## Referrer
+* normal referrer mode: send token to referrer, client verifies with hash that he sent the token.
+* server-less referrer mode (sl): token is transferred as GET parameter and no POST request is made (less secure as client sees token and client is not authenticated)
+* domain referrer mode (domain): token get referrer domain but nothing more, doesn't work with other intentions. BUT: can be automated. Useful for tag updates
 
 ## payment intention
 

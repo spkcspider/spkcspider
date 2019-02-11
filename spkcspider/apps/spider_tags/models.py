@@ -109,6 +109,11 @@ class SpiderTag(BaseContent):
         {
             "name": "SpiderTag",
             "strength": 0
+        },
+        {
+            "name": "PushedTag",
+            "strength": 0,
+            "ctype": VariantType.feature,
         }
     ]
     layout = models.ForeignKey(
@@ -117,6 +122,7 @@ class SpiderTag(BaseContent):
     )
     tagdata = JSONField(default=dict, blank=True)
     verified_by = JSONField(default=list, blank=True)
+    updateable_by = JSONField(default=list, blank=True)
     primary = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
@@ -138,6 +144,14 @@ class SpiderTag(BaseContent):
 
     def get_strength_link(self):
         return 0
+
+    def get_abilities(self, **kwargs):
+        abilities = set()
+        if kwargs["request"].auth_token.referrer:
+            abilities.add("verify")
+            if kwargs["request"].auth_token.referrer in self.updateable_by:
+                abilities.add("push_update")
+        return abilities
 
     def get_form(self, scope):
         from .forms import SpiderTagForm
@@ -189,7 +203,7 @@ class SpiderTag(BaseContent):
 
     def get_info(self):
         return "{}{}tag={}\n".format(
-            super().get_info(unique=self.primary),
+            super().get_info(unique=self.primary, unlisted=False),
             self.encode_verifiers(),
             self.layout.name
         )

@@ -37,7 +37,7 @@ class TagLayoutForm(forms.ModelForm):
 class SpiderTagForm(forms.ModelForm):
     class Meta:
         model = SpiderTag
-        fields = ["layout"]
+        fields = ["layout", "updateable_by"]
 
     def __init__(self, user=None, **kwargs):
         super().__init__(**kwargs)
