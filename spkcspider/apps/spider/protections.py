@@ -344,9 +344,9 @@ class PasswordProtection(BaseProtection):
         return 1
 
     def get_strength(self):
-        return self.eval_strength(
-            self.cleaned_data["min_length"],
-            self.cleaned_data["max_length"]
+        return (
+            self.eval_strength(self.cleaned_data["min_length"]),
+            self.eval_strength(self.cleaned_data["max_length"])
         )
 
     def clean_passwords(self):
