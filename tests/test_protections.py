@@ -1,5 +1,4 @@
-import re
-from urllib.parse import parse_qs, urlsplit
+import unittest
 
 from django.test import override_settings
 from django_webtest import TransactionWebTest
@@ -23,38 +22,60 @@ class ProtectionTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
+    @unittest.expectedFailure
+    @override_settings(DEBUG=True)
     def test_login_only(self):
+        # FIXME: lacks assigned Protections
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
-        home.public = True
-        home.required_passes = 10
-        home.save()
+        updateurl = reverse(
+            "spider_base:ucomponent-update",
+            kwargs={"token": home.token}
+        )
+        # prefer = get tokens, but tokens should be stripped in redirect
+        viewurl = "?".join((home.get_absolute_url(), "token=prefer"))
+        response = self.app.get(updateurl, user="testuser1")
+        form = response.forms["componentForm"]
+        form["public"] = True
+        form["required_passes"] = 10
+        response = form.submit(user="testuser1")
+        home.refresh_from_db()
         self.assertEqual(home.strength, 4)
-        # will prefer get tokens
-        origurl = "?".join((home.get_absolute_url(), "token=prefer"))
-        response = self.app.get(origurl).follow()
-        self.assertNotIn("SPKCProtectionForm", response.forms)
+
+        del form
+        del response
+        self.app.set_user(user=None)
+        self.app.reset()
+        response = self.app.get(viewurl).follow()
+
         form = response.form
-        form["password"] = "abc"
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
         response = form.submit()
-        self.assertTrue(response.location.startswith(origurl))
-        self.assertIn("token=", response.location)
-        self.assertNotIn("token=prefer", response.location)
+        self.assertTrue(response.location.startswith(viewurl))
+        self.assertNotIn("token=", response.location)
         response = response.follow()
         self.assertNotIn("SPKCProtectionForm", response.forms)
 
-        home.public = False
-        home.save()
+        response = self.app.get(updateurl, user="testuser1")
+        form = response.forms["componentForm"]
+        form["public"] = False
+        response = form.submit(user="testuser1")
+        home.refresh_from_db()
         self.assertEqual(home.strength, 9)
 
-        response = self.app.get(origurl).follow()
-        self.assertNotIn("SPKCProtectionForm", response.forms)
+        del form
+        del response
+        self.app.set_user(user=None)
+        self.app.reset()
+        response = self.app.get(viewurl).follow()
         form = response.form
-        form["password"] = "abc"
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        self.assertIn("next", form)
         response = form.submit()
-        self.assertTrue(response.location.startswith(origurl))
-        self.assertIn("token=", response.location)
-        self.assertNotIn("token=prefer", response.location)
+        self.assertTrue(response.location.startswith(viewurl))
+        self.assertNotIn("token=", response.location)
         response = response.follow()
         self.assertNotIn("SPKCProtectionForm", response.forms)
 

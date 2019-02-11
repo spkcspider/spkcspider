@@ -241,8 +241,6 @@ class ComponentPublicIndex(ComponentIndexBase):
 class ComponentIndex(UCTestMixin, ComponentIndexBase):
     model = UserComponent
     source_strength = 10
-    also_authenticated_users = True
-    no_token_usercomponent = True
 
     user = None
 
@@ -306,16 +304,20 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
 class ComponentCreate(UserTestMixin, CreateView):
     model = UserComponent
     form_class = UserComponentForm
-    also_authenticated_users = True
-    no_token_usercomponent = True
 
     def get_success_url(self):
         return reverse(
             "spider_base:ucomponent-update", kwargs={
-                "user": self.object.username,
-                "name": self.object.name,
                 "token": self.object.token
             }
+        )
+
+    def get_usercomponent(self):
+        ucname = "index"
+        if self.request.session.get("is_fake", False):
+            ucname = "fake_index"
+        return get_object_or_404(
+            UserComponent, user=self.get_user(), name=ucname
         )
 
     def get_form_kwargs(self):
@@ -328,7 +330,6 @@ class ComponentCreate(UserTestMixin, CreateView):
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
     form_class = UserComponentForm
-    also_authenticated_users = True
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()

@@ -35,7 +35,6 @@ from ..models import UserComponent, AuthToken
 
 
 class UserTestMixin(AccessMixin):
-    also_authenticated_users = False
     preserved_GET_parameters = set(["token", "protection"])
     login_url = reverse_lazy(getattr(
         settings,
@@ -246,9 +245,9 @@ class UserTestMixin(AccessMixin):
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
         if user_by_login and self.request.user == self.usercomponent.user:
-                self.request.is_owner = True
-                self.request.is_special_user = True
-                return True
+            self.request.is_owner = True
+            self.request.is_special_user = True
+            return True
         if user_by_token and self.test_token(4) is True:
             return True
 
@@ -297,6 +296,7 @@ class UserTestMixin(AccessMixin):
         # in case no protections are used (e.g. add content)
         p = getattr(self.request, "protections", False)
         if not bool(p):
+            # return 403
             return super().handle_no_permission()
         # should be never true here
         assert(p is not True)

@@ -348,7 +348,6 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 class ContentAdd(ContentBase, CreateView):
     scope = "add"
     model = ContentVariant
-    also_authenticated_users = True
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

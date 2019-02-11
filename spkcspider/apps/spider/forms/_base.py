@@ -199,6 +199,10 @@ class UserComponentForm(forms.ModelForm):
             else:
                 strengths = 0
             self.cleaned_data["strength"] += max(strengths, fail_strength)
+        else:
+            # check on creation
+            if self.cleaned_data["required_passes"] > 0:
+                self.cleaned_data["strength"] += 4
         self.cleaned_data["can_auth"] = max_prot_strength >= 4
         if any(map(
             lambda x: VariantType.persist.value in x.ctype,

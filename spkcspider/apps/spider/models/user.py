@@ -52,7 +52,6 @@ class UserComponentManager(models.Manager):
     def _update_args(self, defaults, kwargs):
         if defaults is None:
             defaults = {}
-
         if kwargs is None:
             kwargs = defaults
         name = kwargs.get("name", defaults.get("name", None))
