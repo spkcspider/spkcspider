@@ -26,7 +26,7 @@ from spkcspider.apps.spider.helpers import merge_get_url
 class TagLayoutForm(forms.ModelForm):
     class Meta:
         model = TagLayout
-        fields = ["name", "layout", "default_verifiers"]
+        fields = ["name", "unique", "layout", "default_verifiers"]
 
     def __init__(self, uc=None, **kwargs):
         if "instance" not in kwargs:

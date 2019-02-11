@@ -46,6 +46,7 @@ def get_file_path(instance, filename):
 @add_content
 class FileFilet(BaseContent):
     appearances = [{"name": "File"}]
+    abilities = ("download",)
 
     name = models.CharField(max_length=255, null=False)
 
@@ -86,11 +87,7 @@ class FileFilet(BaseContent):
         kwargs["enctype"] = "multipart/form-data"
         return super().render_form(**kwargs)
 
-    def render_view(self, **kwargs):
-        if "raw" in kwargs["request"].GET:
-            k = kwargs.copy()
-            k["scope"] = "raw"
-            return self.render_serialize(**k)
+    def action_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["associated"] = self.associated
         return (
@@ -101,7 +98,7 @@ class FileFilet(BaseContent):
             ""
         )
 
-    def render_download(self, **kwargs):
+    def action_download(self, **kwargs):
         if getattr(settings, "DIRECT_FILE_DOWNLOAD", False):
             response = HttpResponseRedirect(
                 self.file.url,
@@ -120,20 +117,15 @@ class FileFilet(BaseContent):
             'attachment; filename=%s' % html.escape(name)
         return response
 
-    def render_add(self, **kwargs):
+    def action_add(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Upload File")
-        return super().render_add(**kwargs)
+        return super().action_add(**kwargs)
 
-    def render_update(self, **kwargs):
+    def action_update(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Update File")
-        return super().render_update(**kwargs)
-
-    def render(self, **kwargs):
-        if kwargs["scope"] == "download":
-            return self.render_download()
-        return super().render(**kwargs)
+        return super().action_update(**kwargs)
 
     def save(self, *args, **kw):
         if self.pk is not None:
@@ -228,14 +220,10 @@ class TextFilet(BaseContent):
             if kwargs["scope"] == "update_user":
                 kwargs["legend"] = \
                     _("Update \"%s\" (guest)") % self.__str__()
-                return self.render_update(**kwargs)
+                return self.action_update(**kwargs)
         return super().render(**kwargs)
 
-    def render_view(self, **kwargs):
-        if "raw" in kwargs["request"].GET:
-            k = kwargs.copy()
-            k["scope"] = "raw"
-            return self.render_serialize(**k)
+    def action_view(self, **kwargs):
 
         kwargs["object"] = self
         kwargs["content"] = self.associated

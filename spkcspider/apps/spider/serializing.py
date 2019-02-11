@@ -209,7 +209,7 @@ def serialize_stream(
                     )
                     if context["scope"] != "export":
                         for url_feature, name in \
-                              feature.installed_class.cached_action_urls():
+                              feature.installed_class.cached_feature_urls():
                             url_feature = urljoin(
                                 context["hostpart"],
                                 url_feature
@@ -248,7 +248,7 @@ def serialize_stream(
 
                         if context["scope"] != "export":
                             for url_feature, name in \
-                                  feature.installed_class.cached_action_urls():
+                                  feature.installed_class.cached_feature_urls():  # noqa: E501
                                 url_feature = urljoin(
                                     context["hostpart"],
                                     url_feature

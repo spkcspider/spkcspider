@@ -71,7 +71,7 @@ class ContentBase(UCTestMixin):
     def get_queryset(self):
         ret = self.model.objects.all()
         # skip search if user and single object
-        if self.scope in ("add", "update", "update_raw"):
+        if self.scope in ("add", "update", "raw_update"):
             return ret
 
         searchq = models.Q()
@@ -95,7 +95,7 @@ class ContentBase(UCTestMixin):
             else:
                 searchlist += self.request.GET.getlist("search")
                 idlist += self.request.GET.getlist("id")
-        elif self.scope not in ("add", "update", "update_raw"):
+        elif self.scope not in ("add", "update", "raw_update"):
             searchlist += self.request.GET.getlist("search")
 
         for item in searchlist:
@@ -491,7 +491,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
     def get_context_data(self, **kwargs):
         kwargs["is_public_view"] = (
             self.usercomponent.public and
-            self.scope not in ("add", "update", "update_raw")
+            self.scope not in ("add", "update", "raw_update")
         )
         context = super().get_context_data(**kwargs)
 

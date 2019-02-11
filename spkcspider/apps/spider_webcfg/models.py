@@ -24,7 +24,7 @@ class WebConfig(BaseContent):
     config = models.TextField(default="", blank=True)
 
     @classmethod
-    def action_urls(cls):
+    def feature_urls(cls):
         return [
             ActionUrl(reverse("spider_webcfg:webconfig-view"), "webcfg")
         ]

@@ -43,7 +43,7 @@ class PersistenceFeature(BaseContent):
         abstract = True
 
     @classmethod
-    def action_urls(cls):
+    def feature_urls(cls):
         return [
             ActionUrl(
                 reverse("spider_base:token-renew"),
@@ -111,9 +111,9 @@ class LinkContent(BaseContent):
             ret, self.associated.pk
         )
 
-    def serialize(self, graph, content_ref, context):
+    def serialize(self, graph, ref_content, context):
         return self.content.content.serialize(
-            graph, content_ref, context
+            graph, ref_content, context
         )
 
     def get_references(self):
@@ -135,33 +135,27 @@ class LinkContent(BaseContent):
             ret = self.content.content.get_form_kwargs(**kwargs)
         return ret
 
-    def render_add(self, **kwargs):
-        _ = gettext
-        kwargs["legend"] = _("Create Content Link")
-        return super().render_add(**kwargs)
-
-    def render_update(self, **kwargs):
-        _ = gettext
-        kwargs["legend"] = _("Update Content Link")
-        return super().render_update(**kwargs)
-
-    def render(self, **kwargs):
-        if kwargs["scope"] == "add":
-            return self.render_add(**kwargs)
-        elif kwargs["scope"] == "update":
-            return self.render_update(**kwargs)
-        elif kwargs["scope"] == "raw_update":
-            return redirect(
-                'spider_base:ucontent-access',
-                token=self.content.token,
-                access='update'
-            )
-        elif kwargs["scope"] == "export":
-            return self.render_serialize(**kwargs)
-
+    def action_view(self, **kwargs):
         kwargs["source"] = self
         kwargs["uc"] = self.content.usercomponent
-        return self.content.content.render(**kwargs)
+        return super().action_view(**kwargs)
+
+    def action_add(self, **kwargs):
+        _ = gettext
+        kwargs["legend"] = _("Create Content Link")
+        return super().action_add(**kwargs)
+
+    def action_update(self, **kwargs):
+        _ = gettext
+        kwargs["legend"] = _("Update Content Link")
+        return super().action_update(**kwargs)
+
+    def action_raw_update(self, **kwargs):
+        return redirect(
+            'spider_base:ucontent-access',
+            token=self.content.token,
+            access='update'
+        )
 
 
 login_choices = [
@@ -210,6 +204,7 @@ class TravelProtection(BaseContent):
             # "ctype": VariantType.unique.value
         }
     ]
+    abilities = ("deactivate")
 
     objects = TravelProtectionManager()
 
@@ -266,20 +261,20 @@ class TravelProtection(BaseContent):
         ret["request"] = kwargs["request"]
         return ret
 
-    def render_add(self, **kwargs):
+    def action_add(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Create Travel Protection")
-        return super().render_add(**kwargs)
+        return super().action_add(**kwargs)
 
-    def render_update(self, **kwargs):
+    def action_update(self, **kwargs):
         _ = gettext
         kwargs["legend"] = _("Update Travel Protection")
-        return super().render_update(**kwargs)
+        return super().action_update(**kwargs)
 
-    def render_view(self, **kwargs):
+    def action_view(self, **kwargs):
         return ""
 
-    def render_deactivate(self, **kwargs):
+    def action_deactivate(self, **kwargs):
         if self.hashed_secret:
             if not self.check_password(
                 kwargs["request"].GET.get("travel", "")
@@ -288,8 +283,3 @@ class TravelProtection(BaseContent):
         self.active = False
         self.save()
         return "success"
-
-    def render(self, **kwargs):
-        if kwargs["scope"] == "deactivate":
-            return self.render_deactivate()
-        return super().render(**kwargs)

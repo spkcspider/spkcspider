@@ -4,14 +4,15 @@ __all__ = (
 )
 import logging
 from functools import lru_cache
-
 from urllib.parse import urljoin
+
 from django.apps import apps as django_apps
 from django.db import models, transaction
 from django.utils.translation import gettext
 from django.template.loader import render_to_string
 from django.core.files.base import File
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.http import Http404
 from django.db.utils import IntegrityError
 
 from django.contrib.contenttypes.fields import GenericRelation
@@ -32,6 +33,10 @@ installed_contents = {}
 
 # don't spam set objects
 _empty_set = set()
+
+default_abilities = set(
+    ("add", "view", "update", "export", "list", "raw", "raw_update")
+)
 
 # never use these names
 forbidden_names = ["Content", "UserComponent"]
@@ -120,6 +125,9 @@ class BaseContent(models.Model):
 
     hashed_fields = None
 
+    """ Override for declaring content extra abilities """
+    abilities = ()
+
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
     deletion_period = getattr(settings, "DELETION_PERIOD_CONTENTS", None)
@@ -174,15 +182,16 @@ class BaseContent(models.Model):
         return 0
 
     @classmethod
-    def action_urls(cls):
+    def feature_urls(cls):
+        """ For implementing component features """
         return []
 
     @classmethod
     @lru_cache(typed=True)
-    def cached_action_urls(cls):
+    def cached_feature_urls(cls):
         return list(map(
             lambda x: ActionUrl(*x),
-            cls.action_urls()
+            cls.feature_urls()
         ))
 
     def get_strength(self):
@@ -329,7 +338,7 @@ class BaseContent(models.Model):
             )(name, data, self, context)
         return Literal(data)
 
-    def serialize(self, graph, content_ref, context):
+    def serialize(self, graph, ref_content, context):
         form = self.get_form(context["scope"])(
             **self.get_form_kwargs(
                 disable_data=True,
@@ -337,10 +346,25 @@ class BaseContent(models.Model):
             )
         )
         graph.add((
-            content_ref,
+            ref_content,
             spkcgraph["type"],
             Literal(self.associated.getlist("type", 1)[0])
         ))
+
+        for ability, name in self.abilities:
+            assert(ability not in default_abilities)
+            ref_ability = URIRef(self.get_absolute_url(ability))
+            graph.add((
+                ref_content,
+                spkcgraph["action:ability"],
+                ref_ability
+            ))
+
+            graph.add((
+                ref_ability,
+                spkcgraph["ability:name"],
+                Literal(name)
+            ))
 
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
@@ -361,7 +385,7 @@ class BaseContent(models.Model):
             hashable = getattr(field, "hashable", False)
 
             graph.add((
-                content_ref,
+                ref_content,
                 spkcgraph["properties"],
                 value_node
             ))
@@ -390,30 +414,6 @@ class BaseContent(models.Model):
                     spkcgraph["value"],
                     self.map_data(name, i, context)
                 ))
-
-    def render_add(self, **kwargs):
-        _ = gettext
-        kwargs.setdefault(
-            "legend",
-            _("Add \"%s\"") % self.__str__()
-        )
-        # not visible by default
-        kwargs.setdefault("confirm", _("Create"))
-        # prevent second button
-        kwargs.setdefault("inner_form", True)
-        return self.render_form(**kwargs)
-
-    def render_update(self, **kwargs):
-        _ = gettext
-        kwargs.setdefault(
-            "legend",
-            _("Update \"%s\"") % self.__str__()
-        )
-        # not visible by default
-        kwargs.setdefault("confirm", _("Update"))
-        # prevent second button
-        kwargs.setdefault("inner_form", True)
-        return self.render_form(**kwargs)
 
     def render_serialize(self, **kwargs):
         from .models import AssignedContent
@@ -499,7 +499,7 @@ class BaseContent(models.Model):
                             literal=url_content, datatype=XSD.anyURI
                         )
                     for uri, name in \
-                            feature.installed_class.cached_action_urls():
+                            feature.installed_class.cached_feature_urls():
                         url_feature = urljoin(
                             session_dict["hostpart"],
                             uri
@@ -527,12 +527,8 @@ class BaseContent(models.Model):
         ret["Access-Control-Allow-Origin"] = "*"
         return ret
 
-    def render_view(self, **kwargs):
+    def action_view(self, **kwargs):
         _ = gettext
-        if "raw" in kwargs["request"].GET:
-            k = kwargs.copy()
-            k["scope"] = "raw"
-            return self.render_serialize(**k)
 
         kwargs["form"] = self.get_form("view")(
             **self.get_form_kwargs(disable_data=True, **kwargs)
@@ -555,15 +551,48 @@ class BaseContent(models.Model):
             kwargs["form"].media
         )
 
+    def action_add(self, **kwargs):
+        _ = gettext
+        kwargs.setdefault(
+            "legend",
+            _("Add \"%s\"") % self.__str__()
+        )
+        # not visible by default
+        kwargs.setdefault("confirm", _("Create"))
+        # prevent second button
+        kwargs.setdefault("inner_form", True)
+        return self.render_form(**kwargs)
+
+    def action_update(self, **kwargs):
+        _ = gettext
+        kwargs.setdefault(
+            "legend",
+            _("Update \"%s\"") % self.__str__()
+        )
+        # not visible by default
+        kwargs.setdefault("confirm", _("Update"))
+        # prevent second button
+        kwargs.setdefault("inner_form", True)
+        return self.render_form(**kwargs)
+
+    def action_export(self, **kwargs):
+        return self.render_serialize(**kwargs)
+
+    def action_default(self, **kwargs):
+        raise Http404()
+
+    action_raw_update = action_default
+
     def render(self, **kwargs):
-        if kwargs["scope"] == "add":
-            return self.render_add(**kwargs)
-        elif kwargs["scope"] == "update":
-            return self.render_update(**kwargs)
-        elif kwargs["scope"] == "export":
+        func = self.action_default
+        if kwargs["scope"] == "view" and "raw" in kwargs["request"].GET:
+            kwargs["scope"] = "raw"
             return self.render_serialize(**kwargs)
-        else:
-            return self.render_view(**kwargs)
+        elif kwargs["scope"] in default_abilities:
+            func = getattr(self, "action_{}".format(kwargs["scope"]))
+        elif kwargs["scope"] in self.abilities:
+            func = getattr(self, "action_{}".format(kwargs["scope"]))
+        return func(**kwargs)
 
     def get_info(self, unique=None, unlisted=None):
         # unique=None, feature=None shortcuts for get_info overwrites

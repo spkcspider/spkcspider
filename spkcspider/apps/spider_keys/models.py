@@ -109,11 +109,7 @@ class PublicKey(BaseContent):
         from .forms import KeyForm
         return KeyForm
 
-    def render_view(self, **kwargs):
-        if "raw" in kwargs["request"].GET:
-            k = kwargs.copy()
-            k["scope"] = "raw"
-            return self.render_serialize(**k)
+    def do_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["algo"] = settings.SPIDER_HASH_ALGORITHM
         kwargs["hash"] = self.associated.getlist(
