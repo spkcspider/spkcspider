@@ -353,15 +353,9 @@ class BaseContent(models.Model):
 
         for ability, name in self.abilities:
             assert(ability not in default_abilities)
-            ref_ability = URIRef(self.get_absolute_url(ability))
-            graph.add((
-                ref_content,
-                spkcgraph["action:ability"],
-                ref_ability
-            ))
 
             graph.add((
-                ref_ability,
+                ref_content,
                 spkcgraph["ability:name"],
                 Literal(name)
             ))

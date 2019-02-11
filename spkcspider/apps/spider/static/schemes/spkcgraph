@@ -166,6 +166,13 @@ spkc:feature:name a rdf:value ;
   rdfs:domain rdfs:Resource ;
   rdfs:range rdf:string .
 
+spkc:ability:name a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "ability name" ;
+  rdfs:comment "Name of extra access method" ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range rdf:string .
+
 spkc:pages.num_pages a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Amount Pages" ;
