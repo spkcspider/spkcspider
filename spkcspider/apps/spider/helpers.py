@@ -162,7 +162,7 @@ def extract_host(url):
 
 def merge_get_url(_url, **kwargs):
     _url = _url.lstrip(":/")
-    if not _check_scheme.search(_url) is None:
+    if _check_scheme.search(_url) is None:
         urlparsed = urlsplit("://".join(("https", _url)))
     else:
         urlparsed = urlsplit(_url)

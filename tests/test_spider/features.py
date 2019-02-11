@@ -142,7 +142,7 @@ class FeaturesTest(TransactionWebTest):
                 )
                 response = self.app.get(purl)
 
-                # invalid so check that no update
+                # invalid so check that no update occurs
                 self.assertTrue("Content" in str(response.html.title))
                 purl = "{}?intention=persist&referrer=http://{}:{}".format(
                     home.get_absolute_url(),
@@ -175,8 +175,8 @@ class FeaturesTest(TransactionWebTest):
 
                 response = response.forms[0].submit("action", value="confirm")
                 query = parse_qs(urlsplit(response.location).query)
-                self.assertIn("hash", query)
                 self.assertEqual(query.get("status"), ["success"])
+                self.assertIn("hash", query)
                 self.assertIn(query["hash"][0], self.refserver.unverified)
                 requests.get(response.location)
                 self.assertIn(query["hash"][0], self.refserver.tokens)
