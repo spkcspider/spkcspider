@@ -54,7 +54,7 @@ class WebConfigView(UCTestMixin, View):
 
     def get_object(self, queryset=None):
         variant = self.usercomponent.features.filter(
-            name="WebReference"
+            name="WebConfig"
         ).first()
         # can only access feature if activated even WebConfig exists already
         if not variant:

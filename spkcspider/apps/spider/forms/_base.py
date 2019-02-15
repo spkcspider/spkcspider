@@ -212,6 +212,10 @@ class UserComponentForm(forms.ModelForm):
             self.cleaned_data["features"] |= ContentVariant.objects.filter(
                 name="Persistence"
             )
+        self.cleaned_data["allow_domain_mode"] = any(map(
+            lambda x: VariantType.domain_mode.value in x.ctype,
+            self.cleaned_data["features"]
+        ))
         min_strength = self.cleaned_data["features"].filter(
             strength__gt=self.cleaned_data["strength"]
         ).aggregate(m=models.Max("strength"))["m"]
@@ -262,6 +266,9 @@ class UserComponentForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.strength = self.cleaned_data["strength"]
         self.instance.can_auth = self.cleaned_data["can_auth"]
+        # not sure if cleaned_data is used if field is disabled
+        self.instance.allow_domain_mode = \
+            self.cleaned_data["allow_domain_mode"]
         return super().save(commit=commit)
 
 

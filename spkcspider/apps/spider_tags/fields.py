@@ -69,6 +69,11 @@ class UserContentRefField(forms.ModelChoiceField):
         )
         super().__init__(**kwargs)
 
+    def tagdata_from_value(self, obj):
+        if obj:
+            return obj.pk
+        return None
+
     def label_from_instance(self, obj):
         return str(obj)
 
@@ -98,6 +103,11 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
             associated_rel__usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
+
+    def tagdata_from_value(self, query):
+        return list(query.values_list(
+            'pk', flat=True
+        ))
 
     def label_from_instance(self, obj):
         return str(obj)
@@ -137,6 +147,11 @@ class AnchorField(forms.ModelChoiceField):
                 self.error_messages['invalid_choice'], code='invalid_choice'
             )
         return value
+
+    def tagdata_from_value(self, obj):
+        if obj:
+            return obj.associated.id
+        return None
 
     def label_from_instance(self, obj):
         return str(obj.content)

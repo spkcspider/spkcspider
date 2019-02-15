@@ -123,8 +123,6 @@ class BaseContent(models.Model):
     # use case: model with different abilities
     appearances = None
 
-    hashed_fields = None
-
     """ Override for declaring content extra abilities """
     abilities = ()
 

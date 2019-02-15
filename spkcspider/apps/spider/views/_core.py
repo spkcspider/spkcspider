@@ -369,7 +369,7 @@ class ReferrerMixin(object):
                 return HttpResponse(
                     "invalid intentions", status=400
                 )
-            if "domain" in intentions:
+            if "domain" in intentions and self.usercomponent.allow_domain_mode:
                 # domain mode must be used alone
                 if len(intentions) > 1:
                     return HttpResponse(
@@ -583,6 +583,7 @@ class ReferrerMixin(object):
 
         action = self.request.POST.get("action", None)
         if "domain" in context["intentions"]:
+            # domain mode only possible for non special user
             token = self.request.auth_token
             if not self.clean_domain_upgrade(context, token):
                 return HttpResponse(

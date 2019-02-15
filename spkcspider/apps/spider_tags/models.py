@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 from django.core.exceptions import ValidationError
 
+from django.contrib.contenttypes.models import ContentType
+
 from jsonfield import JSONField
 
 
@@ -105,6 +107,7 @@ class UserTagLayout(BaseContent):
 
 @add_content
 class SpiderTag(BaseContent):
+    _cached_references = None
     appearances = [
         {
             "name": "SpiderTag",
@@ -163,7 +166,9 @@ class SpiderTag(BaseContent):
     def get_references(self):
         if not getattr(self, "layout", None):
             return []
-        ret = []
+        if self._cached_references:
+            return self._cached_references
+        _cached_references = []
         form = self.layout.get_form()(
             initial=self.tagdata.copy(),
             instance=self,
@@ -172,9 +177,32 @@ class SpiderTag(BaseContent):
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
+            # e.g. anchors
             if isinstance(value, AssignedContent):
-                ret.append(value)
-        return ret
+                _cached_references.append(value)
+
+            if issubclass(type(value), BaseContent):
+                _cached_references.append(value.associated)
+
+            # e.g. anchors
+            if isinstance(value, models.QuerySet):
+                if issubclass(value.model, AssignedContent):
+                    _cached_references += list(value)
+
+                if issubclass(value.model, BaseContent):
+                    _cached_references += list(
+                        AssignedContent.objects.filter(
+                            object_id__in=value.values_list(
+                                "id", flat=True
+                            ),
+                            content_type=ContentType.objects.get_for_model(
+                                value.model
+                            )
+                        )
+                    )
+        self._cached_references = _cached_references
+        print("found2:", _cached_references)
+        return self._cached_references
 
     def get_form_kwargs(self, instance=None, **kwargs):
         if kwargs["scope"] == "add":

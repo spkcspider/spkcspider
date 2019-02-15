@@ -8,8 +8,8 @@ from collections import OrderedDict
 from django import forms
 
 # from django.apps import apps
-from django.db.models import Q
-from django.db import models
+from django.db.models import Q, QuerySet
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
@@ -19,8 +19,10 @@ import certifi
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
 from spkcspider.apps.spider.fields import OpenChoiceField
-from spkcspider.apps.spider.fields import OpenChoiceWidget
+from spkcspider.apps.spider.widgets import OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
+from spkcspider.apps.spider.models import AssignedContent
+from spkcspider.apps.spider.contents import BaseContent
 
 
 class TagLayoutForm(forms.ModelForm):
@@ -35,6 +37,15 @@ class TagLayoutForm(forms.ModelForm):
 
 
 class SpiderTagForm(forms.ModelForm):
+    updateable_by = OpenChoiceField(
+        required=False, initial=False,
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
+    )
+
     class Meta:
         model = SpiderTag
         fields = ["layout", "updateable_by"]
@@ -55,6 +66,17 @@ def generate_form(name, layout):
     _gen_fields.insert(0, (
         "primary",
         _temp_field
+    ))
+    _gen_fields.append((
+        "updateable_by",
+        OpenChoiceField(
+            required=False, initial=False,
+            widget=OpenChoiceWidget(
+                attrs={
+                    "style": "min-width: 300px; width:100%"
+                }
+            )
+        )
     ))
     _gen_fields.append((
         "verified_by",
@@ -119,6 +141,46 @@ def generate_form(name, layout):
                 if i != "verified_by":
                     self.instance.verified_by = []
                     break
+
+            failed = []
+            for verifier in self.cleaned_data["verified_by"]:
+                if verifier not in self.instance.verified_by:
+                    if not self.send_verify_requests(verifier):
+                        failed.append(verifier)
+
+            self.cleaned_data["verified_by"] = list(filter(
+                lambda x: x not in failed, self.cleaned_data["verified_by"]
+            ))
+
+            _cached_references = []
+            for key, value in self.cleaned_data.items():
+                if key in ("verified_by", "updateable_by", "primary"):
+                    continue
+                # e.g. anchors
+                if isinstance(value, AssignedContent):
+                    _cached_references.append(value)
+
+                if issubclass(type(value), BaseContent):
+                    _cached_references.append(value.associated)
+
+                # e.g. anchors
+                if isinstance(value, QuerySet):
+                    if issubclass(value.model, AssignedContent):
+                        _cached_references += list(value)
+
+                    if issubclass(value.model, BaseContent):
+                        _cached_references += list(
+                            AssignedContent.objects.filter(
+                                object_id__in=value.values_list(
+                                    "id", flat=True
+                                ),
+                                content_type=ContentType.objects.get_for_model(
+                                    value.model
+                                )
+                            )
+                        )
+            self.instance._cached_references = _cached_references
+            print("found1:", _cached_references)
             self.instance.full_clean()
             return self.cleaned_data
 
@@ -134,8 +196,7 @@ def generate_form(name, layout):
                     base[posixpath.join(prefix, i[0])] = i[1]
             return base
 
-        @staticmethod
-        def encode_data(cleaned_data, prefix="tag"):
+        def encode_data(self, cleaned_data, prefix="tag"):
             ret = {}
             for counter, i in enumerate(cleaned_data.items()):
                 selected_dict = ret
@@ -147,12 +208,9 @@ def generate_form(name, layout):
                     if key not in selected_dict:
                         selected_dict[key] = {}
                     selected_dict = selected_dict[key]
-                if isinstance(i[1], models.Model):
-                    selected_dict[splitted[-1]] = i[1].pk
-                elif isinstance(i[1], models.QuerySet):
-                    selected_dict[splitted[-1]] = list(i[1].values_list(
-                        'id', flat=True
-                    ))
+                if hasattr(self.fields[i[0]], "tagdata_from_value"):
+                    selected_dict[splitted[-1]] = \
+                        self.fields[i[0]].tagdata_from_value(i[1])
                 else:
                     selected_dict[splitted[-1]] = i[1]
             return ret
@@ -170,25 +228,15 @@ def generate_form(name, layout):
             return False
 
         def save_m2m(self):
-            failed = []
-            for verifier in self.cleaned_data["verified_by"]:
-                if verifier not in self.instance.verified_by:
-                    if not self.send_verify_requests(verifier):
-                        failed.append(verifier)
-
-            self.instance.verified_by = list(filter(
-                lambda x: x not in failed, self.cleaned_data["verified_by"]
-            ))
-            self.instance._content_is_cleaned = True
-            self.instance.save(update_fields=["verified_by"])
+            pass
 
         def save(self, commit=True):
-            if self.instance:
-                self.instance.primary = self.cleaned_data["primary"]
-                self.instance.tagdata = self.encode_data(self.cleaned_data)
-                if commit:
-                    self.instance.save()
-                    self.save_m2m()
+            self.instance.primary = self.cleaned_data["primary"]
+            # self.instance.verified_by = self.cleaned_data["verified_by"]
+            # self.instance.updateable_by = self.cleaned_data["updateable_by"]
+            self.instance.tagdata = self.encode_data(self.cleaned_data)
+            if commit:
+                self.instance.save()
 
             return self.instance
 

@@ -121,6 +121,41 @@ default_layouts["person_official"] = {
     ]
 }
 
+
+default_layouts["workplace"] = {
+    "layout": [
+        {
+            "key": "worker",
+            "label": _("Worker"),
+            "localize": True,
+            "field": "UserContentRefField",
+            "modelname": "spider_tags.SpiderTag",
+            "limit_choices_to": {
+                "layout__name__in": ["person_official"]
+            },
+        },
+        {
+            "key": "address",
+            "label": _("Address"),
+            "localize": True,
+            "field": "UserContentRefField",
+            "modelname": "spider_tags.SpiderTag",
+            "limit_choices_to": {
+                "layout__name__in": ["address"]
+            },
+        },
+        {
+            "key": "pension",
+            "label": _("Pension payments"),
+            "localize": True,
+            "field": "BooleanField",
+            "blank": True,
+            "default": False
+        },
+    ]
+}
+
+
 default_layouts["emergency"] = {
     "layout": [
         {
