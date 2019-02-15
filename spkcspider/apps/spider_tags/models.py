@@ -13,6 +13,7 @@ from jsonfield import JSONField
 from spkcspider.apps.spider.contents import (
     BaseContent, add_content, VariantType
 )
+from spkcspider.apps.spider.helpers import get_settings_func
 
 from spkcspider.apps.spider.models import AssignedContent
 CACHE_FORMS = {}
@@ -151,7 +152,11 @@ class SpiderTag(BaseContent):
     def get_abilities(self, **kwargs):
         abilities = set()
         if kwargs["request"].auth_token.referrer:
-            abilities.add("verify")
+            if get_settings_func(
+                "SPIDER_TAG_VERIFIER_VALIDATOR",
+                "spkcspider.apps.spider.functions.allow_all_filter"
+            )(self, kwargs["request"]):
+                abilities.add("verify")
             if kwargs["request"].auth_token.referrer in self.updateable_by:
                 abilities.add("push_update")
         return abilities

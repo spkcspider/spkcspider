@@ -568,17 +568,17 @@ class ReferrerMixin(object):
         context["is_serverless"] = "sl" in context["intentions"]
         context["referrer"] = merge_get_url(self.request.GET["referrer"])
         context["old_search"] = []
+        context["object_list"] = self.object_list
         if not get_settings_func(
             "SPIDER_URL_VALIDATOR",
             "spkcspider.apps.spider.functions.validate_url_default"
-        )(context["referrer"]):
+        )(context["referrer"], self):
             return HttpResponse(
                 status=400,
                 content=_('Insecure url: %(url)s') % {
                     "url": context["referrer"]
                 }
             )
-        context["object_list"] = self.object_list
         delete_auth_token = False
 
         action = self.request.POST.get("action", None)

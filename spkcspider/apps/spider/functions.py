@@ -98,7 +98,7 @@ class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
         return content_length <= max_length
 
 
-def validate_url_default(url):
+def validate_url_default(url, view=None):
     url = urlsplit(url)
     if url.scheme == "https":
         return True

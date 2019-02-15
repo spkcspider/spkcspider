@@ -287,7 +287,7 @@ class UserComponent(models.Model):
     @property
     def deletion_period(self):
         return getattr(
-            settings, "DELETION_PERIODS_COMPONENTS", {}
+            settings, "SPIDER_COMPONENTS_DELETION_PERIODS", {}
         ).get(self.get_name(), None)
 
     def save(self, *args, **kwargs):

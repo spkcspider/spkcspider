@@ -128,7 +128,7 @@ class BaseContent(models.Model):
 
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
-    deletion_period = getattr(settings, "DELETION_PERIOD_CONTENTS", None)
+    deletion_period = getattr(settings, "SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD", None)
     # if created associated is None (will be set later)
     # use usercomponent in form instead
     associated_rel = GenericRelation("spider_base.AssignedContent")
