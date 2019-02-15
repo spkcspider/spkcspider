@@ -210,18 +210,20 @@ class TextFilet(BaseContent):
         ret["scope"] = kwargs["scope"]
         return ret
 
-    def render(self, **kwargs):
+    @property
+    def abilities(self, **kwargs):
+        _abilities = set()
         source = kwargs.get("source", self.associated.usercomponent)
-        kwargs["can_upgrade"] = False
-        if kwargs["scope"] != "add" and self.editable_from.filter(
+        if self.id and self.editable_from.filter(
             pk=source.pk
         ).exists():
-            kwargs["can_upgrade"] = True
-            if kwargs["scope"] == "update_user":
-                kwargs["legend"] = \
-                    _("Update \"%s\" (guest)") % self.__str__()
-                return self.access_update(**kwargs)
-        return super().render(**kwargs)
+            _abilities.add("update_guest")
+        return _abilities
+
+    def access_update_guest(self, **kwargs):
+        kwargs["legend"] = \
+            _("Update \"%s\" (guest)") % self.__str__()
+        return self.access_update(**kwargs)
 
     def access_view(self, **kwargs):
 

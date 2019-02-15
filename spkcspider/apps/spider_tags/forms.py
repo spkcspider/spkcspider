@@ -142,15 +142,16 @@ def generate_form(name, layout):
                     self.instance.verified_by = []
                     break
 
-            failed = []
+            success = []
             for verifier in self.cleaned_data["verified_by"]:
-                if verifier not in self.instance.verified_by:
-                    if not self.send_verify_requests(verifier):
-                        failed.append(verifier)
+                if verifier in self.instance.verified_by:
+                    success.append(verifier)
+                else:
+                    url = self.send_verify_requests(verifier)
+                    if url:
+                        success.append(url)
 
-            self.cleaned_data["verified_by"] = list(filter(
-                lambda x: x not in failed, self.cleaned_data["verified_by"]
-            ))
+            self.cleaned_data["verified_by"] = success
 
             _cached_references = []
             for key, value in self.cleaned_data.items():
@@ -224,8 +225,8 @@ def generate_form(name, layout):
                 verify=certifi.where()
             )
             if resp.status_code == 200:
-                return True
-            return False
+                return resp.url
+            return None
 
         def save_m2m(self):
             pass

@@ -187,6 +187,7 @@ Otherwise security could be compromised.
 
 
 # TODO
+* Verified_by: full url including hash
 * examples
 * tests
 * documentation

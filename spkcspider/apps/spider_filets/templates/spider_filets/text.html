@@ -1,13 +1,11 @@
 {% load i18n %}
-{% if object %}
-  <data hidden="hidden" rel="spkc:properties">
-    <data hidden="hidden" typeof="spkc:Property">
-      <data hidden="hidden" property="spkc:name">name</data>
-      <data hidden="hidden" property="spkc:value">{{object}}</data>
-      <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-    </data>
+<data hidden="hidden" rel="spkc:properties">
+  <data hidden="hidden" typeof="spkc:Property">
+    <data hidden="hidden" property="spkc:name">name</data>
+    <data hidden="hidden" property="spkc:value">{{object}}</data>
+    <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
   </data>
-{% endif %}
+</data>
 <div class="w3-padding">
   <div class="w3-white" typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name">text</data>
@@ -15,8 +13,8 @@
     <data property="spkc:value">{{object.text|safe}}</data>
   </div>
 </div>
-{% if can_upgrade %}
+{% if "update_guest" in object.abilities %}
 <div class="w3-padding">
-  <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_user' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
+  <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_anonym' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
 </div>
 {% endif %}
