@@ -3,7 +3,7 @@
 from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
-from rdflib import Graph, compare
+from rdflib import Graph, XSD, Literal
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import VariantType
@@ -72,8 +72,6 @@ class TagTest(TransactionWebTest):
             ), index=0
         )
         self.assertEqual(response.status_code, 200)
-        g = Graph()
-        g.parse(data=response.body, format="html")
 
         response = response.click(
             href="{}\\?".format(
@@ -83,12 +81,15 @@ class TagTest(TransactionWebTest):
         form = response.form
         self.assertEqual(form["tag/country_code"].value, "de")
 
-        response2 = response.goto("{}\\?raw=true".format(
+        response2 = response.goto("{}?raw=true".format(
             home.contents.first().get_absolute_url("view")
         ))
-        g2 = Graph()
-        g2.parse(data=response2.body, format="turtle")
-        self.assertTrue(compare.isomorphic(g, g2))
+        g = Graph()
+        g.parse(data=response2.body, format="turtle")
+        self.assertIn(
+            (None, None, Literal("tag/country_code", datatype=XSD.string)),
+            g
+        )
 
     @override_settings(DEBUG=True)
     def test_pushed_tags(self):

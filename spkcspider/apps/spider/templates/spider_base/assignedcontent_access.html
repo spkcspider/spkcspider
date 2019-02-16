@@ -33,6 +33,9 @@
       </data>
     {% endfor %}
   {% endfor %}
+  {% for ability in abilities %}
+    <data hidden="hidden" property="spkc:ability:name" datatype="xsd:string">{{ability}}</data>
+  {% endfor %}
   <div class="w3-padding" style="height:120px">
     {% if request.is_special_user or uc.public %}
       {# index is redirected in view #}

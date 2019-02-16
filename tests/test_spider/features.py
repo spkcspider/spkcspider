@@ -173,7 +173,7 @@ class FeaturesTest(TransactionWebTest):
                     string=re.compile("Cancel")
                 ))
 
-                response = response.forms[0].submit("action", value="confirm")
+                response = response.form.submit("action", value="confirm")
                 query = parse_qs(urlsplit(response.location).query)
                 self.assertEqual(query.get("status"), ["success"])
                 self.assertIn("hash", query)

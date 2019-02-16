@@ -16,7 +16,7 @@ from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 from functools import lru_cache
 from importlib import import_module
 
-from rdflib import Literal, BNode
+from rdflib import Literal, BNode, XSD
 
 from django.conf import settings
 from django.core import validators
@@ -62,7 +62,7 @@ def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
         ))
     graph.add((
         value_node, spkcgraph["name"],
-        Literal(name)
+        Literal(name, datatype=XSD.string)
     ))
     if not literal:
         literal = getattr(ob, name)

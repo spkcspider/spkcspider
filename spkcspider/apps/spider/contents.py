@@ -367,7 +367,7 @@ class BaseContent(models.Model):
             graph.add((
                 ref_content,
                 spkcgraph["ability:name"],
-                Literal(name)
+                Literal(name, datatype=XSD.string)
             ))
 
         for name, field in form.fields.items():
@@ -401,12 +401,12 @@ class BaseContent(models.Model):
             graph.add((
                 value_node,
                 spkcgraph["name"],
-                Literal(name)
+                Literal(name, datatype=XSD.string)
             ))
             graph.add((
                 value_node,
                 spkcgraph["fieldname"],
-                Literal(form.add_prefix(name))
+                Literal(form.add_prefix(name), datatype=XSD.string)
             ))
 
             if not isinstance(value, (list, tuple, models.QuerySet)):
@@ -588,8 +588,8 @@ class BaseContent(models.Model):
     access_raw_update = access_default
 
     def render(self, **kwargs):
+        # kwargs contain abilities
         func = self.access_default
-        kwargs["abilities"] = set(self.get_abilities(kwargs))
         if kwargs["scope"] == "view" and "raw" in kwargs["request"].GET:
             kwargs["scope"] = "raw"
             return self.render_serialize(**kwargs)

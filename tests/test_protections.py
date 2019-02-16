@@ -132,6 +132,8 @@ class ProtectionTest(TransactionWebTest):
 
     @override_settings(DEBUG=True)
     def test_protections(self):
+        weak_pw = "fooobar"
+        strong_pw = "nubadkkkkkkkkkkkkkkkkkkkkkkkkkkdkskdksdkdkdkdkr"
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
         updateurl = reverse(
@@ -141,10 +143,11 @@ class ProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(updateurl)
         form = response.forms["componentForm"]
-        form["required_passes"] = 10
+        form["required_passes"] = 1
         form["protections_password-active"] = True
-        form["protections_password-passwords"] = \
-            "fooobar\nnubadkkkkkkkkkkkkkkkkkkkkkkkkkkdkskdksdkdkdkdkr"
+        form["protections_password-passwords"] = "\n".join(
+            (weak_pw, strong_pw)
+        )
         form["protections_password-allow_auth"] = True
         response = form.submit()
         home.refresh_from_db()
@@ -176,3 +179,19 @@ class ProtectionTest(TransactionWebTest):
             ),
             g
         )
+
+        form = response.form
+        form.set("password", weak_pw, index=0)
+        response = form.submit()
+        self.assertTrue(response.location.startswith(home.get_absolute_url()))
+
+        authurl = "?".join(
+            (home.get_absolute_url(), "token=prefer&intention=auth")
+        )
+        response = self.app.get(authurl)
+        form = response.form
+        form.set("password", strong_pw, index=0)
+        response = form.submit()
+        self.assertTrue(response.location.startswith(home.get_absolute_url()))
+        response = response.follow()
+        response = response.form.submit("action", value="confirm")

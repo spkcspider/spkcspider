@@ -519,6 +519,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
                 }),
                 context["remotelink"].urlencode()
             )
+        context["abilities"] = set(self.object.content.get_abilities(kwargs))
         return context
 
     def get_form_success_kwargs(self):
@@ -609,6 +610,13 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 class ContentRemove(EntityDeletionMixin, DeleteView):
     model = AssignedContent
     usercomponent = None
+
+    def form_valid(self, form):
+        _ = gettext
+        messages.error(
+            self.request, _('Content deleted.')
+        )
+        return super().form_valid(form)
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()

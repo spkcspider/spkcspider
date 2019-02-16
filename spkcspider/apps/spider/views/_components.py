@@ -443,6 +443,13 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
     fields = []
     object = None
 
+    def form_valid(self, form):
+        _ = gettext
+        messages.error(
+            self.request, _('Component deleted.')
+        )
+        return super().form_valid(form)
+
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.usercomponent = self.object
