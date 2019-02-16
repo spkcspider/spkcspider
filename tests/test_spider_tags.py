@@ -1,12 +1,9 @@
 
-import re
-from urllib.parse import parse_qs, urlsplit
 
 from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
-import requests
-from rdflib import Graph, Literal, XSD, compare
+from rdflib import Graph, compare
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import VariantType
@@ -93,6 +90,7 @@ class TagTest(TransactionWebTest):
         g2.parse(data=response2.body, format="turtle")
         self.assertTrue(compare.isomorphic(g, g2))
 
+    @override_settings(DEBUG=True)
     def test_pushed_tags(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)

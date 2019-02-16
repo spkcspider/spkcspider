@@ -141,6 +141,7 @@ class ProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(updateurl)
         form = response.forms["componentForm"]
+        form["required_passes"] = 10
         form["protections_password-active"] = True
         form["protections_password-passwords"] = \
             "fooobar\nnubadkkkkkkkkkkkkkkkkkkkkkkkkkkdkskdksdkdkdkdkr"
@@ -155,12 +156,9 @@ class ProtectionTest(TransactionWebTest):
 
         viewurl = "?".join((home.get_absolute_url(), "token=prefer"))
         response = self.app.get(viewurl)
-        response.showbrowser()
         g = Graph()
         g.parse(data=response.body, format="html")
-        baseurl = "{}{}".format(
-            "http://testserver", home.get_absolute_url()
-        )
+        baseurl = home.get_absolute_url()
         self.assertIn(
             (
                 URIRef(baseurl),

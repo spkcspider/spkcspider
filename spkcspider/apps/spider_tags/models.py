@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
+from django.urls import reverse
 
 from jsonfield import JSONField
 
@@ -14,7 +15,7 @@ import requests
 import certifi
 
 from spkcspider.apps.spider.contents import (
-    BaseContent, add_content, VariantType
+    BaseContent, add_content, VariantType, ActionUrl
 )
 from spkcspider.apps.spider.helpers import get_settings_func
 
@@ -140,6 +141,12 @@ class SpiderTag(BaseContent):
             self.layout.name,
             self.associated.id
         )
+
+    @classmethod
+    def feature_urls(cls):
+        return [
+            ActionUrl(reverse("spider_tags:create-pushtag"), "pushtag")
+        ]
 
     def get_template_name(self, scope):
         if scope in ["add", "update"]:
