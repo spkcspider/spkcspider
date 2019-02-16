@@ -116,6 +116,13 @@
     }
   },
   {
+    "model": "spider_base.protection",
+    "pk": "captcha",
+    "fields": {
+      "ptype": "ab"
+    }
+  },
+  {
     "model": "spider_base.assignedprotection",
     "pk": 1,
     "fields": {
@@ -132,12 +139,38 @@
     "model": "spider_base.assignedprotection",
     "pk": 2,
     "fields": {
+      "protection": "captcha",
+      "usercomponent": 2,
+      "data": "{}",
+      "created": "2019-02-15T22:57:10.417Z",
+      "modified": "2019-02-15T22:57:10.417Z",
+      "active": false,
+      "instant_fail": false
+    }
+  },
+  {
+    "model": "spider_base.assignedprotection",
+    "pk": 3,
+    "fields": {
       "protection": "login",
       "usercomponent": 5,
       "data": "{}",
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
       "active": true,
+      "instant_fail": false
+    }
+  },
+  {
+    "model": "spider_base.assignedprotection",
+    "pk": 4,
+    "fields": {
+      "protection": "captcha",
+      "usercomponent": 5,
+      "data": "{}",
+      "created": "2019-02-15T22:57:10.417Z",
+      "modified": "2019-02-15T22:57:10.417Z",
+      "active": false,
       "instant_fail": false
     }
   }

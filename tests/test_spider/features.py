@@ -23,14 +23,17 @@ class FeaturesTest(TransactionWebTest):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.refserver = create_referrer_server(("127.0.0.1", 0))
         cls.refserver.runthread.start()
 
     @classmethod
     def tearDownClass(cls):
         cls.refserver.shutdown()
+        super().tearDownClass()
 
     def setUp(self):
+        super().setUp()
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
@@ -64,14 +67,11 @@ class FeaturesTest(TransactionWebTest):
         self.assertEqual(home.protections.all().count(), 1)
         self.assertEqual(home.strength, 5)
         # logout and clean session
-        # deleting form required
-        del response
-        del form
         self.app.set_user(user=None)
         self.app.reset()
-        # set pw
-        self.user.set_password("abc")
-        self.user.save()
+        # set new pw
+        # self.user.set_password("abcd")
+        # self.user.save()
 
         with self.subTest(msg="Auth Protections active"):
             purl = "{}?intention=auth&token=prefer".format(

@@ -13,6 +13,8 @@ from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
+from django.contrib import messages
+from django.utils.translation import gettext
 
 
 from rdflib import Graph, Literal, URIRef, XSD
@@ -26,6 +28,8 @@ from ..forms import UserContentForm
 from ..helpers import get_settings_func, add_property
 from ..constants.static import spkcgraph, VariantType
 from ..serializing import paginate_stream, serialize_stream
+
+_forbidden_scopes = frozenset(["add", "list", "raw"])
 
 
 class ContentBase(UCTestMixin):
@@ -357,6 +361,13 @@ class ContentAdd(ContentBase, CreateView):
         self.object = self.get_object()
         return self.render_to_response(self.get_context_data())
 
+    def form_valid(self, form):
+        _ = gettext
+        messages.success(
+            self.request, _('Content created.')
+        )
+        return super().form_valid(form)
+
     def get_queryset(self):
         # use requesting user as base if he can add this type of content
         if self.request.user.is_authenticated:
@@ -464,7 +475,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         _scope = kwargs["access"]
         # special scopes which should be not available as url parameter
         # raw is also deceptive because view and raw=? = raw scope
-        if _scope in ["add", "list", "raw"]:
+        if _scope in _forbidden_scopes:
             raise PermissionDenied("Deceptive scopes")
         self.scope = _scope
         return super().dispatch(request, *args, **kwargs)

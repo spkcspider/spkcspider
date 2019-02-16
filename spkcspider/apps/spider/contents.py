@@ -19,6 +19,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import pgettext
+from django.contrib import messages
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD
 
@@ -285,9 +286,15 @@ class BaseContent(models.Model):
                 )
             except ValidationError as exc:
                 kwargs["form"].add_error(None, exc)
+                messages.error(
+                    kwargs["request"], _('Space Exhausted.')
+                )
         if kwargs["form"].is_valid():
             instance.save()
             kwargs["form"].save_m2m()
+            messages.success(
+                kwargs["request"], _('Content updated.')
+            )
             kwargs["form"] = self.get_form(scope)(
                 **self.get_form_kwargs(
                     scope=scope,

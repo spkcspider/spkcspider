@@ -1,7 +1,6 @@
 from django import template
 from django import forms
 from django.template.loader import render_to_string
-from django.utils.translation import gettext as _
 
 
 register = template.Library()
@@ -14,7 +13,7 @@ def render_protection(context, protectiontup):
     ctx = {}
     ctx["parent_ctx"] = context
     ctx["data"] = result
-    ctx["name"] = _(protection.name)
+    ctx["protection"] = protection
 
     if callable(getattr(protection, "render", None)):
         return protection.render(ctx)

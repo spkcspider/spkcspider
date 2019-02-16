@@ -103,7 +103,7 @@ version = "0.2.0"
 django = "*"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "A very simple, yet powerful, Django captcha application"
 name = "django-simple-captcha"
 optional = false
@@ -178,7 +178,7 @@ version = "0.6.0"
 six = "*"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python Imaging Library (Fork)"
 name = "pillow"
 optional = false
@@ -317,8 +317,13 @@ optional = false
 python-versions = "*"
 version = "0.14.1"
 
+[extras]
+captcha = []
+mysql = []
+pgsql = []
+
 [metadata]
-content-hash = "f4f0dc03bdcc4d44d52538db4d15f481ec13d0ae0418c79525f96b8d298570ec"
+content-hash = "537afd7afd54a1b7222f4aeb930693ceb7e98582ab66a020fe9c8e27a217212e"
 python-versions = ">=3.5"
 
 [metadata.hashes]

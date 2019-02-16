@@ -141,6 +141,7 @@ class UserComponentForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        self.cleaned_data["can_auth"] = False
         if 'name' not in self.cleaned_data:
             # ValidationError so return, calculations won't work here
             return

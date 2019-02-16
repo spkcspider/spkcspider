@@ -11,6 +11,8 @@ from django.db import models
 from django.http import HttpResponse
 from django.conf import settings
 from django.urls import reverse
+from django.contrib import messages
+from django.utils.translation import gettext
 
 from rdflib import Graph, Literal, URIRef
 
@@ -305,6 +307,13 @@ class ComponentCreate(UserTestMixin, CreateView):
     model = UserComponent
     form_class = UserComponentForm
 
+    def form_valid(self, form):
+        _ = gettext
+        messages.success(
+            self.request, _('Component created.')
+        )
+        return super().form_valid(form)
+
     def get_success_url(self):
         return reverse(
             "spider_base:ucomponent-update", kwargs={
@@ -408,6 +417,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         }
 
     def form_valid(self, form):
+        _ = gettext
         self.object = form.save()
         persist = 0
         if self.object.primary_anchor:
@@ -420,6 +430,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
                 "spider_base:ucomponent-update",
                 token=self.object.token
             )
+        messages.success(self.request, _('Component updated.'))
         return self.render_to_response(
             self.get_context_data(
                 form=self.get_form_class()(**self.get_form_success_kwargs())

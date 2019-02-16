@@ -558,7 +558,12 @@ class ReferrerMixin(object):
                 redirect_to="{}?{}={}".format(
                     self.get_login_url(),
                     REDIRECT_FIELD_NAME,
-                    quote_plus(self.request.get_full_path())
+                    quote_plus(
+                        merge_get_url(
+                            self.request.get_full_path(),
+                            token=None
+                        )
+                    )
                 )
             )
 

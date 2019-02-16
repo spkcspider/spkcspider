@@ -125,11 +125,11 @@
       {% endblock headerbar %}
       <main class="cond-top-fix {% block main_classes %}{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
       {% block messages %}
-          {% if messages %}
+        {% if messages %}
           <ul class="messagelist">{% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+            <li class="{% if message.tags %}{{ message.tags }}{% endif %} {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}w3-red{% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}w3-green{% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}w3-orange{% else %}w3-blue{% endif %}">{{ message|capfirst }}</li>
           {% endfor %}</ul>
-          {% endif %}
+        {% endif %}
       {% endblock messages %}
       {# Main content  #}
       {% block content %}{% endblock %}

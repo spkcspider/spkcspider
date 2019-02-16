@@ -15,14 +15,16 @@ install_requirements = [
     'rdflib',
     'html5lib',
     'cryptography',
-    'django-widget-tweaks'
+    'django-widget-tweaks',
+    'django-ranged-response'
 ]
 
 debug_requirements = [
     "Werkzeug",
     "pyOpenSSL",
     "django-extensions",
-    "django-webtest"
+    "django-webtest",
+    "django-simple-captcha"
 ]
 
 # install_requirements += debug_requirements
@@ -47,7 +49,8 @@ setup(
     install_requires=install_requirements,
     extras_require={
         "debug": debug_requirements,
-        "fcgi": ["flipflop"]
+        "fcgi": ["flipflop"],
+        "captcha": ["django-simple-captcha"]
     },
     data_files=[('spkcspider', ['LICENSE'])],
     packages=[

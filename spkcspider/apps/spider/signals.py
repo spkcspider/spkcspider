@@ -163,7 +163,7 @@ def InitUserCallback(sender, instance, raw=False, **kwargs):
 
     if getattr(settings, "USE_CAPTCHAS", False):
         captcha = Protection.objects.filter(code="captcha").first()
-        uc.protections.update_or_create(
+        uc.protections.get_or_create(
             defaults={"active": True}, protection=captcha
         )[0]
     uinfo = UserInfo.objects.get_or_create(

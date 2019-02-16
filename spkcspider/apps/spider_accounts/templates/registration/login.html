@@ -19,12 +19,7 @@
       <legend><h1>{% trans 'Authenticate with' %}</h1></legend>
       {% extract_protections "protections" as protections %}
       {% for prot in protections %}
-        <div class="protection-wrapping">
-          <div class="w3-padding-small w3-card w3-white">
-            <h1 class="w3-center">{{prot.1.auth_localize_name}}</h1>
-            {% render_protection prot %}
-          </div>
-        </div>
+        {% include "spider_base/protections/protection_item.html" with prot=prot %}
       {% endfor %}
     </fieldset>
     <button class="w3-button w3-grey" type="submit">Login</button><br/>

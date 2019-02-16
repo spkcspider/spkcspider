@@ -9,7 +9,9 @@ INSTALLED_APPS += [
     'spkcspider.apps.spider_webcfg',
     # ONLY for tests and REAL verifiers=companies verifing data
     'spkcspider.apps.verifier',
+    'captcha'
 ]
+USE_CAPTCHAS = True
 
 # Verifier specific options, not required
 VERIFIER_ALLOW_FILE_UPLOAD = True

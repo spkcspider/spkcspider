@@ -8,10 +8,10 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
-from django.http import FileResponse
 from django.http import HttpResponseRedirect
 from django.core.files.storage import default_storage
 
+from ranged_response import RangedFileResponse
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.helpers import (
@@ -106,9 +106,10 @@ class FileFilet(BaseContent):
                 self.file.url,
             )
         else:
-            response = FileResponse(
+            response = RangedFileResponse(
+                kwargs["request"],
                 self.file.file,
-                content_type='application/force-download'
+                content_type='application/octet-stream'
             )
         name = self.name
         if "." not in name:  # use saved ending

@@ -287,7 +287,7 @@ class AdvancedComponentTest(TransactionWebTest):
             "spider_base:ucontent-add",
             kwargs={
                 "token": public.token,
-                "type": "TravelProtection"
+                "type": "UserTagLayout"
             }
         )
         response = self.app.get(createurl, expect_errors=True, status=404)

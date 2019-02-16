@@ -6,7 +6,7 @@ from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
 import requests
-from rdflib import Graph, Literal, XSD
+from rdflib import Graph, Literal, XSD, compare
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import VariantType
@@ -23,20 +23,23 @@ class TagTest(TransactionWebTest):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.refserver = create_referrer_server(("127.0.0.1", 0))
         cls.refserver.runthread.start()
 
     @classmethod
     def tearDownClass(cls):
         cls.refserver.shutdown()
+        super().tearDownClass()
 
     def setUp(self):
+        super().setUp()
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
         update_dynamic.send_robust(self)
 
-    def test_tags(self):
+    def test_user_tags(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
         self.app.set_user(user="testuser1")
@@ -66,15 +69,15 @@ class TagTest(TransactionWebTest):
         response = form.submit()
         form = response.form
         self.assertEqual(form["tag/country_code"].value, "dedsdlsdlsd")
-        print("{}?".format(
-            home.contents.first().get_absolute_url("update")
-        ))
         response = response.click(
             href="{}\\?".format(
                 home.contents.first().get_absolute_url("view")
             ), index=0
         )
         self.assertEqual(response.status_code, 200)
+        g = Graph()
+        g.parse(data=response.body, format="html")
+
         response = response.click(
             href="{}\\?".format(
                 home.contents.first().get_absolute_url("update")
@@ -82,3 +85,29 @@ class TagTest(TransactionWebTest):
         )
         form = response.form
         self.assertEqual(form["tag/country_code"].value, "de")
+
+        response2 = response.goto("{}\\?raw=true".format(
+            home.contents.first().get_absolute_url("view")
+        ))
+        g2 = Graph()
+        g2.parse(data=response2.body, format="turtle")
+        self.assertTrue(compare.isomorphic(g, g2))
+
+    def test_pushed_tags(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        self.assertTrue(home)
+        updateurl = reverse(
+            "spider_base:ucomponent-update",
+            kwargs={"token": home.token}
+        )
+        self.app.set_user(user="testuser1")
+        form = self.app.get(updateurl).forms["componentForm"]
+        features = dict(ContentVariant.objects.filter(
+            ctype__contains=VariantType.feature.value
+        ).values_list("name", "id"))
+        for i in range(0, len(features)):
+            field = form.get("features", index=i)
+            if field._value == str(features["PushedTag"]):
+                field.checked = True
+        response = form.submit()
+        self.assertEqual(response.status_code, 200)
