@@ -233,7 +233,6 @@ class SpiderTag(BaseContent):
                         )
                     )
         self._cached_references = _cached_references
-        print("found2:", _cached_references)
         return self._cached_references
 
     def get_form_kwargs(self, instance=None, **kwargs):

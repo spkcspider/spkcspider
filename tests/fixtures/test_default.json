@@ -3,14 +3,32 @@
     "model": "spider_accounts.SpiderUser",
     "pk": 1,
     "fields": {
-      "username": "testuser1"
+      "password": "pbkdf2_sha256$120000$CrshvNPFuLmU$/L/jA+hlYQFnA3gRTrOTO421BtQhadUUknbeH0ZpZiQ=",
+      "last_login": null,
+      "username": "testuser1",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2019-02-15T22:57:08.528Z",
+      "quota_local": null,
+      "quota_remote": null,
+      "groups": [],
+      "user_permissions": []
     }
   },
   {
     "model": "spider_accounts.SpiderUser",
     "pk": 2,
     "fields": {
-      "username": "testuser2"
+      "password": "pbkdf2_sha256$120000$CrshvNPFuLmU$/L/jA+hlYQFnA3gRTrOTO421BtQhadUUknbeH0ZpZiQ=",
+      "last_login": null,
+      "username": "testuser2",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2019-01-15T22:57:08.528Z",
+      "quota_local": null,
+      "quota_remote": null,
+      "groups": [],
+      "user_permissions": []
     }
   },
   {
@@ -54,5 +72,75 @@
       "created": "2014-03-17T17:41:28+00:00",
       "modified": "2018-03-16T17:41:28+00:00"
     }
+  },
+  {
+    "model": "spider_base.UserComponent",
+    "pk": 5,
+    "fields": {
+      "name": "index",
+      "user": 2,
+      "public": false,
+      "required_passes": 1,
+      "token": "5/3893892wsdjszewe78dsds9weo",
+      "strength": 10,
+      "created": "2014-03-17T17:41:28+00:00",
+      "modified": "2018-03-16T17:41:28+00:00"
+    }
+  },
+  {
+    "model": "spider_base.protection",
+    "pk": "friends",
+    "fields": {
+      "ptype": "a"
+    }
+  },
+  {
+    "model": "spider_base.protection",
+    "pk": "login",
+    "fields": {
+      "ptype": "ba"
+    }
+  },
+  {
+    "model": "spider_base.protection",
+    "pk": "password",
+    "fields": {
+      "ptype": "ab"
+    }
+  },
+  {
+    "model": "spider_base.protection",
+    "pk": "randomfail",
+    "fields": {
+      "ptype": "abe"
+    }
+  },
+  {
+    "model": "spider_base.assignedprotection",
+    "pk": 1,
+    "fields": {
+      "protection": "login",
+      "usercomponent": 2,
+      "data": "{}",
+      "created": "2019-02-15T22:57:10.417Z",
+      "modified": "2019-02-15T22:57:10.417Z",
+      "active": true,
+      "instant_fail": false
+    }
+  },
+  {
+    "model": "spider_base.assignedprotection",
+    "pk": 2,
+    "fields": {
+      "protection": "login",
+      "usercomponent": 5,
+      "data": "{}",
+      "created": "2019-02-15T22:57:10.417Z",
+      "modified": "2019-02-15T22:57:10.417Z",
+      "active": true,
+      "instant_fail": false
+    }
   }
+
+
 ]

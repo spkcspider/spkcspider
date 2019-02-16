@@ -181,7 +181,6 @@ def generate_form(name, layout):
                             )
                         )
             self.instance._cached_references = _cached_references
-            print("found1:", _cached_references)
             self.instance.full_clean()
             return self.cleaned_data
 

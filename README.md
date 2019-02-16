@@ -148,7 +148,7 @@ There are some special GET parameters for services with special requirements:
 ## Referrer
 * normal referrer mode: send token to referrer, client verifies with hash that he sent the token.
 * server-less referrer mode (sl): token is transferred as GET parameter and no POST request is made (less secure as client sees token and client is not authenticated)
-* domain referrer mode (domain): token get referrer domain but nothing more, doesn't work with other intentions. BUT: can be automated. Useful for tag updates
+* domain referrer mode (domain): token get referrer domain but nothing more, doesn't work with other intentions. BUT: can be automated. Useful for tag updates (only active if feature requests domain mode)
 
 ## payment intention
 
