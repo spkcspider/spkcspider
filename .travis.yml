@@ -1,4 +1,4 @@
-sudo: true
+sudo: false
 dist: xenial
 language: python
 python:
@@ -7,7 +7,6 @@ python:
   - "3.6"
   - "3.7"
 env:
-  - DJANGO="1.11"
   - DJANGO="2.0"
   - DJANGO="2.1"
   - DJANGO="master"
@@ -20,16 +19,10 @@ matrix:
     - python: "3.7"
       env: DJANGO="master"
   exclude:
-    - python: "2.7"
-      env: DJANGO="2.0"
-    - python: "2.7"
-      env: DJANGO="2.1"
-    - python: "2.7"
-      env: DJANGO="master"
     - python: "3.4"
       env: DJANGO="2.1"
     - python: "3.4"
       env: DJANGO="master"
 after_success: codecov
-install: pip install codecov
+install: ./setup.py install
 script: ./manage.py test
