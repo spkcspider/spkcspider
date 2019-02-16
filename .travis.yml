@@ -17,6 +17,5 @@ matrix:
       env: DJANGO="master"
     - python: "3.7"
       env: DJANGO="master"
-after_success: codecov
 install: pip install -e .[debug]
 script: ./manage.py test
