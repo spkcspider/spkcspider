@@ -15,6 +15,6 @@
 </div>
 {% if "update_guest" in abilities %}
 <div class="w3-padding">
-  <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_anonym' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
+  <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_guest' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
 </div>
 {% endif %}
