@@ -152,16 +152,18 @@ class SpiderTag(BaseContent):
     def get_strength_link(self):
         return 0
 
-    @property
-    def abilities(self, **kwargs):
+    def get_abilities(self, context):
         _abilities = set()
-        if kwargs["request"].auth_token.referrer:
+        if (
+            context["request"].auth_token and
+            context["request"].auth_token.referrer
+        ):
             if get_settings_func(
                 "SPIDER_TAG_VERIFIER_VALIDATOR",
                 "spkcspider.apps.spider.functions.allow_all_filter"
-            )(self, kwargs["request"]):
+            )(self, context["request"]):
                 _abilities.add("verify")
-            if kwargs["request"].auth_token.referrer in self.updateable_by:
+            if context["request"].auth_token.referrer in self.updateable_by:
                 _abilities.add("push_update")
         return _abilities
 

@@ -204,7 +204,6 @@ class TravelProtection(BaseContent):
             # "ctype": VariantType.unique.value
         }
     ]
-    abilities = ("deactivate")
 
     objects = TravelProtectionManager()
 
@@ -227,6 +226,9 @@ class TravelProtection(BaseContent):
         "spider_base.UserComponent", related_name="travel_protected",
         blank=True
     )
+
+    def get_abilities(self, context):
+        return ("deactivate",)
 
     def check_password(self, raw_password):
         """

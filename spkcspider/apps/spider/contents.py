@@ -32,9 +32,9 @@ from .helpers import (
 installed_contents = {}
 
 # don't spam set objects
-_empty_set = set()
+_empty_set = frozenset()
 
-default_abilities = set(
+default_abilities = frozenset(
     ("add", "view", "update", "export", "list", "raw", "raw_update")
 )
 
@@ -123,9 +123,6 @@ class BaseContent(models.Model):
     # use case: model with different abilities
     appearances = None
 
-    """ Override for declaring content extra abilities """
-    abilities = ()
-
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
     deletion_period = getattr(
@@ -207,6 +204,10 @@ class BaseContent(models.Model):
             description shown for spider if public and protections are active
         """
         return ""
+
+    def get_abilities(self, context):
+        """ Override for declaring content extra abilities """
+        return set()
 
     def get_instance_form(self, context):
         return self
@@ -350,8 +351,10 @@ class BaseContent(models.Model):
             spkcgraph["type"],
             Literal(self.associated.getlist("type", 1)[0])
         ))
+        if "abilities" not in context:
+            context["abilities"] = self.get_abilities(context)
 
-        for ability, name in self.abilities:
+        for ability, name in context["abilities"]:
             assert(ability not in default_abilities)
 
             graph.add((
@@ -579,12 +582,13 @@ class BaseContent(models.Model):
 
     def render(self, **kwargs):
         func = self.access_default
+        kwargs["abilities"] = set(self.get_abilities(kwargs))
         if kwargs["scope"] == "view" and "raw" in kwargs["request"].GET:
             kwargs["scope"] = "raw"
             return self.render_serialize(**kwargs)
         elif kwargs["scope"] in default_abilities:
             func = getattr(self, "access_{}".format(kwargs["scope"]))
-        elif kwargs["scope"] in self.abilities:
+        elif kwargs["scope"] in kwargs["abilities"]:
             func = getattr(self, "access_{}".format(kwargs["scope"]))
         return func(**kwargs)
 

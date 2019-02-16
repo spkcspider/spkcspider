@@ -46,7 +46,6 @@ def get_file_path(instance, filename):
 @add_content
 class FileFilet(BaseContent):
     appearances = [{"name": "File"}]
-    abilities = ("download",)
 
     name = models.CharField(max_length=255, null=False)
 
@@ -77,6 +76,9 @@ class FileFilet(BaseContent):
     def get_form(self, scope):
         from .forms import FileForm
         return FileForm
+
+    def get_abilities(self, context):
+        return set(("download",))
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
@@ -210,10 +212,9 @@ class TextFilet(BaseContent):
         ret["scope"] = kwargs["scope"]
         return ret
 
-    @property
-    def abilities(self, **kwargs):
+    def get_abilities(self, context):
         _abilities = set()
-        source = kwargs.get("source", self.associated.usercomponent)
+        source = context.get("source", self.associated.usercomponent)
         if self.id and self.editable_from.filter(
             pk=source.pk
         ).exists():
