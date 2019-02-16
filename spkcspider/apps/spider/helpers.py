@@ -174,5 +174,11 @@ def merge_get_url(_url, **kwargs):
     GET.update(kwargs)
     for item in _strip:
         GET.pop(item, None)
-    ret = urlunsplit((*urlparsed[:3], urlencode(GET), ""))
+    ret = urlunsplit((
+        urlparsed[0],
+        urlparsed[1],
+        urlparsed[2],
+        urlencode(GET),
+        ""
+    ))
     return ret
