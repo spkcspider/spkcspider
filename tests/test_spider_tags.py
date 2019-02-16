@@ -110,3 +110,4 @@ class TagTest(TransactionWebTest):
                 field.checked = True
         response = form.submit()
         self.assertEqual(response.status_code, 200)
+        # TODO: test pushed tags
