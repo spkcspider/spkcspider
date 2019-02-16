@@ -352,7 +352,7 @@ class BaseContent(models.Model):
             Literal(self.associated.getlist("type", 1)[0])
         ))
         if "abilities" not in context:
-            context["abilities"] = self.get_abilities(context)
+            context["abilities"] = set(self.get_abilities(context))
 
         for ability, name in context["abilities"]:
             assert(ability not in default_abilities)
