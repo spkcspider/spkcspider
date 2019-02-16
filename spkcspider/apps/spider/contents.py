@@ -587,17 +587,19 @@ class BaseContent(models.Model):
 
     access_raw_update = access_default
 
-    def render(self, **kwargs):
-        # kwargs contain abilities
+    def access(self, context):
+        # context is updated and used outside!!
+        # so make sure that func gets only a copy (**)
+        context["abilities"] = set(self.get_abilities(context))
         func = self.access_default
-        if kwargs["scope"] == "view" and "raw" in kwargs["request"].GET:
-            kwargs["scope"] = "raw"
-            return self.render_serialize(**kwargs)
-        elif kwargs["scope"] in default_abilities:
-            func = getattr(self, "access_{}".format(kwargs["scope"]))
-        elif kwargs["scope"] in kwargs["abilities"]:
-            func = getattr(self, "access_{}".format(kwargs["scope"]))
-        return func(**kwargs)
+        if context["scope"] == "view" and "raw" in context["request"].GET:
+            context["scope"] = "raw"
+            return self.render_serialize(**context)
+        elif context["scope"] in default_abilities:
+            func = getattr(self, "access_{}".format(context["scope"]))
+        elif context["scope"] in context["abilities"]:
+            func = getattr(self, "access_{}".format(context["scope"]))
+        return func(**context)
 
     def get_info(self, unique=None, unlisted=None):
         # unique=None, feature=None shortcuts for get_info overwrites

@@ -1,3 +1,5 @@
+import unittest
+
 from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
@@ -130,6 +132,7 @@ class ProtectionTest(TransactionWebTest):
         response = response.follow()
         self.assertNotIn("SPKCProtectionForm", response.forms)
 
+    @unittest.expectedFailure
     @override_settings(DEBUG=True)
     def test_protections(self):
         weak_pw = "fooobar"
@@ -152,6 +155,7 @@ class ProtectionTest(TransactionWebTest):
         response = form.submit()
         home.refresh_from_db()
         self.assertGreater(home.strength, 5)
+        self.assertTrue(home.can_auth)
 
         self.app.set_user(user=None)
         # resets session

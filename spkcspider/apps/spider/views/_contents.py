@@ -435,7 +435,7 @@ class ContentAdd(ContentBase, CreateView):
         ob = context["content_type"].static_create(
             associated=ucontent, **context
         )
-        rendered = ob.render(**ob.kwargs)
+        rendered = ob.access(ob.kwargs)
 
         # return response if content returned response
         if isinstance(rendered, HttpResponseBase):
@@ -519,7 +519,6 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
                 }),
                 context["remotelink"].urlencode()
             )
-        context["abilities"] = set(self.object.content.get_abilities(kwargs))
         return context
 
     def get_form_success_kwargs(self):
@@ -561,9 +560,8 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return self.test_token(minstrength)
 
     def render_to_response(self, context):
-        rendered = self.object.content.render(
-            **context
-        )
+        # context is updated and used outside!!
+        rendered = self.object.content.access(context)
 
         if self.scope == "update":
             # token changed => path has changed
