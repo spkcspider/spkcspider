@@ -77,13 +77,13 @@ DATABASES = {
 
 ~~~~
 
-Possibilities how to add utf8 charset to mysql:
+### Possibilities how to add utf8 charset to mysql:
 * use 'read_default_file' and add "default-character-set = utf8" in config
 * create database with "CHARACTER SET utf8"
 * see: https://docs.djangoproject.com/en/dev/ref/databases/#mysql-notes
 
 
-\_\_old crashes object creation:
+### \_\_old crashes object creation:
 downgrade sqlite3 to 3.25 or upgrade django to 2.1.5/2.0.10
 
 importing data:
@@ -92,6 +92,48 @@ set:
 UPDATE_DYNAMIC_AFTER_MIGRATION = False
 before importing data (with loaddata), update dynamic creates data
 
+### keep pathes if switching from cgi
+~~~~
+location /cgi-bin/cgihandler.fcgi {
+   rewrite /cgi-bin/cgihandler.fcgi/?(.*)$ https://new.spkcspider.net/$1 redirect ;
+}
+~~~~
+
+### logging
+In this model tokens are transferred as GET parameters. Consider disabling the
+logging of GET parameters (at least the sensible ones) or better:
+disable logging of successfull requests
+
+
+nginx filter tokens only (hard):
+~~~~
+location / {
+  set $filtered_request $request;
+  if ($filtered_request ~ (.*)token=[^&]*(.*)) {
+      set $filtered_request $1token=****$2;
+  }
+}
+log_format filtered_combined '$remote_addr - $remote_user [$time_local] '
+                    '"$filtered_request" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent"';
+
+access_log /var/logs/nginx-access.log filtered_combined;
+~~~~
+
+nginx filter GET parameters:
+~~~~
+log_format filtered_combined '$remote_addr - $remote_user [$time_local] '
+                    '"$uri" $status $body_bytes_sent '
+                    '"$http_referer" "$http_user_agent"';
+
+access_log /var/logs/nginx-access.log filtered_combined;
+~~~~
+
+apache filter GET parameters:
+~~~~
+LogFormat "%h %l %u %t \"%m %U %H\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
+
+~~~
 
 # API
 

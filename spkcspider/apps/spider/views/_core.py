@@ -147,45 +147,41 @@ class UserTestMixin(AccessMixin):
 
     def test_token(self, minstrength=0, force_token=False):
         expire = timezone.now()-self.usercomponent.token_duration
-        tokenstring = self.request.GET.get("token", None)
-        no_token = self.usercomponent.required_passes == 0
+        no_token = not force_token and self.usercomponent.required_passes == 0
         ptype = ProtectionType.access_control.value
         if minstrength >= 4:
             no_token = False
             ptype = ProtectionType.authentication.value
 
-        # token not (always) required
-        if not no_token or tokenstring:
-            # delete old token, so no confusion happen
-            self.remove_old_tokens(expire)
+        # delete old token, so no confusion happen
+        self.remove_old_tokens(expire)
 
-            # generate key if not existent
-            if not self.request.session.session_key:
-                self.request.session.cycle_key()
-
-            # only valid tokens here
-            tokenstring = self.request.GET.get("token", None)
-            if tokenstring or not self.request.session.session_key:
-                # find by tokenstring
-                token = self.usercomponent.authtokens.filter(
-                    token=tokenstring
-                ).first()
-            else:
-                # use session_key
-                token = self.usercomponent.authtokens.filter(
-                    session_key=self.request.session.session_key
-                ).first()
-            if token and token.extra.get("prot_strength", 0) >= minstrength:
-                self.request.token_expires = \
-                    token.created+self.usercomponent.token_duration
-                # case will never enter
-                # if not token.session_key and "token" not in self.request.GET:
-                #     return self.replace_token()
-                if token.extra.get("prot_strength", 0) >= 4:
-                    self.request.is_special_user = True
-                    self.request.is_owner = True
-                self.request.auth_token = token
-                return True
+        # only valid tokens here
+        tokenstring = self.request.GET.get("token", None)
+        if tokenstring:
+            # find by tokenstring
+            token = self.usercomponent.authtokens.filter(
+                token=tokenstring
+            ).first()
+        elif self.request.session.session_key:
+            # use session_key
+            token = self.usercomponent.authtokens.filter(
+                session_key=self.request.session.session_key
+            ).first()
+        elif not no_token:
+            # generate session key if it not exist and token is required
+            self.request.session.cycle_key()
+        if token and token.extra.get("prot_strength", 0) >= minstrength:
+            self.request.token_expires = \
+                token.created+self.usercomponent.token_duration
+            # case will never enter
+            # if not token.session_key and "token" not in self.request.GET:
+            #     return self.replace_token()
+            if token.extra.get("prot_strength", 0) >= 4:
+                self.request.is_special_user = True
+                self.request.is_owner = True
+            self.request.auth_token = token
+            return True
 
         # if result is impossible and token invalid try to login
         if minstrength >= 4 and not self.usercomponent.can_auth:
@@ -215,8 +211,8 @@ class UserTestMixin(AccessMixin):
             type(self.request.protections) is int and  # because: False==0
             self.request.protections >= minstrength
         ):
-            # token not required
-            if no_token and not force_token:
+            # generate no token if not required
+            if no_token:
                 return True
 
             token = self.create_token(
@@ -226,7 +222,7 @@ class UserTestMixin(AccessMixin):
                 }
             )
 
-            if token.extra.get("prot_strength", 0) >= 4:
+            if token.extra["prot_strength"] >= 4:
                 self.request.is_special_user = True
                 self.request.is_owner = True
 
