@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.contrib import messages
 from django.utils.translation import gettext
 
-from rdflib import Graph, Literal, URIRef
+from rdflib import Graph, Literal, URIRef, XSD
 
 from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
 from ..constants.static import spkcgraph, VariantType, index_names
@@ -158,7 +158,7 @@ class ComponentIndexBase(ListView):
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["scope"],
-                Literal(context["scope"])
+                Literal(context["scope"], datatype=XSD.string)
             ))
             g.add((
                 session_dict["sourceref"], spkcgraph["strength"],

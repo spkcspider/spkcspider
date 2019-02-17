@@ -1,12 +1,14 @@
 
+import unittest
+from urllib.parse import parse_qs, urlsplit
 
 from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
-from rdflib import Graph, XSD, Literal
+from rdflib import Graph, XSD, Literal, URIRef
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants.static import VariantType
+from spkcspider.apps.spider.constants.static import VariantType, spkcgraph
 from spkcspider.apps.spider.models import ContentVariant
 from spkcspider.apps.spider_tags.models import TagLayout
 from spkcspider.apps.spider.signals import update_dynamic
@@ -67,16 +69,12 @@ class TagTest(TransactionWebTest):
         form = response.form
         self.assertEqual(form["tag/country_code"].value, "dedsdlsdlsd")
         response = response.click(
-            href="{}\\?".format(
-                home.contents.first().get_absolute_url("view")
-            ), index=0
+            href=home.contents.first().get_absolute_url("view"), index=0
         )
         self.assertEqual(response.status_code, 200)
 
         response = response.click(
-            href="{}\\?".format(
-                home.contents.first().get_absolute_url("update")
-            )
+            href=home.contents.first().get_absolute_url("update")
         )
         form = response.form
         self.assertEqual(form["tag/country_code"].value, "de")
@@ -91,6 +89,7 @@ class TagTest(TransactionWebTest):
             g
         )
 
+    @unittest.expectedFailure
     @override_settings(DEBUG=True)
     def test_pushed_tags(self):
         home = self.user.usercomponent_set.filter(name="home").first()
@@ -110,4 +109,66 @@ class TagTest(TransactionWebTest):
                 field.checked = True
         response = form.submit()
         self.assertEqual(response.status_code, 200)
+        urls = home.features.first().installed_class.cached_feature_urls()
+        self.assertEqual(len(urls), 1)
+        pushed_url = urls[0].url
+        response = response.click(
+            href=home.get_absolute_url(), index=0
+        )
+        self.assertEqual(response.status_code, 200)
+        g = Graph()
+        g.parse(data=response.body, format="html")
+        self.assertIn(
+            (
+                URIRef("http://testserver{}".format(pushed_url)),
+                spkcgraph["feature:name"],
+                Literal("pushtag", datatype=XSD.string)
+            ),
+            g
+        )
+
+        # logout and clean session
+        self.app.set_user(user=None)
+        self.app.reset()
+
+        response = response.goto("{}?raw=true".format(
+            home.get_absolute_url()
+        ))
+
+        g2 = Graph()
+        g2.parse(data=response.body, format="turtle")
+        self.assertIn(
+            (
+                URIRef("http://testserver{}".format(pushed_url)),
+                spkcgraph["feature:name"],
+                Literal("pushtag", datatype=XSD.string)
+            ),
+            g2
+        )
+
+        response = self.app.get(
+            "{}?intention=domain&referrer=http://{}:{}".format(
+                home.get_absolute_url(),
+                *self.refserver.socket.getsockname()
+            )
+        )
+        query = parse_qs(urlsplit(response.location).query)
+        self.assertTrue(
+            response.location.startswith(
+                "http://{}:{}".format(*self.refserver.socket.getsockname())
+            )
+        )
+        response = response.follow()
+        self.assertEqual(response.status_code, 200)
+        token = self.refserver.tokens[query["hash"][0]]["token"]
+
+        response = self.app.get("{}?token={}".format(pushed_url, token))
+        self.assertIn("address", response.json)
+        response = self.app.post(
+            "{}?token={}".format(pushed_url, token),
+            {
+                "layout": "address"
+            }
+        )
+
         # TODO: test pushed tags

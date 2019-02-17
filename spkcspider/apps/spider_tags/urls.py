@@ -11,7 +11,7 @@ app_name = "spider_tags"
 
 urlpatterns = [
     path(
-        '',
+        'pushtag/create/',
         PushTagView.as_view(),
         name='create-pushtag'
     )

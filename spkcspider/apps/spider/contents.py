@@ -463,7 +463,7 @@ class BaseContent(models.Model):
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["scope"],
-                Literal(kwargs["scope"])
+                Literal(kwargs["scope"], datatype=XSD.string)
             ))
 
             uc = kwargs.get("source", self.associated.usercomponent)

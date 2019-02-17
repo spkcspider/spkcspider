@@ -9,6 +9,7 @@ from spkcspider.apps.spider.signals import update_dynamic
 class SpiderTagsConfig(AppConfig):
     name = 'spkcspider.apps.spider_tags'
     label = 'spider_tags'
+    spider_url_path = 'spidertags/'
     verbose_name = 'spkcspider tags optionally verified'
 
     def ready(self):

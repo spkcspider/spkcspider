@@ -42,7 +42,7 @@ def serialize_content(graph, content, context, embed=False):
         graph.add((
             ref_content,
             spkcgraph["type"],
-            Literal("Feature")
+            Literal("Feature", datatype=XSD.string)
         ))
 
     graph.add(
@@ -55,10 +55,10 @@ def serialize_content(graph, content, context, embed=False):
     graph.add((
         ref_content,
         spkcgraph["type"],
-        Literal("Content")
+        Literal("Content", datatype=XSD.string)
     ))
     add_property(
-        graph, "info", ref=ref_content, ob=content
+        graph, "info", ref=ref_content, ob=content, datatype=XSD.string
     )
     add_property(
         graph, "priority", ref=ref_content, ob=content
@@ -94,7 +94,7 @@ def serialize_component(graph, component, context, visible=True):
     graph.add((
         ref_component,
         spkcgraph["type"],
-        Literal("Component")
+        Literal("Component", datatype=XSD.string)
     ))
     if component.primary_anchor:
         url_content = urljoin(
@@ -128,7 +128,7 @@ def serialize_component(graph, component, context, visible=True):
         for feature in component.features.all():
             add_property(
                 graph, "features", ref=ref_component,
-                literal=feature.name
+                literal=feature.name, datatype=XSD.string
             )
     if (
         context.get("uc_namespace", None) and
@@ -174,6 +174,34 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
     )
 
 
+def list_features(graph, component, ref_component, context):
+    if not ref_component:
+        return
+    for feature in component.features.all():
+        add_property(
+            graph, "features", ref=ref_component,
+            literal=feature.name, datatype=XSD.string
+        )
+        if context["scope"] != "export":
+            for url_feature, name in \
+                  feature.installed_class.cached_feature_urls():
+                url_feature = urljoin(
+                    context["hostpart"],
+                    url_feature
+                )
+                ref_feature = URIRef(url_feature)
+                graph.add((
+                    ref_component,
+                    spkcgraph["action:feature"],
+                    ref_feature
+                ))
+                graph.add((
+                    ref_feature,
+                    spkcgraph["feature:name"],
+                    Literal(name, datatype=XSD.string)
+                ))
+
+
 def serialize_stream(
     graph, paginator, context, page=1, embed=False, visible=False
 ):
@@ -201,30 +229,8 @@ def serialize_stream(
     if paginator.object_list.model == UserComponent:
         for component in page_view.object_list:
             ref_component = serialize_component(graph, component, context)
-            if ref_component:
-                for feature in component.features.all():
-                    add_property(
-                        graph, "features", ref=ref_component,
-                        literal=feature.name
-                    )
-                    if context["scope"] != "export":
-                        for url_feature, name in \
-                              feature.installed_class.cached_feature_urls():
-                            url_feature = urljoin(
-                                context["hostpart"],
-                                url_feature
-                            )
-                            ref_feature = URIRef(url_feature)
-                            graph.add((
-                                ref_component,
-                                spkcgraph["action:feature"],
-                                ref_feature
-                            ))
-                            graph.add((
-                                ref_feature,
-                                spkcgraph["feature:name"],
-                                Literal(name)
-                            ))
+            list_features(graph, component, ref_component, context)
+
     else:
         ref_component = None
         usercomponent = None
@@ -239,32 +245,7 @@ def serialize_stream(
                     graph, usercomponent, context,
                     visible=visible
                 )
-                if ref_component:
-                    for feature in usercomponent.features.all():
-                        add_property(
-                            graph, "features", ref=ref_component,
-                            literal=feature.name
-                        )
-
-                        if context["scope"] != "export":
-                            for url_feature, name in \
-                                  feature.installed_class.cached_feature_urls():  # noqa: E501
-                                url_feature = urljoin(
-                                    context["hostpart"],
-                                    url_feature
-                                )
-                                ref_feature = URIRef(url_feature)
-                                graph.add((
-                                    ref_component,
-                                    spkcgraph["action:feature"],
-                                    ref_feature
-                                ))
-                                graph.add((
-                                    ref_feature,
-                                    spkcgraph["feature:name"],
-                                    Literal(name)
-                                ))
-
+                list_features(graph, usercomponent, ref_component, context)
             ref_content = serialize_content(
                 graph, content, context, embed=embed
             )

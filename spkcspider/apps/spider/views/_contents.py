@@ -283,11 +283,19 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         ):
             embed = True
 
-        p = paginate_stream(
-            context["object_list"],
-            getattr(settings, "SERIALIZED_PER_PAGE", 50),
-            getattr(settings, "SERIALIZED_MAX_DEPTH", 5)
-        )
+        if context["object_list"]:
+            p = paginate_stream(
+                context["object_list"],
+                getattr(settings, "SERIALIZED_PER_PAGE", 50),
+                getattr(settings, "SERIALIZED_MAX_DEPTH", 5)
+            )
+        else:
+            # no content, pagination works here only this way
+            p = paginate_stream(
+                UserComponent.objects.filter(pk=self.usercomponent.pk),
+                1,
+                1
+            )
         page = 1
         try:
             page = int(self.request.GET.get("page", "1"))
@@ -307,12 +315,12 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["scope"],
-                Literal(context["scope"])
+                Literal(context["scope"], datatype=XSD.string)
             ))
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["strength"],
-                Literal(self.usercomponent.strength)
+                Literal(self.usercomponent.strength, datatype=XSD.integer)
             ))
             if context["referrer"]:
                 g.add((
@@ -323,7 +331,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             if context["token_strength"]:
                 add_property(
                     g, "token_strength", ref=session_dict["sourceref"],
-                    literal=context["token_strength"]
+                    literal=context["token_strength"], datatype=XSD.integer
                 )
             for intention in context["intentions"]:
                 add_property(
