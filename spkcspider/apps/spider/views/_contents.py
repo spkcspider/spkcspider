@@ -178,8 +178,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     no_token_usercomponent = False
 
     def dispatch_extra(self, request, *args, **kwargs):
-        # only owner can use referring feature
-        if "referrer" in self.request.GET and self.request.is_owner:
+        if "referrer" in self.request.GET:
             self.object_list = self.get_queryset()
             return self.handle_referrer()
         return None
@@ -471,7 +470,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         #     ids = self.request.auth_token.extra.get("ids", None)
         #     if ids is not None and self.object.id not in ids:
         #         return self.handle_no_permission()
-        if "referrer" in self.request.GET and self.request.is_owner:
+        if "referrer" in self.request.GET:
             self.object_list = self.model.objects.filter(
                 pk=self.object.pk
             )

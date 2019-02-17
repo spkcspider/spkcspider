@@ -148,9 +148,7 @@ class UserTestMixin(AccessMixin):
     def test_token(self, minstrength=0, force_token=False):
         expire = timezone.now()-self.usercomponent.token_duration
         tokenstring = self.request.GET.get("token", None)
-        no_token = (
-            self.usercomponent.required_passes == 0 and not force_token
-        )
+        no_token = self.usercomponent.required_passes == 0
         ptype = ProtectionType.access_control.value
         if minstrength >= 4:
             no_token = False
@@ -218,7 +216,7 @@ class UserTestMixin(AccessMixin):
             self.request.protections >= minstrength
         ):
             # token not required
-            if no_token:
+            if no_token and not force_token:
                 return True
 
             token = self.create_token(
@@ -369,11 +367,14 @@ class ReferrerMixin(object):
                 return HttpResponse(
                     "invalid intentions", status=400
                 )
-            if "domain" in intentions and self.usercomponent.allow_domain_mode:
-                # domain mode must be used alone
-                if len(intentions) > 1:
+            if "domain" in intentions:
+
+                if not self.clean_domain_upgrade(
+                    {"intentions": intentions},
+                    False
+                ):
                     return HttpResponse(
-                        "invalid intentions", status=400
+                        "invalid domain upgrade", status=400
                     )
                 # requires token
                 force_token = True
@@ -462,11 +463,21 @@ class ReferrerMixin(object):
         )
 
     def clean_domain_upgrade(self, context, token):
-        if not token or token.created_by_special_user:
+        if not self.usercomponent.allow_domain_mode:
+            return False
+
+        if "referrer" not in self.request.GET:
+            return False
+        # domain mode must be used alone
+        if len(context["intentions"]) > 1:
             return False
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
-        if len(context["intentions"]) != 1:
+
+        # False for really no token
+        if token is False:
+            return True
+        if not token or token.created_by_special_user:
             return False
         return True
 
@@ -593,7 +604,7 @@ class ReferrerMixin(object):
             if not self.clean_domain_upgrade(context, token):
                 return HttpResponse(
                     status=400,
-                    content=_('Invalid token')
+                    content='Invalid token'
                 )
             token.create_auth_token()
             try:
