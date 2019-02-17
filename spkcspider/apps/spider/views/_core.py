@@ -158,6 +158,7 @@ class UserTestMixin(AccessMixin):
 
         # only valid tokens here
         tokenstring = self.request.GET.get("token", None)
+        token = None
         if tokenstring:
             # find by tokenstring
             token = self.usercomponent.authtokens.filter(
