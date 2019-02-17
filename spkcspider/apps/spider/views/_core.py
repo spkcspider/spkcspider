@@ -485,7 +485,10 @@ class ReferrerMixin(object):
         currency = None
         pay_amount = None
         capture = None
-        # First error: invalid intentions
+        # Only owner can use other intentions than domain
+        if not self.request.is_owner:
+            return False
+        # Second error: invalid intentions
         #  this is the second time the validation will be executed
         #    in case test_token path is used
         #  this is the first time the validation will be executed
