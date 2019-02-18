@@ -7,8 +7,8 @@
     <li id="{{field.auto_id}}_wrapper" class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
       <div>
         <div class="{% if field.help_text %}w3-cell {% endif %}w3-padding">
-          <data hidden="hidden" property="spkc:fieldname">{{field.html_name}}</data>
-          <data hidden="hidden" property="spkc:name">{{field.name}}</data>
+          <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.html_name}}</data>
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
           {% hashable_literalize field as hashable %}
           <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
           <div>{{ field.label_tag }}</div>
@@ -19,11 +19,11 @@
           {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
             {% for q in field.value %}
               {% literalize q as LiteralData %}
-              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}">{{LiteralData}}</data>
+              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
             {% endfor %}
           {% else %}
             {% literalize field as LiteralData %}
-            <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype|default:'xsd:string'}}">{{LiteralData}}</data>
+            <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
           {% endif %}
           {% block form_widget %}
           {% if field|widget_type == "checkboxselectmultiple" %}
