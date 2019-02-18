@@ -47,10 +47,11 @@ class UserTestMixin(AccessMixin):
 
     def dispatch(self, request, *args, **kwargs):
         _ = gettext
-        self.request.is_owner = False
-        self.request.is_special_user = False
-        self.request.is_staff = False
-        self.request.auth_token = None
+        self.request.is_owner = getattr(self.request, "is_owner", False)
+        self.request.is_special_user = \
+            getattr(self.request, "is_special_user", False)
+        self.request.is_staff = getattr(self.request, "is_staff", False)
+        self.request.auth_token = getattr(self.request, "auth_token", None)
         try:
             user_test_result = self.test_func()
         except TokenCreationError:
@@ -607,6 +608,7 @@ class ReferrerMixin(object):
                     content='Invalid token'
                 )
             token.create_auth_token()
+            token.referrer = context["referrer"]
             try:
                 token.save()
             except TokenCreationError:

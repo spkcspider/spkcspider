@@ -149,7 +149,7 @@ class SpiderTag(BaseContent):
         ]
 
     def get_template_name(self, scope):
-        if scope in ["add", "update"]:
+        if scope in ["add", "update", "push_update"]:
             return 'spider_tags/edit_form.html'
         return 'spider_tags/view_form.html'
 
@@ -195,6 +195,7 @@ class SpiderTag(BaseContent):
 
     def access_push_update(self, **kwargs):
         kwargs["legend"] = _("Update \"%s\" (push)") % self.__str__()
+        kwargs["inner_form"] = False
         return self.access_update(**kwargs)
 
     def get_form(self, scope):

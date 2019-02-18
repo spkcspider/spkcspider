@@ -1,5 +1,4 @@
 
-import unittest
 from urllib.parse import parse_qs, urlsplit
 
 from django.test import override_settings
@@ -7,13 +6,16 @@ from django_webtest import TransactionWebTest
 from django.urls import reverse
 from rdflib import Graph, XSD, Literal, URIRef
 
+import requests
+
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import VariantType, spkcgraph
-from spkcspider.apps.spider.models import ContentVariant
+from spkcspider.apps.spider.models import ContentVariant, AuthToken
 from spkcspider.apps.spider_tags.models import TagLayout
 from spkcspider.apps.spider.signals import update_dynamic
 
 from tests.referrerserver import create_referrer_server
+
 # Create your tests here.
 
 
@@ -89,7 +91,7 @@ class TagTest(TransactionWebTest):
             g
         )
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     @override_settings(DEBUG=True)
     def test_pushed_tags(self):
         home = self.user.usercomponent_set.filter(name="home").first()
@@ -158,17 +160,48 @@ class TagTest(TransactionWebTest):
                 "http://{}:{}".format(*self.refserver.socket.getsockname())
             )
         )
-        response = response.follow()
-        self.assertEqual(response.status_code, 200)
+
+        response = requests.get(response.location)
+        response.raise_for_status()
+        self.assertIn(query["hash"][0], response.text)
         token = self.refserver.tokens[query["hash"][0]]["token"]
+        tokenob = AuthToken.objects.filter(token=token).first()
+        self.assertTrue(tokenob)
+        self.assertTrue(tokenob.referrer)
 
         response = self.app.get("{}?token={}".format(pushed_url, token))
-        self.assertIn("address", response.json)
+        self.assertIn("address", response.json["layouts"])
         response = self.app.post(
             "{}?token={}".format(pushed_url, token),
             {
                 "layout": "address"
             }
         )
+        response = response.follow()
+        self.assertEqual(response.status_code, 200)
+        form = response.form
+        form["tag/name"] = "Alouis Alchemie AG"
+        form["tag/place"] = "Holdenstreet"
+        form["tag/street_number"] = "40C"
+        form["tag/city"] = "Liquid-City"
+        form["tag/post_code"] = "123456"
+        form["tag/country_code"] = "de"
+        response = form.submit()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.form["tag/city"].value, "Liquid-City")
+        response = self.app.get(
+            "{}?raw=true".format(
+                home.contents.first().get_absolute_url("view")
+            )
+        )
 
-        # TODO: test pushed tags
+        g = Graph()
+        g.parse(data=response.body, format="turtle")
+        self.assertIn(
+            (None, None, Literal("tag/country_code", datatype=XSD.string)),
+            g
+        )
+        self.assertIn(
+            (None, None, Literal("Alouis Alchemie AG")),
+            g
+        )

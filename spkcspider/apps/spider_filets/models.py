@@ -225,6 +225,7 @@ class TextFilet(BaseContent):
     def access_update_guest(self, **kwargs):
         kwargs["legend"] = \
             _("Update \"%s\" (guest)") % self.__str__()
+        kwargs["inner_form"] = False
         return self.access_update(**kwargs)
 
     def access_view(self, **kwargs):

@@ -361,13 +361,13 @@ class BaseContent(models.Model):
         if "abilities" not in context:
             context["abilities"] = set(self.get_abilities(context))
 
-        for ability, name in context["abilities"]:
+        for ability in context["abilities"]:
             assert(ability not in default_abilities)
 
             graph.add((
                 ref_content,
                 spkcgraph["ability:name"],
-                Literal(name, datatype=XSD.string)
+                Literal(ability, datatype=XSD.string)
             ))
 
         for name, field in form.fields.items():
