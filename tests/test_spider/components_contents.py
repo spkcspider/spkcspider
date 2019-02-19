@@ -148,8 +148,7 @@ class AdvancedComponentTest(TransactionWebTest):
         listurl = reverse(
             "spider_base:ucontent-list",
             kwargs={
-                "token": private.token,
-                "type": "AnchorServer"
+                "token": private.token
             }
         )
         self.app.set_user("testuser1")
