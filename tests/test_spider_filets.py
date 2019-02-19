@@ -1,4 +1,6 @@
+import unittest
 
+from django.urls import reverse
 
 from django_webtest import TransactionWebTest
 
@@ -17,7 +19,62 @@ class TextFiletTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
-    # TODO: test TextFilet
+    @unittest.expectedFailure
+    def test_guest(self):
+        home = self.user.usercomponent_set.get(name="home")
+
+        # try to create
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "Text"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        form = self.app.get(createurl).form
+        form.set("name", "foo")
+        form.set("text", "foooo")
+        for field in form.fields["editable_from"]:
+            if field._value == "home":
+                field.checked = True
+                break
+        response = form.submit()
+        updateurl = response.location
+        response = response.follow()
+        self.assertEqual(response.status_code, 200)
+        # check that parameters are saved (don't reuse form from request)
+        self.assertEqual(self.app.get(updateurl).form["text"].value, "foooo")
+        # logout and clean session
+        self.app.set_user(user=None)
+        self.app.reset()
+
+        textob = home.contents.first()
+        self.assertEqual(updateurl, textob.get_absolute_url("update"))
+
+        updateg_url = reverse(
+            "spider_base:ucontent-access",
+            kwargs={
+                "token": textob.token,
+                "access": "update_guest"
+            }
+        )
+
+        # user update successfull
+        response = self.app.get(reverse(
+            "spider_base:ucontent-access",
+            kwargs={
+                "token": textob.token,
+                "access": "view"
+            }
+        ))
+        self.assertEqual(response.status_code, 200)
+        response = response.click(href=updateg_url)
+        form = response.form
+        form.set("text", "nope")
+        response = form.submit()
+
+        self.assertEqual(self.app.get(updateg_url).form["text"].value, "nope")
 
 
 class FileFiletTest(TransactionWebTest):

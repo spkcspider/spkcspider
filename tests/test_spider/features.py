@@ -124,10 +124,10 @@ class FeaturesTest(TransactionWebTest):
             }
         )
         form = self.app.get(updateurl).forms["componentForm"]
-        for i in range(0, len(features)):
-            field = form.get("features", index=i)
+        for field in form.fields["features"]:
             if field._value == str(features["WebConfig"]):
                 field.checked = True
+                break
         response = form.submit()
         self.assertEqual(response.status_code, 200)
         self.assertTrue(home.features.filter(

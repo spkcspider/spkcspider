@@ -105,10 +105,11 @@ class TagTest(TransactionWebTest):
         features = dict(ContentVariant.objects.filter(
             ctype__contains=VariantType.feature.value
         ).values_list("name", "id"))
-        for i in range(0, len(features)):
-            field = form.get("features", index=i)
+        # select checkbox
+        for field in form.fields["features"]:
             if field._value == str(features["PushedTag"]):
                 field.checked = True
+                break
         response = form.submit()
         self.assertEqual(response.status_code, 200)
         urls = home.features.first().installed_class.cached_feature_urls()
@@ -120,6 +121,7 @@ class TagTest(TransactionWebTest):
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=response.body, format="html")
+        # required for referrer stuff
         self.assertIn(
             (
                 URIRef("http://testserver{}".format(pushed_url)),
