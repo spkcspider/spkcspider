@@ -146,7 +146,7 @@ class AdvancedComponentTest(TransactionWebTest):
             }
         )
         listurl = reverse(
-            "spider_base:ucontent-add",
+            "spider_base:ucontent-list",
             kwargs={
                 "token": private.token,
                 "type": "AnchorServer"

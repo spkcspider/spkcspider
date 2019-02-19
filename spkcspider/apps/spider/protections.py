@@ -313,12 +313,6 @@ class PasswordProtection(BaseProtection):
     description = _("Protect with extra passwords")
     prefix = "protection_passwords"
 
-    # TODO: mark single pws for auth
-    allow_auth = forms.BooleanField(
-        label=_("Component authentication"), required=False,
-        help_text=_("(with strong passwords)")
-    )
-
     class auth_form(forms.Form):
         use_required_attribute = False
         password = forms.CharField(
@@ -327,12 +321,22 @@ class PasswordProtection(BaseProtection):
             widget=forms.PasswordInput,
         )
 
-    passwords = forms.CharField(
-        label=_("Passwords"),
-        help_text=_("One password per line. Every password is stripped."),
-        widget=forms.Textarea,
-        strip=True, required=False,
-        initial=""
+    passwords = OpenChoiceField(
+        label=_("Passwords"), required=False,
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
+    )
+
+    auth_passwords = passwords = OpenChoiceField(
+        label=_("Passwords (for component authentcation)"), required=False,
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
     )
 
     @staticmethod
@@ -344,18 +348,27 @@ class PasswordProtection(BaseProtection):
         return 1
 
     def get_strength(self):
+        maxstrength = self.eval_strength(self.cleaned_data["max_length"])
+        if len(self.cleaned_data["auth_passwords"]) > 0:
+            maxstrength = 4
         return (
             self.eval_strength(self.cleaned_data["min_length"]),
-            self.eval_strength(self.cleaned_data["max_length"])
+            maxstrength
         )
 
     def clean_passwords(self):
         passwords = set()
-        for i in self.cleaned_data["passwords"].split("\n"):
-            newpw = i.strip()
-            if len(newpw) > 0:
-                passwords.add(newpw)
-        return "\n".join(passwords)
+        for pw in self.cleaned_data["passwords"]:
+            if len(pw) > 0:
+                passwords.add(pw)
+        return list(passwords)
+
+    def clean_auth_passwords(self):
+        passwords = set()
+        for pw in self.cleaned_data["auth_passwords"]:
+            if self.eval_strength(len(pw)) >= 2:
+                passwords.add(pw)
+        return list(passwords)
 
     def clean(self):
         ret = super().clean()
@@ -367,7 +380,14 @@ class PasswordProtection(BaseProtection):
         min_length = None
         max_length = None
 
-        for pw in self.cleaned_data["passwords"].split("\n"):
+        for pw in self.cleaned_data["passwords"]:
+            lenpw = len(pw)
+            if not min_length or lenpw < min_length:
+                min_length = lenpw
+            if not max_length or lenpw > max_length:
+                max_length = lenpw
+
+        for pw in self.cleaned_data["auth_passwords"]:
             lenpw = len(pw)
             if not min_length or lenpw < min_length:
                 min_length = lenpw
@@ -387,20 +407,27 @@ class PasswordProtection(BaseProtection):
             )
             return retfalse
         success = False
+        auth = False
         max_length = 0
         for password in request.POST.getlist("password")[:2]:
-            for pw in obj.data["passwords"].split("\n"):
+            for pw in obj.data["passwords"]:
                 if constant_time_compare(pw, password):
                     success = True
             if success:
                 max_length = max(len(password), max_length)
 
+        for password in request.POST.getlist("password")[:2]:
+            for pw in obj.data["auth_passwords"]:
+                if constant_time_compare(pw, password):
+                    success = True
+            if success:
+                max_length = max(len(password), max_length)
+                auth = True
+
         if success:
-            ret = cls.eval_strength(max_length)
-            if obj.data.get("allow_auth", False):
-                if ret >= 2:
-                    return 4
-                return ret
+            if auth:
+                return 4
+            return cls.eval_strength(max_length)
         return retfalse
 
 

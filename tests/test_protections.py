@@ -1,5 +1,3 @@
-import unittest
-
 from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
@@ -132,7 +130,6 @@ class ProtectionTest(TransactionWebTest):
         response = response.follow()
         self.assertNotIn("SPKCProtectionForm", response.forms)
 
-    @unittest.expectedFailure
     @override_settings(DEBUG=True)
     def test_protections(self):
         weak_pw = "fooobar"
@@ -148,10 +145,10 @@ class ProtectionTest(TransactionWebTest):
         form = response.forms["componentForm"]
         form["required_passes"] = 1
         form["protections_password-active"] = True
-        form["protections_password-passwords"] = "\n".join(
-            (weak_pw, strong_pw)
+        form.fields["protections_password-passwords"][0].force_value(weak_pw)
+        form.fields["protections_password-auth_passwords"][0].force_value(
+            strong_pw
         )
-        form["protections_password-allow_auth"] = True
         response = form.submit()
         home.refresh_from_db()
         self.assertGreater(home.strength, 5)
@@ -190,12 +187,19 @@ class ProtectionTest(TransactionWebTest):
         self.assertTrue(response.location.startswith(home.get_absolute_url()))
 
         authurl = "?".join(
-            (home.get_absolute_url(), "token=prefer&intention=auth")
+            (home.get_absolute_url(), "intention=auth")
         )
         response = self.app.get(authurl)
         form = response.form
         form.set("password", strong_pw, index=0)
         response = form.submit()
-        self.assertTrue(response.location.startswith(home.get_absolute_url()))
-        response = response.follow()
-        response = response.form.submit("action", value="confirm")
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "AnchorServer"
+            }
+        )
+        response = self.app.get(createurl).form.submit()
+        # home.refresh_from_db()
+        self.assertGreater(home.contents.count(), 0)
