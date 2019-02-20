@@ -1,6 +1,7 @@
 from django.urls import reverse
 
 from django_webtest import TransactionWebTest
+from webtest import Upload
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.signals import update_dynamic
@@ -84,4 +85,19 @@ class FileFiletTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
-    # TODO: test TextFilet
+    def test_upload_file(self):
+        home = self.user.usercomponent_set.get(name="home")
+
+        # try to create
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "File"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        form = self.app.get(createurl).form
+        form["file"] = Upload("fooo", b"[]", "application/json")
+        response = form.submit()
+        self.assertEqual(response.status_code, 200)

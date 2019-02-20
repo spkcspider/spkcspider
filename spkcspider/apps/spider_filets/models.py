@@ -118,6 +118,8 @@ class FileFilet(BaseContent):
                 name = "%s.%s" % (name, ext[1])
         response['Content-Disposition'] = \
             'attachment; filename=%s' % html.escape(name)
+
+        response["Access-Control-Allow-Origin"] = "*"
         return response
 
     def access_add(self, **kwargs):
