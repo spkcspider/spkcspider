@@ -99,5 +99,5 @@ class FileFiletTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         form = self.app.get(createurl).form
         form["file"] = Upload("fooo", b"[]", "application/json")
-        response = form.submit()
+        response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
