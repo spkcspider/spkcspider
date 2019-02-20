@@ -1,5 +1,3 @@
-import unittest
-
 from django.urls import reverse
 
 from django_webtest import TransactionWebTest
@@ -19,8 +17,7 @@ class TextFiletTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
-    @unittest.expectedFailure
-    def test_guest(self):
+    def test_guest_and_normal(self):
         home = self.user.usercomponent_set.get(name="home")
 
         # try to create
@@ -36,7 +33,7 @@ class TextFiletTest(TransactionWebTest):
         form.set("name", "foo")
         form.set("text", "foooo")
         for field in form.fields["editable_from"]:
-            if field._value == "home":
+            if field._value == str(home.id):
                 field.checked = True
                 break
         response = form.submit()

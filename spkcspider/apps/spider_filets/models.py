@@ -176,7 +176,7 @@ class TextFilet(BaseContent):
 
     def get_template_name(self, scope):
         # view update form
-        if scope == "update_user":
+        if scope == "update_guest":
             return 'spider_base/edit_form.html'
         elif scope == "view":
             return 'spider_base/text.html'

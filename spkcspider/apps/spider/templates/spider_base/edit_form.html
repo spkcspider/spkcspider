@@ -10,8 +10,8 @@
     {% include "spider_base/base_form.html" with form=form %}
   </fieldset>
   {% if not inner_form %}
-    <button class="w3-button w3-grey">
+    <button class="w3-button w3-grey" style="margin-bottom: 5px">
       {{confirm}}
     </button>
-    {% endif %}
+  {% endif %}
 <{% if not inner_form %}/form{% else %}/div{% endif %}>

@@ -96,10 +96,11 @@ class TextForm(forms.ModelForm):
 
         del self.fields["editable_from"]
         del self.fields["preview_words"]
+        del self.fields["push"]
         del self.fields["name"]
 
         allow_edit = False
-        if scope == "update_user":
+        if scope == "update_guest":
             allow_edit = True
 
         self.fields["text"].disabled = not allow_edit
