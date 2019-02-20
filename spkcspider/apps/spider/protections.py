@@ -330,7 +330,7 @@ class PasswordProtection(BaseProtection):
         )
     )
 
-    auth_passwords = passwords = OpenChoiceField(
+    auth_passwords = OpenChoiceField(
         label=_("Passwords (for component authentication)"), required=False,
         widget=OpenChoiceWidget(
             attrs={
