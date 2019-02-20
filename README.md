@@ -257,7 +257,7 @@ Otherwise security could be compromised.
 * Webreferences can contain cache
 * can optionally contain tags used for encryption and/or refcounting for automatic deletion
 
-### Reimplement TravelProtection
+### implement TravelProtection new
 * hide contents
 * fake_index?
 * also: encrypt pws

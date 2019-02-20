@@ -16,6 +16,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
 from django.views.decorators.debug import sensitive_variables
+# from django.contrib.auth.hashers import make_password
 
 from .helpers import add_by_field
 from django.utils.crypto import constant_time_compare
@@ -27,7 +28,7 @@ installed_protections = {}
 _sysrand = SystemRandom()
 
 # don't spam set objects
-_empty_set = set()
+_empty_set = frozenset()
 
 # for debug/min switch
 _extra = '' if settings.DEBUG else '.min'
@@ -339,6 +340,11 @@ class PasswordProtection(BaseProtection):
         )
     )
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if ProtectionType.authentication.value in self.ptype:
+            del self.fields["auth_passwords"]
+
     @staticmethod
     def eval_strength(length):
         if length > 15:
@@ -374,20 +380,20 @@ class PasswordProtection(BaseProtection):
         ret = super().clean()
         # prevents user self lockout
         if ProtectionType.authentication.value in self.ptype and \
-           self.cleaned_data["passwords"] == "":
+           len(self.cleaned_data["passwords"]) == 0:
             self.cleaned_data["active"] = False
 
         min_length = None
         max_length = None
 
-        for pw in self.cleaned_data["passwords"]:
+        for pw in self.cleaned_data.get("apasswords", _empty_set):
             lenpw = len(pw)
             if not min_length or lenpw < min_length:
                 min_length = lenpw
             if not max_length or lenpw > max_length:
                 max_length = lenpw
 
-        for pw in self.cleaned_data["auth_passwords"]:
+        for pw in self.cleaned_data.get("auth_passwords", _empty_set):
             lenpw = len(pw)
             if not min_length or lenpw < min_length:
                 min_length = lenpw

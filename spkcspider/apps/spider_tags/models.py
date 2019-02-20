@@ -177,6 +177,8 @@ class SpiderTag(BaseContent):
     def access_verify(self, **kwargs):
         # full url to result
         verified = kwargs["request"].POST.get("verified_url", "")
+        if verified == "":
+            return HttpResponse(status_code=400)
         if not verified.startswith(kwargs["request"].auth_token.referrer):
             raise PermissionDenied()
         if verified in self.verified_by:
