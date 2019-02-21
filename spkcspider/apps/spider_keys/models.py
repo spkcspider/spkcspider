@@ -24,7 +24,7 @@ _htest.update(b"test")
 
 _help_text_sig = _("""Signature of Identifier""")
 
-_help_text_key = _(""""Public Key"-Content""")
+_help_text_key = _(""""Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption.""")  # noqa
 
 ID_VERIFIERS = {
 
@@ -47,26 +47,18 @@ class PublicKey(BaseContent):
         {"name": "PublicKey", "ctype": VariantType.unique.value}
     ]
 
-    key = models.TextField(editable=True, validators=[valid_pkey_properties])
-    note = models.TextField(max_length=100, default="", null=False, blank=True)
-    use_for_encryption = models.BooleanField(
-        blank=True, default=True,
-        help_text=_("Use for encryption not for signing.")
+    key = models.TextField(
+        editable=True, validators=[valid_pkey_properties],
+        help_text=_(
+            "It is recommended to use different keys"
+            "for signing and encryption"
+        )
     )
+    note = models.TextField(max_length=100, default="", null=False, blank=True)
 
     @classmethod
     def localize_name(cls, name):
         return pgettext("content name", "Public Key")
-
-    def clean(self):
-        if self._associated_tmp:
-            self._associated_tmp.content = self
-        if self.anchorkey and self.use_for_encryption:
-            raise ValidationError(
-                _('Cannot use PublicKey for Signing and Encryption'),
-                code="encryption_and_signing"
-            )
-        super().clean()
 
     def get_info(self):
         ret = super().get_info()
@@ -74,17 +66,18 @@ class PublicKey(BaseContent):
         h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
         h.update(key.encode("ascii", "ignore"))
         # don't put use_for_encryption state here; this would break unique
-        return "%shash:%s=%s\n%s" % (
-            ret, settings.SPIDER_HASH_ALGORITHM, h.hexdigest()
+        return "%shash:%s=%s\nnote=%s\n" % (
+            ret, settings.SPIDER_HASH_ALGORITHM, h.hexdigest(),
+            self.note[:200].replace("\n", " ")
         )
 
     def get_key_name(self):
         # PEM key
         split = self.key.split("\n")
         if len(split) > 1:
-            return (self.associated.getlist(
-                "hash:%s" % settings.SPIDER_HASH_ALGORITHM, 1
-            )[0], None)
+            h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
+            h.update(self.key.encode("ascii", "ignore"))
+            return (h.hexdigest(), None)
 
         # ssh key
         split = self.key.rsplit(" ", 1)
@@ -190,9 +183,7 @@ class AnchorKey(AnchorServer):
 
     key = models.OneToOneField(
         PublicKey, on_delete=models.CASCADE, related_name="anchorkey",
-        help_text=_help_text_key, limit_choices_to={
-            "use_for_encryption": False
-        }
+        help_text=_help_text_key
     )
 
     signature = models.CharField(
