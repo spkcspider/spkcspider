@@ -178,8 +178,6 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True
 
-## Enable direct file downloads (handled by webserver)  # noqa: E266
-# disadvantage: blocking access requires file name change
 # DIRECT_FILE_DOWNLOAD = True
 
 # ALLOWED_CONTENT_FILTER
@@ -189,8 +187,11 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # SPIDER_COMPONENTS_DELETION_PERIODS
 # SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD
 # RATELIMIT_FUNC_CONTENTS
-# FILET_FILE_DIR
-# FILE_SALT_SIZE
+## Enable direct file downloads (handled by webserver)  # noqa: E266
+# disadvantage: blocking access requires file name change
+# FILE_DIRECT_DOWNLOAD
+# FILE_FILET_DIR
+# FILE_FILET_SALT_SIZE
 # SPIDER_GET_QUOTA
 # SPIDER_USER_QUOTA_LOCAL
 # SPIDER_USER_QUOTA_REMOTE

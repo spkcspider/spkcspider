@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 
 def get_file_path(instance, filename):
-    ret = getattr(settings, "FILET_FILE_DIR", "file_filet")
-    size = getattr(settings, "FILE_SALT_SIZE", 45)
+    ret = getattr(settings, "FILE_FILET_DIR", "file_filet")
+    size = getattr(settings, "FILE_FILET_SALT_SIZE", 45)
     # try 100 times to find free filename
     # but should not take more than 1 try
     # IMPORTANT: strip . to prevent creation of htaccess files or similar
@@ -101,7 +101,7 @@ class FileFilet(BaseContent):
         )
 
     def access_download(self, **kwargs):
-        if getattr(settings, "DIRECT_FILE_DOWNLOAD", False):
+        if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
             response = HttpResponseRedirect(
                 self.file.url,
             )

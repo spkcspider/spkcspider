@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.test import override_settings
 
 from django_webtest import TransactionWebTest
 from webtest import Upload
@@ -101,3 +102,13 @@ class FileFiletTest(TransactionWebTest):
         form["file"] = Upload("fooo", b"[]", "application/json")
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
+        durl = home.contents.first().get_absolute_url("download")
+        with self.subTest(msg="Download django"):
+            response = self.app.get(durl)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.body, b"[]")
+        with self.subTest(msg="Download direct"):
+            with override_settings(FILE_DIRECT_DOWNLOAD=True):
+                response = self.app.get(durl)
+                self.assertEqual(response.status_code, 302)
+                # no server so skip, as it doesn't work
