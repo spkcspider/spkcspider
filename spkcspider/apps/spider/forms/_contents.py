@@ -48,7 +48,7 @@ class LinkForm(forms.ModelForm):
             strength__lte=uc.strength
         ).exclude(usercomponent__travel_protected__in=travel)
         # component auth should limit links to visible content
-        # rw access outside from component elsewise possible
+        # read access outside from component elsewise possible
         if request.user != uc.user and not request.is_staff:
             q = self.fields["content"].queryset
             self.fields["content"].queryset = q.filter(
