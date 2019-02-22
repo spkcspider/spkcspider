@@ -52,7 +52,8 @@ class LinkForm(forms.ModelForm):
         if request.user != uc.user and not request.is_staff:
             q = self.fields["content"].queryset
             self.fields["content"].queryset = q.filter(
-                usercomponent=uc
+                models.Q(usercomponent=uc) |
+                models.Q(referenced_by__usercomponent=uc)
             )
 
 
