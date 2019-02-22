@@ -25,6 +25,10 @@ from spkcspider.apps.spider.models import AssignedContent
 from spkcspider.apps.spider.contents import BaseContent
 
 
+# don't spam set objects
+_empty_set = frozenset()
+
+
 class TagLayoutForm(forms.ModelForm):
     class Meta:
         model = TagLayout
@@ -124,17 +128,23 @@ def generate_form(name, layout):
             for field in self.fields.values():
                 if hasattr(field, "queryset"):
                     filters = {}
+                    q_user = Q()
+                    q_uc = Q()
                     # can also contain __lte or so
                     attr = getattr(field, "filter_strength_link", None)
                     if attr:
                         filters[attr] = uc.strength
-                    attr = getattr(field, "limit_to_usercomponent", None)
-                    if attr:
-                        filters[attr] = uc
-                    attr = getattr(field, "limit_to_user", None)
-                    if attr:
-                        filters[attr] = uc.user
-                    field.queryset = field.queryset.filter(**filters)
+                    attrs = getattr(field, "filters_user", _empty_set)
+                    if attrs:
+                        for i in attrs:
+                            q_user |= Q(**{i: uc.user})
+                    attrs = getattr(field, "filters_usercomponent", _empty_set)
+                    if attrs:
+                        for i in attrs:
+                            q_uc |= Q(**{i: uc})
+                    field.queryset = field.queryset.filter(
+                        q_user, q_uc, **filters
+                    )
 
         def clean(self):
             super().clean()

@@ -52,9 +52,12 @@ class UserContentRefField(forms.ModelChoiceField):
     def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
         if limit_to_uc:
-            self.limit_to_usercomponent = "associated_rel__usercomponent"
+            self.filters_usercomponent = (
+                "associated_rel__usercomponent",
+                "associated_rel__referenced_by__usercomponent"
+            )
         else:
-            self.limit_to_user = "associated_rel__usercomponent__user"
+            self.filters_user = ("associated_rel__usercomponent__user",)
 
         model = apps.get_model(
             modelname
@@ -88,9 +91,12 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
     def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
         if limit_to_uc:
-            self.limit_to_usercomponent = "associated_rel__usercomponent"
+            self.filters_usercomponent = (
+                "associated_rel__usercomponent",
+                "associated_rel__referenced_by__usercomponent"
+            )
         else:
-            self.limit_to_user = "associated_rel__usercomponent__user"
+            self.filters_user = ("associated_rel__usercomponent__user",)
 
         model = apps.get_model(
             modelname
@@ -124,9 +130,9 @@ class AnchorField(forms.ModelChoiceField):
     def __init__(self, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.models import AssignedContent
         if limit_to_uc:
-            self.limit_to_usercomponent = "usercomponent"
+            self.filters_usercomponent = ("usercomponent",)
         else:
-            self.limit_to_user = "usercomponent__user"
+            self.filters_user = ("usercomponent__user",)
 
         travel = TravelProtection.objects.get_active()
         # can also use Links to anchor as anchor

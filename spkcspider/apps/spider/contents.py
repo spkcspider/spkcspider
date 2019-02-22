@@ -626,7 +626,8 @@ class BaseContent(models.Model):
         unlistedtag = ""
         if unlisted:
             unlistedtag = "unlisted\n"
-        return "\nmodel={}\ntype={}\n{}{}{}".format(
+        return "\nmodel={}.{}\ntype={}\n{}{}{}".format(
+            self._meta.label,
             self._meta.model_name,
             self.associated.ctype.name,
             idtag,
