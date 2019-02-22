@@ -302,7 +302,8 @@ class AuthToken(models.Model):
     session_key = models.CharField(max_length=40, null=True)
     extra = JSONField(default=dict, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
-    _pay_amount = None
+    _pay_total_amount = None
+    _pay_captured_amount = None
 
     def __str__(self):
         return "{}...".format(self.token[:-_striptoken])
@@ -312,25 +313,45 @@ class AuthToken(models.Model):
             self.usercomponent.id, "_", getattr(settings, "TOKEN_SIZE", 30)
         )
 
-    def _pay_amount_get(self):
-        if self._pay_amount is not None:
-            return self._pay_amount
-        ret = self.extra.get("pay_amount", None)
+    def _pay_total_get(self):
+        if self._pay_total_amount is not None:
+            return self._pay_total_amount
+        ret = self.extra.get("pay_total_amount", None)
         if isinstance(ret, str):
             return Decimal(ret)
         return None
 
-    def _pay_amount_set(self, value):
+    def _pay_total_set(self, value):
         if value is None:
-            self._pay_amount = value
-            self.extra.pop("pay_amount", None)
+            self._pay_total_amount = value
+            self.extra.pop("pay_total_amount", None)
             return
         if not isinstance(value, Decimal):
             value = Decimal(value)
-        self._pay_amount = value
-        self.extra["pay_amount"] = str(self._pay_amount)
+        self._pay_total_amount = value
+        self.extra["pay_total_amount"] = str(self._pay_total_amount)
 
-    pay_amount = property(_pay_amount_get, _pay_amount_set)
+    pay_total = property(_pay_total_get, _pay_total_set)
+
+    def _pay_captured_get(self):
+        if self._pay_captured_amount is not None:
+            return self._pay_captured_amount
+        ret = self.extra.get("pay_captured_amount", None)
+        if isinstance(ret, str):
+            return Decimal(ret)
+        return None
+
+    def _pay_captured_set(self, value):
+        if value is None:
+            self._pay_captured_amount = value
+            self.extra.pop("pay_captured_amount", None)
+            return
+        if not isinstance(value, Decimal):
+            value = Decimal(value)
+        self._pay_captured_amount = value
+        self.extra["pay_captured_amount"] = str(self._pay_captured_amount)
+
+    pay_captured = property(_pay_captured_get, _pay_captured_set)
 
     def save(self, *args, **kwargs):
         for i in range(0, 1000):

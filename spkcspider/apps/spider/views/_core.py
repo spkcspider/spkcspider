@@ -505,11 +505,11 @@ class ReferrerMixin(object):
             pay_amount = get_settings_func(
                 "SPIDER_PAYMENT_VALIDATOR",
                 "spkcspider.apps.spider.functions.clean_payment_default"
-            )(self.request.GET.get("ammount", None), currency)
+            )(self.request.GET.get("amount", None), currency)
             if pay_amount is None:
                 return False
 
-        # auth is only for requesting quasi login
+        # auth is only for requesting component auth
         if "auth" in context["intentions"]:
             return False
         # maximal one main intention
@@ -532,7 +532,9 @@ class ReferrerMixin(object):
         ####### with token ########  # noqa: 266E
         if "payment" in context["intentions"]:
             # set
-            token.pay_amount = pay_amount
+            token.pay_total = pay_amount
+            # signal complete payment by setting to pay_total
+            token.pay_captured = Decimal('0').quantize(token.pay_total)
             token.extra["CUR"] = currency
             token.extra["capture"] = (capture == "true")
         if "persist" in context["intentions"]:
