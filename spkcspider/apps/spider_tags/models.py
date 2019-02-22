@@ -69,6 +69,7 @@ class TagLayout(models.Model):
 
 @add_content
 class UserTagLayout(BaseContent):
+    # 10 is required for preventing info leak gadgets via component auth
     appearances = [
         {
             "name": "TagLayout",
@@ -81,6 +82,8 @@ class UserTagLayout(BaseContent):
         return len(str(self.layout.layout).encode("utf8"))
 
     def get_strength_link(self):
+        # never allow links to this, elsewise with links is an information
+        # disclosure possible
         return 11
 
     def get_info(self):

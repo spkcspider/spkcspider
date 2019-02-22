@@ -45,9 +45,10 @@ installed_fields["MultipleLocalizedChoiceField"] = \
 
 @add_by_field(installed_fields, "__name__")
 class UserContentRefField(forms.ModelChoiceField):
-    strength_link_field = "associated_rel__usercomponent__strength__lte"
+    filter_strength_link = "associated_rel__usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
+    # True is strongly recommended to prevent info leak gadgets
     def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
         if limit_to_uc:
@@ -80,9 +81,10 @@ class UserContentRefField(forms.ModelChoiceField):
 
 @add_by_field(installed_fields, "__name__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
-    strength_link_field = "associated_rel__usercomponent__strength__lte"
+    filter_strength_link = "associated_rel__usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
+    # True is strongly recommended to prevent info leak gadgets
     def __init__(self, modelname, limit_to_uc=True, **kwargs):
         from spkcspider.apps.spider.contents import BaseContent
         if limit_to_uc:
@@ -116,7 +118,7 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
 @add_by_field(installed_fields, "__name__")
 class AnchorField(forms.ModelChoiceField):
     force_embed = True
-    strength_link_field = "usercomponent__strength__lte"
+    filter_strength_link = "usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
     def __init__(self, limit_to_uc=True, **kwargs):

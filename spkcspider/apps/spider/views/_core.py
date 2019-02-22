@@ -4,6 +4,7 @@ __all__ = (
 
 import logging
 import hashlib
+from decimal import Decimal
 from urllib.parse import quote_plus
 
 from datetime import timedelta

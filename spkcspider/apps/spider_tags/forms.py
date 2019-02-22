@@ -124,7 +124,8 @@ def generate_form(name, layout):
             for field in self.fields.values():
                 if hasattr(field, "queryset"):
                     filters = {}
-                    attr = getattr(field, "strength_link_field", None)
+                    # can also contain __lte or so
+                    attr = getattr(field, "filter_strength_link", None)
                     if attr:
                         filters[attr] = uc.strength
                     attr = getattr(field, "limit_to_usercomponent", None)

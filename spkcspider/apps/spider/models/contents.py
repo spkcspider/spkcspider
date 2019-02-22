@@ -131,6 +131,7 @@ class LinkContent(BaseContent):
         if kwargs["scope"] in ["add", "update", "export", "raw"]:
             ret = super().get_form_kwargs(**kwargs)
             ret["uc"] = kwargs["uc"]
+            ret["request"] = kwargs["request"]
         else:
             ret = self.content.content.get_form_kwargs(**kwargs)
         return ret

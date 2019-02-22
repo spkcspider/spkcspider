@@ -37,7 +37,7 @@ class LinkForm(forms.ModelForm):
         model = LinkContent
         fields = ['content', 'push']
 
-    def __init__(self, uc, **kwargs):
+    def __init__(self, uc, request, **kwargs):
         super().__init__(**kwargs)
         # if self.instance.associated:
         #     if "\nanchor\n" in self.instance.associated:
@@ -47,6 +47,13 @@ class LinkForm(forms.ModelForm):
         self.fields["content"].queryset = q.filter(
             strength__lte=uc.strength
         ).exclude(usercomponent__travel_protected__in=travel)
+        # component auth should limit links to visible content
+        # rw access outside from component elsewise possible
+        if request.user != uc.user and not request.is_staff:
+            q = self.fields["content"].queryset
+            self.fields["content"].queryset = q.filter(
+                usercomponent=uc
+            )
 
 
 class TravelProtectionForm(forms.ModelForm):

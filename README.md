@@ -233,7 +233,8 @@ Otherwise security could be compromised.
 * examples
 * tests
 * documentation
-
+* decouple payments to spider_payments
+  * align datastructure with web-payments-connector
 
 ## Later
 * offloadable verifier
@@ -244,14 +245,14 @@ Otherwise security could be compromised.
 * messages instead error
 * create client side script for import (pushing to server, index token for auth?)
 * encrypted files/text
-* email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
-  * delta chat integration
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
 
 
 ### Implement Emails/messaging
+* email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
+  * delta chat integration
 * implement webreferences
 * WebReference on an "email" object is an "email"
 * Webreferences can contain cache
