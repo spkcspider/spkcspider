@@ -1,7 +1,7 @@
 from django.urls import path
 
 
-from .views import WebConfigView
+from .views import PaymentsListView
 
 app_name = "spider_pay"
 
@@ -12,7 +12,7 @@ app_name = "spider_pay"
 urlpatterns = [
     path(
         '',
-        WebConfigView.as_view(),
-        name='webconfig-view'
+        PaymentsListView.as_view(),
+        name='payments-list'
     )
 ]

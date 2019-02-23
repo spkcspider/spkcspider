@@ -20,16 +20,8 @@ class Payment(BaseContent):
         "spider_base.AuthToken", blank=True, null=True,
         on_delete=models.SET_ZERO, related_name="payments"
     )
-    # immutable?
-    token_string = models.CharField(
-        max_length=MAX_TOKEN_B64_SIZE+hex_size_of_bigid+2,
-        db_index=True, unique=True,
-        validators=[
-            validator_token
-        ]
-    )
 
-    # for periodic payments, requires persist token
+    # for periodic payments
     period = models.DurationField(
         null=True, blank=True
     )
@@ -53,9 +45,8 @@ class Payment(BaseContent):
 
     @classmethod
     def feature_urls(cls):
-        """ auto created """
         return [
-            ActionUrl(reverse(""), "view")
+            ActionUrl(reverse("spider_base.payments-list"), "payments-list")
         ]
 
     def get_size(self):
@@ -66,10 +57,10 @@ class Payment(BaseContent):
         return -10
 
     def get_info(self):
-        ret = super().get_info(unique=True)
+        ret = super().get_info()
         if not self.associated.info:
             return "{}url={}\n".format(
-                ret, self.token.referrer.replace("\n", "%0A")
+                ret, self.token.referrer.replace("\n", "%0A"),
             )
         else:
             # reuse old info url
@@ -96,7 +87,7 @@ class Transaction(BaseContent):
         {
             "name": "SpiderPayTransaction",
             "ctype": (
-                VariantType.feature
+                VariantType.unlisted.value
             ),
             "strength": 0
         }

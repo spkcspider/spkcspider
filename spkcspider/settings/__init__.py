@@ -204,8 +204,14 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 
 # usercomponents created with user
 DEFAULT_USERCOMPONENTS = {
-    "home": False,
-    "public": True
+    "home": {
+        "public": False,
+        "features": ["Persistence", "WebConfig"]
+    },
+    "public": {
+        "public": True,
+        "features": []
+    },
 }
 
 ## Default description  # noqa: E266

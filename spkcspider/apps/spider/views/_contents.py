@@ -203,17 +203,15 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             # request.user is maybe anonymous
             context["content_variants"] = \
                 self.usercomponent.user.spider_info.allowed_content.exclude(
-                    ctype__contains=VariantType.feature.value
-                ).exclude(
-                    ctype__contains=VariantType.unlisted.value
+                    models.Q(ctype__contains=VariantType.feature.value) |
+                    models.Q(ctype__contains=VariantType.unlisted.value)
                 )
             context["content_variants_used"] = \
                 self.usercomponent.user.spider_info.allowed_content.filter(
                     assignedcontent__usercomponent=self.usercomponent
                 ).exclude(
-                    ctype__contains=VariantType.feature.value
-                ).exclude(
-                    ctype__contains=VariantType.unlisted.value
+                    models.Q(ctype__contains=VariantType.feature.value) |
+                    models.Q(ctype__contains=VariantType.unlisted.value)
                 )
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(
@@ -379,11 +377,13 @@ class ContentAdd(ContentBase, CreateView):
         # use requesting user as base if he can add this type of content
         if self.request.user.is_authenticated:
             return self.request.user.spider_info.allowed_content.exclude(
-                ctype__contains=VariantType.feature.value
+                models.Q(ctype__contains=VariantType.feature.value) |
+                models.Q(ctype__contains=VariantType.unlisted.value)
             )
         else:
             return self.usercomponent.user.spider_info.allowed_content.exclude(
-                ctype__contains=VariantType.feature.value
+                models.Q(ctype__contains=VariantType.feature.value) |
+                models.Q(ctype__contains=VariantType.unlisted.value)
             )
 
     def test_func(self):

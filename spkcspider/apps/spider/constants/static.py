@@ -66,8 +66,11 @@ class VariantType(str, enum.Enum):
     # required for still beeing able to update elemental parameters
     raw_update = "c"
     # raw_add not required, archieved by returning response
+
     # don't list as contentvariant for user (for computer only stuff)
     #  works like unlisted in info field, just for ContentVariants
+    # don't appear in allowed_content in contrast to feature
+    # => should either depend on feature or normal content
     unlisted = "d"
     # activates domain mode
     domain_mode = "e"

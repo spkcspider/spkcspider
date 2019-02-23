@@ -16,6 +16,8 @@ move_persistent = Signal(providing_args=["tokens", "to"])
 # failed guess of token
 failed_guess = Signal(providing_args=["request"])
 
+_empty_set = frozenset()
+
 
 def TriggerUpdate(sender, **_kwargs):
     results = update_dynamic.send_robust(sender)
@@ -146,15 +148,6 @@ def InitUserCallback(sender, instance, raw=False, **kwargs):
         defaults={"public": False},
         name="index", user=instance
     )[0]
-    if kwargs.get("created", False):
-        for name, is_public in getattr(
-            settings, "DEFAULT_USERCOMPONENTS", {}
-        ).items():
-            # overloaded get_or_create calculates strength, ...
-            UserComponent.objects.get_or_create(
-                defaults={"public": is_public},
-                name=name, user=instance
-            )
     login = Protection.objects.filter(code="login").first()
     if login:
         uc.protections.update_or_create(
@@ -171,6 +164,23 @@ def InitUserCallback(sender, instance, raw=False, **kwargs):
     )[0]
     # save not required, m2m field
     uinfo.calculate_allowed_content()
+
+    if kwargs.get("created", False):
+        for name, value in getattr(
+            settings, "DEFAULT_USERCOMPONENTS", {}
+        ).items():
+            # overloaded get_or_create calculates strength, ...
+            ob, created = UserComponent.objects.get_or_create(
+                defaults={"public": value.get("public", False)},
+                name=name, user=instance
+            )
+            if created:
+                for f in value.get("features", _empty_set):
+                    feature = uinfo.allowed_content.filter(
+                        name=f
+                    ).first()
+                    if feature:
+                        ob.features.add(feature)
 
 
 def RemoveTokensLogout(sender, user, request, **kwargs):

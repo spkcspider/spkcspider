@@ -128,7 +128,7 @@ class AnchorKeyForm(forms.ModelForm):
                 _("signature incorrect"),
                 code="incorrect_signature"
             ))
-        except (binascii.Error, KeyError):
+        except (binascii.Error, KeyError, ValueError):
             self.add_error("signature", forms.ValidationError(
                 _("signature malformed or missing"),
                 code="malformed_signature"

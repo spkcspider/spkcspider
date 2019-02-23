@@ -190,7 +190,7 @@ There are some special GET parameters for services with special requirements:
 ## Referrer
 * normal referrer mode: send token to referrer, client verifies with hash that he sent the token.
 * server-less referrer mode (sl): token is transferred as GET parameter and no POST request is made (less secure as client sees token and client is not authenticated)
-* domain referrer mode (domain): token get referrer domain but nothing more, doesn't work with other intentions. BUT: can be automated. Useful for tag updates (only active if feature requests domain mode)
+* domain referrer mode (domain): referrer domain is add to token. Doesn't work with other intentions (but "live" mode is active as no filter will be created) and works only if domain_mode is active. Can be automated, doesn't require user approval. Useful for tag updates (only active if feature requests domain mode).
 
 ## payment intention
 
@@ -199,6 +199,7 @@ Should have a second auth e.g. pw on payment provider
 Requires GET parameter
 * cur=<currency>: currency code
 * amount=<decimalamount|inf>: how much can the referrer maximal request
+* period=<duration in days>
 
 Optionally:
 * capture=<true/false>
@@ -238,6 +239,7 @@ Otherwise security could be compromised.
 
 ## Later
 * offloadable verifier
+* spider_pay stub
 * Fix TravelProtection
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation

@@ -316,7 +316,10 @@ class UserInfo(models.Model):
             "spkcspider.apps.spider.functions.allow_all_filter"
         )
         # Content types which are not "installed" should be removed/never used
-        for variant in ContentVariant.objects.filter(
+        # unlisted needs not to be allowed as it is only a side product
+        for variant in ContentVariant.objects.exclude(
+            ctype__contains=VariantType.unlisted.value
+        ).filter(
             code__in=installed_contents
         ):
             if cfilterfunc(self.user, variant):

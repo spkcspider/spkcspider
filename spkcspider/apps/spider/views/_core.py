@@ -640,7 +640,6 @@ class ReferrerMixin(object):
                 ).first()
                 if token:
                     hasoldtoken = True
-                    token.create_auth_token()
                     # migrate usercomponent
                     token.usercomponent = self.usercomponent
 
@@ -650,6 +649,8 @@ class ReferrerMixin(object):
                 # token is not auth_token
                 if token:
                     token.extra["strength"] = 10
+                    # request new token
+                    token.create_auth_token()
                 else:
                     token = AuthToken(
                         usercomponent=self.usercomponent,
@@ -658,6 +659,8 @@ class ReferrerMixin(object):
                         }
                     )
             else:
+                # either reuse persistent token with auth token tokenstring
+                # or just reuse auth token
                 if token:
                     # slate auth token for destruction
                     delete_auth_token = True
@@ -692,7 +695,7 @@ class ReferrerMixin(object):
             try:
                 with transaction.atomic():
                     # must be done here, elsewise other token can (unlikely)
-                    # catch token, better be safe
+                    # take token as it is free for a short time, better be safe
                     if delete_auth_token:
                         # delete old token
                         self.request.auth_token.delete()
