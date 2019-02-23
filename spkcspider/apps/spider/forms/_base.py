@@ -3,6 +3,7 @@ __all__ = ["UserComponentForm", "UserContentForm"]
 import logging
 from statistics import mean
 
+from django.conf import settings
 from django import forms
 from django.db import models
 from django.core.exceptions import NON_FIELD_ERRORS
@@ -271,6 +272,7 @@ class UserComponentForm(forms.ModelForm):
         self.instance.allow_domain_mode = \
             self.cleaned_data["allow_domain_mode"]
         return super().save(commit=commit)
+    save.alters_data = True
 
 
 class UserContentForm(forms.ModelForm):
@@ -368,20 +370,26 @@ class UserContentForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self.update_anchor()
-        if self.cleaned_data.get("new_static_token", ""):
+        if self.instance.token_generate_new_size is not None:
             if self.instance.token:
                 print(
                     "Old nonce for Content id:", self.instance.id,
                     "is", self.instance.token
                 )
             self.instance.token = create_b64_id_token(
-                self.instance.id, "/",
-                int(self.cleaned_data["new_static_token"])
+                self.instance.id,
+                "/",
+                self.instance.token_generate_new_size
             )
+            self.instance.token_generate_new_size = None
             self.instance.save(update_fields=["token"])
 
     def save(self, commit=True):
-        ret = super().save(commit=commit)
-        if commit:
-            self.update_anchor()
-        return ret
+        if not self.instance.token:
+            self.instance.token_generate_new_size = \
+                getattr(settings, "TOKEN_SIZE", 30)
+        if self.cleaned_data.get("new_static_token", ""):
+            self.instance.token_generate_new_size = \
+                int(self.cleaned_data["new_static_token"])
+        return super().save(commit=commit)
+    save.alters_data = True

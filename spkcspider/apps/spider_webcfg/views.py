@@ -1,5 +1,6 @@
 __all__ = ("WebConfigView",)
 
+from django.conf import settings
 from django.http import Http404
 from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
@@ -69,9 +70,12 @@ class WebConfigView(UCTestMixin, View):
             ctype=variant,
             persist_token=self.request.auth_token
         )
+        associated.token_generate_new_size = \
+            getattr(settings, "TOKEN_SIZE", 30)
         ret = self.model.static_create(associated)
         ret.clean()
         ret.save()
+        assert(associated.token)
         return ret
 
     def options(self, request, *args, **kwargs):

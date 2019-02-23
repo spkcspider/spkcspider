@@ -670,6 +670,7 @@ class BaseContent(models.Model):
         # update info and set content
         assignedcontent.save()
         if created:
+            to_save = set()
             # add id to info
             if "\nprimary\n" not in assignedcontent.info:
                 assignedcontent.info = assignedcontent.info.replace(
@@ -677,14 +678,30 @@ class BaseContent(models.Model):
                         assignedcontent.id
                     ), 1
                 )
-                # set token
-                if not assignedcontent.token:
-                    assignedcontent.token = create_b64_id_token(
-                        assignedcontent.id,
-                        "/"
+                to_save.add("info")
+            if (
+                assignedcontent.token_generate_new_size is not None and
+                not assignedcontent.token
+            ):
+                assignedcontent.token_generate_new_size = \
+                    getattr(settings, "TOKEN_SIZE", 30)
+            # set token
+            if assignedcontent.token_generate_new_size is not None:
+                if assignedcontent.token:
+                    print(
+                        "Old nonce for Content id:", assignedcontent.id,
+                        "is", assignedcontent.token
                     )
-                # second save required
-                assignedcontent.save(update_fields=["info", "token"])
+                assignedcontent.token = create_b64_id_token(
+                    assignedcontent.id,
+                    "/",
+                    assignedcontent.token_generate_new_size
+                )
+                assignedcontent.token_generate_new_size = None
+                to_save.add("token")
+            # second save required
+            if to_save:
+                assignedcontent.save(update_fields=to_save)
         # needs id first
         assignedcontent.references.set(self.get_references())
         # update fakes

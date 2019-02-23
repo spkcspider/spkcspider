@@ -1,12 +1,17 @@
 
-import unittest
+from base64 import urlsafe_b64encode
+
+# import unittest
+from django.urls import reverse
+from django.conf import settings
 
 from django_webtest import TransactionWebTest
-from django.urls import reverse
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.signals import update_dynamic
@@ -25,8 +30,7 @@ class KeyTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
-
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_keys(self):
         home = self.user.usercomponent_set.get(name="home")
         privkey = rsa.generate_private_key(
@@ -93,12 +97,49 @@ class KeyTest(TransactionWebTest):
             key_size=2048,
             backend=default_backend()
         )
-        pempriv = privkey.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
-        )
         pempub = privkey.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         )
+
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "PublicKey"
+            }
+        )
+        response = self.app.get(createurl)
+        form = response.form
+        form["key"] = pempub
+        form["note"] = "valid"
+        response = form.submit().follow()
+        keyob = PublicKey.objects.filter(note="valid").first()
+        self.assertTrue(keyob)
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "AnchorKey"
+            }
+        )
+        response = self.app.get(createurl)
+        form = response.form
+        form.select("key", value=str(keyob.id))
+        response = form.submit().follow()
+        form = response.form
+        identifier = form["identifier"].value.encode("utf-8")
+
+        chosen_hash = getattr(settings, "SPIDER_HASH_ALGORITHM").upper()
+        chosen_hash = getattr(hashes, chosen_hash)()
+        signature = privkey.sign(
+            identifier,
+            padding.PSS(
+                mgf=padding.MGF1(chosen_hash),
+                salt_length=padding.PSS.MAX_LENGTH
+            ),
+            chosen_hash
+        )
+        form["signature"].value = urlsafe_b64encode(signature)
+        response = form.submit()
+        self.assertEqual(response.status_code, 200)

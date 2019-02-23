@@ -1,16 +1,20 @@
 __all__ = ["KeyForm", "AnchorServerForm", "AnchorKeyForm"]
 # "AnchorGovForm"
 
+import binascii
+from base64 import urlsafe_b64decode
 
 from django import forms
 from django.db import models
+from django.conf import settings
 # from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 
 from cryptography import exceptions
+from cryptography.x509 import load_pem_x509_certificate
 from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import utils, padding
 
 from .models import PublicKey, AnchorServer, AnchorKey
 # AnchorGov, ID_VERIFIERS
@@ -69,16 +73,20 @@ class AnchorKeyForm(forms.ModelForm):
     def __init__(self, scope, **kwargs):
         self.scope = scope
         super().__init__(**kwargs)
-        setattr(self.fields['key'], "hashable", True)
         if self.scope == "add":
             del self.fields["identifier"]
             del self.fields["signature"]
+            # self.fields["signature"].disabled = True
+            # self.fields["signature"].required = False
+        else:
+            self.fields["identifier"].disabled = True
 
         if self.scope in ("add", "update"):
             self.fields["key"].queryset = self.fields["key"].queryset.filter(
-                models.Q(key__contains="-----BEGIN CERTIFICATE-----")
+                models.Q(key__contains="-----BEGIN CERTIFICATE-----") |
+                models.Q(key__contains="-----BEGIN PUBLIC KEY-----")
             )
-        else:
+        elif self.scope in ("raw", "list", "view"):
             self.fields["key"] = forms.CharField(
                 initial=self.instance.key.key,
                 widget=forms.TextArea
@@ -89,9 +97,14 @@ class AnchorKeyForm(forms.ModelForm):
         _ = gettext
         ret = super().clean()
         try:
-            pubkey = serialization.load_pem_public_key(
-                ret["key"].key.encode("utf-8"), default_backend()
-            )
+            if "-----BEGIN CERTIFICATE-----" in self.cleaned_data["key"].key:
+                pubkey = load_pem_x509_certificate(
+                    ret["key"].key.encode("utf-8"), default_backend()
+                ).public_key()
+            else:
+                pubkey = serialization.load_pem_public_key(
+                    ret["key"].key.encode("utf-8"), default_backend()
+                )
         except exceptions.UnsupportedAlgorithm:
             self.add_error("key", forms.ValidationError(
                 _("key not usable for signing"),
@@ -100,28 +113,29 @@ class AnchorKeyForm(forms.ModelForm):
         if self.scope == "add":
             ret["signature"] = "<replaceme>"
             return ret
-        chosen_hash = hashes.SHA512()
-        hasher = hashes.Hash(chosen_hash, default_backend())
-        raw_value = self.initial.get("identifier", None)
-        hasher.update(self.fields["identifier"].to_python(
-            raw_value
-        ).encode("utf-8"))
+        chosen_hash = getattr(settings, "SPIDER_HASH_ALGORITHM").upper()
+        chosen_hash = getattr(hashes, chosen_hash)()
         try:
             pubkey.verify(
-                ret["signature"].encode("utf-8"),
-                hasher.finalize(),
+                urlsafe_b64decode(ret["signature"]),
+                ret["identifier"].encode("utf-8"),
                 padding.PSS(
                     mgf=padding.MGF1(chosen_hash),
                     salt_length=padding.PSS.MAX_LENGTH
                 ),
-                utils.Prehashed(chosen_hash)
+                chosen_hash
             )
         except exceptions.InvalidSignature:
             self.add_error("signature", forms.ValidationError(
                 _("signature incorrect"),
                 code="incorrect_signature"
             ))
-        return self.cleaned_data
+        except (binascii.Error, KeyError):
+            self.add_error("signature", forms.ValidationError(
+                _("signature malformed or missing"),
+                code="malformed_signature"
+            ))
+        return ret
 
 
 # class AnchorGovForm(forms.ModelForm):

@@ -290,11 +290,6 @@ class UserComponent(models.Model):
             settings, "SPIDER_COMPONENTS_DELETION_PERIODS", {}
         ).get(self.get_name(), None)
 
-    def save(self, *args, **kwargs):
-        if self.name in index_names and self.public:
-            self.public = False
-        super().save(*args, **kwargs)
-
 
 class UserInfo(models.Model):
     """ Contains generated Informations about user """

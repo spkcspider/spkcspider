@@ -98,6 +98,8 @@ class AssignedContent(BaseInfoModel):
         "spider_base.AuthToken", blank=True, null=True,
         limit_choices_to={"persist__gte": 0}, on_delete=models.CASCADE
     )
+    # set to indicate creating a new token
+    token_generate_new_size = None
     # brute force protection and identifier, replaces nonce
     #  16 = usercomponent.id in hexadecimal
     #  +1 for seperator
@@ -170,11 +172,18 @@ class AssignedContent(BaseInfoModel):
     def __repr__(self):
         return self.content.__repr__()
 
+    def get_absolute_url(self, scope="view"):
+        return reverse(
+            "spider_base:ucontent-access",
+            kwargs={"token": self.token, "access": scope}
+        )
+
     def get_id(self):
         """
             provides "right" id
             only neccessary for access from usercomponent to hide fakes
         """
+        # MAYBE: remove fake mechanic
         # access from content works out of the box by using associated
         if self.fake_id:
             return self.fake_id
@@ -219,9 +228,3 @@ class AssignedContent(BaseInfoModel):
                     message=_("Unique Content already exists"),
                     code='unique_together',
                 )
-
-    def get_absolute_url(self, scope="view"):
-        return reverse(
-            "spider_base:ucontent-access",
-            kwargs={"token": self.token, "access": scope}
-        )

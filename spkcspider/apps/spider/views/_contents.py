@@ -451,6 +451,7 @@ class ContentAdd(ContentBase, CreateView):
         context["content"] = rendered
         # redirect if saving worked
         if getattr(ob, "id", None):
+            assert(ucontent.token)
             assert(hasattr(ucontent, "id") and ucontent.usercomponent)
             return redirect(
                 'spider_base:ucontent-access',

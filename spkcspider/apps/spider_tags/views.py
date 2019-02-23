@@ -1,5 +1,6 @@
 __all__ = ("PushTagView",)
 
+from django.conf import settings
 from django.http import Http404
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -85,6 +86,8 @@ class PushTagView(UCTestMixin, View):
             usercomponent=self.usercomponent,
             ctype=self.variant,
         )
+        associated.token_generate_new_size = \
+            getattr(settings, "TOKEN_SIZE", 30)
         instance = self.model.static_create(associated)
         s = set(self.request.POST.getlist("updateable_by"))
         s.add(self.request.auth_token.referrer)
@@ -94,6 +97,7 @@ class PushTagView(UCTestMixin, View):
         instance.clean()
         instance.save()
 
+        assert(associated.token)
         ret = redirect(
             "spider_base:ucontent-access",
             token=instance.associated.token,

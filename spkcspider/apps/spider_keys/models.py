@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 _htest = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
 _htest.update(b"test")
 
-_help_text_sig = _("""Signature of Identifier""")
+_help_text_sig = _("""Signature of Identifier (base64-encoded)""")
 
 _help_text_key = _(""""Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption.""")  # noqa
 
@@ -180,6 +180,13 @@ class AnchorServer(BaseContent):
 @add_content
 class AnchorKey(AnchorServer):
     """ domain name of pc, signed """
+    appearances = [
+        {
+            "name": "AnchorKey",
+            "ctype": VariantType.anchor+VariantType.unique,
+            "strength": 0
+        }
+    ]
 
     key = models.OneToOneField(
         PublicKey, on_delete=models.CASCADE, related_name="anchorkey",
@@ -187,7 +194,7 @@ class AnchorKey(AnchorServer):
     )
 
     signature = models.CharField(
-        max_length=1024, help_text=_help_text_sig
+        max_length=1024, help_text=_help_text_sig, null=False
     )
 
     def __str__(self):
@@ -201,14 +208,6 @@ class AnchorKey(AnchorServer):
         if len(self.key.note) > 0:
             st = "{}: {}".format(st, self.key.note[:20])
         return "AnchorKey: Key: {}".format(st)
-
-    appearances = [
-        {
-            "name": "AnchorKey",
-            "ctype": VariantType.anchor+VariantType.unique,
-            "strength": 0
-        }
-    ]
 
     def get_form(self, scope):
         from .forms import AnchorKeyForm
