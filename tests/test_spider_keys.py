@@ -1,5 +1,4 @@
-
-from base64 import urlsafe_b64encode
+import binascii
 
 # import unittest
 from django.urls import reverse
@@ -151,7 +150,7 @@ class KeyTest(TransactionWebTest):
             self.assertEqual(form["signature"].value, "<replaceme>")
 
         with self.subTest(msg="valid signature"):
-            u = urlsafe_b64encode(signature)
+            u = binascii.hexlify(signature).decode("ascii")
             response = self.app.get(updateurl)
             form = response.form
             form["signature"].value = u
@@ -159,4 +158,4 @@ class KeyTest(TransactionWebTest):
             response = self.app.get(updateurl)
             form = response.form
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(form["signature"].value, u.decode("ascii"))
+            self.assertEqual(form["signature"].value, u)

@@ -2,7 +2,6 @@ __all__ = ["KeyForm", "AnchorServerForm", "AnchorKeyForm"]
 # "AnchorGovForm"
 
 import binascii
-from base64 import urlsafe_b64decode
 
 from django import forms
 from django.db import models
@@ -116,7 +115,7 @@ class AnchorKeyForm(forms.ModelForm):
         chosen_hash = settings.SPIDER_HASH_ALGORITHM
         try:
             pubkey.verify(
-                urlsafe_b64decode(ret["signature"]),
+                binascii.unhexlify(ret["signature"]),
                 ret["identifier"].encode("utf-8"),
                 padding.PSS(
                     mgf=padding.MGF1(chosen_hash),

@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 _htest = get_hashob()
 _htest.update(b"test")
 
-_help_text_sig = _("""Signature of Identifier (base64-encoded)""")
+_help_text_sig = _("""Signature of Identifier (hexadecimal-encoded)""")
 
 _help_text_key = _(""""Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption.""")  # noqa
 

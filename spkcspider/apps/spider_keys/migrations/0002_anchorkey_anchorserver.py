@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
             name='AnchorKey',
             fields=[
                 ('anchorserver_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='spider_keys.AnchorServer')),
-                ('signature', models.CharField(help_text="""Signature of Identifier (base64-encoded)""", max_length=1024)),
+                ('signature', models.CharField(help_text="""Signature of Identifier (hexadecimal-encoded)""", max_length=1024)),
                 ('key', models.ForeignKey(help_text=""""Public Key"-Content""", on_delete=django.db.models.deletion.CASCADE, related_name='+', to='spider_keys.PublicKey')),
             ],
             options={
