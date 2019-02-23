@@ -2,8 +2,11 @@ __all__ = [
     "clean_graph", "get_hashob"
 ]
 
-import hashlib
+
 from django.conf import settings
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 
 
 def clean_graph(mtype, graph):
@@ -18,6 +21,10 @@ def clean_graph(mtype, graph):
 
 
 def get_hashob():
-    return hashlib.new(getattr(
-        settings, "VERIFICATION_HASH_ALGO", settings.SPIDER_HASH_ALGORITHM
-    ))
+    return hashes.Hash(
+        getattr(
+           settings, "VERIFICATION_HASH_ALGORITHM",
+           settings.SPIDER_HASH_ALGORITHM
+        ),
+        backend=default_backend()
+    )

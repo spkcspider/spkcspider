@@ -380,7 +380,7 @@ class CreateEntryForm(forms.ModelForm):
             g.set((
                 URIRef(t[2].value),
                 spkcgraph["hash"],
-                Literal(h.hexdigest())
+                Literal(h.finalize().hex())
             ))
 
         # make sure triples are linked to start
@@ -397,7 +397,7 @@ class CreateEntryForm(forms.ModelForm):
         for i in g.subjects(spkcgraph["type"], Literal("Content")):
             h = get_hashob()
             h.update(i.encode("utf8"))
-            hashes.append(h.digest())
+            hashes.append(h.finalize())
         hashes.sort()
 
         h = get_hashob()
@@ -405,12 +405,13 @@ class CreateEntryForm(forms.ModelForm):
             h.update(i)
         # do not use add as it could be corrupted by user
         # (user can provide arbitary data)
+        digest = h.finalize().digest()
         g.set((
             start,
             spkcgraph["hash"],
-            Literal(h.hexdigest())
+            Literal(digest)
         ))
-        self.cleaned_data["hash"] = h.hexdigest()
+        self.cleaned_data["hash"] = digest
         # replace dvfile by combined file
         self.cleaned_data["dvfile"] = TemporaryUploadedFile(
             "url_uploaded", "text/turtle", None, "utf8"

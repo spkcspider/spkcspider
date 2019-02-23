@@ -94,8 +94,9 @@ class VerifyEntry(DetailView):
     def get_context_data(self, **kwargs):
         kwargs["verified"] = Literal(self.object.checked)
         kwargs["hash_algorithm"] = getattr(
-            settings, "VERIFICATION_HASH_ALGO", settings.SPIDER_HASH_ALGORITHM
-        )
+            settings, "VERIFICATION_HASH_ALGORITHM",
+            settings.SPIDER_HASH_ALGORITHM
+        ).name
         return super().get_context_data(**kwargs)
 
 
@@ -103,8 +104,9 @@ class HashAlgoView(View):
 
     def get(self, request, *args, **kwargs):
         algo = getattr(
-            settings, "VERIFICATION_HASH_ALGO", settings.SPIDER_HASH_ALGORITHM
-        )
+            settings, "VERIFICATION_HASH_ALGORITHM",
+            settings.SPIDER_HASH_ALGORITHM
+        ).name
         return HttpResponse(
             content=algo.encode("utf8"),
             content_type="text/plain; charset=utf8"

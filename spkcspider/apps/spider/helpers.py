@@ -2,7 +2,7 @@ __all__ = (
     "create_b64_token", "create_b64_id_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
     "merge_get_url", "add_property", "is_decimal", "validator_token",
-    "extract_host"
+    "extract_host", "get_hashob"
 )
 
 
@@ -22,6 +22,9 @@ from django.conf import settings
 from django.core import validators
 from django.utils.translation import gettext_lazy as _
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+
 from .constants.static import MAX_TOKEN_SIZE, spkcgraph
 
 # for not spamming sets
@@ -35,6 +38,12 @@ validator_token = validators.RegexValidator(
     _("Enter a valid token."),
     'invalid'
 )
+
+
+def get_hashob():
+    return hashes.Hash(
+        settings.SPIDER_HASH_ALGORITHM, backend=default_backend()
+    )
 
 
 def is_decimal(inp, precision=None, allow_sign=False):

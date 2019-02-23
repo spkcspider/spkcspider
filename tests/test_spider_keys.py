@@ -10,7 +10,6 @@ from django_webtest import TransactionWebTest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
@@ -126,12 +125,13 @@ class KeyTest(TransactionWebTest):
         response = self.app.get(createurl)
         form = response.form
         form.select("key", value=str(keyob.id))
-        response = form.submit().follow()
+        response = form.submit()
+        updateurl = response.location
+        response = response.follow()
         form = response.form
         identifier = form["identifier"].value.encode("utf-8")
 
-        chosen_hash = getattr(settings, "SPIDER_HASH_ALGORITHM").upper()
-        chosen_hash = getattr(hashes, chosen_hash)()
+        chosen_hash = settings.SPIDER_HASH_ALGORITHM
         signature = privkey.sign(
             identifier,
             padding.PSS(
@@ -140,6 +140,23 @@ class KeyTest(TransactionWebTest):
             ),
             chosen_hash
         )
-        form["signature"].value = urlsafe_b64encode(signature)
-        response = form.submit()
-        self.assertEqual(response.status_code, 200)
+
+        with self.subTest(msg="block invalid signature"):
+            response = self.app.get(updateurl)
+            form = response.form
+            form["signature"].value = signature
+            response = form.submit()
+            response = self.app.get(updateurl)
+            form = response.form
+            self.assertEqual(form["signature"].value, "<replaceme>")
+
+        with self.subTest(msg="valid signature"):
+            u = urlsafe_b64encode(signature)
+            response = self.app.get(updateurl)
+            form = response.form
+            form["signature"].value = u
+            response = form.submit()
+            response = self.app.get(updateurl)
+            form = response.form
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(form["signature"].value, u.decode("ascii"))

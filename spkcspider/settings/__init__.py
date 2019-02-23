@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 
+from cryptography.hazmat.primitives import hashes
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -143,7 +145,8 @@ LOGIN_REDIRECT_URL = "auth:profile"
 LOGOUT_REDIRECT_URL = "home"
 
 AUTH_USER_MODEL = 'spider_accounts.SpiderUser'
-SPIDER_HASH_ALGORITHM = "sha512"
+# uses cryptography
+SPIDER_HASH_ALGORITHM = hashes.SHA512()
 # as hex digest
 MAX_HASH_SIZE = 128
 MIN_STRENGTH_EVELATION = 2

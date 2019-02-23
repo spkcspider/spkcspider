@@ -3,7 +3,6 @@ __all__ = (
 )
 
 import logging
-import hashlib
 from decimal import Decimal
 from urllib.parse import quote_plus
 
@@ -27,7 +26,7 @@ from django.utils.translation import gettext
 import requests
 import certifi
 
-from ..helpers import merge_get_url, get_settings_func
+from ..helpers import merge_get_url, get_settings_func, get_hashob
 from ..constants import (
     VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS,
     TokenCreationError, ProtectionType
@@ -395,7 +394,7 @@ class ReferrerMixin(object):
         try:
             d = {
                 "token": token.token,
-                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM,
+                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
                 "renew": "false"
             }
             if context["payload"]:
@@ -442,13 +441,13 @@ class ReferrerMixin(object):
                 )
             )
         context["post_success"] = True
-        h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
+        h = get_hashob()
         h.update(token.token.encode("ascii", "ignore"))
         return HttpResponseRedirect(
             redirect_to=merge_get_url(
                 context["referrer"],
                 status="success",
-                hash=h.hexdigest()
+                hash=h.finalize().hex()
             )
         )
 

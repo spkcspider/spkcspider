@@ -12,7 +12,7 @@ from django.utils.translation import gettext
 
 from cryptography import exceptions
 from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 
@@ -113,8 +113,7 @@ class AnchorKeyForm(forms.ModelForm):
         if self.scope == "add":
             ret["signature"] = "<replaceme>"
             return ret
-        chosen_hash = getattr(settings, "SPIDER_HASH_ALGORITHM").upper()
-        chosen_hash = getattr(hashes, chosen_hash)()
+        chosen_hash = settings.SPIDER_HASH_ALGORITHM
         try:
             pubkey.verify(
                 urlsafe_b64decode(ret["signature"]),

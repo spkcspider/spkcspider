@@ -1,6 +1,5 @@
 
 import logging
-import hashlib
 
 from django.db import models
 from django.conf import settings
@@ -10,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from django.utils.translation import pgettext
 
-
+from spkcspider.apps.spider.helpers import get_hashob
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.constants import VariantType
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 # Create your models here.
 
-_htest = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
+_htest = get_hashob()
 _htest.update(b"test")
 
 _help_text_sig = _("""Signature of Identifier (base64-encoded)""")
@@ -63,11 +62,11 @@ class PublicKey(BaseContent):
     def get_info(self):
         ret = super().get_info()
         key = self.get_key_name()[0]
-        h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
+        h = get_hashob()
         h.update(key.encode("ascii", "ignore"))
         # don't put use_for_encryption state here; this would break unique
         return "%shash:%s=%s\nnote=%s\n" % (
-            ret, settings.SPIDER_HASH_ALGORITHM, h.hexdigest(),
+            ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex(),
             self.note[:200].replace("\n", " ")
         )
 
@@ -75,9 +74,9 @@ class PublicKey(BaseContent):
         # PEM key
         split = self.key.split("\n")
         if len(split) > 1:
-            h = hashlib.new(settings.SPIDER_HASH_ALGORITHM)
+            h = get_hashob()
             h.update(self.key.encode("ascii", "ignore"))
-            return (h.hexdigest(), None)
+            return (h.finalize().hex(), None)
 
         # ssh key
         split = self.key.rsplit(" ", 1)
@@ -104,9 +103,9 @@ class PublicKey(BaseContent):
 
     def access_view(self, **kwargs):
         kwargs["object"] = self
-        kwargs["algo"] = settings.SPIDER_HASH_ALGORITHM
+        kwargs["algo"] = settings.SPIDER_HASH_ALGORITHM.name
         kwargs["hash"] = self.associated.getlist(
-            "hash:%s" % settings.SPIDER_HASH_ALGORITHM, 1
+            "hash:%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
         )[0]
         return (
             render_to_string(
