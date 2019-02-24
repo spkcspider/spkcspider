@@ -10,7 +10,6 @@ _extra = '' if settings.DEBUG else '.min'
 
 class StateButtonWidget(widgets.CheckboxInput):
     template_name = 'spider_base/forms/widgets/statebutton.html'
-    input_type = "state_widget"
 
     class Media:
         css = {

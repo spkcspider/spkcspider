@@ -32,7 +32,11 @@ input:disabled + .statebutton {
   width: 26px;
   left: 2px;
   bottom: 2px;
-  background-color: green;
+  background-color: #FF1010;
+}
+
+input:focus + .statebutton {
+  box-shadow: 0 0 1px #2196F3;
 }
 
 input:checked + .statebutton:before {
@@ -42,11 +46,7 @@ input:checked + .statebutton:before {
   width: 26px;
   left: 2px;
   bottom: 2px;
-  background-color: red;
-}
-
-input:focus + .statebutton {
-  box-shadow: 0 0 1px #2196F3;
+  background-color: #10FF10;
 }
 
 /* Rounded statebuttons */
