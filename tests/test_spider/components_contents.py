@@ -48,7 +48,7 @@ class BasicComponentTest(TransactionTestCase):
         target = "{}?next={}".format(reverse("auth:login"), indexurl)
         self.assertRedirects(response, target)
         self.client.login(username="testuser2", password="abc")
-        response = self.client.get(indexurl, expect_errors=True, status=403)
+        response = self.client.get(indexurl, status=403)
         self.assertEqual(response.status_code, 403)
         self.client.login(username="testuser1", password="abc")
         response = self.client.get(indexurl)
@@ -161,9 +161,9 @@ class AdvancedComponentTest(TransactionWebTest):
         # check that other non admins have no access
         self.app.set_user("testuser2")
         with self.subTest("test access foreign resources"):
-            response = self.app.get(listurl, expect_errors=True, status=403)
+            response = self.app.get(listurl, status=403)
             self.assertEqual(response.status_code, 403)
-            response = self.app.get(createurl, expect_errors=True, status=403)
+            response = self.app.get(createurl, status=403)
             self.assertEqual(response.status_code, 403)
 
         SpiderUser.objects.filter(
@@ -171,9 +171,9 @@ class AdvancedComponentTest(TransactionWebTest):
         ).update(is_staff=True)
         # still require permission
         with self.subTest("test access foreign resources as staff"):
-            response = self.app.get(listurl, expect_errors=True, status=403)
+            response = self.app.get(listurl, status=403)
             self.assertEqual(response.status_code, 403)
-            response = self.app.get(createurl, expect_errors=True, status=403)
+            response = self.app.get(createurl, status=403)
             self.assertEqual(response.status_code, 403)
 
         user2 = SpiderUser.objects.filter(
@@ -191,7 +191,7 @@ class AdvancedComponentTest(TransactionWebTest):
             # has permission now
             # response = self.app.get(listurl)
             # self.assertEqual(response.status_code, 200)
-            response = self.app.get(createurl, expect_errors=True, status=403)
+            response = self.app.get(createurl, status=403)
             self.assertEqual(response.status_code, 403)
 
         # check superuser
@@ -223,7 +223,7 @@ class AdvancedComponentTest(TransactionWebTest):
         with self.subTest("test access foreign resources as superuser"):
             response = self.app.get(listurl)
             self.assertEqual(response.status_code, 200)
-            response = self.app.get(createurl, expect_errors=True, status=403)
+            response = self.app.get(createurl, status=403)
             self.assertEqual(response.status_code, 403)
 
     def test_token(self):
@@ -241,9 +241,9 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(response.status_code, 200)
 
         self.app.set_user("testuser2")
-        response = self.app.get(updateurl, expect_errors=True, status=403)
+        response = self.app.get(updateurl, status=403)
         self.assertEqual(response.status_code, 403)
-        response = form.submit(expect_errors=True, status=403).maybe_follow()
+        response = form.submit(status=403).maybe_follow()
         self.assertEqual(response.status_code, 403)
 
         # TODO check deletion
@@ -289,7 +289,7 @@ class AdvancedComponentTest(TransactionWebTest):
                 "type": "UserTagLayout"
             }
         )
-        response = self.app.get(createurl, expect_errors=True, status=404)
+        response = self.app.get(createurl, status=404)
         self.assertEqual(response.status_code, 404)
 
         createurlindex = reverse(

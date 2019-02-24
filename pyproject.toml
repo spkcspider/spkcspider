@@ -26,6 +26,7 @@ Werkzeug = '*'
 pyOpenSSL = '*'
 django-webtest = '*'
 django-simple-captcha = "*"
+WSGIProxy2 = "*"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient"]

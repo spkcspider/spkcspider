@@ -24,7 +24,8 @@ debug_requirements = [
     "pyOpenSSL",
     "django-extensions",
     "django-webtest",
-    "django-simple-captcha"
+    "django-simple-captcha",
+    "WSGIProxy2"
 ]
 
 # install_requirements += debug_requirements

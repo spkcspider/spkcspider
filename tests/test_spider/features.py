@@ -98,7 +98,7 @@ class FeaturesTest(TransactionWebTest):
             ).format(
                 home.get_absolute_url(), *self.refserver.socket.getsockname()
             )
-            response = self.app.get(purl, expect_errors=True, status=400)
+            response = self.app.get(purl, status=400)
             # 404 on error
             self.assertEqual(response.status_code, 400)
 
@@ -116,7 +116,7 @@ class FeaturesTest(TransactionWebTest):
                     home.get_absolute_url(),
                     *self.refserver.socket.getsockname()
                 )
-                response = self.app.get(purl, expect_errors=True, status=400)
+                response = self.app.get(purl, status=400)
                 # invalid so check that error
                 self.assertEqual(response.status_code, 400)
 
