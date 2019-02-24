@@ -17,6 +17,8 @@ from spkcspider.apps.spider.models import (
 )
 from .models import WebConfig
 
+_empty_set = frozenset()
+
 
 class WebConfigView(UCTestMixin, View):
     model = WebConfig
@@ -42,8 +44,8 @@ class WebConfigView(UCTestMixin, View):
         )
         if (
             not self.request.auth_token.referrer or
-            "persist" in self.request.auth_token.extra.get(
-                "intentions", []
+            "persist" not in self.request.auth_token.extra.get(
+                "intentions", _empty_set
             )
         ):
             raise Http404()
@@ -114,10 +116,10 @@ class WebConfigView(UCTestMixin, View):
                 "ascii", "backslashreplace"
             ), content_type="text/plain"
         )
-        ret["X-SPIDER-URL"] = self.object.token.referrer
+        ret["X-SPIDER-URL"] = self.request.auth_token.referrer
         ret["X-SPIDER-MODIFIED"] = self.object.associated.modified
         ret["X-SPIDER-CREATED"] = self.object.associated.created
         # allow cors requests for accessing data
         ret["Access-Control-Allow-Origin"] = \
-            extract_host(self.object.token.referrer)
+            extract_host(self.request.auth_token.referrer)
         return ret

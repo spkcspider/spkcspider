@@ -92,8 +92,11 @@ class FeaturesTest(TransactionWebTest):
             ))
 
         with self.subTest(msg="invalid intentions"):
-            purl = "{}?intention=auth&intention=payment&token=prefer".format(
-                home.get_absolute_url()
+            purl = (
+                "{}?intention=auth&intention=payment&token=prefer&"
+                "referrer=http://{}:{}"
+            ).format(
+                home.get_absolute_url(), *self.refserver.socket.getsockname()
             )
             response = self.app.get(purl, expect_errors=True, status=400)
             # 404 on error
