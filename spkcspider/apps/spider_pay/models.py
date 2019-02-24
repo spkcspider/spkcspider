@@ -3,10 +3,13 @@ __all__ = ["Payment", "Transaction"]
 from decimal import Decimal
 from datetime import timedelta
 
+from django.utils.functional import cached_property
 from django.db import models
 from django.urls import reverse
 from django.http import HttpResponse
+from django.core.validators import MinValueValidator
 from django.utils.translation import gettext
+from django.utils import timezone
 # , gettext_lazy as _
 
 from django.core.exceptions import ValidationError
@@ -22,11 +25,14 @@ class PaymentSource(BaseContent):
     # should be encrypted
     secret = models.TextField(null=False)
     provider = models.URLField(max_length=400)
+    description = models.TextField(
+        default="", blank=True
+    )
 
     appearances = [
         {
             "name": "PaymentSource",
-            "strength": 0
+            "strength": 5
         }
     ]
 
@@ -40,7 +46,11 @@ class Payment(BaseContent):
 
     # for periodic payments
     period = models.DurationField(
-        null=True, blank=True
+        null=True, blank=True,
+        validators=[MinValueValidator(timedelta(days=1))]
+    )
+    description = models.TextField(
+        default="", blank=True
     )
 
     #: Currency code
@@ -56,7 +66,7 @@ class Payment(BaseContent):
             "ctype": (
                 VariantType.feature.value
             ),
-            "strength": 0
+            "strength": 5
         }
     ]
 
@@ -123,9 +133,15 @@ class Payment(BaseContent):
                 ret, self.associated.getlist("url", 1)[0]
             )
 
-    @property
+    @cached_property
     def remaining(self):
-        return self.total-self.transactions.aggregate(
+        if self.period is None:
+            total = self.total
+        else:
+            total = (timezone.now()-self.associated.created)//self.period
+            total *= self.total
+
+        return total-self.transactions.aggregate(
             n=models.Sum('captured')
         ).get("n", 0)
 
@@ -139,6 +155,9 @@ class Transaction(BaseContent):
     source = models.ForeignKey(
         PaymentSource,
         on_delete=models.CASCADE, related_name="transactions"
+    )
+    description = models.TextField(
+        default="", blank=True
     )
 
     status_url = models.URLField(max_length=400, null=False)
