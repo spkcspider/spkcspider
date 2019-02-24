@@ -191,7 +191,7 @@ spkc:pages.size_page a rdf:value ;
 spkc:verified a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Verified" ;
-  rdfs:comment "Null or timestamp of verification" ;
+  rdfs:comment "false, timestamp of verification or true in case timestamp not available" ;
   rdfs:domain rdfs:Resource ;
   rdfs:range (
     xsd:boolean
