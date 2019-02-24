@@ -150,7 +150,7 @@ class BaseContent(models.Model):
         default_permissions = []
 
     @classmethod
-    def static_create(cls, associated=None, **kwargs):
+    def static_create(cls, *, associated=None, **kwargs):
         ob = cls()
         if associated:
             ob._associated_tmp = associated

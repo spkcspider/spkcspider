@@ -88,7 +88,7 @@ class PushTagView(UCTestMixin, View):
         )
         associated.token_generate_new_size = \
             getattr(settings, "TOKEN_SIZE", 30)
-        instance = self.model.static_create(associated)
+        instance = self.model.static_create(associated=associated)
         s = set(self.request.POST.getlist("updateable_by"))
         s.add(self.request.auth_token.referrer)
         instance.updateable_by = list(s)

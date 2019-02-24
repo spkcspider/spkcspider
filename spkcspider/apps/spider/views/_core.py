@@ -3,11 +3,13 @@ __all__ = (
 )
 
 import logging
-from decimal import Decimal
 from urllib.parse import quote_plus
 
 from datetime import timedelta
 
+
+from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
@@ -480,9 +482,6 @@ class ReferrerMixin(object):
         return True
 
     def clean_refer_intentions(self, context, token=None):
-        currency = None
-        pay_amount = None
-        capture = None
         # Only owner can use other intentions than domain
         if not self.request.is_owner:
             return False
@@ -495,18 +494,22 @@ class ReferrerMixin(object):
             return False
 
         if "payment" in context["intentions"]:
-            currency = self.request.GET.get("cur", "").upper()
-            if not currency:
-                return False
-            capture = self.request.GET.get("capture", "false")
-            if capture not in ("true", "false"):
+            context["pay_variant"] = self.usercomponent.features.filter(
+                name="SpiderPay"
+            ).first()
+            if not context["pay_variant"]:
                 return False
             # return decimal, str or None
-            pay_amount = get_settings_func(
+            pay_amount, currency = get_settings_func(
                 "SPIDER_PAYMENT_VALIDATOR",
                 "spkcspider.apps.spider.functions.clean_payment_default"
-            )(self.request.GET.get("amount", None), currency)
-            if pay_amount is None:
+            )(
+                (
+                    self.request.GET.get("amount", None),
+                    self.request.GET.get("cur", None)
+                )
+            )
+            if pay_amount is None or currency is None:
                 return False
 
         # auth is only for requesting component auth
@@ -530,13 +533,6 @@ class ReferrerMixin(object):
             return True
 
         ####### with token ########  # noqa: 266E
-        if "payment" in context["intentions"]:
-            # set
-            token.pay_total = pay_amount
-            # signal complete payment by setting to pay_total
-            token.pay_captured = Decimal('0').quantize(token.pay_total)
-            token.extra["CUR"] = currency
-            token.extra["capture"] = (capture == "true")
         if "persist" in context["intentions"]:
             # cannot add sl intention
             if "intentions" in token.extra:
@@ -707,11 +703,31 @@ class ReferrerMixin(object):
                 )
 
             if context["is_serverless"]:
-                return self.refer_with_get(context, token)
-            context["post_success"] = False
-            ret = self.refer_with_post(context, token)
+                context["post_success"] = True
+                ret = self.refer_with_get(context, token)
+            else:
+                context["post_success"] = False
+                ret = self.refer_with_post(context, token)
             if not context["post_success"] and not hasoldtoken:
                 token.delete()
+            if "payment" in context["intentions"]:
+                payment = apps.get_model("spider_pay.Payment")
+                AssignedContent = apps.get_model("spider_base.AssignedContent")
+
+                associated = AssignedContent(
+                    usercomponent=self.usercomponent,
+                    ctype=context["pay_variant"],
+                    persist_token=self.request.auth_token
+                )
+                associated.token_generate_new_size = \
+                    getattr(settings, "TOKEN_SIZE", 30)
+                ret = payment.static_create(associated=associated)
+                try:
+                    ret.clean()
+                    ret.save()
+                except ValidationError:
+                    if not hasoldtoken:
+                        token.delete()
             return ret
 
         elif action == "cancel":

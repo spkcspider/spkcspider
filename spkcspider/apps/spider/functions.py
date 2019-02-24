@@ -46,8 +46,8 @@ def get_quota(user, quota_type):
 
 def validate_payment_default(amountstr, cur):
     if len(cur) != 3:
-        return None
-    return Decimal(amountstr)
+        return None, None
+    return Decimal(amountstr), cur.upper()
 
 
 class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):

@@ -72,7 +72,7 @@ class WebConfigView(UCTestMixin, View):
         )
         associated.token_generate_new_size = \
             getattr(settings, "TOKEN_SIZE", 30)
-        ret = self.model.static_create(associated)
+        ret = self.model.static_create(associated=associated)
         ret.clean()
         ret.save()
         assert(associated.token)
