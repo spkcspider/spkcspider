@@ -91,8 +91,11 @@ class VerifyEntry(DetailView):
     template_name = "spider_verifier/dv_detail.html"
 
     def get_context_data(self, **kwargs):
-        if self.object.checked:
-            kwargs["verified"] = Literal(self.object.checked)
+        if self.object.verification_state == "verified":
+            if self.object.checked:
+                kwargs["verified"] = Literal(self.object.checked)
+            else:
+                kwargs["verified"] = Literal(True)
         else:
             kwargs["verified"] = Literal(False)
         kwargs["hash_algorithm"] = getattr(
