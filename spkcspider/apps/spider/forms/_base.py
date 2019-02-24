@@ -211,8 +211,14 @@ class UserComponentForm(forms.ModelForm):
             lambda x: VariantType.persist.value in x.ctype,
             self.cleaned_data["features"]
         )):
-            self.cleaned_data["features"] |= ContentVariant.objects.filter(
-                name="Persistence"
+            # fixes strange union bug
+            self.cleaned_data["features"] = ContentVariant.objects.filter(
+                models.Q(name="Persistence") |
+                models.Q(
+                    id__in=self.cleaned_data["features"].values_list(
+                        "id", flat=True
+                    )
+                )
             )
         self.cleaned_data["allow_domain_mode"] = any(map(
             lambda x: VariantType.domain_mode.value in x.ctype,

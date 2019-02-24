@@ -347,9 +347,11 @@ class PasswordProtection(BaseProtection):
 
     @staticmethod
     def eval_strength(length):
-        if length > 15:
+        if not length:
+            return 0
+        elif length > 15:
             return 2
-        if length > 40:
+        elif length > 40:
             return 3
         return 1
 
