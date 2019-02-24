@@ -13,6 +13,8 @@ from ..models import (
     AssignedProtection, Protection, UserComponent, AssignedContent,
     ContentVariant, AuthToken
 )
+
+from ..widgets import StateButtonWidget
 from ..helpers import create_b64_id_token
 from ..constants import (
     ProtectionType, VariantType, STATIC_TOKEN_CHOICES,
@@ -65,6 +67,10 @@ class UserComponentForm(forms.ModelForm):
         }
         widgets = {
             'features': forms.CheckboxSelectMultiple(),
+            'allow_domain_mode': StateButtonWidget(
+                attrs={"class": "round"}
+            )
+
         }
 
     def __init__(self, request, data=None, files=None, auto_id='id_%s',
