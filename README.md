@@ -29,9 +29,10 @@ For spiders and contents
 
 * spkcspider.apps.spider: store User Components, common base, WARNING: has spider_base namespace to not break existing apps
 * spkcspider.apps.spider_accounts: user implementation suitable for the spiders. You can supply your own user model instead.
-* spkcspider.apps.spider_tags: verified information tags
-* spkcspider.apps.spider_keys: Public keys and anchors
 * spkcspider.apps.spider_filets: File and Text Content types
+* spkcspider.apps.spider_keys: Public keys and anchors
+* spkcspider.apps.spider_pay: second factor for payments (NOT READY YET)
+* spkcspider.apps.spider_tags: verified information tags
 * spkcspider.apps.spider_webcfg: WebConfig Feature
 * spkcspider: contains spkcspider url detection and wsgi handler
 

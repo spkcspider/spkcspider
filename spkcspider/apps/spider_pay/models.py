@@ -18,6 +18,20 @@ from spkcspider.apps.spider.helpers import get_settings_func
 
 
 @add_content
+class PaymentSource(BaseContent):
+    # should be encrypted
+    secret = models.TextField(null=False)
+    provider = models.URLField(max_length=400)
+
+    appearances = [
+        {
+            "name": "PaymentSource",
+            "strength": 0
+        }
+    ]
+
+
+@add_content
 class Payment(BaseContent):
     token = models.ForeignKey(
         "spider_base.AuthToken", blank=True, null=True,
@@ -84,7 +98,7 @@ class Payment(BaseContent):
             if self.total is None or self.currency is None:
                 raise ValidationError(
                     _('Invalid payment parameters'),
-                    code="invalid_parameters",
+                    code="invalid_payment_parameters",
                 )
         super().clean()
 
@@ -122,20 +136,31 @@ class Transaction(BaseContent):
         "spider_base.SpiderPayment",
         on_delete=models.CASCADE, related_name="transactions"
     )
+    source = models.ForeignKey(
+        PaymentSource,
+        on_delete=models.CASCADE, related_name="transactions"
+    )
+
+    status_url = models.URLField(max_length=400, null=False)
 
     captured = models.DecimalField(
         max_digits=20, decimal_places=8, default=Decimal('0.0')
-    )
-    provider = models.URLField(
-        max_length=400, blank=True, null=True
     )
 
     appearances = [
         {
             "name": "SpiderPayTransaction",
             "ctype": (
-                VariantType.unlisted.value
+                VariantType.unlisted + VariantType.domain_mode
             ),
             "strength": 0
         }
     ]
+
+    def access_view(self, **kwargs):
+        # redirects to confirmation url
+        pass
+
+    def access_cancel(self, **kwargs):
+        # refund token is maybe required
+        pass

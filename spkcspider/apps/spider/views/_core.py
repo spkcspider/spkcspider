@@ -33,7 +33,7 @@ from ..constants import (
     VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS,
     TokenCreationError, ProtectionType
 )
-from ..models import UserComponent, AuthToken
+from ..models import UserComponent, AuthToken, AssignedContent
 
 
 class UserTestMixin(AccessMixin):
@@ -401,6 +401,12 @@ class ReferrerMixin(object):
             }
             if context["payload"]:
                 d["payload"] = context["payload"]
+
+            if context.get("payment", None):
+                d["payment"] = "{}://{}{}".format(
+                    self.request.scheme, self.request.get_host(),
+                    context["payment"].get_absolute_url()
+                )
             ret = requests.post(
                 context["referrer"],
                 data=d,
@@ -410,7 +416,7 @@ class ReferrerMixin(object):
                             context["hostpart"],
                             self.request.path
                         )
-                        # not required anymore, payload
+                        # sending full url not required anymore, payload
                         # token=None, referrer=None, raw=None, intention=None,
                         # sl=None, payload=None
                     )
@@ -454,11 +460,18 @@ class ReferrerMixin(object):
         )
 
     def refer_with_get(self, context, token):
+        payment_url = None
+        if context.get("payment", None):
+            payment_url = "{}://{}{}".format(
+                self.request.scheme, self.request.get_host(),
+                context["payment"].get_absolute_url()
+            )
         return HttpResponseRedirect(
             redirect_to=merge_get_url(
                 context["referrer"],
                 token=token.token,
-                payload=context["payload"]
+                payload=context["payload"],
+                payment=payment_url
             )
         )
 
@@ -702,17 +715,10 @@ class ReferrerMixin(object):
                     _("Token creation failed, try again")
                 )
 
-            if context["is_serverless"]:
-                context["post_success"] = True
-                ret = self.refer_with_get(context, token)
-            else:
-                context["post_success"] = False
-                ret = self.refer_with_post(context, token)
-            if not context["post_success"] and not hasoldtoken:
-                token.delete()
             if "payment" in context["intentions"]:
-                payment = apps.get_model("spider_pay.Payment")
-                AssignedContent = apps.get_model("spider_base.AssignedContent")
+                # use get_model here, because it is not sure, that
+                # spider_pay is in use
+                Payment = apps.get_model("spider_pay.Payment")
 
                 associated = AssignedContent(
                     usercomponent=self.usercomponent,
@@ -721,13 +727,34 @@ class ReferrerMixin(object):
                 )
                 associated.token_generate_new_size = \
                     getattr(settings, "TOKEN_SIZE", 30)
-                ret = payment.static_create(associated=associated)
+                context["payment"] = Payment.static_create(
+                    associated=associated
+                )
                 try:
-                    ret.clean()
-                    ret.save()
+                    context["payment"].clean()
+                    context["payment"].save()
                 except ValidationError:
+                    logging.exception("Payment creation failed")
                     if not hasoldtoken:
                         token.delete()
+                        return HttpResponseRedirect(
+                            redirect_to=merge_get_url(
+                                context["referrer"],
+                                error="payment_creation_failed"
+                            )
+                        )
+
+            if context["is_serverless"]:
+                context["post_success"] = True
+                ret = self.refer_with_get(context, token)
+            else:
+                context["post_success"] = False
+                ret = self.refer_with_post(context, token)
+            if not context["post_success"]:
+                if not hasoldtoken:
+                    token.delete()
+                if context.get("payment", None):
+                    context["payment"].associated.delete()
             return ret
 
         elif action == "cancel":
