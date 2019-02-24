@@ -51,7 +51,9 @@ setup(
     extras_require={
         "debug": debug_requirements,
         "fcgi": ["flipflop"],
-        "captcha": ["django-simple-captcha"]
+        "captcha": ["django-simple-captcha"],
+        "mysql": ["mysqlclient"],
+        "pgsql": ["psycopg-binary"]
     },
     data_files=[('spkcspider', ['LICENSE'])],
     packages=[

@@ -15,9 +15,8 @@ import certifi
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import XSD
 
-from spkcspider.apps.spider.helpers import merge_get_url
+from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 from spkcspider.apps.spider.constants.static import spkcgraph
-from spkcspider.apps.spider.helpers import get_settings_func
 
 from .models import DataVerificationTag
 from .constants import BUFFER_SIZE
@@ -44,7 +43,7 @@ def hash_entry(triple):
         else:
             h.update(XSD.string.encode("utf8"))
         h.update(triple[2].encode("utf8"))
-    return h.digest()
+    return h.finalize()
 
 
 def yield_hashes(graph, hashable_nodes):
@@ -66,10 +65,13 @@ def yield_hashable_urls(graph, hashable_nodes):
 
 class CreateEntryForm(forms.ModelForm):
     url = forms.URLField(help_text=_source_url_help)
-    MAX_FILE_SIZE = forms.CharField(
-        disabled=True, widget=forms.HiddenInput(), required=False,
-        initial=settings.VERIFIER_MAX_SIZE_ACCEPTED
+    dvfile = forms.FileField(
+        required=False, max_length=settings.VERIFIER_MAX_SIZE_ACCEPTED
     )
+    # MAX_FILE_SIZE = forms.CharField(
+    #    disabled=True, widget=forms.HiddenInput(), required=False,
+    #    initial=settings.VERIFIER_MAX_SIZE_ACCEPTED
+    # )
 
     class Meta:
         model = DataVerificationTag
@@ -405,7 +407,7 @@ class CreateEntryForm(forms.ModelForm):
             h.update(i)
         # do not use add as it could be corrupted by user
         # (user can provide arbitary data)
-        digest = h.finalize().digest()
+        digest = h.finalize().hex()
         g.set((
             start,
             spkcgraph["hash"],

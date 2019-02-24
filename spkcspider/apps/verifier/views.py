@@ -24,8 +24,7 @@ class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
         self, input_data, META, content_length, boundary, encoding=None
     ):
         """
-        Use the content_length to signal whether or not this handler should be
-        used.
+        Use the content_length to signal whether upload should be stopped
         """
         # disable upload if too big
         self.activated = content_length <= settings.VERIFIER_MAX_SIZE_ACCEPTED
@@ -92,7 +91,10 @@ class VerifyEntry(DetailView):
     template_name = "spider_verifier/dv_detail.html"
 
     def get_context_data(self, **kwargs):
-        kwargs["verified"] = Literal(self.object.checked)
+        if self.object.checked:
+            kwargs["verified"] = Literal(self.object.checked)
+        else:
+            kwargs["verified"] = Literal(False)
         kwargs["hash_algorithm"] = getattr(
             settings, "VERIFICATION_HASH_ALGORITHM",
             settings.SPIDER_HASH_ALGORITHM

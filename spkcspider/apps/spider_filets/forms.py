@@ -21,9 +21,6 @@ def check_attrs_func(tag, name, value):
 
 class FileForm(forms.ModelForm):
     user = None
-    MAX_FILE_SIZE = forms.CharField(
-        disabled=True, widget=forms.HiddenInput(), required=False
-    )
 
     class Meta:
         model = FileFilet
@@ -33,21 +30,22 @@ class FileForm(forms.ModelForm):
         super().__init__(**kwargs)
         self.fields['name'].required = False
         setattr(self.fields['file'], "hashable", True)
+        if request.user.is_superuser:
+            # no upload limit
+            pass
+        elif request.user.is_staff:
+            self.fields["file"].max_length = getattr(
+                settings, "MAX_FILE_SIZE_STAFF", None
+            )
+        else:
+            self.fields["file"].max_length = getattr(
+                settings, "MAX_FILE_SIZE", None
+            )
         if request.is_owner:
-            self.user = request.user
+            # self.user = request.user
             return
         self.fields["file"].editable = False
         self.fields["name"].editable = False
-        if request.user.is_staff or request.user.is_superuser:
-            self.fields["MAX_FILE_SIZE"].initial = getattr(
-                settings, "MAX_FILE_SIZE", None
-            )
-        else:
-            self.fields["MAX_FILE_SIZE"].initial = getattr(
-                settings, "MAX_FILE_SIZE_STAFF", None
-            )
-        if not self.fields["MAX_FILE_SIZE"].initial:
-            del self.fields["MAX_FILE_SIZE"]
 
     def clean(self):
         ret = super().clean()

@@ -1,14 +1,17 @@
 
-import unittest
+import re
 
+from django.conf import settings
+from django.test import override_settings
 from django.contrib.staticfiles.testing import LiveServerTestCase
 from django.urls import reverse
 
+from rdflib import Graph, Literal, XSD
 
 from django_webtest import WebTestMixin, DjangoTestApp
 
-
 from spkcspider.apps.spider_accounts.models import SpiderUser
+from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider_tags.models import TagLayout
 from spkcspider.apps.spider.signals import update_dynamic
 
@@ -50,10 +53,11 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
             extra_environ=self.extra_environ
         )
 
-    @unittest.expectedFailure
+    # @unittest.expectedFailure
     def test_verify(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
+        self.app.set_user(user="testuser1")
         createurl = reverse(
             "spider_base:ucontent-add",
             kwargs={
@@ -62,10 +66,19 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
             }
         )
         # login in live system first
-        response = self.app.get(createurl).follow()
-        form = response.forms[0]
+        response = self.app.get(reverse(
+            "auth:login"
+        ))
+        # required for csrf cookie
+        self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
+        form = response.form
+        form.set("username", "testuser1")
         form.set("password", "abc", index=0)
         response = form.submit()
+        self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
+        response = response.follow()
+        response = self.app.get(createurl)
+        self.assertEqual(response.status_code, 200)
         form = response.form
         form["layout"].value = TagLayout.objects.get(name="address").pk
         response = form.submit().follow()
@@ -79,9 +92,42 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         form["tag/country_code"] = "de"
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        response = response.click(
-            href=home.contents.first().get_absolute_url("view"), index=0
+        url = response.html.find(
+            "a",
+            attrs={"href": re.compile(".*view.*")}
         )
-        location = response.location
-        breakpoint()
+        self.assertTrue(url)
+        url = url.attrs["href"]
+        self.assertIn(home.contents.first().get_absolute_url(), url)
+        # must be after retrieving link
+        response = response.click(
+            href=url, index=0
+        )
         self.assertEqual(response.status_code, 200)
+        fullurl = "{}{}".format(self.live_server_url, url)
+        verifyurl = reverse("spider_verifier:create")
+        response = None
+        with override_settings(DEBUG=True):
+            response = self.app.get(verifyurl)
+            form = response.form
+            form["url"] = fullurl
+            response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
+        g = Graph()
+        g.parse(data=response.text, format="html")
+        self.assertIn(
+            (
+                None, spkcgraph["hash.algorithm"], Literal(
+                    getattr(
+                        settings, "VERIFICATION_HASH_ALGORITHM",
+                        settings.SPIDER_HASH_ALGORITHM
+                    ).name,
+                    datatype=XSD.string
+                )
+            ),
+            g
+        )
+        self.assertIn(
+            (None, spkcgraph["verified"], Literal(False)),
+            g
+        )

@@ -91,7 +91,7 @@ class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
         if not max_length:
             return True
 
-        # admin can upload as much as he wants
+        # superuser can upload as much as he wants
         if self.request.user.is_superuser:
             return True
 

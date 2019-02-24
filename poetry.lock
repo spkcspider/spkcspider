@@ -331,11 +331,12 @@ webob = "*"
 
 [extras]
 captcha = []
+fcgi = []
 mysql = []
 pgsql = []
 
 [metadata]
-content-hash = "d3f53230cee40604d12e1d5dbcb7d7db3020dcdbc59919f7d4c367b3c80c0ab6"
+content-hash = "9dbd11e65e3d7c121d54412942538ec72fd164c68da11ec92ebd80deb2025aa9"
 python-versions = ">=3.5"
 
 [metadata.hashes]

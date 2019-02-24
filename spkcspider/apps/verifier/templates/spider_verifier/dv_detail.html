@@ -2,19 +2,19 @@
 {% extends "spider_base/base.html" %}
 {% load i18n spider_rdf %}
 {% block content %}
-<table vocab="{% spkc_namespace %}" resource="{{ request.path }}">
+<table prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema#" resource="{{ request.path }}">
   <thead><tr><th cellspan="2">Results:</th></tr></thead>
   <tr>
     <td>{% trans "Hash:" %}</td>
-    <td property="hash" style="word-break: break-all">{{object.hash}}</td>
+    <td property="spkc:hash" datatype="xsd:string" style="word-break: break-all">{{object.hash}}</td>
   </tr>
   <tr>
     <td>{% trans "Hash Algorithm:" %}</td>
-    <td property="hash.algorithm">{{hash_algorithm}}</td>
+    <td property="spkc:hash.algorithm" datatype="xsd:string">{{hash_algorithm}}</td>
   </tr>
   <tr>
     <td>{% trans "Verification State:" %}</td>
-    <td property="verified" {% if object.verification_state == "verified" %}datatype="{{verified.datatype}}"{% else %}content="unverified"{% endif %}>{% if object.verification_state == "verified" %}{{verified}}{% else %}{% trans 'unverified' %}{% endif %}</td>
+    <td property="spkc:verified" datatype="{{verified.datatype}}" content="{{verified}}">{% if object.verification_state == "verified" %}{% trans 'verified' %}:{{verified}}{% else %}{% trans 'unverified' %}{% endif %}</td>
   </tr>
 
 </table>

@@ -29,9 +29,10 @@ django-simple-captcha = "*"
 WSGIProxy2 = "*"
 
 [tool.poetry.extras]
+captcha = ["django-simple-captcha"]
+fcgi = ["flipflop"]
 mysql = ["mysqlclient"]
 pgsql = ["psycopg-binary"]
-captcha = ["django-simple-captcha"]
 
 
 [build-system]
