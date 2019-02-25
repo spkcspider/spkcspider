@@ -11,7 +11,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 from spkcspider.apps.spider.views import UCTestMixin
-from spkcspider.apps.spider.helpers import get_settings_func, extract_host
+from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
     AuthToken, AssignedContent
 )
@@ -83,8 +83,7 @@ class WebConfigView(UCTestMixin, View):
     def options(self, request, *args, **kwargs):
         ret = super().options()
         self.object = self.get_object()
-        ret["Access-Control-Allow-Origin"] = \
-            extract_host(self.object.token.referrer)
+        ret["Access-Control-Allow-Origin"] = self.object.token.referrer.host
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return ret
 
@@ -116,10 +115,10 @@ class WebConfigView(UCTestMixin, View):
                 "ascii", "backslashreplace"
             ), content_type="text/plain"
         )
-        ret["X-SPIDER-URL"] = self.request.auth_token.referrer
+        ret["X-SPIDER-URL"] = self.request.auth_token.referrer.url
         ret["X-SPIDER-MODIFIED"] = self.object.associated.modified
         ret["X-SPIDER-CREATED"] = self.object.associated.created
         # allow cors requests for accessing data
         ret["Access-Control-Allow-Origin"] = \
-            extract_host(self.request.auth_token.referrer)
+            self.request.auth_token.referrer.host
         return ret

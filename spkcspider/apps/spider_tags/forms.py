@@ -21,7 +21,7 @@ from .models import TagLayout, SpiderTag
 from spkcspider.apps.spider.fields import OpenChoiceField
 from spkcspider.apps.spider.widgets import OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
-from spkcspider.apps.spider.models import AssignedContent
+from spkcspider.apps.spider.models import AssignedContent, ReferrerObject
 from spkcspider.apps.spider.contents import BaseContent
 
 
@@ -61,6 +61,21 @@ class SpiderTagForm(forms.ModelForm):
             Q(usertag__isnull=True) |
             Q(usertag__associated_rel__usercomponent=index)
         ).order_by("name")
+
+    def clean_updateable_by(self):
+        values = self.cleaned_data["updateable_by"]
+        values = set(map(merge_get_url, values))
+        existing = ReferrerObject.objects.filter(
+            url__in=values
+        ).values_list("url", flat=True)
+        for url in values.difference(existing):
+            # extra validation
+            ReferrerObject.objects.get_or_create(
+                url=url
+            )
+        return ReferrerObject.objects.filter(
+            url__in=values
+        )
 
 
 def generate_form(name, layout):
@@ -145,6 +160,21 @@ def generate_form(name, layout):
                     field.queryset = field.queryset.filter(
                         q_user, q_uc, **filters
                     )
+
+        def clean_updateable_by(self):
+            values = self.cleaned_data["updateable_by"]
+            values = set(map(merge_get_url, values))
+            existing = ReferrerObject.objects.filter(
+                url__in=values
+            ).values_list("url", flat=True)
+            for url in values.difference(existing):
+                # extra validation
+                ReferrerObject.objects.get_or_create(
+                    url=url
+                )
+            return ReferrerObject.objects.filter(
+                url__in=values
+            )
 
         def clean(self):
             super().clean()

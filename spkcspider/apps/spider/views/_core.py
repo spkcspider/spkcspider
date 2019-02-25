@@ -33,7 +33,7 @@ from ..constants import (
     VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS,
     TokenCreationError, ProtectionType
 )
-from ..models import UserComponent, AuthToken, AssignedContent
+from ..models import UserComponent, AuthToken, AssignedContent, ReferrerObject
 
 
 class UserTestMixin(AccessMixin):
@@ -346,9 +346,7 @@ class ReferrerMixin(object):
         kwargs["referrer"] = None
         kwargs["intentions"] = []
         if self.request.auth_token:
-            kwargs["referrer"] = self.request.auth_token.extra.get(
-                "referrer", None
-            )
+            kwargs["referrer"] = self.request.auth_token.referrer
             kwargs["token_strength"] = self.request.auth_token.extra.get(
                 "strength", None
             )
@@ -513,7 +511,7 @@ class ReferrerMixin(object):
             if not context["pay_variant"]:
                 return False
             # return decimal, str or None
-            pay_amount, currency = get_settings_func(
+            context["pay_amount"], context["currency"] = get_settings_func(
                 "SPIDER_PAYMENT_VALIDATOR",
                 "spkcspider.apps.spider.functions.clean_payment_default"
             )(
@@ -522,7 +520,7 @@ class ReferrerMixin(object):
                     self.request.GET.get("cur", None)
                 )
             )
-            if pay_amount is None or currency is None:
+            if context["pay_amount"] is None or context["currency"] is None:
                 return False
 
         # auth is only for requesting component auth
@@ -619,7 +617,9 @@ class ReferrerMixin(object):
                     content='Invalid token'
                 )
             token.create_auth_token()
-            token.referrer = context["referrer"]
+            token.referrer = ReferrerObject.objects.get_or_create(
+                url=context["referrer"]
+            )[0]
             try:
                 token.save()
             except TokenCreationError:
@@ -645,7 +645,7 @@ class ReferrerMixin(object):
                 )
                 token = AuthToken.objects.filter(
                     persistfind,
-                    referrer=context["referrer"]
+                    referrer__url=context["referrer"]
                 ).first()
                 if token:
                     hasoldtoken = True
@@ -699,7 +699,9 @@ class ReferrerMixin(object):
                 token.extra["ids"] = list(
                     self.object_list.values_list("id", flat=True)
                 )
-            token.referrer = context["referrer"]
+            token.referrer = ReferrerObject.objects.get_or_create(
+                url=context["referrer"]
+            )[0]
             # after cleanup, save
             try:
                 with transaction.atomic():
@@ -784,7 +786,7 @@ class ReferrerMixin(object):
                 )
                 oldtoken = AuthToken.objects.filter(
                     persistfind,
-                    referrer=context["referrer"],
+                    referrer__url=context["referrer"],
                 ).first()
 
             if oldtoken:

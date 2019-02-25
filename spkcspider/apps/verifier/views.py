@@ -4,6 +4,7 @@ __all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
 from django.views.generic.edit import CreateView
 from django.views.generic.detail import DetailView
 from django.views import View
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
@@ -103,6 +104,23 @@ class VerifyEntry(DetailView):
             settings.SPIDER_HASH_ALGORITHM
         ).name
         return super().get_context_data(**kwargs)
+
+    def has_perm(self):
+        if self.request.user.is_superuser:
+            return True
+        elif self.request.user.has_permission("evaluate"):
+            return True
+        return False
+
+    def post(self, request, *args, **kwargs):
+        action = self.request.POST.get("action")
+        if not action:
+            return self.get(request, *args, **kwargs)
+        elif action == "evaluate":
+            if not self.has_perm():
+                raise PermissionDenied()
+            # queue download
+            self.get_object().download()
 
 
 class HashAlgoView(View):

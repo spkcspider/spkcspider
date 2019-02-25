@@ -172,7 +172,7 @@ class TagTest(TransactionWebTest):
         self.assertTrue(tokenob.referrer)
 
         response = self.app.get("{}?token={}".format(pushed_url, token))
-        self.assertIn("address", response.json["layouts"])
+        self.assertIn("address", response.json["layout"])
         response = self.app.post(
             "{}?token={}".format(pushed_url, token),
             {

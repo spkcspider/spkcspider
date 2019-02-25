@@ -12,7 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 from spkcspider.apps.spider.views import UserTestMixin
-from spkcspider.apps.spider.helpers import get_settings_func, extract_host
+from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
     AuthToken, AssignedContent
 )
@@ -58,15 +58,17 @@ class PaymentsListView(UserTestMixin, View):
         if request.GET.get("also_referrer", "false") == "true":
             q |= models.Q(
                 associated_rel__info__contains="\nurl={}\n".format(
-                    request.auth_token.referrer
+                    request.auth_token.referrer.info_url
                 )
             )
         ret = JsonResponse(
-            "payments": [
-                "{}{}".format(
-                    hostpart, i.get_absolute_url()
-                ) for i in Payment.objects.filter(q)
-            ]
+            {
+                "payments": [
+                    "{}{}".format(
+                        hostpart, i.get_absolute_url()
+                    ) for i in Payment.objects.filter(q)
+                ]
+            }
         )
         # allow cors requests for accessing data
         ret["Access-Control-Allow-Origin"] = "*"

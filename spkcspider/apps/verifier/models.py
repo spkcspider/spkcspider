@@ -17,6 +17,14 @@ def dv_path(instance, filename):
     )
 
 
+class VerifySourceObject(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
+    url = models.URLField(
+        max_length=400, db_index=True, unique=True
+    )
+    get_params = models.TextField()
+
+
 class DataVerificationTag(models.Model):
     """ Contains verified data """
     # warning: never depend directly on user, seperate for multi-db setups
@@ -32,10 +40,14 @@ class DataVerificationTag(models.Model):
             "File with data to verify"
         )
     )
+    source = models.ForeignKey(
+        VerifySourceObject, null=True, blank=True, on_delete=models.CASCADE
+    )
+    # url = models.URLField(max_length=600)
     data_type = models.CharField(default="layout", max_length=20)
     checked = models.DateTimeField(null=True, blank=True)
     verification_state = models.CharField(
-        default="pending",
+        default="retrieve",
         max_length=10, choices=VERIFICATION_CHOICES
     )
     note = models.TextField(default="", blank=True)

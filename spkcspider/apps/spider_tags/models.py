@@ -133,7 +133,9 @@ class SpiderTag(BaseContent):
     )
     tagdata = JSONField(default=dict, blank=True)
     verified_by = JSONField(default=list, blank=True)
-    updateable_by = JSONField(default=list, blank=True)
+    updateable_by = models.ManyToManyField(
+        "spider_base.ReferrerObject", blank=True
+    )
     primary = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
@@ -173,7 +175,10 @@ class SpiderTag(BaseContent):
                 "spkcspider.apps.spider.functions.allow_all_filter"
             )(self, context["request"]):
                 _abilities.add("verify")
-            if context["request"].auth_token.referrer in self.updateable_by:
+            if (
+                context["request"].auth_token.referrer in
+                self.updateable_by
+            ):
                 _abilities.add("push_update")
         return _abilities
 
@@ -182,7 +187,7 @@ class SpiderTag(BaseContent):
         verified = kwargs["request"].POST.get("verified_url", "")
         if verified == "":
             return HttpResponse(status_code=400)
-        if not verified.startswith(kwargs["request"].auth_token.referrer):
+        if not verified.startswith(kwargs["request"].auth_token.referrer.url):
             raise PermissionDenied()
         if verified in self.verified_by:
             return self.access_view(self, **kwargs)

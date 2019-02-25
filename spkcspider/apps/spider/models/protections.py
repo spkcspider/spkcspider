@@ -291,8 +291,9 @@ class AuthToken(models.Model):
             validator_token
         ]
     )
-    referrer = models.URLField(
-        max_length=400, blank=True, null=True
+    referrer = models.ForeignKey(
+        "spider_base.ReferrerObject", on_delete=models.CASCADE,
+        related_name="tokens", blank=True, null=True
     )
     created_by_special_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,

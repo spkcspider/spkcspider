@@ -1,11 +1,13 @@
-__all__ = ["BaseInfoModel", "info_and", "info_or"]
+__all__ = ["BaseInfoModel", "ReferrerObject", "info_and", "info_or"]
 
 import re
 
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
+from django.utils.functional import cached_property
 
+from ..helpers import extract_host
 
 _info_replacer_templ = '\n{}.*\n'
 
@@ -84,6 +86,21 @@ def info_field_validator(value):
                 _('flag not unique: %(element)s in %(value)s'),
                 params={'element': elem, 'value': value},
             )
+
+
+class ReferrerObject(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
+    url = models.URLField(
+        max_length=600, db_index=True, unique=True, editable=False
+    )
+
+    @cached_property
+    def info_url(self):
+        return self.url.replace("\n", "%0A")
+
+    @cached_property
+    def host(self):
+        return extract_host(self.url)
 
 
 class BaseInfoModel(models.Model):

@@ -2,7 +2,9 @@ from django.core.management import call_command
 from django.test import TransactionTestCase
 from django.utils.six import StringIO
 
-from spkcspider.apps.spider.models import AuthToken, UserComponent
+from spkcspider.apps.spider.models import (
+    AuthToken, UserComponent, ReferrerObject
+)
 from spkcspider.apps.spider_accounts.models import SpiderUser
 
 
@@ -82,37 +84,51 @@ class ManagementTests(TransactionTestCase):
         AuthToken.objects.create(
             persist=-1,
             usercomponent=uc,
-            referrer="http://example.com"
+            referrer=ReferrerObject.objects.get_or_create(
+                url="http://example.com"
+            )[0]
         )
         AuthToken.objects.create(
             persist=0,
             usercomponent=uc,
-            referrer="http://example.com"
+            referrer=ReferrerObject.objects.get_or_create(
+                url="http://example.com"
+            )[0]
         )
         AuthToken.objects.create(
             persist=1,
             usercomponent=uc,
-            referrer="http://example.com"
+            referrer=ReferrerObject.objects.get_or_create(
+                url="http://example.com"
+            )[0]
         )
         AuthToken.objects.create(
             persist=1,
             usercomponent=uc,
-            referrer="http://example.com/test"
+            referrer=ReferrerObject.objects.get_or_create(
+                url="http://example.com/test"
+            )[0]
         )
         AuthToken.objects.create(
             persist=-1,
             usercomponent=uc,
-            referrer="http://example.com/test"
+            referrer=ReferrerObject.objects.get_or_create(
+                url="http://example.com/test"
+            )[0]
         )
         AuthToken.objects.create(
             persist=0,
             usercomponent=uc,
-            referrer="http://example.com/test"
+            referrer=ReferrerObject.objects.get_or_create(
+                url="http://example.com/test"
+            )[0]
         )
         AuthToken.objects.create(
             persist=0,
             usercomponent=uc,
-            referrer="http://example2.com/test"
+            referrer=ReferrerObject.objects.get_or_create(
+                url="http://example2.com/test"
+            )[0]
         )
 
         out = StringIO()
@@ -139,5 +155,5 @@ class ManagementTests(TransactionTestCase):
         self.assertEqual(out.getvalue(), "count: 1\n")
         # the last is the latest and not affected
         self.assertTrue(AuthToken.objects.get(
-            referrer="http://example2.com/test",
+            referrer__url="http://example2.com/test",
         ))

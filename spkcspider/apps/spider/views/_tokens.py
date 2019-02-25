@@ -20,7 +20,7 @@ import certifi
 
 from ._core import UCTestMixin
 from ..models import AuthToken
-from ..helpers import get_settings_func, extract_host
+from ..helpers import get_settings_func
 from ..constants.static import TokenCreationError
 
 
@@ -162,7 +162,7 @@ class TokenRenewal(UCTestMixin, View):
     def options(self, request, *args, **kwargs):
         ret = super().options()
         ret["Access-Control-Allow-Origin"] = \
-            extract_host(self.request.auth_token.referrer)
+            self.request.auth_token.referrer.host
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return ret
 
@@ -241,5 +241,5 @@ class TokenRenewal(UCTestMixin, View):
         # no sl: simplifies update logic for thirdparty web servers
         # sl: safety (but anyway checked by referer check)
         ret["Access-Control-Allow-Origin"] = \
-            extract_host(self.request.auth_token.referrer)
+            self.request.auth_token.referrer.host
         return ret

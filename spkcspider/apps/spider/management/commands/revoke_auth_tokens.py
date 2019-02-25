@@ -37,7 +37,7 @@ class Command(BaseCommand):
         q = AuthToken.objects.all()
 
         if options['referrer']:
-            q = q.filter(referrer=options["referrer"])
+            q = q.filter(referrer__url=options["referrer"])
             if anchor == "all" or not anchor:
                 pass
             elif anchor == "component":

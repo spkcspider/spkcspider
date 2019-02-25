@@ -45,6 +45,8 @@ def get_quota(user, quota_type):
 
 
 def validate_payment_default(amountstr, cur):
+    if amountstr in ("", "0"):
+        return Decimal(0), ""
     if len(cur) != 3:
         return None, None
     return Decimal(amountstr), cur.upper()
