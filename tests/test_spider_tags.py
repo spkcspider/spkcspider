@@ -11,7 +11,6 @@ import requests
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import VariantType, spkcgraph
 from spkcspider.apps.spider.models import ContentVariant, AuthToken
-from spkcspider.apps.spider_tags.models import TagLayout
 from spkcspider.apps.spider.signals import update_dynamic
 
 from tests.referrerserver import create_referrer_server
@@ -53,7 +52,7 @@ class TagTest(TransactionWebTest):
         )
         response = self.app.get(createurl)
         form = response.form
-        form["layout"].value = TagLayout.objects.get(name="address").pk
+        form["layout"].value = "address"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
         form = response.form

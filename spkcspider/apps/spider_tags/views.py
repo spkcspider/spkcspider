@@ -1,22 +1,21 @@
 __all__ = ("PushTagView",)
 
 from django.conf import settings
+from django.urls import reverse
 from django.http import Http404
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.http.response import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.generic.edit import FormView
-from django.shortcuts import redirect
 
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
-    AuthToken, AssignedContent, UserComponent
+    AuthToken, AssignedContent
 )
-from .models import SpiderTag, TagLayout
+from .models import SpiderTag
 from .forms import SpiderTagForm
 
 
@@ -24,6 +23,7 @@ class PushTagView(UCTestMixin, FormView):
     model = SpiderTag
     form_class = SpiderTagForm
     variant = None
+    object = None
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -38,6 +38,7 @@ class PushTagView(UCTestMixin, FormView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["instance"] = self.object
+        kwargs["user"] = self.usercomponent.user
         return kwargs
 
     def get_usercomponent(self):
@@ -61,23 +62,6 @@ class PushTagView(UCTestMixin, FormView):
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return ret
 
-    def get(self, request, *args, **kwargs):
-        index = UserComponent.objects.get(
-            user=self.usercomponent.user,
-            name="index"
-        )
-        layouts = TagLayout.objects.filter(
-            Q(usertag__isnull=True) |
-            Q(usertag__associated_rel__usercomponent=index)
-        ).values_list("name", flat=True)
-        ret = JsonResponse(
-            {"layout": list(layouts)}
-        )
-        # allow cors requests for accessing data
-        ret["Access-Control-Allow-Origin"] = \
-            self.request.auth_token.referrer.host
-        return ret
-
     def post(self, request, *args, **kwargs):
         associated = AssignedContent(
             usercomponent=self.usercomponent,
@@ -85,21 +69,49 @@ class PushTagView(UCTestMixin, FormView):
         )
         associated.token_generate_new_size = \
             getattr(settings, "TOKEN_SIZE", 30)
+        # not yet confirmed
         self.object = self.model.static_create(associated=associated)
-        return super().post(request, *args, **kwargs)
+        # return super().post(request, *args, **kwargs)
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def render_to_response(self, context):
+        ret = JsonResponse(
+            {
+                "layout": [
+                    i.name
+                    for i in context["form"].fields["layout"].queryset.all()
+                ]
+            }
+        )
+        # allow cors requests for accessing data
+        ret["Access-Control-Allow-Origin"] = \
+            self.request.auth_token.referrer.host
+        return ret
 
     def form_valid(self, form):
         self.object = form.save(commit=False)
         self.object.clean()
         self.object.save()
         form.save_m2m()
+        self.object.updateable_by.add(self.request.auth_token.referrer)
+        assert(self.object.associated.id)
         assert(self.object.associated.token)
-        ret = redirect(
-            "spider_base:ucontent-access",
-            token=self.object.associated.token,
-            access="push_update"
+        ret = HttpResponseRedirect(
+            redirect_to="{}?token={}".format(
+                reverse(
+                    "spider_base:ucontent-access",
+                    kwargs={
+                        "token": self.object.associated.token,
+                        "access": "push_update"
+                    }
+                ),
+                self.request.auth_token.token
+            )
         )
-
         ret["Access-Control-Allow-Origin"] = \
             self.request.auth_token.referrer.host
         return ret

@@ -175,11 +175,11 @@ class SpiderTag(BaseContent):
                 "spkcspider.apps.spider.functions.allow_all_filter"
             )(self, context["request"]):
                 _abilities.add("verify")
-            if (
-                context["request"].auth_token.referrer in
-                self.updateable_by
-            ):
+            if self.updateable_by.filter(
+                id=context["request"].auth_token.referrer.id
+            ).exists():
                 _abilities.add("push_update")
+
         return _abilities
 
     def access_verify(self, **kwargs):

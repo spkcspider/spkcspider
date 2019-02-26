@@ -49,6 +49,10 @@ class SpiderTagForm(forms.ModelForm):
             }
         )
     )
+    layout = forms.ModelChoiceField(
+        queryset=TagLayout.objects.none(),
+        to_field_name="name"
+    )
 
     class Meta:
         model = SpiderTag
@@ -57,7 +61,7 @@ class SpiderTagForm(forms.ModelForm):
     def __init__(self, user=None, **kwargs):
         super().__init__(**kwargs)
         index = user.usercomponent_set.get(name="index")
-        self.fields["layout"].queryset = self.fields["layout"].queryset.filter(
+        self.fields["layout"].queryset = TagLayout.objects.filter(
             Q(usertag__isnull=True) |
             Q(usertag__associated_rel__usercomponent=index)
         ).order_by("name")
