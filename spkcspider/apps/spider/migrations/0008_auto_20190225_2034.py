@@ -10,6 +10,10 @@ class Migration(migrations.Migration):
         ('spider_base', '0007_usercomponent_allow_domain_mode'),
     ]
 
+    def remove_breaking(apps, schema_editor):
+        AuthToken = apps.get_model('spider_base', 'AuthToken')
+        AuthToken.objects.filter(referrer__isnull=False).delete()
+
     operations = [
         migrations.CreateModel(
             name='ReferrerObject',
@@ -18,6 +22,7 @@ class Migration(migrations.Migration):
                 ('url', models.URLField(db_index=True, editable=False, max_length=600, unique=True)),
             ],
         ),
+        migrations.RunPython(remove_breaking),
         migrations.AlterField(
             model_name='authtoken',
             name='referrer',

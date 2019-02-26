@@ -134,7 +134,7 @@ class SpiderTag(BaseContent):
     tagdata = JSONField(default=dict, blank=True)
     verified_by = JSONField(default=list, blank=True)
     updateable_by = models.ManyToManyField(
-        "spider_base.ReferrerObject", blank=True
+        "spider_base.ReferrerObject", related_name="tags", blank=True
     )
     primary = models.BooleanField(default=False, blank=True)
 
