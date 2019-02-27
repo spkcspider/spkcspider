@@ -1,4 +1,4 @@
-__all__ = ["OpenChoiceWidget", "InfoWidget"]
+__all__ = ["OpenChoiceWidget", "StateButtonWidget", "InfoWidget"]
 
 
 from django.forms import widgets
@@ -6,6 +6,17 @@ from django.conf import settings
 
 
 _extra = '' if settings.DEBUG else '.min'
+
+
+class StateButtonWidget(widgets.CheckboxInput):
+    template_name = 'spider_base/forms/widgets/statebutton.html'
+
+    class Media:
+        css = {
+            'all': [
+                'spider_base/statebutton.css'
+            ]
+        }
 
 
 class InfoWidget(widgets.Input):

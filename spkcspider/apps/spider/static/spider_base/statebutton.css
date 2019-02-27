@@ -1,0 +1,59 @@
+.statebutton_wrap {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+}
+
+.statebutton_wrap input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.statebutton {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #000;
+}
+
+input:disabled + .statebutton {
+  cursor: default;
+}
+
+.statebutton:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #FF1010;
+}
+
+input:focus + .statebutton {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .statebutton:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #10FF10;
+}
+
+/* Rounded statebuttons */
+input.round + .statebutton {
+  border-radius: 34px;
+}
+
+input.round + .statebutton:before {
+  border-radius: 50%;
+}
