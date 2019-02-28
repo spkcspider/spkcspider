@@ -253,6 +253,14 @@ Otherwise security could be compromised.
 * improve protections, add protections
 
 
+### Implement Web Comments
+* every webpage can be annotated
+* reactions and likes
+* you see only the comments of your friends
+* Later/Maybe:
+  * way to register your comment url on webpage, so others can see all comments
+  * social media stuff: find content via comments and likes
+
 ### Implement Emails/messaging
 * email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
   * delta chat integration
