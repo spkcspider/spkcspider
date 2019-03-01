@@ -30,17 +30,25 @@ def TriggerUpdate(sender, **_kwargs):
 
 
 def CleanupCallback(sender, instance, **kwargs):
+    recalc_all = False
     if sender._meta.model_name == "usercomponent":
         # if component is deleted the content deletion handler cannot find
         # the user. Here if the user is gone counting doesn't matter anymore
         if instance.user and instance.user.spider_info:
-            s = instance.get_size()
-            # because of F expressions no atomic is required
-            instance.user.spider_info.update_with_quota(-s[0], "local")
-            instance.user.spider_info.update_with_quota(-s[1], "remote")
-            instance.user.spider_info.save(
-                update_fields=["used_space_local", "used_space_remote"]
-            )
+            try:
+                s = instance.get_accumulated_size()
+                # because of F expressions no atomic is required
+                instance.user.spider_info.update_with_quota(-s[0], "local")
+                instance.user.spider_info.update_with_quota(-s[1], "remote")
+                instance.user.spider_info.save(
+                    update_fields=["used_space_local", "used_space_remote"]
+                )
+            except Exception:
+                logging.exception(
+                    "update size failed, trigger expensive recalculation"
+                )
+                recalc_all = True
+
     elif sender._meta.model_name == "assignedcontent":
         if instance.usercomponent and instance.usercomponent.user:
             f = "local"
@@ -49,15 +57,23 @@ def CleanupCallback(sender, instance, **kwargs):
                 VariantType.feature.value in instance.ctype.ctype
             ):
                 f = "remote"
-            instance.usercomponent.user.spider_info.update_with_quota(
-                -instance.get_size(), f
-            )
-            # because of F expressions no atomic is required
-            instance.usercomponent.user.spider_info.save(
-                update_fields=["used_space_local", "used_space_remote"]
-            )
+            try:
+                instance.usercomponent.user.spider_info.update_with_quota(
+                    -instance.get_size(), f
+                )
+                # because of F expressions no atomic is required
+                instance.usercomponent.user.spider_info.save(
+                    update_fields=["used_space_local", "used_space_remote"]
+                )
+            except Exception:
+                logging.exception(
+                    "update size failed, trigger expensive recalculation"
+                )
+                recalc_all = True
         if instance.fake_id is None and instance.content:
             instance.content.delete(False)
+    if recalc_all:
+        update_dynamic.send(sender)
 
 
 def UpdateAnchorContent(sender, instance, raw=False, **kwargs):

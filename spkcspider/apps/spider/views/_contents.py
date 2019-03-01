@@ -4,6 +4,8 @@ __all__ = (
     "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
 )
 
+from datetime import timedelta
+
 from django.views.generic.edit import DeleteView, UpdateView, CreateView
 from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404, redirect
@@ -639,6 +641,14 @@ class ContentRemove(EntityDeletionMixin, DeleteView):
                 "token": self.usercomponent.token,
             }
         )
+
+    def get_required_timedelta(self):
+        _time = self.object.content.deletion_period
+        if _time:
+            _time = timedelta(seconds=_time)
+        else:
+            _time = timedelta(seconds=0)
+        return _time
 
     def get_usercomponent(self):
         return self.object.usercomponent

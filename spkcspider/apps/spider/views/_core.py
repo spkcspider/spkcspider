@@ -823,7 +823,7 @@ class EntityDeletionMixin(UserTestMixin):
         return super().get_context_data(**kwargs)
 
     def get_required_timedelta(self):
-        _time = self.object.content.deletion_period
+        _time = self.object.deletion_period
         if _time:
             _time = timedelta(seconds=_time)
         else:

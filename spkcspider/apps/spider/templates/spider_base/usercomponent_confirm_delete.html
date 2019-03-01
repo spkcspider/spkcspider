@@ -27,22 +27,24 @@
     </div>
   </div>
 
-  <table class="w3-table-all">
-    <thead>
-      <tr>
-        <th class="">{% trans 'Deleted Content' %}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for content in object.contents %}
+  <div class="w3-padding">
+    <table class="w3-table-all">
+      <thead>
         <tr>
-          <td>
-            {{content}}
-          </td>
+          <th class="">{% trans 'Deleted Content' %}</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for content in object.contents.all %}
+          <tr>
+            <td>
+              {{content}}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 
   <div class="w3-bar w3-black w3-container">
     {% if not remaining or remaining == 0 %}
