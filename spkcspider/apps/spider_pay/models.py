@@ -1,4 +1,4 @@
-__all__ = ["Payment", "Transaction"]
+__all__ = ["ContractSource", "Contract", "Transaction"]
 
 from decimal import Decimal
 from datetime import timedelta
@@ -43,14 +43,15 @@ class ContractSource(BaseContent):
 
     appearances = [
         {
-            "name": "PaymentSource",
+            "name": "ContractSource",
             "strength": 5
         }
     ]
 
 
 @add_content
-class Payment(BaseContent):
+class Contract(BaseContent):
+    """ total=0 => Contract """
     token = models.ForeignKey(
         "spider_base.AuthToken", blank=True, null=True,
         on_delete=models.SET_ZERO, related_name="payments"
@@ -98,7 +99,20 @@ class Payment(BaseContent):
     def clean(self):
         _ = gettext
         if self.kwargs:
-            if "period" in self.kwargs["request"].GET:
+            # return (decimal, str) or (None, None)
+            self.total, self.currency = get_settings_func(
+                "SPIDER_PAYMENT_VALIDATOR",
+                "spkcspider.apps.spider.functions.clean_payment_default"
+            )(
+                self.kwargs["request"].GET.get("amount", None),
+                self.kwargs["request"].GET.get("cur", "")
+            )
+            if self.total is None or self.currency is None:
+                raise ValidationError(
+                    _('Invalid payment parameters'),
+                    code="invalid_payment_parameters",
+                )
+            if self.total != 0 and "period" in self.kwargs["request"].GET:
                 try:
                     self.period = timedelta(
                         days=int(self.kwargs["request"].GET["period"])
@@ -108,20 +122,6 @@ class Payment(BaseContent):
                         _('Invalid repeation period'),
                         code="invalid_period",
                     )
-
-            # return (decimal, str) or (None, None)
-            self.total, self.currency = get_settings_func(
-                "SPIDER_PAYMENT_VALIDATOR",
-                "spkcspider.apps.spider.functions.clean_payment_default"
-            )(
-                self.request.GET.get("amount", None),
-                self.request.GET.get("cur", "")
-            )
-            if self.total is None or self.currency is None:
-                raise ValidationError(
-                    _('Invalid payment parameters'),
-                    code="invalid_payment_parameters",
-                )
         super().clean()
 
     def access_capture(self, **kwargs):
@@ -200,8 +200,8 @@ class Payment(BaseContent):
 
 @add_content
 class Transaction(BaseContent):
-    payment = models.ForeignKey(
-        "spider_base.SpiderPayment",
+    contract = models.ForeignKey(
+        Contract,
         on_delete=models.CASCADE, related_name="transactions"
     )
     source = models.ForeignKey(
@@ -220,7 +220,7 @@ class Transaction(BaseContent):
 
     appearances = [
         {
-            "name": "SpiderPayTransaction",
+            "name": "PayTransaction",
             "ctype": (
                 VariantType.unlisted + VariantType.domain_mode
             ),
