@@ -1,9 +1,11 @@
 
 import logging
 import posixpath
-import html
+from urllib.parse import quote_plus
 
+from django.core.validators import get_available_image_extensions
 from django.db import models
+from django.urls import reverse
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
@@ -19,6 +21,10 @@ from spkcspider.apps.spider.helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+image_endings = set(get_available_image_extensions())
+# in case non are found because no pillow
+image_endings.update({"jpg", "jpeg", "tiff", "png"})
 
 # Create your models here.
 
@@ -92,6 +98,22 @@ class FileFilet(BaseContent):
     def access_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["associated"] = self.associated
+        kwargs["preview"] = None
+        split = self.name.rsplit(".", 1)
+        if len(split) == 2:
+            if split[1] in image_endings:
+                if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
+                    kwargs["preview"] = self.file.url
+                else:
+                    kwargs["preview"] = "{}?{}".format(
+                        reverse(
+                            'spider_base:ucontent-access',
+                            kwargs={
+                                "token": self.associated.token,
+                                "access": 'download'
+                            }
+                        ), kwargs["spider_GET"].urlencode
+                    )
         return (
             render_to_string(
                 "spider_filets/file.html", request=kwargs["request"],
@@ -117,7 +139,7 @@ class FileFilet(BaseContent):
             if len(ext) > 1:
                 name = "%s.%s" % (name, ext[1])
         response['Content-Disposition'] = \
-            'attachment; filename=%s' % html.escape(name)
+            'attachment; filename=%s' % quote_plus(name)
 
         response["Access-Control-Allow-Origin"] = "*"
         return response

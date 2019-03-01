@@ -1,6 +1,18 @@
 {% load i18n %}
-<div class="w3-padding" typeof="spkc:Property">
-  <data hidden="hidden" property="spkc:name">file</data>
-  <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-  <a property="spkc:value" href="{% url 'spider_base:ucontent-access' token=associated.token access='download' %}?{{spider_GET.urlencode}}">{% trans "Download" %}</a>
+<div class="w3-padding">
+  {% if preview %}
+    <a href="{% url 'spider_base:ucontent-access' token=associated.token access='download' %}?{{spider_GET.urlencode}}">
+      <img src="{{preview}}" alt="{{object.name}}" style="width:100%"></img>
+    </a>
+  {% endif %}
+  <div typeof="spkc:Property">
+    <data hidden="hidden" property="spkc:name">name</data>
+    <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
+    <data hidden="hidden" property="spkc:value">{{object.name}}</data>
+  </div>
+  <div typeof="spkc:Property">
+    <data hidden="hidden" property="spkc:name">file</data>
+    <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
+    <a property="spkc:value" href="{% url 'spider_base:ucontent-access' token=associated.token access='download' %}?{{spider_GET.urlencode}}">{% trans "Download" %}</a>
+  </div>
 </div>
