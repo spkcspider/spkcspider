@@ -30,7 +30,7 @@ def TriggerUpdate(sender, **_kwargs):
 
 
 def CleanupCallback(sender, instance, **kwargs):
-    recalc_all = False
+    stored_exc = None
     if sender._meta.model_name == "usercomponent":
         # if component is deleted the content deletion handler cannot find
         # the user. Here if the user is gone counting doesn't matter anymore
@@ -43,11 +43,11 @@ def CleanupCallback(sender, instance, **kwargs):
                 instance.user.spider_info.save(
                     update_fields=["used_space_local", "used_space_remote"]
                 )
-            except Exception:
+            except Exception as exc:
                 logging.exception(
                     "update size failed, trigger expensive recalculation"
                 )
-                recalc_all = True
+                stored_exc = exc
 
     elif sender._meta.model_name == "assignedcontent":
         if instance.usercomponent and instance.usercomponent.user:
@@ -65,15 +65,16 @@ def CleanupCallback(sender, instance, **kwargs):
                 instance.usercomponent.user.spider_info.save(
                     update_fields=["used_space_local", "used_space_remote"]
                 )
-            except Exception:
+            except Exception as exc:
                 logging.exception(
                     "update size failed, trigger expensive recalculation"
                 )
-                recalc_all = True
+                stored_exc = exc
         if instance.fake_id is None and instance.content:
             instance.content.delete(False)
-    if recalc_all:
+    if stored_exc:
         update_dynamic.send(sender)
+        raise stored_exc
 
 
 def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
