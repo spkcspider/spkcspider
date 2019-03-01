@@ -473,6 +473,11 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
             return self.handle_no_permission()
         return super().delete(request, *args, **kwargs)
 
+    def get(self, request, *args, **kwargs):
+        if self.object.name in index_names:
+            return self.handle_no_permission()
+        return super().get(request, *args, **kwargs)
+
     def get_usercomponent(self):
         return self.object
 
