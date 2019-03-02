@@ -11,6 +11,9 @@ from rdflib import Graph, Literal, XSD
 
 from django_webtest import WebTestMixin, DjangoTestApp
 
+from celerytest.testcase import CeleryTestCaseMixin, setup_celery_worker
+
+from spkcspider import celery_app
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
@@ -18,6 +21,7 @@ from spkcspider.apps.spider.signals import update_dynamic
 from tests.referrerserver import create_referrer_server
 
 # Create your tests here.
+setup_celery_worker(celery_app)
 
 
 class LiveDjangoTestApp(DjangoTestApp):
@@ -25,7 +29,7 @@ class LiveDjangoTestApp(DjangoTestApp):
         super(DjangoTestApp, self).__init__(url, *args, **kwargs)
 
 
-class VerifyTest(WebTestMixin, LiveServerTestCase):
+class VerifyTest(CeleryTestCaseMixin, WebTestMixin, LiveServerTestCase):
     fixtures = ['test_default.json']
     app_class = LiveDjangoTestApp
 
@@ -54,6 +58,9 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         )
 
     @unittest.expectedFailure
+    @override_settings(CELERY_TASK_EAGER_PROPAGATES=True,
+                       CELERY_TASK_ALWAYS_EAGER=True,
+                       CELERY_BROKER_URL='memory://localhost/')
     def test_verify(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)

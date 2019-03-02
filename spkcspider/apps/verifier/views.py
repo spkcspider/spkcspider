@@ -4,11 +4,7 @@ from django.shortcuts import redirect
 from django.views.generic.edit import UpdateView
 from django.views.generic.detail import DetailView
 from django.views import View
-from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, HttpResponse, Http404
-from django.core.files.uploadhandler import (
-    TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
-)
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
@@ -17,35 +13,6 @@ from rdflib import Literal
 from spkcspider import celery_app
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
-
-
-class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
-    activated = False
-
-    def handle_raw_input(
-        self, input_data, META, content_length, boundary, encoding=None
-    ):
-        """
-        Use the content_length to signal whether upload should be stopped
-        """
-        # disable upload if too big
-        self.activated = content_length <= settings.VERIFIER_MAX_SIZE_ACCEPTED
-
-    def new_file(self, *args, **kwargs):
-        if not self.activated:
-            raise StopFutureHandlers()
-        return super().new_file(self, *args, **kwargs)
-
-    def receive_data_chunk(self, raw_data, start):
-        if not self.activated:
-            raise StopUpload(True)
-        return super().receive_data_chunk(raw_data, start)
-
-    def file_complete(self, file_size):
-        """Return a file object if this handler is activated."""
-        if not self.activated:
-            return
-        return super().file_complete(file_size)
 
 
 @celery_app.task
@@ -62,10 +29,8 @@ class CreateEntry(UpdateView):
     model = DataVerificationTag
     form_class = CreateEntryForm
     template_name = "spider_verifier/dv_form.html"
-    upload_handlers = [
-        LimitedTemporaryFileUploadHandler
-    ]
     task_id_field = "task_id"
+    object = None
 
     def get_object(self):
         if self.task_id_field not in self.kwargs:
@@ -80,10 +45,6 @@ class CreateEntry(UpdateView):
     # this allows enforcing upload limits
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
-        if self.upload_handlers:
-            request.upload_handlers = [
-                i(request) for i in self.upload_handlers
-            ]
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
@@ -102,7 +63,7 @@ class CreateEntry(UpdateView):
         form = None
         if self.object:
             if self.object.ready():
-                if self.object.result.is_valid():
+                if self.object.result is True:
                     ret = redirect(
                         "spider_verifier:hash",
                         hash=self.object.result.instance
@@ -110,10 +71,9 @@ class CreateEntry(UpdateView):
                     ret["Access-Control-Allow-Origin"] = "*"
                     return ret
                 # replace form
-                form = self.object.result
-                self.template_name_suffix = "_form"
+                form = self.get_form()
             else:
-                self.template_name_suffix = "_wait"
+                self.template_name = "spider_verifier/dv_wait"
                 return self.render_to_response(
                     self.get_context_data(**kwargs)
                 )

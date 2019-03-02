@@ -307,6 +307,14 @@ python-versions = "*"
 version = "1.8"
 
 [[package]]
+category = "dev"
+description = "Database Abstraction Library"
+name = "sqlalchemy"
+optional = false
+python-versions = "*"
+version = "1.2.18"
+
+[[package]]
 category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
@@ -382,13 +390,13 @@ webob = "*"
 
 [extras]
 captcha = []
+celery = []
 fcgi = []
 mysql = []
 pgsql = []
-verify = []
 
 [metadata]
-content-hash = "858b854feedbf5391a5b91a0800011eb023008a5c520639e02c23edabe73f6e3"
+content-hash = "40c5b186a0387148d9b03ea6062b4d719138a394d8baf29820706d956cca1501"
 python-versions = ">=3.5"
 
 [metadata.hashes]
@@ -422,6 +430,7 @@ rdflib = ["58d5994610105a457cff7fdfe3d683d87786c5028a45ae032982498a7e913d6f", "d
 requests = ["502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e", "7bf2a778576d825600030a110f3c0e3e8edc51dfaafe1c146e39a2027784957b"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
 soupsieve = ["afa56bf14907bb09403e5d15fbed6275caa4174d36b975226e3b67a3bb6e2c4b", "eaed742b48b1f3e2d45ba6f79401b2ed5dc33b2123dfe216adb90d4bfa0ade26"]
+sqlalchemy = ["8027fa183f5be466030617a497b2d64e0e16c8d615e5a34bdf9fab6f66bf4723"]
 urllib3 = ["06330f386d6e4b195fbfc736b297f58c5a892e4440e54d294d7004e3a9bbea1b", "cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f"]
 vine = ["3cd505dcf980223cfaf13423d371f2e7ff99247e38d5985a01ec8264e4f2aca1", "ee4813e915d0e1a54e5c1963fde0855337f82655678540a6bc5996bca4165f76"]
 waitress = ["c369e238bd81ef7d61f04825f06f107c42094de60d13d8de8e71952c7c683dfe", "de0dbd36dec695d90ac8e7464998f28c7e968a2dde3c37b06bb0a714df4dad62"]

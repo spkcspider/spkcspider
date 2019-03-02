@@ -1,0 +1,13 @@
+{# just use edit_form, real verifier have to replace this or to depend on spider #}
+{% extends "registration/base.html" %}
+{% load i18n %}
+{% block extrahead %}
+{{block.super}}
+<meta http-equiv="refresh" content="5; URL={% url 'spider_verifier:task' task_id=object.task_id %}">
+{% endblock %}
+
+{% block content %}
+  <p>{% trans "Please wait (it can take hours)." %}</p>
+{% endblock %}
+{# form errors should not appear here #}
+{% block errors %}{% endblock errors%}

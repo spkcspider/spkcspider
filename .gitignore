@@ -1,4 +1,5 @@
 db.sqlite3
+celery.sqlite3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

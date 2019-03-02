@@ -14,9 +14,10 @@ INSTALLED_APPS += [
 USE_CAPTCHAS = True
 
 # Verifier specific options, not required
-VERIFIER_ALLOW_FILE_UPLOAD = True
 # 40 mb maximal size
 VERIFIER_MAX_SIZE_ACCEPTED = 40000000
+# 2 mb, set to 0 to disable a direct file upload
+VERIFIER_MAX_SIZE_DIRECT_ACCEPTED = 2000000
 
 # not required, SpiderTokenAuthBackend have to be tested, so here active
 AUTHENTICATION_BACKENDS = [
@@ -51,10 +52,9 @@ SERIALIZED_PER_PAGE = 3
 SERIALIZED_MAX_DEPTH = 5
 
 
-CELERY_TASK_EAGER_PROPAGATES=True
-CELERY_TASK_ALWAYS_EAGER=True
-# this is a intentional bad documented debug backend
-CELERY_BROKER_BACKEND='memory'
+CELERY_RESULT_BACKEND = 'db+sqlite:///{}/celery.sqlite3'.format(
+    BASE_DIR.replace("\\", "/").strip("/")
+)
 
 # specify fixtures directory for tests
 FIXTURE_DIRS = [

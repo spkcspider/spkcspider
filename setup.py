@@ -25,7 +25,9 @@ debug_requirements = [
     "django-extensions",
     "django-webtest",
     "django-simple-captcha",
-    "WSGIProxy2"
+    "WSGIProxy2",
+    "celery",
+    "sqlalchemy"
 ]
 
 # install_requirements += debug_requirements
@@ -54,7 +56,7 @@ setup(
         "captcha": ["django-simple-captcha"],
         "mysql": ["mysqlclient"],
         "pgsql": ["psycopg-binary"],
-        "verify": ["celery"]
+        "celery": ["celery", "sqlalchemy"]
     },
     data_files=[('spkcspider', ['LICENSE'])],
     packages=[

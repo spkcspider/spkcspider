@@ -8,7 +8,7 @@ app_name = "spider_verifier"
 
 urlpatterns = [
     path(
-        'task/<int:pk>/',
+        'task/<int:task_id>/',
         CreateEntry.as_view(),
         name='task'
     ),

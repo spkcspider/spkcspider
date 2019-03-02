@@ -22,19 +22,20 @@ django-widget-tweaks = "*"
 
 [tool.poetry.dev-dependencies]
 django-extensions = '*'
-celery = '*'
 Werkzeug = '*'
 pyOpenSSL = '*'
 django-webtest = '*'
 django-simple-captcha = "*"
 WSGIProxy2 = "*"
+celery = '*'
+sqlalchemy = '*'
 
 [tool.poetry.extras]
 captcha = ["django-simple-captcha"]
 fcgi = ["flipflop"]
 mysql = ["mysqlclient"]
 pgsql = ["psycopg-binary"]
-verify = ["celery"]
+celery = ["celery", "sqlalchemy"]
 
 
 [build-system]
