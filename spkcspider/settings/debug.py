@@ -50,6 +50,12 @@ SERIALIZED_PER_PAGE = 3
 # max depth of references
 SERIALIZED_MAX_DEPTH = 5
 
+
+CELERY_TASK_EAGER_PROPAGATES=True
+CELERY_TASK_ALWAYS_EAGER=True
+# this is a intentional bad documented debug backend
+CELERY_BROKER_BACKEND='memory'
+
 # specify fixtures directory for tests
 FIXTURE_DIRS = [
     "tests/fixtures/"

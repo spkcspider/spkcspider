@@ -54,7 +54,7 @@ setup(
         "captcha": ["django-simple-captcha"],
         "mysql": ["mysqlclient"],
         "pgsql": ["psycopg-binary"],
-        "verifier": ["celery"]
+        "verify": ["celery"]
     },
     data_files=[('spkcspider', ['LICENSE'])],
     packages=[

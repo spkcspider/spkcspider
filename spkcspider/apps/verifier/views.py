@@ -1,11 +1,11 @@
 __all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
 
-
-from django.views.generic.edit import CreateView
+from django.shortcuts import redirect
+from django.views.generic.edit import UpdateView
 from django.views.generic.detail import DetailView
 from django.views import View
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
 )
@@ -14,6 +14,7 @@ from django.utils.decorators import method_decorator
 from django.conf import settings
 from rdflib import Literal
 
+from spkcspider import celery_app
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
 
@@ -47,7 +48,15 @@ class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
         return super().file_complete(file_size)
 
 
-class CreateEntry(CreateView):
+@celery_app.task
+def verify_entry(form):
+    form.verify()
+    if form.is_valid():
+        form.save()
+    return form
+
+
+class CreateEntry(UpdateView):
     # NOTE: this class is csrf_exempted
     # reason for this are upload stops and cross post requests
     model = DataVerificationTag
@@ -56,6 +65,15 @@ class CreateEntry(CreateView):
     upload_handlers = [
         LimitedTemporaryFileUploadHandler
     ]
+    task_id_field = "task_id"
+
+    def get_object(self):
+        if self.task_id_field not in self.kwargs:
+            return None
+        result = verify_entry.AsyncResult(self.kwargs[self.task_id_field])
+        if not result:
+            raise Http404()
+        return result
 
     # exempt from csrf checks
     # if you want to enable them mark post with csrf_protect
@@ -76,19 +94,52 @@ class CreateEntry(CreateView):
         ret["initial"]["url"] = self.request.META.get("Referer", "")
         return ret
 
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests: instantiate a form instance with the passed
+        POST variables and then check if it's valid.
+        """
+        form = None
+        if self.object:
+            if self.object.ready():
+                if self.object.result.is_valid():
+                    ret = redirect(
+                        "spider_verifier:hash",
+                        hash=self.object.result.instance
+                    )
+                    ret["Access-Control-Allow-Origin"] = "*"
+                    return ret
+                # replace form
+                form = self.object.result
+                self.template_name_suffix = "_form"
+            else:
+                self.template_name_suffix = "_wait"
+                return self.render_to_response(
+                    self.get_context_data(**kwargs)
+                )
+        else:
+            form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def form_valid(self, form):
+        task = verify_entry.delay(form)
+        ret = redirect(
+            "spider_verifier:task", pk=task.task_id
+        )
+        ret["Access-Control-Allow-Origin"] = "*"
+        return ret
+
     def form_invalid(self, form):
+        # go to existing instance
         q = DataVerificationTag.objects.filter(
             hash=form.fields["hash"].initial
         ).first()
         if q:
             return HttpResponseRedirect(q.get_absolute_url())
         return super().form_invalid(form)
-
-
-class TaskView(DetailView):
-
-    def get_object(self):
-        pass
 
 
 class VerifyEntry(DetailView):
@@ -110,23 +161,6 @@ class VerifyEntry(DetailView):
             settings.SPIDER_HASH_ALGORITHM
         ).name
         return super().get_context_data(**kwargs)
-
-    def has_perm(self):
-        if self.request.user.is_superuser:
-            return True
-        elif self.request.user.has_permission("evaluate"):
-            return True
-        return False
-
-    def post(self, request, *args, **kwargs):
-        action = self.request.POST.get("action")
-        if not action:
-            return self.get(request, *args, **kwargs)
-        elif action == "evaluate":
-            if not self.has_perm():
-                raise PermissionDenied()
-            # queue download
-            self.get_object().download()
 
 
 class HashAlgoView(View):

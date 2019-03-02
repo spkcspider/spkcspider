@@ -31,10 +31,10 @@ WSGIProxy2 = "*"
 
 [tool.poetry.extras]
 captcha = ["django-simple-captcha"]
-verifier = ["celery"]
 fcgi = ["flipflop"]
 mysql = ["mysqlclient"]
 pgsql = ["psycopg-binary"]
+verify = ["celery"]
 
 
 [build-system]

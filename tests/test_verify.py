@@ -1,4 +1,5 @@
 
+import unittest
 import re
 
 from django.conf import settings
@@ -52,7 +53,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
             extra_environ=self.extra_environ
         )
 
-    # @unittest.expectedFailure
+    @unittest.expectedFailure
     def test_verify(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)

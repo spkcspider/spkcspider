@@ -385,10 +385,10 @@ captcha = []
 fcgi = []
 mysql = []
 pgsql = []
-verifier = []
+verify = []
 
 [metadata]
-content-hash = "84db264d597f96bcbdef79fff243d04316bc20b09b4b105cb8938ff78a47cea6"
+content-hash = "858b854feedbf5391a5b91a0800011eb023008a5c520639e02c23edabe73f6e3"
 python-versions = ">=3.5"
 
 [metadata.hashes]

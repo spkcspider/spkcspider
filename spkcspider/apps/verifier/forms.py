@@ -102,16 +102,52 @@ class CreateEntryForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
-        _dvfile_scope = None
-        current_size = 0
         if not ret.get("url", None) and not ret.get("dvfile", None):
             raise forms.ValidationError(
                 _('Require either url or dvfile'),
                 code="missing_parameter"
             )
-        elif ret["dvfile"]:
-            current_size = ret["dvfile"].size
-        elif not ret["dvfile"]:
+            return ret
+        if ret.get("url", None):
+            url = self.cleaned_data["url"]
+            url = merge_get_url(url, raw="embed")
+            if not get_settings_func(
+                "SPIDER_URL_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_url_default"
+            )(url):
+                self.add_error(
+                    "url", forms.ValidationError(
+                        _('Insecure url: %(url)s'),
+                        params={"url": url},
+                        code="insecure_url"
+                    )
+                )
+                return ret
+            try:
+                resp = requests.get(url, stream=True, verify=certifi.where())
+            except requests.exceptions.ConnectionError:
+                self.add_error(
+                    "url", forms.ValidationError(
+                        _('invalid url: %(url)s'),
+                        params={"url": url},
+                        code="invalid_url"
+                    )
+                )
+            if resp.status_code != 200:
+                self.add_error(
+                    "url", forms.ValidationError(
+                        _("Retrieval failed: %s") % resp.reason,
+                        code=str(resp.status_code)
+                    )
+                )
+        return ret
+
+    def verify(self):
+        _dvfile_scope = None
+        current_size = 0
+        if self.cleaned_data["dvfile"]:
+            current_size = self.cleaned_data["dvfile"].size
+        elif not self.cleaned_data["dvfile"]:
             url = self.cleaned_data["url"]
             url = merge_get_url(url, raw="embed")
             if not get_settings_func(
@@ -427,8 +463,6 @@ class CreateEntryForm(forms.ModelForm):
         # delete graph
         del g
         # make sure, that updated data is used
-        self.fields["hash"].initial = self.cleaned_data["hash"]
-        self.fields["dvfile"].initial = self.cleaned_data["dvfile"]
-        self.fields["data_type"].initial = self.cleaned_data["data_type"]
-
-        return self.cleaned_data
+        self.instance.hash = self.cleaned_data["hash"]
+        self.instance.dvfile = self.cleaned_data["dvfile"]
+        self.instance.data_type = self.cleaned_data["data_type"]
