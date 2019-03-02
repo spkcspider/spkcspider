@@ -85,6 +85,12 @@ class CreateEntry(CreateView):
         return super().form_invalid(form)
 
 
+class TaskView(DetailView):
+
+    def get_object(self):
+        pass
+
+
 class VerifyEntry(DetailView):
     model = DataVerificationTag
     slug_field = "hash"

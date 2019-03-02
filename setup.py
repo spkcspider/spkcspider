@@ -7,8 +7,8 @@ from setuptools import setup
 base_dir = os.path.dirname(__file__)
 
 install_requirements = [
-    "django>=2",
-    "django-simple-jsonfield",
+    'django>=2',
+    'django-simple-jsonfield',
     'certifi',
     'requests',
     'bleach',
@@ -53,13 +53,20 @@ setup(
         "fcgi": ["flipflop"],
         "captcha": ["django-simple-captcha"],
         "mysql": ["mysqlclient"],
-        "pgsql": ["psycopg-binary"]
+        "pgsql": ["psycopg-binary"],
+        "verifier": ["celery"]
     },
     data_files=[('spkcspider', ['LICENSE'])],
     packages=[
-        "spkcspider", "spkcspider.apps.spider",
-        "spkcspider.apps.spider_accounts", "spkcspider.apps.spider_tags",
-        "spkcspider.apps.spider_keys"
+        "spkcspider",
+        "spkcspider.apps.spider",
+        "spkcspider.apps.spider_accounts",
+        "spkcspider.apps.spider_filets",
+        "spkcspider.apps.spider_keys",
+        "spkcspider.apps.spider_pay",
+        "spkcspider.apps.spider_tags",
+        "spkcspider.apps.spider_webcfg",
+        "spkcspider.apps.verifier",
     ],
     package_data={
         '': ['templates/**.*', 'static/**'],

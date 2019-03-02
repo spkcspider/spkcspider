@@ -47,7 +47,7 @@ class DataVerificationTag(models.Model):
     data_type = models.CharField(default="layout", max_length=20)
     checked = models.DateTimeField(null=True, blank=True)
     verification_state = models.CharField(
-        default="retrieve",
+        default="pending",
         max_length=10, choices=VERIFICATION_CHOICES
     )
     note = models.TextField(default="", blank=True)

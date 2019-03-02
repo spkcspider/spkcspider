@@ -7,7 +7,6 @@ from django.utils.translation import gettext_lazy as _
 
 
 VERIFICATION_CHOICES = [
-    ("retrieve", _("retrieval pending")),
     ("pending", _("pending")),
     ("verified", _("verified")),
     ("invalid", _("invalid")),

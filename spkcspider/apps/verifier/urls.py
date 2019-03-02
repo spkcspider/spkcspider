@@ -1,12 +1,17 @@
 from django.urls import path
 
 
-from .views import CreateEntry, VerifyEntry, HashAlgoView
+from .views import CreateEntry, TaskView, VerifyEntry, HashAlgoView
 
 
 app_name = "spider_verifier"
 
 urlpatterns = [
+    path(
+        'task/<int:pk>/',
+        TaskView.as_view(),
+        name='task'
+    ),
     path(
         'hash/<slug:hash>/',
         VerifyEntry.as_view(),

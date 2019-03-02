@@ -233,15 +233,14 @@ Otherwise security could be compromised.
 # TODO
 * Verified_by: full url including hash
   * requires confirmation by verify
-  * offloadable verifier (partly prepared)
 * examples
 * documentation
 * decouple payments to spider_payments
-  * align datastructure with web-payments-connector
   * reuse verifier for payment confirmation (push graph ob as dvfile)
 
 ## Later
-* spider_pay stub
+* offloadable verifier (celery)
+  * requires task view
 * Fix TravelProtection
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
