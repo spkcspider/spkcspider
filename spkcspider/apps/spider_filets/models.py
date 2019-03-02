@@ -3,7 +3,6 @@ import logging
 import posixpath
 from urllib.parse import quote_plus
 
-from django.core.validators import get_available_image_extensions
 from django.db import models
 from django.urls import reverse
 from django.conf import settings
@@ -16,15 +15,15 @@ from django.core.files.storage import default_storage
 from ranged_response import RangedFileResponse
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.apps.spider.constants.settings import (
+    image_extensions, media_extensions
+)
 from spkcspider.apps.spider.helpers import (
     create_b64_token, prepare_description
 )
 
 logger = logging.getLogger(__name__)
 
-image_endings = set(get_available_image_extensions())
-# in case non are found because no pillow
-image_endings.update({"jpg", "jpeg", "tiff", "png"})
 
 # Create your models here.
 
@@ -98,22 +97,26 @@ class FileFilet(BaseContent):
     def access_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["associated"] = self.associated
-        kwargs["preview"] = None
+        kwargs["type"] = None
         split = self.name.rsplit(".", 1)
         if len(split) == 2:
-            if split[1] in image_endings:
-                if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
-                    kwargs["preview"] = self.file.url
-                else:
-                    kwargs["preview"] = "{}?{}".format(
-                        reverse(
-                            'spider_base:ucontent-access',
-                            kwargs={
-                                "token": self.associated.token,
-                                "access": 'download'
-                            }
-                        ), kwargs["spider_GET"].urlencode
-                    )
+            extension = split[1].lower()
+            if extension in image_extensions:
+                kwargs["type"] = "image"
+            elif extension in media_extensions:
+                kwargs["type"] = "media"
+        if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
+            kwargs["download"] = self.file.url
+        else:
+            kwargs["download"] = "{}?{}".format(
+                reverse(
+                    'spider_base:ucontent-access',
+                    kwargs={
+                        "token": self.associated.token,
+                        "access": 'download'
+                    }
+                ), kwargs["spider_GET"].urlencode()
+            )
         return (
             render_to_string(
                 "spider_filets/file.html", request=kwargs["request"],

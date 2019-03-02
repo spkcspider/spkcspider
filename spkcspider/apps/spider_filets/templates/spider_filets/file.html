@@ -1,9 +1,20 @@
 {% load i18n %}
 <div class="w3-padding">
-  {% if preview %}
-    <a href="{% url 'spider_base:ucontent-access' token=associated.token access='download' %}?{{spider_GET.urlencode}}">
-      <img src="{{preview}}" alt="{{object.name}}" style="width:100%"></img>
+  {% if type == "image" %}
+    <a href="{{download}}">
+      <img src="{{download}}" alt="{{object.name}}" style="width:100%"></img>
     </a>
+  {% elif type == "media" %}
+    <video controls>
+      <source src="{{download}}" style="width:100%">
+      {% trans 'Format not supported' %}
+    </video>
+  {% else %}
+    <div style="width:100%" class="w3-padding w3-center">
+      <a class="w3-margin" href="{{download}}">
+        <i class="fas fa-file-download" style="font-size:300px;color: red;" aria-hidden="true"></i>
+      </a>
+    </div>
   {% endif %}
   <div typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name">name</data>
@@ -13,6 +24,6 @@
   <div typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name">file</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-    <a property="spkc:value" href="{% url 'spider_base:ucontent-access' token=associated.token access='download' %}?{{spider_GET.urlencode}}">{% trans "Download" %}</a>
+    <a property="spkc:value" class="w3-xlarge" href="{{download}}">{% trans "Download" %}</a>
   </div>
 </div>

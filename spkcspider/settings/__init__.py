@@ -168,6 +168,11 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 ## Update dynamic content, ... after migrations, default=true  # noqa: E266
 # UPDATE_DYNAMIC_AFTER_MIGRATION = False
 
+## extensions of images (used in file_filets)  # noqa: E266
+# SPIDER_IMAGE_EXTENSIONS
+## extensions of media (used in file_filets)  # noqa: E266
+# SPIDER_MEDIA_EXTENSIONS
+
 ## embeddding function for files in graph, for e.g. linking  # noqa: E266
 # SPIDER_FILE_EMBED_FUNC
 
