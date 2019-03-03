@@ -340,6 +340,8 @@ class UCTestMixin(UserTestMixin):
 
 
 class ReferrerMixin(object):
+    allow_domain_mode = False
+
     def get_context_data(self, **kwargs):
         kwargs["token_strength"] = None
         # will be overwritten in referring path so there is no interference
@@ -474,9 +476,6 @@ class ReferrerMixin(object):
         )
 
     def clean_domain_upgrade(self, context, token):
-        if not self.usercomponent.allow_domain_mode:
-            return False
-
         if "referrer" not in self.request.GET:
             return False
         # domain mode must be used alone
@@ -611,6 +610,11 @@ class ReferrerMixin(object):
         if "domain" in context["intentions"]:
             # domain mode only possible for non special user
             token = self.request.auth_token
+            if not self.allow_domain_mode:
+                return HttpResponse(
+                    status=400,
+                    content='domain mode disallowed'
+                )
             if not self.clean_domain_upgrade(context, token):
                 return HttpResponse(
                     status=400,

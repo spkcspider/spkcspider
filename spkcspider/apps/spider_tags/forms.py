@@ -21,7 +21,10 @@ from .models import TagLayout, SpiderTag
 from spkcspider.apps.spider.fields import OpenChoiceField
 from spkcspider.apps.spider.widgets import OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
-from spkcspider.apps.spider.models import AssignedContent, ReferrerObject
+from spkcspider.apps.spider.models import (
+    AssignedContent, ReferrerObject, AuthToken
+)
+from spkcspider.apps.spider.constants import TokenCreationError
 from spkcspider.apps.spider.contents import BaseContent
 
 
@@ -261,10 +264,22 @@ def generate_form(name, layout):
             return ret
 
         def send_verify_requests(self, verifier):
+            verifier = merge_get_url(verifier)
+            token = AuthToken(
+                referrer=verifier,
+                usercomponent=self.instance.usercomponent
+            )
+            try:
+                token.save()
+            except TokenCreationError:
+                return
+            url = merge_get_url(
+                self._get_absolute_url_cache, token=token.token
+            )
             resp = requests.post(
-                merge_get_url(verifier),
+                verifier,
                 data={
-                    "url": self._get_absolute_url_cache
+                    "url": url
                 },
                 verify=certifi.where()
             )

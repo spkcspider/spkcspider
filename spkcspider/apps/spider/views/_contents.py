@@ -180,6 +180,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     no_token_usercomponent = False
 
     def dispatch_extra(self, request, *args, **kwargs):
+        self.allow_domain_mode = self.usercomponent.allow_domain_mode
         if "referrer" in self.request.GET:
             self.object_list = self.get_queryset()
             return self.handle_referrer()
@@ -468,6 +469,9 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
     model = AssignedContent
 
     def dispatch_extra(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.allow_domain_mode = \
+            VariantType.domain_mode.value in self.object.ctype.ctype
         # done in get_queryset
         # if getattr(self.request, "auth_token", None):
         #     ids = self.request.auth_token.extra.get("ids", None)
@@ -491,14 +495,12 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
         context = {"form": None}
         if self.scope == "update":
             context["form"] = self.get_form()
         return self.render_to_response(self.get_context_data(**context))
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
         context = {"form": None}
         # other than update have no form
         if self.scope == "update":

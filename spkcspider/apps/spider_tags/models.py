@@ -119,7 +119,8 @@ class SpiderTag(BaseContent):
     appearances = [
         {
             "name": "SpiderTag",
-            "strength": 0
+            "strength": 0,
+            "ctype": VariantType.domain_mode
         },
         {
             "name": "PushedTag",
