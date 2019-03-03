@@ -75,7 +75,6 @@ def validate(ob, task=None):
         current_size = 0
         dvfile = tempfile.NamedTemporaryFile(delete=False)
 
-    if not dvfile:
         source = VerifySourceObject.objects.get(
             id=ob
         )
@@ -171,7 +170,7 @@ def validate(ob, task=None):
             }
         )
     view_url = None
-    tmp = g.triples((start, spkcgraph["action:view"], None))
+    tmp = list(g.triples((start, spkcgraph["action:view"], None)))
     if len(tmp) != 1:
         dvfile.close()
         os.unlink(dvfile.name)
@@ -396,7 +395,7 @@ def validate(ob, task=None):
 
     result, created = DataVerificationTag.objects.get_or_create(
         defaults={
-            "file": File(dvfile),
+            "dvfile": File(dvfile),
             "source": source
         },
         hash=digest

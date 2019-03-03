@@ -8,6 +8,7 @@ from django.views import View
 from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from celery.exceptions import TimeoutError
 from django.conf import settings
 from rdflib import Literal
 
@@ -19,7 +20,8 @@ from .validate import validate
 
 @celery_app.task(bind=True, name='async validation')
 def async_validate_entry(self, ob):
-    return validate(ob, self)
+    ret = validate(ob, self)
+    return ret.get_absolute_url()
 
 
 class CreateEntry(UpdateView):
@@ -34,10 +36,11 @@ class CreateEntry(UpdateView):
     def get_object(self):
         if self.task_id_field not in self.kwargs:
             return None
-        result = async_validate_entry.AsyncResult(
-            self.kwargs[self.task_id_field]
-        )
-        if not result:
+        try:
+            result = async_validate_entry.AsyncResult(
+                self.kwargs[self.task_id_field]
+            ).get(timeout=1)
+        except TimeoutError:
             raise Http404()
         return result
 
@@ -113,7 +116,7 @@ class CreateEntry(UpdateView):
 
     def form_valid(self, form):
         task = async_validate_entry.apply_async(
-            args=(form.save(),)
+            args=(form.save(),),
         )
         ret = redirect(
             "spider_verifier:task", task_id=task.task_id
