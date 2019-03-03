@@ -1,6 +1,7 @@
 
-import unittest
+# import unittest
 import re
+from unittest.mock import patch
 
 from django.conf import settings
 from django.test import override_settings
@@ -11,17 +12,14 @@ from rdflib import Graph, Literal, XSD
 
 from django_webtest import WebTestMixin, DjangoTestApp
 
-from celerytest.testcase import CeleryTestCaseMixin, setup_celery_worker
-
-from spkcspider import celery_app
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
+from spkcspider.apps.verifier.validate import validate
 
 from tests.referrerserver import create_referrer_server
 
 # Create your tests here.
-setup_celery_worker(celery_app)
 
 
 class LiveDjangoTestApp(DjangoTestApp):
@@ -29,7 +27,32 @@ class LiveDjangoTestApp(DjangoTestApp):
         super(DjangoTestApp, self).__init__(url, *args, **kwargs)
 
 
-class VerifyTest(CeleryTestCaseMixin, WebTestMixin, LiveServerTestCase):
+class MockAsyncValidate(object):
+    value_captured = None
+    task_id = "lslsd"
+    tasks = {}
+
+    @classmethod
+    def AsyncResult(cls, task_id, *args, **kwargs):
+        return cls.tasks[task_id]
+
+    def successful(self):
+        return True
+
+    @classmethod
+    def apply_async(cls, *args, **kwargs):
+        self = cls()
+        self.value_captured = kwargs["args"][0]
+        self.task_id = "abc"
+        cls.tasks[self.task_id] = self
+        return self
+
+    def get(self, *args, **kwargs):
+        ret = validate(self.value_captured)
+        return ret.get_absolute_url()
+
+
+class VerifyTest(WebTestMixin, LiveServerTestCase):
     fixtures = ['test_default.json']
     app_class = LiveDjangoTestApp
 
@@ -57,10 +80,11 @@ class VerifyTest(CeleryTestCaseMixin, WebTestMixin, LiveServerTestCase):
             extra_environ=self.extra_environ
         )
 
-    @unittest.expectedFailure
-    @override_settings(CELERY_TASK_EAGER_PROPAGATES=True,
-                       CELERY_TASK_ALWAYS_EAGER=True,
-                       CELERY_BROKER_URL='memory://localhost/')
+    # @unittest.expectedFailure
+    @patch(
+        "spkcspider.apps.verifier.views.async_validate_entry",
+        new=MockAsyncValidate
+    )
     def test_verify(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
@@ -118,7 +142,7 @@ class VerifyTest(CeleryTestCaseMixin, WebTestMixin, LiveServerTestCase):
             response = self.app.get(verifyurl)
             form = response.form
             form["url"] = fullurl
-            response = form.submit().follow()
+            response = form.submit().follow().follow()
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=response.text, format="html")

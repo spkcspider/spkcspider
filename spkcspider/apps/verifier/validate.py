@@ -5,7 +5,7 @@ import binascii
 import tempfile
 import os
 
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 from django.core.files import File
 from django.conf import settings
 from django.core import exceptions

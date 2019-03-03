@@ -1,15 +1,19 @@
 __all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
 
+from django.contrib import messages
 from django.shortcuts import redirect
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.views.generic.edit import UpdateView
 from django.views.generic.detail import DetailView
 from django.views import View
 from django.http import HttpResponse, HttpResponseRedirect
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from celery.exceptions import TimeoutError
 from django.conf import settings
+
+
+from celery.exceptions import TimeoutError
 from rdflib import Literal
 
 from spkcspider import celery_app
@@ -20,10 +24,10 @@ from .validate import validate
 
 
 _valid_wait_states = {
-    "RETRIEVING", "HASHING"
+    "RETRIEVING", "HASHING", "STARTED"
 }
-if getattr(settings, "CELERY_TRACK_STARTED", False):
-    _valid_wait_states.add("STARTED")
+if not getattr(settings, "CELERY_TRACK_STARTED", False):
+    _valid_wait_states.add("PENDING")
 
 
 @celery_app.task(bind=True, name='async validation')
@@ -78,11 +82,17 @@ class CreateEntry(UpdateView):
                 # replace form
                 form = self.get_form()
                 form.add_error(NON_FIELD_ERRORS, res)
+                messages.error(self.request, _('Validation failed'))
             except TimeoutError:
                 if self.object.state in _valid_wait_states:
                     self.template_name = "spider_verifier/dv_wait.html"
                 else:
-                    form = self.get_form()
+                    messages.error(self.request, _('Invalid Task'))
+                    ret = redirect(
+                        "spider_verifier:create"
+                    )
+                    ret["Access-Control-Allow-Origin"] = "*"
+                    return ret
         else:
             form = self.get_form()
         return self.render_to_response(
@@ -90,32 +100,7 @@ class CreateEntry(UpdateView):
         )
 
     def post(self, request, *args, **kwargs):
-        """
-        Handle POST requests: instantiate a form instance with the passed
-        POST variables and then check if it's valid.
-        """
-        self.object = self.get_object()
-        form = None
-        if self.object:
-            if self.object.ready():
-                if self.object.successful():
-                    ret = redirect(
-                        "spider_verifier:hash",
-                        hash=self.object.result.instance
-                    )
-                    ret["Access-Control-Allow-Origin"] = "*"
-                    return ret
-                # replace form
-                form = self.get_form()
-                form.add_error(NON_FIELD_ERRORS, self.object.result)
-            else:
-                ret = redirect(
-                    "spider_verifier:task", task_id=self.object.task_id
-                )
-                ret["Access-Control-Allow-Origin"] = "*"
-                return ret
-        else:
-            form = self.get_form()
+        form = self.get_form()
         if get_settings_func(
             "VERIFIER_REQUEST_VALIDATOR",
             "spkcspider.apps.verifier.functions.validate_request_default"
