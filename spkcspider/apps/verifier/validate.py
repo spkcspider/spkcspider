@@ -1,15 +1,24 @@
-__all__ = ("validate",)
+__all__ = ("validate", "verify_download_size")
 
 import logging
 import binascii
+import tempfile
+import os
+
+from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import XSD
+import requests
+import certifi
 
 from spkcspider.apps.spider.constants.static import spkcgraph
+from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
 from .constants import BUFFER_SIZE
 from .functions import get_hashob
+from .models import VerifySourceObject
 
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
 
@@ -45,8 +54,7 @@ def yield_hashable_urls(graph, hashable_nodes):
             yield t
 
 
-
-def _verify_download_size(self, length, current_size=0):
+def verify_download_size(length, current_size=0):
     if not length or not length.isdigit():
         return False
     length = int(length)
@@ -55,114 +63,63 @@ def _verify_download_size(self, length, current_size=0):
     return True
 
 
-def validate(self):
-    _dvfile_scope = None
-    current_size = 0
-    if self.cleaned_data["dvfile"]:
-        current_size = self.cleaned_data["dvfile"].size
-    elif not self.cleaned_data["dvfile"]:
-        url = self.cleaned_data["url"]
-        url = merge_get_url(url, raw="embed")
-        try:
-            resp = requests.get(url, stream=True, verify=certifi.where())
-        except requests.exceptions.ConnectionError:
-            self.add_error(
-                "url", forms.ValidationError(
-                    _('invalid url: %(url)s'),
-                    params={"url": url},
-                    code="invalid_url"
-                )
-            )
-            return
-        if resp.status_code != 200:
-            self.add_error(
-                "url", forms.ValidationError(
-                    _("Retrieval failed: %s") % resp.reason,
-                    code=str(resp.status_code)
-                )
-            )
-            return
+def validate(ob):
+    dvfile = None
+    if isinstance(ob, tuple):
+        dvfile = open(ob[0], "r+b")
+        current_size = ob[1]
+    else:
+        current_size = 0
+        dvfile = tempfile.mkstemp()
 
-        if not self._verify_download_size(
+    if not dvfile:
+        url = VerifySourceObject.objects.get(
+            id=ob
+        ).get_absolute_url()
+
+        resp = requests.get(url, stream=True, verify=certifi.where())
+        resp.raise_for_status()
+
+        if not verify_download_size(
             resp.headers.get("content-length", None), current_size
         ):
-            self.add_error(
-                "url", forms.ValidationError(
-                    _(
-                        "Retrieval failed, no length specified, invalid\n"
-                        "or too long, length: %(length)s, url: %(url)s"
-                    ),
-                    params={
-                        "length": resp.headers.get(
-                            "content-length", None
-                        ),
-                        "url": url
-                    },
-                    code="invalid_length"
-                )
-            )
             return
         current_size += int(resp.headers["content-length"])
-        self.cleaned_data["dvfile"] = TemporaryUploadedFile(
-            "url_uploaded", resp.headers.get(
-                'content-type', "application/octet-stream"
-            ),
-            int(resp.headers["content-length"]),
-            "utf8"
-        )
-
-        _dvfile_scope = self.cleaned_data["dvfile"].open("wb")
         for chunk in resp.iter_content(BUFFER_SIZE):
-            _dvfile_scope.write(chunk)
-        _dvfile_scope.seek(0, 0)
+            dvfile.write(chunk)
+        dvfile.seek(0, 0)
     g = Graph()
     g.namespace_manager.bind("spkc", spkcgraph, replace=True)
     try:
         g.parse(
-            self.cleaned_data["dvfile"].temporary_file_path(),
+            dvfile.temporary_file_path(),
             format="turtle"
         )
-        self.cleaned_data["dvfile"].close()
-        del self.cleaned_data["dvfile"]
+        dvfile.close()
+        os.unlink(dvfile.name)
     except Exception as exc:
         if settings.DEBUG:
             with open(
-                self.cleaned_data["dvfile"].temporary_file_path()
+                dvfile.temporary_file_path()
             ) as f:
                 logging.error(f.read())
         logging.exception(exc)
-        raise forms.ValidationError(
-            _("not a \"%(format)s\" file"),
-            params={"format": "turtle"},
-            code="invalid_file"
-        )
+        return "invalid_format"
 
     tmp = list(g.triples((None, spkcgraph["scope"], None)))
     if len(tmp) != 1:
-        raise forms.ValidationError(
-            _("invalid graph, scopes: %(scope)s"),
-            params={"scope": tmp},
-            code="invalid_graph"
-        )
+        return"invalid_graph"
     start = tmp[0][0]
     scope = tmp[0][2].toPython()
     tmp = list(g.triples((start, spkcgraph["pages.num_pages"], None)))
     if len(tmp) != 1:
-        raise forms.ValidationError(
-            _("invalid graph, pages: %(page)s"),
-            params={"page": tmp},
-            code="invalid_graph"
-        )
+        return "invalid_graph"
     pages = tmp[0][2].toPython()
     view_url = None
     if pages > 1:
         tmp = g.triples((start, spkcgraph["action:view"], None))
         if len(tmp) != 1:
-            raise forms.ValidationError(
-                _("invalid graph, view url: %(url)s"),
-                params={"url": tmp},
-                code="invalid_graph"
-            )
+            return "invalid_graph"
         view_url = tmp[0][2].toPython()
     mtype = None
     if scope == "list":
@@ -176,19 +133,12 @@ def validate(self):
         else:
             mtype = None
 
-    self.cleaned_data["data_type"] = get_settings_func(
+    data_type = get_settings_func(
         "VERIFIER_CLEAN_GRAPH",
         "spkcspider.apps.verifier.functions.clean_graph"
     )(mtype, g)
-    if not self.cleaned_data["data_type"]:
-        raise forms.ValidationError(
-            _(
-                "Invalid type: %(type)s"
-            ),
-            params={"type": mtype},
-            code="invalid_type"
-        )
-        return
+    if not data_type:
+        return "invalid_type"
 
     # retrieve further pages
     for page in range(2, pages+1):
@@ -197,47 +147,18 @@ def validate(self):
             "SPIDER_URL_VALIDATOR",
             "spkcspider.apps.spider.functions.validate_url_default"
         )(url):
-            self.add_error(
-                "url", forms.ValidationError(
-                    _('Insecure url: %(url)s'),
-                    params={"url": url},
-                    code="insecure_url"
-                )
-            )
-            return
+            return "insecure_url"
         try:
             resp = requests.get(url, stream=True, verify=certifi.where())
         except requests.exceptions.ConnectionError:
-            raise forms.ValidationError(
-                _('invalid url: %(url)s'),
-                params={"url": url},
-                code="invalid_url"
-            )
-            return
+            return "invalid_url"
         if resp.status_code != 200:
-            raise forms.ValidationError(
-                _("Retrieval failed: %s") % resp.reason,
-                code=str(resp.status_code)
-            )
-            return
+            return "retrieval_failed"
 
-        if not self._verify_download_size(
+        if not verify_download_size(
             resp.headers.get("content-length", None), current_size
         ):
-            raise forms.ValidationError(
-                _(
-                    "Retrieval failed, no length specified, invalid\n"
-                    "or too long, length: %(length)s, url: %(url)s"
-                ),
-                params={
-                    "length": resp.headers.get(
-                        "content-length", None
-                    ),
-                    "url": url
-                },
-                code="invalid_length"
-            )
-            return
+            return "invalid_length"
         current_size += int(resp.headers["content-length"])
         self.cleaned_data["dvfile"] = TemporaryUploadedFile(
             "url_uploaded", resp.headers.get(

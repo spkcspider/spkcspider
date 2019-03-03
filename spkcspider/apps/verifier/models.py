@@ -24,6 +24,9 @@ class VerifySourceObject(models.Model):
     )
     get_params = models.TextField()
 
+    def get_absolute_url(self):
+        return "?".join((self.url, self.get_params))
+
 
 class DataVerificationTag(models.Model):
     """ Contains verified data """

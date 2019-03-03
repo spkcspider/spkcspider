@@ -1,5 +1,7 @@
 __all__ = ["CreateEntryForm"]
 
+import tempfile
+import shutil
 
 from django import forms
 from django.forms import widgets
@@ -11,7 +13,8 @@ import certifi
 
 
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
-from .models import VerifySourceObject, VerifyFile
+from .models import VerifySourceObject
+from .validate import verify_download_size
 
 _source_url_help = _(
     "Url to content or content list to verify"
@@ -32,18 +35,14 @@ class CreateEntryForm(forms.ModelForm):
     #    initial=settings.VERIFIER_MAX_SIZE_ACCEPTED
     # )
 
-    class Meta:
-        model = VerifyFile
-        fields = ["file"]
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if settings.VERIFIER_MAX_SIZE_DIRECT_ACCEPTED > 0:
-            self.fields["file"].help_text = _source_file_help
+            self.fields["dvfile"].help_text = _source_file_help
             self.fields["url"].required = False
         else:
-            self.fields["file"].disabled = True
-            self.fields["file"].widget = widgets.HiddenInput()
+            self.fields["dvfile"].disabled = True
+            self.fields["dvfile"].widget = widgets.HiddenInput()
 
     def clean(self):
         ret = super().clean()
@@ -87,10 +86,11 @@ class CreateEntryForm(forms.ModelForm):
                         code=str(resp.status_code)
                     )
                 )
-            split = url.split("?", 1)
-            VerifySourceObject.objects.update_or_create(
-                url=split[0], defaults={"get_params": split[1]}
-            )
+
+            if not verify_download_size(
+                resp.headers.get("content-length", None), 0
+            ):
+                return
         return ret
 
     def save(self):
@@ -98,6 +98,8 @@ class CreateEntryForm(forms.ModelForm):
             split = self.cleaned_data["url"].split("?", 1)
             return VerifySourceObject.objects.update_or_create(
                 url=split[0], defaults={"get_params": split[1]}
-            )[0]
+            )[0].id
         else:
-            return super().save()
+            f = tempfile.mkstemp()
+            shutil.copyfileobj(self.cleaned_data["dvfile"].file, f)
+            return f.name, self.cleaned_data["dvfile"].size
