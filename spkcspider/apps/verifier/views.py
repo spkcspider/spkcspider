@@ -5,7 +5,7 @@ from django.core.exceptions import NON_FIELD_ERRORS
 from django.views.generic.edit import UpdateView
 from django.views.generic.detail import DetailView
 from django.views import View
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from celery.exceptions import TimeoutError
@@ -13,9 +13,17 @@ from django.conf import settings
 from rdflib import Literal
 
 from spkcspider import celery_app
+from spkcspider.apps.spider.helpers import get_settings_func
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
 from .validate import validate
+
+
+_valid_wait_states = {
+    "RETRIEVING", "HASHING"
+}
+if getattr(settings, "CELERY_TRACK_STARTED", False):
+    _valid_wait_states.add("STARTED")
 
 
 @celery_app.task(bind=True, name='async validation')
@@ -36,13 +44,9 @@ class CreateEntry(UpdateView):
     def get_object(self):
         if self.task_id_field not in self.kwargs:
             return None
-        try:
-            result = async_validate_entry.AsyncResult(
-                self.kwargs[self.task_id_field]
-            ).get(timeout=1)
-        except TimeoutError:
-            raise Http404()
-        return result
+        return async_validate_entry.AsyncResult(
+            self.kwargs[self.task_id_field]
+        )
 
     # exempt from csrf checks
     # if you want to enable them mark post with csrf_protect
@@ -63,19 +67,22 @@ class CreateEntry(UpdateView):
         self.object = self.get_object()
         form = None
         if self.object:
-            if self.object.ready():
+            try:
+                res = self.object.get(timeout=5)
                 if self.object.successful():
-                    ret = redirect(
-                        "spider_verifier:hash",
-                        hash=self.object.result.instance
+                    ret = HttpResponseRedirect(
+                        redirect_to=res
                     )
                     ret["Access-Control-Allow-Origin"] = "*"
                     return ret
                 # replace form
                 form = self.get_form()
-                form.add_error(NON_FIELD_ERRORS, self.object.result)
-            else:
-                self.template_name = "spider_verifier/dv_wait.html"
+                form.add_error(NON_FIELD_ERRORS, res)
+            except TimeoutError:
+                if self.object.state in _valid_wait_states:
+                    self.template_name = "spider_verifier/dv_wait.html"
+                else:
+                    form = self.get_form()
         else:
             form = self.get_form()
         return self.render_to_response(
@@ -109,7 +116,10 @@ class CreateEntry(UpdateView):
                 return ret
         else:
             form = self.get_form()
-        if form.is_valid():
+        if get_settings_func(
+            "VERIFIER_REQUEST_VALIDATOR",
+            "spkcspider.apps.verifier.functions.validate_request_default"
+        )(self.request, form):
             return self.form_valid(form)
         else:
             return self.form_invalid(form)

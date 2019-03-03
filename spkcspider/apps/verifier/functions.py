@@ -9,6 +9,13 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
 
+def validate_request_default(request, form):
+    if not form.is_valid():
+        return False
+
+    return True
+
+
 def clean_graph(mtype, graph):
     if not mtype:
         return None

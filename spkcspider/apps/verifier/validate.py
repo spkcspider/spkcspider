@@ -163,7 +163,7 @@ def validate(ob, task=None):
         )
     if task:
         task.update_state(
-            state='PROGRESS',
+            state='RETRIEVING',
             meta={
                 'page': 1,
                 'num_pages': pages
@@ -282,7 +282,7 @@ def validate(ob, task=None):
 
         if task:
             task.update_state(
-                state='PROGRESS',
+                state='RETRIEVING',
                 meta={
                     'page': page,
                     'num_pages': pages
@@ -298,7 +298,7 @@ def validate(ob, task=None):
     ]
     if task:
         task.update_state(
-            state='PROGRESS',
+            state='RETRIEVING',
             meta={
                 'hashable_urls_checked': 0
             }
@@ -347,7 +347,7 @@ def validate(ob, task=None):
         ))
         if task:
             task.update_state(
-                state='PROGRESS',
+                state='RETRIEVING',
                 meta={
                     'hashable_urls_checked': count
                 }
