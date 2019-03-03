@@ -210,12 +210,12 @@ def serialize_stream(
         graph.add((
             context["sourceref"],
             spkcgraph["pages.num_pages"],
-            Literal(paginator.num_pages)
+            Literal(paginator.num_pages, datatype=XSD.positiveInteger)
         ))
         graph.add((
             context["sourceref"],
             spkcgraph["pages.size_page"],
-            Literal(paginator.per_page)
+            Literal(paginator.per_page, datatype=XSD.positiveInteger)
         ))
     try:
         page_view = paginator.get_page(page)
@@ -226,6 +226,12 @@ def serialize_stream(
         })
         logging.exception(exc)
         raise exc
+
+    graph.add((
+        context["sourceref"],
+        spkcgraph["pages.current_page"],
+        Literal(page_view.number, datatype=XSD.positiveInteger)
+    ))
     if paginator.object_list.model == UserComponent:
         for component in page_view.object_list:
             ref_component = serialize_component(graph, component, context)

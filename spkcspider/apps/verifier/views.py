@@ -1,10 +1,11 @@
 __all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
 
 from django.shortcuts import redirect
+from django.core.exceptions import NON_FIELD_ERRORS
 from django.views.generic.edit import UpdateView
 from django.views.generic.detail import DetailView
 from django.views import View
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import HttpResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
@@ -13,14 +14,12 @@ from rdflib import Literal
 from spkcspider import celery_app
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
+from .validate import validate
 
 
-@celery_app.task
-def verify_entry(form):
-    form.verify()
-    if form.is_valid():
-        form.save()
-    return form
+@celery_app.task(bind=True, name='async validation')
+def async_validate_entry(self, ob):
+    return validate(ob, self)
 
 
 class CreateEntry(UpdateView):
@@ -35,7 +34,9 @@ class CreateEntry(UpdateView):
     def get_object(self):
         if self.task_id_field not in self.kwargs:
             return None
-        result = verify_entry.AsyncResult(self.kwargs[self.task_id_field])
+        result = async_validate_entry.AsyncResult(
+            self.kwargs[self.task_id_field]
+        )
         if not result:
             raise Http404()
         return result
@@ -55,15 +56,12 @@ class CreateEntry(UpdateView):
         ret["initial"]["url"] = self.request.META.get("Referer", "")
         return ret
 
-    def post(self, request, *args, **kwargs):
-        """
-        Handle POST requests: instantiate a form instance with the passed
-        POST variables and then check if it's valid.
-        """
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
         form = None
         if self.object:
             if self.object.ready():
-                if self.object.result is True:
+                if self.object.successful():
                     ret = redirect(
                         "spider_verifier:hash",
                         hash=self.object.result.instance
@@ -72,11 +70,40 @@ class CreateEntry(UpdateView):
                     return ret
                 # replace form
                 form = self.get_form()
+                form.add_error(NON_FIELD_ERRORS, self.object.result)
             else:
-                self.template_name = "spider_verifier/dv_wait"
-                return self.render_to_response(
-                    self.get_context_data(**kwargs)
+                self.template_name = "spider_verifier/dv_wait.html"
+        else:
+            form = self.get_form()
+        return self.render_to_response(
+            self.get_context_data(form=form, **kwargs)
+        )
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests: instantiate a form instance with the passed
+        POST variables and then check if it's valid.
+        """
+        self.object = self.get_object()
+        form = None
+        if self.object:
+            if self.object.ready():
+                if self.object.successful():
+                    ret = redirect(
+                        "spider_verifier:hash",
+                        hash=self.object.result.instance
+                    )
+                    ret["Access-Control-Allow-Origin"] = "*"
+                    return ret
+                # replace form
+                form = self.get_form()
+                form.add_error(NON_FIELD_ERRORS, self.object.result)
+            else:
+                ret = redirect(
+                    "spider_verifier:task", task_id=self.object.task_id
                 )
+                ret["Access-Control-Allow-Origin"] = "*"
+                return ret
         else:
             form = self.get_form()
         if form.is_valid():
@@ -85,21 +112,14 @@ class CreateEntry(UpdateView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        task = verify_entry.delay(form)
+        task = async_validate_entry.apply_async(
+            args=(form.save(),)
+        )
         ret = redirect(
-            "spider_verifier:task", pk=task.task_id
+            "spider_verifier:task", task_id=task.task_id
         )
         ret["Access-Control-Allow-Origin"] = "*"
         return ret
-
-    def form_invalid(self, form):
-        # go to existing instance
-        q = DataVerificationTag.objects.filter(
-            hash=form.fields["hash"].initial
-        ).first()
-        if q:
-            return HttpResponseRedirect(q.get_absolute_url())
-        return super().form_invalid(form)
 
 
 class VerifyEntry(DetailView):

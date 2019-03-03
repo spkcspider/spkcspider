@@ -178,14 +178,21 @@ spkc:pages.num_pages a rdf:value ;
   rdfs:label "Amount Pages" ;
   rdfs:comment "The amount of pages. 1 indicates no paging" ;
   rdfs:domain rdfs:Resource ;
-  rdfs:range xsd:PositiveInteger .
+  rdfs:range xsd:positiveInteger .
 
 spkc:pages.size_page a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Page Size" ;
   rdfs:comment "The size of the page." ;
   rdfs:domain rdfs:Resource ;
-  rdfs:range xsd:PositiveInteger .
+  rdfs:range xsd:positiveInteger .
+
+spkc:pages.current_page a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Page Size" ;
+  rdfs:comment "The current page." ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range xsd:positiveInteger .
 
 
 spkc:verified a rdf:value ;

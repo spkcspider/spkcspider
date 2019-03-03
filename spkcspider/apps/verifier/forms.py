@@ -25,7 +25,7 @@ _source_file_help = _(
 )
 
 
-class CreateEntryForm(forms.ModelForm):
+class CreateEntryForm(forms.Form):
     url = forms.URLField(help_text=_source_url_help)
     dvfile = forms.FileField(
         required=False, max_length=settings.VERIFIER_MAX_SIZE_DIRECT_ACCEPTED
@@ -35,7 +35,7 @@ class CreateEntryForm(forms.ModelForm):
     #    initial=settings.VERIFIER_MAX_SIZE_ACCEPTED
     # )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, instance, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if settings.VERIFIER_MAX_SIZE_DIRECT_ACCEPTED > 0:
             self.fields["dvfile"].help_text = _source_file_help
@@ -82,15 +82,25 @@ class CreateEntryForm(forms.ModelForm):
             if resp.status_code != 200:
                 self.add_error(
                     "url", forms.ValidationError(
-                        _("Retrieval failed: %s") % resp.reason,
-                        code=str(resp.status_code)
+                        _("Retrieval failed: %(reason)s"),
+                        params={"reason": resp.reason},
+                        code="error_code:{}".format(resp.status_code)
                     )
                 )
-
-            if not verify_download_size(
-                resp.headers.get("content-length", None), 0
-            ):
                 return
+            c_length = resp.headers.get("content-length", None)
+            # release connection
+            resp.close()
+
+            if not verify_download_size(c_length, 0):
+                self.add_error(
+                    "url", forms.ValidationError(
+                        _("Content too big: %(size)s"),
+                        params={"size": c_length},
+                        code="invalid_size"
+                    )
+                )
+                return ret
         return ret
 
     def save(self):

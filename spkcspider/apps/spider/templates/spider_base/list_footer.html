@@ -1,8 +1,9 @@
 {% load i18n spider_paging %}
 {% list_parameters "search" as cur_search %}
 {% get_searchpath as searchpath %}
-<data hidden="hidden" property="spkc:pages.num_pages" datatype="xsd:PositiveInteger">{{page_obj.paginator.num_pages}}</data>
-<data hidden="hidden" property="spkc:pages.size_page" datatype="xsd:PositiveInteger">{{page_obj.paginator.per_page}}</data>
+<data hidden="hidden" property="spkc:pages.num_pages" datatype="xsd:positiveInteger">{{page_obj.paginator.num_pages}}</data>
+<data hidden="hidden" property="spkc:pages.size_page" datatype="xsd:positiveInteger">{{page_obj.paginator.per_page}}</data>
+<data hidden="hidden" property="spkc:pages.current_page" datatype="xsd:positiveInteger">{{page_obj.number}}</data>
 <div class="">
   <form class="" method="POST" action="{{searchpath}}">
     {% csrf_token %}

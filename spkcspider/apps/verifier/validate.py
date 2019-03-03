@@ -6,7 +6,9 @@ import tempfile
 import os
 
 from django.utils.translation import gettext_lazy as _
+from django.core.files import File
 from django.conf import settings
+from django.core import exceptions
 
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import XSD
@@ -18,7 +20,7 @@ from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
 from .constants import BUFFER_SIZE
 from .functions import get_hashob
-from .models import VerifySourceObject
+from .models import VerifySourceObject, DataVerificationTag
 
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
 
@@ -63,28 +65,50 @@ def verify_download_size(length, current_size=0):
     return True
 
 
-def validate(ob):
+def validate(ob, task=None):
     dvfile = None
+    source = None
     if isinstance(ob, tuple):
         dvfile = open(ob[0], "r+b")
         current_size = ob[1]
     else:
         current_size = 0
-        dvfile = tempfile.mkstemp()
+        dvfile = tempfile.NamedTemporaryFile(delete=False)
 
     if not dvfile:
-        url = VerifySourceObject.objects.get(
+        source = VerifySourceObject.objects.get(
             id=ob
-        ).get_absolute_url()
+        )
+        url = source.get_absolute_url()
 
-        resp = requests.get(url, stream=True, verify=certifi.where())
-        resp.raise_for_status()
+        try:
+            resp = requests.get(url, stream=True, verify=certifi.where())
+        except requests.exceptions.ConnectionError:
+            raise exceptions.ValidationError(
+                _('invalid url: %(url)s'),
+                params={"url": url},
+                code="invalid_url"
+            )
+        if resp.status_code != 200:
+            raise exceptions.ValidationError(
+                _("Retrieval failed: %(reason)s"),
+                params={"reason": resp.reason},
+                code="error_code:{}".format(resp.status_code)
+            )
 
-        if not verify_download_size(
-            resp.headers.get("content-length", None), current_size
-        ):
-            return
-        current_size += int(resp.headers["content-length"])
+        c_length = resp.headers.get("content-length", None)
+        if not verify_download_size(c_length, current_size):
+            raise exceptions.ValidationError(
+                _("Content too big: %(size)s"),
+                params={"size": c_length},
+                code="invalid_size"
+            )
+        c_length = int(c_length)
+        current_size += c_length
+        # preallocate file
+        dvfile.truncate(c_length)
+        dvfile.seek(0, 0)
+
         for chunk in resp.iter_content(BUFFER_SIZE):
             dvfile.write(chunk)
         dvfile.seek(0, 0)
@@ -92,35 +116,75 @@ def validate(ob):
     g.namespace_manager.bind("spkc", spkcgraph, replace=True)
     try:
         g.parse(
-            dvfile.temporary_file_path(),
+            dvfile.name,
             format="turtle"
         )
-        dvfile.close()
-        os.unlink(dvfile.name)
     except Exception as exc:
         if settings.DEBUG:
-            with open(
-                dvfile.temporary_file_path()
-            ) as f:
-                logging.error(f.read())
+            dvfile.seek(0, 0)
+            logging.error(dvfile.read())
         logging.exception(exc)
-        return "invalid_format"
+        dvfile.close()
+        os.unlink(dvfile.name)
+        raise exceptions.ValidationError(
+            _('Invalid graph fromat'),
+            code="invalid_format"
+        )
 
     tmp = list(g.triples((None, spkcgraph["scope"], None)))
     if len(tmp) != 1:
-        return"invalid_graph"
+        dvfile.close()
+        os.unlink(dvfile.name)
+        raise exceptions.ValidationError(
+            _('Invalid graph'),
+            code="invalid_graph"
+        )
     start = tmp[0][0]
     scope = tmp[0][2].toPython()
     tmp = list(g.triples((start, spkcgraph["pages.num_pages"], None)))
     if len(tmp) != 1:
-        return "invalid_graph"
+        dvfile.close()
+        os.unlink(dvfile.name)
+        raise exceptions.ValidationError(
+            _('Invalid graph'),
+            code="invalid_graph"
+        )
     pages = tmp[0][2].toPython()
+    tmp = list(g.triples((
+        start,
+        spkcgraph["pages.current_page"],
+        Literal(1, datatype=XSD.positiveInteger)
+    )))
+    if len(tmp) != 1:
+        dvfile.close()
+        os.unlink(dvfile.name)
+        raise exceptions.ValidationError(
+            _('Must be page 1'),
+            code="invalid_page"
+        )
+    if task:
+        task.update_state(
+            state='PROGRESS',
+            meta={
+                'page': 1,
+                'num_pages': pages
+            }
+        )
     view_url = None
-    if pages > 1:
-        tmp = g.triples((start, spkcgraph["action:view"], None))
-        if len(tmp) != 1:
-            return "invalid_graph"
-        view_url = tmp[0][2].toPython()
+    tmp = g.triples((start, spkcgraph["action:view"], None))
+    if len(tmp) != 1:
+        dvfile.close()
+        os.unlink(dvfile.name)
+        raise exceptions.ValidationError(
+            _('Invalid graph'),
+            code="invalid_graph"
+        )
+    view_url = tmp[0][2].toPython()
+    if isinstance(ob, tuple):
+        split = view_url.split("?", 1)
+        source = VerifySourceObject.objects.update_or_create(
+            url=split[0], defaults={"get_params": split[1]}
+        )
     mtype = None
     if scope == "list":
         mtype = "UserComponent"
@@ -138,7 +202,13 @@ def validate(ob):
         "spkcspider.apps.verifier.functions.clean_graph"
     )(mtype, g)
     if not data_type:
-        return "invalid_type"
+        dvfile.close()
+        os.unlink(dvfile.name)
+        raise exceptions.ValidationError(
+            _('Invalid graph type: %(type)s'),
+            params={"type": data_type},
+            code="invalid_type"
+        )
 
     # retrieve further pages
     for page in range(2, pages+1):
@@ -147,49 +217,77 @@ def validate(ob):
             "SPIDER_URL_VALIDATOR",
             "spkcspider.apps.spider.functions.validate_url_default"
         )(url):
-            return "insecure_url"
+            dvfile.close()
+            os.unlink(dvfile.name)
+            raise exceptions.ValidationError(
+                _('Insecure url: %(url)s'),
+                params={"url": url},
+                code="insecure_url"
+            )
+
         try:
             resp = requests.get(url, stream=True, verify=certifi.where())
         except requests.exceptions.ConnectionError:
-            return "invalid_url"
+            dvfile.close()
+            os.unlink(dvfile.name)
+            raise exceptions.ValidationError(
+                _('Invalid url: %(url)s'),
+                params={"url": url},
+                code="innvalid_url"
+            )
         if resp.status_code != 200:
-            return "retrieval_failed"
+            dvfile.close()
+            os.unlink(dvfile.name)
+            raise exceptions.ValidationError(
+                _("Retrieval failed: %(reason)s"),
+                params={"reason": resp.reason},
+                code="error_code:{}".format(resp.status_code)
+            )
 
-        if not verify_download_size(
-            resp.headers.get("content-length", None), current_size
-        ):
-            return "invalid_length"
-        current_size += int(resp.headers["content-length"])
-        self.cleaned_data["dvfile"] = TemporaryUploadedFile(
-            "url_uploaded", resp.headers.get(
-                'content-type', "application/octet-stream"
-            ),
-            int(resp.headers["content-length"]),
-            "utf8"
-        )
+        c_length = resp.headers.get("content-length", None)
+        if not verify_download_size(c_length, current_size):
+            dvfile.close()
+            os.unlink(dvfile.name)
+            raise exceptions.ValidationError(
+                _("Content too big: %(size)s"),
+                params={"size": c_length},
+                code="invalid_size"
+            )
+        c_length = int(c_length)
+        current_size += c_length
+        # clear file
+        dvfile.truncate(c_length)
+        dvfile.seek(0, 0)
 
         for chunk in resp.iter_content(BUFFER_SIZE):
-            self.cleaned_data["dvfile"].write(chunk)
-        self.cleaned_data["dvfile"].seek(0, 0)
+            dvfile.write(chunk)
+        dvfile.seek(0, 0)
         try:
             g.parse(
-                self.cleaned_data["dvfile"].temporary_file_path(),
+                dvfile.name,
                 format="turtle"
             )
-            self.cleaned_data["dvfile"].close()
-            del self.cleaned_data["dvfile"]
         except Exception as exc:
             if settings.DEBUG:
-                with open(
-                    self.cleaned_data["dvfile"].temporary_file_path()
-                ) as f:
-                    logging.error(f.read())
+                dvfile.seek(0, 0)
+                logging.error(dvfile.read())
             logging.exception(exc)
+            dvfile.close()
+            os.unlink(dvfile.name)
             # pages could have changed, but still incorrect
-            raise forms.ValidationError(
+            raise exceptions.ValidationError(
                 _("%(page)s is not a \"%(format)s\" file"),
                 params={"format": "turtle", "page": page},
                 code="invalid_file"
+            )
+
+        if task:
+            task.update_state(
+                state='PROGRESS',
+                meta={
+                    'page': page,
+                    'num_pages': pages
+                }
             )
 
     hashable_nodes = set(g.subjects(
@@ -199,7 +297,14 @@ def validate(ob):
     hashes = [
         i for i in yield_hashes(g, hashable_nodes)
     ]
-    for t in yield_hashable_urls(g, hashable_nodes):
+    if task:
+        task.update_state(
+            state='PROGRESS',
+            meta={
+                'hashable_urls_checked': 0
+            }
+        )
+    for count, t in enumerate(yield_hashable_urls(g, hashable_nodes), start=1):
         if (URIRef(t[2].value), None, None) in g:
             continue
         url = merge_get_url(t[2].value, raw="embed")
@@ -207,30 +312,29 @@ def validate(ob):
             "SPIDER_URL_VALIDATOR",
             "spkcspider.apps.spider.functions.validate_url_default"
         )(url):
-            self.add_error(
-                "url", forms.ValidationError(
-                    _('Insecure url: %(url)s'),
-                    params={"url": url},
-                    code="insecure_url"
-                )
+            dvfile.close()
+            os.unlink(dvfile.name)
+            raise exceptions.ValidationError(
+                _('Insecure url: %(url)s'),
+                params={"url": url},
+                code="insecure_url"
             )
-            return
+
         try:
             resp = requests.get(url, stream=True, verify=certifi.where())
         except requests.exceptions.ConnectionError:
-            raise forms.ValidationError(
-                _('invalid url: %(url)s'),
+            raise exceptions.ValidationError(
+                _('Invalid url: %(url)s'),
                 params={"url": url},
-                code="invalid_url"
+                code="innvalid_url"
             )
-            return
         if resp.status_code != 200:
-            raise forms.ValidationError(
+            raise exceptions.ValidationError(
                 _("Retrieval failed: %(reason)s"),
                 params={"reason": resp.reason},
-                code=str(resp.status_code)
+                code="code_{}".format(resp.status_code)
             )
-            return
+
         h = get_hashob()
         h.update(XSD.base64Binary.encode("utf8"))
         for chunk in resp.iter_content(BUFFER_SIZE):
@@ -242,6 +346,17 @@ def validate(ob):
             spkcgraph["hash"],
             Literal(h.finalize().hex())
         ))
+        if task:
+            task.update_state(
+                state='PROGRESS',
+                meta={
+                    'hashable_urls_checked': count
+                }
+            )
+    if task:
+        task.update_state(
+            state='HASHING',
+        )
 
     # make sure triples are linked to start
     # (user can provide arbitary data)
@@ -271,20 +386,28 @@ def validate(ob):
         spkcgraph["hash"],
         Literal(digest)
     ))
-    self.cleaned_data["hash"] = digest
-    # replace dvfile by combined file
-    self.cleaned_data["dvfile"] = TemporaryUploadedFile(
-        "url_uploaded", "text/turtle", None, "utf8"
-    )
+
+    dvfile.truncate(0)
+    dvfile.seek(0, 0)
+    # save in temporary file
     g.serialize(
-        self.cleaned_data["dvfile"], format="turtle"
+        dvfile, format="turtle"
     )
-    self.cleaned_data["dvfile"].size = \
-        self.cleaned_data["dvfile"].tell()
-    self.cleaned_data["dvfile"].seek(0, 0)
-    # delete graph
-    del g
-    # make sure, that updated data is used
-    self.instance.hash = self.cleaned_data["hash"]
-    self.instance.dvfile = self.cleaned_data["dvfile"]
-    self.instance.data_type = self.cleaned_data["data_type"]
+
+    result, created = DataVerificationTag.objects.get_or_create(
+        defaults={
+            "file": File(dvfile),
+            "source": source
+        },
+        hash=digest
+    )
+    dvfile.close()
+    os.unlink(dvfile.name)
+    if not created and source and source != result.source:
+        result.source = source
+        result.save(update_fields=["source"])
+    if task:
+        task.update_state(
+            state='SUCCESS'
+        )
+    return result
