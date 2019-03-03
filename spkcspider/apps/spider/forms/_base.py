@@ -14,7 +14,6 @@ from ..models import (
     ContentVariant, AuthToken
 )
 
-from ..widgets import StateButtonWidget
 from ..helpers import create_b64_id_token
 from ..constants import (
     ProtectionType, VariantType, STATIC_TOKEN_CHOICES,
@@ -54,7 +53,7 @@ class UserComponentForm(forms.ModelForm):
     class Meta:
         model = UserComponent
         fields = [
-            'name', 'description', 'allow_domain_mode', 'public', 'featured',
+            'name', 'description', 'public', 'featured',
             'features', 'primary_anchor', 'required_passes', 'token_duration'
         ]
         error_messages = {
@@ -67,9 +66,6 @@ class UserComponentForm(forms.ModelForm):
         }
         widgets = {
             'features': forms.CheckboxSelectMultiple(),
-            'allow_domain_mode': StateButtonWidget(
-                attrs={"class": "round"}
-            )
 
         }
 
