@@ -9,6 +9,7 @@ from django.contrib.staticfiles.testing import LiveServerTestCase
 from django.urls import reverse
 
 from rdflib import Graph, Literal, XSD
+from celery import uuid
 
 from django_webtest import WebTestMixin, DjangoTestApp
 
@@ -43,7 +44,7 @@ class MockAsyncValidate(object):
     def apply_async(cls, *args, **kwargs):
         self = cls()
         self.value_captured = kwargs["args"][0]
-        self.task_id = "abc"
+        self.task_id = uuid()
         cls.tasks[self.task_id] = self
         return self
 
