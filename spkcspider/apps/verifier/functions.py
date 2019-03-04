@@ -21,7 +21,7 @@ def validate_request_default(request, form):
 
 
 def verify_tag_default(tag):
-    pass
+    tag.save()
 
 
 def clean_graph(mtype, graph, start):

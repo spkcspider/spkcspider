@@ -416,8 +416,6 @@ def validate(ob, task=None):
     if not created and source and source != result.source:
         result.source = source
         result.save(update_fields=["source"])
-    # if (URIRef(start),):
-        # request
     if task:
         task.update_state(
             state='SUCCESS'
@@ -437,7 +435,6 @@ def verify(tagid, task=None):
         "VERIFIER_TAG_VERIFIER",
         "spkcspider.apps.verifier.functions.verify_tag_default"
     )(tag)
-    tag.save()
     if tag.verification_state == "verified":
         try:
             tag.callback()

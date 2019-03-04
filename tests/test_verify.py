@@ -83,7 +83,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
 
     # @unittest.expectedFailure
     @patch(
-        "spkcspider.apps.verifier.validate.async_validate",
+        "spkcspider.apps.verifier.views.async_validate",
         new=MockAsyncValidate
     )
     def test_verify(self):
