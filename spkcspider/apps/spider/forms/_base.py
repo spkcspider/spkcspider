@@ -75,7 +75,7 @@ class UserComponentForm(forms.ModelForm):
             *args, data=data, files=files, auto_id=auto_id,
             prefix=prefix, **kwargs
         )
-        self.fields["allow_domain_mode"].disabled = True
+        # self.fields["allow_domain_mode"].disabled = True
         self.fields["new_static_token"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),
             self.fields["new_static_token"].choices

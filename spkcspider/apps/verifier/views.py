@@ -16,24 +16,10 @@ from django.conf import settings
 from celery.exceptions import TimeoutError
 from rdflib import Literal
 
-from spkcspider import celery_app
 from spkcspider.apps.spider.helpers import get_settings_func
 from .models import DataVerificationTag
 from .forms import CreateEntryForm
-from .validate import validate
-
-
-_valid_wait_states = {
-    "RETRIEVING", "HASHING", "STARTED"
-}
-if not getattr(settings, "CELERY_TRACK_STARTED", False):
-    _valid_wait_states.add("PENDING")
-
-
-@celery_app.task(bind=True, name='async validation')
-def async_validate_entry(self, ob):
-    ret = validate(ob, self)
-    return ret.get_absolute_url()
+from .validate import valid_wait_states, async_validate
 
 
 class CreateEntry(UpdateView):
@@ -48,7 +34,7 @@ class CreateEntry(UpdateView):
     def get_object(self):
         if self.task_id_field not in self.kwargs:
             return None
-        return async_validate_entry.AsyncResult(
+        return async_validate.AsyncResult(
             self.kwargs[self.task_id_field]
         )
 
@@ -84,7 +70,7 @@ class CreateEntry(UpdateView):
                 form.add_error(NON_FIELD_ERRORS, res)
                 messages.error(self.request, _('Validation failed'))
             except TimeoutError:
-                if self.object.state in _valid_wait_states:
+                if self.object.state in valid_wait_states:
                     self.template_name = "spider_verifier/dv_wait.html"
                 else:
                     messages.error(self.request, _('Invalid Task'))
@@ -110,7 +96,7 @@ class CreateEntry(UpdateView):
             return self.form_invalid(form)
 
     def form_valid(self, form):
-        task = async_validate_entry.apply_async(
+        task = async_validate.apply_async(
             args=(form.save(),),
         )
         ret = redirect(

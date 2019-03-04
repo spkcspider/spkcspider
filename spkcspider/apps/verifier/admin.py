@@ -40,7 +40,9 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
     def save_form(self, request, form, change):
         if 'verification_state' in form.changed_data:
             form.instance.checked = now()
-        return super().save_form(request, form, change)
+        ret = super().save_form(request, form, change)
+        form.instance.callback()
+        return ret
 
     def save_model(self, request, obj, form, change):
         """
@@ -48,4 +50,6 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
         """
         if 'verification_state' in form.changed_data:
             obj.checked = now()
-        return super().save_model(request, obj, form, change)
+        ret = super().save_model(request, obj, form, change)
+        obj.callback()
+        return ret

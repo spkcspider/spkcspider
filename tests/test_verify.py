@@ -30,7 +30,7 @@ class LiveDjangoTestApp(DjangoTestApp):
 
 class MockAsyncValidate(object):
     value_captured = None
-    task_id = "lslsd"
+    task_id = None
     tasks = {}
 
     @classmethod
@@ -83,7 +83,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
 
     # @unittest.expectedFailure
     @patch(
-        "spkcspider.apps.verifier.views.async_validate_entry",
+        "spkcspider.apps.verifier.validate.async_validate",
         new=MockAsyncValidate
     )
     def test_verify(self):

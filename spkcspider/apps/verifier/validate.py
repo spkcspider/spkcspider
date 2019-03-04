@@ -1,4 +1,7 @@
-__all__ = ("validate", "verify_download_size")
+__all__ = {
+    "validate", "valid_wait_states", "verify_download_size",
+    "async_validate", "verify", "async_verify"
+}
 
 import logging
 import binascii
@@ -15,6 +18,8 @@ from rdflib.namespace import XSD
 import requests
 import certifi
 
+from spkcspider import celery_app
+
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
@@ -23,6 +28,12 @@ from .functions import get_hashob
 from .models import VerifySourceObject, DataVerificationTag
 
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
+
+valid_wait_states = {
+    "RETRIEVING", "HASHING", "STARTED"
+}
+if not getattr(settings, "CELERY_TRACK_STARTED", False):
+    valid_wait_states.add("PENDING")
 
 
 def hash_entry(triple):
@@ -199,7 +210,7 @@ def validate(ob, task=None):
     data_type = get_settings_func(
         "VERIFIER_CLEAN_GRAPH",
         "spkcspider.apps.verifier.functions.clean_graph"
-    )(mtype, g)
+    )(mtype, g, start)
     if not data_type:
         dvfile.close()
         os.unlink(dvfile.name)
@@ -412,3 +423,28 @@ def validate(ob, task=None):
             state='SUCCESS'
         )
     return result
+
+
+@celery_app.task(bind=True, name='async validation')
+def async_validate(self, ob):
+    ret = validate(ob, self)
+    return ret.get_absolute_url()
+
+
+def verify(tagid, task=None):
+    tag = DataVerificationTag.objects.get(id=tagid)
+    get_settings_func(
+        "VERIFIER_TAG_VERIFIER",
+        "spkcspider.apps.verifier.functions.verify_tag_default"
+    )(tag)
+    tag.save()
+    if tag.verification_state == "verified":
+        try:
+            tag.callback()
+        except exceptions.ValidationError:
+            logging.exception("Error while calling back")
+
+
+@celery_app.task(bind=True, name='async verification', ignore_results=True)
+def async_verify(self, tagid):
+    verify(tagid, self)

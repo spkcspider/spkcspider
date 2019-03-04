@@ -3,6 +3,11 @@ import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
+from django.core import exceptions
+
+import requests
+import certifi
+
 
 from .constants import (
     VERIFICATION_CHOICES
@@ -24,8 +29,13 @@ class VerifySourceObject(models.Model):
     )
     get_params = models.TextField()
 
-    def get_absolute_url(self):
-        return "?".join((self.url, self.get_params))
+    def get_absolute_url(self, access=None):
+        if access:
+            split = self.url.rsplit("view", 1)
+            if len(split) == 1:
+                raise Exception()
+            return "{}{}?{}".format(*split, self.get_params)
+        return "{}?{}".format(self.url, self.get_params)
 
 
 class DataVerificationTag(models.Model):
@@ -68,3 +78,21 @@ class DataVerificationTag(models.Model):
                 "hash": self.hash
             }
         )
+
+    def callback(self):
+        if self.source and self.data_type.endswith("_cb"):
+            url = self.source.get_absolute_url("verify")
+            try:
+                resp = requests.get(url, stream=True, verify=certifi.where())
+            except requests.exceptions.ConnectionError:
+                raise exceptions.ValidationError(
+                    _('invalid url: %(url)s'),
+                    params={"url": url},
+                    code="invalid_url"
+                )
+            if resp.status_code != 200:
+                raise exceptions.ValidationError(
+                    _("Retrieval failed: %(reason)s"),
+                    params={"reason": resp.reason},
+                    code="error_code:{}".format(resp.status_code)
+                )
