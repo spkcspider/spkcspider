@@ -191,7 +191,7 @@ There are some special GET parameters for services with special requirements:
 ## Referrer
 * normal referrer mode: send token to referrer, client verifies with hash that he sent the token.
 * server-less referrer mode (sl): token is transferred as GET parameter and no POST request is made (less secure as client sees token and client is not authenticated)
-* domain referrer mode (domain): referrer domain is add to token. Doesn't work with other intentions (but "live" mode is active as no filter will be created) and works only if domain_mode is active. Can be automated, doesn't require user approval. Useful for tag updates (only active if feature requests domain mode).
+* domain referrer mode (domain): referrer domain is add to token. Doesn't work with other intentions (but "live" mode is active as no filter will be created) and works only if domain_mode is for context active (e.g. feature or access context (content)). Can be automated, doesn't require user approval. Useful for tag updates (only active if feature requests domain mode).
 
 ## payment intention
 
@@ -234,6 +234,8 @@ Otherwise security could be compromised.
 * Verified_by: full url including hash
   * requires confirmation by verify
 * examples
+* next/previous for content contexts (use lag/lead)
+  * foo.annotate(next=RawSQL("lead(id) OVER (ORDER BY {})".format(",".join(e.query.order_by)), []))  (every object gets next attribute)
 * documentation
 * decouple payments to spider_payments
   * reuse verifier for payment confirmation (push graph ob as dvfile)
