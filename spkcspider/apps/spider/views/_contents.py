@@ -613,7 +613,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         queryset = queryset.select_related(
             "usercomponent", "usercomponent__user",
             "usercomponent__user__spider_info"
-        ).filter(usercomponent=self.usercomponent).order_by("id")
+        ).filter(usercomponent=self.usercomponent).order_by("priority", "id")
         ob = get_object_or_404(
             queryset,
             token=self.kwargs["token"]

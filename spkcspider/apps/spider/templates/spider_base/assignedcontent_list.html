@@ -116,26 +116,7 @@
         {% trans 'Add new content' %}
         <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
       </summary>
-      <div class="w3-border">
-        <div class="w3-row">
-          {% for variant in content_variants %}
-            {% if uc.strength < variant.strength %}
-            <div class="w3-padding w3-left-align w3-col s12 m4 l3 w3-red w3-tooltip">
-              <b style="margin-right:5px" aria-hidden="true">X</b>{{variant}}
-              <div aria-hidden="true" title="{{variant}}" class="w3-text spkc-variant-errcolor spkc-variant-text"><div class="w3-padding"><b style="margin-right:5px" aria-hidden="true">X</b><span class="w3-tiny">{% blocktrans trimmed with required_strength=variant.strength %}
-                Requires Strength: {{required_strength}}
-              {% endblocktrans %}</span></div></div>
-            </div>
-            {% else %}
-            <a rel="nofollow" class="w3-button w3-left-align w3-col s12 m4 l3 {% if variant in content_variants_used %}{% if variant.unique_for_component %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' token=uc.token type=variant.name %}?{{spider_GET.urlencode}}" >
-              <b style="margin-right:5px" aria-hidden="true">+</b>{{variant}}
-            </a>
-            {% endif %}
-          {% empty %}
-              {% trans 'No Content Variants available.' %}
-          {% endfor %}
-        </div>
-      </div>
+      {% include "spider_base/content_variants_box.html" %}
     </details>
   {% endif %}
 
