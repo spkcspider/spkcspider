@@ -19,6 +19,7 @@ html5lib = '*'
 cryptography = "*"
 django-ranged-response = "*"
 django-widget-tweaks = "*"
+django-next-prev = "*"
 
 [tool.poetry.dev-dependencies]
 django-extensions = '*'

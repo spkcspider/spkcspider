@@ -16,7 +16,8 @@ install_requirements = [
     'html5lib',
     'cryptography',
     'django-widget-tweaks',
-    'django-ranged-response'
+    'django-ranged-response',
+    'django-next-prev'
 ]
 
 debug_requirements = [

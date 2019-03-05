@@ -36,7 +36,7 @@
   {% for ability in abilities %}
     <data hidden="hidden" property="spkc:ability:name" datatype="xsd:string">{{ability}}</data>
   {% endfor %}
-  <div class="w3-padding" style="height:120px">
+  <div class="w3-padding"  style="min-height:120px">
     {% if request.is_special_user or uc.public %}
       {# index is redirected in view #}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' token=uc.token %}?{{request.GET.urlencode}}">
@@ -122,6 +122,24 @@
     </div>
     {% endif %}
   </div>
+  {% if scope == "view" %}
+    {% if uc.public or request.is_special_user %}
+      {% if object.previous_object or object.next_object %}
+        <div class="w3-padding" style="min-height: 40px">
+          {% if object.previous_object %}
+          <a class="" href="{% url 'spider_base:ucontent-access' token=object.previous_object.token access='view' %}?{{spider_GET.urlencode}}">
+            {% trans "previous" %}
+          </a>
+          {% endif %}
+          {% if object.next_object %}
+          <a class="w3-right" href="{% url 'spider_base:ucontent-access' token=object.next_object.token access='view' %}?{{spider_GET.urlencode}}">
+            {% trans "Next" %}
+          </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endif %}
+  {% endif %}
   {% if uc.features.exists %}
   <div class="w3-padding">
     <div class="w3-white w3-padding">

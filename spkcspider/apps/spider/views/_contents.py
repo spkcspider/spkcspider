@@ -18,6 +18,7 @@ from django.http import Http404
 from django.contrib import messages
 from django.utils.translation import gettext
 
+from next_prev import next_in_order, prev_in_order
 
 from rdflib import Graph, Literal, URIRef, XSD
 
@@ -608,13 +609,18 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         if not queryset:
             queryset = self.get_queryset()
 
-        q = models.Q(token=self.kwargs["token"])
-        return get_object_or_404(
-            queryset.select_related(
-                "usercomponent", "usercomponent__user",
-                "usercomponent__user__spider_info"
-            ).filter(q)
+        # required for next/previous token
+        queryset = queryset.select_related(
+            "usercomponent", "usercomponent__user",
+            "usercomponent__user__spider_info"
+        ).filter(usercomponent=self.usercomponent).order_by("id")
+        ob = get_object_or_404(
+            queryset,
+            token=self.kwargs["token"]
         )
+        ob.previous_object = prev_in_order(ob, queryset)
+        ob.next_object = next_in_order(ob, queryset)
+        return ob
 
 
 class ContentRemove(EntityDeletionMixin, DeleteView):

@@ -234,15 +234,11 @@ Otherwise security could be compromised.
 * Verified_by: full url including hash
   * requires confirmation by verify
 * examples
-* next/previous for content contexts (use lag/lead)
-  * foo.annotate(next=RawSQL("lead(id) OVER (ORDER BY {})".format(",".join(e.query.order_by)), []))  (every object gets next attribute)
 * documentation
 * decouple payments to spider_payments
   * reuse verifier for payment confirmation (push graph ob as dvfile)
 
 ## Later
-* offloadable verifier (celery)
-  * requires task view
 * Fix TravelProtection
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
