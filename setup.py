@@ -66,7 +66,6 @@ setup(
         "spkcspider.apps.spider_accounts",
         "spkcspider.apps.spider_filets",
         "spkcspider.apps.spider_keys",
-        "spkcspider.apps.spider_pay",
         "spkcspider.apps.spider_tags",
         "spkcspider.apps.spider_webcfg",
         "spkcspider.apps.verifier",

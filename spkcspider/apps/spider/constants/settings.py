@@ -39,7 +39,7 @@ STATIC_TOKEN_CHOICES = [
 
 VALID_INTENTIONS = set(getattr(
     settings, "SPIDER_VALID_INTENTIONS",
-    {"auth", "domain", "live", "login", "persist", "payment", "sl"}
+    {"auth", "domain", "live", "login", "persist", "sl"}
 ))
 VALID_SUB_INTENTIONS = {"sl", "live"}
 

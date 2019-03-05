@@ -8,8 +8,6 @@ from urllib.parse import quote_plus
 from datetime import timedelta
 
 
-from django.apps import apps
-from django.core.exceptions import ValidationError
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
@@ -33,7 +31,7 @@ from ..constants import (
     VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS,
     TokenCreationError, ProtectionType
 )
-from ..models import UserComponent, AuthToken, AssignedContent, ReferrerObject
+from ..models import UserComponent, AuthToken, ReferrerObject
 
 
 class UserTestMixin(AccessMixin):
@@ -402,11 +400,6 @@ class ReferrerMixin(object):
             if context["payload"]:
                 d["payload"] = context["payload"]
 
-            if context.get("payment", None):
-                d["payment"] = "{}://{}{}".format(
-                    self.request.scheme, self.request.get_host(),
-                    context["payment"].get_absolute_url()
-                )
             ret = requests.post(
                 context["referrer"],
                 data=d,
@@ -460,18 +453,11 @@ class ReferrerMixin(object):
         )
 
     def refer_with_get(self, context, token):
-        payment_url = None
-        if context.get("payment", None):
-            payment_url = "{}://{}{}".format(
-                self.request.scheme, self.request.get_host(),
-                context["payment"].get_absolute_url()
-            )
         return HttpResponseRedirect(
             redirect_to=merge_get_url(
                 context["referrer"],
                 token=token.token,
-                payload=context["payload"],
-                payment=payment_url
+                payload=context["payload"]
             )
         )
 
@@ -502,25 +488,6 @@ class ReferrerMixin(object):
         #    in case has_special_access path is used
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
-
-        if "payment" in context["intentions"]:
-            context["pay_variant"] = self.usercomponent.features.filter(
-                name="SpiderPay"
-            ).first()
-            if not context["pay_variant"]:
-                return False
-            # return decimal, str or None
-            context["pay_amount"], context["currency"] = get_settings_func(
-                "SPIDER_PAYMENT_VALIDATOR",
-                "spkcspider.apps.spider.functions.clean_payment_default"
-            )(
-                (
-                    self.request.GET.get("amount", None),
-                    self.request.GET.get("cur", None)
-                )
-            )
-            if context["pay_amount"] is None or context["currency"] is None:
-                return False
 
         # auth is only for requesting component auth
         if "auth" in context["intentions"]:
@@ -721,35 +688,6 @@ class ReferrerMixin(object):
                     _("Token creation failed, try again")
                 )
 
-            if "payment" in context["intentions"]:
-                # use get_model here, because it is not sure, that
-                # spider_pay is in use
-                Payment = apps.get_model("spider_pay.Payment")
-
-                associated = AssignedContent(
-                    usercomponent=self.usercomponent,
-                    ctype=context["pay_variant"],
-                    persist_token=self.request.auth_token
-                )
-                associated.token_generate_new_size = \
-                    getattr(settings, "TOKEN_SIZE", 30)
-                context["payment"] = Payment.static_create(
-                    associated=associated
-                )
-                try:
-                    context["payment"].clean()
-                    context["payment"].save()
-                except ValidationError:
-                    logging.exception("Payment creation failed")
-                    if not hasoldtoken:
-                        token.delete()
-                        return HttpResponseRedirect(
-                            redirect_to=merge_get_url(
-                                context["referrer"],
-                                error="payment_creation_failed"
-                            )
-                        )
-
             if context["is_serverless"]:
                 context["post_success"] = True
                 ret = self.refer_with_get(context, token)
@@ -759,8 +697,6 @@ class ReferrerMixin(object):
             if not context["post_success"]:
                 if not hasoldtoken:
                     token.delete()
-                if context.get("payment", None):
-                    context["payment"].associated.delete()
             return ret
 
         elif action == "cancel":

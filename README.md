@@ -31,7 +31,6 @@ For spiders and contents
 * spkcspider.apps.spider_accounts: user implementation suitable for the spiders. You can supply your own user model instead.
 * spkcspider.apps.spider_filets: File and Text Content types
 * spkcspider.apps.spider_keys: Public keys and anchors
-* spkcspider.apps.spider_pay: second factor for payments (NOT READY YET)
 * spkcspider.apps.spider_tags: verified information tags
 * spkcspider.apps.spider_webcfg: WebConfig Feature
 * spkcspider: contains spkcspider url detection and wsgi handler
@@ -182,8 +181,7 @@ There are some special GET parameters for services with special requirements:
 * referrer=<url>: activate referrer mode
   * intention=domain: domain verify referrer mode
   * intention=sl: server-less referrer mode
-  * payload=<foo>: passed on successfull requests (including post), e.g. for sessionid  
-  * intention=payment: referrer can initiate payments  
+  * payload=<foo>: passed on successfull requests (including post), e.g. for sessionid
   * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
   * intention=persist: referrer can persist data on webserver
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
@@ -192,19 +190,6 @@ There are some special GET parameters for services with special requirements:
 * normal referrer mode: send token to referrer, client verifies with hash that he sent the token.
 * server-less referrer mode (sl): token is transferred as GET parameter and no POST request is made (less secure as client sees token and client is not authenticated)
 * domain referrer mode (domain): referrer domain is add to token. Doesn't work with other intentions (but "live" mode is active as no filter will be created) and works only if domain_mode is for context active (e.g. feature or access context (content)). Can be automated, doesn't require user approval. Useful for tag updates (only active if feature requests domain mode).
-
-## payment intention
-
-Should have a second auth e.g. pw on payment provider
-
-Requires GET parameter
-* cur=<currency>: currency code
-* amount=<decimalamount|inf>: how much can the referrer maximal request
-* period=<duration in days>
-
-Optionally:
-* capture=<true/false>
-
 
 ## search parameters
 
@@ -235,8 +220,6 @@ Otherwise security could be compromised.
   * requires confirmation by verify
 * examples
 * documentation
-* decouple payments to spider_payments
-  * reuse verifier for payment confirmation (push graph ob as dvfile)
 
 ## Later
 * Fix TravelProtection
