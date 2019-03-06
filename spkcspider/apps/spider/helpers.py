@@ -62,7 +62,10 @@ def is_decimal(inp, precision=None, allow_sign=False):
     )
 
 
-def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
+def add_property(
+    graph, name, ref=None, ob=None, literal=None, datatype=None,
+    iterate=False
+):
     value_node = BNode()
     if ref:
         graph.add((
@@ -73,12 +76,15 @@ def add_property(graph, name, ref=None, ob=None, literal=None, datatype=None):
         value_node, spkcgraph["name"],
         Literal(name, datatype=XSD.string)
     ))
-    if not literal:
+    if literal is None:
         literal = getattr(ob, name)
-    graph.add((
-        value_node, spkcgraph["value"],
-        Literal(literal, datatype=datatype)
-    ))
+    if not iterate:
+        literal = [literal]
+    for l in literal:
+        graph.add((
+            value_node, spkcgraph["value"],
+            Literal(l, datatype=datatype)
+        ))
     return value_node
 
 

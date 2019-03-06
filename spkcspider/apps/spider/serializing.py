@@ -125,11 +125,11 @@ def serialize_component(graph, component, context, visible=True):
         graph.add((
             ref_component, spkcgraph["strength"], Literal(component.strength)
         ))
-        for feature in component.features.all():
-            add_property(
-                graph, "features", ref=ref_component,
-                literal=feature.name, datatype=XSD.string
-            )
+        add_property(
+            graph, "features", ref=ref_component,
+            literal=component.features.values_list("name", flat=True),
+            datatype=XSD.string, iterate=True
+        )
     if (
         context.get("uc_namespace", None) and
         context["sourceref"] != ref_component
@@ -177,11 +177,12 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
 def list_features(graph, component, ref_component, context):
     if not ref_component:
         return
-    for feature in component.features.all():
-        add_property(
-            graph, "features", ref=ref_component,
-            literal=feature.name, datatype=XSD.string
-        )
+    allf = component.features.all()
+    add_property(
+        graph, "features", ref=ref_component,
+        literal=allf.values_list("name", flat=True), datatype=XSD.string
+    )
+    for feature in allf:
         if context["scope"] != "export":
             for url_feature, name in \
                   feature.installed_class.cached_feature_urls():

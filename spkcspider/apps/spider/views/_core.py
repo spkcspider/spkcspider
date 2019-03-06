@@ -344,13 +344,13 @@ class ReferrerMixin(object):
         kwargs["token_strength"] = None
         # will be overwritten in referring path so there is no interference
         kwargs["referrer"] = None
-        kwargs["intentions"] = []
+        kwargs["intentions"] = set()
         if self.request.auth_token:
             kwargs["referrer"] = self.request.auth_token.referrer
             kwargs["token_strength"] = self.request.auth_token.extra.get(
                 "strength", None
             )
-            kwargs["intentions"] = set(self.request.auth_token.extra.get(
+            kwargs["intentions"].update(self.request.auth_token.extra.get(
                 "intentions", []
             ))
         return super().get_context_data(**kwargs)

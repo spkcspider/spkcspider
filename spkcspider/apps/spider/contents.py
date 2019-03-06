@@ -482,16 +482,19 @@ class BaseContent(models.Model):
                     g, "token_strength", ref=session_dict["sourceref"],
                     literal=kwargs["token_strength"]
                 )
-            for intention in kwargs["intentions"]:
-                add_property(
-                    g, "intentions", ref=session_dict["sourceref"],
-                    literal=intention, datatype=XSD.string
-                )
-            for feature in uc.features.all():
-                add_property(
-                    g, "features", ref=session_dict["sourceref"],
-                    literal=feature.name
-                )
+            add_property(
+                g, "intentions", ref=session_dict["sourceref"],
+                literal=kwargs["intentions"], datatype=XSD.string,
+                iterate=True
+            )
+
+            allf = uc.features.all()
+            add_property(
+                g, "features", ref=session_dict["sourceref"],
+                literal=allf.values_list("name", flat=True),
+                datatype=XSD.string, iterate=True
+            )
+            for feature in allf:
                 if kwargs["scope"] != "export":
                     if uc.primary_anchor:
                         url_content = urljoin(

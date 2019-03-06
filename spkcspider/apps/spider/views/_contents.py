@@ -334,11 +334,11 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
                     g, "token_strength", ref=session_dict["sourceref"],
                     literal=context["token_strength"], datatype=XSD.integer
                 )
-            for intention in context["intentions"]:
-                add_property(
-                    g, "intentions", ref=session_dict["sourceref"],
-                    literal=intention, datatype=XSD.string
-                )
+            add_property(
+                g, "intentions", ref=session_dict["sourceref"],
+                literal=context["intentions"], datatype=XSD.string,
+                iterate=True
+            )
 
         serialize_stream(
             g, p, session_dict,

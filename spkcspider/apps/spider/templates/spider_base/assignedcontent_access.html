@@ -108,12 +108,18 @@
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">id</data>
           <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{object.get_id}}</data>
         </data>
-        {% for f in uc.features.all %}
-          <data hidden="hidden" typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
-            <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{f.name}}</data>
+        <data hidden="hidden" typeof="spkc:Property">
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
+            {% for f in uc.features.all %}
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{f.name}}</data>
+            {% endfor %}
           </data>
-        {% endfor %}
+        <data hidden="hidden" typeof="spkc:Property">
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">intentions</data>
+          {% for i in intentions %}
+            <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{i}}</data>
+          {% endfor %}
+          </data>
       </data>
     {% endif %}
     {% if request.token_expires %}

@@ -32,8 +32,7 @@
       {% if "payment" in intentions %}
         <tr class="w3-red w3-large">
           <td>
-            {% trans 'Warning: this referrer wants access to payments' %}
-            {% trans 'Amount:'%}{{request.GET.amount}}{{request.GET.cur|upper}}
+            {% trans 'Warning: this referrer wants to initiate payments and/or create contracts' %}
           </td>
         </tr>
       {% endif %}
