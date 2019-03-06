@@ -74,7 +74,7 @@ class VariantType(str, enum.Enum):
     unlisted = "d"
     # activates domain mode
     domain_mode = "e"
-    # e,f,g not assigned
+    # f,g not assigned
 
     # is content unique for usercomponent
     # together with strength level 10: unique for user
