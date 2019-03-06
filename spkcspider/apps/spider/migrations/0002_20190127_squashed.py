@@ -199,7 +199,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='linkcontent',
             name='push',
-            field=models.BooleanField(blank=True, default=False, help_text='Push Link to top.'),
+            field=models.BooleanField(blank=True, default=False, help_text='Improve ranking of this Link.'),
         ),
         migrations.AddField(
             model_name='authtoken',

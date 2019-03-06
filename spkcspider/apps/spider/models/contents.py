@@ -73,7 +73,7 @@ class LinkContent(BaseContent):
 
     push = models.BooleanField(
         blank=True, default=False,
-        help_text=_("Push Link to top.")
+        help_text=_("Improve ranking of this Link.")
     )
 
     def __str__(self):

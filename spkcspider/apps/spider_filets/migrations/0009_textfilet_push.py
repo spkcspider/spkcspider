@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='textfilet',
             name='push',
-            field=models.BooleanField(blank=True, default=False, help_text='Push TextFilet to top.'),
+            field=models.BooleanField(blank=True, default=False, help_text='Improve ranking of this content.'),
         ),
     ]

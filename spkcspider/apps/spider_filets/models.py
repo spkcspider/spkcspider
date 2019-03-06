@@ -177,7 +177,7 @@ class TextFilet(BaseContent):
     )
     push = models.BooleanField(
         blank=True, default=False,
-        help_text=_("Push TextFilet to top.")
+        help_text=_("Improve ranking of this content.")
     )
 
     preview_words = models.PositiveIntegerField(
