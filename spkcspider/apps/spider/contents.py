@@ -459,6 +459,7 @@ class BaseContent(models.Model):
                     g, "token_expires", ob=session_dict["request"],
                     ref=session_dict["sourceref"]
                 )
+
         if page <= 1:
             g.add((
                 session_dict["sourceref"],

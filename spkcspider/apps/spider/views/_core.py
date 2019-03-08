@@ -591,6 +591,7 @@ class ReferrerMixin(object):
             token.referrer = ReferrerObject.objects.get_or_create(
                 url=context["referrer"]
             )[0]
+            token.extra["intentions"] = list(context["intentions"])
             try:
                 token.save()
             except TokenCreationError:
@@ -653,6 +654,7 @@ class ReferrerMixin(object):
 
             # set to zero as prot_strength can elevate perms
             token.extra["prot_strength"] = 0
+            token.extra["intentions"] = list(context["intentions"])
 
             if not self.clean_refer_intentions(context, token):
                 return HttpResponseRedirect(
@@ -661,7 +663,6 @@ class ReferrerMixin(object):
                         error="intentions_incorrect"
                     )
                 )
-            token.extra["intentions"] = list(context["intentions"])
 
             token.extra["filter"] = self.request.POST.getlist("search")
             if "live" in context["intentions"]:
@@ -694,9 +695,8 @@ class ReferrerMixin(object):
             else:
                 context["post_success"] = False
                 ret = self.refer_with_post(context, token)
-            if not context["post_success"]:
-                if not hasoldtoken:
-                    token.delete()
+            if not context["post_success"] and not hasoldtoken:
+                token.delete()
             return ret
 
         elif action == "cancel":

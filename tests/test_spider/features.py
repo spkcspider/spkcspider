@@ -1,5 +1,3 @@
-# import unittest
-
 import re
 from urllib.parse import parse_qs, urlsplit
 
@@ -9,9 +7,10 @@ from django.urls import reverse
 import requests
 from rdflib import Graph, Literal, XSD
 
+from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import VariantType
-from spkcspider.apps.spider.models import ContentVariant
+from spkcspider.apps.spider.models import ContentVariant, AuthToken
 from spkcspider.apps.spider.signals import update_dynamic
 
 from tests.referrerserver import create_referrer_server
@@ -137,6 +136,8 @@ class FeaturesTest(TransactionWebTest):
             name="Persistence"
         ).exists())
         self.assertEqual(len(home.features.all()), 2)
+
+        token = None
         # now test persistence feature
         with self.subTest(msg="Persist"):
             with override_settings(DEBUG=True):
@@ -181,5 +182,49 @@ class FeaturesTest(TransactionWebTest):
                 self.assertEqual(query.get("status"), ["success"])
                 self.assertIn("hash", query)
                 self.assertIn(query["hash"][0], self.refserver.unverified)
+                # confirm token
                 requests.get(response.location)
                 self.assertIn(query["hash"][0], self.refserver.tokens)
+                token = AuthToken.objects.get(
+                    token=self.refserver.tokens[query["hash"][0]]["token"]
+                )
+                self.assertTrue(token)
+                self.assertIn("persist", token.extra["intentions"])
+
+        # remove user
+        self.app.set_user(user=None)
+        self.app.reset()
+
+        with self.subTest(msg="Intentions via persist"):
+            self.assertTrue(token)
+            purl = "{}?token={}".format(
+                home.get_absolute_url(),
+                token.token
+            )
+            response = self.app.get(purl)
+            g = Graph()
+            g.parse(data=str(response.content, "utf8"), format="html")
+            self.assertIn(
+                (
+                    None,
+                    spkcgraph["value"],
+                    Literal("persist", datatype=XSD.string)
+                ),
+                g
+            )
+
+            purl = "{}?token={}&raw=true".format(
+                home.get_absolute_url(),
+                token.token
+            )
+            response = self.app.get(purl)
+            g = Graph()
+            g.parse(data=str(response.content, "utf8"), format="turtle")
+            self.assertIn(
+                (
+                    None,
+                    spkcgraph["value"],
+                    Literal("persist", datatype=XSD.string)
+                ),
+                g
+            )
