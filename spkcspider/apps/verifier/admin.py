@@ -16,26 +16,34 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
     list_display = ('hash', "checked", 'verification_state')
     search_fields = ('hash', "checked", 'verification_state')
     fields = [
-        'created', 'modified', "checked", 'dvfile', 'verification_state',
+        'created', 'modified', 'checked', 'dvfile', 'verification_state',
         'note'
     ]
     readonly_fields = ['created', 'modified', "checked"]
 
     def get_form(self, request, obj=None, **kwargs):
-        ret = super().get_form(request, obj, **kwargs)
         opts = self.opts
         codename = get_permission_codename('change', opts)
         if not request.user.has_perm("%s.%s" % (opts.app_label, codename)):
-            ret.fields["dvfile"].disabled = True
-        return ret
+            self.readonly_fields = [
+                'created', 'modified', 'checked', 'dvfile'
+            ]
+        return super().get_form(request, obj, **kwargs)
+
+    def has_module_permission(self, request):
+        return True
+
+    def has_view_permission(self, request, obj=None):
+        opts = self.opts
+        if request.user.has_perm("%s.%s" % (opts.app_label, 'can_verify')):
+            return True
+        return super().has_view_permission(self, request, obj)
 
     def has_change_permission(self, request, obj=None):
         opts = self.opts
-        codename = get_permission_codename('can_verify', opts)
-        if request.user.has_perm("%s.%s" % (opts.app_label, codename)):
+        if request.user.has_perm("%s.%s" % (opts.app_label, 'can_verify')):
             return True
-        codename = get_permission_codename('change', opts)
-        return request.user.has_perm("%s.%s" % (opts.app_label, codename))
+        return super().has_change_permission(self, request, obj)
 
     def save_form(self, request, form, change):
         if 'verification_state' in form.changed_data:

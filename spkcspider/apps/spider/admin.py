@@ -14,6 +14,9 @@ class AssignedContentAdmin(admin.ModelAdmin):
         'info', 'created', 'modified'
     ]
 
+    def has_module_permission(self, request):
+        return True
+
     def has_delete_permission(self, request, obj=None):
         n = request.user._meta.app_label
         m = request.user._meta.model_name
@@ -127,6 +130,9 @@ class UserComponentAdmin(admin.ModelAdmin):
     list_display = ('name', 'username', 'strength', 'featured', 'modified')
     view_on_site = True
 
+    def has_module_permission(self, request):
+        return True
+
     def feature(self, request, queryset):
         queryset.exclude(
             name__in=("index", "fake_index")
@@ -178,7 +184,7 @@ class UserComponentAdmin(admin.ModelAdmin):
         if request.user.is_superuser or \
            request.user.has_perm("spider_base.change_usercomponent"):
             return True
-        return request.user == obj.user
+        return not obj or request.user == obj.user
 
 
 @admin.register(Protection)

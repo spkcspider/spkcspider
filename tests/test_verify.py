@@ -3,6 +3,8 @@
 import re
 from unittest.mock import patch
 
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 from django.test import override_settings
 from django.contrib.staticfiles.testing import LiveServerTestCase
@@ -17,6 +19,7 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.verifier.validate import validate
+from spkcspider.apps.verifier.models import DataVerificationTag
 
 from tests.referrerserver import create_referrer_server
 
@@ -143,7 +146,9 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
             response = self.app.get(verifyurl)
             form = response.form
             form["url"] = fullurl
-            response = form.submit().follow().follow()
+            response = form.submit().follow()
+            verification_location = response.location
+            response = response.follow()
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=response.text, format="html")
@@ -161,5 +166,49 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         )
         self.assertIn(
             (None, spkcgraph["verified"], Literal(False)),
+            g
+        )
+
+        # add permissions
+
+        self.user.is_staff = True
+        self.user.save(update_fields=["is_staff"])
+
+        self.app.set_user("testuser1")
+
+        tag = DataVerificationTag.objects.first()
+        self.assertFalse(tag.checked)
+
+        content_type = ContentType.objects.get_for_model(DataVerificationTag)
+        permission = Permission.objects.get(
+            codename='can_verify',
+            content_type=content_type,
+        )
+        self.user.user_permissions.add(permission)
+
+        # create url to admin of verifiedtag
+        adminurl = reverse(
+            "admin:spider_verifier_dataverificationtag_change",
+            kwargs={"object_id": tag.id}
+        )
+
+        # now verify tag
+        response = self.app.get(adminurl)
+        self.assertEqual(response.status_code, 200)
+        form = response.form
+        form["verification_state"].select("verified")
+        response = form.submit(name="_continue").maybe_follow()
+        # and check if tag is verified now
+        form = response.form
+        self.assertEqual(form["verification_state"].value, "verified")
+        tag.refresh_from_db()
+        # check if checked is set (date of verification)
+        self.assertTrue(tag.checked)
+        response = self.app.get(verification_location)
+        g = Graph()
+        g.parse(data=response.text, format="html")
+        # now check if checked date is in rdf annotated html page
+        self.assertIn(
+            (None, spkcgraph["verified"], Literal(tag.checked)),
             g
         )

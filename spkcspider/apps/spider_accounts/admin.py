@@ -16,10 +16,14 @@ class UserAdmin(user_admin.UserAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('email',)}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff',
-                                       'is_superuser', 'quota', 'groups',
+                                       'is_superuser',
+                                       'quota_local', 'quota_remote', 'groups',
                                        'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
+
+    def has_module_permission(self, request):
+        return True
 
     def has_change_permission(self, request, obj=None):
         if obj:
