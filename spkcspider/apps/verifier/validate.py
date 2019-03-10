@@ -32,8 +32,6 @@ hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
 valid_wait_states = {
     "RETRIEVING", "HASHING", "STARTED"
 }
-if not getattr(settings, "CELERY_TRACK_STARTED", False):
-    valid_wait_states.add("PENDING")
 
 
 def hash_entry(triple):
@@ -76,7 +74,7 @@ def verify_download_size(length, current_size=0):
     return True
 
 
-def validate(ob, task=None):
+def validate(ob, hostpart, task=None):
     dvfile = None
     source = None
     if isinstance(ob, tuple):
@@ -89,7 +87,7 @@ def validate(ob, task=None):
         source = VerifySourceObject.objects.get(
             id=ob
         )
-        url = source.get_absolute_url()
+        url = source.get_url()
 
         try:
             resp = requests.get(url, stream=True, verify=certifi.where())
@@ -129,11 +127,11 @@ def validate(ob, task=None):
             dvfile.name,
             format="turtle"
         )
-    except Exception as exc:
+    except Exception:
         if settings.DEBUG:
             dvfile.seek(0, 0)
-            logging.error(dvfile.read())
-        logging.exception(exc)
+            logging.exception(dvfile.read())
+        logging.error("Parsing file failed")
         dvfile.close()
         os.unlink(dvfile.name)
         raise exceptions.ValidationError(
@@ -180,8 +178,7 @@ def validate(ob, task=None):
                 'num_pages': pages
             }
         )
-    view_url = None
-    tmp = list(g.triples((start, spkcgraph["action:view"], None)))
+    tmp = list(g.objects(start, spkcgraph["action:view"]))
     if len(tmp) != 1:
         dvfile.close()
         os.unlink(dvfile.name)
@@ -189,28 +186,24 @@ def validate(ob, task=None):
             _('Invalid graph'),
             code="invalid_graph"
         )
-    view_url = tmp[0][2].toPython()
+    view_url = tmp[0].toPython()
     if isinstance(ob, tuple):
         split = view_url.split("?", 1)
         source = VerifySourceObject.objects.update_or_create(
             url=split[0], defaults={"get_params": split[1]}
         )
-    mtype = None
+    mtype = set()
     if scope == "list":
-        mtype = "UserComponent"
+        mtype.add("UserComponent")
     else:
-        mtype = list(g.triples((
-            start, spkcgraph["type"], None
-        )))
-        if len(mtype) > 0:
-            mtype = mtype[0][2].value
-        else:
-            mtype = None
+        mtype.update(map(
+            lambda x: x.toPython(), g.objects(start, spkcgraph["type"])
+        ))
 
     data_type = get_settings_func(
         "VERIFIER_CLEAN_GRAPH",
         "spkcspider.apps.verifier.functions.clean_graph"
-    )(mtype, g, start)
+    )(mtype, g, start, source, hostpart)
     if not data_type:
         dvfile.close()
         os.unlink(dvfile.name)
@@ -222,19 +215,10 @@ def validate(ob, task=None):
 
     # retrieve further pages
     for page in range(2, pages+1):
-        url = merge_get_url(view_url, raw="embed", page=str(page))
-        if not get_settings_func(
-            "SPIDER_URL_VALIDATOR",
-            "spkcspider.apps.spider.functions.validate_url_default"
-        )(url):
-            dvfile.close()
-            os.unlink(dvfile.name)
-            raise exceptions.ValidationError(
-                _('Insecure url: %(url)s'),
-                params={"url": url},
-                code="insecure_url"
-            )
-
+        url = merge_get_url(
+            source.get_url(), raw="embed", page=str(page)
+        )
+        # validation not neccessary here (base url is verified)
         try:
             resp = requests.get(url, stream=True, verify=certifi.where())
         except requests.exceptions.ConnectionError:
@@ -407,15 +391,22 @@ def validate(ob, task=None):
     result, created = DataVerificationTag.objects.get_or_create(
         defaults={
             "dvfile": File(dvfile),
-            "source": source
+            "source": source,
+            "data_type": data_type
         },
         hash=digest
     )
     dvfile.close()
     os.unlink(dvfile.name)
+    update_fields = set()
+    # and source, cannot remove source without replacement
     if not created and source and source != result.source:
         result.source = source
-        result.save(update_fields=["source"])
+        update_fields.add("source")
+    if data_type != result.data_type:
+        result.data_type = data_type
+        update_fields.add("data_type")
+    result.save(update_fields=update_fields)
     if task:
         task.update_state(
             state='SUCCESS'
@@ -424,8 +415,8 @@ def validate(ob, task=None):
 
 
 @celery_app.task(bind=True, name='async validation')
-def async_validate(self, ob):
-    ret = validate(ob, self)
+def async_validate(self, ob, hostpart):
+    ret = validate(ob, hostpart, self)
     return ret.get_absolute_url()
 
 

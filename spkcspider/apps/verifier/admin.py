@@ -1,5 +1,5 @@
 
-
+import logging
 from django.utils.timezone import now
 
 from django.contrib import admin
@@ -7,7 +7,7 @@ from django.contrib.auth import get_permission_codename
 
 from .models import DataVerificationTag
 
-# Register your models here.
+logger = logging.getLogger(__name__)
 
 
 @admin.register(DataVerificationTag)
@@ -49,15 +49,22 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
         if 'verification_state' in form.changed_data:
             form.instance.checked = now()
         ret = super().save_form(request, form, change)
-        form.instance.callback()
+        try:
+            form.instance.callback(
+                "{}://{}".format(
+                    request.scheme, request.get_host()
+                )
+            )
+        except Exception:
+            logger.exception("Callback failed")
         return ret
 
-    def save_model(self, request, obj, form, change):
-        """
-        Given a model instance save it to the database.
-        """
-        if 'verification_state' in form.changed_data:
-            obj.checked = now()
-        ret = super().save_model(request, obj, form, change)
-        obj.callback()
-        return ret
+    # def save_model(self, request, obj, form, change):
+    #    """
+    #    Given a model instance save it to the database.
+    #    """
+    #    if 'verification_state' in form.changed_data:
+    #        obj.checked = now()
+    #    ret = super().save_model(request, obj, form, change)
+    #    obj.callback()
+    #    return ret

@@ -78,6 +78,7 @@ class UserTestMixin(AccessMixin):
 
     def get_context_data(self, **kwargs):
         kwargs["raw_update_type"] = VariantType.raw_update.value
+        kwargs["feature_type"] = VariantType.feature.value
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )

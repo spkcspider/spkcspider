@@ -243,6 +243,3 @@ MAX_SEARCH_PARAMETERS = 30
 UPDATE_DYNAMIC_AFTER_MIGRATION = True
 
 SITE_ID = 1
-
-# required for tracking status in celery
-CELERY_TRACK_STARTED = True

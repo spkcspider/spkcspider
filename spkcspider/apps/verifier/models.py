@@ -8,7 +8,9 @@ from django.core import exceptions
 import requests
 import certifi
 
-
+from spkcspider.apps.spider.constants.static import (
+    MAX_TOKEN_B64_SIZE
+)
 from .constants import (
     VERIFICATION_CHOICES
 )
@@ -28,13 +30,16 @@ class VerifySourceObject(models.Model):
         max_length=400, db_index=True, unique=True
     )
     get_params = models.TextField()
+    update_secret = models.CharField(
+        max_length=MAX_TOKEN_B64_SIZE, unique=True, null=True, blank=True
+    )
 
-    def get_absolute_url(self, access=None):
+    def get_url(self, access=None):
         if access:
             split = self.url.rsplit("view", 1)
             if len(split) == 1:
                 raise Exception()
-            return "{}{}?{}".format(*split, self.get_params)
+            return "{}{}/?{}".format(split[0], access, self.get_params)
         return "{}?{}".format(self.url, self.get_params)
 
 
@@ -79,15 +84,20 @@ class DataVerificationTag(models.Model):
             }
         )
 
-    def callback(self):
+    def callback(self, hostpart):
         if self.source and self.data_type.endswith("_cb"):
-            url = self.source.get_absolute_url("verify")
+            vurl = self.source.get_url("verify")
+            body = {
+                "url": "{}{}".format(
+                    hostpart, self.get_absolute_url()
+                )
+            }
             try:
-                resp = requests.get(url, stream=True, verify=certifi.where())
+                resp = requests.post(vurl, body, verify=certifi.where())
             except requests.exceptions.ConnectionError:
                 raise exceptions.ValidationError(
                     _('invalid url: %(url)s'),
-                    params={"url": url},
+                    params={"url": vurl},
                     code="invalid_url"
                 )
             if resp.status_code != 200:

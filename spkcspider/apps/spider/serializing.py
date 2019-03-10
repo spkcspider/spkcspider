@@ -44,6 +44,12 @@ def serialize_content(graph, content, context, embed=False):
             spkcgraph["type"],
             Literal("Feature", datatype=XSD.string)
         ))
+    else:
+        graph.add((
+            ref_content,
+            spkcgraph["type"],
+            Literal("Content", datatype=XSD.string)
+        ))
 
     graph.add(
         (
@@ -52,11 +58,6 @@ def serialize_content(graph, content, context, embed=False):
             URIRef(url2)
         )
     )
-    graph.add((
-        ref_content,
-        spkcgraph["type"],
-        Literal("Content", datatype=XSD.string)
-    ))
     add_property(
         graph, "info", ref=ref_content, ob=content, datatype=XSD.string
     )

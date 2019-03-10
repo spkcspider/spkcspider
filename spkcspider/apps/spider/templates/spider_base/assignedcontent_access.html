@@ -21,11 +21,15 @@
 {% endif %}
 {% endblock %}
 
-{% block main_classes %}{{block.super}}{% if not object %} w3-animate-bottom{% endif %}{% endblock %}
+{% block main_classes %}{{block.super}}{% if scope == "add" %} w3-animate-bottom{% endif %}{% endblock %}
 {% block main_attributes %}resource="{{ request.path }}" typeof="spkc:Content"{% endblock %}
 
 {% block content %}
-  <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
+  {% if scope != "add" and feature_type in object.ctype.ctype %}
+    <data hidden="hidden" property="spkc:type" datatype="xsd:string">Feature</data>
+  {% else %}
+    <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
+  {% endif %}
   {% for f in uc.features.all %}
     {% for action in f.installed_class.cached_feature_urls %}
       <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">

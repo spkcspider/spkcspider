@@ -1,5 +1,7 @@
 __all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
 
+from urllib.parse import parse_qs, urlencode
+
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.core.exceptions import NON_FIELD_ERRORS
@@ -17,7 +19,7 @@ from celery.exceptions import TimeoutError
 from rdflib import Literal
 
 from spkcspider.apps.spider.helpers import get_settings_func
-from .models import DataVerificationTag
+from .models import DataVerificationTag, VerifySourceObject
 from .forms import CreateEntryForm
 from .validate import valid_wait_states, async_validate
 
@@ -86,6 +88,25 @@ class CreateEntry(UpdateView):
         )
 
     def post(self, request, *args, **kwargs):
+        if "payload" in request.POST:
+            try:
+                payload = parse_qs(request.POST["payload"])
+                # check if token parameter exists
+                request.POST["token"]
+            except Exception:
+                return HttpResponse(400)
+            ob = VerifySourceObject.objects.filter(
+                url=payload.get("url"),
+                update_secret=payload.get("update_secret", "x")
+            ).first()
+            if ob:
+                GET = parse_qs(ob.get_params)
+                GET["token"] = request.POST["token"]
+                ob.get_params = urlencode(GET)
+                ob.update_secret = None
+                ob.save(update_fields=["get_params", "ob.update_secret"])
+                return HttpResponse(200)
+            return HttpResponse(404)
         form = self.get_form()
         if get_settings_func(
             "VERIFIER_REQUEST_VALIDATOR",
@@ -97,7 +118,12 @@ class CreateEntry(UpdateView):
 
     def form_valid(self, form):
         task = async_validate.apply_async(
-            args=(form.save(),),
+            args=(
+                form.save(),
+                "{}://{}".format(
+                    self.request.scheme, self.request.get_host()
+                )
+            ), track_started=True
         )
         ret = redirect(
             "spider_verifier:task", task_id=task.task_id

@@ -32,7 +32,7 @@ class LiveDjangoTestApp(DjangoTestApp):
 
 
 class MockAsyncValidate(object):
-    value_captured = None
+    value_captured = frozenset()
     task_id = None
     tasks = {}
 
@@ -46,13 +46,13 @@ class MockAsyncValidate(object):
     @classmethod
     def apply_async(cls, *args, **kwargs):
         self = cls()
-        self.value_captured = kwargs["args"][0]
+        self.value_captured = kwargs["args"]
         self.task_id = uuid()
         cls.tasks[self.task_id] = self
         return self
 
     def get(self, *args, **kwargs):
-        ret = validate(self.value_captured)
+        ret = validate(*self.value_captured)
         return ret.get_absolute_url()
 
 
