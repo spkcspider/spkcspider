@@ -1,0 +1,24 @@
+{% load i18n %}
+{% include "spider_base/edit_form.html" %}
+
+{% if scope == "update" %}
+  <div class="w3-padding">
+    <table class=" w3-table-all" style="width:100%">
+      <thead>
+        <tr><th>{% trans "Verifier for this type" %}:</th></tr>
+      </thead>
+      <tbody>
+        {% for verifier in content.layout.default_verifiers %}
+          <tr>
+            <td>
+              <form action="{% url 'spider_base:ucontent-access' token=object.token access='request_verification' %}" method="POST" style="word-break: break-all">
+                <input type="hidden" name="url">{{verifier}}</input>
+                <button>{{verifier}}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}

@@ -1,4 +1,7 @@
 
+import logging
+
+from django.conf import settings
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -7,17 +10,26 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from django.http import HttpResponse
+from django.contrib import messages
+from django.http import HttpResponse, HttpResponseRedirect
+
+import requests
+import certifi
 
 from jsonfield import JSONField
 
+from spkcspider.apps.spider.constants import TokenCreationError
 from spkcspider.apps.spider.contents import (
     BaseContent, add_content, VariantType, ActionUrl
 )
-from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.apps.spider.helpers import get_settings_func, merge_get_url
 
-from spkcspider.apps.spider.models import AssignedContent
+from spkcspider.apps.spider.models import (
+    AssignedContent, AuthToken, ReferrerObject
+)
 CACHE_FORMS = {}
+
+logger = logging.getLogger(__name__)
 
 # Create your models here.
 
@@ -151,6 +163,13 @@ class SpiderTag(BaseContent):
             ActionUrl(reverse("spider_tags:create-pushtag"), "pushtag")
         ]
 
+    def get_template_name(self, scope):
+        if scope == "update":
+            return 'spider_tags/edit_form.html'
+        elif scope == "push_update":
+            return 'spider_base/edit_form.html'
+        return super().get_template_name(scope)
+
     def get_size(self):
         return len(str(self.tagdata).encode("utf8"))
 
@@ -159,13 +178,15 @@ class SpiderTag(BaseContent):
 
     def get_abilities(self, context):
         _abilities = set()
+        if context["request"].is_special_user:
+            _abilities.add("request_verification")
         if (
             context["request"].auth_token and
             context["request"].auth_token.referrer
         ):
             if get_settings_func(
                 "SPIDER_TAG_VERIFIER_VALIDATOR",
-                "spkcspider.apps.spider.functions.verify_verifier_urls"
+                "spkcspider.apps.spider.functions.clean_verifier"
             )(self, context["request"]):
                 _abilities.add("verify")
             if self.updateable_by.filter(
@@ -174,6 +195,52 @@ class SpiderTag(BaseContent):
                 _abilities.add("push_update")
 
         return _abilities
+
+    def access_request_verification(self, **kwargs):
+        if not kwargs["request"].method == "POST":
+            return HttpResponse(status=405)
+        verifier = kwargs["request"].POST.get("url", "")
+        if not get_settings_func(
+            "SPIDER_TAG_VERIFY_REQUEST_VALIDATOR",
+            "spkcspider.apps.spider.functions.clean_verifier_url"
+        )(self, verifier):
+            return HttpResponse("invalid verifier", status=400)
+        try:
+            token = AuthToken(
+                referrer=ReferrerObject.objects.get_or_create(
+                    url=verifier
+                )[0]
+            )
+            token.save()
+            body = {
+                "url": merge_get_url(
+                    self.get_absolute_url(), token=token.token
+                )
+            }
+            resp = requests.post(
+                verifier, data=body, verify=certifi.where(),
+                allow_redirects=False
+            )
+            resp.raise_for_status()
+        except TokenCreationError:
+            if settings.DEBUG:
+                logger.exception("Token creation failed")
+            messages.error(kwargs["request"], 'Token creation failed')
+            return HttpResponseRedirect(
+                redirect_to=self.get_absolute_url()
+            )
+        except Exception:
+            if settings.DEBUG:
+                logger.exception("Other Error")
+            messages.error(kwargs["request"], 'Request verification failed')
+            token.delete()
+            return HttpResponseRedirect(
+                redirect_to=self.get_absolute_url()
+            )
+        else:
+            return HttpResponseRedirect(
+                redirect_to=resp.url
+            )
 
     @csrf_exempt
     def access_verify(self, **kwargs):

@@ -95,24 +95,20 @@
       <data hidden="hidden" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        <data rel="spkc:value">
-          {% for f in uc.features.all %}
-            <data hidden="hidden" datatype="xsd:string">{{f.name}}</data>
-          {% empty %}
-            <data hidden="hidden" property="spkc:value" resource="rdf:nil"></data>
-          {% endfor %}
-        </data>
+        {% for f in uc.features.all %}
+          <data hidden="hidden" datatype="xsd:string" property="spkc:value">{{f.name}}</data>
+        {% empty %}
+          <data hidden="hidden" rel="spkc:value" resource="rdf:nil"></data>
+        {% endfor %}
       </data>
       <data hidden="hidden" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">intentions</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        <data rel="spkc:value">
-          {% for i in intentions %}
-            <data hidden="hidden" datatype="xsd:string">{{i}}</data>
-          {% empty %}
-            <data hidden="hidden" resource="rdf:nil"></data>
-          {% endfor %}
-        </data>
+        {% for i in intentions %}
+          <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{i}}</data>
+        {% empty %}
+          <data hidden="hidden" rel="spkc:value" resource="rdf:nil"></data>
+        {% endfor %}
       </data>
     </data>
     {% if uc.description %}

@@ -5,7 +5,7 @@ from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
 import requests
-from rdflib import Graph, Literal, XSD
+from rdflib import Graph, Literal, XSD, RDF
 
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider_accounts.models import SpiderUser
@@ -37,6 +37,50 @@ class FeaturesTest(TransactionWebTest):
             username="testuser1"
         )
         update_dynamic.send_robust(self)
+
+    def test_nil(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        url = home.get_absolute_url()
+        response = self.app.get(url)
+        g = Graph()
+        g.parse(data=response.text, format="html")
+        subject = g.value(
+            predicate=spkcgraph["name"],
+            object=Literal("intentions", datatype=XSD.string)
+        )
+        self.assertIn((
+            subject, spkcgraph["value"], RDF.nil
+        ), g)
+        subject = g.value(
+            predicate=spkcgraph["name"],
+            object=Literal("features", datatype=XSD.string)
+        )
+        self.assertIn((
+            subject, spkcgraph["value"], RDF.nil
+        ), g)
+
+    def test_nil_raw(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        url = "{}?raw=true".format(
+            home.get_absolute_url()
+        )
+        response = self.app.get(url)
+        g = Graph()
+        g.parse(data=response.text, format="turtle")
+        subject = g.value(
+            predicate=spkcgraph["name"],
+            object=Literal("intentions", datatype=XSD.string)
+        )
+        self.assertIn((
+            subject, spkcgraph["value"], RDF.nil
+        ), g)
+        subject = g.value(
+            predicate=spkcgraph["name"],
+            object=Literal("features", datatype=XSD.string)
+        )
+        self.assertIn((
+            subject, spkcgraph["value"], RDF.nil
+        ), g)
 
     def test_update_perm(self):
         home = self.user.usercomponent_set.filter(name="home").first()
@@ -203,7 +247,7 @@ class FeaturesTest(TransactionWebTest):
             )
             response = self.app.get(purl)
             g = Graph()
-            g.parse(data=str(response.content, "utf8"), format="html")
+            g.parse(data=response.text, format="html")
             self.assertIn(
                 (
                     None,

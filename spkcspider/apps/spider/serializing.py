@@ -181,7 +181,8 @@ def list_features(graph, component, ref_component, context):
     allf = component.features.all()
     add_property(
         graph, "features", ref=ref_component,
-        literal=allf.values_list("name", flat=True), datatype=XSD.string
+        literal=allf.values_list("name", flat=True), datatype=XSD.string,
+        iterate=True
     )
     for feature in allf:
         if context["scope"] != "export":

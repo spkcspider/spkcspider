@@ -7,7 +7,6 @@ from urllib.parse import quote_plus
 
 from datetime import timedelta
 
-
 from django.contrib.auth.mixins import AccessMixin
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
@@ -598,7 +597,7 @@ class ReferrerMixin(object):
             except TokenCreationError:
                 logging.exception("Token creation failed")
                 return HttpResponseServerError(
-                    _("Token creation failed, try again")
+                    "Token creation failed, try again"
                 )
             context["post_success"] = False
             ret = self.refer_with_post(context, token)
