@@ -164,9 +164,10 @@ class SpiderTag(BaseContent):
         ]
 
     def get_template_name(self, scope):
-        if scope == "update":
+        # TODO: unprefix if ready
+        if settings.DEBUG and scope == "update":
             return 'spider_tags/edit_form.html'
-        elif scope == "push_update":
+        if scope == "push_update":
             return 'spider_base/edit_form.html'
         return super().get_template_name(scope)
 
@@ -197,7 +198,7 @@ class SpiderTag(BaseContent):
         return _abilities
 
     def access_request_verification(self, **kwargs):
-        if not kwargs["request"].method == "POST":
+        if kwargs["request"].method != "POST":
             return HttpResponse(status=405)
         verifier = kwargs["request"].POST.get("url", "")
         if not get_settings_func(

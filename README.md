@@ -137,15 +137,12 @@ LogFormat "%h %l %u %t \"%m %U %H\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" c
 
 # API
 
-Note: there are some migration breaks. Especially to unbreak mysql. Should not happen after tests are integrated
-
-
 ## authentication/privileges
 
 * request.is_staff: requesting user used staff rights to access view (not true in ComponentPublicIndex)
 * request.is_owner: requesting user owns the components
 * request.is_special_user: requesting user owns the components or is_staff
-* request.protections: int: enough protections were fullfilled, max strength, list: protections which failed, False: no access, no matter what
+* request.protections: int: enough protections were fullfilled, maximal measured strength, list: protections which failed, False: no access; access with protections not possible
 
 ## Special Scopes
 
@@ -212,26 +209,26 @@ Otherwise security could be compromised.
 ## Important Features
 
 * Persistence: Allow referrer to save data (used and activated by persistent features)
-* WebConfig: Allow remote websites to save config data on your server (requires Persistence)
+* WebConfig: Allow remote websites and servers to save config data on your server (requires Persistence)
 
 
 # TODO
-* Verified_by: full url including hash
-  * requires confirmation by verify
 * examples
 * documentation
+* tags: push to verifier, unprefix if ready
+* layouts
+* (travis?) tests for other dbs
 
 ## Later
-* Fix TravelProtection
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
 * govAnchor
 * messages instead error
 * create client side script for import (pushing to server, index token for auth?)
-* encrypted files/text
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
+* Travelprotection
 
 
 ### Implement Web Comments
@@ -250,10 +247,10 @@ Otherwise security could be compromised.
 * Webreferences can contain cache
 * can optionally contain tags used for encryption and/or refcounting for automatic deletion
 
-### implement TravelProtection new
+### re-implement TravelProtection
 * hide contents
-* fake_index?
-* also: encrypt pws
+* remove fake_index?
+* also: harden pws
 
 
 # Thanks
