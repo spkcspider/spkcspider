@@ -218,6 +218,7 @@ Otherwise security could be compromised.
 * tags: push to verifier, unprefix if ready
 * layouts
 * (travis?) tests for other dbs
+* improve default tag validators to prevent request spams by weak validators
 
 ## Later
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)

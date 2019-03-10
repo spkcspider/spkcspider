@@ -133,7 +133,7 @@ class SpiderTag(BaseContent):
         },
         {
             "name": "PushedTag",
-            "strength": 0,
+            "strength": 2,
             "ctype": VariantType.feature + VariantType.domain_mode
         }
     ]

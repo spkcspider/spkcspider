@@ -60,8 +60,13 @@ def clean_verifier(view, request):
     url = request.auth_token.referrer.url
     if request.method == "POST":
         url = request.POST.get("url", "")
+        if not url.startswith(request.auth_token.referrer.url):
+            return False
     if "://" not in url:
         return False
+    if request.method == "GET":
+        # don't spam verifier
+        return True
     try:
         resp = requests.get(url, stream=True, verify=certifi.where())
         resp.close()
