@@ -22,7 +22,7 @@
 {% endblock %}
 
 {% block main_classes %}{{block.super}}{% if scope == "add" %} w3-animate-bottom{% endif %}{% endblock %}
-{% block main_attributes %}resource="{{ request.path }}" typeof="spkc:Content"{% endblock %}
+{% block main_attributes %}{{block.super}}resource="{{ request.path }}" typeof="spkc:Content"{% endblock %}
 
 {% block content %}
   {% if scope != "add" and feature_type in object.ctype.ctype %}
@@ -99,11 +99,13 @@
       <data hidden="hidden" rel="spkc:properties">
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
-          <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{object.info}}</data>
+          <data hidden="hidden" property="spkc:value"
+          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data> datatype="xsd:string">{{object.info}}</data>
         </data>
         {% if uc.primary_anchor %}
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">primary_anchor</data>
+          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
           <data hidden="hidden" property="spkc:value" datatype="xsd:anyURI">{{hostpart}}{{uc.primary_anchor.get_absolute_url}}</data>
         </data>
         {% endif %}
@@ -114,16 +116,26 @@
         </data>
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
+          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
+          <data rel="spkc:value">
             {% for f in uc.features.all %}
-              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{f.name}}</data>
+              <data hidden="hidden" datatype="xsd:string">{{f.name}}</data>
+            {% empty %}
+              <data hidden="hidden" resource="rdf:nil"></data>
             {% endfor %}
           </data>
+        </data>
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">intentions</data>
-          {% for i in intentions %}
-            <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{i}}</data>
-          {% endfor %}
+          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
+          <data rel="spkc:value">
+            {% for i in intentions %}
+              <data hidden="hidden" datatype="xsd:string">{{i}}</data>
+            {% empty %}
+              <data hidden="hidden" resource="rdf:nil"></data>
+            {% endfor %}
           </data>
+        </data>
       </data>
     {% endif %}
     {% if request.token_expires %}

@@ -20,6 +20,7 @@ from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.verifier.validate import validate
 from spkcspider.apps.verifier.models import DataVerificationTag
+from spkcspider.apps.spider_tags.models import SpiderTag
 
 from tests.referrerserver import create_referrer_server
 
@@ -210,5 +211,19 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         # now check if checked date is in rdf annotated html page
         self.assertIn(
             (None, spkcgraph["verified"], Literal(tag.checked)),
+            g
+        )
+
+        # check if verifier is entered in verified_urls
+        response = self.app.get(SpiderTag.objects.first().get_absolute_url())
+        g = Graph()
+        g.parse(data=response.text, format="html")
+        # now check if checked date is in rdf annotated html page
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal(verification_location, datatype=XSD.anyURI)
+            ),
             g
         )

@@ -93,7 +93,7 @@ class DataVerificationTag(models.Model):
                 )
             }
             try:
-                resp = requests.post(vurl, body, verify=certifi.where())
+                resp = requests.post(vurl, data=body, verify=certifi.where())
             except requests.exceptions.ConnectionError:
                 raise exceptions.ValidationError(
                     _('invalid url: %(url)s'),

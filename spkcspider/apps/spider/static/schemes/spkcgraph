@@ -21,7 +21,11 @@ spkc:type a rdf:value ;
   rdfs:label "type" ;
   rdfs:comment "The type of an Entity." ;
   rdfs:domain spkc:Entity ;
-  rdfs:range rdfs:Literal .
+  rdfs:subClassOf rdfs:Container; 
+  rdfs:range (
+    rdfs:Literal
+    rdf:nil
+  ) .
 
 spkc:strength a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

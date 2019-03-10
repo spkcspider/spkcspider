@@ -330,11 +330,11 @@ class UCTestMixin(UserTestMixin):
         return super(UCTestMixin, self).dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        # for protections
+        # for protections & contents
         return self.get(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
-        # for protections
+        # for protections & contents
         return self.get(request, *args, **kwargs)
 
 

@@ -3,4 +3,4 @@
 
 {% block main_classes %}{{block.super}} w3-content w3-card-4 w3-sand{% endblock %}
 {% block body_class %}{{block.super}} w3-light-grey{% endblock %}
-{% block main_attributes %}{{block.super}} prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema#" resource="{{hostpart}}{{ request.path }}"{% endblock %}
+{% block main_attributes %}{{block.super}} prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema# rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#" resource="{{hostpart}}{{ request.path }}"{% endblock %}

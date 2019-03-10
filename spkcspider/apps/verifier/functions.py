@@ -61,6 +61,7 @@ def domain_auth(source, hostpart):
         if settings.DEBUG:
             logging.exception("domain_auth failed")
         ret = False
+    # other or own update_secret was successful or url has problems
     source.refresh_from_db()
     return ret
 

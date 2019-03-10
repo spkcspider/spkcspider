@@ -3,16 +3,13 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
 from django.urls import reverse
+from django.http import HttpResponse
 
 from jsonfield import JSONField
-
-import requests
-import certifi
 
 from spkcspider.apps.spider.contents import (
     BaseContent, add_content, VariantType, ActionUrl
@@ -154,11 +151,6 @@ class SpiderTag(BaseContent):
             ActionUrl(reverse("spider_tags:create-pushtag"), "pushtag")
         ]
 
-    def get_template_name(self, scope):
-        if scope in ["add", "update", "push_update"]:
-            return 'spider_tags/edit_form.html'
-        return 'spider_tags/view_form.html'
-
     def get_size(self):
         return len(str(self.tagdata).encode("utf8"))
 
@@ -173,7 +165,7 @@ class SpiderTag(BaseContent):
         ):
             if get_settings_func(
                 "SPIDER_TAG_VERIFIER_VALIDATOR",
-                "spkcspider.apps.spider.functions.allow_all_filter"
+                "spkcspider.apps.spider.functions.verify_verifier_urls"
             )(self, context["request"]):
                 _abilities.add("verify")
             if self.updateable_by.filter(
@@ -183,26 +175,19 @@ class SpiderTag(BaseContent):
 
         return _abilities
 
+    @csrf_exempt
     def access_verify(self, **kwargs):
         # full url to result
         verified = kwargs["request"].POST.get("url", "")
-        if verified == "":
-            return HttpResponse(status_code=400)
-        if not verified.startswith(kwargs["request"].auth_token.referrer.url):
-            raise PermissionDenied()
+        if "://" not in verified:
+            return HttpResponse("invalid url", status=400)
         if verified in self.verified_by:
-            return self.access_view(self, **kwargs)
-        resp = requests.get(
-            verified,
-            verify=certifi.where()
-        )
-        if resp.status_code != 200:
-            return HttpResponse(status_code=400)
+            return self.access_view(**kwargs)
         self.verified_by.append(verified)
         self.clean()
         self.save()
 
-        return self.access_view(self, **kwargs)
+        return self.access_view(**kwargs)
 
     def access_push_update(self, **kwargs):
         kwargs["legend"] = _("Update \"%s\" (push)") % self.__str__()

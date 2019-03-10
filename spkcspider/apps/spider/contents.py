@@ -14,12 +14,13 @@ from django.core.files.base import File
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.http import Http404
 from django.db.utils import IntegrityError
-
+from django.middleware.csrf import CsrfViewMiddleware
 from django.contrib.contenttypes.fields import GenericRelation
 from django.http import HttpResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 from django.contrib import messages
+from django.views.decorators.csrf import csrf_exempt
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD
 
@@ -586,6 +587,7 @@ class BaseContent(models.Model):
     def access_export(self, **kwargs):
         return self.render_serialize(**kwargs)
 
+    @csrf_exempt
     def access_default(self, **kwargs):
         raise Http404()
 
@@ -598,11 +600,19 @@ class BaseContent(models.Model):
         func = self.access_default
         if context["scope"] == "view" and "raw" in context["request"].GET:
             context["scope"] = "raw"
-            return self.render_serialize(**context)
+            func = self.render_serialize
         elif context["scope"] in default_abilities:
             func = getattr(self, "access_{}".format(context["scope"]))
         elif context["scope"] in context["abilities"]:
             func = getattr(self, "access_{}".format(context["scope"]))
+
+        # check csrf tokens manually
+        if not getattr(func, "csrf_exempt", False):
+            csrferror = CsrfViewMiddleware().process_view(
+                context["request"], None, (), {}
+            )
+            if csrferror is not None:
+                return csrferror
         return func(**context)
 
     def get_info(self, unique=None, unlisted=None):

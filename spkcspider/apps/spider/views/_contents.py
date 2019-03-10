@@ -17,6 +17,8 @@ from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.contrib import messages
 from django.utils.translation import gettext
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from next_prev import next_in_order, prev_in_order
 
@@ -486,6 +488,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 
         return None
 
+    @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         _scope = kwargs["access"]
         # special scopes which should be not available as url parameter

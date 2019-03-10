@@ -2,7 +2,7 @@ __all__ = [
     "rate_limit_default", "allow_all_filter",
     "embed_file_default", "has_admin_permission",
     "LimitedTemporaryFileUploadHandler", "validate_url_default",
-    "get_quota", "validate_payment_default"
+    "get_quota", "validate_payment_default", "verify_verifier_urls"
 ]
 
 import time
@@ -10,6 +10,9 @@ import base64
 import logging
 from decimal import Decimal
 from urllib.parse import urlsplit
+
+import requests
+import certifi
 
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
@@ -42,6 +45,23 @@ def allow_all_filter(*args, **kwargs):
 
 def get_quota(user, quota_type):
     return getattr(user, "quota_{}".format(quota_type), None)
+
+
+def verify_verifier_urls(view, request):
+    if not request.auth_token:
+        return False
+    url = request.auth_token.referrer
+    if request.method == "POST":
+        url = request.POST.get("url", "")
+    if "://" not in url:
+        return False
+    try:
+        resp = requests.head(url, stream=True, verify=certifi.where())
+        resp.close()
+        resp.raise_for_status()
+    except Exception:
+        return False
+    return True
 
 
 def validate_payment_default(amountstr, cur):

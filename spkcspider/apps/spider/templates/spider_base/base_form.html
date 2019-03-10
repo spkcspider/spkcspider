@@ -17,13 +17,27 @@
             <div class="w3-text-grey w3-tiny">(optional)</div>{% endif %}
           {% endcomment %}
           {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
+            <data hidden="hidden" rel="spkc:value">
             {% for q in field.value %}
-              {% literalize q as LiteralData %}
-              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+              {% literalize q field as LiteralData %}
+              {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
+                {% if LiteralData|is_uriref %}
+                  <data hidden="hidden" resource="{{LiteralData}}"></data>
+                {% else %}
+                  <data hidden="hidden"  datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+                {% endif %}
+              {% endif %}
+            {% empty %}
+              <data hidden="hidden" resource="rdf:nil"></data>
             {% endfor %}
+            </data>
           {% else %}
             {% literalize field as LiteralData %}
-            <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+            {% if LiteralData|is_uriref %}
+              <data hidden="hidden" resource="{{LiteralData}}"></data>
+            {% else %}
+              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+            {% endif %}
           {% endif %}
           {% block form_widget %}
           {% if field|widget_type == "checkboxselectmultiple" %}

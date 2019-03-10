@@ -26,7 +26,7 @@ from .validate import valid_wait_states, async_validate
 
 class CreateEntry(UpdateView):
     # NOTE: this class is csrf_exempted
-    # reason for this are upload stops and cross post requests
+    # reason for this are cross post requests
     model = DataVerificationTag
     form_class = CreateEntryForm
     template_name = "spider_verifier/dv_form.html"
@@ -96,15 +96,15 @@ class CreateEntry(UpdateView):
             except Exception:
                 return HttpResponse(400)
             ob = VerifySourceObject.objects.filter(
-                url=payload.get("url"),
-                update_secret=payload.get("update_secret", "x")
+                url=payload.get("url", [None])[0],
+                update_secret=payload.get("update_secret", ["x"])[0]
             ).first()
             if ob:
                 GET = parse_qs(ob.get_params)
                 GET["token"] = request.POST["token"]
                 ob.get_params = urlencode(GET)
                 ob.update_secret = None
-                ob.save(update_fields=["get_params", "ob.update_secret"])
+                ob.save(update_fields=["get_params", "update_secret"])
                 return HttpResponse(200)
             return HttpResponse(404)
         form = self.get_form()
