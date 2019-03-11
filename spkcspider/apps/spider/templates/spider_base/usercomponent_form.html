@@ -119,7 +119,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
                   {% endif %}
                 </td>
                 <td>
-                  <input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="{{token.id}}"></input>
+                  <input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="{{token.id}}"/>
                 </td>
               </tr>
             {% endfor %}
@@ -129,7 +129,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             <td></td><td></td>
             <td>
               {# onchange would be also triggered by reset, so use click instead #}
-              <input style="margin-left:10px" id="deleteAllSelector" type="checkbox" onclick='toggleAll(this);'></input>
+              <input style="margin-left:10px" id="deleteAllSelector" type="checkbox" onclick='toggleAll(this);'/>
             </td>
           </tr>
         </tbody>

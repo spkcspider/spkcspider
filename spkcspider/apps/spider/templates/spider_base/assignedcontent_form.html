@@ -3,7 +3,7 @@
 
 {% block render_content %}
 {% include "spider_base/form_errors.html" with form=form %}
-<form class="w3-padding" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
+<form class="w3-padding" id="main_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}
   <fieldset style="width:100%">
     <legend><h2>{% trans 'Content Settings' %}</h2></legend>
@@ -15,26 +15,31 @@
       {{content.0|safe}}
     </fieldset>
   {% endif %}
-  <button class="w3-button w3-grey">
-    {% if scope == "add" %}
-      {% trans 'Create' %}
-    {% else %}
-      {% trans 'Update' %}
+  <div class="w3-padding">
+    <button class="w3-button w3-grey">
+      {% if scope == "add" %}
+        {% trans 'Create' %}
+      {% else %}
+        {% trans 'Update' %}
+      {% endif %}
+    </button>
+    {% if scope == "update" and raw_update_type in object.ctype.ctype %}
+      <a class="w3-button w3-grey" onclick="if(document.readyState === 'complete'){open_qrmodal_raw_update();}; return false;" href="#">
+        <i class="fas fa-settings" aria-hidden="true"></i>
+        {% trans 'Update Raw Content' %}
+      </a>
     {% endif %}
-  </button>
-  {% if scope == "update" and raw_update_type in object.ctype.ctype %}
-    <a class="w3-button w3-grey" onclick="if(document.readyState === 'complete'){open_qrmodal_raw_update();}; return false;" href="#">
-      <i class="fas fa-settings" aria-hidden="true"></i>
-      {% trans 'Update Raw Content' %}
-    </a>
-  {% endif %}
 
-  {% if scope != "add" %}
-    <a class="w3-right" href="{% url 'spider_base:ucontent-access' token=object.token access='view' %}?{{request.GET.urlencode}}">
-      {% trans "View" %}
-    </a>
-  {% endif %}
+    {% if scope != "add" %}
+      <a class="w3-right" href="{% url 'spider_base:ucontent-access' token=object.token access='view' %}?{{request.GET.urlencode}}">
+        {% trans "View" %}
+      </a>
+    {% endif %}
+  </div>
 </form>
+{% for i in extra_outer_forms %}
+<form id="{{i}}" method="post" hidden="hidden"></form>
+{% endfor %}
 {% endblock %}
 
 

@@ -215,10 +215,10 @@ Otherwise security could be compromised.
 # TODO
 * examples
 * documentation
-* tags: push to verifier, unprefix if ready
+* check and test referenced_by trees 
 * layouts
 * (travis?) tests for other dbs
-* improve default tag validators to prevent request spams by weak validators
+* improve default tag validators to prevent ddos gadgets by weak validators
 
 ## Later
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)

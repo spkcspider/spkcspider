@@ -55,7 +55,7 @@ class TagTest(TransactionWebTest):
         form["layout"].value = "address"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.form
+        form = response.forms[0]
         form["tag/name"] = "Alouis Alchemie AG"
         form["tag/place"] = "Holdenstreet"
         form["tag/street_number"] = "40C"
@@ -64,10 +64,11 @@ class TagTest(TransactionWebTest):
         form["tag/country_code"] = "de"
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        form = response.form
+        # test updates
+        form = response.forms[0]
         form["tag/country_code"] = "dedsdlsdlsd"
         response = form.submit()
-        form = response.form
+        form = response.forms[0]
         self.assertEqual(form["tag/country_code"].value, "dedsdlsdlsd")
         response = response.click(
             href=home.contents.first().get_absolute_url("view"), index=0
@@ -77,7 +78,7 @@ class TagTest(TransactionWebTest):
         response = response.click(
             href=home.contents.first().get_absolute_url("update")
         )
-        form = response.form
+        form = response.forms[0]
         self.assertEqual(form["tag/country_code"].value, "de")
 
         response2 = response.goto("{}?raw=true".format(

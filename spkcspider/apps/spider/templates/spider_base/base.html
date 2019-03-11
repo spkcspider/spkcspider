@@ -123,7 +123,7 @@
         </div>
       </header>
       {% endblock headerbar %}
-      <main class="cond-top-fix {% block main_classes %}{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
+      <main class="cond-top-fix{% block main_classes %}{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
       {% block messages %}
         {% if messages %}
           <ul class="messagelist w3-ul w3-padding">{% for message in messages %}

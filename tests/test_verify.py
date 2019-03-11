@@ -11,50 +11,18 @@ from django.contrib.staticfiles.testing import LiveServerTestCase
 from django.urls import reverse
 
 from rdflib import Graph, Literal, XSD
-from celery import uuid
 
-from django_webtest import WebTestMixin, DjangoTestApp
+from django_webtest import WebTestMixin
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
-from spkcspider.apps.verifier.validate import validate
 from spkcspider.apps.verifier.models import DataVerificationTag
-from spkcspider.apps.spider_tags.models import SpiderTag
+from spkcspider.apps.spider_tags.models import SpiderTag, TagLayout
 
 from tests.referrerserver import create_referrer_server
-
+from tests.helpers import LiveDjangoTestApp, MockAsyncValidate
 # Create your tests here.
-
-
-class LiveDjangoTestApp(DjangoTestApp):
-    def __init__(self, url, *args, **kwargs):
-        super(DjangoTestApp, self).__init__(url, *args, **kwargs)
-
-
-class MockAsyncValidate(object):
-    value_captured = frozenset()
-    task_id = None
-    tasks = {}
-
-    @classmethod
-    def AsyncResult(cls, task_id, *args, **kwargs):
-        return cls.tasks[task_id]
-
-    def successful(self):
-        return True
-
-    @classmethod
-    def apply_async(cls, *args, **kwargs):
-        self = cls()
-        self.value_captured = kwargs["args"]
-        self.task_id = uuid()
-        cls.tasks[self.task_id] = self
-        return self
-
-    def get(self, *args, **kwargs):
-        ret = validate(*self.value_captured)
-        return ret.get_absolute_url()
 
 
 class VerifyTest(WebTestMixin, LiveServerTestCase):
@@ -115,11 +83,11 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         response = response.follow()
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
-        form = response.form
+        form = response.forms[0]
         form["layout"].value = "address"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.form
+        form = response.forms[0]
         form["tag/name"] = "Alouis Alchemie AG"
         form["tag/place"] = "Holdenstreet"
         form["tag/street_number"] = "40C"
@@ -135,7 +103,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         self.assertTrue(url)
         url = url.attrs["href"]
         self.assertIn(home.contents.first().get_absolute_url(), url)
-        # must be after retrieving link
+        # execute after retrieving link
         response = response.click(
             href=url, index=0
         )
@@ -225,5 +193,78 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
                 spkcgraph["value"],
                 Literal(verification_location, datatype=XSD.anyURI)
             ),
+            g
+        )
+
+    @patch(
+        "spkcspider.apps.verifier.views.async_validate",
+        new=MockAsyncValidate
+    )
+    def test_request_verify(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        verifierurl = "{}{}".format(
+            self.live_server_url,
+            reverse("spider_verifier:create")
+        )
+        TagLayout.objects.filter(name="address").update(
+            default_verifiers=[verifierurl]
+        )
+        self.assertTrue(home)
+        self.app.set_user(user="testuser1")
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "SpiderTag"
+            }
+        )
+        # login in live system first
+        response = self.app.get(reverse(
+            "auth:login"
+        ))
+        # required for csrf cookie
+        self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit()
+        self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
+        response = response.follow()
+        response = self.app.get(createurl)
+        self.assertEqual(response.status_code, 200)
+        form = response.form
+        form["layout"].value = "address"
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
+        form = response.forms[0]
+        form["tag/name"] = "Alouis Alchemie AG2"
+        form["tag/place"] = "Holdenstreet"
+        form["tag/street_number"] = "40C"
+        form["tag/city"] = "Liquid-City"
+        form["tag/post_code"] = "123456"
+        form["tag/country_code"] = "de"
+        response = form.submit()
+        self.assertEqual(response.status_code, 200)
+
+        with override_settings(DEBUG=True):
+            form = response.forms[1]
+            response = form.submit().follow().follow()
+        self.assertEqual(response.status_code, 200)
+        g = Graph()
+        g.parse(data=response.text, format="html")
+        self.assertIn(
+            (
+                None, spkcgraph["hash.algorithm"], Literal(
+                    getattr(
+                        settings, "VERIFICATION_HASH_ALGORITHM",
+                        settings.SPIDER_HASH_ALGORITHM
+                    ).name,
+                    datatype=XSD.string
+                )
+            ),
+            g
+        )
+        self.assertIn(
+            (None, spkcgraph["verified"], Literal(False)),
             g
         )

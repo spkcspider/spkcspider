@@ -145,8 +145,6 @@ def generate_form(name, layout):
             super().__init__(
                 initial=_initial, **kwargs
             )
-            self.fields["verified_by"].choices = \
-                map(lambda x: (x, x), self.instance.layout.default_verifiers)
 
             for field in self.fields.values():
                 if hasattr(field, "queryset"):

@@ -10,12 +10,22 @@ from urllib.parse import urljoin
 from django.http import Http404
 from django.core.paginator import InvalidPage, Paginator
 from django.utils.translation import gettext as _
+from django.db.models import Q
 
 from rdflib import URIRef, Literal, XSD
 
 
 from .constants.static import spkcgraph, VariantType
 from .helpers import merge_get_url, add_property
+
+
+# TODO replace by proper tree search (connect by/recursive query)
+def references_q(ids, limit):
+    ids = set(ids)
+    q = Q()
+    for i in range(0, limit+1):
+        q |= Q(**{"{}id__in".format("referenced_by__"*i): ids})
+    return q
 
 
 def serialize_content(graph, content, context, embed=False):
@@ -151,22 +161,12 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
             usercomponent__in=query
         )
     if query.model == AssignedContent:
-        length = len(query)
-        count = 0
-        while True:
-            query = query.union(
-                AssignedContent.objects.filter(referenced_by__in=query)
+        query = AssignedContent.objects.filter(
+            references_q(
+                query.values_list("id", flat=True),
+                limit_depth or 30
             )
-            if len(query) != length:
-                length = len(query)
-                count += 1
-                if limit_depth and count > limit_depth:
-                    logging.warning(
-                        "Content references exceeded allowed depth"
-                    )
-                    break
-            else:
-                break
+        )
         query = query.order_by("usercomponent__id", "id")
     else:
         query = query.order_by("id")

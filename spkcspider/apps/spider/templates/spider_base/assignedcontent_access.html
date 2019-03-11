@@ -22,7 +22,7 @@
 {% endblock %}
 
 {% block main_classes %}{{block.super}}{% if scope == "add" %} w3-animate-bottom{% endif %}{% endblock %}
-{% block main_attributes %}{{block.super}}resource="{{ request.path }}" typeof="spkc:Content"{% endblock %}
+{% block main_attributes %}{{block.super}} typeof="spkc:Content"{% endblock %}
 
 {% block content %}
   {% if scope != "add" and feature_type in object.ctype.ctype %}
@@ -99,8 +99,8 @@
       <data hidden="hidden" rel="spkc:properties">
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
-          <data hidden="hidden" property="spkc:value"
-          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data> datatype="xsd:string">{{object.info}}</data>
+          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
+          <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{object.info}}</data>
         </data>
         {% if uc.primary_anchor %}
         <data hidden="hidden" typeof="spkc:Property">

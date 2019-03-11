@@ -1,8 +1,6 @@
 
 import logging
 
-from django.conf import settings
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -10,23 +8,19 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
-from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 
-import requests
-import certifi
 
 from jsonfield import JSONField
 
-from spkcspider.apps.spider.constants import TokenCreationError
 from spkcspider.apps.spider.contents import (
     BaseContent, add_content, VariantType, ActionUrl
 )
-from spkcspider.apps.spider.helpers import get_settings_func, merge_get_url
+from spkcspider.apps.spider.helpers import get_settings_func
 
-from spkcspider.apps.spider.models import (
-    AssignedContent, AuthToken, ReferrerObject
-)
+from spkcspider.apps.spider.models import AssignedContent
+
+
 CACHE_FORMS = {}
 
 logger = logging.getLogger(__name__)
@@ -164,8 +158,7 @@ class SpiderTag(BaseContent):
         ]
 
     def get_template_name(self, scope):
-        # TODO: unprefix if ready
-        if settings.DEBUG and scope == "update":
+        if scope == "update":
             return 'spider_tags/edit_form.html'
         if scope == "push_update":
             return 'spider_base/edit_form.html'
@@ -179,8 +172,6 @@ class SpiderTag(BaseContent):
 
     def get_abilities(self, context):
         _abilities = set()
-        if context["request"].is_special_user:
-            _abilities.add("request_verification")
         if (
             context["request"].auth_token and
             context["request"].auth_token.referrer
@@ -196,52 +187,6 @@ class SpiderTag(BaseContent):
                 _abilities.add("push_update")
 
         return _abilities
-
-    def access_request_verification(self, **kwargs):
-        if kwargs["request"].method != "POST":
-            return HttpResponse(status=405)
-        verifier = kwargs["request"].POST.get("url", "")
-        if not get_settings_func(
-            "SPIDER_TAG_VERIFY_REQUEST_VALIDATOR",
-            "spkcspider.apps.spider.functions.clean_verifier_url"
-        )(self, verifier):
-            return HttpResponse("invalid verifier", status=400)
-        try:
-            token = AuthToken(
-                referrer=ReferrerObject.objects.get_or_create(
-                    url=verifier
-                )[0]
-            )
-            token.save()
-            body = {
-                "url": merge_get_url(
-                    self.get_absolute_url(), token=token.token
-                )
-            }
-            resp = requests.post(
-                verifier, data=body, verify=certifi.where(),
-                allow_redirects=False
-            )
-            resp.raise_for_status()
-        except TokenCreationError:
-            if settings.DEBUG:
-                logger.exception("Token creation failed")
-            messages.error(kwargs["request"], 'Token creation failed')
-            return HttpResponseRedirect(
-                redirect_to=self.get_absolute_url()
-            )
-        except Exception:
-            if settings.DEBUG:
-                logger.exception("Other Error")
-            messages.error(kwargs["request"], 'Request verification failed')
-            token.delete()
-            return HttpResponseRedirect(
-                redirect_to=self.get_absolute_url()
-            )
-        else:
-            return HttpResponseRedirect(
-                redirect_to=resp.url
-            )
 
     @csrf_exempt
     def access_verify(self, **kwargs):
@@ -261,6 +206,10 @@ class SpiderTag(BaseContent):
         kwargs["legend"] = _("Update \"%s\" (push)") % self.__str__()
         kwargs["inner_form"] = False
         return self.access_update(**kwargs)
+
+    def access(self, context):
+        context["extra_outer_forms"] = ["request_verification_form"]
+        return super().access(context)
 
     def get_form(self, scope):
         from .forms import SpiderTagForm

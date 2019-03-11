@@ -5,7 +5,7 @@
 {% endblocktrans %}{% elif request.is_owner %}{% blocktrans trimmed %}
   Owned Components
 {% endblocktrans %}{% else %}{% blocktrans trimmed with name=username %}
-    Component List of {{name}}
+    Components of {{name}}
   {% endblocktrans %}
 {% endif %}{% endblock %}
 

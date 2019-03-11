@@ -30,7 +30,7 @@
     <span class="w3-left">
       {% if request.user == uc.user or request.is_staff %}
         <a class="w3-block" style="margin-bottom:5px" href="{% if request.is_owner %}{% url 'spider_base:ucomponent-list' %}{% else %}{% url 'spider_base:ucomponent-list' user=uc.user %}{% endif %}">
-          <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
+          <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% if request.user == uc.user %}{% trans 'Owned' %}{% else %}{% trans 'Owned by user' %}{% endif %}
         </a>
       {% endif %}
       <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-listpublic' %}">
@@ -51,7 +51,7 @@
       </div>
     </span>
     <h1 class="w3-center">
-      {% if request.is_owner or uc.public %}
+      {% if request.is_special_user or uc.public %}
         {% blocktrans trimmed %}
           Content of:
         {% endblocktrans %} <b>{{uc}}</b> <em>({{uc.user}})</em>

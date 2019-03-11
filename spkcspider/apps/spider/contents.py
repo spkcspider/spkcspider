@@ -597,6 +597,7 @@ class BaseContent(models.Model):
         # context is updated and used outside!!
         # so make sure that func gets only a copy (**)
         context["abilities"] = set(self.get_abilities(context))
+        context.setdefault("extra_outer_forms", [])
         func = self.access_default
         if context["scope"] == "view" and "raw" in context["request"].GET:
             context["scope"] = "raw"
