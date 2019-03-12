@@ -27,9 +27,9 @@ from rdflib import Literal, Graph, BNode, URIRef, XSD
 from .constants.static import VariantType, spkcgraph, ActionUrl
 from .serializing import paginate_stream, serialize_stream
 from .helpers import (
-    merge_get_url, get_settings_func, add_property, create_b64_id_token
+    get_settings_func, add_property, create_b64_id_token
 )
-
+from .templatetags.spider_rdf import literalize
 
 installed_contents = {}
 
@@ -283,18 +283,18 @@ class BaseContent(models.Model):
             instance = kwargs["form"].save(False)
             try:
                 self.update_used_space(
-                    kwargs["form"].instance.get_size() - old_size
+                    instance.get_size() - old_size
                 )
             except ValidationError as exc:
                 kwargs["form"].add_error(None, exc)
                 messages.error(
-                    kwargs["request"], _('Space Exhausted.')
+                    kwargs["request"], _('Space exhausted')
                 )
         if kwargs["form"].is_valid():
             instance.save()
             kwargs["form"].save_m2m()
             messages.success(
-                kwargs["request"], _('Content updated.')
+                kwargs["request"], _('Content updated')
             )
             kwargs["form"] = self.get_form(scope)(
                 **self.get_form_kwargs(
@@ -326,26 +326,13 @@ class BaseContent(models.Model):
     def get_references(self):
         return []
 
-    def map_data(self, name, data, context):
-        from .models import AssignedContent
-        if isinstance(data, AssignedContent):
-            url = merge_get_url(
-                urljoin(
-                    context["hostpart"],
-                    data.get_absolute_url()
-                ),
-                raw=context["request"].GET["raw"]
-            )
-            return Literal(
-                url,
-                datatype=spkcgraph["hashableURI"],
-            )
-        elif isinstance(data, File):
+    def map_data(self, name, field, data, context):
+        if isinstance(data, File):
             return get_settings_func(
                 "SPIDER_FILE_EMBED_FUNC",
                 "spkcspider.apps.spider.functions.embed_file_default"
             )(name, data, self, context)
-        return Literal(data)
+        return literalize(data, field)
 
     def serialize(self, graph, ref_content, context):
         form = self.get_form(context["scope"])(
@@ -417,7 +404,7 @@ class BaseContent(models.Model):
                 graph.add((
                     value_node,
                     spkcgraph["value"],
-                    self.map_data(name, i, context)
+                    self.map_data(name, field, i, context)
                 ))
 
     def render_serialize(self, **kwargs):

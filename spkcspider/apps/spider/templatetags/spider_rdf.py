@@ -41,13 +41,12 @@ def literalize(ob, datatype=None, use_uriref=None):
         return RDF.nil
     if hasattr(ob, "get_absolute_url"):
         if not datatype:
-            datatype = XSD.anyURI
+            datatype = spkcgraph["hashableURI"]
         if use_uriref is None:
             use_uriref = True
         ob = ob.get_absolute_url()
-    elif isinstance(ob, str):
-        if not datatype:
-            datatype = XSD.string
+    elif isinstance(ob, str) and not datatype:
+        datatype = XSD.string
     if use_uriref:
         return URIRef(ob)
     return Literal(ob, datatype=datatype)

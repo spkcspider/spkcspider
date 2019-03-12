@@ -6,18 +6,17 @@ It keeps your online data safe while shopping by just providing a link to a poti
 
 Further features and advantages of spkcspider are:
 
-* depending services like web stores need not tp save your private data
+* cross device configuration without saving user data on webshop/service.
   This makes them easily DSGVO compatible without adjustments
-  * doing so breaches contain only links to data (which can also be protected)
 * Address Data have to changed only on one place if you move. This is especially useful if you move a lot
   Also if you travel and want to buy something on the way.
 * Verification of data is possible.
-* Privacy: private servers are easily set up (only requirement: cgi), compatible to tor
+* Privacy: private servers are easily set up (only requirement: cgi), also compatible to tor
 * Travelling: some people don't respect common rules for privacy. This tool allows you to keep your digital life private.
   * You don't have it on the device
   * You can hide your data with the travel mode (against the worst kind of inspectors)
     * Note: traces could be still existent (like "recently-used" feature, bookmarks)
-  * for governments: the data can still be acquired by other ways. So why bothering the travel mode and trusting your inspectors blindly?
+  * for governments: use psychology instead of breaking into systems! The only victims are law-abidding citizens.
 
 
 # Installation
@@ -102,7 +101,7 @@ location /cgi-bin/cgihandler.fcgi {
 ### logging
 In this model tokens are transferred as GET parameters. Consider disabling the
 logging of GET parameters (at least the sensible ones) or better:
-disable logging of successfull requests
+disable logging of succeeding requests
 
 
 nginx filter tokens only (hard):
@@ -215,7 +214,7 @@ Otherwise security could be compromised.
 # TODO
 * examples
 * documentation
-* check and test referenced_by trees 
+* check and test referenced_by trees
 * layouts
 * (travis?) tests for other dbs
 * improve default tag validators to prevent ddos gadgets by weak validators

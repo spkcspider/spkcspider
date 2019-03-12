@@ -164,7 +164,7 @@ def embed_file_default(name, value, content, context):
         )
     elif (
         context["scope"] == "export" or
-        getattr(settings, "DIRECT_FILE_DOWNLOAD", False)
+        getattr(settings, "FILE_DIRECT_DOWNLOAD", False)
     ):
         # link always direct to files in exports
         url = value.url

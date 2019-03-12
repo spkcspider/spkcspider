@@ -14,8 +14,6 @@ from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
 from rdflib import XSD
-import requests
-import certifi
 
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
@@ -24,9 +22,8 @@ from spkcspider.apps.spider.fields import OpenChoiceField
 from spkcspider.apps.spider.widgets import OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
 from spkcspider.apps.spider.models import (
-    AssignedContent, ReferrerObject, AuthToken
+    AssignedContent, ReferrerObject
 )
-from spkcspider.apps.spider.constants import TokenCreationError
 from spkcspider.apps.spider.contents import BaseContent
 
 
@@ -39,10 +36,22 @@ class TagLayoutForm(forms.ModelForm):
         model = TagLayout
         fields = ["name", "unique", "layout", "default_verifiers"]
 
-    def __init__(self, uc=None, **kwargs):
-        if "instance" not in kwargs:
-            kwargs["instance"] = self._meta.model(usertag=uc)
-        super().__init__(**kwargs)
+    usertag = None
+
+    def _save_m2m(self):
+        self.instance.usertag = self.usertag
+        self.instance.save()
+        self.instance.usertag.refresh_from_db()
+        return super()._save_m2m()
+
+    def save(self, commit=True):
+        self.usertag = self.instance.usertag
+        if commit:
+            self.usertag.save()
+            self._save_m2m()
+        else:
+            self.save_m2m = self._save_m2m
+        return self.usertag
 
 
 class SpiderTagForm(forms.ModelForm):
@@ -123,7 +132,6 @@ def generate_form(name, layout):
         base_fields = declared_fields
         # used in models
         layout_generating_form = True
-        _get_absolute_url_cache = None
 
         class Meta:
             error_messages = {
@@ -138,7 +146,6 @@ def generate_form(name, layout):
             if not initial:
                 initial = {}
             self.instance = instance
-            self._get_absolute_url_cache = self.instance.get_absolute_url()
             _initial = self.encode_initial(initial)
             _initial["primary"] = getattr(instance, "primary", False)
             _initial["verified_by"] = getattr(instance, "verified_by", [])
@@ -184,21 +191,6 @@ def generate_form(name, layout):
 
         def clean(self):
             super().clean()
-            for i in self.changed_data:
-                if i != "verified_by":
-                    self.instance.verified_by = []
-                    break
-
-            success = []
-            for verifier in self.cleaned_data["verified_by"]:
-                if verifier in self.instance.verified_by:
-                    success.append(verifier)
-                else:
-                    url = self.send_verify_requests(verifier)
-                    if url:
-                        success.append(url)
-
-            self.cleaned_data["verified_by"] = success
 
             _cached_references = []
             for key, value in self.cleaned_data.items():
@@ -261,30 +253,6 @@ def generate_form(name, layout):
                 else:
                     selected_dict[splitted[-1]] = i[1]
             return ret
-
-        def send_verify_requests(self, verifier):
-            verifier = merge_get_url(verifier)
-            token = AuthToken(
-                referrer=verifier,
-                usercomponent=self.instance.usercomponent
-            )
-            try:
-                token.save()
-            except TokenCreationError:
-                return
-            url = merge_get_url(
-                self._get_absolute_url_cache, token=token.token
-            )
-            resp = requests.post(
-                verifier,
-                data={
-                    "url": url
-                },
-                verify=certifi.where()
-            )
-            if resp.status_code == 200:
-                return resp.url
-            return None
 
         def save_m2m(self):
             pass

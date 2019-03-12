@@ -84,6 +84,11 @@ class UserTagLayout(BaseContent):
     def get_size(self):
         return len(str(self.layout.layout).encode("utf8"))
 
+    def get_template_name(self, scope):
+        if scope == "view":
+            return 'spider_base/edit_form.html'
+        return super().get_template_name(scope)
+
     def get_strength_link(self):
         # never allow links to this, elsewise with links is an information
         # disclosure possible
@@ -96,15 +101,11 @@ class UserTagLayout(BaseContent):
         )
 
     def get_form(self, scope):
-        if scope == "add":
+        if scope in ("add", "update"):
             from .forms import TagLayoutForm
             return TagLayoutForm
         else:
-            ret = self.layout.get_form()
-            if scope not in ["update", "raw_update"]:
-                for i in ret.fields:
-                    i.disabled = True
-            return ret
+            return self.layout.get_form()
 
     def access_add(self, **kwargs):
         if not hasattr(self, "layout"):

@@ -1,3 +1,4 @@
+import re
 
 from urllib.parse import parse_qs, urlsplit
 
@@ -9,6 +10,9 @@ from rdflib import Graph, XSD, Literal, URIRef
 import requests
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
+from spkcspider.apps.spider_tags.models import (
+    TagLayout, SpiderTag
+)
 from spkcspider.apps.spider.constants.static import VariantType, spkcgraph
 from spkcspider.apps.spider.models import ContentVariant, AuthToken
 from spkcspider.apps.spider.signals import update_dynamic
@@ -91,7 +95,136 @@ class TagTest(TransactionWebTest):
             g
         )
 
-    # @unittest.expectedFailure
+    def test_user_tag_layout(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        self.assertTrue(index)
+        self.app.set_user(user="testuser1")
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TagLayout"
+            }
+        )
+        response = self.app.get(createurl)
+        form = response.form
+        form["name"] = "foo"
+        form["layout"] = """[
+            {
+                "key": "name",
+                "field": "CharField",
+                "max_length": 12
+            },
+            {
+                "key": "ab",
+                "label": "name2",
+                "field": "CharField",
+                "max_length": 12
+            }
+        ]"""
+        response = form.submit().follow()
+        url = response.html.find(
+            "a",
+            attrs={"href": re.compile(".*view.*")}
+        )
+        self.assertTrue(url)
+        url = url.attrs["href"]
+        response = self.app.get(url)
+        form = response.form
+        self.assertIn("tag/name", form.fields)
+        self.assertIn("tag/ab", form.fields)
+
+    def test_referenced_by(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        self.assertTrue(home)
+        self.app.set_user(user="testuser1")
+        TagLayout.objects.create(
+            name="selfref",
+            layout=[
+                {
+                    "key": "name",
+                    "field": "CharField",
+                    "max_length": 12
+                },
+                {
+                    "key": "ref",
+                    "field": "UserContentRefField",
+                    "modelname": "spider_tags.SpiderTag",
+                    "required": False
+                }
+            ]
+        )
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "SpiderTag"
+            }
+        )
+
+        response = self.app.get(createurl)
+        form = response.form
+        form["layout"].value = "selfref"
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
+        form = response.forms[0]
+        form["tag/name"] = "f1"
+        form.submit()
+        stag = SpiderTag.objects.latest("associated_rel__created")
+
+        response = self.app.get(createurl)
+        form = response.form
+        form["layout"].value = "selfref"
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
+        form = response.forms[0]
+        form["tag/name"] = "f2"
+        form["tag/ref"] = stag.id
+        form.submit()
+
+        stag2 = SpiderTag.objects.latest("associated_rel__created")
+        self.assertNotEqual(stag.id, stag2.id)
+
+        response = self.app.get(createurl)
+        form = response.form
+        form["layout"].value = "selfref"
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
+        form = response.forms[0]
+        form["tag/name"] = "f3"
+        form["tag/ref"] = stag2.id
+        form.submit()
+        stag3 = SpiderTag.objects.latest("associated_rel__created")
+        self.assertNotEqual(stag3.id, stag2.id)
+
+        viewurl = "{}?raw=embed".format(
+            stag3.get_absolute_url()
+        )
+        response = self.app.get(viewurl)
+        g = Graph()
+        g.parse(data=response.text, format="turtle")
+        self.assertIn(
+            (
+                None,
+                None,
+                Literal("f3", datatype=XSD.string)
+            ), g
+        )
+        self.assertIn(
+            (
+                None,
+                None,
+                Literal("f2", datatype=XSD.string)
+            ), g
+        )
+        self.assertIn(
+            (
+                None,
+                None,
+                Literal("f1", datatype=XSD.string)
+            ), g
+        )
+
     @override_settings(DEBUG=True)
     def test_pushed_tags(self):
         home = self.user.usercomponent_set.filter(name="home").first()
@@ -204,6 +337,6 @@ class TagTest(TransactionWebTest):
             g
         )
         self.assertIn(
-            (None, None, Literal("Alouis Alchemie AG")),
+            (None, None, Literal("Alouis Alchemie AG", datatype=XSD.string)),
             g
         )

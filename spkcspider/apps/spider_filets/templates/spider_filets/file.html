@@ -24,6 +24,7 @@
   <div typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name">file</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-    <a property="spkc:value" class="w3-xlarge" href="{{download}}">{% trans "Download" %}</a>
+    <data hidden="hidden" property="spkc:value" datatype="spkc:hashableURI">{{download}}</data>
+    <a class="w3-xlarge" href="{{download}}">{% trans "Download" %}</a>
   </div>
 </div>

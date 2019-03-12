@@ -324,7 +324,9 @@ class UserContentForm(forms.ModelForm):
             q = ~models.Q(name="index")
         else:
             q = ~models.Q(name="fake_index")
-        query = UserComponent.objects.filter(q, user=user)
+        query = UserComponent.objects.filter(
+            q, user=user, strength__gte=self.instance.ctype.strength
+        )
         self.fields["usercomponent"].queryset = query
 
         show_primary_anchor_mig = False
