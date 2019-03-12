@@ -454,6 +454,7 @@ class ContentAdd(ContentBase, CreateView):
         if isinstance(rendered, HttpResponseBase):
             return rendered
         # show framed output
+        assert(isinstance(rendered, (tuple, list)))
         context["content"] = rendered
         # redirect if saving worked
         if getattr(ob, "id", None):
@@ -591,12 +592,8 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
                 context["form"] = self.get_form_class()(
                     **self.get_form_success_kwargs()
                 )
-        else:
-            # return response if content returned response
-            # useful for redirects and raw update
-            # only allow for non-update
-            if isinstance(rendered, HttpResponseBase):
-                return rendered
+        if isinstance(rendered, HttpResponseBase):
+            return rendered
 
         context["content"] = rendered
         return super().render_to_response(context)

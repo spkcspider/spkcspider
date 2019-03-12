@@ -16,7 +16,7 @@ from django.http import Http404
 from django.db.utils import IntegrityError
 from django.middleware.csrf import CsrfViewMiddleware
 from django.contrib.contenttypes.fields import GenericRelation
-from django.http import HttpResponse
+from django.http.response import HttpResponseBase, HttpResponse
 from django.conf import settings
 from django.utils.translation import pgettext
 from django.contrib import messages
@@ -613,8 +613,14 @@ class BaseContent(models.Model):
                 context["request"], None, (), {}
             )
             if csrferror is not None:
+                # csrferror is HttpResponse
                 return csrferror
-        return func(**context)
+        ret = func(**context)
+        if context["scope"] == "update":
+            # update function should never return HttpResponse
+            #  (except csrf error)
+            assert(not isinstance(ret, HttpResponseBase))
+        return ret
 
     def get_info(self, unique=None, unlisted=None):
         # unique=None, feature=None shortcuts for get_info overwrites

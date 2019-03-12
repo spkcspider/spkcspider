@@ -84,6 +84,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
         form = response.forms[0]
+        # url field is incorrectly assigned (but no effect)
         form["layout"].value = "address"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
@@ -248,7 +249,16 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
 
         with override_settings(DEBUG=True):
             form = response.forms[1]
-            response = form.submit().follow().follow()
+            # required until webtest support formaction, form attributes
+            if "url" not in form.fields:
+                form.action = verifierurl
+                form.fields["url"] = response.forms[0].fields["url"]
+                form.field_order.insert(
+                    0,
+                    ("url", form.fields["url"][0])
+                )
+            response = form.submit()
+            response = response.follow().follow()
         self.assertEqual(response.status_code, 200)
         g = Graph()
         g.parse(data=response.text, format="html")
