@@ -47,12 +47,19 @@ class TagLayout(models.Model):
             ("name", "usertag")
         ]
 
+    def full_clean(self, **kwargs):
+        # checked with clean
+        kwargs.setdefault("exclude", []).append("usertag")
+        return super().full_clean(**kwargs)
+
     def clean(self):
         if TagLayout.objects.filter(usertag=None, name=self.name).exists():
             raise ValidationError(
                 _("Layout exists already"),
                 code="unique"
             )
+        if self.usertag:
+            self.usertag.full_clean(exclude=["layout"])
 
     def get_form(self):
         from .forms import generate_form

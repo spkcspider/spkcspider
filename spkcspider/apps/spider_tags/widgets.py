@@ -1,5 +1,6 @@
 __all__ = ["ValidatorWidget", "SchemeWidget"]
 
+import json
 
 from django.forms import widgets
 from django.conf import settings
@@ -40,6 +41,15 @@ class ValidatorWidget(widgets.Textarea):
         )
         return context
 
+    def render(self, name, value, attrs=None, renderer=None):
+        if value is None:
+            value = ""
+        if not isinstance(value, str):
+            value = json.dumps(value, ensure_ascii=False, indent=2)
+
+        return super().render(name, value, attrs, renderer)
+
+
 
 class SchemeWidget(widgets.Textarea):
     template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
@@ -79,3 +89,11 @@ class SchemeWidget(widgets.Textarea):
             context['widget']['attrs']["id"]
         )
         return context
+
+    def render(self, name, value, attrs=None, renderer=None):
+        if value is None:
+            value = ""
+        if not isinstance(value, str):
+            value = json.dumps(value, ensure_ascii=False, indent=2)
+
+        return super().render(name, value, attrs, renderer)

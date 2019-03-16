@@ -36,7 +36,8 @@ document.addEventListener("DOMContentLoaded", function(){
             },
             "nonhashable": {
               "title": "Exclude from verification",
-              "type": "boolean"
+              "type": "boolean",
+              "format": "checkbox"
             },
             "help_text": {
               "title": "Field help text",

@@ -54,11 +54,6 @@ class TagLayoutForm(forms.ModelForm):
 
     usertag = None
 
-    def clean(self):
-        ret = super().clean()
-        self.instance.usertag.full_clean()
-        return ret
-
     def _save_m2m(self):
         self.instance.usertag = self.usertag
         self.instance.save()
