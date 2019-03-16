@@ -92,7 +92,7 @@ class TravelProtectionForm(forms.ModelForm):
 
     class Media:
         js = [
-            'admin/js/vendor/jquery/jquery%s.js' % _extra,
+            'node_modules/jquery/dist/jquery%s.js' % _extra,
             'spider_base/travelprotection.js'
         ]
 

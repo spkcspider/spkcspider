@@ -1,12 +1,5 @@
 
-
-jQuery.noConflict();
-var travel_protection_initialized = false;
-
-jQuery( document ).ready(function( $ ) {
-  if (travel_protection_initialized)
-    return;
-  travel_protection_initialized = true;
+document.addEventListener("DOMContentLoaded", function(){
   if(document.getElementById("id_self_protection").value != "pw"){
     $("#id_new_pw_wrapper").hide();
     $("#id_new_pw2_wrapper").hide();

@@ -26,16 +26,16 @@ class InfoWidget(widgets.Input):
 
 class Select2Multiple(widgets.SelectMultiple):
     class Media:
-        css = {
-            'all': [
-                'node_modules/select2/dist/css/select2.min.css'
-            ]
-        }
         js = [
             'node_modules/jquery/dist/jquery%s.js' % _extra,
             'node_modules/select2/dist/js/select2%s.js' % _extra,
             'spider_base/Select2MultipleWidget.js'
         ]
+        css = {
+            'all': [
+                'node_modules/select2/dist/css/select2%s.css' % _extra
+            ]
+        }
 
     def __init__(self, *, attrs=None, **kwargs):
         if not attrs:
@@ -46,7 +46,7 @@ class Select2Multiple(widgets.SelectMultiple):
 
 
 class TrumbowygWidget(widgets.Textarea):
-    template_name = 'spider_base/forms/widgets/trumbowygwidget.html'
+    template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
 
     class Media:
         css = {

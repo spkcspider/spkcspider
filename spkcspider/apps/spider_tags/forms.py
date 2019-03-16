@@ -2,9 +2,12 @@ __all__ = [
     "TagLayoutForm", "SpiderTagForm", "generate_form",
 ]
 
+import json
+
 import posixpath
 from collections import OrderedDict
 # from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 from django import forms
 
 # from django.apps import apps
@@ -26,17 +29,35 @@ from spkcspider.apps.spider.models import (
 )
 from spkcspider.apps.spider.contents import BaseContent
 
+from .widgets import ValidatorWidget, SchemeWidget
+from .fields import installed_fields
 
 # don't spam set objects
 _empty_set = frozenset()
+
+
+_extra = '' if settings.DEBUG else '.min'
 
 
 class TagLayoutForm(forms.ModelForm):
     class Meta:
         model = TagLayout
         fields = ["name", "unique", "layout", "default_verifiers"]
+        widgets = {
+            "layout": SchemeWidget(
+                attrs={
+                    "field_types": json.dumps(list(installed_fields.keys()))
+                }
+            ),
+            "default_verifiers": ValidatorWidget,
+        }
 
     usertag = None
+
+    def clean(self):
+        ret = super().clean()
+        self.instance.usertag.full_clean()
+        return ret
 
     def _save_m2m(self):
         self.instance.usertag = self.usertag
