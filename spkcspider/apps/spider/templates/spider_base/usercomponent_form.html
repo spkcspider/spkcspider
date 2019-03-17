@@ -18,7 +18,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 {% endblock %}
 {# public_meta not required because it will never be used #}
 
-{% block main_classes %}{% if not object %}{{block.super}}{% else %} w3-content w3-card-4 color-front-{{object.strength}}{% endif %}{% endblock %}
+{% block main_classes %}{% if not object %}{{block.super}}{% else %} w3-card-4 color-front-{{object.strength}}{% endif %}{% endblock %}
 {% block body_class %}{% if not object %}{{block.super}}{% else %} color-back-{{object.strength}}{% endif %}{% endblock %}
 
 

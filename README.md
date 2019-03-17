@@ -57,6 +57,12 @@ pip install .
 npm install
 ~~~~
 
+# Setup
+~~~~.sh
+./manager.py migrate
+./manager.py collectstatic
+~~~~
+
 ## Caveats
 
 Mysql works with some special settings:
@@ -134,36 +140,10 @@ LogFormat "%h %l %u %t \"%m %U %H\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" c
 
 ~~~
 
-# API
-
-## authentication/privileges
-
-* request.is_staff: requesting user used staff rights to access view (not true in ComponentPublicIndex)
-* request.is_owner: requesting user owns the components
-* request.is_special_user: requesting user owns the components or is_staff
-* request.protections: int: enough protections were fullfilled, maximal measured strength, list: protections which failed, False: no access; access with protections not possible
-
-## Special Scopes
-
-* add: create content, with AssignedContent form
-* raw_add: not existent, can be archieved by return response
-* update: update content
-* raw_update: update Content, without AssignedContent form, adds second raw update mode
-* export: export data (import not implemented yet)
-* view: present usercontent to untrusted parties
-
-## strength
-* 0: no protection
-* 1-3: protection strength which can be provided by protections
-* 4: login only, user password
-* 5: public attribute not set
-* 6-8: protections + public attribute not set
-* 9: login only, user password + public attribute not set
-* 10: index, can be used in combination with unique per component attribute for unique content per user
-
 # External usage
 
-There are some special GET parameters for services with special requirements:
+There are special GET parameters for controlling spkcspider:
+* page=<int>: page number
 * token=xy: token as GET parameter, if invalid: retrieve token as GET parameter
 * token=prefer: uses invalid mechanic, easier to see what it does
 * raw=true: optimize output for machines, use turtle format
@@ -209,6 +189,34 @@ Otherwise security could be compromised.
 
 * Persistence: Allow referrer to save data (used and activated by persistent features)
 * WebConfig: Allow remote websites and servers to save config data on your server (requires Persistence)
+
+
+# internal API
+
+## authentication/privileges
+
+* request.is_staff: requesting user used staff rights to access view (not true in ComponentPublicIndex)
+* request.is_owner: requesting user owns the components
+* request.is_special_user: requesting user owns the components or is_staff
+* request.protections: int: enough protections were fullfilled, maximal measured strength, list: protections which failed, False: no access; access with protections not possible
+
+## Special Scopes
+
+* add: create content, with AssignedContent form
+* raw_add: not existent, can be archieved by return response
+* update: update content
+* raw_update: update Content, without AssignedContent form, adds second raw update mode
+* export: export data (import not implemented yet)
+* view: present usercontent to untrusted parties
+
+## strength
+* 0: no protection
+* 1-3: protection strength which can be provided by protections
+* 4: login only, user password
+* 5: public attribute not set
+* 6-8: protections + public attribute not set
+* 9: login only, user password + public attribute not set
+* 10: index, can be used in combination with unique per component attribute for unique content per user
 
 
 # TODO
