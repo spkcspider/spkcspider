@@ -113,12 +113,14 @@ class TagTest(TransactionWebTest):
             {
                 "key": "name",
                 "field": "CharField",
+                "nonhashable": false,
                 "max_length": 12
             },
             {
                 "key": "ab",
                 "label": "name2",
                 "field": "CharField",
+                "nonhashable": false,
                 "max_length": 12
             }
         ]"""
