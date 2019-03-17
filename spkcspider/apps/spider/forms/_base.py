@@ -282,7 +282,7 @@ class UserComponentForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.strength = self.cleaned_data["strength"]
         self.instance.can_auth = self.cleaned_data["can_auth"]
-        # not sure if cleaned_data is used if field is disabled
+        # field maybe not available
         self.instance.allow_domain_mode = \
             self.cleaned_data["allow_domain_mode"]
         return super().save(commit=commit)
@@ -374,9 +374,8 @@ class UserContentForm(forms.ModelForm):
 
     def clean(self):
         super().clean()
-        if not self.cleaned_data["allow_domain_mode"]:
-            self.cleaned_data["allow_domain_mode"] = \
-                VariantType.domain_mode.value in self.instance.ctype.ctype
+        self.cleaned_data["allow_domain_mode"] = \
+            VariantType.domain_mode.value in self.instance.ctype.ctype
         if "features" in self.cleaned_data:
             min_strength = self.cleaned_data["features"].filter(
                 strength__gt=self.instance.usercomponent.strength
@@ -446,6 +445,9 @@ class UserContentForm(forms.ModelForm):
             self.instance.save(update_fields=["token"])
 
     def save(self, commit=True):
+        # field maybe not available
+        self.instance.allow_domain_mode = \
+            self.cleaned_data["allow_domain_mode"]
         if not self.instance.token:
             self.instance.token_generate_new_size = \
                 getattr(settings, "TOKEN_SIZE", 30)
