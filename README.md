@@ -215,6 +215,7 @@ Otherwise security could be compromised.
 * examples
 * documentation
 * layouts
+* use anchor in verification
 * tests for other dbs
 * improve default tag validators to prevent ddos gadgets by weak validators
 

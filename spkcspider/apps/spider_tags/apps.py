@@ -10,7 +10,7 @@ class SpiderTagsConfig(AppConfig):
     name = 'spkcspider.apps.spider_tags'
     label = 'spider_tags'
     spider_url_path = 'spidertags/'
-    verbose_name = 'spkcspider tags optionally verified'
+    verbose_name = 'spkcspider tags'
 
     def ready(self):
         from .fields import installed_fields
