@@ -4,7 +4,6 @@ __all__ = (
 )
 import logging
 from functools import lru_cache
-from urllib.parse import urljoin
 
 from django.apps import apps as django_apps
 from django.db import models, transaction
@@ -253,7 +252,7 @@ class BaseContent(models.Model):
         if size_diff == 0:
             return
         f = "local"
-        if VariantType.feature.value in self.associated.ctype.ctype:
+        if VariantType.component_feature.value in self.associated.ctype.ctype:
             f = "remote"
         with transaction.atomic():
             self.associated.usercomponent.user_info.update_with_quota(
@@ -477,41 +476,6 @@ class BaseContent(models.Model):
                 iterate=True
             )
 
-            allf = uc.features.all()
-            add_property(
-                g, "features", ref=session_dict["sourceref"],
-                literal=allf.values_list("name", flat=True),
-                datatype=XSD.string, iterate=True
-            )
-            for feature in allf:
-                if kwargs["scope"] != "export":
-                    if uc.primary_anchor:
-                        url_content = urljoin(
-                            session_dict["hostpart"],
-                            uc.primary_anchor.get_absolute_url()
-                        )
-                        add_property(
-                            g, "primary_anchor", ref=session_dict["sourceref"],
-                            literal=url_content, datatype=XSD.anyURI
-                        )
-                    for uri, name in \
-                            feature.installed_class.cached_feature_urls():
-                        url_feature = urljoin(
-                            session_dict["hostpart"],
-                            uri
-                        )
-                        ref_feature = URIRef(url_feature)
-                        g.add((
-                            session_dict["sourceref"],
-                            spkcgraph["action:feature"],
-                            ref_feature
-                        ))
-                        g.add((
-                            ref_feature,
-                            spkcgraph["feature:name"],
-                            Literal(name)
-                        ))
-
         ret = HttpResponse(
             g.serialize(format="turtle"),
             content_type="text/turtle;charset=utf-8"
@@ -618,7 +582,10 @@ class BaseContent(models.Model):
             )
         if unlisted is None:
             unlisted = (
-                VariantType.feature.value in self.associated.ctype.ctype
+                VariantType.component_feature.value in
+                self.associated.ctype.ctype or
+                VariantType.content_feature.value in
+                self.associated.ctype.ctype
             )
 
         anchortag = ""
@@ -711,7 +678,9 @@ class BaseContent(models.Model):
             if to_save:
                 assignedcontent.save(update_fields=to_save)
         # needs id first
-        assignedcontent.references.set(self.get_references())
+        s = set(assignedcontent.attached_contents.all())
+        s.update(self.get_references())
+        assignedcontent.references.set(s)
         # update fakes
         # fakes = self.associated_rel.filter(fake_id__isnull=False)
         # fakes.update(

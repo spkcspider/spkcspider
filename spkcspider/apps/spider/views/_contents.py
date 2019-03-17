@@ -209,16 +209,27 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             # request.user is maybe anonymous
             context["content_variants"] = \
                 self.usercomponent.user.spider_info.allowed_content.exclude(
-                    models.Q(ctype__contains=VariantType.feature.value) |
+                    models.Q(
+                        ctype__contains=VariantType.component_feature.value
+                    ) |
+                    models.Q(
+                        ctype__contains=VariantType.content_feature.value
+                    ) |
                     models.Q(ctype__contains=VariantType.unlisted.value)
                 )
             context["content_variants_used"] = \
                 self.usercomponent.user.spider_info.allowed_content.filter(
                     assignedcontent__usercomponent=self.usercomponent
                 ).exclude(
-                    models.Q(ctype__contains=VariantType.feature.value) |
+                    models.Q(
+                        ctype__contains=VariantType.component_feature.value
+                    ) |
+                    models.Q(
+                        ctype__contains=VariantType.content_feature.value
+                    ) |
                     models.Q(ctype__contains=VariantType.unlisted.value)
                 )
+        context["active_features"] = self.usercomponent.features.all()
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(
             info__contains="\nunlisted\n"
@@ -383,12 +394,12 @@ class ContentAdd(ContentBase, CreateView):
         # use requesting user as base if he can add this type of content
         if self.request.user.is_authenticated:
             return self.request.user.spider_info.allowed_content.exclude(
-                models.Q(ctype__contains=VariantType.feature.value) |
+                models.Q(ctype__contains=VariantType.component_feature.value) |
                 models.Q(ctype__contains=VariantType.unlisted.value)
             )
         else:
             return self.usercomponent.user.spider_info.allowed_content.exclude(
-                models.Q(ctype__contains=VariantType.feature.value) |
+                models.Q(ctype__contains=VariantType.component_feature.value) |
                 models.Q(ctype__contains=VariantType.unlisted.value)
             )
 
@@ -403,6 +414,7 @@ class ContentAdd(ContentBase, CreateView):
     def get_context_data(self, **kwargs):
         kwargs["content_type"] = self.object.installed_class
         kwargs["form"] = self.get_form()
+        kwargs["active_features"] = self.usercomponent.features.all()
         return super().get_context_data(**kwargs)
 
     def get_form(self, allow_data=True):
@@ -474,8 +486,10 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.allow_domain_mode = \
-            VariantType.domain_mode.value in self.object.ctype.ctype
+        self.allow_domain_mode = (
+            self.usercomponent.allow_domain_mode or
+            self.object.allow_domain_mode
+        )
         # done in get_queryset
         # if getattr(self.request, "auth_token", None):
         #     ids = self.request.auth_token.extra.get("ids", None)
@@ -523,18 +537,24 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         )
         context = super().get_context_data(**kwargs)
 
-        if self.scope != "add":
-            context["remotelink"] = context["spider_GET"].copy()
-            context["auth_token"] = None
-            if self.request.auth_token:
-                context["auth_token"] = self.request.auth_token.token
-            context["remotelink"] = "{}{}?{}".format(
-                context["hostpart"],
-                reverse("spider_base:ucontent-access", kwargs={
-                    "token": self.object.token,
-                    "access": "view"
-                }),
-                context["remotelink"].urlencode()
+        context["remotelink"] = context["spider_GET"].copy()
+        context["auth_token"] = None
+        if self.request.auth_token:
+            context["auth_token"] = self.request.auth_token.token
+        context["remotelink"] = "{}{}?{}".format(
+            context["hostpart"],
+            reverse("spider_base:ucontent-access", kwargs={
+                "token": self.object.token,
+                "access": "view"
+            }),
+            context["remotelink"].urlencode()
+        )
+        if self.scope == "update":
+            context["active_features"] = self.usercomponent.features.all()
+        else:
+            context["active_features"] = ContentVariant.objects.filter(
+                models.Q(feature_for_contents=self.object) |
+                models.Q(feature_for_components=self.usercomponent)
             )
         return context
 

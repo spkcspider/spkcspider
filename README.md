@@ -214,12 +214,13 @@ Otherwise security could be compromised.
 # TODO
 * examples
 * documentation
-* check and test referenced_by trees
 * layouts
-* (travis?) tests for other dbs
+* tests for other dbs
 * improve default tag validators to prevent ddos gadgets by weak validators
 
 ## Later
+* use django-cte (common table expressions)
+  * maybe: relax attached_to_content restriction
 * make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
 * govAnchor

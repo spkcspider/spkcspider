@@ -98,6 +98,12 @@ class AssignedContent(BaseInfoModel):
         "spider_base.AuthToken", blank=True, null=True,
         limit_choices_to={"persist__gte": 0}, on_delete=models.CASCADE
     )
+    # don't allow recursion, can cause performance problems and headaches
+    attached_to_content = models.ForeignKey(
+        "self", blank=True, null=True,
+        related_name="attached_contents", on_delete=models.CASCADE
+    )
+    allow_domain_mode = models.BooleanField(default=False)
     # set to indicate creating a new token
     token_generate_new_size = None
     # brute force protection and identifier, replaces nonce
@@ -114,6 +120,13 @@ class AssignedContent(BaseInfoModel):
     usercomponent = models.ForeignKey(
         "spider_base.UserComponent", on_delete=models.CASCADE,
         related_name="contents", null=False, blank=False
+    )
+    features = models.ManyToManyField(
+        "spider_base.ContentVariant",
+        related_name="feature_for_contents", blank=True,
+        limit_choices_to=models.Q(
+            ctype__contains=VariantType.content_feature.value
+        )
     )
     # ctype is here extended: VariantObject with abilities, name, model_name
     ctype = models.ForeignKey(
@@ -152,8 +165,8 @@ class AssignedContent(BaseInfoModel):
     # for quick retrieval!! even maybe a duplicate
     # layouts referencing models are not appearing here, so do it here
     references = models.ManyToManyField(
-        "spider_base.AssignedContent", related_name="referenced_by",
-        editable=False
+        "self", related_name="referenced_by", editable=False,
+        symmetrical=False
     )
     # info extra flags:
     #  primary: primary content of type for usercomponent

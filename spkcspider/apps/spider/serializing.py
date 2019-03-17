@@ -1,6 +1,6 @@
 __all__ = [
     "paginate_stream", "serialize_stream", "serialize_content",
-    "serialize_component"
+    "serialize_component", "list_features"
 ]
 
 
@@ -28,6 +28,44 @@ def references_q(ids, limit):
     return q
 
 
+def list_features(graph, entity, ref_entity, context):
+    from .models import UserComponent, ContentVariant
+    if not ref_entity:
+        return
+    if isinstance(entity, UserComponent):
+        active_features = entity.features.all()
+    else:
+        active_features = ContentVariant.objects.filter(
+            Q(feature_for_contents=entity) |
+            Q(feature_for_components=entity.usercomponent)
+        )
+    add_property(
+        graph, "features", ref=ref_entity,
+        literal=active_features.values_list("name", flat=True),
+        datatype=XSD.string,
+        iterate=True
+    )
+    for feature in active_features:
+        if context["scope"] != "export":
+            for url_feature, name in \
+                  feature.installed_class.cached_feature_urls():
+                url_feature = urljoin(
+                    context["hostpart"],
+                    url_feature
+                )
+                ref_feature = URIRef(url_feature)
+                graph.add((
+                    ref_entity,
+                    spkcgraph["action:feature"],
+                    ref_feature
+                ))
+                graph.add((
+                    ref_feature,
+                    spkcgraph["feature:name"],
+                    Literal(name, datatype=XSD.string)
+                ))
+
+
 def serialize_content(graph, content, context, embed=False):
     url_content = urljoin(
         context["hostpart"],
@@ -48,7 +86,10 @@ def serialize_content(graph, content, context, embed=False):
     if token:
         token = token.token
     url2 = merge_get_url(url_content, token=token)
-    if VariantType.feature.value in content.ctype.ctype:
+    if (
+        VariantType.component_feature.value in content.ctype.ctype or
+        VariantType.content_feature.value in content.ctype.ctype
+    ):
         graph.add((
             ref_content,
             spkcgraph["type"],
@@ -79,6 +120,7 @@ def serialize_content(graph, content, context, embed=False):
         datatype=XSD.integer
     )
     if embed:
+        list_features(graph, content, ref_content, context)
         content.content.serialize(graph, ref_content, context)
     return ref_content
 
@@ -173,36 +215,6 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
     return Paginator(
         query, page_size, orphans=0, allow_empty_first_page=True
     )
-
-
-def list_features(graph, component, ref_component, context):
-    if not ref_component:
-        return
-    allf = component.features.all()
-    add_property(
-        graph, "features", ref=ref_component,
-        literal=allf.values_list("name", flat=True), datatype=XSD.string,
-        iterate=True
-    )
-    for feature in allf:
-        if context["scope"] != "export":
-            for url_feature, name in \
-                  feature.installed_class.cached_feature_urls():
-                url_feature = urljoin(
-                    context["hostpart"],
-                    url_feature
-                )
-                ref_feature = URIRef(url_feature)
-                graph.add((
-                    ref_component,
-                    spkcgraph["action:feature"],
-                    ref_feature
-                ))
-                graph.add((
-                    ref_feature,
-                    spkcgraph["feature:name"],
-                    Literal(name, datatype=XSD.string)
-                ))
 
 
 def serialize_stream(

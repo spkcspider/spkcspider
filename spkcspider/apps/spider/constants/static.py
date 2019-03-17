@@ -52,12 +52,7 @@ class ProtectionType(str, enum.Enum):
 
 
 class VariantType(str, enum.Enum):
-    # allow outside applications push content to spiders
-    # adds by default unlisted attribute
-    # appears in features of userComponent
-    # counts as foreign content
-    # don't list as content variant for user
-    feature = "a"
+    # a not assigned
     # use persistent token
     #  can be used for some kind of federation
     #  warning: if token is deleted persisted content is deleted
@@ -74,7 +69,14 @@ class VariantType(str, enum.Enum):
     unlisted = "d"
     # activates domain mode
     domain_mode = "e"
-    # f,g not assigned
+    # allow outside applications push content to spiders
+    # adds by default unlisted attribute
+    # appears in features of userComponent
+    # counts as foreign content
+    # don't list as content variant for user
+    component_feature = "f"
+    # same, but assigns to contents
+    content_feature = "g"
 
     # is content unique for usercomponent
     # together with strength level 10: unique for user

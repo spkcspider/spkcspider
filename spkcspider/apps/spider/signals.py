@@ -54,7 +54,7 @@ def CleanupCallback(sender, instance, **kwargs):
             f = "local"
             if (
                 instance.ctype and
-                VariantType.feature.value in instance.ctype.ctype
+                VariantType.component_feature.value in instance.ctype.ctype
             ):
                 f = "remote"
             try:

@@ -149,7 +149,7 @@ class FeaturesTest(TransactionWebTest):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
         features = dict(ContentVariant.objects.filter(
-            ctype__contains=VariantType.feature.value
+            ctype__contains=VariantType.component_feature.value
         ).values_list("name", "id"))
         self.app.set_user("testuser1")
 
