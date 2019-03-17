@@ -112,3 +112,4 @@ cgihandler.build
 cgihandler.dist
 media
 node_modules
+pip-wheel-metadata/

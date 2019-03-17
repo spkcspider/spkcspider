@@ -368,16 +368,26 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["content_variants"] = \
             self.usercomponent.user_info.allowed_content.exclude(
-                ctype__contains=VariantType.feature.value
+                ctype__contains=VariantType.component_feature.value
             ).exclude(
-                models.Q(ctype__contains=VariantType.feature.value) |
+                models.Q(
+                    ctype__contains=VariantType.component_feature.value
+                ) |
+                models.Q(
+                    ctype__contains=VariantType.content_feature.value
+                ) |
                 models.Q(ctype__contains=VariantType.unlisted.value)
             )
         context["content_variants_used"] = \
             self.usercomponent.user_info.allowed_content.filter(
                 assignedcontent__usercomponent=self.usercomponent
             ).exclude(
-                models.Q(ctype__contains=VariantType.feature.value) |
+                models.Q(
+                    ctype__contains=VariantType.component_feature.value
+                ) |
+                models.Q(
+                    ctype__contains=VariantType.content_feature.value
+                ) |
                 models.Q(ctype__contains=VariantType.unlisted.value)
             )
         context["remotelink"] = context["spider_GET"].copy()

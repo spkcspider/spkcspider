@@ -34,7 +34,7 @@ class PersistenceFeature(BaseContent):
     appearances = [
         {
             "name": "Persistence",
-            "ctype": VariantType.feature.value,
+            "ctype": VariantType.component_feature.value,
             "strength": 0
         },
     ]

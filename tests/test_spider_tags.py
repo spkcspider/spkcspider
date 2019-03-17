@@ -113,12 +113,14 @@ class TagTest(TransactionWebTest):
             {
                 "key": "name",
                 "field": "CharField",
+                "nonhashable": false,
                 "max_length": 12
             },
             {
                 "key": "ab",
                 "label": "name2",
                 "field": "CharField",
+                "nonhashable": false,
                 "max_length": 12
             }
         ]"""
@@ -236,7 +238,7 @@ class TagTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         form = self.app.get(updateurl).forms["componentForm"]
         features = dict(ContentVariant.objects.filter(
-            ctype__contains=VariantType.feature.value
+            ctype__contains=VariantType.component_feature.value
         ).values_list("name", "id"))
         # select checkbox
         for field in form.fields["features"]:

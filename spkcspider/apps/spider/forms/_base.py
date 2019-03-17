@@ -38,8 +38,13 @@ public attribute from component for restoring protection</td>
 """)  # noqa: E501
 
 
-_help_text_features = _("""
+_help_text_features_components = _("""
 Note: persistent Features (=features which use a persistent token) require and enable "Persistence"
+""")  # noqa: E501
+
+_help_text_features_contents = _("""
+Note: persistent Features (=features which use a persistent token) require active "Persistence" Feature on usercomponent
+They are elsewise excluded
 """)  # noqa: E501
 
 
@@ -62,7 +67,7 @@ class UserComponentForm(forms.ModelForm):
             }
         }
         help_texts = {
-            'features': _help_text_features,
+            'features': _help_text_features_components,
         }
         widgets = {
             'features': forms.CheckboxSelectMultiple(),
@@ -229,14 +234,15 @@ class UserComponentForm(forms.ModelForm):
         min_strength = self.cleaned_data["features"].filter(
             strength__gt=self.cleaned_data["strength"]
         ).aggregate(m=models.Max("strength"))["m"]
-        # min_strength is None if no features are higher than allowed
+        # min_strength is None if no features require a higher strength
+        # than provided
         if min_strength:
             self.add_error("features", forms.ValidationError(
                 _(
                     "selected features require "
                     "higher protection strength: %s"
                 ) % min_strength,
-                code="unsufficient_strength"
+                code="insufficient_strength"
             ))
         return self.cleaned_data
 
@@ -302,13 +308,20 @@ class UserContentForm(forms.ModelForm):
 
     class Meta:
         model = AssignedContent
-        fields = ['usercomponent']
+        fields = ['usercomponent', 'features']
         error_messages = {
             NON_FIELD_ERRORS: {
                 'unique_together': _(
                     "Unique Content already exists"
                 )
             }
+        }
+        help_texts = {
+            'features': _help_text_features_contents,
+        }
+        widgets = {
+            'features': forms.CheckboxSelectMultiple(),
+
         }
 
     def __init__(self, request, *args, **kwargs):
@@ -341,11 +354,49 @@ class UserContentForm(forms.ModelForm):
             self.fields["new_static_token"].initial = INITIAL_STATIC_TOKEN_SIZE
             self.fields["new_static_token"].choices = \
                 self.fields["new_static_token"].choices[1:]
+
+        if self.instance.usercomponent.name in index_names:
+            # contents in index has no features as they could allow
+            # remote access
+            self.fields.pop("features", None)
+        elif not self.instance.usercomponent.features.filter(
+            name="Persistence"
+        ):
+            self.fields["features"].queryset = \
+                self.fields["features"].queryset.exclude(
+                    ctype__contains=VariantType.persist.value
+                )
         if request.user != user and not request.is_staff:
             del self.fields["usercomponent"]
 
         if not show_primary_anchor_mig:
             del self.fields["migrate_primary_anchor"]
+
+    def clean(self):
+        super().clean()
+        if not self.cleaned_data["allow_domain_mode"]:
+            self.cleaned_data["allow_domain_mode"] = \
+                VariantType.domain_mode.value in self.instance.ctype.ctype
+        if "features" in self.cleaned_data:
+            min_strength = self.cleaned_data["features"].filter(
+                strength__gt=self.instance.usercomponent.strength
+            ).aggregate(m=models.Max("strength"))["m"]
+            # min_strength is None if no features require a higher strength
+            # than provided
+            if min_strength:
+                self.add_error("features", forms.ValidationError(
+                    _(
+                        "selected features require "
+                        "higher protection strength: %s"
+                    ) % min_strength,
+                    code="insufficient_strength"
+                ))
+            if not self.cleaned_data["allow_domain_mode"]:
+                self.cleaned_data["allow_domain_mode"] = any(map(
+                    lambda x: VariantType.domain_mode.value in x.ctype,
+                    self.cleaned_data["features"]
+                ))
+        return self.cleaned_data
 
     def update_anchor(self):
         if not self.instance.primary_anchor_for.exists():

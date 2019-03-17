@@ -136,7 +136,7 @@ class SpiderTag(BaseContent):
         {
             "name": "PushedTag",
             "strength": 2,
-            "ctype": VariantType.feature + VariantType.domain_mode
+            "ctype": VariantType.component_feature + VariantType.domain_mode
         }
     ]
     layout = models.ForeignKey(

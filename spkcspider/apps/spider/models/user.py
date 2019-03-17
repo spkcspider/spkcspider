@@ -160,9 +160,10 @@ class UserComponent(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
     )
     features = models.ManyToManyField(
-        "spider_base.ContentVariant", related_name="supports", blank=True,
+        "spider_base.ContentVariant",
+        related_name="feature_for_components", blank=True,
         limit_choices_to=models.Q(
-            ctype__contains=VariantType.feature.value
+            ctype__contains=VariantType.component_feature.value
         )
     )
     primary_anchor = models.ForeignKey(
@@ -247,7 +248,7 @@ class UserComponent(models.Model):
         _local_size = 0
         _remote_size = 0
         for elem in self.contents.all():
-            if VariantType.feature.value in elem.ctype.ctype:
+            if VariantType.component_feature.value in elem.ctype.ctype:
                 _remote_size += elem.get_size()
             else:
                 _local_size += elem.get_size()
@@ -334,7 +335,7 @@ class UserInfo(models.Model):
         for c in AssignedContent.objects.filter(
             usercomponent__user=self.user
         ):
-            if VariantType.feature.value in c.ctype.ctype:
+            if VariantType.component_feature.value in c.ctype.ctype:
                 self.used_space_remote += c.get_size()
             else:
                 self.used_space_local += c.get_size()
