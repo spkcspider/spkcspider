@@ -127,7 +127,7 @@ def UpdateAnchorTargets(sender, instance, raw=False, **kwargs):
         return
     from django.apps import apps
     UserComponent = apps.get_model("spider_base", "UserComponent")
-    AssociatedContent = apps.get_model("spider_base", "AssociatedContent")
+    AssignedContent = apps.get_model("spider_base", "AssignedContent")
     old = UserComponent.objects.filter(pk=instance.pk).first()
     if old and old.primary_anchor != instance.primary_anchor:
         if old.primary_anchor:
@@ -138,7 +138,7 @@ def UpdateAnchorTargets(sender, instance, raw=False, **kwargs):
             )
         if instance.primary_anchor:
             instance.primary_anchor.referenced_by.add(
-                AssociatedContent.objects.filter(
+                AssignedContent.objects.filter(
                     usercomponent=instance,
                     attached_to_primary_anchor=True
                 )
