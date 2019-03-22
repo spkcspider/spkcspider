@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic.detail import DetailView
 
-from spkcspider.apps.spider.constants import SPIDER_ANCHOR_DOMAIN
+from spkcspider.apps.spider.constants import get_anchor_domain
 
 from spkcspider.apps.spider.models import AssignedContent
 
@@ -16,10 +16,10 @@ class PermAnchorView(DetailView):
     )
 
     def get(self, request, *args, **kwargs):
-        if request.get_host() != SPIDER_ANCHOR_DOMAIN:
+        if request.get_host() != get_anchor_domain():
             return HttpResponseRedirect(
                 location=urljoin(
-                    SPIDER_ANCHOR_DOMAIN, request.get_full_path()
+                    get_anchor_domain(), request.get_full_path()
                 )
             )
         return super().get(request, *args, **kwargs)

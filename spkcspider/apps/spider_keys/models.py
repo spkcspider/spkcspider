@@ -13,7 +13,7 @@ from django.utils.translation import pgettext
 
 from spkcspider.apps.spider.helpers import get_hashob
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.constants import VariantType, SPIDER_ANCHOR_DOMAIN
+from spkcspider.apps.spider.constants import VariantType, get_anchor_domain
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +171,7 @@ class AnchorServer(BaseContent):
         if not self.associated.id:
             return None
         ret = urljoin(
-            SPIDER_ANCHOR_DOMAIN, reverse(
+            get_anchor_domain(), reverse(
                 "spider_keys:anchor-permanent",
                 kwargs={"pk": self.associated.id}
             )

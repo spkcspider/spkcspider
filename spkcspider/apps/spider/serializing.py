@@ -15,7 +15,7 @@ from django.db.models import Q
 from rdflib import URIRef, Literal, XSD
 
 
-from .constants import spkcgraph, VariantType, SPIDER_ANCHOR_DOMAIN
+from .constants import spkcgraph, VariantType, get_anchor_domain
 from .helpers import merge_get_url, add_property
 
 
@@ -69,7 +69,7 @@ def list_features(graph, entity, ref_entity, context):
 def serialize_content(graph, content, context, embed=False):
     if VariantType.anchor.value in content.ctype.ctype:
         url_content = urljoin(
-            SPIDER_ANCHOR_DOMAIN,
+            get_anchor_domain(),
             content.get_absolute_url()
         )
     else:

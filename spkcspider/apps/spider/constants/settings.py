@@ -1,5 +1,5 @@
 __all__ = [
-    "media_extensions", "image_extensions", "SPIDER_ANCHOR_DOMAIN",
+    "media_extensions", "image_extensions", "get_anchor_domain",
     "INITIAL_STATIC_TOKEN_SIZE", "STATIC_TOKEN_CHOICES",
     "default_uctoken_duration",
     "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS"
@@ -24,9 +24,19 @@ media_extensions = set(getattr(
 ))
 
 # if None, set to default Site ID if models are ready
-SPIDER_ANCHOR_DOMAIN = getattr(
+_anchor_domain = getattr(
     settings, "SPIDER_ANCHOR_DOMAIN", None
 )
+
+
+def get_anchor_domain():
+    global _anchor_domain
+    if _anchor_domain:
+        return _anchor_domain
+    from django.contrib.sites.models import Site
+    _anchor_domain = \
+        Site.objects.get(id=settings.SITE_ID).domain
+    return _anchor_domain
 
 
 INITIAL_STATIC_TOKEN_SIZE = str(

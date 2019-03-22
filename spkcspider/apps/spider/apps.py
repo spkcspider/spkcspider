@@ -14,7 +14,6 @@ from .signals import (
     CleanupCallback, MovePersistentCallback, move_persistent,
     UpdateAnchorTargets
 )
-from .constants import settings as csettings
 
 
 class SpiderBaseConfig(AppConfig):
@@ -27,12 +26,8 @@ class SpiderBaseConfig(AppConfig):
         from .models import (
             AssignedContent, UserComponent, AuthToken
         )
-        from django.contrib.sites.models import Site
         from django.apps import apps
         from .protections import installed_protections
-        if csettings.SPIDER_ANCHOR_DOMAIN is None:
-            csettings.SPIDER_ANCHOR_DOMAIN = \
-                Site.objects.get(id=settings.SITE_ID).domain
 
         for app in apps.get_app_configs():
             installed_protections.update(

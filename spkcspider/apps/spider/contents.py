@@ -24,7 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD
 
-from .constants import VariantType, spkcgraph, ActionUrl, SPIDER_ANCHOR_DOMAIN
+from .constants import VariantType, spkcgraph, ActionUrl, get_anchor_domain
 from .serializing import paginate_stream, serialize_stream
 from .helpers import (
     get_settings_func, add_property, create_b64_id_token
@@ -323,17 +323,17 @@ class BaseContent(models.Model):
         p = self.associated.usercomponent.primary_anchor
         if p:
             return urljoin(
-                SPIDER_ANCHOR_DOMAIN,
+                get_anchor_domain(),
                 p.get_absolute_url()
             )
 
         if not p and self.associated.usercomponent.public:
             return urljoin(
-                SPIDER_ANCHOR_DOMAIN,
+                get_anchor_domain(),
                 self.associated.usercomponent.get_absolute_url()
             )
         return urljoin(
-            SPIDER_ANCHOR_DOMAIN, context["request"].path
+            get_anchor_domain(), context["request"].path
         )
 
     def get_references(self):
