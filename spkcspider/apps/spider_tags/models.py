@@ -248,7 +248,7 @@ class SpiderTag(BaseContent):
             instance=self,
             uc=self.associated.usercomponent
         )
-        add_primary_anchor = False
+        attached_to_primary_anchor = False
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
@@ -260,7 +260,7 @@ class SpiderTag(BaseContent):
                 field.use_default_anchor
             ):
                 if value is None:
-                    add_primary_anchor = True
+                    attached_to_primary_anchor = True
 
             if issubclass(type(value), BaseContent):
                 _cached_references.append(value.associated)
@@ -281,9 +281,23 @@ class SpiderTag(BaseContent):
                             )
                         )
                     )
-        if add_primary_anchor and self.associated.usercomponent.primary_anchor:
+        if (
+            attached_to_primary_anchor and
+            self.associated.usercomponent.primary_anchor
+        ):
             _cached_references.append(
                 self.associated.usercomponent.primary_anchor
+            )
+        if (
+            self.associated.attached_to_primary_anchor !=
+            attached_to_primary_anchor
+        ):
+            self.associated.attached_to_primary_anchor = \
+                attached_to_primary_anchor
+            self.associated.save(
+                update_fields=[
+                    "attached_to_primary_anchor"
+                ]
             )
         self._cached_references = _cached_references
         return self._cached_references

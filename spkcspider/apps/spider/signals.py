@@ -133,14 +133,14 @@ def UpdateAnchorTargets(sender, instance, raw=False, **kwargs):
         if old.primary_anchor:
             old.primary_anchor.referenced_by.clear(
                 old.primary_anchor.referenced_by.filter(
-                    info__contains="\nuse_primary_anchor\n"
+                    attached_to_primary_anchor=True
                 )
             )
         if instance.primary_anchor:
             instance.primary_anchor.referenced_by.add(
                 AssociatedContent.objects.filter(
                     usercomponent=instance,
-                    info__contains="\nuse_primary_anchor\n"
+                    attached_to_primary_anchor=True
                 )
             )
 

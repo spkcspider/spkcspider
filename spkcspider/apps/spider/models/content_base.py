@@ -11,7 +11,7 @@ __all__ = [
 import logging
 
 from django.db import models
-from django.utils.translation import gettext
+from django.utils.translation import gettext, gettext_lazy as _
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -154,6 +154,12 @@ class AssignedContent(BaseInfoModel):
     strength_link = models.PositiveSmallIntegerField(
         default=0, validators=[validators.MaxValueValidator(11)],
         editable=False
+    )
+    attached_to_primary_anchor = models.BooleanField(
+        default=False, editable=False, null=False,
+        help_text=_(
+            "Content references primary anchor"
+        )
     )
     content_type = models.ForeignKey(
         ContentType, on_delete=models.CASCADE, editable=False

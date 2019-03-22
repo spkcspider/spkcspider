@@ -223,7 +223,6 @@ Otherwise security could be compromised.
 * examples
 * documentation
 * layouts
-* cleanup tags, use use_primary_anchor info field
 * tests for other dbs
 * improve default tag validators to prevent ddos gadgets by weak validators
 
