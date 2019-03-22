@@ -11,8 +11,10 @@ from .helpers import extract_app_dicts
 from .signals import (
     UpdateSpiderCallback, InitUserCallback, UpdateAnchorContent,
     UpdateAnchorComponent, update_dynamic, TriggerUpdate, RemoveTokensLogout,
-    CleanupCallback, MovePersistentCallback, move_persistent
+    CleanupCallback, MovePersistentCallback, move_persistent,
+    UpdateAnchorTargets
 )
+from .constants import settings as csettings
 
 
 class SpiderBaseConfig(AppConfig):
@@ -25,9 +27,12 @@ class SpiderBaseConfig(AppConfig):
         from .models import (
             AssignedContent, UserComponent, AuthToken
         )
-
+        from django.contrib.sites.models import Site
         from django.apps import apps
         from .protections import installed_protections
+        if csettings.SPIDER_ANCHOR_DOMAIN is None:
+            csettings.SPIDER_ANCHOR_DOMAIN = \
+                Site.objects.get(id=settings.SITE_ID).domain
 
         for app in apps.get_app_configs():
             installed_protections.update(
@@ -40,6 +45,10 @@ class SpiderBaseConfig(AppConfig):
         pre_save.connect(
             UpdateAnchorComponent, sender=UserComponent,
             dispatch_uid="spider_update_anchors_component"
+        )
+        pre_save.connect(
+            UpdateAnchorTargets, sender=UserComponent,
+            dispatch_uid="spider_update_anchors_targets"
         )
         post_save.connect(
             UpdateAnchorContent, sender=AssignedContent,

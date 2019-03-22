@@ -45,6 +45,7 @@ class KeyForm(forms.ModelForm):
 
 class AnchorServerForm(forms.ModelForm):
     identifier = forms.CharField(disabled=True)
+    anchor_type = forms.CharField(disabled=True, initial="url")
     setattr(identifier, "hashable", True)
     scope = ""
 
@@ -57,10 +58,12 @@ class AnchorServerForm(forms.ModelForm):
         super().__init__(**kwargs)
         if self.scope == "add":
             del self.fields["identifier"]
+            del self.fields["anchor_type"]
 
 
 class AnchorKeyForm(forms.ModelForm):
     identifier = forms.CharField(disabled=True)
+    anchor_type = forms.CharField(disabled=True, initial="signature")
     scope = ""
 
     class Meta:
@@ -75,10 +78,9 @@ class AnchorKeyForm(forms.ModelForm):
         if self.scope == "add":
             del self.fields["identifier"]
             del self.fields["signature"]
+            del self.fields["anchor_type"]
             # self.fields["signature"].disabled = True
             # self.fields["signature"].required = False
-        else:
-            self.fields["identifier"].disabled = True
 
         if self.scope in ("add", "update"):
             self.fields["key"].queryset = self.fields["key"].queryset.filter(
@@ -138,6 +140,7 @@ class AnchorKeyForm(forms.ModelForm):
 
 # class AnchorGovForm(forms.ModelForm):
 #    identifier = forms.CharField(disabled=True, widget=forms.HiddenInput())
+#    anchor_type = forms.CharField(disabled=True, initial="gov")
 #    scope = ""
 #
 #    class Meta:

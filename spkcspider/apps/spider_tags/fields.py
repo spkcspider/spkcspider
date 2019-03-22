@@ -4,7 +4,7 @@ import logging
 import posixpath
 from django import forms
 from django.apps import apps
-from django.utils.translation import gettext
+from django.utils.translation import gettext, gettext_lazy
 
 from spkcspider.apps.spider.helpers import add_by_field
 from spkcspider.apps.spider.models import TravelProtection
@@ -123,16 +123,24 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
 
 @add_by_field(installed_fields, "__name__")
 class AnchorField(forms.ModelChoiceField):
-    force_embed = True
+    spkc_use_uriref = True
+    use_default_anchor = None
     filter_strength_link = "usercomponent__strength__lte"
 
     # limit_to_uc: limit to usercomponent, if False to user
-    def __init__(self, limit_to_uc=True, **kwargs):
+    def __init__(
+        self, use_default_anchor=True, required=False, limit_to_uc=True,
+        **kwargs
+    ):
         from spkcspider.apps.spider.models import AssignedContent
+        _ = gettext_lazy
         if limit_to_uc:
             self.filters_usercomponent = ("usercomponent",)
         else:
             self.filters_user = ("usercomponent__user",)
+        self.use_default_anchor = use_default_anchor
+        if self.use_default_anchor and not kwargs.get("empty_label", None):
+            kwargs["empty_label"] = _("(Use default anchor)")
 
         travel = TravelProtection.objects.get_active()
         # can also use Links to anchor as anchor
@@ -142,7 +150,7 @@ class AnchorField(forms.ModelChoiceField):
         ).exclude(
             usercomponent__travel_protected__in=travel
         )
-        super().__init__(**kwargs)
+        super().__init__(required=required, **kwargs)
 
     def to_python(self, value):
         if value in self.empty_values:

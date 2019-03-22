@@ -1,6 +1,7 @@
 __all__ = (
     "UpdateSpiderCallback", "InitUserCallback", "UpdateAnchorContent",
-    "UpdateAnchorComponent", "update_dynamic", "failed_guess",
+    "UpdateAnchorTargets", "UpdateAnchorComponent", "update_dynamic",
+    "failed_guess",
     "RemoveTokensLogout", "CleanupCallback",
     "MovePersistentCallback", "move_persistent"
 )
@@ -119,6 +120,29 @@ def MovePersistentCallback(sender, tokens, to, **kwargs):
     AssignedContent.objects.filter(
         persist_token__in=tokens
     ).update(usercomponent=to)
+
+
+def UpdateAnchorTargets(sender, instance, raw=False, **kwargs):
+    if raw:
+        return
+    from django.apps import apps
+    UserComponent = apps.get_model("spider_base", "UserComponent")
+    AssociatedContent = apps.get_model("spider_base", "AssociatedContent")
+    old = UserComponent.objects.filter(pk=instance.pk).first()
+    if old and old.primary_anchor != instance.primary_anchor:
+        if old.primary_anchor:
+            old.primary_anchor.referenced_by.clear(
+                old.primary_anchor.referenced_by.filter(
+                    info__contains="\nuse_primary_anchor\n"
+                )
+            )
+        if instance.primary_anchor:
+            instance.primary_anchor.referenced_by.add(
+                AssociatedContent.objects.filter(
+                    usercomponent=instance,
+                    info__contains="\nuse_primary_anchor\n"
+                )
+            )
 
 
 def UpdateSpiderCallback(**_kwargs):

@@ -1,5 +1,5 @@
 __all__ = [
-    "media_extensions", "image_extensions",
+    "media_extensions", "image_extensions", "SPIDER_ANCHOR_DOMAIN",
     "INITIAL_STATIC_TOKEN_SIZE", "STATIC_TOKEN_CHOICES",
     "default_uctoken_duration",
     "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS"
@@ -9,7 +9,6 @@ import datetime
 from django.conf import settings
 
 from django.utils.translation import gettext_lazy as _
-
 
 # webbrowser supported image formats
 image_extensions = set(getattr(
@@ -23,6 +22,11 @@ media_extensions = set(getattr(
         "mp4", "ogg", "flac", "mp3", "webm", "wav", "avi"
     }
 ))
+
+# if None, set to default Site ID if models are ready
+SPIDER_ANCHOR_DOMAIN = getattr(
+    settings, "SPIDER_ANCHOR_DOMAIN", None
+)
 
 
 INITIAL_STATIC_TOKEN_SIZE = str(

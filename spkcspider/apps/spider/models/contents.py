@@ -14,6 +14,8 @@ from datetime import timedelta
 from django.db import models
 from django.shortcuts import redirect
 from django.utils.translation import gettext
+from django.middleware.csrf import CsrfViewMiddleware
+from django.http.response import HttpResponseBase
 from django.utils import timezone
 from django.urls import reverse
 from django.contrib.auth.hashers import (
@@ -27,6 +29,9 @@ from ..constants.static import (
 )
 
 logger = logging.getLogger(__name__)
+
+# raw and export: use references
+link_abilities = frozenset(["add", "update", "update_raw", "raw", "export"])
 
 
 @add_content
@@ -111,11 +116,6 @@ class LinkContent(BaseContent):
             ret, self.associated.pk
         )
 
-    def serialize(self, graph, ref_content, context):
-        return self.content.content.serialize(
-            graph, ref_content, context
-        )
-
     def get_references(self):
         if not self.content:
             return []
@@ -123,23 +123,20 @@ class LinkContent(BaseContent):
 
     def get_form(self, scope):
         from ..forms import LinkForm
-        if scope in ["add", "update", "export", "raw"]:
+        if scope in link_abilities:
             return LinkForm
+        # maybe not required
         return self.content.content.get_form(scope)
 
     def get_form_kwargs(self, **kwargs):
-        if kwargs["scope"] in ["add", "update", "export", "raw"]:
+        if kwargs["scope"] in link_abilities:
             ret = super().get_form_kwargs(**kwargs)
             ret["uc"] = kwargs["uc"]
             ret["request"] = kwargs["request"]
         else:
+            # maybe not required anymore
             ret = self.content.content.get_form_kwargs(**kwargs)
         return ret
-
-    def access_view(self, **kwargs):
-        kwargs["source"] = self
-        kwargs["uc"] = self.content.usercomponent
-        return super().access_view(**kwargs)
 
     def access_add(self, **kwargs):
         _ = gettext
@@ -157,6 +154,34 @@ class LinkContent(BaseContent):
             token=self.content.token,
             access='update'
         )
+
+    def access(self, context):
+        # context is updated and used outside!!
+        # so make sure that func gets only a copy (**)
+        context.setdefault("extra_outer_forms", [])
+        func = self.access_default
+        if context["scope"] in link_abilities:
+            func = getattr(self, "access_{}".format(context["scope"]))
+
+            # check csrf tokens manually
+            csrferror = CsrfViewMiddleware().process_view(
+                context["request"], None, (), {}
+            )
+            if csrferror is not None:
+                # csrferror is HttpResponse
+                return csrferror
+            ret = func(**context)
+            if context["scope"] == "update":
+                # update function should never return HttpResponse
+                #  (except csrf error)
+                assert(not isinstance(ret, HttpResponseBase))
+            return ret
+        else:
+            context["source"] = self
+            context["uc"] = self.content.usercomponent
+            ret = self.access(context)
+            context["uc"] = self.usercomponent
+            return ret
 
 
 login_choices = [

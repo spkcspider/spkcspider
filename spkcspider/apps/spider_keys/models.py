@@ -1,8 +1,10 @@
 
 import logging
+from urllib.parse import urljoin
 
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
@@ -11,7 +13,7 @@ from django.utils.translation import pgettext
 
 from spkcspider.apps.spider.helpers import get_hashob
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.constants import VariantType
+from spkcspider.apps.spider.constants import VariantType, SPIDER_ANCHOR_DOMAIN
 
 logger = logging.getLogger(__name__)
 
@@ -165,14 +167,15 @@ class AnchorServer(BaseContent):
     def get_identifier(self, request):
         """ returns id of content, server """
         # security: id can only be faked by own server
-        # this should never happen, except with access to server
-        # why @?: to be scheme independent and keep id abstract
-        ret = "{}@{}".format(
-            getattr(self.associated, "id", None),
-            request.get_host()
+        # this should never happen, except with admin access to server
+        if not self.associated.id:
+            return None
+        ret = urljoin(
+            SPIDER_ANCHOR_DOMAIN, reverse(
+                "spider_keys:anchor-permanent",
+                kwargs={"pk": self.associated.id}
+            )
         )
-        if getattr(settings, "SPIDER_ID_USE_SUBPATH", False):
-            ret += request.path[:request.path.rfind(request.path_info)]
         return ret
 
 

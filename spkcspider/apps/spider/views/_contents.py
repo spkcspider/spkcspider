@@ -458,9 +458,9 @@ class ContentAdd(ContentBase, CreateView):
         else:
             ucontent = context["form"].instance
         ob = context["content_type"].static_create(
-            associated=ucontent, **context
+            associated=ucontent
         )
-        rendered = ob.access(ob.kwargs)
+        rendered = ob.access(context)
 
         # return response if content returned response
         if isinstance(rendered, HttpResponseBase):
@@ -582,7 +582,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         staff_perm = uncritically
         if staff_perm:
             staff_perm = "spider_base.view_assignedcontent"
-            if self.scope in ["update", "raw_update"]:
+            if self.scope in {"update", "raw_update"}:
                 staff_perm = "spider_base.update_assignedcontent"
         # user token is tested later
         if self.has_special_access(
@@ -592,7 +592,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             self.request.auth_token = self.create_admin_token()
             return True
         minstrength = 0
-        if self.scope in ["update", "raw_update", "export"]:
+        if self.scope in {"update", "raw_update", "export"}:
             minstrength = 4
         return self.test_token(minstrength)
 

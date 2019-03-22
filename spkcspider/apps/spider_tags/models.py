@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.http import HttpResponse
 
-
+from rdflib import URIRef
 from jsonfield import JSONField
 
 from spkcspider.apps.spider.contents import (
@@ -127,6 +127,7 @@ class UserTagLayout(BaseContent):
 @add_content
 class SpiderTag(BaseContent):
     _cached_references = None
+    tmp_primary_anchor = None
     appearances = [
         {
             "name": "SpiderTag",
@@ -196,6 +197,15 @@ class SpiderTag(BaseContent):
 
         return _abilities
 
+    def map_data(self, name, field, data, graph, context):
+        if (
+            field.__class__.__name__ == "AnchorField" and
+            field.use_default_anchor
+        ):
+            if data is None:
+                return URIRef(self.get_primary_anchor())
+        return super().map_data(name, field, data, graph, context)
+
     @csrf_exempt
     def access_verify(self, **kwargs):
         # full url to result
@@ -216,7 +226,8 @@ class SpiderTag(BaseContent):
         return self.access_update(**kwargs)
 
     def access(self, context):
-        context["extra_outer_forms"] = ["request_verification_form"]
+        if context["scope"] not in {"add", "push_update"}:
+            context["extra_outer_forms"] = ["request_verification_form"]
         return super().access(context)
 
     def get_form(self, scope):
@@ -237,12 +248,19 @@ class SpiderTag(BaseContent):
             instance=self,
             uc=self.associated.usercomponent
         )
+        add_primary_anchor = False
         for name, field in form.fields.items():
             raw_value = form.initial.get(name, None)
             value = field.to_python(raw_value)
             # e.g. anchors
             if isinstance(value, AssignedContent):
                 _cached_references.append(value)
+            if (
+                field.__class__.__name__ == "AnchorField" and
+                field.use_default_anchor
+            ):
+                if value is None:
+                    add_primary_anchor = True
 
             if issubclass(type(value), BaseContent):
                 _cached_references.append(value.associated)
@@ -263,6 +281,10 @@ class SpiderTag(BaseContent):
                             )
                         )
                     )
+        if add_primary_anchor and self.associated.usercomponent.primary_anchor:
+            _cached_references.append(
+                self.associated.usercomponent.primary_anchor
+            )
         self._cached_references = _cached_references
         return self._cached_references
 

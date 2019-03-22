@@ -3,6 +3,7 @@ __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
 import logging
+from urllib.parse import urljoin
 from functools import lru_cache
 
 from django.apps import apps as django_apps
@@ -23,7 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD
 
-from .constants.static import VariantType, spkcgraph, ActionUrl
+from .constants import VariantType, spkcgraph, ActionUrl, SPIDER_ANCHOR_DOMAIN
 from .serializing import paginate_stream, serialize_stream
 from .helpers import (
     get_settings_func, add_property, create_b64_id_token
@@ -142,19 +143,15 @@ class BaseContent(models.Model):
             return self._associated_tmp
         return self.associated_rel.filter(fake_id__isnull=True).first()
 
-    # if static_create is used and class not saved yet
-    kwargs = None
-
     class Meta:
         abstract = True
         default_permissions = []
 
     @classmethod
-    def static_create(cls, *, associated=None, **kwargs):
+    def static_create(cls, *, associated=None):
         ob = cls()
         if associated:
             ob._associated_tmp = associated
-        ob.kwargs = kwargs
         return ob
 
     @classmethod
@@ -322,10 +319,27 @@ class BaseContent(models.Model):
     def get_absolute_url(self, scope="view"):
         return self.associated.get_absolute_url(scope)
 
+    def get_primary_anchor(self, graph, context):
+        p = self.associated.usercomponent.primary_anchor
+        if p:
+            return urljoin(
+                SPIDER_ANCHOR_DOMAIN,
+                p.get_absolute_url()
+            )
+
+        if not p and self.associated.usercomponent.public:
+            return urljoin(
+                SPIDER_ANCHOR_DOMAIN,
+                self.associated.usercomponent.get_absolute_url()
+            )
+        return urljoin(
+            SPIDER_ANCHOR_DOMAIN, context["request"].path
+        )
+
     def get_references(self):
         return []
 
-    def map_data(self, name, field, data, context):
+    def map_data(self, name, field, data, graph, context):
         if isinstance(data, File):
             return get_settings_func(
                 "SPIDER_FILE_EMBED_FUNC",
@@ -403,7 +417,7 @@ class BaseContent(models.Model):
                 graph.add((
                     value_node,
                     spkcgraph["value"],
-                    self.map_data(name, field, i, context)
+                    self.map_data(name, field, i, graph, context)
                 ))
 
     def render_serialize(self, **kwargs):
@@ -416,7 +430,9 @@ class BaseContent(models.Model):
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
             "ac_namespace": spkcgraph["contents"],
-            "sourceref": URIRef(kwargs["hostpart"] + kwargs["request"].path)
+            "sourceref": URIRef(urljoin(
+                kwargs["hostpart"], kwargs["request"].path
+            ))
         }
 
         g = Graph()
@@ -536,6 +552,11 @@ class BaseContent(models.Model):
         return self.render_form(**kwargs)
 
     def access_export(self, **kwargs):
+        kwargs["scope"] = "export"
+        return self.render_serialize(**kwargs)
+
+    def access_raw(self, **kwargs):
+        kwargs["scope"] = "raw"
         return self.render_serialize(**kwargs)
 
     @csrf_exempt
@@ -551,8 +572,7 @@ class BaseContent(models.Model):
         context.setdefault("extra_outer_forms", [])
         func = self.access_default
         if context["scope"] == "view" and "raw" in context["request"].GET:
-            context["scope"] = "raw"
-            func = self.render_serialize
+            func = self.access_raw
         elif context["scope"] in default_abilities:
             func = getattr(self, "access_{}".format(context["scope"]))
         elif context["scope"] in context["abilities"]:

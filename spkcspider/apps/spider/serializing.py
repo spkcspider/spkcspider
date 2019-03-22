@@ -15,16 +15,16 @@ from django.db.models import Q
 from rdflib import URIRef, Literal, XSD
 
 
-from .constants.static import spkcgraph, VariantType
+from .constants import spkcgraph, VariantType, SPIDER_ANCHOR_DOMAIN
 from .helpers import merge_get_url, add_property
 
 
 # TODO replace by proper tree search (connect by/recursive query)
-def references_q(ids, limit):
+def references_q(ids, limit, prefix=""):
     ids = set(ids)
     q = Q()
     for i in range(0, limit+1):
-        q |= Q(**{"{}id__in".format("referenced_by__"*i): ids})
+        q |= Q(**{"{}{}id__in".format(prefix, "referenced_by__"*i): ids})
     return q
 
 
@@ -67,11 +67,20 @@ def list_features(graph, entity, ref_entity, context):
 
 
 def serialize_content(graph, content, context, embed=False):
-    url_content = urljoin(
-        context["hostpart"],
-        content.get_absolute_url()
-    )
+    if VariantType.anchor.value in content.ctype.ctype:
+        url_content = urljoin(
+            SPIDER_ANCHOR_DOMAIN,
+            content.get_absolute_url()
+        )
+    else:
+        url_content = urljoin(
+            context["hostpart"],
+            content.get_absolute_url()
+        )
     ref_content = URIRef(url_content)
+    # is already node in graph
+    if (ref_content, spkcgraph["type"], None) in graph:
+        return ref_content
     if (
         context.get("ac_namespace", None) and
         context["sourceref"] != ref_content
@@ -102,7 +111,7 @@ def serialize_content(graph, content, context, embed=False):
             Literal("Content", datatype=XSD.string)
         ))
 
-    graph.add(
+    graph.set(
         (
             ref_content,
             spkcgraph["action:view"],
@@ -253,13 +262,19 @@ def serialize_stream(
             list_features(graph, component, ref_component, context)
 
     else:
-        ref_component = None
-        usercomponent = None
+        # either start with invalid usercomponent which will be replaced
+        #  or use bottom-1 usercomponent to detect split
+        if page <= 1:
+            usercomponent = None
+            ref_component = None
+        else:
+            _pos = ((page - 1) * paginator.per_page) - 1
+            usercomponent = paginator.object_list[_pos]
+            ref_component = URIRef(urljoin(
+                context["hostpart"],
+                usercomponent.get_absolute_url()
+            ))
         for content in page_view.object_list:
-            # leads to possible duplicate usercomponents among multiple pages
-            # but every graph is complete
-            # and is safer in case a site splits between
-            # two different components
             if usercomponent != content.usercomponent:
                 usercomponent = content.usercomponent
                 ref_component = serialize_component(
