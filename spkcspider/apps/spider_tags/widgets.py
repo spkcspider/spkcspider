@@ -50,7 +50,6 @@ class ValidatorWidget(widgets.Textarea):
         return super().render(name, value, attrs, renderer)
 
 
-
 class SchemeWidget(widgets.Textarea):
     template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
 
