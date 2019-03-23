@@ -184,7 +184,7 @@ class FriendProtection(BaseProtection):
         label=_("Users"), required=False,
         widget=OpenChoiceWidget(
             attrs={
-                "style": "min-width: 300px; width:100%"
+                "style": "min-width: 250px; width:100%"
             }
         )
     )
@@ -326,7 +326,7 @@ class PasswordProtection(BaseProtection):
         label=_("Passwords"), required=False,
         widget=OpenChoiceWidget(
             attrs={
-                "style": "min-width: 300px; width:100%"
+                "style": "min-width: 250px; width:100%"
             }
         )
     )
@@ -335,7 +335,7 @@ class PasswordProtection(BaseProtection):
         label=_("Passwords (for component authentication)"), required=False,
         widget=OpenChoiceWidget(
             attrs={
-                "style": "min-width: 300px; width:100%"
+                "style": "min-width: 250px; width:100%"
             }
         )
     )

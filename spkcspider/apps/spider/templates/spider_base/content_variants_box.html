@@ -1,16 +1,16 @@
 {% load i18n static %}
 <div class="w3-border">
-  <div style="flex:auto;flex-wrap:wrap;padding:2px 4px 2px 4px;">
+  <div style=" display:flex;flex:auto;flex-wrap:wrap;padding:2px; align-items: stretch;">
     {% for variant in content_variants %}
       {% if uc.strength < variant.strength %}
-      <span class="w3-button w3-red w3-tooltip" style="cursor: default;margin:2px 0 2px 0;">
+      <span class="w3-button w3-red w3-tooltip" style="cursor: default;margin:2px;">
         <b style="margin-right:5px" aria-hidden="true">X</b>{{variant}}
         <div aria-hidden="true" title="{{variant}}" class="w3-text spkc-variant-errcolor spkc-variant-text"><div class="w3-padding"><b style="margin-right:5px" aria-hidden="true">X</b><span class="w3-tiny">{% blocktrans trimmed with required_strength=variant.strength %}
           Strength: {{required_strength}}
         {% endblocktrans %}</span></div></div>
       </span>
       {% else %}
-      <a rel="nofollow" style="margin:2px 0 2px 0;" class="w3-button {% if variant in content_variants_used %}{% if variant.unique_for_component %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' token=uc.token type=variant.name %}?{{spider_GET.urlencode}}" >
+      <a rel="nofollow" style="margin:2px;" class="w3-button {% if variant in content_variants_used %}{% if variant.unique_for_component %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' token=uc.token type=variant.name %}?{{spider_GET.urlencode}}" >
         <b style="margin-right:5px" aria-hidden="true">+</b>{{variant}}
       </a>
       {% endif %}

@@ -59,16 +59,16 @@
                     {% trans 'Add Component' %}
                   </a>
                   <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-listpublic' %}">
-                    <i class="fas fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'List public Components' %}
+                    <i class="fas fa-globe" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'Public Components' %}
                   </a>
                   <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-list' %}">
-                    <i class="fas fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'List owned Components' %}
+                    <i class="fas fa-sitemap" style="margin-right:10px" aria-hidden="true"></i>
+                    {% trans 'Own Components' %}
                   </a>
                   <a class="w3-bar-item w3-button" href="{% list_own_content %}">
-                    <i class="fas fa-list-ul" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'List private Content' %}
+                    <i class="fas fa-folder" style="margin-right:10px;color:#FF0000;" aria-hidden="true"></i>
+                    {% trans 'Private Contents' %}
                   </a>
                 {% endblock context_actions %}
               </div>

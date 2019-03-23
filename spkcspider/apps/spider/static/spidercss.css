@@ -1,3 +1,21 @@
+
+.spkc-form input[type=text] {
+  padding:8px;
+  display:block;
+  border:none;
+  border-bottom:1px solid #ccc;
+  width:100%;
+}
+
+.spkc-form textarea {
+  resize: none;
+  padding:8px;
+  display:block;
+  border:none;
+  border-bottom:1px solid #ccc;
+  width:100%;
+}
+
 .spkc-variant-text{
   height:100%;
   width:100%;
