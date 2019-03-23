@@ -16,37 +16,72 @@ document.addEventListener("DOMContentLoaded", function(){
       compact: true,
       disable_collapse: true,
       schema: {
-        "type": "array",
         "title": "Schema",
-        "format": "tabs",
-        "disable_properties": false,
-        "items": {
-          "title": "Field",
-          "type": "object",
-          "remove_empty_properties": true,
-          "headerTemplate": "{{ self.key }}",
-          "properties": {
-            "key": {
-              "title": "Name of the field",
-              "type": "string"
-            },
-            "label": {
-              "title": "Field label",
-              "type": "string"
-            },
-            "nonhashable": {
-              "title": "Exclude from verification",
-              "type": "boolean",
-              "format": "checkbox"
-            },
-            "help_text": {
-              "title": "Field help text",
-              "type": "string"
-            },
-            "field": {
-              "title": "Field type",
-              "type": "string",
-              "enum": field_types
+        "$ref": "#/definitions/fieldarray",
+        "definitions": {
+          "fieldarray": {
+            "type": "array",
+            "title": "Field Array",
+            "id": "fieldarray",
+            "format": "tabs",
+            "items": {
+              "title": "Entry",
+              "oneOf": [
+                {
+                  "title": "Field",
+                  "$ref": "#/definitions/field"
+                },
+                {
+                  "title": "Field Array",
+                  "$ref": "#/definitions/fieldarray2"
+                }
+              ]
+            }
+          },
+          "fieldarray2": {
+            "type": "array",
+            "title": "Field Array",
+            "id": "fieldarray2",
+            "format": "tabs",
+            "items": {
+              "title": "Entry",
+              "oneOf": [
+                {
+                  "title": "Field",
+                  "$ref": "#/definitions/field"
+                }
+              ]
+            }
+          },
+          "field": {
+            "type": "object",
+            "title": "Field",
+            "id": "field",
+            "disable_properties": false,
+            "remove_empty_properties": true,
+            "properties": {
+              "key": {
+                "title": "Name of the field",
+                "type": "string"
+              },
+              "label": {
+                "title": "Field label",
+                "type": "string"
+              },
+              "nonhashable": {
+                "title": "Exclude from verification",
+                "type": "boolean",
+                "format": "checkbox"
+              },
+              "help_text": {
+                "title": "Field help text",
+                "type": "string"
+              },
+              "field": {
+                "title": "Field type",
+                "type": "string",
+                "enum": field_types
+              }
             }
           }
         }

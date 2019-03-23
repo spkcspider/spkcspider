@@ -129,8 +129,7 @@ class AnchorField(forms.ModelChoiceField):
 
     # limit_to_uc: limit to usercomponent, if False to user
     def __init__(
-        self, use_default_anchor=True, required=False, limit_to_uc=True,
-        **kwargs
+        self, use_default_anchor=True, limit_to_uc=True, **kwargs
     ):
         from spkcspider.apps.spider.models import AssignedContent
         _ = gettext_lazy
@@ -139,7 +138,9 @@ class AnchorField(forms.ModelChoiceField):
         else:
             self.filters_user = ("usercomponent__user",)
         self.use_default_anchor = use_default_anchor
-        if self.use_default_anchor and not kwargs.get("empty_label", None):
+        if use_default_anchor:
+            kwargs.setdefault("required", False)
+        if use_default_anchor and not kwargs.get("empty_label", None):
             kwargs["empty_label"] = _("(Use default anchor)")
 
         travel = TravelProtection.objects.get_active()
@@ -150,7 +151,7 @@ class AnchorField(forms.ModelChoiceField):
         ).exclude(
             usercomponent__travel_protected__in=travel
         )
-        super().__init__(required=required, **kwargs)
+        super().__init__(**kwargs)
 
     def to_python(self, value):
         if value in self.empty_values:
