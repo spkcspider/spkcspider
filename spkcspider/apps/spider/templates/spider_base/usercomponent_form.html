@@ -23,7 +23,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 
 {% block content %}
-  <div class="w3-padding" style="height:120px">
+  <div class="w3-padding" style="min-height:120px">
     <span class="w3-left">
     {% if object %}
       <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-list' token=object.token %}">
