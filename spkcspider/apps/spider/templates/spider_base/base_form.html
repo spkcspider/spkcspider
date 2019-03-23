@@ -11,11 +11,8 @@
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
           {% hashable_literalize field as hashable %}
           <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
-          <div>{{ field.label_tag }}</div>
-          {% comment %}
-            {% if form.use_required_attribute and not field.required %}
-            <div class="w3-text-grey w3-tiny">(optional)</div>{% endif %}
-          {% endcomment %}
+          <div><label for="{{ field.auto_id }}">{{ field.label }}<sup class="w3-small {% if field.field.disabled %}w3-text-grey{% else %}w3-text-red{% endif %}">{% if field.field.required %}*{% endif %}</sup>:</label>
+          </div>
           {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
             <data hidden="hidden" rel="spkc:value">
             {% for q in field.value %}
