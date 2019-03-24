@@ -1,5 +1,10 @@
-{% extends "spkcspider/base.html" %}
+{% extends "spider_base/nouc_base.html" %}
+{% block title %}{{ flatpage.title }}{% endblock %}
 {% block content %}
-  {% block title %}{{ flatpage.title }}{% endblock %}
-  {% block content %}{{ flatpage.content }}{% endblock %}
+  <div class="w3-padding">
+    <h1>{{ flatpage.title }}</h1>
+    <div class="w3-white">
+      {{ flatpage.content|safe }}
+    </div>
+  </div>
 {% endblock %}

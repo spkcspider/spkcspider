@@ -1,5 +1,6 @@
 {% load i18n %}
 {% load staticfiles spider_base %}
+{% load flatpages %}
 <!DOCTYPE html>
 <html lang="{{LANGUAGE_CODE}}">
   <head>
@@ -31,7 +32,7 @@
     {% block extrahead %}{% endblock %}
   </head>
 
-  <body class="{% block body_class %}{% endblock %}">
+  <body class="bodyflex {% block body_class %}{% endblock %}">
     {# Deco content, e.g.base.html  #}
     {% block layout %}
       {% block headerbar %}
@@ -123,7 +124,7 @@
         </div>
       </header>
       {% endblock headerbar %}
-      <main class="cond-top-fix{% block main_classes %}{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
+      <main class="footer-fix cond-top-fix{% block main_classes %}{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
       {% block messages %}
         {% if messages %}
           <ul class="messagelist w3-ul w3-padding">{% for message in messages %}
@@ -134,6 +135,22 @@
       {# Main content  #}
       {% block content %}{% endblock %}
     </main>
+    {% block global_footer %}
+    {% concat_string '/' LANGUAGE_CODE '/gfooter/' as global_footer_localized %}
+    {% get_flatpages global_footer_localized for request.user as footer_pages %}
+    {% if not footer_pages %}
+      {% get_flatpages '/gfooter/' for request.user as footer_pages %}
+    {% endif %}
+    {% if footer_pages %}
+    <footer>
+      <div class="w3-red w3-padding" style="display:flex;flex: 1;flex-direction: column;">
+        {% for page in footer_pages %}
+          <a href="{{page.url}}">{{page.title}}</a>
+        {% endfor %}
+      </div>
+    </footer>
+    {% endif %}
+    {% endblock %}
     {% endblock %}
 
     {# Main scripts #}

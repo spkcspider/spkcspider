@@ -7,9 +7,11 @@ from ..widgets import TrumbowygWidget
 
 _help_text = _(
     """Example: '/about/contact/'. Make sure to have leading and trailing slashes.
-    "<br/>Special Urls (ordered by url):<br/>
+    <br/>Special Urls (ordered by url):<br/>
     /home/heading/*/ : flatpages used for heading on frontpage <br/>
-    /home/main/*/ : flatpages used for general information on frontpage"""
+    /home/main/*/ : flatpages used for general information on frontpage <br/>
+    /gfooter/*/ : flatpage links with general informations (links will be rendered on every page)
+    """  # noqa: E501
 )
 
 

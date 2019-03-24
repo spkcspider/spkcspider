@@ -1,3 +1,15 @@
+.spkc-content{
+  max-width:980px;
+  margin-left:5px;
+  margin-right:auto;
+  width:100vw;
+}
+@media (max-width:990px){
+  .spkc-content{
+    margin-right:10px;
+    width:auto;
+  }
+}
 
 .spkc-form input[type=text] {
   padding:8px;
@@ -39,6 +51,12 @@
   text-align:center;
 }
 
+.bodyflex {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
 header.cond-top-fix{
   width:100%;
   z-index:99;
@@ -46,6 +64,11 @@ header.cond-top-fix{
 
 main.cond-top-fix{
   margin-top:20px;
+}
+
+main.footer-fix{
+  margin-bottom:10px;
+  flex: 1;
 }
 @media (min-width:601px){
   .spkc-entity-button{
@@ -57,7 +80,7 @@ main.cond-top-fix{
       position:fixed;
     }
     main.cond-top-fix{
-      margin-top:40px;
+      margin-top:45px;
     }
   }
 }
