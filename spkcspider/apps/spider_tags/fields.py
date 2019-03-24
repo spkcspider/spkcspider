@@ -180,7 +180,11 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
         _mainprefix = prefix
     for i in layout:
         item = i.copy()
-        key, field = item.pop("key", None), item.pop("field", None)
+        try:
+            key, field = item.pop("key", None), item.pop("field", None)
+        except Exception:
+            logging.warning("Invalid item (no dict)", i)
+            continue
         localize = item.pop("localize", False)
         nonhashable = item.pop("nonhashable", False)
         if "label" not in item:

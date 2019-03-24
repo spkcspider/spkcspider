@@ -7,14 +7,13 @@
 </div>
 {% endif %}
 <div style="word-break: break-all" class="w3-padding">
-  <input type="hidden" form="request_verification_form" name="url" value="{{hostpart}}{% url 'spider_base:ucontent-access' token=object.token access='view' %}"/>
   <table class="w3-table-all" style="width:100%">
     <thead>
       <tr><th>{% trans "Verifier for this type" %}:</th></tr>
     </thead>
     <tbody>
       {% for verifier in object.content.layout.default_verifiers %}
-        <tr><td><button class="w3-btn" form="request_verification_form" formaction="{{verifier}}" type="submit">{{verifier}}</button><td></tr>
+        <tr><td><button class="w3-btn" form="request_verification_form" type="button">{{verifier}}</button><td></tr>
       {% endfor %}
     </tbody>
   </table>

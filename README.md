@@ -224,7 +224,7 @@ Otherwise security could be compromised.
 * documentation
 * layouts
 * tests for other dbs
-* allow disabling json editor
+* fix multilevel forms
 * improve default tag validators to prevent ddos gadgets by weak validators
 
 ## Later

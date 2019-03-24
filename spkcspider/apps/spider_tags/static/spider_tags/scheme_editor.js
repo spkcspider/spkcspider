@@ -1,5 +1,28 @@
 
 JSONEditor.plugins.select2.enable = true;
+/**JSONEditor.defaults.editors.mainarray = JSONEditor.defaults.editors.array.extend({
+  addControls: function() {
+    JSONEditor.defaults.editors.array.addControls.apply(this)
+    this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'),'delete',this.translate('button_delete_all_title'));
+    this.remove_all_rows_button.classList.add('json-editor-btntype-deleteall');
+    this.remove_all_rows_button.addEventListener('click',function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!self.askConfirmation()) {
+        return false;
+      }
+
+      self.empty(true);
+      self.setValue([]);
+      self.onChange(true);
+      self.jsoneditor.trigger('deleteAllRows');
+    });
+    self.controls.appendChild(this.remove_all_rows_button);
+  }
+
+})*/
+
 document.addEventListener("DOMContentLoaded", function(){
   let collection = document.getElementsByClassName("SchemeEditorTarget");
   for (let counter=0;counter<collection.length;counter++){
@@ -10,10 +33,9 @@ document.addEventListener("DOMContentLoaded", function(){
     } catch(e){
       console.log(e);
     }
-    let validator_editor = new JSONEditor(document.getElementById(`${element.id}_inner_wrapper`), {
+    let scheme_editor = new JSONEditor(document.getElementById(`${element.id}_inner_wrapper`), {
       theme: 'html',
       iconlib: 'fontawesome5',
-      compact: true,
       disable_collapse: true,
       schema: {
         "title": "Schema",
@@ -32,23 +54,25 @@ document.addEventListener("DOMContentLoaded", function(){
                   "$ref": "#/definitions/field"
                 },
                 {
-                  "title": "Field Array",
-                  "$ref": "#/definitions/fieldarray2"
-                }
-              ]
-            }
-          },
-          "fieldarray2": {
-            "type": "array",
-            "title": "Field Array",
-            "id": "fieldarray2",
-            "format": "tabs",
-            "items": {
-              "title": "Entry",
-              "oneOf": [
-                {
-                  "title": "Field",
-                  "$ref": "#/definitions/field"
+                  "title": "Sub Form",
+                  "type": "object",
+                  "disable_properties": true,
+                  "no_additional_properties": true,
+                  "disable_edit_json": true,
+                  "properties": {
+                    "key": {
+                      "title": "Sub Form Key",
+                      "type": "string"
+                    },
+                    "label": {
+                      "title": "Sub Form Label",
+                      "type": "string"
+                    },
+                    "field": {
+                      "title": "Sub Array",
+                      "$ref": "#/definitions/fieldarray"
+                    }
+                  }
                 }
               ]
             }
@@ -67,6 +91,11 @@ document.addEventListener("DOMContentLoaded", function(){
               "label": {
                 "title": "Field label",
                 "type": "string"
+              },
+              "required": {
+                "title": "Required",
+                "type": "boolean",
+                "format": "checkbox"
               },
               "nonhashable": {
                 "title": "Exclude from verification",
@@ -88,15 +117,36 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
     element.style.display = 'none';
-    validator_editor.setValue(JSON.parse(element.value));
-    let handler = function (ev){
-      let errors = validator_editor.validate();
+    scheme_editor.setValue(JSON.parse(element.value));
+    let clean_handler = function (ev){
+      /* if visible ignore */
+      if (element.style.display !== 'none'){
+        return;
+      }
+      let errors = scheme_editor.validate();
       if (errors.length){
         ev.preventDefault();
       } else {
-        element.value = JSON.stringify(validator_editor.getValue());
+        element.value = JSON.stringify(scheme_editor.getValue());
       }
     };
-    element.form.addEventListener("submit", handler, false);
+    let toggle_handler = function (ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (element.style.display === 'none'){
+        element.value = JSON.stringify(scheme_editor.getValue(), null, 4);
+        scheme_editor.disable();
+        element.style.display = 'block';
+      } else {
+        scheme_editor.enable();
+        element.style.display = 'none';
+      }
+    };
+    let editor = scheme_editor.getEditor('root')
+    let togglebut = editor.getButton('raw','', null);
+    togglebut.classList.add('json-editor-btntype-toggle');
+    togglebut.addEventListener("click", toggle_handler, false);
+    editor.title_controls.appendChild(togglebut);
+    element.form.addEventListener("submit", clean_handler, false);
   }
 }, false);

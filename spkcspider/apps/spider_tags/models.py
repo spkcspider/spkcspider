@@ -2,7 +2,7 @@
 import logging
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
@@ -93,7 +93,7 @@ class UserTagLayout(BaseContent):
 
     def get_template_name(self, scope):
         if scope == "view":
-            return 'spider_base/edit_form.html'
+            return 'spider_tags/edit_preview_form.html'
         return super().get_template_name(scope)
 
     def get_strength_link(self):
@@ -108,11 +108,23 @@ class UserTagLayout(BaseContent):
         )
 
     def get_form(self, scope):
-        if scope in ("add", "update"):
+        if scope in {"add", "update"}:
             from .forms import TagLayoutForm
             return TagLayoutForm
         else:
             return self.layout.get_form()
+
+    def access_view(self, **kwargs):
+        _ = gettext
+        kwargs.setdefault(
+            "legend",
+            _("Check \"%s\"") % self.__str__()
+        )
+        # not visible by default
+        kwargs.setdefault("confirm", _("Check"))
+        # prevent second button
+        kwargs.setdefault("inner_form", False)
+        return super().access_view(**kwargs)
 
     def access_add(self, **kwargs):
         if not hasattr(self, "layout"):
@@ -122,6 +134,11 @@ class UserTagLayout(BaseContent):
     def get_form_kwargs(self, **kwargs):
         kwargs["instance"] = self.layout
         return super().get_form_kwargs(**kwargs)
+
+    def access(self, context):
+        if context["scope"] == "view":
+            context["extra_outer_forms"] = ["request_verification_form"]
+        return super().access(context)
 
 
 @add_content
@@ -226,7 +243,7 @@ class SpiderTag(BaseContent):
         return self.access_update(**kwargs)
 
     def access(self, context):
-        if context["scope"] not in {"add", "push_update"}:
+        if context["scope"] not in {"add", "view"}:
             context["extra_outer_forms"] = ["request_verification_form"]
         return super().access(context)
 
