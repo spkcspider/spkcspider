@@ -142,10 +142,12 @@
       {% get_flatpages '/gfooter/' for request.user as footer_pages %}
     {% endif %}
     {% if footer_pages %}
-    <footer>
-      <div class="w3-red w3-padding" style="display:flex;flex: 1;flex-direction: column;">
+    <footer style="border-top: 2px solid #aaa;">
+      <div class="w3-red w3-row w3-padding">
         {% for page in footer_pages %}
-          <a href="{{page.url}}">{{page.title}}</a>
+          <div class="w3-padding w3-col s12 m4">
+            <a href="{{page.url}}">{{page.title}}</a>
+          </div>
         {% endfor %}
       </div>
     </footer>
