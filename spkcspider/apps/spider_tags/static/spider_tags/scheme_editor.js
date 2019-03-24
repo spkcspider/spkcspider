@@ -146,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function(){
     let togglebut = editor.getButton('raw','', null);
     togglebut.classList.add('json-editor-btntype-toggle');
     togglebut.addEventListener("click", toggle_handler, false);
-    editor.title_controls.appendChild(togglebut);
+    editor.controls.appendChild(togglebut);
     element.form.addEventListener("submit", clean_handler, false);
   }
 }, false);

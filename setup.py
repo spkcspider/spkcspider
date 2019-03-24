@@ -17,7 +17,8 @@ install_requirements = [
     'cryptography',
     'django-widget-tweaks',
     'django-ranged-response',
-    'django-next-prev'
+    'django-next-prev',
+    'lru-dict'
 ]
 
 debug_requirements = [

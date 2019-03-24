@@ -175,7 +175,7 @@ class AnchorField(forms.ModelChoiceField):
 
 
 def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
-    if not _base:
+    if _base is None:
         _base = []
         _mainprefix = prefix
     for i in layout:
@@ -194,16 +194,11 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             item["label"] = gettext(item["label"])
             if "help_text" in item:
                 item["help_text"] = gettext(item["help_text"])
-        # readd prefix to label:
-        item["label"] = "".join(
-                [
-                    # remove mainprefix
-                    *prefix.replace(
-                        _mainprefix, "", 1
-                    ).replace("/", " > "),  # beautify /
-                    item["label"],
-                ]
-            )
+        # add beautified prefix to label:
+        split = prefix.replace(_mainprefix, "", 1).split("/")
+        if len(split) > 1:
+            split = " > ".join(split[1:])
+            item["label"] = "{} > {}".format(split, item["label"])
         if not key or "/" in key:
             logging.warning("Invalid item (no key/contains /)", i)
             continue

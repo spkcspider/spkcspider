@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.http import HttpResponse
 
+
 from rdflib import URIRef
 from jsonfield import JSONField
 
@@ -20,10 +21,15 @@ from spkcspider.apps.spider.helpers import get_settings_func
 
 from spkcspider.apps.spider.models import AssignedContent
 
-
-CACHE_FORMS = {}
-
 logger = logging.getLogger(__name__)
+
+try:
+    from lru import LRU
+    CACHE_FORMS = LRU(256)
+except Exception:
+    logger.warning("LRU dict failed, use dict instead", exc_info=True)
+    CACHE_FORMS = {}
+
 
 # Create your models here.
 
@@ -62,12 +68,12 @@ class TagLayout(models.Model):
             self.usertag.full_clean(exclude=["layout"])
 
     def get_form(self):
-        from .forms import generate_form
-        id = self.usertag.pk if self.usertag else None
-        form = CACHE_FORMS.get((self.name, id))
+        compkey = (self.name, self.usertag.pk if self.usertag else None)
+        form = CACHE_FORMS.get(compkey)
         if not form:
+            from .forms import generate_form
             form = generate_form("LayoutForm", self.layout)
-            CACHE_FORMS[self.name, id] = form
+            CACHE_FORMS[compkey] = form
         return form
 
     def __repr__(self):
@@ -75,6 +81,17 @@ class TagLayout(models.Model):
 
     def __str__(self):
         return "<TagLayout: %s>" % self.name
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            # invalidate forms
+            old = TagLayout.objects.get(pk=self.pk)
+            _id = self.usertag.pk if self.usertag else None
+            try:
+                del CACHE_FORMS[old.name, _id]
+            except KeyError:
+                pass
+        return super().save(*args, **kwargs)
 
 
 @add_content
