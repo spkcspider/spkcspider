@@ -10,7 +10,7 @@ repository = ""
 [tool.poetry.dependencies]
 python = ">=3.5"
 django = '>=2'
-django-simple-jsonfield = '*'
+django-simple-jsonfield = '>=0.3'
 requests = '*'
 certifi = '*'
 bleach = '*'

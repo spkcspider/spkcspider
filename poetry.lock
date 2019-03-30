@@ -165,7 +165,7 @@ description = ""
 name = "django-simple-jsonfield"
 optional = false
 python-versions = "*"
-version = "0.2.3"
+version = "0.3.0"
 
 [package.dependencies]
 django = "*"
@@ -415,7 +415,7 @@ mysql = []
 pgsql = []
 
 [metadata]
-content-hash = "aeb20f2e21dc716f418d27371ac23bbdc36bd3ad70ce35a7a765296a9ab1f8e1"
+content-hash = "6a1e97e363d372aa1eaa85815eb0873772b3d09524ea70e6abf659d41949fb46"
 python-versions = ">=3.5"
 
 [metadata.hashes]
@@ -434,7 +434,7 @@ django-extensions = ["109004f80b6f45ad1f56addaa59debca91d94aa0dc1cb19678b9364b4f
 django-next-prev = ["5fe2c693db551c0f444cb82284335a0e303518215050b3cb56551abb251e9376"]
 django-ranged-response = ["f71fff352a37316b9bead717fc76e4ddd6c9b99c4680cdf4783b9755af1cf985"]
 django-simple-captcha = ["4bbb39c2fd4bf17e678cb3e0aa42ecf6e3515e9ecafc14d1f5383f09a66a8165", "f71d20a294ce645f3ddd6cdf5bdfc693cecfe86b192f2069d2298344a3e82041"]
-django-simple-jsonfield = ["e499d97b2e86e5ef07298711848a92f4f3837a708177b657fc9b3dcca6875e30"]
+django-simple-jsonfield = ["226761953bf8794e634c7ab421f114b189c9798864138c14dd61652aa855c121", "3b222fbb560ffc6ab219ce99feec0c41f2eeb9fca8a244e259519b170393255e"]
 django-webtest = ["7b683d87cd9be13599af44b81bd44f97b49978b4e69cf4b92059c393f64307c1", "f3cd35d06ec01610e1a5ec8917679ad9a53f815d85d1e41e385746f1e823869d"]
 django-widget-tweaks = ["a69cba6c8a6b98f0cf6eef0535f8212d635e19044ee4533d4d78df700c2e233f", "bc645ef88307bc4ac269ee8ee9e572be814cd4a125c2bb6edb59ffcdc194982d"]
 html5lib = ["20b159aa3badc9d5ee8f5c647e5efd02ed2a66ab8d354930bd9ff139fc1dc0a3", "66cb0dcfdbbc4f9c3ba1a63fdb511ffdbd4f513b2b6d81b80cd26ce6b3fb3736"]
