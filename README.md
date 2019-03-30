@@ -209,7 +209,7 @@ Otherwise security could be compromised.
 * export: export data (import not implemented yet)
 * view: present usercontent to untrusted parties
 
-## strength
+## strength (component)
 * 0: no protection
 * 1-3: protection strength which can be provided by protections
 * 4: login only, user password
@@ -218,6 +218,10 @@ Otherwise security could be compromised.
 * 9: login only, user password + public attribute not set
 * 10: index, can be used in combination with unique per component attribute for unique content per user
 
+## strength (protection)
+* 0: no protection
+* 1-3: weak, medium, strong
+* 4: do component authentication
 
 # TODO
 * examples
@@ -241,12 +245,13 @@ Otherwise security could be compromised.
 
 
 ### Implement Web Comments
-* every webpage can be annotated
+* every internal page can be annotated (to keep contact to author)
 * reactions and likes
 * you see only the comments of your friends
 * Later/Maybe:
   * way to register your comment url on webpage, so others can see all comments
   * social media stuff: find content via comments and likes
+  * annotation of other pages
 
 ### Implement Emails/messaging
 * email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
