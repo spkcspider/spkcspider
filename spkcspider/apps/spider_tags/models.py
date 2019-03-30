@@ -1,6 +1,7 @@
 
 import logging
 
+from django.utils.html import escape
 from django.db import models
 from django.utils.translation import gettext, gettext_lazy as _
 
@@ -77,10 +78,18 @@ class TagLayout(models.Model):
         return form
 
     def __repr__(self):
+        if self.usertag:
+            return "<TagLayout: %s:%s>" % (
+                self.name, self.usertag.associated.usercomponent.user
+            )
         return "<TagLayout: %s>" % self.name
 
     def __str__(self):
-        return "<TagLayout: %s>" % self.name
+        if self.usertag:
+            return "TagLayout: %s:%s" % (
+                self.name, self.usertag.associated.usercomponent.user
+            )
+        return "TagLayout: %s" % self.name
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -107,9 +116,18 @@ class UserTagLayout(BaseContent):
 
     def __str__(self):
         if not self.id:
-            return self.localize_name(self.associated.ctype.name)
+            return self.localize_name("UserTagLayout")
         return "%s: %s:%s" % (
-            self.localize_name("Tag"),
+            self.localize_name("UserTagLayout"),
+            self.layout.name,
+            self.associated.usercomponent.user
+        )
+
+    def __repr__(self):
+        if not self.id:
+            return self.localize_name("UserTagLayout")
+        return "<%s: %s:%s>" % (
+            self.localize_name("UserTagLayout"),
             self.layout.name,
             self.associated.usercomponent.user
         )
@@ -144,7 +162,7 @@ class UserTagLayout(BaseContent):
         _ = gettext
         kwargs.setdefault(
             "legend",
-            _("Check \"%s\"") % self.__str__()
+            escape(_("Check \"%s\"") % self.__str__())
         )
         # not visible by default
         kwargs.setdefault("confirm", _("Check"))
@@ -197,9 +215,16 @@ class SpiderTag(BaseContent):
     def __str__(self):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
-        return "%s: %s:%s" % (
+        if not self.layout.usertag:
+            return "%s: <%s>: %s" % (
+                self.localize_name("Tag"),
+                self.layout.name,
+                self.associated.id
+            )
+        return "%s: <%s: %s>: %s" % (
             self.localize_name("Tag"),
             self.layout.name,
+            self.layout.id,
             self.associated.id
         )
 
@@ -264,7 +289,9 @@ class SpiderTag(BaseContent):
         return self.access_view(**kwargs)
 
     def access_push_update(self, **kwargs):
-        kwargs["legend"] = _("Update \"%s\" (push)") % self.__str__()
+        kwargs["legend"] = escape(
+            _("Update \"%s\" (push)") % self.__str__()
+        )
         kwargs["inner_form"] = False
         return self.access_update(**kwargs)
 

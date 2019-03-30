@@ -12,6 +12,7 @@ import logging
 from datetime import timedelta
 
 from django.db import models
+from django.utils.html import escape
 from django.shortcuts import redirect
 from django.utils.translation import gettext
 from django.middleware.csrf import CsrfViewMiddleware
@@ -140,12 +141,12 @@ class LinkContent(BaseContent):
 
     def access_add(self, **kwargs):
         _ = gettext
-        kwargs["legend"] = _("Create Content Link")
+        kwargs["legend"] = escape(_("Create Content Link"))
         return super().access_add(**kwargs)
 
     def access_update(self, **kwargs):
         _ = gettext
-        kwargs["legend"] = _("Update Content Link")
+        kwargs["legend"] = escape(_("Update Content Link"))
         return super().access_update(**kwargs)
 
     def access_raw_update(self, **kwargs):
@@ -291,12 +292,12 @@ class TravelProtection(BaseContent):
 
     def access_add(self, **kwargs):
         _ = gettext
-        kwargs["legend"] = _("Create Travel Protection")
+        kwargs["legend"] = escape(_("Create Travel Protection"))
         return super().access_add(**kwargs)
 
     def access_update(self, **kwargs):
         _ = gettext
-        kwargs["legend"] = _("Update Travel Protection")
+        kwargs["legend"] = escape(_("Update Travel Protection"))
         return super().access_update(**kwargs)
 
     def access_view(self, **kwargs):

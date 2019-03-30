@@ -206,7 +206,7 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             continue
         localize = item.pop("localize", False)
         nonhashable = item.pop("nonhashable", False)
-        if "label" not in item:
+        if not item.get("label"):
             item["label"] = key.replace(_mainprefix, "", 1)
 
         if localize:
@@ -220,15 +220,17 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             new_prefix = posixpath.join(prefix, key)
             item["required"] = False
             item["initial"] = None
+            # by prefixing with _ invalidate prefix for tag recognition
             _base.append((
-                "{}_start".format(new_prefix),
+                "_{}_start".format(new_prefix),
                 StartSub(**item)
             ))
             generate_fields(
                 field, new_prefix, _base=_base, _mainprefix=_mainprefix
             )
+            # by prefixing with _ invalidate prefix for tag recognition
             _base.append((
-                "{}_stop".format(new_prefix),
+                "_{}_stop".format(new_prefix),
                 StopSub(**item)
             ))
         elif isinstance(field, str):

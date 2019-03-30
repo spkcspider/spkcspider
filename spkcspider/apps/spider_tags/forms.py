@@ -262,7 +262,7 @@ def generate_form(name, layout):
 
         @classmethod
         def encode_initial(cls, initial, prefix="tag", base=None):
-            if not base:
+            if base is None:
                 base = {}
             for i in initial.items():
                 if isinstance(i[1], dict):
@@ -275,10 +275,10 @@ def generate_form(name, layout):
         def encode_data(self, cleaned_data, prefix="tag"):
             ret = {}
             for counter, i in enumerate(cleaned_data.items()):
+                if not i[0].startswith(prefix):  # unrelated data
+                    continue
                 selected_dict = ret
                 splitted = i[0].split("/")
-                if splitted[0] != prefix:  # unrelated data
-                    continue
                 # last key is item key, first is "tag"
                 for key in splitted[1:-1]:
                     if key not in selected_dict:

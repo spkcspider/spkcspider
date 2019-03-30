@@ -3,6 +3,7 @@ import logging
 import posixpath
 from urllib.parse import quote_plus
 
+from django.utils.html import escape
 from django.db import models
 from django.urls import reverse
 from django.conf import settings
@@ -149,12 +150,12 @@ class FileFilet(BaseContent):
 
     def access_add(self, **kwargs):
         _ = gettext
-        kwargs["legend"] = _("Upload File")
+        kwargs["legend"] = escape(_("Upload File"))
         return super().access_add(**kwargs)
 
     def access_update(self, **kwargs):
         _ = gettext
-        kwargs["legend"] = _("Update File")
+        kwargs["legend"] = escape(_("Update File"))
         return super().access_update(**kwargs)
 
     def save(self, *args, **kw):
@@ -251,7 +252,7 @@ class TextFilet(BaseContent):
 
     def access_update_guest(self, **kwargs):
         kwargs["legend"] = \
-            _("Update \"%s\" (guest)") % self.__str__()
+            escape(_("Update \"%s\" (guest)") % self.__str__())
         kwargs["inner_form"] = False
         return self.access_update(**kwargs)
 

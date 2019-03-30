@@ -6,6 +6,7 @@ import logging
 from urllib.parse import urljoin
 from functools import lru_cache
 
+from django.utils.html import escape
 from django.apps import apps as django_apps
 from django.db import models, transaction
 from django.utils.translation import gettext
@@ -509,7 +510,7 @@ class BaseContent(models.Model):
         kwargs["form"] = self.get_form("view")(
             **self.get_form_kwargs(disable_data=True, **kwargs)
         )
-        kwargs.setdefault("legend", _("View"))
+        kwargs.setdefault("legend", escape(_("View")))
         # not required: done by access template
         # kwargs.setdefault(
         #    "add_spkc_types",
@@ -531,7 +532,7 @@ class BaseContent(models.Model):
         _ = gettext
         kwargs.setdefault(
             "legend",
-            _("Add \"%s\"") % self.__str__()
+            escape(_("Add \"%s\"") % self.__str__())
         )
         # not visible by default
         kwargs.setdefault("confirm", _("Create"))
@@ -543,7 +544,7 @@ class BaseContent(models.Model):
         _ = gettext
         kwargs.setdefault(
             "legend",
-            _("Update \"%s\"") % self.__str__()
+            escape(_("Update \"%s\"") % self.__str__())
         )
         # not visible by default
         kwargs.setdefault("confirm", _("Update"))

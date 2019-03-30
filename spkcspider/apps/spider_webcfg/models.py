@@ -15,7 +15,8 @@ class WebConfig(BaseContent):
         {
             "name": "WebConfig",
             "ctype": (
-                VariantType.unique + VariantType.component_feature + VariantType.persist
+                VariantType.unique + VariantType.component_feature +
+                VariantType.persist
             ),
             "strength": 0
         }
