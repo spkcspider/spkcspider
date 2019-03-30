@@ -271,7 +271,7 @@ class SpiderTag(BaseContent):
             field.use_default_anchor
         ):
             if data is None:
-                return URIRef(self.get_primary_anchor())
+                return URIRef(self.get_primary_anchor(graph, context))
         return super().map_data(name, field, data, graph, context)
 
     @csrf_exempt
