@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from ..constants import dangerous_login_choices
 from ..models import LinkContent, TravelProtection
 from ..helpers import create_b64_token
-from ..widgets import InfoWidget
+from ..widgets import HTMLWidget
 
 
 _extra = '' if settings.DEBUG else '.min'
@@ -73,7 +73,7 @@ class TravelProtectionForm(forms.ModelForm):
     token_arg = forms.CharField(
         label=_("Token"),
         help_text=_("please export/copy for disabling travel mode"),
-        widget=InfoWidget
+        widget=HTMLWidget
     )
     new_pw = forms.CharField(
         initial="", required=False, label=_("New Password"),

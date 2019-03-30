@@ -1,5 +1,5 @@
 __all__ = [
-    "TagLayoutForm", "SpiderTagForm", "generate_form",
+    "TagLayoutForm", "TagLayoutAdminForm", "SpiderTagForm", "generate_form",
 ]
 
 import json
@@ -68,6 +68,27 @@ class TagLayoutForm(forms.ModelForm):
         else:
             self.save_m2m = self._save_m2m
         return self.usertag
+
+
+class TagLayoutAdminForm(forms.ModelForm):
+    class Meta:
+        model = TagLayout
+        fields = ["name", "unique", "layout", "default_verifiers", "usertag"]
+        widgets = {
+            "layout": SchemeWidget(
+                attrs={
+                    "field_types": json.dumps(list(installed_fields.keys()))
+                }
+            ),
+            "default_verifiers": ValidatorWidget,
+        }
+
+    class Media:
+        css = {
+            'all': [
+                'node_modules/@fortawesome/fontawesome-free/css/all.min.css'
+            ]
+        }
 
 
 class SpiderTagForm(forms.ModelForm):
@@ -246,7 +267,7 @@ def generate_form(name, layout):
             for i in initial.items():
                 if isinstance(i[1], dict):
                     new_prefix = posixpath.join(prefix, i[0])
-                    cls.encode_initial(i[i], prefix=new_prefix, base=base)
+                    cls.encode_initial(i[1], prefix=new_prefix, base=base)
                 else:
                     base[posixpath.join(prefix, i[0])] = i[1]
             return base

@@ -4,64 +4,74 @@
 {% endfor %}
 <ul class="w3-ul spkc-form" rel="spkc:properties">
   {% for field in form.visible_fields %}
-    <li id="{{field.auto_id}}_wrapper" class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
-      <div>
-        <div class="{% if field.help_text %}w3-cell w3-mobile{% endif %}">
-          <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.html_name}}</data>
-          <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
-          {% hashable_literalize field as hashable %}
-          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
-          <div><label for="{{ field.auto_id }}">{{ field.label }}<sup class="w3-small {% if field.field.disabled %}w3-text-grey{% else %}w3-text-red{% endif %}">{% if field.field.required %}*{% endif %}</sup>:</label>
-          </div>
-          {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
-            <data hidden="hidden" rel="spkc:value">
-            {% for q in field.value %}
-              {% literalize q field as LiteralData %}
-              {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
-                {% if LiteralData|is_uriref %}
-                  <data hidden="hidden" resource="{{LiteralData}}"></data>
-                {% else %}
-                  <data hidden="hidden"  datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+    {% if field.field.widget.input_type == "start_pseudo" %}
+      <li>
+        {% render_field field %}
+          <ul class="w3-ul">
+    {% elif field.field.widget.input_type == "stop_pseudo" %}
+          </ul>
+        {% render_field field %}
+      </li>
+    {% else %}
+      <li id="{{field.auto_id}}_wrapper" class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
+        <div>{# cell row #}
+          <div class="{% if field.help_text %}w3-cell w3-mobile{% endif %}">
+            <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.html_name}}</data>
+            <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
+            {% hashable_literalize field as hashable %}
+            <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
+            <div><label for="{{ field.auto_id }}">{{ field.label }}<sup class="w3-small {% if field.field.disabled %}w3-text-grey{% else %}w3-text-red{% endif %}">{% if field.field.required %}*{% endif %}</sup>:</label>
+            </div>
+            {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
+              <data hidden="hidden" rel="spkc:value">
+              {% for q in field.value %}
+                {% literalize q field as LiteralData %}
+                {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
+                  {% if LiteralData|is_uriref %}
+                    <data hidden="hidden" resource="{{LiteralData}}"></data>
+                  {% else %}
+                    <data hidden="hidden"  datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+                  {% endif %}
                 {% endif %}
-              {% endif %}
-            {% empty %}
-              <data hidden="hidden" resource="rdf:nil"></data>
-            {% endfor %}
-            </data>
-          {% else %}
-            {% literalize field as LiteralData %}
-            {% if LiteralData|is_uriref %}
-              <data hidden="hidden" resource="{{LiteralData}}"></data>
+              {% empty %}
+                <data hidden="hidden" resource="rdf:nil"></data>
+              {% endfor %}
+              </data>
             {% else %}
-              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+              {% literalize field as LiteralData %}
+              {% if LiteralData|is_uriref %}
+                <data hidden="hidden" resource="{{LiteralData}}"></data>
+              {% else %}
+                <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+              {% endif %}
             {% endif %}
+            {% block form_widget %}
+            {% if field|widget_type == "checkboxselectmultiple" %}
+            {% render_field field class+="w3-ul" %}
+            {% elif field|widget_type == "HTMLWidget" %}
+            {% render_field field class+="w3-white" style="padding: 6px 8px;" %}
+            {% else %}
+            {% render_field field %}
+            {% endif %}
+            {% endblock form_widget %}
+          </div>
+          {% if field.help_text %}
+            <div class="w3-cell w3-padding w3-mobile">
+              <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+            </div>
           {% endif %}
-          {% block form_widget %}
-          {% if field|widget_type == "checkboxselectmultiple" %}
-          {% render_field field class+="w3-ul" %}
-          {% elif field|widget_type == "infowidget" %}
-          {% render_field field class+="w3-white" style="padding: 6px 8px;" %}
-          {% else %}
-          {% render_field field %}
-          {% endif %}
-          {% endblock form_widget %}
         </div>
-        {% if field.help_text %}
-          <div class="w3-cell w3-padding w3-mobile">
-            <small class="w3-text-grey">{{ field.help_text|safe }}</small>
+        {% if field.errors %}
+          <div class="w3-text-red">
+            <ul>
+              {% for error in field.errors %}
+              <li class="">
+                {{ error }}
+              </li>
+              {% endfor %}
+            </ul>
           </div>
         {% endif %}
-      </div>
-      {% if field.errors %}
-        <div class="w3-text-red">
-          <ul>
-            {% for error in field.errors %}
-            <li class="">
-              {{ error }}
-            </li>
-            {% endfor %}
-          </ul>
-        </div>
       {% endif %}
     </li>
   {% empty %}{{form_empty_message|safe}}{% endfor %}

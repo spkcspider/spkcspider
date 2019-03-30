@@ -105,6 +105,15 @@ class UserTagLayout(BaseContent):
         }
     ]
 
+    def __str__(self):
+        if not self.id:
+            return self.localize_name(self.associated.ctype.name)
+        return "%s: %s:%s" % (
+            self.localize_name("Tag"),
+            self.layout.name,
+            self.associated.usercomponent.user
+        )
+
     def get_size(self):
         return len(str(self.layout.layout).encode("utf8"))
 

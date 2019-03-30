@@ -5,8 +5,9 @@ from django.contrib import admin
 from .models import (
     TagLayout
 )
+from .forms import TagLayoutAdminForm
 
 
 @admin.register(TagLayout)
-class AssignedContentAdmin(admin.ModelAdmin):
-    fields = ['name', 'unique', 'layout', 'default_verifiers', 'usertag']
+class TagLayoutAdmin(admin.ModelAdmin):
+    form = TagLayoutAdminForm

@@ -9,6 +9,10 @@ from django.utils.translation import gettext, gettext_lazy
 from spkcspider.apps.spider.helpers import add_by_field
 from spkcspider.apps.spider.models import TravelProtection
 
+from spkcspider.apps.spider.widgets import (
+    SubSectionStartWidget, SubSectionStopWidget
+)
+
 installed_fields = {}
 
 safe_default_fields = [
@@ -174,12 +178,27 @@ class AnchorField(forms.ModelChoiceField):
         return str(obj.content)
 
 
+class StartSub(forms.Field):
+    widget = SubSectionStartWidget
+    hashable = False
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.widget.label = self.label
+
+
+class StopSub(forms.Field):
+    widget = SubSectionStopWidget
+    hashable = False
+
+
 def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
     if _base is None:
         _base = []
         _mainprefix = prefix
     for i in layout:
         item = i.copy()
+        item.setdefault("required", False)
         try:
             key, field = item.pop("key", None), item.pop("field", None)
         except Exception:
@@ -194,19 +213,24 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
             item["label"] = gettext(item["label"])
             if "help_text" in item:
                 item["help_text"] = gettext(item["help_text"])
-        # add beautified prefix to label:
-        split = prefix.replace(_mainprefix, "", 1).split("/")
-        if len(split) > 1:
-            split = " > ".join(split[1:])
-            item["label"] = "{} > {}".format(split, item["label"])
         if not key or "/" in key:
             logging.warning("Invalid item (no key/contains /)", i)
             continue
         if isinstance(field, list):
             new_prefix = posixpath.join(prefix, key)
+            item["required"] = False
+            item["initial"] = None
+            _base.append((
+                "{}_start".format(new_prefix),
+                StartSub(**item)
+            ))
             generate_fields(
                 field, new_prefix, _base=_base, _mainprefix=_mainprefix
             )
+            _base.append((
+                "{}_stop".format(new_prefix),
+                StopSub(**item)
+            ))
         elif isinstance(field, str):
             new_field = installed_fields.get(field, None)
             if not new_field:

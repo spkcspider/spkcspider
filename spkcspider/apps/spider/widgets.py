@@ -1,4 +1,7 @@
-__all__ = ["OpenChoiceWidget", "StateButtonWidget", "InfoWidget"]
+__all__ = [
+    "OpenChoiceWidget", "StateButtonWidget", "HTMLWidget",
+    "SubSectionStartWidget", "SubSectionStopWidget"
+]
 
 
 from django.forms import widgets
@@ -19,9 +22,43 @@ class StateButtonWidget(widgets.CheckboxInput):
         }
 
 
-class InfoWidget(widgets.Input):
+class HTMLWidget(widgets.Input):
     template_name = 'spider_base/forms/widgets/info.html'
-    input_type = "info_widget"
+    input_type = "html_widget"
+
+    def __init__(self, *, template_name=None, **kwargs):
+        if template_name:
+            self.template_name = template_name
+        super().__init__(**kwargs)
+
+    def use_required_attribute(self, initial):
+        return False
+
+    def format_value(self, value):
+        return None
+
+    def value_omitted_from_data(self, data, files, name):
+        return None
+
+
+class SubSectionStartWidget(HTMLWidget):
+    input_type = "start_pseudo"
+    template_name = 'spider_base/forms/widgets/subsectionstart.html'
+    label = None
+
+    def __init__(self, *, label=None, **kwargs):
+        self.label = label
+        super().__init__(**kwargs)
+
+    def get_context(self, name, value, attrs):
+        ret = super().get_context(name, value, attrs)
+        ret["label"] = self.label
+        return ret
+
+
+class SubSectionStopWidget(HTMLWidget):
+    input_type = "stop_pseudo"
+    template_name = 'spider_base/forms/widgets/subsectionstop.html'
 
 
 class Select2Multiple(widgets.SelectMultiple):

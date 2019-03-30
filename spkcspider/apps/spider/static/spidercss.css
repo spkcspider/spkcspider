@@ -1,13 +1,27 @@
 .spkc-content{
   max-width:980px;
-  margin-left:5px;
-  margin-right:auto;
-  width:100vw;
+  margin-right:10px;
+  width:auto;
 }
-@media (max-width:990px){
+@media (min-width:990px){
   .spkc-content{
-    margin-right:10px;
-    width:auto;
+    width:100vw;
+    margin-left:5px;
+    margin-right:auto;
+  }
+}
+
+@media (min-width:1200px){
+  .spkc-content{
+    width:100vw;
+    margin: auto;
+  }
+}
+
+@media (min-width:1400px){
+  .spkc-content{
+    width:100vw;
+    max-width:1200px;
   }
 }
 
