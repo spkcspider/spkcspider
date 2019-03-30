@@ -42,6 +42,7 @@ class Command(BaseCommand):
                     for field in requires_hack:
                         self.fix_instance(i, field)
                     try:
+                        i.clean()
                         i.save()
                     except Exception as exc:
                         self.stdout.write(str(exc))
