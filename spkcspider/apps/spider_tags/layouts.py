@@ -281,9 +281,3 @@ def initialize_layouts(apps=None):
 
         if has_changed:
             tag_layout.save()
-    invalid_models = TagLayout.objects.exclude(
-        name__in=layouts.keys(), usertag=None
-    )
-    if invalid_models.exists():
-        print("Invalid layouts, please update or remove them:",
-              [t.name for t in invalid_models])
