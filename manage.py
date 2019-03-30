@@ -13,7 +13,13 @@ if __name__ == "__main__":
     )
     if not os.environ.get(
         "SPIDER_SILENCE",
-        os.environ.get("RUN_MAIN", None)  # is started with reloader
+        os.environ.get(
+            "RUN_MAIN",  # is started with reloader
+            os.environ.get(
+                "WERKZEUG_RUN_MAIN",  # is started with extensions reloader
+                None
+            )
+        )
     ):
         print("USE SETTINGS:", os.environ["DJANGO_SETTINGS_MODULE"])
 
