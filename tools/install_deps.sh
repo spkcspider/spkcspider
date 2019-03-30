@@ -4,6 +4,5 @@
 
 npm install
 poetry install
-poetry shell
-./manage.py migrate
-./manage.py collectstatic --no-input
+poetry run ./manage.py migrate
+poetry run ./manage.py collectstatic --no-input
