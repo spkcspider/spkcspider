@@ -1,5 +1,6 @@
 __all__ = ["FileForm", "TextForm", "RawTextForm"]
 
+import posixpath
 
 from django.db import models
 from django.conf import settings
@@ -52,7 +53,7 @@ class FileForm(forms.ModelForm):
         if "file" not in ret:
             return ret
         if not ret["name"] or ret["name"].strip() == "":
-            ret["name"] = ret["file"].name
+            ret["name"] = posixpath.basename(ret["file"].name)
         # has to raise ValidationError
         get_settings_func(
             "UPLOAD_FILTER_FUNC",
