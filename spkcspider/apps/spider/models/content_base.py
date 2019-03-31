@@ -98,7 +98,10 @@ class AssignedContent(BaseInfoModel):
         "spider_base.AuthToken", blank=True, null=True,
         limit_choices_to={"persist__gte": 0}, on_delete=models.CASCADE
     )
-    # don't allow recursion, can cause performance problems and headaches
+    # don't use extensive recursion,
+    # this can cause performance problems and headaches
+    # this is not enforced for allowing some small chains
+    # see SERIALIZED_MAX_DEPTH for limits (default currently 5)
     attached_to_content = models.ForeignKey(
         "self", blank=True, null=True,
         related_name="attached_contents", on_delete=models.CASCADE

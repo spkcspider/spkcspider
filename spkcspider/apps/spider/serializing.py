@@ -128,6 +128,11 @@ def serialize_content(graph, content, context, embed=False):
         graph, "id", ref=ref_content, literal=content.get_id(),
         datatype=XSD.integer
     )
+    if context["scope"] == "export":
+        add_property(
+            graph, "attached_to_content", ref=ref_content, ob=content
+        )
+
     if embed:
         list_features(graph, content, ref_content, context)
         content.content.serialize(graph, ref_content, context)
