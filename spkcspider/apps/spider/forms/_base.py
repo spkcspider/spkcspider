@@ -59,7 +59,8 @@ class UserComponentForm(forms.ModelForm):
         model = UserComponent
         fields = [
             'name', 'description', 'public', 'featured',
-            'features', 'primary_anchor', 'required_passes', 'token_duration'
+            'features', 'default_content_features',
+            'primary_anchor', 'required_passes', 'token_duration'
         ]
         error_messages = {
             NON_FIELD_ERRORS: {
@@ -93,6 +94,11 @@ class UserComponentForm(forms.ModelForm):
 
         self.fields["features"].queryset = (
             self.fields["features"].queryset &
+            request.user.spider_info.allowed_content.all()
+        ).order_by("name")
+
+        self.fields["default_content_features"].queryset = (
+            self.fields["default_content_features"].queryset &
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 
@@ -359,13 +365,24 @@ class UserContentForm(forms.ModelForm):
             # contents in index has no features as they could allow
             # remote access
             self.fields.pop("features", None)
-        elif not self.instance.usercomponent.features.filter(
-            name="Persistence"
-        ):
-            self.fields["features"].queryset = \
-                self.fields["features"].queryset.exclude(
-                    ctype__contains=VariantType.persist.value
-                )
+        else:
+            if not self.instance.usercomponent.features.filter(
+                name="Persistence"
+            ):
+                self.fields["features"].queryset = \
+                    self.fields["features"].queryset.exclude(
+                        ctype__contains=VariantType.persist.value
+                    )
+            user = request.user
+            if not user.is_authenticated:
+                user = self.instance.usercomponent.user
+            self.fields["features"].queryset = (
+                self.fields["features"].queryset &
+                user.spider_info.allowed_content.all()
+            ).order_by("name")
+            self.fields["features"].initial = \
+                self.instance.usercomponent.default_content_features.all()
+
         if request.user != user and not request.is_staff:
             del self.fields["usercomponent"]
 

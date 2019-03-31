@@ -166,6 +166,17 @@ class UserComponent(models.Model):
             ctype__contains=VariantType.component_feature.value
         )
     )
+    default_content_features = models.ManyToManyField(
+        "spider_base.ContentVariant",
+        related_name="default_feature_for_contents", blank=True,
+        limit_choices_to=models.Q(
+            ctype__contains=VariantType.content_feature.value
+        ),
+        help_text=_(
+            "Select features used by default for contents in this "
+            "component"
+        )
+    )
     primary_anchor = models.ForeignKey(
         "spider_base.AssignedContent", related_name="primary_anchor_for",
         null=True, blank=True,
@@ -173,7 +184,7 @@ class UserComponent(models.Model):
             "info__contains": "\nanchor\n",
         }, on_delete=models.SET_NULL,
         help_text=_(
-            "Select main identyifing anchor. Also used for attaching "
+            "Select main identifying anchor. Also used for attaching "
             "persisting tokens (elsewise they are attached to component)"
         )
     )
