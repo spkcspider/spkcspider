@@ -12,7 +12,7 @@
   <tbody>
   {% for uc in object_list %}
     <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" resource="{% url 'spider_base:ucontent-list' token=uc.token %}" typeof="spkc:Component">
-      <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px" >
+      <td class="{% if uc.is_index %}w3-large{% endif %}" style="width:40%; min-height:48px;display:inline-block;word-break: break-all;">
         <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
         <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
         <data rel="spkc:properties">
@@ -47,7 +47,7 @@
         Modified: {{time}} ago
         {% endblocktrans %}
       </td>
-      <td class="w3-show-inline-block">
+      <td style="display:inline-block">
         <div class="w3-bar w3-round-large w3-tiny w3-blue">
           <a style="{% if request.user == uc.user %}width:49.9%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list' token=uc.token %}" property="spkc:action:view">
             <div class="spkc-entity-button"><i class="fas fa-list-ul" alt="{% trans 'List' %}" aria-label="{% trans 'List' %}"></i></div>
