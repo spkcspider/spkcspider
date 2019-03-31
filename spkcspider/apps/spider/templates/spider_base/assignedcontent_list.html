@@ -150,7 +150,7 @@
     <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="spkc:contents">
       {% for content in object_list %}
         <tr resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
-          <td class="" style="width:40%; min-height:48px;display:inline-block;word-break: break-all;" rel="spkc:properties">
+          <td class="" style="min-height:48px;display:inline-block;word-break: break-all;" rel="spkc:properties">
             <span>{{ content.content|truncatechars:50 }}</span>
             <data hidden="hidden" typeof="spkc:Property">
               <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
