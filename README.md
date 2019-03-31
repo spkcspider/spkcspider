@@ -138,7 +138,7 @@ apache filter GET parameters:
 ~~~~
 LogFormat "%h %l %u %t \"%m %U %H\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" combined
 
-~~~
+~~~~
 
 # External usage
 
