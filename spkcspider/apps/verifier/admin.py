@@ -37,13 +37,13 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
         opts = self.opts
         if request.user.has_perm("%s.%s" % (opts.app_label, 'can_verify')):
             return True
-        return super().has_view_permission(self, request, obj)
+        return super().has_view_permission(request, obj)
 
     def has_change_permission(self, request, obj=None):
         opts = self.opts
         if request.user.has_perm("%s.%s" % (opts.app_label, 'can_verify')):
             return True
-        return super().has_change_permission(self, request, obj)
+        return super().has_change_permission(request, obj)
 
     def save_form(self, request, form, change):
         if 'verification_state' in form.changed_data:

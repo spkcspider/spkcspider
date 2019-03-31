@@ -162,11 +162,12 @@ class UserComponentAdmin(admin.ModelAdmin):
         m = request.user._meta.model_name
         if not request.user.is_active:
             return False
-        # not obj allows deletion of user
-        if not obj or request.user.is_superuser:
+        if request.user.is_superuser:
             return True
-        if obj.name == "index":
-            return request.user.has_perm("{}.delete_{}".format(n, m))
+        # you must be able to delete user to delete index component
+        if obj and obj.name == "index":
+            if not request.user.has_perm("{}.delete_{}".format(n, m)):
+                return False
         return request.user.has_perm("spider_base.delete_usercomponent")
 
     def has_view_permission(self, request, obj=None):
@@ -174,17 +175,18 @@ class UserComponentAdmin(admin.ModelAdmin):
             return False
         if request.user.is_superuser:
             return True
-        if not obj or obj.name == "index":
+        if obj and obj.name == "index" and obj.user != request.user:
             return False
-        return request.user == obj.user or request.user.is_staff
+        return request.user.has_perm("spider_base.view_usercomponent")
 
     def has_change_permission(self, request, obj=None):
         if not request.user.is_active:
             return False
-        if request.user.is_superuser or \
-           request.user.has_perm("spider_base.change_usercomponent"):
+        if request.user.is_superuser:
             return True
-        return not obj or request.user == obj.user
+        if obj and obj.name == "index" and obj.user != request.user:
+            return False
+        return request.user.has_perm("spider_base.change_usercomponent")
 
 
 @admin.register(Protection)

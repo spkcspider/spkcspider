@@ -262,16 +262,19 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         return ("-modified",)
 
     def get_context_data(self, **kwargs):
-        kwargs["component_user"] = self.user
+        kwargs["collection_user"] = self.user
         kwargs["username"] = getattr(self.user, self.user.USERNAME_FIELD)
         kwargs["scope"] = self.scope
         kwargs["is_public_view"] = False
         return super().get_context_data(**kwargs)
 
     def test_func(self):
+        staffperm = {"spider_base.view_usercomponent"}
+        if self.scope == "export":
+            staffperm.add("spider_base.view_assignedcontent")
         if self.has_special_access(
             user_by_login=True, user_by_token=False,
-            staff="spider_base.view_usercomponent", superuser=True
+            staff=staffperm, superuser=True
         ):
             return True
         return False

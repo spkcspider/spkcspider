@@ -257,10 +257,20 @@ class UserTestMixin(AccessMixin):
             self.request.is_staff = True
             return True
         if staff and self.request.user.is_staff:
-            if type(staff) is bool or self.request.user.has_perm(staff):
+            if type(staff) is bool:
                 self.request.is_special_user = True
                 self.request.is_staff = True
                 return True
+            if not isinstance(staff, (tuple, list, set)):
+                staff = (staff,)
+
+            if not all(
+                map(self.request.user.has_perm, staff)
+            ):
+                return False
+            self.request.is_special_user = True
+            self.request.is_staff = True
+            return True
         return False
 
     def get_user(self):
