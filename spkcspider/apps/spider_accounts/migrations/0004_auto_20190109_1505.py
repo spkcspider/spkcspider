@@ -18,11 +18,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='spideruser',
             name='quota_local',
-            field=models.PositiveIntegerField(blank=True, default=spkcspider.apps.spider_accounts.models.default_quota_spider_user_local, help_text='Quota in Bytes, null to use standard', null=True),
+            field=models.PositiveIntegerField(blank=True, default=spkcspider.apps.spider_accounts.models.default_quota_spider_user_local, help_text='Quota in Bytes, null for no limit', null=True),
         ),
         migrations.AddField(
             model_name='spideruser',
             name='quota_remote',
-            field=models.PositiveIntegerField(blank=True, default=spkcspider.apps.spider_accounts.models.default_quota_spider_user_remote, help_text='Quota in Bytes, null to use standard', null=True),
+            field=models.PositiveIntegerField(blank=True, default=spkcspider.apps.spider_accounts.models.default_quota_spider_user_remote, help_text='Quota in Bytes, null for no limit', null=True),
         ),
     ]

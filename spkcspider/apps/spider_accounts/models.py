@@ -32,11 +32,11 @@ class SpiderUser(AbstractUser):
     # optional quota
     quota_local = models.PositiveIntegerField(
         null=True, blank=True, default=default_quota_spider_user_local,
-        help_text=_("Quota in Bytes, null to use standard")
+        help_text=_("Quota in Bytes, null for no limit")
     )
     quota_remote = models.PositiveIntegerField(
         null=True, blank=True, default=default_quota_spider_user_remote,
-        help_text=_("Quota in Bytes, null to use standard")
+        help_text=_("Quota in Bytes, null for no limit")
     )
     # first_name,last_name are used in the UserForm so don't remove them
     # unless you want spending your time adapting the adminform
