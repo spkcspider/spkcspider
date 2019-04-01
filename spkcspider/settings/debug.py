@@ -52,9 +52,7 @@ SERIALIZED_PER_PAGE = 3
 SERIALIZED_MAX_DEPTH = 5
 
 CELERY_BROKER_URL = "redis://127.0.0.1:6379"
-CELERY_RESULT_BACKEND = 'db+sqlite:////{}/celery.sqlite3'.format(
-    BASE_DIR.replace("\\", "/").strip("/")
-)
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379"
 
 # specify fixtures directory for tests
 FIXTURE_DIRS = [
