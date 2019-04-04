@@ -13,7 +13,7 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider_tags.models import (
     TagLayout, SpiderTag
 )
-from spkcspider.apps.spider.constants.static import VariantType, spkcgraph
+from spkcspider.apps.spider.constants import VariantType, spkcgraph
 from spkcspider.apps.spider.models import ContentVariant, AuthToken
 from spkcspider.apps.spider.signals import update_dynamic
 

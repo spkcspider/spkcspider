@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='filefilet',
             name='sources',
-            field=jsonfield.fields.JSONField(default=[], help_text='Sources'),
+            field=jsonfield.fields.JSONField(default=[], blank=True),
         ),
         migrations.AddField(
             model_name='textfilet',
@@ -39,6 +39,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='textfilet',
             name='sources',
-            field=jsonfield.fields.JSONField(default=[], help_text='Sources'),
+            field=jsonfield.fields.JSONField(default=[], blank=True),
         ),
     ]

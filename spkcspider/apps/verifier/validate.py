@@ -20,7 +20,7 @@ import certifi
 
 from spkcspider import celery_app
 
-from spkcspider.apps.spider.constants.static import spkcgraph
+from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
 from .constants import BUFFER_SIZE

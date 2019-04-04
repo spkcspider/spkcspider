@@ -17,7 +17,7 @@ from rdflib import XSD, URIRef, Literal
 import requests
 import certifi
 
-from spkcspider.apps.spider.constants.static import spkcgraph
+from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.helpers import create_b64_token
 
 

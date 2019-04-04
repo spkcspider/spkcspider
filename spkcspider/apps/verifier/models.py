@@ -8,7 +8,7 @@ from django.core import exceptions
 import requests
 import certifi
 
-from spkcspider.apps.spider.constants.static import (
+from spkcspider.apps.spider.constants import (
     MAX_TOKEN_B64_SIZE
 )
 from .constants import (

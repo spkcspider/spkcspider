@@ -16,10 +16,9 @@ from ..models import (
 
 from ..helpers import create_b64_id_token
 from ..constants import (
-    ProtectionType, VariantType, STATIC_TOKEN_CHOICES,
-    INITIAL_STATIC_TOKEN_SIZE,
-    index_names, protected_names
+    ProtectionType, VariantType, index_names, protected_names
 )
+from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
 from ..signals import move_persistent
 
 _help_text_static_token = _("""Generate a new static token with variable strength<br/>
@@ -113,7 +112,7 @@ class UserComponentForm(forms.ModelForm):
                 self.fields["primary_anchor"].queryset.filter(
                     usercomponent=self.instance
                 )
-            if self.instance.name in index_names:
+            if self.instance.is_index:
                 self.fields.pop("features", None)
                 self.fields.pop("featured", None)
                 self.fields["required_passes"].help_text = _(
@@ -315,7 +314,7 @@ class UserContentForm(forms.ModelForm):
 
     class Meta:
         model = AssignedContent
-        fields = ['usercomponent', 'features']
+        fields = ['usercomponent', 'features', 'name', 'description']
         error_messages = {
             NON_FIELD_ERRORS: {
                 'unique_together': _(
@@ -333,6 +332,10 @@ class UserContentForm(forms.ModelForm):
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not self.instance.content.expose_name:
+            del self.fields["name"]
+        if not self.instance.content.expose_description:
+            del self.fields["description"]
 
         self.fields["new_static_token"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),
@@ -362,7 +365,7 @@ class UserContentForm(forms.ModelForm):
             self.fields["new_static_token"].choices = \
                 self.fields["new_static_token"].choices[1:]
 
-        if self.instance.usercomponent.name in index_names:
+        if self.instance.usercomponent.is_index:
             # contents in index has no features as they could allow
             # remote access
             self.fields.pop("features", None)
@@ -448,6 +451,10 @@ class UserContentForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self.update_anchor()
+        update_fields = set()
+        if not self.instance.name:
+
+            update_fields.add("name")
         if self.instance.token_generate_new_size is not None:
             if self.instance.token:
                 print(
@@ -460,7 +467,9 @@ class UserContentForm(forms.ModelForm):
                 self.instance.token_generate_new_size
             )
             self.instance.token_generate_new_size = None
-            self.instance.save(update_fields=["token"])
+            update_fields.add("token")
+        if update_fields:
+            self.instance.save(update_fields=update_fields)
 
     def save(self, commit=True):
         # field maybe not available

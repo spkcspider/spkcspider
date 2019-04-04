@@ -63,14 +63,14 @@ class PushTagView(UCTestMixin, FormView):
         return ret
 
     def post(self, request, *args, **kwargs):
-        associated = AssignedContent(
-            usercomponent=self.usercomponent,
-            ctype=self.variant,
-        )
-        associated.token_generate_new_size = \
-            getattr(settings, "TOKEN_SIZE", 30)
         # not yet confirmed
-        self.object = self.model.static_create(associated=associated)
+        self.object = self.model.static_create(
+            token_size=getattr(settings, "TOKEN_SIZE", 30),
+            associated_kwargs={
+                "usercomponent": self.usercomponent,
+                "ctype": self.variant
+            }
+        )
         # return super().post(request, *args, **kwargs)
         form = self.get_form()
         if form.is_valid():

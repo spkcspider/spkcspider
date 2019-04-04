@@ -7,7 +7,7 @@ from rdflib import Graph, Literal, URIRef, XSD
 
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants.static import spkcgraph
+from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
 
 

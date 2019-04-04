@@ -228,6 +228,8 @@ Otherwise security could be compromised.
 * documentation
 * layouts
 * show license information
+* use title and description
+* replace \n and = through ascii seperator meta chars (why? it is smarter than to block chars)
 * tests for other dbs
 * improve default tag validators to prevent ddos gadgets by weak validators
   * rate limitting (per domain)

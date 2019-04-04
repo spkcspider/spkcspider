@@ -17,7 +17,7 @@ from django.utils.translation import gettext
 from rdflib import Graph, Literal, URIRef, XSD
 
 from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
-from ..constants.static import spkcgraph, VariantType, index_names
+from ..constants import spkcgraph, VariantType
 from ..forms import UserComponentForm
 from ..models import (
     UserComponent, TravelProtection
@@ -482,12 +482,12 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
         return super().get_context_data(**kwargs)
 
     def delete(self, request, *args, **kwargs):
-        if self.object.name in index_names:
+        if self.object.is_index:
             return self.handle_no_permission()
         return super().delete(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
-        if self.object.name in index_names:
+        if self.object.is_index:
             return self.handle_no_permission()
         return super().get(request, *args, **kwargs)
 

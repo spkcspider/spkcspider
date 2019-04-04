@@ -67,17 +67,17 @@ class WebConfigView(UCTestMixin, View):
         ).first()
         if ret:
             return ret.content
-        associated = AssignedContent(
-            usercomponent=self.usercomponent,
-            ctype=variant,
-            persist_token=self.request.auth_token
+        ret = self.model.static_create(
+            token_size=getattr(settings, "TOKEN_SIZE", 30),
+            associated_kwargs={
+                "usercomponent": self.usercomponent,
+                "ctype": variant,
+                "persist_token": self.request.auth_token
+            }
         )
-        associated.token_generate_new_size = \
-            getattr(settings, "TOKEN_SIZE", 30)
-        ret = self.model.static_create(associated=associated)
         ret.clean()
         ret.save()
-        assert(associated.token)
+        assert(ret.associated.token)
         return ret
 
     def options(self, request, *args, **kwargs):

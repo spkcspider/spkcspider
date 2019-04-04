@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from django.http import HttpResponseRedirect, HttpResponse
 from django.views.generic.detail import DetailView
 
-from spkcspider.apps.spider.constants import get_anchor_domain
+from spkcspider.apps.spider.conf import get_anchor_domain
 
 from spkcspider.apps.spider.models import AssignedContent
 

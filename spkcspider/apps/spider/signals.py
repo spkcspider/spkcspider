@@ -8,7 +8,7 @@ __all__ = (
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from .constants.static import VariantType
+from .constants import VariantType
 from .helpers import create_b64_id_token
 import logging
 

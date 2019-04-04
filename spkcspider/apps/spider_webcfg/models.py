@@ -4,7 +4,7 @@ __all__ = ["WebConfig"]
 from django.db import models
 from django.urls import reverse
 
-from spkcspider.apps.spider.constants.static import VariantType, ActionUrl
+from spkcspider.apps.spider.constants import VariantType, ActionUrl
 from spkcspider.apps.spider.contents import BaseContent, add_content
 # from spkcspider.apps.spider.models.base import BaseInfoModel
 

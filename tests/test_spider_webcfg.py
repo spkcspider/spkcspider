@@ -8,7 +8,7 @@ from django.urls import reverse
 import requests
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants.static import VariantType
+from spkcspider.apps.spider.constants import VariantType
 from spkcspider.apps.spider.models import ContentVariant
 from spkcspider.apps.spider.signals import update_dynamic
 

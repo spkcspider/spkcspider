@@ -24,7 +24,7 @@ from ..protections import installed_protections
 
 # from ..constants import VariantType
 from ..helpers import validator_token, create_b64_id_token
-from ..constants.static import (
+from ..constants import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid
 )
 
@@ -119,7 +119,14 @@ class AssignedContent(BaseInfoModel):
             validator_token
         ]
     )
-    objects = UserContentManager()
+    # regex disables controlcars and disable special spaces
+    name = models.CharField(
+        max_length=255, blank=True, default="",
+        validators=[validators.RegexValidator(r"^(\w[\w ]*\w|\w?)$")]
+    )
+    description = models.TextField(
+        default="", blank=True
+    )
     usercomponent = models.ForeignKey(
         "spider_base.UserComponent", on_delete=models.CASCADE,
         related_name="contents", null=False, blank=False
@@ -179,12 +186,14 @@ class AssignedContent(BaseInfoModel):
     )
     # info extra flags:
     #  primary: primary content of type for usercomponent
-    #  unlisted:
+    #  unlisted: not listed
+    objects = UserContentManager()
 
     class Meta:
         unique_together = [
             ('content_type', 'object_id'),
         ]
+        # unique_together.append(('usercomponent', 'name'))
         if not getattr(settings, "MYSQL_HACK", False):
             unique_together.append(('usercomponent', 'info'))
 

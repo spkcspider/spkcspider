@@ -15,7 +15,7 @@ from rdflib import Graph, Literal, XSD
 from django_webtest import WebTestMixin
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants.static import spkcgraph
+from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.verifier.models import DataVerificationTag
 from spkcspider.apps.spider_tags.models import SpiderTag, TagLayout

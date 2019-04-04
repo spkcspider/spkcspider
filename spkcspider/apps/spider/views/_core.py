@@ -26,10 +26,8 @@ import requests
 import certifi
 
 from ..helpers import merge_get_url, get_settings_func, get_hashob
-from ..constants import (
-    VariantType, index_names, VALID_INTENTIONS, VALID_SUB_INTENTIONS,
-    TokenCreationError, ProtectionType
-)
+from ..constants import VariantType, TokenCreationError, ProtectionType
+from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
 from ..models import UserComponent, AuthToken, ReferrerObject
 
 
@@ -313,7 +311,6 @@ class UserTestMixin(AccessMixin):
             "LOGIN_URL": self.get_login_url(),
             "scope": getattr(self, "scope", None),
             "uc": self.usercomponent,
-            "index_names": index_names,
             "object": getattr(self, "object", None),
             "is_public_view": self.usercomponent.public
         }
@@ -787,9 +784,6 @@ class EntityDeletionMixin(UserTestMixin):
         return ret
 
     def delete(self, request, *args, **kwargs):
-        # hack for compatibility to ContentRemove
-        if getattr(self.object, "name", "") in index_names:
-            return self.handle_no_permission()
         _time = self.get_required_timedelta()
         if _time:
             now = timezone.now()

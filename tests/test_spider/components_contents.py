@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from rdflib import Graph
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants.static import spkcgraph
+from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.models import UserComponent
 from spkcspider.apps.spider.signals import update_dynamic
 # Create your tests here.

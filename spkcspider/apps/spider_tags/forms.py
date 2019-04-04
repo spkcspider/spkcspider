@@ -51,8 +51,7 @@ class TagLayoutForm(forms.ModelForm):
                 }
             ),
             "default_verifiers": ListWidget(
-                format_type="url", item_label=_("Url to Verifier"),
-                root_label=_("Verifiers")
+                format_type="url", item_label=_("Url to Verifier")
             )
         }
 
@@ -85,8 +84,7 @@ class TagLayoutAdminForm(forms.ModelForm):
                 }
             ),
             "default_verifiers": ListWidget(
-                format_type="url", item_label=_("Url to Verifier"),
-                root_label=_("Verifiers")
+                format_type="url", item_label=_("Url to Verifier")
             )
         }
 
@@ -102,8 +100,7 @@ class SpiderTagForm(forms.ModelForm):
     updateable_by = OpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier"),
-            root_label=_("Verifiers")
+            format_type="url", item_label=_("Url to Verifier")
         )
     )
     layout = forms.ModelChoiceField(
@@ -150,8 +147,7 @@ def generate_form(name, layout):
     _temp_field = OpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier"),
-            root_label=_("Verifiers")
+            format_type="url", item_label=_("Url to Verifier")
         )
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)
@@ -160,8 +156,7 @@ def generate_form(name, layout):
     _temp_field = OpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier"),
-            root_label=_("Verifiers")
+            format_type="url", item_label=_("Url to Verifier")
         )
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)

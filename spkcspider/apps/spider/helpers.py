@@ -25,7 +25,7 @@ from django.utils.translation import gettext_lazy as _
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
-from .constants.static import MAX_TOKEN_SIZE, spkcgraph
+from .constants import MAX_TOKEN_SIZE, spkcgraph
 
 # for not spamming sets
 _empty_set = frozenset()

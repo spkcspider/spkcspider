@@ -7,7 +7,6 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django import forms
 
-from spkcspider.apps.spider.constants.static import index_names
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.fields import SanitizedHtmlField
 from .models import FileFilet, TextFilet
@@ -41,9 +40,7 @@ class FileForm(forms.ModelForm):
         model = FileFilet
         fields = ['file', 'name', 'license_name', 'license', 'sources']
         widgets = {
-            "sources": ListWidget(
-                item_label=_("Source"), root_label=_("Sources")
-            )
+            "sources": ListWidget(item_label=_("Source"))
         }
 
     class Media:
@@ -125,7 +122,7 @@ class TextForm(forms.ModelForm):
         widgets = {
             "editable_from": forms.CheckboxSelectMultiple(),
             "sources": ListWidget(
-                item_label=_("Source"), root_label=_("Sources")
+                item_label=_("Source")
             )
         }
 
@@ -154,7 +151,7 @@ class TextForm(forms.ModelForm):
                     contents__references=self.instance.associated
                 )
             query &= models.Q(strength__gte=settings.MIN_STRENGTH_EVELATION)
-            query &= ~models.Q(name__in=index_names)
+            query &= models.Q(strength__lt=9)
             self.fields["editable_from"].queryset = \
                 self.fields["editable_from"].queryset.filter(query).distinct()
             return

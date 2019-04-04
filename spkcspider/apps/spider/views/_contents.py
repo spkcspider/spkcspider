@@ -31,7 +31,7 @@ from ..models import (
 )
 from ..forms import UserContentForm
 from ..helpers import get_settings_func, add_property
-from ..constants.static import spkcgraph, VariantType
+from ..constants import spkcgraph, VariantType
 from ..serializing import paginate_stream, serialize_stream
 
 _forbidden_scopes = frozenset(["add", "list", "raw"])
@@ -417,10 +417,12 @@ class ContentAdd(ContentBase, CreateView):
         return super().get_context_data(**kwargs)
 
     def get_form(self, allow_data=True):
-        assigned = AssignedContent(
-            usercomponent=self.usercomponent,
-            ctype=self.object
-        )
+        assigned = self.object.installed_class.static_create(
+            associated_kwargs={
+                "usercomponent": self.usercomponent,
+                "ctype": self.object
+            }
+        ).associated
         form_kwargs = {
             "instance": assigned,
             "request": self.request,
@@ -456,10 +458,7 @@ class ContentAdd(ContentBase, CreateView):
             ucontent = context["form"].save(commit=False)
         else:
             ucontent = context["form"].instance
-        ob = context["content_type"].static_create(
-            associated=ucontent
-        )
-        rendered = ob.access(context)
+        rendered = ucontent.content.access(context)
 
         # return response if content returned response
         if isinstance(rendered, HttpResponseBase):
@@ -468,13 +467,15 @@ class ContentAdd(ContentBase, CreateView):
         assert(isinstance(rendered, (tuple, list)))
         context["content"] = rendered
         # redirect if saving worked
-        if getattr(ob, "id", None):
+        if getattr(ucontent, "id", None):
             assert(ucontent.token)
-            assert(hasattr(ucontent, "id") and ucontent.usercomponent)
+            assert(ucontent.usercomponent)
             return redirect(
                 'spider_base:ucontent-access',
                 token=ucontent.token, access="update"
             )
+        else:
+            assert(not getattr(ucontent.content, "id", None))
         return super().render_to_response(context)
 
 

@@ -21,7 +21,7 @@ import certifi
 from ._core import UCTestMixin
 from ..models import AuthToken
 from ..helpers import get_settings_func
-from ..constants.static import TokenCreationError
+from ..constants import TokenCreationError
 
 
 class TokenDelete(UCTestMixin, DeleteView):

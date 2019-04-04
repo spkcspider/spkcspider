@@ -37,7 +37,7 @@ class ListWidget(widgets.Textarea):
 
     def __init__(
         self, *, attrs=None, wrapper_attrs=None, format_type="text",
-        item_label=_("item"), root_label=_("List Editor"), **kwargs
+        item_label=_("item"), **kwargs
     ):
         if not attrs:
             attrs = {"class": ""}
@@ -48,7 +48,6 @@ class ListWidget(widgets.Textarea):
         attrs["format_type"] = format_type
         # don't access them as they are lazy evaluated
         attrs["item_label"] = item_label
-        attrs["root_label"] = root_label
         self.wrapper_attrs = wrapper_attrs.copy()
         super().__init__(attrs=attrs, **kwargs)
 

@@ -18,7 +18,7 @@ from jsonfield import JSONField
 from ranged_response import RangedFileResponse
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.constants.settings import (
+from spkcspider.apps.spider.conf import (
     image_extensions, media_extensions
 )
 from spkcspider.apps.spider.helpers import (
@@ -56,9 +56,7 @@ class ContentWithLicense(BaseContent):
         max_length=255, null=False, default="other"
     )
     license = models.TextField(default="", blank=True)
-    sources = JSONField(default=[], help_text=_(
-        "Sources"
-    ))
+    sources = JSONField(default=[], blank=True)
 
     class Meta(BaseContent.Meta):
         abstract = True

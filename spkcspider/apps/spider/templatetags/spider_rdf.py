@@ -6,7 +6,7 @@ from django.forms import BoundField, Field
 from rdflib import Literal
 from rdflib.namespace import XSD, RDF, URIRef
 
-from ..constants.static import spkcgraph
+from ..constants import spkcgraph
 
 register = template.Library()
 

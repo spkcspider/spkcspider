@@ -15,7 +15,8 @@ from django.db.models import Q
 from rdflib import URIRef, Literal, XSD
 
 
-from .constants import spkcgraph, VariantType, get_anchor_domain
+from .constants import spkcgraph, VariantType
+from .conf import get_anchor_domain
 from .helpers import merge_get_url, add_property
 
 

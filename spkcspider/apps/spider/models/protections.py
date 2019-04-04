@@ -21,7 +21,7 @@ from ..constants import (
 )
 from ..helpers import create_b64_id_token, validator_token
 from ..protections import installed_protections
-from ..constants.static import ProtectionType, ProtectionResult, index_names
+from ..constants import ProtectionType, ProtectionResult
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +182,7 @@ class Protection(models.Model):
 def get_limit_choices_assigned_protection():
     # django cannot serialize static, classmethods
     # possible?????
-    index = models.Q(usercomponent__name__in=index_names)
+    index = models.Q(usercomponent__strength=10)
     restriction = models.Q(
         ~index, ptype__contains=ProtectionType.access_control.value
     )

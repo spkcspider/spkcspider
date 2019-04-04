@@ -25,7 +25,7 @@ from django.contrib.auth.hashers import (
 from django.utils.translation import gettext_lazy as _
 
 from ..contents import BaseContent, add_content
-from ..constants.static import (
+from ..constants import (
     TravelLoginType, VariantType, ActionUrl
 )
 

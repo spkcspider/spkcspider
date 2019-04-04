@@ -13,7 +13,8 @@ from django.utils.translation import pgettext
 
 from spkcspider.apps.spider.helpers import get_hashob
 from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.constants import VariantType, get_anchor_domain
+from spkcspider.apps.spider.constants import VariantType
+from spkcspider.apps.spider.conf import get_anchor_domain
 
 logger = logging.getLogger(__name__)
 

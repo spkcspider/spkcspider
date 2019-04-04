@@ -7,9 +7,8 @@ from django.urls import reverse
 import requests
 from rdflib import Graph, Literal, XSD, RDF
 
-from spkcspider.apps.spider.constants.static import spkcgraph
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants.static import VariantType
+from spkcspider.apps.spider.constants import VariantType, spkcgraph
 from spkcspider.apps.spider.models import ContentVariant, AuthToken
 from spkcspider.apps.spider.signals import update_dynamic
 

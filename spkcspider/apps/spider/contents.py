@@ -25,7 +25,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD
 
-from .constants import VariantType, spkcgraph, ActionUrl, get_anchor_domain
+from .constants import VariantType, spkcgraph, ActionUrl
+from .conf import get_anchor_domain
 from .serializing import paginate_stream, serialize_stream
 from .helpers import (
     get_settings_func, add_property, create_b64_id_token
@@ -136,6 +137,11 @@ class BaseContent(models.Model):
     associated_rel = GenericRelation("spider_base.AssignedContent")
     _associated_tmp = None
 
+    # user can set name
+    expose_name = True
+    # user can set description
+    expose_description = False
+
     _content_is_cleaned = False
 
     @property
@@ -149,10 +155,25 @@ class BaseContent(models.Model):
         default_permissions = []
 
     @classmethod
-    def static_create(cls, *, associated=None):
-        ob = cls()
+    def static_create(
+        cls, *, associated=None, associated_kwargs=None, content_kwargs=None,
+        token_size=None
+    ):
+        if content_kwargs:
+            ob = cls(**content_kwargs)
+        else:
+            ob = cls()
         if associated:
             ob._associated_tmp = associated
+        else:
+            from .models import AssignedContent
+            ob = cls()
+            if not associated_kwargs:
+                associated_kwargs = {}
+            ob._associated_tmp = AssignedContent(**associated_kwargs)
+        ob._associated_tmp.content = ob
+        if token_size is not None:
+            ob._associated_tmp.token_generate_new_size = token_size
         return ob
 
     @classmethod
@@ -189,6 +210,12 @@ class BaseContent(models.Model):
             lambda x: ActionUrl(*x),
             cls.feature_urls()
         ))
+
+    def get_content_name(self):
+        return ""
+
+    def get_content_description(self):
+        return ""
 
     def get_strength(self):
         """ get required strength """
@@ -641,6 +668,11 @@ class BaseContent(models.Model):
             self._associated_tmp.content = self
         assignedcontent = self.associated
         assignedcontent.info = self.get_info()
+        if getattr(self, "id", None):
+            if not self.expose_name or not assignedcontent.name:
+                assignedcontent.name = self.get_content_name()
+            if not self.expose_description:
+                assignedcontent.description = self.get_content_description()
         assignedcontent.priority = self.get_priority()
         assignedcontent.strength = self.get_strength()
         assignedcontent.strength_link = self.get_strength_link()
@@ -695,6 +727,12 @@ class BaseContent(models.Model):
                 )
                 assignedcontent.token_generate_new_size = None
                 to_save.add("token")
+            if not self.expose_name or not assignedcontent.name:
+                assignedcontent.name = self.get_content_name()
+                to_save.add("name")
+            if not self.expose_description:
+                assignedcontent.description = self.get_content_description()
+                to_save.add("description")
             # second save required
             if to_save:
                 assignedcontent.save(update_fields=to_save)

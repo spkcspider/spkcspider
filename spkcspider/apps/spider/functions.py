@@ -26,7 +26,7 @@ from django.conf import settings
 from rdflib import Literal, XSD
 
 from .signals import failed_guess
-from .constants.static import spkcgraph
+from .constants import spkcgraph
 
 
 def rate_limit_default(view, request):

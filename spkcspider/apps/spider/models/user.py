@@ -23,8 +23,9 @@ from django.core import validators
 from ..helpers import get_settings_func, validator_token, create_b64_id_token
 from ..constants import (
     ProtectionType, VariantType, MAX_TOKEN_B64_SIZE, TokenCreationError,
-    default_uctoken_duration, force_captcha, index_names, hex_size_of_bigid
+    index_names, hex_size_of_bigid
 )
+from ..conf import default_uctoken_duration, force_captcha
 
 
 logger = logging.getLogger(__name__)
@@ -127,6 +128,18 @@ class UserComponent(models.Model):
             "because of assigned content"
         )
     )
+    # special name: index, (fake_index):
+    #    protections are used for authentication
+    #    attached content is only visible for admin and user
+    # db_index=True: "index", "fake_index" requests can speed up
+    # regex disables controlcars and disable special spaces
+    name = models.CharField(
+        max_length=255,
+        null=False,
+        db_index=True,
+        help_text=_name_help,
+        validators=[validators.RegexValidator(r"^(\w[\w ]*\w|\w?)$")]
+    )
     description = models.TextField(
         default="",
         help_text=_(
@@ -142,19 +155,6 @@ class UserComponent(models.Model):
         default=0,
         validators=[validators.MaxValueValidator(10)],
         editable=False
-    )
-    # fix linter warning
-    objects = UserComponentManager()
-    # special name: index, (fake_index):
-    #    protections are used for authentication
-    #    attached content is only visible for admin and user
-    # db_index=True: "index", "fake_index" requests can speed up
-    name = models.SlugField(
-        max_length=50,
-        null=False,
-        db_index=True,
-        allow_unicode=True,
-        help_text=_name_help
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
@@ -206,6 +206,8 @@ class UserComponent(models.Model):
     deletion_requested = models.DateTimeField(
         null=True, default=None, blank=True
     )
+    # fix linter warning
+    objects = UserComponentManager()
     contents = None
     # should be used for retrieving active protections, related_name
     protections = None
@@ -214,27 +216,22 @@ class UserComponent(models.Model):
         unique_together = [("user", "name")]
         permissions = [("can_feature", "Can feature User Components")]
 
-    def __repr__(self):
-        name = self.name
-        if name in index_names:
-            name = "index"
-        return "<UserComponent: %s: %s>" % (self.username, name)
-
     def get_name(self):
-        name = self.name
-        if name in index_names:
-            name = "index"
-        return name
+        if self.strength == 10:
+            return "index"
+        return self.name
 
     def __str__(self):
         return self.get_name()
+
+    def __repr__(self):
+        return "<UserComponent: %s: %s>" % (self.username, self.get_name())
 
     def clean(self):
         _ = gettext
         self.public = (self.public and self.is_public_allowed)
         self.featured = (self.featured and self.public)
-        assert(self.name not in index_names or self.strength == 10)
-        assert(self.name in index_names or self.strength < 10)
+        assert(self.is_index or self.strength < 10)
         obj = self.contents.filter(
             strength__gt=self.strength
         ).order_by("strength").last()
@@ -292,7 +289,7 @@ class UserComponent(models.Model):
     @property
     def is_public_allowed(self):
         """ Can the public attribute be set """
-        return self.name not in index_names and not self.contents.filter(
+        return not self.is_index and not self.contents.filter(
             strength__gte=5
         ).exists()
 
