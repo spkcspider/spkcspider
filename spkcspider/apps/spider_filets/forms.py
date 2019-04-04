@@ -11,6 +11,11 @@ from spkcspider.apps.spider.constants.static import index_names
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.fields import SanitizedHtmlField
 from .models import FileFilet, TextFilet
+from .conf import (
+    DEFAULT_LICENSE_FILE, LICENSE_CHOICES_FILE,
+    DEFAULT_LICENSE_TEXT, LICENSE_CHOICES_TEXT
+)
+from .widgets import SourcesWidget
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -20,17 +25,41 @@ def check_attrs_func(tag, name, value):
     return True
 
 
+def _extract_choice(item):
+    return (item[0], item[1][0])
+
+
 class FileForm(forms.ModelForm):
-    user = None
+    license_name = forms.ChoiceField(
+        label=_("License"), help_text=_("Select license"),
+        initial=DEFAULT_LICENSE_FILE,
+        choices=map(_extract_choice, LICENSE_CHOICES_FILE)
+    )
 
     class Meta:
         model = FileFilet
-        fields = ['file', 'name']
+        fields = ['file', 'name', 'license_name', 'license', 'sources']
+        widgets = {
+            "sources": SourcesWidget()
+        }
+
+    class Media:
+        js = [
+            'spider_filets/licensechooser.js'
+        ]
 
     def __init__(self, request, **kwargs):
         super().__init__(**kwargs)
         self.fields['name'].required = False
         setattr(self.fields['file'], "hashable", True)
+        # sources should not be hashed as they don't affect result
+        setattr(self.fields['sources'], "hashable", False)
+        raw_value = self.initial.get("license_name", "other")
+        value = self.fields['license_name'].to_python(raw_value)
+        if value == "other":
+            setattr(self.fields['license'], "hashable", True)
+        else:
+            setattr(self.fields['license_name'], "hashable", True)
         if request.user.is_superuser:
             # no upload limit
             pass
@@ -47,6 +76,10 @@ class FileForm(forms.ModelForm):
             return
         self.fields["file"].editable = False
         self.fields["name"].editable = False
+        self.fields["license_name"].editable = False
+        self.fields["license"].editable = False
+        # sources stay enabled
+        self.fields["sources"].editable = True
 
     def clean(self):
         ret = super().clean()
@@ -59,19 +92,37 @@ class FileForm(forms.ModelForm):
             "UPLOAD_FILTER_FUNC",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )(ret["file"])
+        # if self.cleaned_data['license_name'] == "other":
+        #     setattr(self.fields['license'], "hashable", True)
+        # else:
+        #     setattr(self.fields['license_name'], "hashable", True)
         return ret
 
 
 class TextForm(forms.ModelForm):
     text = SanitizedHtmlField()
+    license_name = forms.ChoiceField(
+        label=_("License"), help_text=_("Select license"),
+        initial=DEFAULT_LICENSE_TEXT,
+        choices=map(_extract_choice, LICENSE_CHOICES_TEXT)
+    )
 
     class Meta:
         model = TextFilet
-        fields = ['text', 'name', 'push', 'editable_from', 'preview_words']
+        fields = [
+            'text', 'name', 'push', 'editable_from', 'preview_words',
+            'license_name', 'license', 'sources'
+        ]
 
         widgets = {
-            "editable_from": forms.CheckboxSelectMultiple()
+            "editable_from": forms.CheckboxSelectMultiple(),
+            "sources": SourcesWidget()
         }
+
+    class Media:
+        js = [
+            'spider_filets/licensechooser.js'
+        ]
 
     def __init__(self, request, source, scope, **kwargs):
         super().__init__(**kwargs)
@@ -108,9 +159,19 @@ class TextForm(forms.ModelForm):
 class RawTextForm(forms.ModelForm):
     class Meta:
         model = TextFilet
-        fields = ['text', 'name']
+        fields = ['text', 'name', 'license_name', 'license', 'sources']
 
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
         setattr(self.fields['name'], "hashable", True)
         setattr(self.fields['text'], "hashable", True)
+        # sources should not be hashed as they don't affect result
+        setattr(self.fields['sources'], "hashable", False)
+        raw_value = self.initial.get("license_name", "other")
+        value = self.fields['license_name'].to_python(raw_value)
+        if value == "other":
+            setattr(self.fields['license'], "hashable", True)
+        else:
+            setattr(self.fields['license_name'], "hashable", True)
+            self.fields['license'].initial = \
+                LICENSE_CHOICES_TEXT[value][1]

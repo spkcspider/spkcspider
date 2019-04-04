@@ -22,14 +22,15 @@ from .fields import generate_fields
 from .models import TagLayout, SpiderTag
 
 from spkcspider.apps.spider.fields import OpenChoiceField
-from spkcspider.apps.spider.widgets import OpenChoiceWidget
+from spkcspider.apps.spider.widgets import URLListWidget
 from spkcspider.apps.spider.helpers import merge_get_url
 from spkcspider.apps.spider.models import (
     AssignedContent, ReferrerObject
 )
 from spkcspider.apps.spider.contents import BaseContent
 
-from .widgets import ValidatorWidget, SchemeWidget
+
+from .widgets import SchemeWidget
 from .fields import installed_fields
 
 # don't spam set objects
@@ -49,7 +50,7 @@ class TagLayoutForm(forms.ModelForm):
                     "field_types": json.dumps(list(installed_fields.keys()))
                 }
             ),
-            "default_verifiers": ValidatorWidget,
+            "default_verifiers": URLListWidget,
         }
 
     usertag = None
@@ -80,7 +81,7 @@ class TagLayoutAdminForm(forms.ModelForm):
                     "field_types": json.dumps(list(installed_fields.keys()))
                 }
             ),
-            "default_verifiers": ValidatorWidget,
+            "default_verifiers": URLListWidget,
         }
 
     class Media:
@@ -94,11 +95,7 @@ class TagLayoutAdminForm(forms.ModelForm):
 class SpiderTagForm(forms.ModelForm):
     updateable_by = OpenChoiceField(
         required=False, initial=False,
-        widget=OpenChoiceWidget(
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
-        )
+        widget=URLListWidget()
     )
     layout = forms.ModelChoiceField(
         queryset=TagLayout.objects.none(),
@@ -143,22 +140,14 @@ def generate_form(name, layout):
     ))
     _temp_field = OpenChoiceField(
         required=False, initial=False,
-        widget=OpenChoiceWidget(
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
-        )
+        widget=URLListWidget
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)
 
     _gen_fields.append(("updateable_by", _temp_field))
     _temp_field = OpenChoiceField(
         required=False, initial=False,
-        widget=OpenChoiceWidget(
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
-        )
+        widget=URLListWidget
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)
     _gen_fields.append(("verified_by", _temp_field))

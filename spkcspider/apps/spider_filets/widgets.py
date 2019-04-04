@@ -1,4 +1,4 @@
-__all__ = ["SchemeWidget"]
+__all__ = ["SourcesWidget"]
 
 import json
 
@@ -9,21 +9,14 @@ from django.conf import settings
 _extra = '' if settings.DEBUG else '.min'
 
 
-class SchemeWidget(widgets.Textarea):
+class SourcesWidget(widgets.Textarea):
     template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
 
     class Media:
         js = [
-            'node_modules/jquery/dist/jquery%s.js' % _extra,
-            'node_modules/select2/dist/js/select2%s.js' % _extra,
             'node_modules/@json-editor/json-editor/dist/jsoneditor%s.js' % _extra,  # noqa:E501,
-            'spider_tags/scheme_editor.js'
+            'spider_filets/sourceseditor.js'
         ]
-        css = {
-            'all': [
-                'node_modules/select2/dist/css/select2%s.css' % _extra
-            ]
-        }
 
     def __init__(self, *, attrs=None, wrapper_attrs=None, **kwargs):
         if not attrs:
@@ -31,7 +24,7 @@ class SchemeWidget(widgets.Textarea):
         if not wrapper_attrs:
             wrapper_attrs = {}
         attrs.setdefault("class", "")
-        attrs["class"] += " SchemeEditorTarget"
+        attrs["class"] += " FiletSourcesEditorTarget"
         self.wrapper_attrs = wrapper_attrs.copy()
         super().__init__(attrs=attrs, **kwargs)
 

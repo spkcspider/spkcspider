@@ -13,6 +13,8 @@ from django.utils.translation import gettext
 from django.http import HttpResponseRedirect
 from django.core.files.storage import default_storage
 
+from jsonfield import JSONField
+
 from ranged_response import RangedFileResponse
 
 from spkcspider.apps.spider.contents import BaseContent, add_content
@@ -49,8 +51,21 @@ def get_file_path(instance, filename):
     return ret_path
 
 
+class ContentWithLicense(BaseContent):
+    license_name = models.CharField(
+        max_length=255, null=False, default="other"
+    )
+    license = models.TextField(default="")
+    sources = JSONField(default=[], help_text=_(
+        "Sources"
+    ))
+
+    class Meta(BaseContent.Meta):
+        abstract = True
+
+
 @add_content
-class FileFilet(BaseContent):
+class FileFilet(ContentWithLicense):
     appearances = [{"name": "File"}]
 
     name = models.CharField(max_length=255, null=False)
@@ -167,7 +182,7 @@ class FileFilet(BaseContent):
 
 
 @add_content
-class TextFilet(BaseContent):
+class TextFilet(ContentWithLicense):
     appearances = [{"name": "Text"}]
 
     name = models.CharField(max_length=255, null=False)
