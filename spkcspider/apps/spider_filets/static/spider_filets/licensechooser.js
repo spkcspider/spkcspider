@@ -1,16 +1,26 @@
 
 document.addEventListener("DOMContentLoaded", function(){
-  let el = document.getElementById("id_license_name")
-  let target = document.getElementById("id_license_wrapper")
-  let initial_value = target.style.display;
+  let el = document.getElementById("id_license_name");
+  let licenses = {}
+  try{
+    licenses = JSON.parse(el.attributes.licenses.value);
+  } catch(e){
+    console.log(e);
+  }
+  let target = document.getElementById("id_license");
   if(el.value != "other"){
-    target.style.display = "none";
+    target.disabled = true;
   }
   el.addEventListener("change", function(event){
     if(event.target.value == "other"){
-      target.style.display = "none";
+      target.disabled = false;
     } else {
-      target.style.display = initial_value;
+      target.disabled = true;
+      try{
+        target.value = licenses[event.target.value];
+      } catch(e){
+        console.log(e);
+      }
     }
   })
 })

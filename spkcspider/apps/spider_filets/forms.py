@@ -15,7 +15,8 @@ from .conf import (
     DEFAULT_LICENSE_FILE, LICENSE_CHOICES_FILE,
     DEFAULT_LICENSE_TEXT, LICENSE_CHOICES_TEXT
 )
-from .widgets import SourcesWidget
+from .widgets import LicenseChooserWidget
+from spkcspider.apps.spider.widgets import ListWidget
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -32,15 +33,17 @@ def _extract_choice(item):
 class FileForm(forms.ModelForm):
     license_name = forms.ChoiceField(
         label=_("License"), help_text=_("Select license"),
-        initial=DEFAULT_LICENSE_FILE,
-        choices=map(_extract_choice, LICENSE_CHOICES_FILE)
+        choices=map(_extract_choice, LICENSE_CHOICES_FILE.items()),
+        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES_FILE)
     )
 
     class Meta:
         model = FileFilet
         fields = ['file', 'name', 'license_name', 'license', 'sources']
         widgets = {
-            "sources": SourcesWidget()
+            "sources": ListWidget(
+                item_label=_("Source"), root_label=_("Sources")
+            )
         }
 
     class Media:
@@ -48,8 +51,13 @@ class FileForm(forms.ModelForm):
             'spider_filets/licensechooser.js'
         ]
 
-    def __init__(self, request, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, request, uc=None, initial=None, **kwargs):
+        if initial is None:
+            initial = {}
+        initial.setdefault(
+            "license_name", DEFAULT_LICENSE_FILE(uc, request.user)
+        )
+        super().__init__(initial=initial, **kwargs)
         self.fields['name'].required = False
         setattr(self.fields['file'], "hashable", True)
         # sources should not be hashed as they don't affect result
@@ -103,8 +111,8 @@ class TextForm(forms.ModelForm):
     text = SanitizedHtmlField()
     license_name = forms.ChoiceField(
         label=_("License"), help_text=_("Select license"),
-        initial=DEFAULT_LICENSE_TEXT,
-        choices=map(_extract_choice, LICENSE_CHOICES_TEXT)
+        choices=map(_extract_choice, LICENSE_CHOICES_TEXT.items()),
+        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES_TEXT)
     )
 
     class Meta:
@@ -116,7 +124,9 @@ class TextForm(forms.ModelForm):
 
         widgets = {
             "editable_from": forms.CheckboxSelectMultiple(),
-            "sources": SourcesWidget()
+            "sources": ListWidget(
+                item_label=_("Source"), root_label=_("Sources")
+            )
         }
 
     class Media:
@@ -124,8 +134,13 @@ class TextForm(forms.ModelForm):
             'spider_filets/licensechooser.js'
         ]
 
-    def __init__(self, request, source, scope, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, request, source, scope, initial=None, **kwargs):
+        if initial is None:
+            initial = {}
+        initial.setdefault(
+            "license_name", DEFAULT_LICENSE_TEXT(source, request.user)
+        )
+        super().__init__(initial=initial, **kwargs)
         if scope in ("add", "update"):
             self.fields["editable_from"].help_text = \
                 _(

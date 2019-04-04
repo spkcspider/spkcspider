@@ -151,9 +151,8 @@ class ContentBase(UCTestMixin):
 
             searchq &= (
                 models.Q(
-                    id__in=ids,
-                    fake_id__isnull=True
-                ) | models.Q(fake_id__in=ids)
+                    id__in=ids
+                )
             )
 
         # list only unlisted if explicity requested or export or:

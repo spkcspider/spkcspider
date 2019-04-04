@@ -142,7 +142,7 @@ class BaseContent(models.Model):
     def associated(self):
         if self._associated_tmp:
             return self._associated_tmp
-        return self.associated_rel.filter(fake_id__isnull=True).first()
+        return self.associated_rel.first()
 
     class Meta:
         abstract = True
@@ -702,16 +702,5 @@ class BaseContent(models.Model):
         s = set(assignedcontent.attached_contents.all())
         s.update(self.get_references())
         assignedcontent.references.set(s)
-        # update fakes
-        # fakes = self.associated_rel.filter(fake_id__isnull=False)
-        # fakes.update(
-        #     info=assignedcontent.info,
-        #     strength=assignedcontent.strength,
-        #     strength_link=assignedcontent.strength_link,
-        #     nonce=assignedcontent.nonce
-        # )
-        # update references of fakes
-        # for i in fakes:
-        #     i.references.set(assignedcontent.references)
         # require cleaning again
         self._content_is_cleaned = False

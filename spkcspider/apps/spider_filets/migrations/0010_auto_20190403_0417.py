@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='filefilet',
             name='license',
-            field=models.TextField(default=''),
+            field=models.TextField(default='', blank=True),
         ),
         migrations.AddField(
             model_name='filefilet',
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='textfilet',
             name='license',
-            field=models.TextField(default=''),
+            field=models.TextField(default='', blank=True),
         ),
         migrations.AddField(
             model_name='textfilet',

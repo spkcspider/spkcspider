@@ -1,27 +1,5 @@
 
 JSONEditor.plugins.select2.enable = true;
-/**JSONEditor.defaults.editors.mainarray = JSONEditor.defaults.editors.array.extend({
-  addControls: function() {
-    JSONEditor.defaults.editors.array.addControls.apply(this)
-    this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'),'delete',this.translate('button_delete_all_title'));
-    this.remove_all_rows_button.classList.add('json-editor-btntype-deleteall');
-    this.remove_all_rows_button.addEventListener('click',function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (!self.askConfirmation()) {
-        return false;
-      }
-
-      self.empty(true);
-      self.setValue([]);
-      self.onChange(true);
-      self.jsoneditor.trigger('deleteAllRows');
-    });
-    self.controls.appendChild(this.remove_all_rows_button);
-  }
-
-})*/
 
 document.addEventListener("DOMContentLoaded", function(){
   let collection = document.getElementsByClassName("SchemeEditorTarget");

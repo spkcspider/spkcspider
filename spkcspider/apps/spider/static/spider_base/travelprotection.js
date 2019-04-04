@@ -1,25 +1,28 @@
 
 document.addEventListener("DOMContentLoaded", function(){
-  if(document.getElementById("id_self_protection").value != "pw"){
-    $("#id_new_pw_wrapper").hide();
-    $("#id_new_pw2_wrapper").hide();
+  let self_protection = document.getElementById("id_self_protection");
+  let token_wrapper = document.getElementById("id_token_arg_wrapper");
+  let new_pw_wrapper = document.getElementById("id_new_pw_wrapper");
+  let new_pw2_wrapper = document.getElementById("id_new_pw2_wrapper");
+  if(self_protection.value != "pw"){
+    new_pw_wrapper.style.display = "none";
+    new_pw2_wrapper.style.display = "none";
   }
-  if(document.getElementById("id_self_protection").value != "token"){
-    $("#id_token_arg_wrapper").hide();
-    $("#id_token_arg_wrapper").hide();
+  if(self_protection.value != "token"){
+    token_wrapper.style.display = "none";
   }
-  $("#id_self_protection").on("change", function (event){
+  self_protection.addEventListener("change", function (event){
     if(event.target.value == "pw"){
-      $("#id_new_pw_wrapper").show();
-      $("#id_new_pw2_wrapper").show();
+      new_pw_wrapper.style.display = "";
+      new_pw2_wrapper.style.display = "";
     } else {
-      $("#id_new_pw_wrapper").hide();
-      $("#id_new_pw2_wrapper").hide();
+      new_pw_wrapper.style.display = "none";
+      new_pw2_wrapper.style.display = "none";
     }
     if(event.target.value == "token"){
-      $("#id_token_arg_wrapper").show();
+      token_wrapper.style.display = "";
     }else {
-      $("#id_token_arg_wrapper").hide();
+      token_wrapper.style.display = "none";
     }
   })
 })

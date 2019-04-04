@@ -1,50 +1,28 @@
-__all__ = ["SourcesWidget"]
+__all__ = [
+    "LicenseChooserWidget"
+]
+
 
 import json
 
 from django.forms import widgets
 from django.conf import settings
+# from django.utils.translation import gettext_lazy as _
 
 
 _extra = '' if settings.DEBUG else '.min'
 
 
-class SourcesWidget(widgets.Textarea):
-    template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
+class LicenseChooserWidget(widgets.Select):
+    licenses = None
 
-    class Media:
-        js = [
-            'node_modules/@json-editor/json-editor/dist/jsoneditor%s.js' % _extra,  # noqa:E501,
-            'spider_filets/sourceseditor.js'
-        ]
+    def __init__(self, licenses, **kwargs):
+        self.licenses = licenses
+        super().__init__(**kwargs)
 
-    def __init__(self, *, attrs=None, wrapper_attrs=None, **kwargs):
-        if not attrs:
-            attrs = {"class": ""}
-        if not wrapper_attrs:
-            wrapper_attrs = {}
-        attrs.setdefault("class", "")
-        attrs["class"] += " FiletSourcesEditorTarget"
-        self.wrapper_attrs = wrapper_attrs.copy()
-        super().__init__(attrs=attrs, **kwargs)
-
-    def __deepcopy__(self, memo):
-        obj = super().__deepcopy__(memo)
-        obj.wrapper_attrs = self.wrapper_attrs.copy()
-        return obj
-
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        context['widget']['wrapper_attrs'] = self.wrapper_attrs
-        context['widget']['wrapper_attrs']["id"] = "{}_inner_wrapper".format(
-            context['widget']['attrs']["id"]
-        )
-        return context
-
-    def render(self, name, value, attrs=None, renderer=None):
-        if value is None:
-            value = ""
-        if not isinstance(value, str):
-            value = json.dumps(value, ensure_ascii=False, indent=2)
-
-        return super().render(name, value, attrs, renderer)
+    def build_attrs(self, base_attrs, extra_attrs=None):
+        """Build an attribute dictionary."""
+        ret = super().build_attrs(base_attrs, extra_attrs)
+        d = dict(map(lambda x: (x[0], str(x[1][1])), self.licenses.items()))
+        ret["licenses"] = json.dumps(d)
+        return ret

@@ -93,7 +93,7 @@ class UserContentManager(models.Manager):
 
 class AssignedContent(BaseInfoModel):
     id = models.BigAutoField(primary_key=True, editable=False)
-    fake_id = models.BigIntegerField(editable=False, null=True)
+    # fake_level = models.PositiveIntegerField(null=False, default=0)
     persist_token = models.ForeignKey(
         "spider_base.AuthToken", blank=True, null=True,
         limit_choices_to={"persist__gte": 0}, on_delete=models.CASCADE
@@ -200,16 +200,8 @@ class AssignedContent(BaseInfoModel):
             kwargs={"token": self.token, "access": scope}
         )
 
-    def get_id(self):
-        """
-            provides "right" id
-            only neccessary for access from usercomponent to hide fakes
-        """
-        # MAYBE: remove fake mechanic
-        # access from content works out of the box by using associated
-        if self.fake_id:
-            return self.fake_id
-        return self.id
+    # use next_object, last_object instead get_next_by_FOO, ...
+    # for preventing disclosure of elements
 
     def get_size(self):
         if not self.content:

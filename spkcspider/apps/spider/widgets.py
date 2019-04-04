@@ -1,6 +1,6 @@
 __all__ = [
     "OpenChoiceWidget", "StateButtonWidget", "HTMLWidget",
-    "SubSectionStartWidget", "SubSectionStopWidget", "URLListWidget"
+    "SubSectionStartWidget", "SubSectionStopWidget", "ListWidget"
 ]
 
 
@@ -8,6 +8,7 @@ import json
 
 from django.forms import widgets
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 
 _extra = '' if settings.DEBUG else '.min'
@@ -15,6 +16,7 @@ _extra = '' if settings.DEBUG else '.min'
 
 class StateButtonWidget(widgets.CheckboxInput):
     template_name = 'spider_base/forms/widgets/statebutton.html'
+    # ugly as hell
 
     class Media:
         css = {
@@ -24,22 +26,29 @@ class StateButtonWidget(widgets.CheckboxInput):
         }
 
 
-class URLListWidget(widgets.Textarea):
+class ListWidget(widgets.Textarea):
     template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
 
     class Media:
         js = [
             'node_modules/@json-editor/json-editor/dist/jsoneditor%s.js' % _extra,  # noqa:E501
-            'spider_tags/urllist_editor.js'
+            'spider_base/list_editor.js'
         ]
 
-    def __init__(self, *, attrs=None, wrapper_attrs=None, **kwargs):
+    def __init__(
+        self, *, attrs=None, wrapper_attrs=None, format_type="text",
+        item_label=_("item"), root_label=_("List Editor"), **kwargs
+    ):
         if not attrs:
             attrs = {"class": ""}
         if not wrapper_attrs:
             wrapper_attrs = {}
         attrs.setdefault("class", "")
-        attrs["class"] += " URLListTarget"
+        attrs["class"] += " SpiderListTarget"
+        attrs["format_type"] = format_type
+        # don't access them as they are lazy evaluated
+        attrs["item_label"] = item_label
+        attrs["root_label"] = root_label
         self.wrapper_attrs = wrapper_attrs.copy()
         super().__init__(attrs=attrs, **kwargs)
 

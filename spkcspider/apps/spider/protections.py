@@ -81,8 +81,7 @@ class BaseProtection(forms.Form):
     instant_fail = forms.BooleanField(
         label=_("Instant fail"), required=False,
         help_text=_("Fail instantly if not fullfilled. "
-                    "Don't count to required_passes. "
-                    "Requires \"active\".")
+                    "Don't count to required_passes.")
     )
     # unique code name max 10 slug chars
     # if imported by extract_app_dicts, name is automatically set to key name
@@ -280,6 +279,7 @@ class LoginProtection(BaseProtection):
             self.fields["active"].initial = True
             self.initial["active"] = True
             self.fields["active"].disabled = True
+            del self.fields["allow_auth"]
 
     def get_strength(self):
         return (3, 4 if self.cleaned_data.get("allow_auth", False) else 3)

@@ -55,7 +55,7 @@ class ContentWithLicense(BaseContent):
     license_name = models.CharField(
         max_length=255, null=False, default="other"
     )
-    license = models.TextField(default="")
+    license = models.TextField(default="", blank=True)
     sources = JSONField(default=[], help_text=_(
         "Sources"
     ))
@@ -104,6 +104,7 @@ class FileFilet(ContentWithLicense):
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
         ret["request"] = kwargs["request"]
+        ret["uc"] = self.associated.usercomponent
         return ret
 
     def render_form(self, **kwargs):

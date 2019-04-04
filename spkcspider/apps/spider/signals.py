@@ -71,7 +71,7 @@ def CleanupCallback(sender, instance, **kwargs):
                     "update size failed, trigger expensive recalculation"
                 )
                 stored_exc = exc
-        if instance.fake_id is None and instance.content:
+        if instance.content:
             instance.content.delete(False)
     if stored_exc:
         update_dynamic.send(sender)

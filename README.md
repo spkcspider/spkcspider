@@ -227,8 +227,11 @@ Otherwise security could be compromised.
 * examples
 * documentation
 * layouts
+* show license information
 * tests for other dbs
 * improve default tag validators to prevent ddos gadgets by weak validators
+  * rate limitting (per domain)
+  * characteristic requester url
 
 ## Later
 * use django-cte (common table expressions)
