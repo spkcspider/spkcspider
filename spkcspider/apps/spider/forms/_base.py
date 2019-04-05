@@ -333,11 +333,11 @@ class UserContentForm(forms.ModelForm):
     def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self.instance.content.expose_name:
-            del self.fields["name"]
+            self.fields["name"].widget = forms.HiddenInput()
         elif self.instance.content.expose_name == "force":
             self.fields["name"].required = True
         if not self.instance.content.expose_description:
-            del self.fields["description"]
+            self.fields["description"].widget = forms.HiddenInput()
 
         self.fields["new_static_token"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),

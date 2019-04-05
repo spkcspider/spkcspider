@@ -3,6 +3,8 @@
 import django.core.validators
 from django.db import migrations, models
 
+import spkcspider.apps.spider.validators
+
 
 class Migration(migrations.Migration):
 
@@ -23,7 +25,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='assignedcontent',
             name='name',
-            field=models.CharField(blank=True, default='', max_length=255, validators=[django.core.validators.RegexValidator('^(\\w[\\w ]*\\w|\\w?)$')]),
+            field=models.CharField(blank=True, default='', max_length=255, validators=[
+                spkcspider.apps.spider.validators.nocontrol_validator,
+                django.core.validators.RegexValidator(r"[()<>]", inverse_match=True)
+            ]),
         ),
         migrations.AlterField(
             model_name='usercomponent',

@@ -128,12 +128,9 @@ class TextForm(forms.ModelForm):
             'license_name', 'license', 'sources'
         ]
 
-        # widgets = {
-        #    "editable_from": forms.CheckboxSelectMultiple(),
-        #    "sources": ListWidget(
-        #        item_label=_("Source")
-        #    )
-        # }
+        widgets = {
+            "editable_from": forms.CheckboxSelectMultiple(),
+        }
 
     class Media:
         js = [
@@ -166,7 +163,6 @@ class TextForm(forms.ModelForm):
             return
 
         del self.fields["editable_from"]
-        del self.fields["preview_words"]
         del self.fields["push"]
 
         allow_edit = False

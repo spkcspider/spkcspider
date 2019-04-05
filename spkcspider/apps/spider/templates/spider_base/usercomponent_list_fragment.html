@@ -62,7 +62,11 @@
         </div>
       </td>
     </tr>
-    <tr><td colspan="3">{{uc.description|escape}}</td></tr>
+    <tr><td colspan="3" style="padding:0">
+      <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
+        {{uc.description|escape|linebreaksbr}}
+      </div>
+    </td></tr>
   {% empty %}
       <tr><td>{% trans 'No Components available.' %}</td></tr>
   {% endfor %}

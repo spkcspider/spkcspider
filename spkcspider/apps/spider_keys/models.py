@@ -139,6 +139,8 @@ class PublicKey(BaseContent):
 @add_content
 class AnchorServer(BaseContent):
     """ identify by server """
+    expose_name = False
+    expose_description = True
     appearances = [
         {
             "name": "AnchorServer",
@@ -153,6 +155,9 @@ class AnchorServer(BaseContent):
 
     def get_priority(self):
         return -10
+
+    def get_content_name(self):
+        return "Anchor: {}".format(self.associated.id)
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
@@ -181,6 +186,8 @@ class AnchorServer(BaseContent):
 @add_content
 class AnchorKey(AnchorServer):
     """ domain name of pc, signed """
+    expose_name = False
+    expose_description = True
     appearances = [
         {
             "name": "AnchorKey",
@@ -199,8 +206,6 @@ class AnchorKey(AnchorServer):
     )
 
     def get_content_name(self):
-        if not self.id:
-            return super().__str__()
         st = self.key.get_key_name()
         if st[1]:
             st = st[1]
@@ -208,7 +213,7 @@ class AnchorKey(AnchorServer):
             st = "{}...".format(st[0][:10])
         if len(self.key.associated.description) > 0:
             st = "{}: {}".format(st, self.key.associated.description[:20])
-        return "AnchorKey: <{}>".format(st)
+        return st
 
     def get_form(self, scope):
         from .forms import AnchorKeyForm

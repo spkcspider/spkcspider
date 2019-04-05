@@ -27,6 +27,7 @@ from ..helpers import validator_token, create_b64_id_token
 from ..constants import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid
 )
+from ..validators import nocontrol_validator
 
 from .base import BaseInfoModel
 
@@ -116,13 +117,15 @@ class AssignedContent(BaseInfoModel):
         max_length=(MAX_TOKEN_B64_SIZE)+hex_size_of_bigid+2,
         db_index=True, unique=True, null=True, blank=True,
         validators=[
-            validator_token
+            validator_token,
+            validators.RegexValidator(r"[()<>]", inverse_match=True)
         ]
     )
     # regex disables controlcars and disable special spaces
+    # and allows some of special characters
     name = models.CharField(
         max_length=255, blank=True, default="",
-        validators=[validators.RegexValidator(r"^(\w[\w ]*\w|\w?)$")]
+        validators=[nocontrol_validator]
     )
     description = models.TextField(
         default="", blank=True

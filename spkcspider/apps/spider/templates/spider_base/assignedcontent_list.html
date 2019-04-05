@@ -163,7 +163,7 @@
       {% for content in object_list %}
         <tr class="w3-light-grey" resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
           <td class="" style="min-height:48px;display:inline-block;word-break: break-all;" rel="spkc:properties">
-            <span>{{ content.title }}</span>
+            <span>{{ content.name }}<span class="w3-small" style="margin-left: 5px">({{ content.ctype }})</span></span>
             <data hidden="hidden" typeof="spkc:Property">
               <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
               <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.info}}</data>
@@ -174,11 +174,11 @@
             </data>
             <data hidden="hidden" typeof="spkc:Property">
               <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
-              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.name|escape}}</data>
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.name|escape}}</data>
             </data>
             <data hidden="hidden" typeof="spkc:Property">
               <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
-              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description|escape}}</data>
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.description|escape}}</data>
             </data>
           </td>
           <td>
@@ -208,7 +208,11 @@
             </div>
           </td>
         </tr>
-        <tr class="w3-white"><td colspan="3">{{content.description|escape}}</td></tr>
+        <tr><td colspan="3" style="padding:0">
+          <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
+            {{uc.description|escape|linebreaksbr}}
+          </div>
+        </td></tr>
       {% empty %}
         <tr class="w3-light-grey"><td colspan="3">{% trans 'No User Content available.' %}</td></tr>
       {% endfor %}

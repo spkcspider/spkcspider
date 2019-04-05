@@ -143,6 +143,8 @@ class BaseContent(models.Model):
     # user can set description
     expose_description = False
 
+    associated_errors = None
+
     _content_is_cleaned = False
 
     @property
@@ -325,13 +327,14 @@ class BaseContent(models.Model):
                 )
             )
 
-        else:
-            if (
-                parent_form and
-                len(kwargs["form"].errors.get(NON_FIELD_ERRORS, [])) > 0
-            ):
+        elif parent_form:
+            if len(kwargs["form"].errors.get(NON_FIELD_ERRORS, [])) > 0:
                 parent_form.add_error(
-                    None, kwargs["form"].errors[NON_FIELD_ERRORS]
+                    None, kwargs["form"].errors.pop(NON_FIELD_ERRORS)
+                )
+            if self.associated_errors:
+                parent_form.add_error(
+                    None, self.associated_errors
                 )
         return (
             render_to_string(
@@ -661,6 +664,7 @@ class BaseContent(models.Model):
         return super().full_clean(**kwargs)
 
     def clean(self):
+        _ = gettext
         if self._associated_tmp:
             self._associated_tmp.content = self
         assignedcontent = self.associated
@@ -673,9 +677,17 @@ class BaseContent(models.Model):
         assignedcontent.priority = self.get_priority()
         assignedcontent.strength = self.get_strength()
         assignedcontent.strength_link = self.get_strength_link()
-        assignedcontent.full_clean(exclude=["content"])
+        try:
+            assignedcontent.full_clean(exclude=["content"])
+        except ValidationError as exc:
+            self.associated_errors = exc
         # persist AssignedContent for saving
         self._associated_tmp = assignedcontent
+        if self.associated_errors:
+            raise ValidationError(
+                _('AssignedContent validation failed'),
+                code="assigned_content"
+            )
         self._content_is_cleaned = True
 
     def save(self, *args, **kwargs):
@@ -737,5 +749,7 @@ class BaseContent(models.Model):
         s = set(assignedcontent.attached_contents.all())
         s.update(self.get_references())
         assignedcontent.references.set(s)
+        # delete saved errors
+        self.associated_errors = None
         # require cleaning again
         self._content_is_cleaned = False

@@ -31,13 +31,17 @@ class TextFiletTest(TransactionWebTest):
             }
         )
         self.app.set_user(user="testuser1")
-        form = self.app.get(createurl).form
+        response = self.app.get(createurl)
+        form = response.form
         form.set("content_control-name", "foo")
         form.set("text", "foooo")
+        # form["editable_from"].select_multiple([str(home.id)])
         for field in form.fields["editable_from"]:
             if field._value == str(home.id):
                 field.checked = True
                 break
+        else:
+            self.fail(msg="editable_from was not selected")
         response = form.submit()
         updateurl = response.location
         response = response.follow()
