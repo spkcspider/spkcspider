@@ -1,5 +1,5 @@
 {% load i18n static spider_rdf %}
-<table class="w3-table w3-bordered w3-hoverable" rel="spkc:components">
+<table class="w3-table w3-bordered" rel="spkc:components">
   {% if table_heading %}
   <thead>
     <tr>
@@ -11,7 +11,7 @@
   {% endif %}
   <tbody>
   {% for uc in object_list %}
-    <tr class="color-front-{{uc.strength}}" title="{{uc.description|escape}}" resource="{% url 'spider_base:ucontent-list' token=uc.token %}" typeof="spkc:Component">
+    <tr class="color-front-{{uc.strength}}" resource="{% url 'spider_base:ucontent-list' token=uc.token %}" typeof="spkc:Component">
       <td class="{% if uc.is_index %}w3-large{% endif %}" style="min-height:48px;display:inline-block;word-break: break-all;">
         <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
         <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
@@ -62,6 +62,7 @@
         </div>
       </td>
     </tr>
+    <tr><td colspan="3">{{uc.description|escape}}</td></tr>
   {% empty %}
       <tr><td>{% trans 'No Components available.' %}</td></tr>
   {% endfor %}

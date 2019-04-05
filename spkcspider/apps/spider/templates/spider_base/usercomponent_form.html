@@ -79,7 +79,9 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           {% trans 'Add new content' %}
         </h2>
       </legend>
+      <div class="w3-white w3-border">
       {% include "spider_base/content_variants_box.html" with open=True uc=object %}
+      </div>
     </fieldset>
     {% endif %}
     <fieldset style="width:100%">

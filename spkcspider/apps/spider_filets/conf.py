@@ -14,7 +14,7 @@ LICENSE_CHOICES_FILE = getattr(
 )
 DEFAULT_LICENSE_FILE = getattr(
     settings, "SPIDER_DEFAULT_LICENSE_FILE",
-    lambda uc, user: "other"
+    lambda uc, user: "pd"
 )
 if not callable(DEFAULT_LICENSE_FILE):
     _DEFAULT_LICENSE_FILE = DEFAULT_LICENSE_FILE
@@ -31,7 +31,7 @@ LICENSE_CHOICES_TEXT = getattr(
 
 DEFAULT_LICENSE_TEXT = getattr(
     settings, "DEFAULT_LICENSE_TEXT",
-    lambda uc, user: "other"
+    lambda uc, user: "pd"
 )
 
 if not callable(DEFAULT_LICENSE_TEXT):

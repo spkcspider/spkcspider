@@ -124,14 +124,18 @@
   </div>
   {% list_parameters "search" as cur_search %}
   {% if request.is_owner and not cur_search %}
-    <details class="w3-margin" style="margin-bottom:30px" {% if object_list|length < 2 %}open="open"{% endif %}>
-      <summary class="w3-button w3-hover-dark-grey w3-black">
-        <i class="fas fa-plus" style="margin-right:10px" aria-hidden="true"></i>
-        {% trans 'Add new content' %}
-        <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
-      </summary>
-      {% include "spider_base/content_variants_box.html" %}
-    </details>
+    <div class="w3-padding" style="margin-bottom:30px">
+      <details {% if object_list|length < 2 %}open="open"{% endif %}>
+        <summary class="w3-button w3-hover-dark-grey w3-black">
+          <i class="fas fa-plus" style="margin-right:10px" aria-hidden="true"></i>
+          {% trans 'Add new content' %}
+          <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
+        </summary>
+        <div class="w3-white w3-border">
+        {% include "spider_base/content_variants_box.html" %}
+        <div>
+      </details>
+    </div>
   {% endif %}
 
   {% if active_features.exists %}
@@ -147,11 +151,19 @@
   </div>
   {% endif %}
   <div class="w3-margin">
-    <table class="w3-table w3-striped w3-bordered w3-hoverable w3-white" rel="spkc:contents">
+    <table class="w3-table w3-bordered" rel="spkc:contents">
+      <thead>
+        <tr>
+          <th colspan="3" class="w3-blue" style="padding-left:40px">
+            {% trans 'Contents' %}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
       {% for content in object_list %}
-        <tr resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
+        <tr class="w3-light-grey" resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
           <td class="" style="min-height:48px;display:inline-block;word-break: break-all;" rel="spkc:properties">
-            <span>{{ content.content|truncatechars:50 }}</span>
+            <span>{{ content.title }}</span>
             <data hidden="hidden" typeof="spkc:Property">
               <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
               <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.info}}</data>
@@ -159,6 +171,14 @@
             <data hidden="hidden" typeof="spkc:Property">
               <data hidden="hidden" property="spkc:name" datatype="xsd:string">id</data>
               <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{content.id}}</data>
+            </data>
+            <data hidden="hidden" typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.name|escape}}</data>
+            </data>
+            <data hidden="hidden" typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description|escape}}</data>
             </data>
           </td>
           <td>
@@ -188,9 +208,11 @@
             </div>
           </td>
         </tr>
+        <tr class="w3-white"><td colspan="3">{{content.description|escape}}</td></tr>
       {% empty %}
-        <tr><td>{% trans 'No User Content available.' %}</td></tr>
+        <tr class="w3-light-grey"><td colspan="3">{% trans 'No User Content available.' %}</td></tr>
       {% endfor %}
+      </tbody>
     </table>
   </div>
   <div class="page-manipulation w3-padding" style="margin-top:40px">

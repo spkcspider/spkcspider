@@ -7,12 +7,13 @@
   </data>
 </data>
 <div class="w3-padding">
-  <div class="w3-white" typeof="spkc:Property">
+  <div class="w3-white w3-padding" typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name">text</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
     <data property="spkc:value">{{object.text|safe}}</data>
   </div>
 </div>
+{% include "spider_filets/license_info.html" %}
 {% if "update_guest" in abilities %}
 <div class="w3-padding">
   <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_guest' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
