@@ -334,6 +334,8 @@ class UserContentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.instance.content.expose_name:
             del self.fields["name"]
+        elif self.instance.content.expose_name == "force":
+            self.fields["name"].required = True
         if not self.instance.content.expose_description:
             del self.fields["description"]
 

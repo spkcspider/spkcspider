@@ -1,7 +1,5 @@
 __all__ = ["FileForm", "TextForm", "RawTextForm"]
 
-import posixpath
-
 from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -15,7 +13,9 @@ from .conf import (
     DEFAULT_LICENSE_TEXT, LICENSE_CHOICES_TEXT
 )
 from .widgets import LicenseChooserWidget
-from spkcspider.apps.spider.widgets import ListWidget
+
+from spkcspider.apps.spider.fields import OpenChoiceField
+from spkcspider.apps.spider.widgets import OpenChoiceWidget
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -35,12 +35,20 @@ class FileForm(forms.ModelForm):
         choices=map(_extract_choice, LICENSE_CHOICES_FILE.items()),
         widget=LicenseChooserWidget(licenses=LICENSE_CHOICES_FILE)
     )
+    sources = OpenChoiceField(
+        required=False, initial=False,
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
+    )
 
     class Meta:
         model = FileFilet
-        fields = ['file', 'name', 'license_name', 'license', 'sources']
+        fields = ['file', 'license_name', 'license', 'sources']
         widgets = {
-            "sources": ListWidget(item_label=_("Source"))
+            # "sources": ListWidget(item_label=_("Source"))
         }
 
     class Media:
@@ -55,7 +63,6 @@ class FileForm(forms.ModelForm):
             "license_name", DEFAULT_LICENSE_FILE(uc, request.user)
         )
         super().__init__(initial=initial, **kwargs)
-        self.fields['name'].required = False
         setattr(self.fields['file'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
@@ -90,17 +97,11 @@ class FileForm(forms.ModelForm):
         ret = super().clean()
         if "file" not in ret:
             return ret
-        if not ret["name"] or ret["name"].strip() == "":
-            ret["name"] = posixpath.basename(ret["file"].name)
         # has to raise ValidationError
         get_settings_func(
             "UPLOAD_FILTER_FUNC",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )(ret["file"])
-        # if self.cleaned_data['license_name'] == "other":
-        #     setattr(self.fields['license'], "hashable", True)
-        # else:
-        #     setattr(self.fields['license_name'], "hashable", True)
         return ret
 
 
@@ -111,20 +112,28 @@ class TextForm(forms.ModelForm):
         choices=map(_extract_choice, LICENSE_CHOICES_TEXT.items()),
         widget=LicenseChooserWidget(licenses=LICENSE_CHOICES_TEXT)
     )
+    sources = OpenChoiceField(
+        required=False, initial=False,
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
+    )
 
     class Meta:
         model = TextFilet
         fields = [
-            'text', 'name', 'push', 'editable_from', 'preview_words',
+            'text', 'push', 'editable_from',
             'license_name', 'license', 'sources'
         ]
 
-        widgets = {
-            "editable_from": forms.CheckboxSelectMultiple(),
-            "sources": ListWidget(
-                item_label=_("Source")
-            )
-        }
+        # widgets = {
+        #    "editable_from": forms.CheckboxSelectMultiple(),
+        #    "sources": ListWidget(
+        #        item_label=_("Source")
+        #    )
+        # }
 
     class Media:
         js = [
@@ -159,7 +168,6 @@ class TextForm(forms.ModelForm):
         del self.fields["editable_from"]
         del self.fields["preview_words"]
         del self.fields["push"]
-        del self.fields["name"]
 
         allow_edit = False
         if scope == "update_guest":
@@ -169,12 +177,23 @@ class TextForm(forms.ModelForm):
 
 
 class RawTextForm(forms.ModelForm):
+    name = forms.CharField()
+    sources = OpenChoiceField(
+        required=False, initial=False,
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
+        )
+    )
+
     class Meta:
         model = TextFilet
-        fields = ['text', 'name', 'license_name', 'license', 'sources']
+        fields = ['text', 'license_name', 'license', 'sources']
 
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
+        self.fields['name'].initial = self.instance.associated.name
         setattr(self.fields['name'], "hashable", True)
         setattr(self.fields['text'], "hashable", True)
         # sources should not be hashed as they don't affect result

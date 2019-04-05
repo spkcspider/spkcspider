@@ -198,10 +198,13 @@ class AssignedContent(BaseInfoModel):
             unique_together.append(('usercomponent', 'info'))
 
     def __str__(self):
-        return self.content.__str__()
+        return self.name
 
     def __repr__(self):
-        return self.content.__repr__()
+        return "<AssignedContent: ({}: {})>".format(
+            self.usercomponent.username,
+            self.name
+        )
 
     def get_absolute_url(self, scope="view"):
         return reverse(

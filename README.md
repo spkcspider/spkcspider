@@ -228,6 +228,8 @@ Otherwise security could be compromised.
 * documentation
 * layouts
 * show license information
+* rebuild ListWidget on select field, add compatibility to select and text fields
+* maybe: replace select2 by json-editor
 * use title and description
 * replace \n and = through ascii seperator meta chars (why? it is smarter than to block chars)
 * tests for other dbs

@@ -7,7 +7,7 @@
   {% if scope == "list" %}
     <meta name="description" content="{{uc.description|escape}}" />
   {% else %}
-    <meta name="description" content="{{object.content.get_protected_preview|escape}}" />
+    <meta name="description" content="{{object.description|escape}}" />
   {% endif %}
 {% endblock %}
 

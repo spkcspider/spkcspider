@@ -45,6 +45,8 @@ def valid_pkey_properties(key):
 
 @add_content
 class PublicKey(BaseContent):
+    expose_name = False
+    expose_description = True
     appearances = [
         {"name": "PublicKey", "ctype": VariantType.unique.value}
     ]
@@ -56,7 +58,6 @@ class PublicKey(BaseContent):
             "for signing and encryption"
         )
     )
-    note = models.TextField(max_length=100, default="", null=False, blank=True)
 
     @classmethod
     def localize_name(cls, name):
@@ -68,9 +69,8 @@ class PublicKey(BaseContent):
         h = get_hashob()
         h.update(key.encode("ascii", "ignore"))
         # don't put use_for_encryption state here; this would break unique
-        return "%shash:%s=%s\nnote=%s\n" % (
-            ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex(),
-            self.note[:200].replace("\n", " ")
+        return "%shash:%s=%s\n" % (
+            ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex()
         )
 
     def get_key_name(self):
@@ -88,16 +88,14 @@ class PublicKey(BaseContent):
         # other key
         return (self.key, None)
 
-    def __str__(self):
-        if not self.id:
-            return super().__str__()
+    def get_content_name(self):
         st = self.get_key_name()
         if st[1]:
             st = st[1]
         else:
             st = "{}...".format(st[0][:10])
-        if len(self.note) > 0:
-            st = "{}: {}".format(st, self.note[:20])
+        if len(self.associated.description) > 0:
+            st = "{}: {}".format(st, self.associated.description[:20])
         return "Key: {}".format(st)
 
     def get_form(self, scope):
@@ -200,7 +198,7 @@ class AnchorKey(AnchorServer):
         max_length=1024, help_text=_help_text_sig, null=False
     )
 
-    def __str__(self):
+    def get_content_name(self):
         if not self.id:
             return super().__str__()
         st = self.key.get_key_name()
@@ -208,9 +206,9 @@ class AnchorKey(AnchorServer):
             st = st[1]
         else:
             st = "{}...".format(st[0][:10])
-        if len(self.key.note) > 0:
-            st = "{}: {}".format(st, self.key.note[:20])
-        return "AnchorKey: Key: {}".format(st)
+        if len(self.key.associated.description) > 0:
+            st = "{}: {}".format(st, self.key.associated.description[:20])
+        return "AnchorKey: <{}>".format(st)
 
     def get_form(self, scope):
         from .forms import AnchorKeyForm

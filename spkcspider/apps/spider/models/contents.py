@@ -82,17 +82,11 @@ class LinkContent(BaseContent):
         help_text=_("Improve ranking of this Link.")
     )
 
-    def __str__(self):
-        if getattr(self, "content", None):
-            return "Link: <%s>" % self.content
-        else:
-            return "Link"
+    def get_content_name(self):
+        return self.content.content.get_content_name()
 
-    def __repr__(self):
-        if getattr(self, "content", None):
-            return "<Link: %r>" % self.content
-        else:
-            return "<Link>"
+    def get_content_description(self):
+        return self.content.content.get_content_description()
 
     def get_strength(self):
         return self.content.content.get_strength()
@@ -107,9 +101,6 @@ class LinkContent(BaseContent):
     def get_strength_link(self):
         # don't allow links linking on links
         return 11
-
-    def get_protected_preview(self):
-        return self.content.content.get_protected_preview()
 
     def get_info(self):
         ret = self.content.content.get_info()

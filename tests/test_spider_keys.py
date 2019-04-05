@@ -58,17 +58,21 @@ class KeyTest(TransactionWebTest):
             response = self.app.get(createurl)
             form = response.form
             form["key"] = pempriv
-            form["note"] = "invalid"
+            form["content_control-description"] = "invalid"
             response = form.submit()
-            self.assertFalse(PublicKey.objects.filter(note="invalid"))
+            self.assertFalse(PublicKey.objects.filter(
+                associated_rel__description="invalid"
+            ))
 
         with self.subTest(msg="allow valid keys"):
             response = self.app.get(createurl)
             form = response.form
             form["key"] = pempub
-            form["note"] = "valid"
+            form["content_control-description"] = "valid"
             response = form.submit().follow()
-            self.assertTrue(PublicKey.objects.filter(note="valid"))
+            self.assertTrue(PublicKey.objects.filter(
+                associated_rel__description="valid"
+            ))
 
     def test_anchor_server(self):
         home = self.user.usercomponent_set.get(name="home")
@@ -110,9 +114,11 @@ class KeyTest(TransactionWebTest):
         response = self.app.get(createurl)
         form = response.form
         form["key"] = pempub
-        form["note"] = "valid"
+        form["content_control-description"] = "valid"
         response = form.submit().follow()
-        keyob = PublicKey.objects.filter(note="valid").first()
+        keyob = PublicKey.objects.filter(
+            associated_rel__description="valid"
+        ).first()
         self.assertTrue(keyob)
         createurl = reverse(
             "spider_base:ucontent-add",

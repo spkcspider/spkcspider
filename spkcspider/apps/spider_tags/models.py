@@ -113,23 +113,12 @@ class UserTagLayout(BaseContent):
             "strength": 10
         }
     ]
+    expose_name = False
 
-    def __str__(self):
-        if not self.id:
-            return self.localize_name("UserTagLayout")
-        return "%s: %s:%s" % (
-            self.localize_name("UserTagLayout"),
+    def get_content_name(self):
+        return "%s: %s" % (
             self.layout.name,
-            self.associated.usercomponent.user
-        )
-
-    def __repr__(self):
-        if not self.id:
-            return self.localize_name("UserTagLayout")
-        return "<%s: %s:%s>" % (
-            self.localize_name("UserTagLayout"),
-            self.layout.name,
-            self.associated.usercomponent.user
+            self.associated.usercomponent.username
         )
 
     def get_size(self):

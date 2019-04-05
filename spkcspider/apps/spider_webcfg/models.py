@@ -11,6 +11,7 @@ from spkcspider.apps.spider.contents import BaseContent, add_content
 
 @add_content
 class WebConfig(BaseContent):
+    expose_name = False
     appearances = [
         {
             "name": "WebConfig",

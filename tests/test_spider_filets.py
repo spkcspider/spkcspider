@@ -32,7 +32,7 @@ class TextFiletTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         form = self.app.get(createurl).form
-        form.set("name", "foo")
+        form.set("content_control-name", "foo")
         form.set("text", "foooo")
         for field in form.fields["editable_from"]:
             if field._value == str(home.id):

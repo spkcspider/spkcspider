@@ -302,8 +302,8 @@ class AdvancedComponentTest(TransactionWebTest):
         form = self.app.get(createurlindex).forms[0]
         form.action = createurlindex
         form['content_control-usercomponent'] = public.id
+        form['content_control-name'] = "name"
         form['text'] = "foobar"
-        form['name'] = "name"
         response = form.submit()
         location = response.location
         response = response.follow()
@@ -318,6 +318,6 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(form["text"].value, "foobar")
         form['content_control-new_static_token'] = "12"
         form['text'] = "foobart"
-        form['name'] = "hubert"
+        form['content_control-name'] = "hubert"
         response = form.submit().follow()
         self.assertEqual(response.forms[0]["text"].value, "foobart")

@@ -216,16 +216,13 @@ class UserComponent(models.Model):
         unique_together = [("user", "name")]
         permissions = [("can_feature", "Can feature User Components")]
 
-    def get_name(self):
+    def __str__(self):
         if self.strength == 10:
             return "index"
         return self.name
 
-    def __str__(self):
-        return self.get_name()
-
     def __repr__(self):
-        return "<UserComponent: %s: %s>" % (self.username, self.get_name())
+        return "<UserComponent: (%s: %s)>" % (self.username, self.__str__())
 
     def clean(self):
         _ = gettext
@@ -297,7 +294,7 @@ class UserComponent(models.Model):
     def deletion_period(self):
         return getattr(
             settings, "SPIDER_COMPONENTS_DELETION_PERIODS", {}
-        ).get(self.get_name(), None)
+        ).get(self.__str__(), None)
 
 
 class UserInfo(models.Model):

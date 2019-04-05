@@ -10,6 +10,13 @@
 {% endblocktrans %}{% endif %}{% endblock %}
 
 
+{% block public_meta %}
+  {{block.super}}
+  {% if scope != "add" %}
+    <meta name="description" content="{{object.description|escape}}" />
+  {% endif %}
+{% endblock %}
+
 {% block extrahead %}
 {{block.super}}
 <script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>

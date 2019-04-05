@@ -35,11 +35,11 @@ document.addEventListener("DOMContentLoaded", function(){
     element.style.display = "none";
     editor.setValue(JSON.parse(element.value));
     let handler = function (ev){
-      let errors = scheme_editor.validate();
+      let errors = editor.validate();
       if (errors.length){
         ev.preventDefault();
       } else {
-        element.value = JSON.stringify(scheme_editor.getValue());
+        element.value = JSON.stringify(editor.getValue());
       }
     };
     element.form.addEventListener("submit", handler, false);

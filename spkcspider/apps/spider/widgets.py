@@ -28,16 +28,17 @@ class StateButtonWidget(widgets.CheckboxInput):
 
 class ListWidget(widgets.Textarea):
     template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
+    allow_multiple_selected = True
 
     class Media:
         js = [
             'node_modules/@json-editor/json-editor/dist/jsoneditor%s.js' % _extra,  # noqa:E501
-            'spider_base/list_editor.js'
+            'spider_base/ListEditorWidget.js'
         ]
 
     def __init__(
-        self, *, attrs=None, wrapper_attrs=None, format_type="text",
-        item_label=_("item"), **kwargs
+        self, *, attrs=None, wrapper_attrs=None,
+        format_type="text", item_label=_("item"), **kwargs
     ):
         if not attrs:
             attrs = {"class": ""}
@@ -63,6 +64,20 @@ class ListWidget(widgets.Textarea):
             context['widget']['attrs']["id"]
         )
         return context
+
+    def value_from_datadict(self, data, files, name):
+        ret = data.get(name)
+        if ret and isinstance(ret, str):
+            ret = json.loads(ret)
+        return ret
+
+    def format_value(self, value):
+        """Return selected values as a json."""
+        if not value:
+            return "[]"
+        if isinstance(value, (tuple, list)):
+            value = json.dumps(value)
+        return str(value)
 
     def render(self, name, value, attrs=None, renderer=None):
         if value is None:

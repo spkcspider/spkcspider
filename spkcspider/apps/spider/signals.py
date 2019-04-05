@@ -1,9 +1,9 @@
 __all__ = (
-    "UpdateSpiderCallback", "InitUserCallback", "UpdateAnchorContent",
+    "UpdateSpiderCb", "InitUserCb", "UpdateAnchorContent",
     "UpdateAnchorTargets", "UpdateAnchorComponent", "update_dynamic",
-    "failed_guess",
-    "RemoveTokensLogout", "CleanupCallback",
-    "MovePersistentCallback", "move_persistent"
+    "DeleteContentCb",
+    "RemoveTokensLogout", "CleanupCb", "MovePersistentCb",
+    "move_persistent", "failed_guess"
 )
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
@@ -30,7 +30,18 @@ def TriggerUpdate(sender, **_kwargs):
     logging.info("Update of dynamic content completed")
 
 
-def CleanupCallback(sender, instance, **kwargs):
+def DeleteContentCb(sender, instance, **_kwargs):
+    # connect if your content object can be deleted without AssignedContent
+    from .models import AssignedContent
+    from django.contrib.contenttypes.models import ContentType
+
+    AssignedContent.objects.filter(
+        object_id=instance.id,
+        content_type=ContentType.objects.get_for_model(sender)
+    ).delete()
+
+
+def CleanupCb(sender, instance, **kwargs):
     stored_exc = None
     if sender._meta.model_name == "usercomponent":
         # if component is deleted the content deletion handler cannot find
@@ -114,7 +125,7 @@ def UpdateAnchorComponent(sender, instance, raw=False, **kwargs):
             ).update(persist=0)
 
 
-def MovePersistentCallback(sender, tokens, to, **kwargs):
+def MovePersistentCb(sender, tokens, to, **kwargs):
     from django.apps import apps
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
     AssignedContent.objects.filter(
@@ -145,7 +156,7 @@ def UpdateAnchorTargets(sender, instance, raw=False, **kwargs):
             )
 
 
-def UpdateSpiderCallback(**_kwargs):
+def UpdateSpiderCb(**_kwargs):
     # provided apps argument lacks model function support
     # so use this
     from django.apps import apps
@@ -163,7 +174,11 @@ def UpdateSpiderCallback(**_kwargs):
         row.info = row.content.get_info()
         if not row.token:
             row.token = create_b64_id_token(row.id, "/")
-        row.save(update_fields=['info', "token"])
+        if not row.content.expose_name or not row.name:
+            row.name = row.content.get_content_name()
+        if not row.content.expose_description:
+            row.description = row.content.get_content_description()
+        row.save(update_fields=['name', 'description', 'info', "token"])
 
     for row in UserComponent.objects.all():
         if not row.token:
@@ -179,7 +194,7 @@ def UpdateSpiderCallback(**_kwargs):
             row.spider_info.save()
 
 
-def InitUserCallback(sender, instance, raw=False, **kwargs):
+def InitUserCb(sender, instance, raw=False, **kwargs):
     if raw:
         return
     from .models import UserComponent, Protection, UserInfo

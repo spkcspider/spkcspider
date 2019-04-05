@@ -56,7 +56,7 @@ class ContentWithLicense(BaseContent):
         max_length=255, null=False, default="other"
     )
     license = models.TextField(default="", blank=True)
-    sources = JSONField(default=[], blank=True)
+    sources = JSONField(default=list, blank=True)
 
     class Meta(BaseContent.Meta):
         abstract = True
@@ -64,10 +64,10 @@ class ContentWithLicense(BaseContent):
 
 @add_content
 class FileFilet(ContentWithLicense):
+    expose_name = True
+    expose_description = True
+
     appearances = [{"name": "File"}]
-
-    name = models.CharField(max_length=255, null=False)
-
     file = models.FileField(upload_to=get_file_path, null=False, blank=False)
 
     def get_template_name(self, scope):
@@ -75,22 +75,16 @@ class FileFilet(ContentWithLicense):
             return 'spider_filets/file_form.html'
         return 'spider_base/view_form.html'
 
-    def __str__(self):
-        if not self.id:
-            return self.localize_name(self.associated.ctype.name)
-        name = self.name
-        if "." not in name:  # use saved ending
-            ext = self.file.name.rsplit(".", 1)
-            if len(ext) > 1:
-                name = "%s.%s" % (name, ext[1])
-        return name
-
     def get_size(self):
         return self.file.size
 
+    def get_content_name(self):
+        # in case no name is set
+        return posixpath.basename(self.file.name)
+
     def get_info(self):
         ret = super().get_info()
-        return "%sname=%s\n" % (ret, self.name)
+        return "%sname=%s\n" % (ret, self.associated.name)
 
     def get_form(self, scope):
         from .forms import FileForm
@@ -113,7 +107,7 @@ class FileFilet(ContentWithLicense):
         kwargs["object"] = self
         kwargs["associated"] = self.associated
         kwargs["type"] = None
-        split = self.name.rsplit(".", 1)
+        split = self.associated.name.rsplit(".", 1)
         if len(split) == 2:
             extension = split[1].lower()
             if extension in image_extensions:
@@ -151,8 +145,8 @@ class FileFilet(ContentWithLicense):
                 self.file.file,
                 content_type='application/octet-stream'
             )
-        name = self.name
-        if "." not in name:  # use saved ending
+        name = self.associated.name
+        if "." not in name:  # use ending of saved file
             ext = self.file.name.rsplit(".", 1)
             if len(ext) > 1:
                 name = "%s.%s" % (name, ext[1])
@@ -182,9 +176,11 @@ class FileFilet(ContentWithLicense):
 
 @add_content
 class TextFilet(ContentWithLicense):
+    expose_name = "force"
+    expose_description = True
+
     appearances = [{"name": "Text"}]
 
-    name = models.CharField(max_length=255, null=False)
     editable_from = models.ManyToManyField(
         "spider_base.UserComponent", related_name="+",
         help_text=_("Allow editing from selected components."),
@@ -195,20 +191,7 @@ class TextFilet(ContentWithLicense):
         help_text=_("Improve ranking of this content.")
     )
 
-    preview_words = models.PositiveIntegerField(
-        default=0,
-        help_text=_(
-            "How many words from start should be used for search, seo, "
-            "search machine preview? (tags are stripped)"
-        )
-    )
-
     text = models.TextField(default="", blank=True)
-
-    def __str__(self):
-        if not self.id:
-            return self.localize_name(self.associated.ctype.name)
-        return self.name
 
     def get_priority(self):
         # push to top
@@ -224,22 +207,24 @@ class TextFilet(ContentWithLicense):
             return 'spider_base/text.html'
         return super().get_template_name(scope)
 
+    def get_content_description(self):
+        # use javascript instead
+        # currently dead code
+        return " ".join(
+            prepare_description(
+                self.text, 51
+            )[:50]
+        )
+
     def get_info(self):
         ret = super().get_info()
-        return "%sname=%s\npreview=%s\n" % (
-            ret, self.name,
-            " ".join(
-                prepare_description(
-                    self.text, self.preview_words+1
-                )[:self.preview_words]
-            )
+        return "%sname=%s\n" % (
+            ret, self.associated.name
+
         )
 
     def get_size(self):
         return len(self.text.encode("utf8"))
-
-    def get_protected_preview(self):
-        return self.associated.getlist("preview", 1)[0]
 
     def get_form(self, scope):
         if scope in ("raw", "export", "list"):

@@ -9,9 +9,9 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from .helpers import extract_app_dicts
 from .signals import (
-    UpdateSpiderCallback, InitUserCallback, UpdateAnchorContent,
+    UpdateSpiderCb, InitUserCb, UpdateAnchorContent,
     UpdateAnchorComponent, update_dynamic, TriggerUpdate, RemoveTokensLogout,
-    CleanupCallback, MovePersistentCallback, move_persistent,
+    CleanupCb, MovePersistentCb, move_persistent, DeleteContentCb,
     UpdateAnchorTargets
 )
 
@@ -24,7 +24,7 @@ class SpiderBaseConfig(AppConfig):
 
     def ready(self):
         from .models import (
-            AssignedContent, UserComponent, AuthToken
+            AssignedContent, UserComponent, AuthToken, LinkContent
         )
         from django.apps import apps
         from .protections import installed_protections
@@ -50,29 +50,35 @@ class SpiderBaseConfig(AppConfig):
             dispatch_uid="spider_update_anchors_content"
         )
         move_persistent.connect(
-            MovePersistentCallback, sender=AuthToken,
+            MovePersistentCb, sender=AuthToken,
             dispatch_uid="spider_move_persistent"
         )
 
         # order important for next two
         post_delete.connect(
-            CleanupCallback, sender=UserComponent,
+            CleanupCb, sender=UserComponent,
             dispatch_uid="spider_delete_cleanup_usercomponent"
         )
 
         post_delete.connect(
-            CleanupCallback, sender=AssignedContent,
+            CleanupCb, sender=AssignedContent,
             dispatch_uid="spider_delete_cleanup_content"
         )
+
+        post_delete.connect(
+            DeleteContentCb, sender=LinkContent,
+            dispatch_uid="spider_delete_cleanup_linkcontent"
+        )
+
         #####################
 
         post_save.connect(
-            InitUserCallback, sender=get_user_model(),
+            InitUserCb, sender=get_user_model(),
             dispatch_uid="setup_spider_user"
         )
 
         update_dynamic.connect(
-            UpdateSpiderCallback,
+            UpdateSpiderCb,
             dispatch_uid="update_spider_dynamic"
         )
 

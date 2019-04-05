@@ -22,7 +22,7 @@ from .models import PublicKey, AnchorServer, AnchorKey
 class KeyForm(forms.ModelForm):
     class Meta:
         model = PublicKey
-        fields = ['key', 'note']
+        fields = ['key']
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

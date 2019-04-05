@@ -22,7 +22,7 @@ from .fields import generate_fields
 from .models import TagLayout, SpiderTag
 
 from spkcspider.apps.spider.fields import OpenChoiceField
-from spkcspider.apps.spider.widgets import ListWidget
+from spkcspider.apps.spider.widgets import ListWidget, OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
 from spkcspider.apps.spider.models import (
     AssignedContent, ReferrerObject
@@ -99,8 +99,10 @@ class TagLayoutAdminForm(forms.ModelForm):
 class SpiderTagForm(forms.ModelForm):
     updateable_by = OpenChoiceField(
         required=False, initial=False,
-        widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier")
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
         )
     )
     layout = forms.ModelChoiceField(
@@ -146,8 +148,10 @@ def generate_form(name, layout):
     ))
     _temp_field = OpenChoiceField(
         required=False, initial=False,
-        widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier")
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
         )
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)
@@ -155,8 +159,10 @@ def generate_form(name, layout):
     _gen_fields.append(("updateable_by", _temp_field))
     _temp_field = OpenChoiceField(
         required=False, initial=False,
-        widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier")
+        widget=OpenChoiceWidget(
+            attrs={
+                "style": "min-width: 300px; width:100%"
+            }
         )
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)

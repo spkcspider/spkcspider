@@ -138,6 +138,7 @@ class BaseContent(models.Model):
     _associated_tmp = None
 
     # user can set name
+    # if set to "force" name will be enforced
     expose_name = True
     # user can set description
     expose_description = False
@@ -184,13 +185,12 @@ class BaseContent(models.Model):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
         else:
-            return "%s:%s" % (
-                self.localize_name(self.associated.ctype.name),
-                self.associated.id
-            )
+            return self.associated.name
 
     def __repr__(self):
-        return "<Content: %s>" % self.__str__()
+        return "<Content: ({}: {})>".format(
+            self.associated.usercomponent.username, self.__str__()
+        )
 
     def get_size(self):
         return 0
@@ -212,7 +212,10 @@ class BaseContent(models.Model):
         ))
 
     def get_content_name(self):
-        return ""
+        return "{}_{}".format(
+            self.localize_name(self.associated.ctype.name),
+            self.associated.id
+        )
 
     def get_content_description(self):
         return ""
@@ -224,12 +227,6 @@ class BaseContent(models.Model):
     def get_strength_link(self):
         """ get required strength for links """
         return self.get_strength()
-
-    def get_protected_preview(self):
-        """
-            description shown for spider if public and protections are active
-        """
-        return ""
 
     def get_abilities(self, context):
         """ Override for declaring content extra abilities """
