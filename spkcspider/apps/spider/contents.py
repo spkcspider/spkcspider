@@ -220,7 +220,7 @@ class BaseContent(models.Model):
         )
 
     def get_content_description(self):
-        return ""
+        return " "
 
     def get_strength(self):
         """ get required strength """
@@ -672,7 +672,7 @@ class BaseContent(models.Model):
         if getattr(self, "id", None):
             if not self.expose_name or not assignedcontent.name:
                 assignedcontent.name = self.get_content_name()
-            if not self.expose_description:
+            if not self.expose_description or not assignedcontent.description:
                 assignedcontent.description = self.get_content_description()
         assignedcontent.priority = self.get_priority()
         assignedcontent.strength = self.get_strength()
@@ -739,7 +739,7 @@ class BaseContent(models.Model):
             if not self.expose_name or not assignedcontent.name:
                 assignedcontent.name = self.get_content_name()
                 to_save.add("name")
-            if not self.expose_description:
+            if not self.expose_description or not assignedcontent.description:
                 assignedcontent.description = self.get_content_description()
                 to_save.add("description")
             # second save required
