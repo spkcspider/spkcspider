@@ -26,8 +26,7 @@ class Migration(migrations.Migration):
             model_name='assignedcontent',
             name='name',
             field=models.CharField(blank=True, default='', max_length=255, validators=[
-                spkcspider.apps.spider.validators.nocontrol_validator,
-                django.core.validators.RegexValidator(r"[()<>]", inverse_match=True)
+                spkcspider.apps.spider.validators.content_name_validator
             ]),
         ),
         migrations.AlterField(
