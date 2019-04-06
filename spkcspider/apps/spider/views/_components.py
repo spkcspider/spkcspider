@@ -23,9 +23,7 @@ from ..models import (
     UserComponent, TravelProtection
 )
 from ..helpers import merge_get_url
-from ..serializing import (
-    paginate_stream, serialize_stream, serialize_component
-)
+from ..serializing import paginate_stream, serialize_stream
 
 
 class ComponentIndexBase(ListView):
@@ -143,12 +141,12 @@ class ComponentIndexBase(ListView):
 
         g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
-        p = paginate_stream(
+        p = [paginate_stream(
             context["object_list"],
             getattr(settings, "SERIALIZED_PER_PAGE", 50),
             getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
             contentnize=embed
-        )
+        )]
         page = 1
         try:
             page = int(self.request.GET.get("page", "1"))
@@ -176,10 +174,17 @@ class ComponentIndexBase(ListView):
                 )
             )
             if embed:
-                for component in context["object_list"].filter(
-                    contents__isnull=True
-                ):
-                    serialize_component(g, component, session_dict)
+                # embed empty components
+                p.append(
+                    paginate_stream(
+                        context["object_list"].filter(
+                            contents__isnull=True
+                        ),
+                        getattr(settings, "SERIALIZED_PER_PAGE", 50),
+                        getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
+                        contentnize=embed
+                    )
+                )
 
         serialize_stream(
             g, p, session_dict,

@@ -4,12 +4,10 @@ __all__ = [
 ]
 
 
-import logging
 from urllib.parse import urljoin
 
 from django.http import Http404
 from django.core.paginator import InvalidPage, Paginator
-from django.utils.translation import gettext as _
 from django.db.models import Q
 
 from rdflib import URIRef, Literal, XSD
@@ -211,7 +209,10 @@ def serialize_component(graph, component, context, visible=True):
 
 
 def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
-    # WARNING: AssignedContent method doesn't include empty UserComponents
+    # WARNING: if AssignedContent queryset is empty
+    #   no usercomponent can be retrieved
+    # so don't use AssignedContent queryset or contentnize if serializing an
+    #   empty usercomponent
     from .models import AssignedContent
     if contentnize and query.model != AssignedContent:
         query = AssignedContent.objects.filter(
@@ -233,68 +234,75 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
 
 
 def serialize_stream(
-    graph, paginator, context, page=1, embed=False, visible=False
+    graph, paginators, context, page=1, embed=False, visible=False
 ):
     from .models import UserComponent
+    if not isinstance(paginators, (tuple, list)):
+        paginators = [paginators]
     if page <= 1:
+        num_pages = max(map(lambda p: p.num_pages, paginators))
+        per_page = sum(map(lambda p: p.per_page, paginators))
         graph.add((
             context["sourceref"],
             spkcgraph["pages.num_pages"],
-            Literal(paginator.num_pages, datatype=XSD.positiveInteger)
+            Literal(num_pages, datatype=XSD.positiveInteger)
         ))
         graph.add((
             context["sourceref"],
             spkcgraph["pages.size_page"],
-            Literal(paginator.per_page, datatype=XSD.positiveInteger)
+            Literal(per_page, datatype=XSD.positiveInteger)
         ))
-    try:
-        page_view = paginator.get_page(page)
-    except InvalidPage as e:
-        exc = Http404(_('Invalid page (%(page_number)s): %(message)s') % {
-            'page_number': page,
-            'message': str(e)
-        })
-        logging.exception(exc)
-        raise exc
+    invalid_pages = 0
+    for paginator in paginators:
+        try:
+            page_view = paginator.get_page(page)
+        except InvalidPage:
+            invalid_pages += 1
+            continue
 
-    graph.add((
-        context["sourceref"],
-        spkcgraph["pages.current_page"],
-        Literal(page_view.number, datatype=XSD.positiveInteger)
-    ))
-    if paginator.object_list.model == UserComponent:
-        for component in page_view.object_list:
-            ref_component = serialize_component(graph, component, context)
-            list_features(graph, component, ref_component, context)
+        graph.add((
+            context["sourceref"],
+            spkcgraph["pages.current_page"],
+            Literal(page_view.number, datatype=XSD.positiveInteger)
+        ))
+        if paginator.object_list.model == UserComponent:
+            for component in page_view.object_list:
+                # not clever for serializing components with much content
+                ref_component = serialize_component(graph, component, context)
+                list_features(graph, component, ref_component, context)
 
-    else:
-        # either start with invalid usercomponent which will be replaced
-        #  or use bottom-1 usercomponent to detect split
-        if page <= 1:
-            usercomponent = None
-            ref_component = None
         else:
-            _pos = ((page - 1) * paginator.per_page) - 1
-            usercomponent = paginator.object_list[_pos]
-            ref_component = URIRef(urljoin(
-                context["hostpart"],
-                usercomponent.get_absolute_url()
-            ))
-        for content in page_view.object_list:
-            if usercomponent != content.usercomponent:
-                usercomponent = content.usercomponent
-                ref_component = serialize_component(
-                    graph, usercomponent, context,
-                    visible=visible
-                )
-                list_features(graph, usercomponent, ref_component, context)
-            ref_content = serialize_content(
-                graph, content, context, embed=embed
-            )
-
-            if ref_component:
-                graph.add((
-                    ref_component,
-                    spkcgraph["contents"],
-                    ref_content
+            # either start with invalid usercomponent which will be replaced
+            #  or use bottom-1 usercomponent to detect split
+            if page <= 1:
+                usercomponent = None
+                ref_component = None
+            else:
+                _pos = ((page - 1) * paginator.per_page) - 1
+                usercomponent = paginator.object_list[_pos]
+                ref_component = URIRef(urljoin(
+                    context["hostpart"],
+                    usercomponent.get_absolute_url()
                 ))
+            for content in page_view.object_list:
+                if usercomponent != content.usercomponent:
+                    usercomponent = content.usercomponent
+                    ref_component = serialize_component(
+                        graph, usercomponent, context,
+                        visible=visible
+                    )
+                    list_features(graph, usercomponent, ref_component, context)
+                ref_content = serialize_content(
+                    graph, content, context, embed=embed
+                )
+
+                if ref_component:
+                    graph.add((
+                        ref_component,
+                        spkcgraph["contents"],
+                        ref_content
+                    ))
+    if invalid_pages == len(paginators):
+        raise Http404('Invalid page (%(page_number)s)' % {
+            'page_number': page
+        })
