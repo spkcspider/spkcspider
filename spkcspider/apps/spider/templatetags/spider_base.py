@@ -5,6 +5,13 @@ from django.utils import timezone
 register = template.Library()
 
 
+@register.filter()
+def is_not_or_space(value):
+    if not value:
+        return True
+    return isinstance(value, str) and value.isspace()
+
+
 @register.simple_tag(takes_context=True)
 def list_own_content(context):
     ucname = "index"

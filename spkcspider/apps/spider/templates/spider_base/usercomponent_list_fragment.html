@@ -1,4 +1,4 @@
-{% load i18n static spider_rdf %}
+{% load i18n static spider_base spider_rdf %}
 <table class="w3-table w3-bordered" rel="spkc:components">
   {% if table_heading %}
   <thead>
@@ -21,7 +21,7 @@
             {% if uc.is_index and request.is_owner %}
               <span property="spkc:value" datatype="xsd:string">{% trans 'Private Component' %}</span>
             {% else %}
-              <span property="spkc:value" datatype="xsd:string">{{ uc.name }}</span>{% if not request.is_owner %} <em>({{uc.user}})</em>{% endif %}
+              <span property="spkc:value" datatype="xsd:string">{{ uc.name }}</span>{% if not request.user == uc.user %} <em>({{uc.user}})</em>{% endif %}
             {% endif %}
           </data>
           <data hidden="hidden" typeof="spkc:Property">
@@ -64,7 +64,11 @@
     </tr>
     <tr><td colspan="3" style="padding:0">
       <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
-        {{uc.description|escape|linebreaksbr}}
+        {% if not uc.description|is_not_or_space %}
+          {{uc.description|escape|linebreaksbr}}
+        {% else %}
+          <span class="w3-text-gray">{% trans 'No description' %}</span>
+        {% endif %}
       </div>
     </td></tr>
   {% empty %}

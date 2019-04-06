@@ -28,9 +28,9 @@
 <div>
   <div class="w3-padding">
     <span class="w3-left">
-      {% if request.user == uc.user or request.is_staff %}
-        <a class="w3-block" style="margin-bottom:5px" href="{% if request.is_owner %}{% url 'spider_base:ucomponent-list' %}{% else %}{% url 'spider_base:ucomponent-list' user=uc.user %}{% endif %}">
-          <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% if request.user == uc.user %}{% trans 'Owned' %}{% else %}{% trans 'Owned by user' %}{% endif %}
+      {% if request.user == uc.user %}
+        <a class="w3-block" style="margin-bottom:5px" href="{% if request.is_owner %}{% url 'spider_base:ucomponent-list' %}{% else %}{% url 'spider_base:ucomponent-list' %}{% endif %}">
+          <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned' %}
         </a>
       {% endif %}
       <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-listpublic' %}">
@@ -43,9 +43,14 @@
           <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Update' %}
         </a>
       {% endif %}
-        <a class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
-          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
+      {% if request.is_staff and uc.user != request.user %}
+        <a class="w3-block" style="margin-bottom:5px" href="{% if request.is_owner %}{% url 'spider_base:ucomponent-list' %}{% else %}{% url 'spider_base:ucomponent-list' user=uc.user %}{% endif %}">
+          <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Owned by user' %}
         </a>
+      {% endif %}
+      <a class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
+        <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
+      </a>
       <div>
         <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
       </div>
@@ -153,12 +158,6 @@
   <div class="w3-margin">
     <table class="w3-table w3-bordered" rel="spkc:contents">
       <thead>
-        <tr>
-          <th colspan="3" class="w3-blue" style="padding-left:40px">
-            {% trans 'Contents' %}
-          </th>
-        </tr>
-      </thead>
       <tbody>
       {% for content in object_list %}
         <tr class="w3-light-grey" resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
@@ -210,7 +209,11 @@
         </tr>
         <tr><td colspan="3" style="padding:0">
           <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
-            {{uc.description|escape|linebreaksbr}}
+            {% if not content.description|is_not_or_space %}
+              {{content.description|escape|linebreaksbr}}
+            {% else %}
+              <span class="w3-text-gray">{% trans 'No description' %}</span>
+            {% endif %}
           </div>
         </td></tr>
       {% empty %}
