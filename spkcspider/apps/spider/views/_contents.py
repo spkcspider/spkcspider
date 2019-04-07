@@ -183,7 +183,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         context["active_features"] = self.usercomponent.features.all()
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(
-            info__contains="\nunlisted\n"
+            info__contains="\x1eunlisted\x1e"
         ).exists()
 
         context["remotelink"] = context["spider_GET"].copy()

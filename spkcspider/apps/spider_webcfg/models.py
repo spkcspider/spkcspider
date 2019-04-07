@@ -50,6 +50,6 @@ class WebConfig(BaseContent):
 
     def get_info(self):
         ret = super().get_info(unique=True)
-        return "{}url={}\n".format(
+        return "{}url\x1f{}\x1e".format(
             ret, self.associated.persist_token.referrer.info_url
         )

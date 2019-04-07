@@ -150,7 +150,7 @@ class AnchorField(forms.ModelChoiceField):
         travel = TravelProtection.objects.get_active()
         # can also use Links to anchor as anchor
         kwargs["queryset"] = AssignedContent.objects.filter(
-            info__contains="\nanchor\n",
+            info__contains="\x1eanchor\x1e",
             **kwargs.pop("limit_choices_to", {})
         ).exclude(
             usercomponent__travel_protected__in=travel

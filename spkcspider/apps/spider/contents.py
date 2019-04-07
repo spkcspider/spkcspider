@@ -649,18 +649,18 @@ class BaseContent(models.Model):
 
         anchortag = ""
         if VariantType.anchor.value in self.associated.ctype.ctype:
-            anchortag = "anchor\n"
+            anchortag = "anchor\x1e"
 
-        idtag = "primary\n"
+        idtag = "primary\x1e"
         # simulates beeing not unique, by adding id
         if not unique:
-            idtag = "id=None\n"  # placeholder
+            idtag = "id\x1f\x1e"  # placeholder
             if getattr(self.associated, "id", None):
-                idtag = "id={}\n".format(self.associated.id)
+                idtag = "id\x1f{}\x1e".format(self.associated.id)
         unlistedtag = ""
         if unlisted:
-            unlistedtag = "unlisted\n"
-        return "\nmodel={}.{}\ntype={}\n{}{}{}".format(
+            unlistedtag = "unlisted\x1e"
+        return "\x1emodel\x1f{}.{}\x1etype\x1f{}\x1e{}{}{}".format(
             self._meta.label,
             self._meta.model_name,
             self.associated.ctype.name,
@@ -720,9 +720,9 @@ class BaseContent(models.Model):
         if created:
             to_save = set()
             # add id to info
-            if "\nprimary\n" not in assignedcontent.info:
+            if "\x1eprimary\x1e" not in assignedcontent.info:
                 assignedcontent.info = assignedcontent.info.replace(
-                    "\nid=None\n", "\nid={}\n".format(
+                    "\x1eid\x1f\x1e", "\x1eid\x1f{}\x1e".format(
                         assignedcontent.id
                     ), 1
                 )

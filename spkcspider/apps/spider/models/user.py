@@ -181,7 +181,7 @@ class UserComponent(models.Model):
         "spider_base.AssignedContent", related_name="primary_anchor_for",
         null=True, blank=True,
         limit_choices_to={
-            "info__contains": "\nanchor\n",
+            "info__contains": "\x1eanchor\x1e",
         }, on_delete=models.SET_NULL,
         help_text=_(
             "Select main identifying anchor. Also used for attaching "

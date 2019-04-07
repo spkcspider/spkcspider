@@ -619,7 +619,7 @@ class ReferrerMixin(object):
                 persistfind = Q(persist=0, usercomponent=self.usercomponent)
                 persistfind |= Q(
                     persist__in=self.usercomponent.contents.filter(
-                        info__contains="\nanchor\n"
+                        info__contains="\x1eanchor\x1e"
                     ).values_list("id", flat=True)
                 )
                 token = AuthToken.objects.filter(
@@ -728,7 +728,7 @@ class ReferrerMixin(object):
                 persistfind = Q(persist=0, usercomponent=self.usercomponent)
                 persistfind |= Q(
                     persist__in=self.usercomponent.contents.filter(
-                        info__contains="\nanchor\n"
+                        info__contains="\x1eanchor\x1e"
                     ).values_list("id", flat=True)
                 )
                 oldtoken = AuthToken.objects.filter(

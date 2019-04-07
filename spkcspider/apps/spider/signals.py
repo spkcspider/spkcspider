@@ -95,7 +95,7 @@ def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
     from django.apps import apps
     AuthToken = apps.get_model("spider_base", "AuthToken")
     if instance.primary_anchor_for.exists():
-        if "\nanchor\n" not in instance.info:
+        if "\x1eanchor\x1e" not in instance.info:
             # don't call signals, be explicit with bulk=True (default)
             instance.primary_anchor_for.clear(bulk=True)
             # update here

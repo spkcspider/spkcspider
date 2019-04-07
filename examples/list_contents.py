@@ -51,5 +51,5 @@ if __name__ == "__main__":
                 info = g.value(subject=p, predicate=spkcgraph["value"])
         print("Name (if available):", *extract_name.findall(info))
         print("Model:", *extract_model.findall(info))
-        print("Info:", info.replace("\n", "|"))
+        print("Info:", info.replace("\x1f", "=").replace("\x1e", "|"))
         print()

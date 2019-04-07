@@ -135,7 +135,7 @@ class UserTagLayout(BaseContent):
         return 11
 
     def get_info(self):
-        return "%slayout=%s\n" % (
+        return "%slayout\x1f%s\x1e" % (
             super().get_info(),
             self.layout.name
         )
@@ -379,15 +379,15 @@ class SpiderTag(BaseContent):
     def encode_verifiers(self):
         return "".join(
             map(
-                lambda x: "verified_by={}\n".format(
-                    x.replace("\n", "%0A")
+                lambda x: "verified_by\x1f{}\x1e".format(
+                    x.replace("\x1e", "%1E").replace("\x1f", "%1F")
                 ),
                 self.verified_by
             )
         )
 
     def get_info(self):
-        return "{}{}tag={}\n".format(
+        return "{}{}tag\x1f{}\x1e".format(
             super().get_info(unique=self.primary, unlisted=False),
             self.encode_verifiers(),
             self.layout.name

@@ -40,7 +40,7 @@ class LinkForm(forms.ModelForm):
     def __init__(self, uc, request, **kwargs):
         super().__init__(**kwargs)
         # if self.instance.associated:
-        #     if "\nanchor\n" in self.instance.associated:
+        #     if "\x1eanchor\x1e" in self.instance.associated:
         #         self.fields["content"].disabled = True
         q = self.fields["content"].queryset
         travel = TravelProtection.objects.get_active()

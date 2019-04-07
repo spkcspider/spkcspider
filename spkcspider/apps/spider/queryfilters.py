@@ -17,7 +17,7 @@ def filter_components(searchlist, filter_unlisted=True, use_contents=True):
     # ComponentPublicIndex doesn't allow unlisted in any case
     # this is enforced by setting "is_special_user" to False
     if filter_unlisted:
-        notsearch = ~Q(contents__info__contains="\nunlisted\n")
+        notsearch = ~Q(contents__info__contains="\x1eunlisted\x1e")
 
     for item in searchlist:
         if filter_unlisted and item == "_unlisted":
@@ -45,7 +45,7 @@ def filter_components(searchlist, filter_unlisted=True, use_contents=True):
         qob = Q()
         if use_strict:
             if use_contents:
-                qob |= Q(contents__info__contains="\n%s\n" % _item)
+                qob |= Q(contents__info__contains="\x1e%s\x1e" % _item)
                 # exclude unlisted from searchterms
                 qob &= notsearch
         else:
@@ -112,7 +112,7 @@ def filter_contents(
             _item = item
         if use_strict:
             qob = Q(name=_item)
-            qob |= Q(info__contains="\n%s\n" % _item)
+            qob |= Q(info__contains="\x1e%s\x1e" % _item)
             # can exclude/include specific usercomponents names
             if use_components:
                 qob |= Q(usercomponent__name=_item)
@@ -145,9 +145,10 @@ def filter_contents(
         )
     if not unlisted_active:
         if filter_unlisted is True:
-            searchq_exc |= Q(info__contains="\nunlisted\n")
+            searchq_exc |= Q(info__contains="\x1eunlisted\x1e")
         else:
             searchq_exc |= Q(
-                info__contains="\nunlisted\n", priority__lte=filter_unlisted
+                info__contains="\x1eunlisted\x1e",
+                priority__lte=filter_unlisted
             )
     return (searchq & ~searchq_exc, counter)

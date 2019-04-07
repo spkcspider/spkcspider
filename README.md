@@ -193,6 +193,18 @@ Otherwise security could be compromised.
 
 # internal API
 
+## info field syntax
+
+The info field is a simple key value storage. The syntax is (strip the spaces):
+
+flag syntax: \\x1e key \\x1e
+key value syntax: \\x1e key \\x1f value \\x1e
+
+Note: I use the semantic ascii seperators \\x1e and \\x1f. Why? The info field is for machines and having no printable characters eases escaping and sanitizing.
+
+Why not a json field? Django has no uniform json field for every db adapter yet.
+
+
 ## authentication/privileges
 
 * request.is_staff: requesting user used staff rights to access view (not true in ComponentPublicIndex)

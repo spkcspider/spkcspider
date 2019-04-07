@@ -104,7 +104,7 @@ class LinkContent(BaseContent):
 
     def get_info(self):
         ret = self.content.content.get_info()
-        return "%ssource=%s\nlink\n" % (
+        return "%ssource\x1f%s\x1elink\x1e" % (
             ret, self.associated.pk
         )
 
@@ -270,10 +270,6 @@ class TravelProtection(BaseContent):
     def get_form(self, scope):
         from ..forms import TravelProtectionForm
         return TravelProtectionForm
-
-    def get_info(self):
-        ret = super().get_info()
-        return ret
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)

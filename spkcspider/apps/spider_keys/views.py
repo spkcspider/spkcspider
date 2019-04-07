@@ -12,7 +12,7 @@ from spkcspider.apps.spider.models import AssignedContent
 
 class PermAnchorView(DetailView):
     queryset = AssignedContent.objects.filter(
-        info__contains="\nanchor\n"
+        info__contains="\x1eanchor\x1e"
     )
 
     def get(self, request, *args, **kwargs):
