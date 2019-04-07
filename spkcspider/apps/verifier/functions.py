@@ -84,7 +84,7 @@ def clean_graph(mtype, graph, start, source, hostpart):
                 (
                     start,
                     spkcgraph["action:view"],
-                    URIRef(source.get_url())
+                    Literal(source.get_url(), datatype=XSD.anyURI)
                 )
             )
             ret = "layout_cb"

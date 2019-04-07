@@ -1,5 +1,5 @@
 {% extends "spider_base/uc_base.html" %}
-{% load i18n static spider_base %}
+{% load i18n static spider_base spider_rdf %}
 
 {% block title %}{% if scope == "add" %}{% blocktrans trimmed with name=object %}
   Create Content: {{name}}
@@ -32,6 +32,7 @@
 {% block main_attributes %}{{block.super}} typeof="spkc:Content"{% endblock %}
 
 {% block content %}
+  <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
   {% if scope != "add" and feature_type in object.ctype.ctype %}
     <data hidden="hidden" property="spkc:type" datatype="xsd:string">Feature</data>
   {% else %}

@@ -7,6 +7,7 @@ from rdflib import Literal
 from rdflib.namespace import XSD, RDF, URIRef
 
 from ..constants import spkcgraph
+from ..helpers import merge_get_url
 
 register = template.Library()
 
@@ -19,6 +20,17 @@ def uriref(path):
 @register.filter()
 def is_uriref(value):
     return isinstance(value, URIRef)
+
+
+@register.simple_tag(takes_context=True)
+def action_view(context):
+    token = getattr(context["request"], "auth_token", None)
+    if token:
+        token = token.token
+    url2 = merge_get_url(
+        context["hostpart"] + context["request"].path, token=token
+    )
+    return Literal(url2, datatype=XSD.anyURI)
 
 
 @register.simple_tag()

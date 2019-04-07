@@ -59,6 +59,7 @@
     {% endfor %}
   </div>
   {% endblock %}
+  <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
   {% block featured_components %}
   {% if object_list|length > 0 %}
   <div class="w3-padding">

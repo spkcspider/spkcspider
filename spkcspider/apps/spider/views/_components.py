@@ -19,8 +19,9 @@ from rdflib import Graph, Literal, URIRef, XSD
 from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
 from ..constants import spkcgraph, VariantType
 from ..forms import UserComponentForm
+from ..queryfilters import filter_contents, filter_components
 from ..models import (
-    UserComponent, TravelProtection
+    UserComponent, TravelProtection, AssignedContent
 )
 from ..helpers import merge_get_url
 from ..serializing import paginate_stream, serialize_stream
@@ -33,91 +34,64 @@ class ComponentIndexBase(ListView):
         kwargs["scope"] = self.scope
         return super().get_context_data(**kwargs)
 
-    def get_queryset(self):
-        searchq = models.Q()
-        searchq_exc = models.Q()
-        notsearch = models.Q()
-
+    def get_queryset_components(self, use_contents=True):
         order = None
-        counter = 0
-        # against ddos
-        max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 60)
-
         if "search" in self.request.POST:
             searchlist = self.request.POST.getlist("search")
         else:
             searchlist = self.request.GET.getlist("search")
 
-        # list only unlisted if explicity requested or export is used
-        # ComponentPublicIndex doesn't allow unlisted in any case
-        # this is enforced by setting "is_special_user" to False
-        if not (
-            self.request.is_special_user and "_unlisted" in searchlist
-        ) and self.scope != "export":
-            notsearch = ~models.Q(contents__info__contains="\nunlisted\n")
-
-        for item in searchlist:
-            if counter > max_counter:
-                break
-            counter += 1
-            if len(item) == 0:
-                continue
-            use_info = False
-            if item.startswith("!!"):
-                _item = item[1:]
-            elif item.startswith("__"):
-                _item = item[1:]
-            elif item.startswith("!_"):
-                _item = item[2:]
-                use_info = True
-            elif item.startswith("!"):
-                _item = item[1:]
-            elif item.startswith("_"):
-                _item = item[1:]
-                use_info = True
-            else:
-                _item = item
-            if use_info:
-                qob = models.Q(contents__info__contains="\n%s\n" % _item)
-            else:
-                qob = models.Q(
-                    contents__info__icontains=_item
-                )
-                qob |= models.Q(
-                    description__icontains=_item
-                )
-            if _item == "index":
-                qob |= models.Q(
-                    strength=10
-                )
-            else:
-                qob |= models.Q(
-                    name__icontains=_item,
-                    strength__lt=10
-                )
-            # exclude unlisted from searchterms
-            qob &= notsearch
-            if item.startswith("!!"):
-                searchq |= qob
-            elif item.startswith("!"):
-                searchq_exc |= qob
-            else:
-                searchq |= qob
+        filter_unlisted = not (
+                self.request.is_special_user and "_unlisted" in searchlist
+            ) and self.scope != "export"
+        filter_q, counter = filter_components(
+            searchlist, filter_unlisted, use_contents
+        )
 
         if self.request.GET.get("protection", "") == "false":
-            searchq &= models.Q(required_passes=0)
+            filter_q &= models.Q(required_passes=0)
 
         if self.scope != "export" and "raw" not in self.request.GET:
             order = self.get_ordering(counter > 0)
         ret = self.model.objects.prefetch_related(
             "contents"
-        ).filter(searchq & ~searchq_exc).distinct()
+        ).filter(filter_q).distinct()
         if order:
             ret = ret.order_by(*order)
         return ret
 
+    def get_queryset_contents(self):
+        if "search" in self.request.POST:
+            searchlist = self.request.POST.getlist("search")
+        else:
+            searchlist = self.request.GET.getlist("search")
+
+        filter_unlisted = not (
+                self.request.is_special_user and "_unlisted" in searchlist
+            ) and self.scope != "export"
+        filter_q, counter = filter_contents(
+            searchlist, filter_unlisted
+        )
+
+        if self.request.GET.get("protection", "") == "false":
+            filter_q &= models.Q(required_passes=0)
+
+        return AssignedContent.objects.select_related(
+            "usercomponent"
+        ).filter(filter_q, strengt__lte=self.source_strength)
+
+    def get_queryset(self):
+        if self.request.GET.get("raw") == "embed":
+            return self.get_queryset_components(False).filter(
+                models.Q(contents__isnull=True) |
+                models.Q(strength__gt=self.source_strength)
+            )
+        else:
+            return self.get_queryset_components()
+
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
+            # are later paginated and ordered
             return None
         return getattr(settings, "COMPONENTS_PER_PAGE", 25)
 
@@ -141,12 +115,28 @@ class ComponentIndexBase(ListView):
 
         g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
-        p = [paginate_stream(
-            context["object_list"],
-            getattr(settings, "SERIALIZED_PER_PAGE", 50),
-            getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
-            contentnize=embed
-        )]
+
+        if embed:
+            # embed empty components
+            per_page = getattr(settings, "SERIALIZED_PER_PAGE", 50) // 2
+            p = [
+                paginate_stream(
+                    self.get_queryset_contents(),
+                    per_page,
+                    getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
+                ),
+                paginate_stream(
+                    context["object_list"],  # empty components
+                    per_page,
+                    getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
+                )
+            ]
+        else:
+            p = [paginate_stream(
+                context["object_list"],
+                getattr(settings, "SERIALIZED_PER_PAGE", 50),
+                getattr(settings, "SERIALIZED_MAX_DEPTH", 5)
+            )]
         page = 1
         try:
             page = int(self.request.GET.get("page", "1"))
@@ -170,27 +160,16 @@ class ComponentIndexBase(ListView):
                 (
                     session_dict["sourceref"],
                     spkcgraph["action:view"],
-                    URIRef(url2)
+                    Literal(url2, datatype=XSD.anyURI)
                 )
             )
-            if embed:
-                # embed empty components
-                p.append(
-                    paginate_stream(
-                        context["object_list"].filter(
-                            contents__isnull=True
-                        ),
-                        getattr(settings, "SERIALIZED_PER_PAGE", 50),
-                        getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
-                        contentnize=embed
-                    )
-                )
 
         serialize_stream(
             g, p, session_dict,
             page=page,
             embed=embed,
-            visible=(self.source_strength == 10)
+            restrict_embed=(self.source_strength == 10),
+            restrict_inclusion=(self.source_strength == 10)
         )
 
         ret = HttpResponse(
@@ -231,18 +210,25 @@ class ComponentPublicIndex(ComponentIndexBase):
         kwargs["spider_GET"] = GET
         return super().get_context_data(**kwargs)
 
-    def get_queryset(self):
-        query = super().get_queryset()
-        q = models.Q(public=True, strength__lt=5)
+    def get_queryset_components(self):
+        query = super().get_queryset_components()
+        q = models.Q(public=True)
         if self.is_home:
             q &= models.Q(featured=True)
         return query.filter(q)
 
+    def get_queryset_contents(self):
+        query = super().get_queryset_contents()
+        q = models.Q(usercomponent__strength=0)
+        if self.is_home:
+            q &= models.Q(usercomponent__featured=True)
+        return query.filter(q)
+
     def get_ordering(self, issearching=False):
         if not issearching:
-            return ("strength", "-modified",)
+            return ("-strength", "-modified",)
         else:
-            return ("strength", "name", "user__username")
+            return ("-strength", "name", "user__username")
 
 
 class ComponentIndex(UCTestMixin, ComponentIndexBase):
@@ -284,19 +270,53 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
             return True
         return False
 
-    def get_queryset(self):
-        query = super().get_queryset()
+    def get_queryset_components(self):
+        query = super().get_queryset_components()
         q = models.Q()
         # doesn't matter if it is same user, lazy
         travel = TravelProtection.objects.get_active()
-        # remove all travel protected components if not admin
-        if not self.request.is_staff:
+        if self.request.session.get("is_fake", False):
+            # remove access to index
+            q &= ~models.Q(name="index")
             q &= ~models.Q(
                 travel_protected__in=travel
             )
-        if self.request.session.get("is_fake", False):
-            q &= ~models.Q(name="index")
         else:
+            # remove all travel protected components if not admin or is_fake
+            if not self.request.is_staff:
+                q &= ~models.Q(
+                    travel_protected__in=travel
+                )
+            # and remove access to fake index
+            q &= ~models.Q(name="fake_index")
+        return query.filter(
+            q, user=self.user
+        )
+
+    def get_queryset_contents(self):
+        query = super().get_queryset_contents()
+        q = models.Q()
+        # doesn't matter if it is same user, lazy
+        travel = TravelProtection.objects.get_active()
+        if self.request.session.get("is_fake", False):
+            # remove access to index
+            q &= ~models.Q(name="usercomponent__index")
+            # q &= ~models.Q(
+            #     travel_protected__in=travel
+            # )
+            q &= ~models.Q(
+                usercomponent__travel_protected__in=travel
+            )
+        else:
+            # remove all travel protected components if not admin or is_fake
+            if not self.request.is_staff:
+                # q &= ~models.Q(
+                #    travel_protected__in=travel
+                # )
+                q &= ~models.Q(
+                    usercomponent__travel_protected__in=travel
+                )
+            # and remove access to fake index
             q &= ~models.Q(name="fake_index")
         return query.filter(
             q, user=self.user

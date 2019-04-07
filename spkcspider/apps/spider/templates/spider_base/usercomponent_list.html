@@ -44,6 +44,7 @@
     <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">0</data>
     {% else %}
     <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">10</data>
+    <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
     {% endif %}
     {% if request.user.is_authenticated %}
       <span class="w3-right w3-left-align">

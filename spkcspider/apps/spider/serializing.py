@@ -15,7 +15,7 @@ from rdflib import URIRef, Literal, XSD
 
 from .constants import spkcgraph, VariantType
 from .conf import get_anchor_domain
-from .helpers import merge_get_url, add_property
+from .helpers import add_property
 
 
 # TODO replace by proper tree search (connect by/recursive query)
@@ -89,11 +89,23 @@ def serialize_content(graph, content, context, embed=False):
             context["ac_namespace"],
             ref_content
         ))
+    add_property(
+        graph, "name", ref=ref_content, ob=content, datatype=XSD.string
+    )
+    add_property(
+        graph, "description", ref=ref_content, ob=content, datatype=XSD.string
+    )
+    add_property(
+        graph, "info", ref=ref_content, ob=content, datatype=XSD.string
+    )
+    add_property(
+        graph, "id", ref=ref_content, literal=content.id,
+        datatype=XSD.integer
+    )
+    add_property(
+        graph, "priority", ref=ref_content, ob=content
+    )
 
-    token = getattr(context["request"], "auth_token", None)
-    if token:
-        token = token.token
-    url2 = merge_get_url(url_content, token=token)
     if (
         VariantType.component_feature.value in content.ctype.ctype or
         VariantType.content_feature.value in content.ctype.ctype
@@ -109,24 +121,6 @@ def serialize_content(graph, content, context, embed=False):
             spkcgraph["type"],
             Literal("Content", datatype=XSD.string)
         ))
-
-    graph.set(
-        (
-            ref_content,
-            spkcgraph["action:view"],
-            URIRef(url2)
-        )
-    )
-    add_property(
-        graph, "info", ref=ref_content, ob=content, datatype=XSD.string
-    )
-    add_property(
-        graph, "priority", ref=ref_content, ob=content
-    )
-    add_property(
-        graph, "id", ref=ref_content, literal=content.id,
-        datatype=XSD.integer
-    )
     if context["scope"] == "export":
         add_property(
             graph, "attached_to_content", ref=ref_content, ob=content
@@ -139,6 +133,7 @@ def serialize_content(graph, content, context, embed=False):
 
 
 def serialize_component(graph, component, context, visible=True):
+    # visible: everything is visible elsewise only public
     url_component = urljoin(
         context["hostpart"],
         component.get_absolute_url()
@@ -148,15 +143,6 @@ def serialize_component(graph, component, context, visible=True):
         visible = True
     if not visible and ref_component != context["sourceref"]:
         return None
-    token = getattr(context["request"], "auth_token", None)
-    if token:
-        token = token.token
-    url2 = merge_get_url(url_component, token=token)
-    graph.add((
-        ref_component,
-        spkcgraph["action:view"],
-        URIRef(url2)
-    ))
     graph.add((
         ref_component,
         spkcgraph["type"],
@@ -208,16 +194,12 @@ def serialize_component(graph, component, context, visible=True):
     return ref_component
 
 
-def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
+def paginate_stream(query, page_size, limit_depth=None):
     # WARNING: if AssignedContent queryset is empty
     #   no usercomponent can be retrieved
-    # so don't use AssignedContent queryset or contentnize if serializing an
+    # so don't use AssignedContent queryset if serializing an
     #   empty usercomponent
     from .models import AssignedContent
-    if contentnize and query.model != AssignedContent:
-        query = AssignedContent.objects.filter(
-            usercomponent__in=query
-        )
     if query.model == AssignedContent:
         query = AssignedContent.objects.filter(
             references_q(
@@ -234,8 +216,11 @@ def paginate_stream(query, page_size, limit_depth=None, contentnize=False):
 
 
 def serialize_stream(
-    graph, paginators, context, page=1, embed=False, visible=False
+    graph, paginators, context, page=1, embed=False,
+    restrict_inclusion=True, restrict_embed=False
 ):
+    # restrict_inclusion: only public components of contents are included
+    # restrict_embed: only contents with no restrictions are embedded
     from .models import UserComponent
     if not isinstance(paginators, (tuple, list)):
         paginators = [paginators]
@@ -267,8 +252,9 @@ def serialize_stream(
         ))
         if paginator.object_list.model == UserComponent:
             for component in page_view.object_list:
-                # not clever for serializing components with much content
-                ref_component = serialize_component(graph, component, context)
+                ref_component = serialize_component(
+                    graph, component, context
+                )
                 list_features(graph, component, ref_component, context)
 
         else:
@@ -289,11 +275,15 @@ def serialize_stream(
                     usercomponent = content.usercomponent
                     ref_component = serialize_component(
                         graph, usercomponent, context,
-                        visible=visible
+                        visible=not restrict_inclusion
                     )
                     list_features(graph, usercomponent, ref_component, context)
+
+                _embed = embed
+                if restrict_embed and content.usercomponent.strength != 0:
+                    _embed = False
                 ref_content = serialize_content(
-                    graph, content, context, embed=embed
+                    graph, content, context, embed=_embed
                 )
 
                 if ref_component:

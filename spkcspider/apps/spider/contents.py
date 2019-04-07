@@ -29,7 +29,7 @@ from .constants import VariantType, spkcgraph, ActionUrl
 from .conf import get_anchor_domain
 from .serializing import paginate_stream, serialize_stream
 from .helpers import (
-    get_settings_func, add_property, create_b64_id_token
+    get_settings_func, add_property, create_b64_id_token, merge_get_url
 )
 from .templatetags.spider_rdf import literalize
 
@@ -503,6 +503,17 @@ class BaseContent(models.Model):
                 session_dict["sourceref"], spkcgraph["strength"],
                 Literal(uc.strength)
             ))
+            token = getattr(session_dict["request"], "auth_token", None)
+            if token:
+                token = token.token
+            url2 = merge_get_url(str(session_dict["sourceref"]), token=token)
+            g.add(
+                (
+                    session_dict["sourceref"],
+                    spkcgraph["action:view"],
+                    URIRef(url2)
+                )
+            )
             if kwargs["referrer"]:
                 g.add((
                     session_dict["sourceref"],

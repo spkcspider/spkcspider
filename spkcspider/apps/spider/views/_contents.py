@@ -30,7 +30,8 @@ from ..models import (
     AssignedContent, ContentVariant, UserComponent
 )
 from ..forms import UserContentForm
-from ..helpers import get_settings_func, add_property
+from ..helpers import get_settings_func, add_property, merge_get_url
+from ..queryfilters import filter_contents
 from ..constants import spkcgraph, VariantType
 from ..serializing import paginate_stream, serialize_stream
 
@@ -83,19 +84,14 @@ class ContentBase(UCTestMixin):
         if self.scope in ("add", "update", "raw_update"):
             return ret
 
-        searchq = models.Q()
-        searchq_exc = models.Q()
-
-        counter = 0
-        # against ddos
-        max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 60)
-
-        searchlist = []
-        idlist = []
-
         if getattr(self.request, "auth_token", None):
-            idlist += self.request.auth_token.extra.get("ids", [])
-            searchlist += self.request.auth_token.extra.get("filter", [])
+            idlist = \
+                self.request.auth_token.extra.get("ids", [])
+            searchlist = \
+                self.request.auth_token.extra.get("filter", [])
+        else:
+            idlist = []
+            searchlist = []
 
         if self.scope == "list":
             if "search" in self.request.POST or "id" in self.request.POST:
@@ -107,70 +103,26 @@ class ContentBase(UCTestMixin):
         elif self.scope not in ("add", "update", "raw_update"):
             searchlist += self.request.GET.getlist("search")
 
-        for item in searchlist:
-            if counter > max_counter:
-                break
-            counter += 1
-            if len(item) == 0:
-                continue
-            use_info = False
-            if item.startswith("!!"):
-                _item = item[1:]
-            elif item.startswith("__"):
-                _item = item[1:]
-            elif item.startswith("!_"):
-                _item = item[2:]
-                use_info = True
-            elif item.startswith("!"):
-                _item = item[1:]
-            elif item.startswith("_"):
-                _item = item[1:]
-                use_info = True
-            else:
-                _item = item
-            if use_info:
-                qob = models.Q(info__contains="\n%s\n" % _item)
-            else:
-                qob = models.Q(
-                    info__icontains=_item
-                )
-            if item.startswith("!!"):
-                searchq |= qob
-            elif item.startswith("!"):
-                searchq_exc |= qob
-            else:
-                searchq |= qob
-
-        if idlist:
-            # idlist contains int and str entries
-            try:
-                ids = map(lambda x: int(x), idlist)
-            except ValueError:
-                # deny any access in case of an incorrect id
-                ids = []
-
-            searchq &= (
-                models.Q(
-                    id__in=ids
-                )
-            )
-
         # list only unlisted if explicity requested or export or:
         # if it has high priority (only for special users)
         # listing prioritized, unlisted content is different to the broader
         # search
+        filter_unlisted = False
         if self.request.is_special_user:
             # all other scopes than list can show here _unlisted
             # this includes export
             if self.scope == "list" and "_unlisted" not in searchlist:
-                searchq_exc |= models.Q(
-                    info__contains="\nunlisted\n", priority__lte=0
-                )
+                filter_unlisted = 0
         else:
-            searchq_exc |= models.Q(info__contains="\nunlisted\n")
+            filter_unlisted = True
+
+        filter_q, counter = filter_contents(
+            searchlist, idlist, filter_unlisted
+        )
+
         order = self.get_ordering(counter > 0)
         # distinct required?
-        ret = ret.filter(searchq & ~searchq_exc).distinct()
+        ret = ret.filter(filter_q)
         if order:
             ret = ret.order_by(*order)
         return ret
@@ -341,6 +293,17 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
                     spkcgraph["referrer"],
                     Literal(context["referrer"], datatype=XSD.anyURI)
                 ))
+            token = getattr(session_dict["request"], "auth_token", None)
+            if token:
+                token = token.token
+            url2 = merge_get_url(str(session_dict["sourceref"]), token=token)
+            g.add(
+                (
+                    session_dict["sourceref"],
+                    spkcgraph["action:view"],
+                    Literal(url2, datatype=XSD.anyURI)
+                )
+            )
             if context["token_strength"]:
                 add_property(
                     g, "token_strength", ref=session_dict["sourceref"],

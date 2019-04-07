@@ -49,7 +49,7 @@
       </td>
       <td style="display:inline-block">
         <div class="w3-bar w3-round-large w3-tiny w3-blue">
-          <a style="{% if request.user == uc.user %}width:49.9%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list' token=uc.token %}" property="spkc:action:view">
+          <a style="{% if request.user == uc.user %}width:49.9%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list' token=uc.token %}">
             <div class="spkc-entity-button"><i class="fas fa-list-ul" alt="{% trans 'List' %}" aria-label="{% trans 'List' %}"></i></div>
             <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "List" %}</div></div>
           </a>
