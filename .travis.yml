@@ -10,8 +10,7 @@ branches:
   - master
   - develop
 env:
-  - DJANGO="2.0"
-  - DJANGO="2.1"
+  - DJANGO="2.2"
   - DJANGO="master"
 matrix:
   allow_failures:
