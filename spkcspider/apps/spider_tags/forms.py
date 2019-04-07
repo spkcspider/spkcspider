@@ -21,7 +21,7 @@ from rdflib import XSD
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
 
-from spkcspider.apps.spider.fields import OpenChoiceField
+from spkcspider.apps.spider.fields import OpenChoiceField, JsonField
 from spkcspider.apps.spider.widgets import ListWidget, OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
 from spkcspider.apps.spider.models import (
@@ -41,19 +41,22 @@ _extra = '' if settings.DEBUG else '.min'
 
 
 class TagLayoutForm(forms.ModelForm):
+    layout = JsonField(
+        widget=SchemeWidget(
+            attrs={
+                "field_types": json.dumps(list(installed_fields.keys()))
+            }
+        )
+    )
+    default_verifiers = JsonField(
+        widget=ListWidget(
+            format_type="url", item_label=_("Url to Verifier")
+        ), required=False
+    )
+
     class Meta:
         model = TagLayout
         fields = ["name", "unique", "layout", "default_verifiers"]
-        widgets = {
-            "layout": SchemeWidget(
-                attrs={
-                    "field_types": json.dumps(list(installed_fields.keys()))
-                }
-            ),
-            "default_verifiers": ListWidget(
-                format_type="url", item_label=_("Url to Verifier")
-            )
-        }
 
     usertag = None
 
@@ -74,19 +77,22 @@ class TagLayoutForm(forms.ModelForm):
 
 
 class TagLayoutAdminForm(forms.ModelForm):
+    layout = JsonField(
+        widget=SchemeWidget(
+            attrs={
+                "field_types": json.dumps(list(installed_fields.keys()))
+            }
+        )
+    )
+    default_verifiers = JsonField(
+        widget=ListWidget(
+            format_type="url", item_label=_("Url to Verifier")
+        ), required=False
+    )
+
     class Meta:
         model = TagLayout
         fields = ["name", "unique", "layout", "default_verifiers", "usertag"]
-        widgets = {
-            "layout": SchemeWidget(
-                attrs={
-                    "field_types": json.dumps(list(installed_fields.keys()))
-                }
-            ),
-            "default_verifiers": ListWidget(
-                format_type="url", item_label=_("Url to Verifier")
-            )
-        }
 
     class Media:
         css = {

@@ -167,7 +167,7 @@ description = ""
 name = "django-simple-jsonfield"
 optional = false
 python-versions = "*"
-version = "0.3.0"
+version = "0.3.1"
 
 [package.dependencies]
 django = "*"
@@ -444,7 +444,7 @@ django-extensions = ["109004f80b6f45ad1f56addaa59debca91d94aa0dc1cb19678b9364b4f
 django-next-prev = ["5fe2c693db551c0f444cb82284335a0e303518215050b3cb56551abb251e9376"]
 django-ranged-response = ["f71fff352a37316b9bead717fc76e4ddd6c9b99c4680cdf4783b9755af1cf985"]
 django-simple-captcha = ["71a48c516432c6a6b8e9a0bbf27dc8692e9c9a8881245a7f9eb3e813b51fed3d", "e14e5c4b207be3dffb200309e7ac7a48de1a2b3293f09eefedd9ab317c4d9a7f"]
-django-simple-jsonfield = ["226761953bf8794e634c7ab421f114b189c9798864138c14dd61652aa855c121", "3b222fbb560ffc6ab219ce99feec0c41f2eeb9fca8a244e259519b170393255e"]
+django-simple-jsonfield = ["86f02097a55fbdcf22cfe50cce937625011cf5196413c0437921e909c484a00f", "a685d5473ac793c49206a55af9de9d06c9d881bae531e1be8823cc8d5cb795f7"]
 django-webtest = ["7b683d87cd9be13599af44b81bd44f97b49978b4e69cf4b92059c393f64307c1", "f3cd35d06ec01610e1a5ec8917679ad9a53f815d85d1e41e385746f1e823869d"]
 django-widget-tweaks = ["a69cba6c8a6b98f0cf6eef0535f8212d635e19044ee4533d4d78df700c2e233f", "bc645ef88307bc4ac269ee8ee9e572be814cd4a125c2bb6edb59ffcdc194982d"]
 html5lib = ["20b159aa3badc9d5ee8f5c647e5efd02ed2a66ab8d354930bd9ff139fc1dc0a3", "66cb0dcfdbbc4f9c3ba1a63fdb511ffdbd4f513b2b6d81b80cd26ce6b3fb3736"]

@@ -48,6 +48,13 @@ class SchemeWidget(widgets.Textarea):
         )
         return context
 
+    def format_value(self, value):
+        if not value:
+            return "[]"
+        if isinstance(value, (tuple, list)):
+            value = json.dumps(value)
+        return str(value)
+
     def render(self, name, value, attrs=None, renderer=None):
         if value is None:
             value = ""

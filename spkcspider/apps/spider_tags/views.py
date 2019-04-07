@@ -13,7 +13,7 @@ from django.views.generic.edit import FormView
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
-    AuthToken, AssignedContent
+    AuthToken
 )
 from .models import SpiderTag
 from .forms import SpiderTagForm

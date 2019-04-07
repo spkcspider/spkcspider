@@ -1,11 +1,20 @@
 __all__ = ["OpenChoiceField", "SanitizedHtmlField"]
 
+import json
+
 from django.forms import fields
 
 from html5lib.filters.sanitizer import allowed_css_properties
 from bleach import sanitizer
 
 from .widgets import OpenChoiceWidget, TrumbowygWidget
+
+
+class JsonField(fields.Field):
+    def to_python(self, value):
+        if isinstance(value, str):
+            value = json.dumps(value)
+        return value
 
 
 class OpenChoiceField(fields.MultipleChoiceField):
