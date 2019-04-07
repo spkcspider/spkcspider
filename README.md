@@ -172,10 +172,10 @@ There are special GET parameters for controlling spkcspider:
 * search also searches UserComponents name and description fields
 * can only be used with "list"-views
 * items can be negated with !foo
-* strict infofield search can be activated with _
+* strict infofield search can be activated with \_
 * !!foo escapes a !foo item
 * \_\_foo escapes a \_foo item
-* != negates a strict infofield search
+* !\_ negates a strict infofield search
 * \_unlisted is a special search: it lists with "unlisted" marked contents
 
 verified_by urls should return last verification date for a hash
@@ -215,20 +215,19 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 ## Special Scopes
 
 * add: create content, with AssignedContent form
-* raw_add: not existent, can be archieved by return response
 * update: update content
-* raw_update: update Content, without AssignedContent form, adds second raw update mode
+* raw_update: update Content, without AssignedContent form, adds second raw update mode (raw_add is not existent, can be archieved by returning HttpResponse in add scope)
 * export: export data (import not implemented yet)
-* view: present usercontent to untrusted parties
+* view: present content to untrusted parties
 
 ## strength (component)
-* 0: no protection
-* 1-3: protection strength which can be provided by protections
-* 4: login only, user password
-* 5: public attribute not set
+* 0: no protection. Complete content visible
+* 1-3: protection strength which can be provided by protections. Meta data (names, descriptions) visible, inclusion in sitemap, public components
+* 4: login only, user password. Still with inclusion of metadata
+* 5: public attribute not set. No inclusion in sitemap or public components index anymore
 * 6-8: protections + public attribute not set
 * 9: login only, user password + public attribute not set
-* 10: index, can be used in combination with unique per component attribute for unique content per user
+* 10: index, login only, special protected. Protections are used for login. Content here can be made unique per user by using unique per component attribute
 
 ## strength (protection)
 * 0: no protection
@@ -239,11 +238,8 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * examples
 * documentation
 * layouts
-* show license information
+* licenses
 * rebuild ListWidget on select field, add compatibility to select and text fields
-* maybe: replace select2 by json-editor
-* use title and description
-* replace \n and = through ascii seperator meta chars (why? it is smarter than to block chars)
 * tests for other dbs
 * improve default tag validators to prevent ddos gadgets by weak validators
   * rate limitting (per domain)
