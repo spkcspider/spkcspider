@@ -162,9 +162,6 @@ MIN_STRENGTH_EVELATION = 2
 ## captcha field names (REQUIRED) # noqa: E266
 SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 
-## required if using mysql  # noqa: E266
-# MYSQL_HACK = True
-
 ## Update dynamic content, ... after migrations, default=true  # noqa: E266
 # UPDATE_DYNAMIC_AFTER_MIGRATION = False
 

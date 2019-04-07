@@ -151,17 +151,9 @@ class Migration(migrations.Migration):
         ),
     ]
 
-    if getattr(settings, "MYSQL_HACK", False):
-        operations.append(
-            migrations.AlterUniqueTogether(
-                name='assignedcontent',
-                unique_together={('content_type', 'object_id')},
-            )
+    operations.append(
+        migrations.AlterUniqueTogether(
+            name='assignedcontent',
+            unique_together={('content_type', 'object_id')},
         )
-    else:
-        operations.append(
-            migrations.AlterUniqueTogether(
-                name='assignedcontent',
-                unique_together={('content_type', 'object_id'), ('usercomponent', 'info')},
-            )
-        )
+    )

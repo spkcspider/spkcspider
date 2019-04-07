@@ -7,7 +7,7 @@ from setuptools import setup
 base_dir = os.path.dirname(__file__)
 
 install_requirements = [
-    'django>=2',
+    'django>=2.2',
     'django-simple-jsonfield',
     'certifi',
     'requests',

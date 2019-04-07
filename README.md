@@ -66,7 +66,7 @@ npm install
 ## Caveats
 
 Mysql works with some special settings:
-Set MYSQL_HACK = True and require mysql to use utf8 charset
+Require mysql to use utf8 charset
 To unbreak tests, use 'CHARSET': 'utf8':
 
 ~~~~.python
@@ -89,7 +89,7 @@ DATABASES = {
 
 
 ### \_\_old crashes object creation:
-downgrade sqlite3 to 3.25 or upgrade django to 2.1.5/2.0.10
+downgrade sqlite3 to 3.25 or upgrade django to at least 2.1.5/2.0.10
 
 importing data:
 

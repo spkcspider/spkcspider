@@ -425,7 +425,7 @@ mysql = []
 pgsql = []
 
 [metadata]
-content-hash = "6a1e97e363d372aa1eaa85815eb0873772b3d09524ea70e6abf659d41949fb46"
+content-hash = "870b41ea3bccb03a28f36fb544035cbdbb5401030d4337c3dc4b2dd3f06980cf"
 python-versions = ">=3.5"
 
 [metadata.hashes]

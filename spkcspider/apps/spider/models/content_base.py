@@ -13,7 +13,6 @@ import logging
 from django.db import models
 from django.utils.translation import gettext, gettext_lazy as _
 from django.urls import reverse
-from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -195,9 +194,15 @@ class AssignedContent(BaseInfoModel):
         unique_together = [
             ('content_type', 'object_id'),
         ]
-        # unique_together.append(('usercomponent', 'name'))
-        if not getattr(settings, "MYSQL_HACK", False):
-            unique_together.append(('usercomponent', 'info'))
+        constraints = [
+            models.UniqueConstraint(
+                fields=['usercomponent', 'info'], name='unique_info'
+            ),
+            # models.UniqueConstraint(
+            #     fields=['usercomponent', 'name'], name='unique_name',
+            #     condition=~models.Q(name='')
+            # )
+        ]
 
     def __str__(self):
         return self.name
@@ -244,15 +249,3 @@ class AssignedContent(BaseInfoModel):
                 code="strength",
                 params={'strength': self.strength},
             )
-
-        if getattr(settings, "MYSQL_HACK", False):
-            obj = AssignedContent.objects.filter(
-                usercomponent=self.usercomponent,
-                info=self.info
-            ).first()
-
-            if obj and obj.id != getattr(self, "id", None):
-                raise ValidationError(
-                    message=_("Unique Content already exists"),
-                    code='unique_together',
-                )
