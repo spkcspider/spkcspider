@@ -95,10 +95,6 @@ class ReferrerObject(models.Model):
     )
 
     @cached_property
-    def info_url(self):
-        return self.url.replace("\x1e", "%1E").replace("\x1f", "%1F")
-
-    @cached_property
     def host(self):
         return extract_host(self.url)
 

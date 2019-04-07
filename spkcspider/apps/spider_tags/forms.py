@@ -66,6 +66,14 @@ class TagLayoutForm(forms.ModelForm):
         self.instance.usertag.refresh_from_db()
         return super()._save_m2m()
 
+    def clean_default_verifiers(self):
+        values = self.cleaned_data["verified_by"]
+        if not isinstance(values, list):
+            raise forms.ValidationError(
+                _("Invalid format")
+            )
+        return values
+
     def save(self, commit=True):
         self.usertag = self.instance.usertag
         if commit:
@@ -100,6 +108,14 @@ class TagLayoutAdminForm(forms.ModelForm):
                 'node_modules/@fortawesome/fontawesome-free/css/all.min.css'
             ]
         }
+
+    def clean_default_verifiers(self):
+        values = self.cleaned_data["verified_by"]
+        if not isinstance(values, list):
+            raise forms.ValidationError(
+                _("Invalid format")
+            )
+        return values
 
 
 class SpiderTagForm(forms.ModelForm):

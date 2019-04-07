@@ -20,6 +20,7 @@ from rdflib import Literal, BNode, XSD, RDF
 
 from django.conf import settings
 from django.core import validators
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from cryptography.hazmat.backends import default_backend
@@ -178,6 +179,11 @@ def extract_host(url):
 
 
 def merge_get_url(_url, **kwargs):
+    if not _url.isprintable():
+        raise ValidationError(
+            _("Url contains control characters"),
+            code="control_characters"
+        )
     _url = _url.lstrip(":/")
     if _check_scheme.search(_url) is None:
         urlparsed = urlsplit("://".join(("https", _url)))

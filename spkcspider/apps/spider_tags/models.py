@@ -379,9 +379,7 @@ class SpiderTag(BaseContent):
     def encode_verifiers(self):
         return "".join(
             map(
-                lambda x: "verified_by\x1f{}\x1e".format(
-                    x.replace("\x1e", "%1E").replace("\x1f", "%1F")
-                ),
+                lambda x: "verified_by\x1f{}\x1e".format(x),
                 self.verified_by
             )
         )
