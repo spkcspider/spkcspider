@@ -67,7 +67,7 @@ class TagLayoutForm(forms.ModelForm):
         return super()._save_m2m()
 
     def clean_default_verifiers(self):
-        values = self.cleaned_data["verified_by"]
+        values = self.cleaned_data["default_verifiers"]
         if not isinstance(values, list):
             raise forms.ValidationError(
                 _("Invalid format")
@@ -110,7 +110,7 @@ class TagLayoutAdminForm(forms.ModelForm):
         }
 
     def clean_default_verifiers(self):
-        values = self.cleaned_data["verified_by"]
+        values = self.cleaned_data["default_verifiers"]
         if not isinstance(values, list):
             raise forms.ValidationError(
                 _("Invalid format")
