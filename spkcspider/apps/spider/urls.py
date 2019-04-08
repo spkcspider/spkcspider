@@ -8,7 +8,7 @@ from .views import (
 )
 
 from .views import (
-    ContentAdd, ContentIndex, ContentAccess, ContentRemove
+    ContentAdd, ContentIndex, ContentAccess, ContentDelete
 )
 
 from .views import (
@@ -23,47 +23,73 @@ app_name = "spider_base"
 
 urlpatterns = [
     path(
-        'ucs/user/<slug:user>/export/',
+        'components/export/',
         login_required(ComponentIndex.as_view(scope="export")),
         name='ucomponent-export'
     ),
     path(
-        'ucs/user/export/',
+        'components/slug:user>/export/',
         login_required(ComponentIndex.as_view(scope="export")),
         name='ucomponent-export'
     ),
     path(
-        'ucs/user/<slug:user>/',
+        'components/list/',
         login_required(ComponentIndex.as_view()),
         name='ucomponent-list'
     ),
     path(
-        'ucs/user/',
+        'components/<slug:user>/list/',
         login_required(ComponentIndex.as_view()),
         name='ucomponent-list'
     ),
     # path(
     #     'ucs/create/<slug:user>/',
     #     ComponentCreate.as_view(),
-    #     name='ucomponent-create'
+    #     name='ucomponent-add'
     # ),
     path(
-        'ucs/create/',
+        'components/add/',
         login_required(ComponentCreate.as_view()),
-        name='ucomponent-create'
+        name='ucomponent-add'
     ),
     path(
-        'ucs/update/<path:token>/',
+        'components/<path:token>/update/',
         login_required(ComponentUpdate.as_view()),
         name='ucomponent-update'
     ),
     path(
-        'ucs/delete/<path:token>/',
+        'components/<path:token>/delete/',
         login_required(ComponentDelete.as_view()),
         name='ucomponent-delete'
     ),
+
     path(
-        'token/delete/<path:token>/',
+        'components/<path:token>/list/',
+        ContentIndex.as_view(),
+        name='ucontent-list'
+    ),
+    path(
+        'components/<path:token>/export/',
+        ContentIndex.as_view(scope="export"),
+        name='ucontent-export'
+    ),
+    path(
+        'components/<path:token>/add/<slug:type>/',
+        ContentAdd.as_view(),
+        name='ucontent-add'
+    ),
+    path(
+        'content/<path:token>/delete/',
+        ContentDelete.as_view(),
+        name='ucontent-delete'
+    ),
+    path(
+        'content/<path:token>/<slug:access>/',
+        ContentAccess.as_view(),
+        name='ucontent-access'
+    ),
+    path(
+        'token/<path:token>/delete/',
         login_required(TokenDelete.as_view()),
         name='token-delete'
     ),
@@ -77,34 +103,8 @@ urlpatterns = [
         TokenRenewal.as_view(),
         name='token-renew'
     ),
-
     path(
-        'ucs/list/<path:token>/',
-        ContentIndex.as_view(),
-        name='ucontent-list'
-    ),
-    path(
-        'ucs/export/<path:token>/',
-        ContentIndex.as_view(scope="export"),
-        name='ucontent-export'
-    ),
-    path(
-        'ucs/add/<path:token>/<slug:type>/',
-        ContentAdd.as_view(),
-        name='ucontent-add'
-    ),
-    path(
-        'content/access/<path:token>/<slug:access>/',
-        ContentAccess.as_view(),
-        name='ucontent-access'
-    ),
-    path(
-        'content/remove/<path:token>/',
-        ContentRemove.as_view(),
-        name='ucontent-remove'
-    ),
-    path(
-        'ucs/',
+        'components/',
         ComponentPublicIndex.as_view(
             is_home=False
         ),
