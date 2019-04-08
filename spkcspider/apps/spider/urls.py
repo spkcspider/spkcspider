@@ -17,9 +17,10 @@ from .views import (
 
 app_name = "spider_base"
 
-# uc = UserComponent
-# name = UserComponent.name
-# UserComponent.name contains unicode => str
+# token: path: token can simulate path structures (legacy)
+
+# components plural: most components url retrieve multiple items
+#    one "component"-url for single retrievals is confusing
 
 urlpatterns = [
     path(

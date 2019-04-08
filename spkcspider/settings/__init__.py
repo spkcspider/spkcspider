@@ -203,6 +203,9 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # SPIDER_USER_QUOTA_LOCAL
 # SPIDER_USER_QUOTA_REMOTE
 
+# unbreak old links after switch to a new machine friendly url layout
+SPIDER_LEGACY_REDIRECT = True
+
 ##  Use subpath to create ids for identifiers # noqa: E266
 # SPIDER_ID_USE_SUBPATH
 

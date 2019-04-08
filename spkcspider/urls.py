@@ -73,6 +73,29 @@ for app in apps.get_app_configs():
     )
 
 
+if getattr(settings, "SPIDER_LEGACY_REDIRECT", False):
+    urlpatterns_i18n.insert(
+        0,
+        path(
+            'spider/content/access/<path:token>/<slug:access>/',
+            RedirectView.as_view(
+                pattern_name='spider_base:ucontent-access',
+                permanent=True
+            )
+        )
+    )
+    urlpatterns_i18n.insert(
+        0,
+        path(
+            'spider/ucs/list/<path:token>/',
+            RedirectView.as_view(
+                pattern_name='spider_base:ucontent-list',
+                permanent=True
+            )
+        )
+    )
+
+
 if getattr(settings, "USE_CAPTCHAS", False):
     urlpatterns.append(path(r'captcha/', include('captcha.urls')))
 
@@ -107,6 +130,7 @@ urlpatterns += [
         name='sitemaps'
     ),
 ] + i18n_patterns(*urlpatterns_i18n, prefix_default_language=False)
+
 
 if settings.DEBUG:
     urlpatterns += static(

@@ -80,7 +80,7 @@ class BasicComponentTest(TransactionTestCase):
             self.assertTrue(self.user.usercomponent_set.get(name="test%s" % i))
         self.assertTrue(self.user.usercomponent_set.get(name="public"))
 
-        response = self.client.get('/spider/ucs/')
+        response = self.client.get('/spider/components/')
         # Check that the response is 200 OK.
         self.assertEqual(response.status_code, 200)
         g = Graph()
@@ -88,7 +88,7 @@ class BasicComponentTest(TransactionTestCase):
         self.assertEqual(sum(
             1 for _ in g.triples((None, spkcgraph["components"], None))
         ), 3)
-        response = self.client.get('/spider/ucs/?page=2')
+        response = self.client.get('/spider/components/?page=2')
         # Check that the response is 200 OK.
         self.assertEqual(response.status_code, 200)
         g = Graph()
@@ -98,7 +98,7 @@ class BasicComponentTest(TransactionTestCase):
         ), 1)
 
         # Issue a GET request.
-        response = self.client.get('/spider/ucs/?raw=true')
+        response = self.client.get('/spider/components/?raw=true')
 
         # Check that the response is 200 OK.
         self.assertEqual(response.status_code, 200)
@@ -109,7 +109,7 @@ class BasicComponentTest(TransactionTestCase):
         ), 3)
 
         # Issue a GET request.
-        response = self.client.get('/spider/ucs/?raw=true&page=2')
+        response = self.client.get('/spider/components/?raw=true&page=2')
 
         # Check that the response is 200 OK.
         self.assertEqual(response.status_code, 200)
