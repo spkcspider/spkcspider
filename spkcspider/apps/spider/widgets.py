@@ -4,8 +4,6 @@ __all__ = [
 ]
 
 
-import json
-
 from django.forms import widgets
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -26,8 +24,8 @@ class StateButtonWidget(widgets.CheckboxInput):
         }
 
 
-class ListWidget(widgets.Textarea):
-    template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
+class ListWidget(widgets.SelectMultiple):
+    template_name = 'spider_base/forms/widgets/wrapped_select.html'
     allow_multiple_selected = True
 
     class Media:
@@ -64,28 +62,6 @@ class ListWidget(widgets.Textarea):
             context['widget']['attrs']["id"]
         )
         return context
-
-    def value_from_datadict(self, data, files, name):
-        ret = data.get(name)
-        if ret and isinstance(ret, str):
-            ret = json.loads(ret)
-        return ret
-
-    def format_value(self, value):
-        """Return selected values as a json."""
-        if not value:
-            return "[]"
-        if isinstance(value, (tuple, list)):
-            value = json.dumps(value)
-        return str(value)
-
-    def render(self, name, value, attrs=None, renderer=None):
-        if value is None:
-            value = ""
-        if not isinstance(value, str):
-            value = json.dumps(value, ensure_ascii=False, indent=2)
-
-        return super().render(name, value, attrs, renderer)
 
 
 class HTMLWidget(widgets.Input):

@@ -15,7 +15,7 @@ from .conf import (
 from .widgets import LicenseChooserWidget
 
 from spkcspider.apps.spider.fields import OpenChoiceField
-from spkcspider.apps.spider.widgets import OpenChoiceWidget
+from spkcspider.apps.spider.widgets import ListWidget
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -37,10 +37,8 @@ class FileForm(forms.ModelForm):
     )
     sources = OpenChoiceField(
         required=False, initial=False,
-        widget=OpenChoiceWidget(
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
+        widget=ListWidget(
+            item_label=_("Source")
         )
     )
 
@@ -114,10 +112,8 @@ class TextForm(forms.ModelForm):
     )
     sources = OpenChoiceField(
         required=False, initial=False,
-        widget=OpenChoiceWidget(
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
+        widget=ListWidget(
+            item_label=_("Source")
         )
     )
 
@@ -175,12 +171,7 @@ class TextForm(forms.ModelForm):
 class RawTextForm(forms.ModelForm):
     name = forms.CharField()
     sources = OpenChoiceField(
-        required=False, initial=False,
-        widget=OpenChoiceWidget(
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
-        )
+        required=False, initial=False
     )
 
     class Meta:

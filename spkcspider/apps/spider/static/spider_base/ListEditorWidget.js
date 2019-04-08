@@ -33,13 +33,31 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
     element.style.display = "none";
-    editor.setValue(JSON.parse(element.value));
+    let orig_val = [];
+    for (let count=0; count < element.options.length; count++)
+    {
+      if (element.options[count].hasAttribute("selected")){
+        orig_val.add(element.options[count].value)
+      }
+    }
+    editor.setValue(orig_val);
     let handler = function (ev){
       let errors = editor.validate();
       if (errors.length){
         ev.preventDefault();
       } else {
-        element.value = JSON.stringify(editor.getValue());
+        let editor_val = editor.getValue();
+        while(element.options.length != 0) {
+          element.options.remove(0);
+        }
+        for (let count=0; count < editor_val.length; count++)
+        {
+          let option = document.createElement("option");
+          option.selected = true;
+          option.value = editor_val[count];
+          option.innerText = editor_val[count];
+          element.options.add(option);
+        }
       }
     };
     element.form.addEventListener("submit", handler, false);
