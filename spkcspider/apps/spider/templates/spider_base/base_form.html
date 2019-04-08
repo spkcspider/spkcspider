@@ -22,7 +22,7 @@
             <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
             <div><label for="{{ field.auto_id }}">{{ field.label }}<sup class="w3-small {% if field.field.disabled %}w3-text-grey{% else %}w3-text-red{% endif %}">{% if field.field.required %}*{% endif %}</sup>:</label>
             </div>
-            {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
+            {% if field.field.widget.allow_multiple_selected %}
               <data hidden="hidden" rel="spkc:value">
               {% for q in field.value %}
                 {% literalize q field as LiteralData %}

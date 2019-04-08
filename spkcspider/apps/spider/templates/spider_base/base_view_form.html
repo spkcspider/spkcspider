@@ -16,7 +16,7 @@
         {% hashable_literalize field as hashable %}
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
         <div>{{ field.label_tag }}</div>
-        {% if field.field.widget.input_type == "select" and field.field.widget.allow_multiple_selected %}
+        {% if field.field.widget.allow_multiple_selected %}
           <ul class="w3-white">
             {% for val in field.value %}
               {% literalize val field as LiteralData %}
