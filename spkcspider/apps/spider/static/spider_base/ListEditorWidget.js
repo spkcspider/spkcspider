@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", function(){
     for (let count=0; count < element.options.length; count++)
     {
       if (element.options[count].hasAttribute("selected")){
-        orig_val.add(element.options[count].value)
+        orig_val.push(element.options[count].value)
       }
     }
     editor.setValue(orig_val);

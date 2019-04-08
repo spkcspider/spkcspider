@@ -13,7 +13,7 @@ from .widgets import OpenChoiceWidget, TrumbowygWidget
 class JsonField(fields.Field):
     def to_python(self, value):
         if isinstance(value, str):
-            value = json.dumps(value)
+            value = json.loads(value)
         return value
 
 

@@ -63,6 +63,24 @@ class ListWidget(widgets.SelectMultiple):
         )
         return context
 
+    def optgroups(self, name, value, attrs=None):
+        """Return a list of optgroups for this widget."""
+        groups = []
+
+        for index, option_value in enumerate(value or []):
+            if option_value is None:
+                option_value = ''
+            # selected = True
+            groups.append((
+                None,
+                [self.create_option(
+                    name, option_value, option_value, True, index,
+                    subindex=None, attrs=attrs,
+                )],
+                index
+            ))
+        return groups
+
 
 class HTMLWidget(widgets.Input):
     template_name = 'spider_base/forms/widgets/info.html'
