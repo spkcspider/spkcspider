@@ -1,7 +1,7 @@
 """ Content Views """
 
 __all__ = (
-    "ContentIndex", "ContentAdd", "ContentAccess", "ContentRemove"
+    "ContentIndex", "ContentAdd", "ContentAccess", "ContentDelete"
 )
 
 from datetime import timedelta
@@ -35,7 +35,7 @@ from ..queryfilters import filter_contents
 from ..constants import spkcgraph, VariantType
 from ..serializing import paginate_stream, serialize_stream
 
-_forbidden_scopes = frozenset(["add", "list", "raw"])
+_forbidden_scopes = frozenset(["add", "list", "raw", "delete"])
 
 
 class ContentBase(UCTestMixin):
@@ -267,16 +267,15 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         except Exception:
             pass
 
-        if hasattr(self.request, "token_expires"):
-            session_dict["expires"] = self.request.token_expires.strftime(
-                "%a, %d %b %Y %H:%M:%S %z"
-            )
-            if page <= 1:
+        if page <= 1:
+            if hasattr(self.request, "token_expires"):
+                session_dict["expires"] = self.request.token_expires.strftime(
+                    "%a, %d %b %Y %H:%M:%S %z"
+                )
                 add_property(
                     g, "token_expires", ob=session_dict["request"],
                     ref=session_dict["sourceref"]
                 )
-        if page <= 1:
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["scope"],
@@ -296,12 +295,16 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             token = getattr(session_dict["request"], "auth_token", None)
             if token:
                 token = token.token
-            url2 = merge_get_url(str(session_dict["sourceref"]), token=token)
             g.add(
                 (
                     session_dict["sourceref"],
                     spkcgraph["action:view"],
-                    Literal(url2, datatype=XSD.anyURI)
+                    Literal(
+                        merge_get_url(
+                            str(session_dict["sourceref"]), token=token
+                        ),
+                        datatype=XSD.anyURI
+                    )
                 )
             )
             if context["token_strength"]:
@@ -606,7 +609,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return ob
 
 
-class ContentRemove(EntityDeletionMixin, DeleteView):
+class ContentDelete(EntityDeletionMixin, DeleteView):
     model = AssignedContent
     usercomponent = None
 

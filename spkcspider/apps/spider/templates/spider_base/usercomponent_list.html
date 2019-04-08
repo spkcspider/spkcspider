@@ -49,7 +49,7 @@
     {% if request.user.is_authenticated %}
       <span class="w3-right w3-left-align">
         {% if request.is_owner %}
-          <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-create' %}">
+          <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-add' %}">
             <i class="fas fa-plus" style="margin-right:10px" aria-hidden="true"></i>
             {% trans 'Add New Component' %}
           </a>
