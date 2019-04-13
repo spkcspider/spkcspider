@@ -7,7 +7,7 @@
 {% endif %}
 
 <div class="w3-bar w3-black">
-  <a class="w3-bar-item w3-button" href="{% url 'home' %}">
+  <a class="w3-bar-item w3-button {% if request.user.is_authenticated %}w3-hide-small{% endif %}" href="{% url 'home' %}">
     <i class="fas fa-home" aria-hidden="true"></i>
   </a>
   {% if request.user.is_authenticated %}
@@ -41,22 +41,9 @@
       </div>
     </div>
   {% endif %}
-
-  {% get_current_language as LANGUAGE_CODE %}
-  {% language "en" %}
-  <form action="" method="get" class="w3-bar-item" onsubmit="window.location.href = `/${this.language.value}{% current_url %}`;return false;">
-      <select name="language">
-          {% get_available_languages as LANGUAGES %}
-          {% get_language_info_list for LANGUAGES as languages %}
-          {% for language in languages %}
-              <option value="{{language.code}}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-                  {{ language.name_local }} ({{ language.code }})
-              </option>
-          {% endfor %}
-      </select>
-      <input type="submit" value="Go">
-  </form>
-  {% endlanguage %}
+  <div class="w3-bar-item w3-tiny w3-hide-small">
+    {% include "spider_base/partials/language_box.html" with attrs=" style=\"width:120px\"" %}
+  </div>
   {% if request.user.is_authenticated %}
     <div class="w3-right w3-dropdown-hover w3-dropdown-click w3-black">
       <button onclick='document.getElementById("user_actions_list").classList.toggle("w3-show")' class="w3-button w3-black">
@@ -104,4 +91,7 @@
       </a>
     {% endif %}
   {% endif %}
+  <div class="w3-bar-item w3-hide-medium">
+    {% include "spider_base/partials/language_box.html" with attrs=" style=\"width:150px\"" %}
+  </div>
 </div>
