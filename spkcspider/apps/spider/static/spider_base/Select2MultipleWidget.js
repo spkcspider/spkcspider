@@ -1,10 +1,7 @@
 
-jQuery.noConflict();
-var select2_multiple_initialized = false;
+let $ = jQuery.noConflict();
 
-jQuery( document ).ready(function( $ ) {
-  if (select2_multiple_initialized)
-    return;
+document.addEventListener("DOMContentLoaded", function(){
   select2_multiple_initialized = true;
   $(".Select2MultipleTarget").select2();
 })

@@ -2,12 +2,12 @@
 {% load i18n spider_rdf %}
 
 {% block render_content %}
-{% include "spider_base/form_errors.html" with form=form %}
+{% include "spider_base/partials/form_errors.html" with form=form %}
 <form class="w3-padding" id="main_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   {% csrf_token %}
   <fieldset style="width:100%">
     <legend><h2>{% trans 'Content Settings' %}</h2></legend>
-    {% include "spider_base/base_form.html" with form=form %}
+    {% include "spider_base/partials/base_form.html" with form=form %}
   </fieldset>
   {% if content %}
     <fieldset style="width:100%">

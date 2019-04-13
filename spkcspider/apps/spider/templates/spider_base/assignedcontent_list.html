@@ -124,7 +124,7 @@
     {% endif %}
     {% if request.token_expires %}
     <div>
-      {% include 'spider_base/token_lifetime.html' with rtime=request.token_expires %}
+      {% include 'spider_base/partials/token_lifetime.html' with rtime=request.token_expires %}
     </div>
     {% endif %}
   </div>
@@ -138,7 +138,7 @@
           <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
         </summary>
         <div class="w3-white w3-border">
-          {% include "spider_base/content_variants_box.html" %}
+          {% include "spider_base/partials/content_variants_box.html" %}
         </div>
       </details>
     </div>
@@ -239,9 +239,9 @@
 {% if request.is_owner %}
 {% url 'spider_base:ucontent-export' token=uc.token as exportlink %}
 {% with exportlink=exportlink|add:"?"|add:spider_GET.urlencode %}
-{% include "spider_base/modalpresenter.html" %}
+{% include "spider_base/partials/modalpresenter.html" %}
 {% endwith %}
 {% else %}
-{% include "spider_base/modalpresenter.html" %}
+{% include "spider_base/partials/modalpresenter.html" %}
 {% endif %}
 {% endblock %}

@@ -155,6 +155,7 @@ class BaseInfoModel(models.Model):
                     "\x1e", self.info, 0
                 )
                 continue
+            # count replacements
             self.info, count1 = pattern.subn(
                 "\x1e{}\x1e", self.info, 1
             )

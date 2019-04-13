@@ -1,16 +1,13 @@
 
-jQuery.noConflict();
-var trumbowygwidget_initialized = false;
+let $ = jQuery.noConflict();
 
-jQuery( document ).ready(function( $ ) {
-  if (trumbowygwidget_initialized)
-    return;
-  trumbowygwidget_initialized = true;
+document.addEventListener("DOMContentLoaded", function(){
   $('.TrumbowygTarget').trumbowyg({
     imageWidthModalEdit: true,
     resetCss:true,
     minimalLinks: true,
     urlProtocol: true,
+    lang: document.documentElement.lang || "en",
     btnsDef: {
         // Create a new dropdown
         insert: {

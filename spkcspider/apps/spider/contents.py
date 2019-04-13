@@ -269,7 +269,7 @@ class BaseContent(models.Model):
 
     def get_template_name(self, scope):
         if scope in ["add", "update"]:
-            return 'spider_base/base_form.html'
+            return 'spider_base/partials/base_form.html'
         return 'spider_base/view_form.html'
 
     def update_used_space(self, size_diff):
@@ -660,9 +660,7 @@ class BaseContent(models.Model):
         unlistedtag = ""
         if unlisted:
             unlistedtag = "unlisted\x1e"
-        return "\x1emodel\x1f{}.{}\x1etype\x1f{}\x1e{}{}{}".format(
-            self._meta.label,
-            self._meta.model_name,
+        return "\x1etype\x1f{}\x1e{}{}{}".format(
             self.associated.ctype.name,
             idtag,
             anchortag,

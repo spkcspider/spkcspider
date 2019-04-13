@@ -7,7 +7,7 @@
     {% csrf_token %}
     {# don't annotate (correctly) for making it harder for bots #}
     <fieldset>
-      {% include "spider_base/base_form.html" with form=form %}
+      {% include "spider_base/partials/base_form.html" with form=form %}
     </fieldset>
     <button class="w3-button w3-grey" type="submit">{% trans 'Sign up' %}</button><br/>
     <a href="{% url 'auth:login' %}">{% trans 'Already an account? Login?' %}</a>

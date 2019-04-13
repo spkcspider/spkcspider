@@ -249,3 +249,4 @@ class AssignedContent(BaseInfoModel):
                 code="strength",
                 params={'strength': self.strength},
             )
+        super().clean()

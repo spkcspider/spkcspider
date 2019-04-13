@@ -104,7 +104,7 @@ class FileForm(forms.ModelForm):
 
 
 class TextForm(forms.ModelForm):
-    text = SanitizedHtmlField()
+    text = SanitizedHtmlField(localize=True)
     license_name = forms.ChoiceField(
         label=_("License"), help_text=_("Select license"),
         choices=map(_extract_choice, LICENSE_CHOICES_TEXT.items()),

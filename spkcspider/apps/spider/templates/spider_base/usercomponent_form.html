@@ -68,7 +68,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       {% csrf_token %}
     </form>
   {% endif %}
-  {% include "spider_base/form_errors.html" with form=form %}
+  {% include "spider_base/partials/form_errors.html" with form=form %}
   <form class="w3-padding" id="componentForm" action="{{ request.get_full_path }}" encdata="multipart/form-data" method="post">
     {% csrf_token %}
     <data hidden="hidden" property="type" datatype="xsd:string">Component</data>
@@ -80,7 +80,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         </h2>
       </legend>
       <div class="w3-white w3-border">
-      {% include "spider_base/content_variants_box.html" with open=True uc=object %}
+      {% include "spider_base/partials/content_variants_box.html" with open=True uc=object %}
       </div>
     </fieldset>
     {% endif %}
@@ -142,7 +142,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           <button class="w3-button w3-grey w3-right w3-hover-red" form="deleteForm"><i class="fas fa-trash" aria-hidden="true" style="margin-right:10px"></i>{% trans 'Delete' %}</button>
         </div>
       {% endif %}
-      {% include "spider_base/base_form.html" with form=form %}
+      {% include "spider_base/partials/base_form.html" with form=form %}
     </fieldset>
     {% if form.instance.id %}
     <button class="w3-button w3-grey">
@@ -155,7 +155,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         <div class="protection-wrapping">
           <div class="w3-padding-small w3-card w3-white">
             <h1 class="w3-center" style="word-break:break-word">{{prot}}</h1>
-            {% include "spider_base/base_form.html" with form=prot %}
+            {% include "spider_base/partials/base_form.html" with form=prot %}
           </div>
         </div>
       {% empty%}
@@ -178,7 +178,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 {% block outercontent %}
 {% if object %}
   {% url 'spider_base:ucontent-export' token=object.token as exportlink %}
-  {% include "spider_base/modalpresenter.html" %}
+  {% include "spider_base/partials/modalpresenter.html" %}
   <script>
     let allselector=document.getElementById("deleteAllSelector");
     let deleteform=document.getElementById("deleteForm");

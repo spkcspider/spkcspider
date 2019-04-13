@@ -1,11 +1,7 @@
 
-jQuery.noConflict();
-var open_choice_initialized = false;
+let $ = jQuery.noConflict();
 
-jQuery( document ).ready(function( $ ) {
-  if (open_choice_initialized)
-    return;
-  open_choice_initialized = true;
+document.addEventListener("DOMContentLoaded", function(){
   $(".OpenChoiceTarget").select2({
     tags: true,
     width: 'element'

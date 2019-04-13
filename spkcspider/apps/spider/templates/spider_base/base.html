@@ -1,5 +1,5 @@
 {% load i18n %}
-{% load staticfiles spider_base %}
+{% load static spider_base %}
 {% load flatpages %}
 <!DOCTYPE html>
 <html lang="{{LANGUAGE_CODE}}">
@@ -37,91 +37,7 @@
     {% block layout %}
       {% block headerbar %}
       <header class="cond-top-fix">
-        <div class="w3-bar w3-black">
-        <a class="w3-bar-item w3-button" href="{% url 'home' %}">
-          <i class="fas fa-home" aria-hidden="true"></i>
-        </a>
-        {% url 'auth:login' as loginpath %}
-        {% if SETTINGS.OPEN_FOR_REGISTRATION %}
-          {% url 'auth:signup' as registerpath %}
-        {% endif %}
-        {% if request.user.is_authenticated %}
-          <div style="margin-left:15px" class="w3-dropdown-hover w3-dropdown-click">
-            <button onclick='document.getElementById("context_actions_list").classList.toggle("w3-show")' class="w3-button">
-            <i class="fas fa-bars" aria-hidden="true"></i>
-            <span class="w3-hide-small" style="margin-left:10px">Actions</span>
-            <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
-            </button>
-            <div class="w3-dropdown-content w3-bar-block w3-black" id="context_actions_list">
-              <div class="w3-animate-opacity w3-black">
-                {% block context_actions %}
-                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-add' %}">
-                    <i class="fas fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'Add Component' %}
-                  </a>
-                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-listpublic' %}">
-                    <i class="fas fa-globe" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'Public Components' %}
-                  </a>
-                  <a class="w3-bar-item w3-button" href="{% url 'spider_base:ucomponent-list' %}">
-                    <i class="fas fa-sitemap" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'Own Components' %}
-                  </a>
-                  <a class="w3-bar-item w3-button" href="{% list_own_content %}">
-                    <i class="fas fa-folder" style="margin-right:10px;color:#FF0000;" aria-hidden="true"></i>
-                    {% trans 'Private Contents' %}
-                  </a>
-                {% endblock context_actions %}
-              </div>
-            </div>
-          </div>
-          <div class="w3-right w3-dropdown-hover w3-dropdown-click w3-black">
-            <button onclick='document.getElementById("user_actions_list").classList.toggle("w3-show")' class="w3-button w3-black">
-              <i class="fas fa-user" style="margin-right:10px" aria-hidden="true"></i>
-              <small class="w3-hide-small">{{request.user.username}}</small>
-              <small class="w3-hide-medium w3-hide-large">{{request.user.username|truncatechars:10}}</small>
-              <i class="fas fa-caret-down" style="margin-left:5px" aria-hidden="true"></i>
-            </button>
-            <div class="w3-dropdown-content w3-bar-block w3-black" style="right:0px" id="user_actions_list">
-              <div class="w3-animate-opacity w3-black">
-                {% block user_actions %}
-                <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:profile' %}">
-                  <i class="fas fa-user-edit" style="margin-right:10px" aria-hidden="true"></i>
-                  {% trans 'Profile' %}
-                </a>
-                <a class="w3-bar-item w3-button" href="{% update_component 'index' %}">
-                  <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>
-                  {% trans 'Security' %}
-                </a>
-                {% if request.user.is_superuser or request.user.is_staff %}
-                  <a class="w3-bar-item w3-button" href="{% url 'admin:index' %}">
-                    <i class="fas fa-toolbox" style="margin-right:10px" aria-hidden="true"></i>
-                    {% trans 'Admin' %}
-                  </a>
-                {% endif %}
-                <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:logout'%}">
-                  <i class="fas fa-sign-out-alt" style="margin-right:10px" aria-hidden="true"></i>
-                  {% trans 'Logout' %}
-                </a>
-                {% endblock user_actions %}
-              </div>
-            </div>
-          </div>
-        {% else %}
-          {% if SETTINGS.OPEN_FOR_REGISTRATION %}
-          <a class="w3-bar-item w3-button w3-right" href="{{registerpath}}{% if registerpath != request.path %}?next={{request.path|urlencode}}{% endif %}">
-            <i class="fas fa-user-plus" style="margin-right:10px" aria-hidden="true"></i>
-            {% trans 'Register' %}
-          </a>
-          {% endif %}
-          {% if request.path != loginpath %}
-            <a class="w3-bar-item w3-button w3-right" href="{{loginpath}}?next={{request.path|urlencode}}">
-              <i class="fas fa-sign-in-alt" style="margin-right:10px" aria-hidden="true"></i>
-              {% trans 'Login' %}
-            </a>
-          {% endif %}
-        {% endif %}
-        </div>
+        {% include "spider_base/partials/headerbar.html"%}
       </header>
       {% endblock headerbar %}
       <main class="footer-fix cond-top-fix{% block main_classes %}{% endblock %}" id="content-main" {% block main_attributes %}{% endblock %}>
@@ -155,11 +71,10 @@
     {% endblock %}
     {% endblock %}
 
-    {# Main scripts #}
-    {% block base_scripts %}{% endblock %}
-
     {# Scripts #}
-    {% block scripts %}{% endblock %}
+    {% block scripts %}
+    <script></script>
+    {% endblock %}
 
     {# e.g. modals #}
     {% block outercontent %}{% endblock %}

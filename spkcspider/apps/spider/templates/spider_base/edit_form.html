@@ -1,5 +1,5 @@
 {% load spider_rdf %}
-{% include "spider_base/form_errors.html" with form=form %}
+{% include "spider_base/partials/form_errors.html" with form=form %}
 <{% if not inner_form %}form action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post"{% else %}div{% endif %}>
   {% for rdftype in add_spkc_types %}
     <data property="spkc:type" hidden="hidden">{{rdftype}}</data>
@@ -7,7 +7,7 @@
   {% if not inner_form %}{% csrf_token %}{% endif %}
   <fieldset>
     <legend><h2>{{legend|safe}}</h2></legend>
-    {% include "spider_base/base_form.html" with form=form %}
+    {% include "spider_base/partials/base_form.html" with form=form %}
   </fieldset>
   {% if not inner_form %}
     <button class="w3-button w3-grey" style="margin-bottom: 5px">

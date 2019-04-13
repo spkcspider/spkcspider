@@ -13,6 +13,18 @@ def is_not_or_space(value):
 
 
 @register.simple_tag(takes_context=True)
+def current_url(context):
+    return reverse(
+        "{}:{}".format(
+            context["request"].resolver_match.namespace,
+            context["request"].resolver_match.url_name,
+        ),
+        args=context["request"].resolver_match.args,
+        kwargs=context["request"].resolver_match.kwargs
+    )
+
+
+@register.simple_tag(takes_context=True)
 def list_own_content(context):
     ucname = "index"
     if context["request"].session.get("is_fake", False):

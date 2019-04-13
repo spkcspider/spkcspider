@@ -144,7 +144,7 @@
     {% endif %}
     {% if request.token_expires %}
     <div>
-      {% include 'spider_base/token_lifetime.html' with rtime=request.token_expires %}
+      {% include 'spider_base/partials/token_lifetime.html' with rtime=request.token_expires %}
     </div>
     {% endif %}
   </div>
@@ -189,6 +189,6 @@
 {% endif %}
 {% if scope != "add" %}
   {# remotelink generated in view #}
-  {% include "spider_base/modalpresenter.html" %}
+  {% include "spider_base/partials/modalpresenter.html" %}
 {% endif %}
 {% endblock %}

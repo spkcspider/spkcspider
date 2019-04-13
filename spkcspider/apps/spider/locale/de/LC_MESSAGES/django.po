@@ -553,11 +553,11 @@ msgstr ""
 msgid "Login"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/form_errors.html:6
+#: spkcspider/apps/spider/templates/spider_base/partials/form_errors.html:6
 msgid "Please correct the error below."
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/form_errors.html:6
+#: spkcspider/apps/spider/templates/spider_base/partials/form_errors.html:6
 msgid "Please correct the errors below."
 msgstr ""
 
@@ -602,38 +602,38 @@ msgstr ""
 msgid "Page %(page)s of %(num_pages)s."
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:10
+#: spkcspider/apps/spider/templates/spider_base/partials/modalpresenter.html:10
 msgid "QR/Export-Mode"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:19
+#: spkcspider/apps/spider/templates/spider_base/partials/modalpresenter.html:19
 msgid "With access token"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:26
+#: spkcspider/apps/spider/templates/spider_base/partials/modalpresenter.html:26
 msgid "Link"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:30
+#: spkcspider/apps/spider/templates/spider_base/partials/modalpresenter.html:30
 msgid "Raw"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/modalpresenter.html:32
+#: spkcspider/apps/spider/templates/spider_base/partials/modalpresenter.html:32
 #: spkcspider/apps/spider/templates/spider_base/usercomponent_list.html:53
 msgid "Export"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:2
+#: spkcspider/apps/spider/templates/spider_base/partials/token_lifetime.html:2
 msgid "Remaining lifetime of token"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:6
-#: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:26
+#: spkcspider/apps/spider/templates/spider_base/partials/token_lifetime.html:6
+#: spkcspider/apps/spider/templates/spider_base/partials/token_lifetime.html:26
 #, python-format
 msgid "Days: %(days)s %(hours)sh:%(minutes)sm:%(seconds)ss"
 msgstr ""
 
-#: spkcspider/apps/spider/templates/spider_base/token_lifetime.html:31
+#: spkcspider/apps/spider/templates/spider_base/partials/token_lifetime.html:31
 msgid "Expired"
 msgstr ""
 
