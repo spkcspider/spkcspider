@@ -104,7 +104,7 @@ class LinkContent(BaseContent):
 
     def get_info(self):
         ret = self.content.content.get_info()
-        return "%ssource\x1f%s\x1elink\x1e" % (
+        return "%ssource=%s\x1elink\x1e" % (
             ret, self.associated.pk
         )
 

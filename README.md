@@ -198,9 +198,10 @@ Otherwise security could be compromised.
 The info field is a simple key value storage. The syntax is (strip the spaces):
 
 flag syntax: \\x1e key \\x1e
-key value syntax: \\x1e key \\x1f value \\x1e
+key value syntax: \\x1e key=value \\x1e
 
-Note: I use the semantic ascii seperators \\x1e and \\x1f. Why? The info field is for machines and having no printable characters eases escaping and sanitizing.
+Note: I use the semantic ascii seperators \\x1e. Why? Sperating with an non-printable character eases escaping and sanitizing.
+Note 2: I reverted from using \\x1f instead of = because the info field is used in searchs
 
 Why not a json field? Django has no uniform json field for every db adapter yet.
 

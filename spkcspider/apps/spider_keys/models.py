@@ -69,7 +69,7 @@ class PublicKey(BaseContent):
         h = get_hashob()
         h.update(key.encode("ascii", "ignore"))
         # don't put use_for_encryption state here; this would break unique
-        return "%shash\x1f%s\x1f%s\x1e" % (
+        return "%shash:%s=%s\x1e" % (
             ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex()
         )
 

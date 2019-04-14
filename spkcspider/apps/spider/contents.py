@@ -654,13 +654,13 @@ class BaseContent(models.Model):
         idtag = "primary\x1e"
         # simulates beeing not unique, by adding id
         if not unique:
-            idtag = "id\x1f\x1e"  # placeholder
+            idtag = "id=\x1e"  # placeholder
             if getattr(self.associated, "id", None):
-                idtag = "id\x1f{}\x1e".format(self.associated.id)
+                idtag = "id={}\x1e".format(self.associated.id)
         unlistedtag = ""
         if unlisted:
             unlistedtag = "unlisted\x1e"
-        return "\x1etype\x1f{}\x1e{}{}{}".format(
+        return "\x1etype={}\x1e{}{}{}".format(
             self.associated.ctype.name,
             idtag,
             anchortag,
@@ -720,7 +720,7 @@ class BaseContent(models.Model):
             # add id to info
             if "\x1eprimary\x1e" not in assignedcontent.info:
                 assignedcontent.info = assignedcontent.info.replace(
-                    "\x1eid\x1f\x1e", "\x1eid\x1f{}\x1e".format(
+                    "\x1eid=\x1e", "\x1eid={}\x1e".format(
                         assignedcontent.id
                     ), 1
                 )

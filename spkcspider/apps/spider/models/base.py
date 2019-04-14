@@ -24,11 +24,11 @@ def info_and(*args, **kwargs):
     for name, query in kwargs.items():
         if query is None:
             q &= models.Q(
-                info__contains="\x1e{}\x1f".format(name)
+                info__contains="\x1e{}=".format(name)
             )
         else:
             q &= models.Q(
-                info__contains="\x1e{}\x1f{}\x1e".format(name, query)
+                info__contains="\x1e{}={}\x1e".format(name, query)
             )
     return q
 
@@ -45,11 +45,11 @@ def info_or(*args, **kwargs):
     for name, query in kwargs.items():
         if query is None:
             q |= models.Q(
-                info__contains="\x1e{}\x1f".format(name)
+                info__contains="\x1e{}=".format(name)
             )
         else:
             q |= models.Q(
-                info__contains="\x1e{}\x1f{}\x1e".format(name, query)
+                info__contains="\x1e{}={}\x1e".format(name, query)
             )
     return q
 
@@ -72,14 +72,14 @@ def info_field_validator(value):
     for elem in value.split("\x1e"):
         if elem == "":
             continue
-        f = elem.find("\x1f")
+        f = elem.find("=")
         # no flag => allow multiple instances
         if f != -1:
             continue
         counts = 0
         counts += value.count("\x1e%s\x1e" % elem)
         # check: is flag used as key in key, value storage
-        counts += value.count("\x1e%s\x1f" % elem)
+        counts += value.count("\x1e%s=" % elem)
         assert counts > 0, value
         if counts > 1:
             raise ValidationError(
@@ -122,7 +122,7 @@ class BaseInfoModel(models.Model):
     def getlist(self, key, amount=None):
         info = self.info
         ret = []
-        pstart = info.find("\x1e%s\x1f" % key)
+        pstart = info.find("\x1e%s=" % key)
         while pstart != -1:
             tmpstart = pstart+len(key)+2
             pend = info.find("\x1e", tmpstart)
@@ -132,7 +132,7 @@ class BaseInfoModel(models.Model):
                     info
                 )
             ret.append(info[tmpstart:pend])
-            pstart = info.find("\x1e%s\x1f" % key, pend)
+            pstart = info.find("\x1e%s=" % key, pend)
             # if amount=0 => bool(amount) == false
             if amount and amount <= len(ret):
                 break
@@ -171,12 +171,12 @@ class BaseInfoModel(models.Model):
             elif isinstance(val, (tuple, list)):
                 rep.append("\x1e".join(
                     map(
-                        lambda x: "{}\x1f{}".format(name, x),
+                        lambda x: "{}={}".format(name, x),
                         val
                     )
                 ))
             else:
-                rep.append("{}\x1f{}".format(name, val))
+                rep.append("{}={}".format(name, val))
         self.info = self.info.format(*rep_replace)
         if rep_missing:
             self.info = "{}\x1e{}\x1e".format(

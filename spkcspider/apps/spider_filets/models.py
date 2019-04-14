@@ -96,7 +96,7 @@ class FileFilet(ContentWithLicense):
 
     def get_info(self):
         ret = super().get_info()
-        return "%sname\x1f%s\x1e" % (ret, self.associated.name)
+        return "%sname=%s\x1e" % (ret, self.associated.name)
 
     def get_form(self, scope):
         from .forms import FileForm
@@ -231,7 +231,7 @@ class TextFilet(ContentWithLicense):
 
     def get_info(self):
         ret = super().get_info()
-        return "%sname\x1f%s\x1e" % (
+        return "%sname=%s\x1e" % (
             ret, self.associated.name
 
         )

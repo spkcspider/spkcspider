@@ -311,7 +311,7 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(public.contents.count(), 2)
         url = public.contents.get(
-            info__contains="\x1ename\x1fname\x1e"
+            info__contains="\x1ename=name\x1e"
         ).get_absolute_url("update")
         self.assertEqual(location, url)
         form = response.forms[0]
