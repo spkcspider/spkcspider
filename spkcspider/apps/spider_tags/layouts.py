@@ -5,6 +5,10 @@ from spkcspider.apps.spider.helpers import extract_app_dicts
 
 default_layouts = {}
 default_layouts["address"] = {
+    "description": _(
+        "An universal address.\n"
+        "Can be used for persons and companies."
+    ),
     "layout": [
         {
             "key": "name",
@@ -63,6 +67,10 @@ default_layouts["address"] = {
 }
 
 default_layouts["person_official"] = {
+    "description": _(
+        "An description of a person.\n"
+        "For e.g. shopping or contracts"
+    ),
     "layout": [
         {
             "key": "address",
@@ -122,7 +130,10 @@ default_layouts["person_official"] = {
 }
 
 
-default_layouts["workplace"] = {
+default_layouts["work"] = {
+    "description": _(
+        "Basic specifications of a work."
+    ),
     "layout": [
         {
             "key": "worker",
@@ -144,23 +155,18 @@ default_layouts["workplace"] = {
                 "layout__name__in": ["address"]
             },
         },
-        {
-            "key": "pension",
-            "label": _("Pension payments"),
-            "localize": True,
-            "field": "BooleanField",
-            "blank": True,
-            "default": False
-        },
     ]
 }
 
 
 default_layouts["emergency"] = {
+    "description": _(
+        "Emergency information."
+    ),
     "layout": [
         {
             "key": "address",
-            "label": _("Adress Object"),
+            "label": _("Address"),
             "localize": True,
             "field": "UserContentRefField",
             "modelname": "spider_tags.SpiderTag",
