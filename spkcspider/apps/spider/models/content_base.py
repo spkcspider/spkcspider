@@ -10,6 +10,7 @@ __all__ = [
 
 import logging
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext, gettext_lazy as _
 from django.urls import reverse
@@ -50,6 +51,10 @@ class ContentVariant(models.Model):
     @property
     def installed_class(self):
         return installed_contents[self.code]
+
+    @property
+    def feature_urls(self):
+        return installed_contents[self.code].cached_feature_urls(self.name)
 
     def localize_name(self):
         if self.code not in installed_protections:
@@ -94,14 +99,14 @@ class UserContentManager(models.Manager):
 class AssignedContent(BaseInfoModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     # fake_level = models.PositiveIntegerField(null=False, default=0)
-    persist_token = models.ForeignKey(
+    attached_to_token = models.ForeignKey(
         "spider_base.AuthToken", blank=True, null=True,
-        limit_choices_to={"persist__gte": 0}, on_delete=models.CASCADE
+        on_delete=models.CASCADE
     )
     # don't use extensive recursion,
     # this can cause performance problems and headaches
     # this is not enforced for allowing some small chains
-    # see SERIALIZED_MAX_DEPTH for limits (default currently 5)
+    # see SPIDER_MAX_EMBED_DEPTH setting for limits (default around 5)
     attached_to_content = models.ForeignKey(
         "self", blank=True, null=True,
         related_name="attached_contents", on_delete=models.CASCADE
@@ -235,8 +240,11 @@ class AssignedContent(BaseInfoModel):
 
     def clean(self):
         _ = gettext
+        self.description = self.description[
+            :settings.SPIDER_MAX_DESCRIPTION_LENGTH
+        ]
         if VariantType.persist.value in self.ctype.ctype:
-            if not self.persist_token:
+            if not self.attached_to_token:
                 raise ValidationError(
                     _('Persistent token required'),
                     code="persist",

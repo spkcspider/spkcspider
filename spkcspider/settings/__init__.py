@@ -229,16 +229,16 @@ SPIDER_BLACKLISTED_MODULES = [
     "spkcspider.apps.spider.protections.TravelProtection",
 ]
 
-# how many user components per page
-COMPONENTS_PER_PAGE = 25
-# how many user contents per page
-CONTENTS_PER_PAGE = 25
+# max description length (stripped)
+SPIDER_MAX_DESCRIPTION_LENGTH = 500
+# how many user components/contents per page
+SPIDER_OBJECTS_PER_PAGE = 25
 # how many raw/serialized results per page?
-SERIALIZED_PER_PAGE = 50
+SPIDER_SERIALIZED_PER_PAGE = 50
 # max depth of references
-SERIALIZED_MAX_DEPTH = 5
+SPIDER_MAX_EMBED_DEPTH = 5
 # how many search parameters are allowed
-MAX_SEARCH_PARAMETERS = 30
+SPIDER_MAX_SEARCH_PARAMETERS = 30
 
 # disable when importing backup
 # ease deploy

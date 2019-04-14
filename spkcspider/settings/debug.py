@@ -42,14 +42,12 @@ DATABASES = {
 }
 
 
-# how many user components per page
-COMPONENTS_PER_PAGE = 3
-# how many user contents per page
-CONTENTS_PER_PAGE = 3
+# how many user contents/components per page
+SPIDER_OBJECTS_PER_PAGE = 3
 # how many raw/serialized results per page?
-SERIALIZED_PER_PAGE = 3
+SPIDER_SERIALIZED_PER_PAGE = 3
 # max depth of references
-SERIALIZED_MAX_DEPTH = 5
+SPIDER_MAX_EMBED_DEPTH = 5
 
 CELERY_BROKER_URL = "redis://127.0.0.1:6379"
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379"

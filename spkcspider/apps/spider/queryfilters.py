@@ -11,7 +11,7 @@ def filter_components(searchlist, filter_unlisted=True, use_contents=True):
 
     counter = 0
     # against ddos
-    max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 60)
+    max_counter = settings.SPIDER_MAX_SEARCH_PARAMETERS
 
     # list only unlisted if explicity requested or export is used
     # ComponentPublicIndex doesn't allow unlisted in any case
@@ -80,7 +80,7 @@ def filter_contents(
     counter = 0
     unlisted_active = False
     # against ddos
-    max_counter = getattr(settings, "MAX_SEARCH_PARAMETERS", 60)
+    max_counter = settings.SPIDER_MAX_SEARCH_PARAMETERS
 
     for item in searchlist:
         if filter_unlisted is True and item == "_unlisted":

@@ -20,13 +20,21 @@ class WebConfig(BaseContent):
                 VariantType.persist
             ),
             "strength": 0
+        },
+        {
+            "name": "TmpConfig",
+            "ctype": (
+                VariantType.unique + VariantType.component_feature +
+                VariantType.domain_mode
+            ),
+            "strength": 5
         }
     ]
 
     config = models.TextField(default="", blank=True)
 
     @classmethod
-    def feature_urls(cls):
+    def feature_urls(cls, name):
         return [
             ActionUrl(reverse("spider_webcfg:webconfig-view"), "webcfg")
         ]
@@ -51,5 +59,5 @@ class WebConfig(BaseContent):
     def get_info(self):
         ret = super().get_info(unique=True)
         return "{}url={}\x1e".format(
-            ret, self.associated.persist_token.referrer.url
+            ret, self.associated.attached_to_token.referrer.url
         )

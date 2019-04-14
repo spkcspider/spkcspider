@@ -46,8 +46,7 @@ def list_features(graph, entity, ref_entity, context):
     )
     for feature in active_features:
         if context["scope"] != "export":
-            for url_feature, name in \
-                  feature.installed_class.cached_feature_urls():
+            for url_feature, name in feature.feature_urls:
                 url_feature = urljoin(
                     context["hostpart"],
                     url_feature

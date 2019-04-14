@@ -22,6 +22,7 @@ _empty_set = frozenset()
 
 class WebConfigView(UCTestMixin, View):
     model = WebConfig
+    require_persist = True
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -39,18 +40,11 @@ class WebConfigView(UCTestMixin, View):
             raise Http404()
         self.request.auth_token = get_object_or_404(
             AuthToken,
-            token=token,
-            persist__gte=0
+            token=token
         )
-        if (
-            not self.request.auth_token.referrer or
-            "persist" not in self.request.auth_token.extra.get(
-                "intentions", _empty_set
-            )
-        ):
+        if not self.request.auth_token.referrer:
             raise Http404()
-        usercomponent = self.request.auth_token.usercomponent
-        return usercomponent
+        return self.request.auth_token.usercomponent
 
     def test_func(self):
         return True
@@ -59,11 +53,23 @@ class WebConfigView(UCTestMixin, View):
         variant = self.usercomponent.features.filter(
             name="WebConfig"
         ).first()
+        if not variant:
+            variant = self.usercomponent.features.filter(
+                name="TmpConfig"
+            ).first()
         # can only access feature if activated even WebConfig exists already
         if not variant:
             raise Http404()
+
+        if (
+            variant == "WebConfig" and
+            "persist" not in self.request.auth_token.extra.get(
+                "intentions", _empty_set
+            )
+        ):
+            raise Http404()
         ret = AssignedContent.objects.filter(
-            persist_token=self.request.auth_token
+            attached_to_token=self.request.auth_token
         ).first()
         if ret:
             return ret.content
@@ -72,7 +78,7 @@ class WebConfigView(UCTestMixin, View):
             associated_kwargs={
                 "usercomponent": self.usercomponent,
                 "ctype": variant,
-                "persist_token": self.request.auth_token
+                "attached_to_token": self.request.auth_token
             }
         )
         ret.clean()

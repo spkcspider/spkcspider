@@ -224,7 +224,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
             return None
-        return getattr(settings, "CONTENTS_PER_PAGE", 25)
+        return settings.SPIDER_OBJECTS_PER_PAGE
 
     def render_to_response(self, context):
         if context["scope"] != "export" and "raw" not in self.request.GET:
@@ -251,8 +251,11 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         if context["object_list"]:
             p = paginate_stream(
                 context["object_list"],
-                getattr(settings, "SERIALIZED_PER_PAGE", 50),
-                getattr(settings, "SERIALIZED_MAX_DEPTH", 5)
+                getattr(
+                    settings, "SPIDER_SERIALIZED_PER_PAGE",
+                    settings.SPIDER_OBJECTS_PER_PAGE
+                ),
+                settings.SPIDER_MAX_EMBED_DEPTH
             )
         else:
             # no content, pagination works here only this way

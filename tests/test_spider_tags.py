@@ -247,7 +247,7 @@ class TagTest(TransactionWebTest):
                 break
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        urls = home.features.first().installed_class.cached_feature_urls()
+        urls = home.features.first().feature_urls
         self.assertEqual(len(urls), 1)
         pushed_url = urls[0].url
         response = response.click(

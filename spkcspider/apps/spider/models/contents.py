@@ -49,7 +49,7 @@ class PersistenceFeature(BaseContent):
         abstract = True
 
     @classmethod
-    def feature_urls(cls):
+    def feature_urls(cls, name):
         return [
             ActionUrl(
                 reverse("spider_base:token-renew"),

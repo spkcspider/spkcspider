@@ -39,7 +39,7 @@
     <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
   {% endif %}
   {% for f in active_features %}
-    {% for action in f.installed_class.cached_feature_urls %}
+    {% for action in f.feature_urls %}
       <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
         <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{action.name}}</data>
       </data>

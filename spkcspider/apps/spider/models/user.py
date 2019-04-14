@@ -226,6 +226,9 @@ class UserComponent(models.Model):
 
     def clean(self):
         _ = gettext
+        self.description = self.description[
+            :settings.SPIDER_MAX_DESCRIPTION_LENGTH
+        ]
         self.public = (self.public and self.is_public_allowed)
         self.featured = (self.featured and self.public)
         assert(self.is_index or self.strength < 10)

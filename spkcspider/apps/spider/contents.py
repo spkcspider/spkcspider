@@ -201,16 +201,16 @@ class BaseContent(models.Model):
         return 0
 
     @classmethod
-    def feature_urls(cls):
+    def feature_urls(cls, name):
         """ For implementing component features """
         return []
 
     @classmethod
     @lru_cache(typed=True)
-    def cached_feature_urls(cls):
+    def cached_feature_urls(cls, name):
         return list(map(
             lambda x: ActionUrl(*x),
-            cls.feature_urls()
+            cls.feature_urls(name)
         ))
 
     def get_content_name(self):
@@ -474,8 +474,11 @@ class BaseContent(models.Model):
 
         p = paginate_stream(
             AssignedContent.objects.filter(id=self.associated.id),
-            getattr(settings, "SERIALIZED_PER_PAGE", 50),
-            getattr(settings, "SERIALIZED_MAX_DEPTH", 20)
+            getattr(
+                settings, "SPIDER_SERIALIZED_PER_PAGE",
+                settings.SPIDER_OBJECTS_PER_PAGE
+            ),
+            settings.SPIDER_MAX_EMBED_DEPTH
         )
         page = 1
         try:

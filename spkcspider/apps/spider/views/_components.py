@@ -93,7 +93,7 @@ class ComponentIndexBase(ListView):
         if self.scope == "export" or "raw" in self.request.GET:
             # are later paginated and ordered
             return None
-        return getattr(settings, "COMPONENTS_PER_PAGE", 25)
+        return settings.SPIDER_OBJECTS_PER_PAGE
 
     def render_to_response(self, context):
         if self.scope != "export" and "raw" not in self.request.GET:
@@ -118,24 +118,31 @@ class ComponentIndexBase(ListView):
 
         if embed:
             # embed empty components
-            per_page = getattr(settings, "SERIALIZED_PER_PAGE", 50) // 2
+            per_page = getattr(
+                settings,
+                "SPIDER_SERIALIZED_PER_PAGE",
+                settings.SPIDER_OBJECTS_PER_PAGE
+            ) // 2
             p = [
                 paginate_stream(
                     self.get_queryset_contents(),
                     per_page,
-                    getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
+                    settings.SPIDER_MAX_EMBED_DEPTH
                 ),
                 paginate_stream(
                     context["object_list"],  # empty components
                     per_page,
-                    getattr(settings, "SERIALIZED_MAX_DEPTH", 5),
+                    settings.SPIDER_MAX_EMBED_DEPTH
                 )
             ]
         else:
             p = [paginate_stream(
                 context["object_list"],
-                getattr(settings, "SERIALIZED_PER_PAGE", 50),
-                getattr(settings, "SERIALIZED_MAX_DEPTH", 5)
+                getattr(
+                    settings, "SPIDER_SERIALIZED_PER_PAGE",
+                    settings.SPIDER_OBJECTS_PER_PAGE
+                ),
+                settings.SPIDER_MAX_EMBED_DEPTH
             )]
         page = 1
         try:

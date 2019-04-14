@@ -130,7 +130,7 @@ def MovePersistentCb(sender, tokens, to, **kwargs):
     from django.apps import apps
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
     AssignedContent.objects.filter(
-        persist_token__in=tokens
+        attached_to_token__in=tokens
     ).update(usercomponent=to)
 
 
