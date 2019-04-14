@@ -20,5 +20,5 @@ matrix:
       env: DJANGO="master"
     - python: "3.7"
       env: DJANGO="master"
-install: pip install -e .[debug]
+install: pip install -e ".[debug]"
 script: ./manage.py test
