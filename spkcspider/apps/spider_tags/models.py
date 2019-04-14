@@ -238,7 +238,7 @@ class SpiderTag(BaseContent):
         ]
 
     def get_content_description(self):
-        self.layout.get_description()
+        return self.layout.get_description()
 
     def get_content_name(self):
         if not self.layout.usertag:

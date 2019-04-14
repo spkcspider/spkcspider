@@ -227,10 +227,11 @@ class AssignedContent(BaseInfoModel):
             return 0
         return self.content.get_size()
 
-    def get_description(self):
+    def localized_description(self):
+        """ """
         if not self.content:
             return self.description
-        return self.content.transformed_description()
+        return self.content.localized_description()
 
     def clean(self):
         _ = gettext

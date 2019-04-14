@@ -1,6 +1,4 @@
 
-let $ = jQuery.noConflict();
-
 document.addEventListener("DOMContentLoaded", function(){
   $('.TrumbowygTarget').trumbowyg({
     imageWidthModalEdit: true,

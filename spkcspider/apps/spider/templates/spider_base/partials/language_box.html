@@ -3,16 +3,13 @@
 
 {% get_current_language as LANGUAGE_CODE %}
 {% language "en" %}
-<form onsubmit="window.location.href = `/${this.language.value}{% current_url %}`;return false;">
-    <select name="language" {{attrs}}>
-        {% get_available_languages as LANGUAGES %}
-        {% get_language_info_list for LANGUAGES as languages %}
-        {% for language in languages %}
-            <option value="{{language.code}}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
-                {{ language.name_local }} ({{ language.code }})
-            </option>
-        {% endfor %}
-    </select>
-    <input type="submit" value="{% trans 'Go' %}">
-</form>
+<select onchange="if(this.value=='en'){window.location.href = '{% current_url %}'} else {window.location.href = `/${this.value}{% current_url %}`};return false;" {{attrs}}>
+    {% get_available_languages as LANGUAGES %}
+    {% get_language_info_list for LANGUAGES as languages %}
+    {% for language in languages %}
+        <option value="{{language.code}}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+            {{ language.name_local }} ({{ language.code }})
+        </option>
+    {% endfor %}
+</select>
 {% endlanguage %}

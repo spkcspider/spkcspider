@@ -41,8 +41,8 @@
       </div>
     </div>
   {% endif %}
-  <div class="w3-bar-item w3-tiny w3-hide-small">
-    {% include "spider_base/partials/language_box.html" with attrs=" style=\"width:120px\"" %}
+  <div class="w3-bar-item w3-tiny w3-hide-small" style="height:38.5px">
+    {% include "spider_base/partials/language_box.html" with attrs=" style=\"width:150px\"" %}
   </div>
   {% if request.user.is_authenticated %}
     <div class="w3-right w3-dropdown-hover w3-dropdown-click w3-black">
@@ -91,7 +91,9 @@
       </a>
     {% endif %}
   {% endif %}
-  <div class="w3-bar-item w3-hide-medium">
-    {% include "spider_base/partials/language_box.html" with attrs=" style=\"width:150px\"" %}
+</div>
+<div class="w3-bar w3-black w3-hide-medium w3-hide-large">
+  <div class="w3-bar-item">
+    {% include "spider_base/partials/language_box.html" %}
   </div>
 </div>

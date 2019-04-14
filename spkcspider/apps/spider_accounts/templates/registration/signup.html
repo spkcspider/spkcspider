@@ -2,11 +2,11 @@
 {% load i18n static %}
 {% block main_classes %}{{block.super}} w3-animate-bottom{% endblock %}
 {% block content %}
-  <h2>{% trans 'Sign up' %}</h2>
   <form action="{{ app_path }}" method="post">
     {% csrf_token %}
     {# don't annotate (correctly) for making it harder for bots #}
     <fieldset>
+      <legend><h1>{% trans 'Sign up' %}</h1></legend>
       {% include "spider_base/partials/base_form.html" with form=form %}
     </fieldset>
     <button class="w3-button w3-grey" type="submit">{% trans 'Sign up' %}</button><br/>

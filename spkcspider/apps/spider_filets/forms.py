@@ -130,7 +130,8 @@ class TextForm(forms.ModelForm):
 
     class Media:
         js = [
-            'spider_filets/licensechooser.js'
+            'spider_filets/licensechooser.js',
+            'spider_filets/description_helper.js'
         ]
 
     def __init__(self, request, source, scope, initial=None, **kwargs):

@@ -5,9 +5,9 @@
 {% block public_meta %}
   {{block.super}}
   {% if scope == "list" %}
-    <meta name="description" content="{{uc.description|escape}}" />
+    <meta name="description" content="{{uc.description|escape}}"/>
   {% else %}
-    <meta name="description" content="{{object.get_description|escape}}" />
+    <meta name="description" content="{{object.localized_description|escape}}"/>
   {% endif %}
 {% endblock %}
 

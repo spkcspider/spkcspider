@@ -32,8 +32,9 @@ def TriggerUpdate(sender, **_kwargs):
 
 def DeleteContentCb(sender, instance, **_kwargs):
     # connect if your content object can be deleted without AssignedContent
-    from .models import AssignedContent
-    from django.contrib.contenttypes.models import ContentType
+    from django.apps import apps
+    ContentType = apps.get_model("contenttypes", "ContentType")
+    AssignedContent = apps.get_model("spider_base", "AssignedContent")
 
     AssignedContent.objects.filter(
         object_id=instance.id,
@@ -178,6 +179,8 @@ def UpdateSpiderCb(**_kwargs):
             row.name = row.content.get_content_name()
         if not row.content.expose_description:
             row.description = row.content.get_content_description()
+        assert(row.description is not None)
+        assert(row.name is not None)
         row.save(update_fields=['name', 'description', 'info', "token"])
 
     for row in UserComponent.objects.all():
@@ -195,9 +198,13 @@ def UpdateSpiderCb(**_kwargs):
 
 
 def InitUserCb(sender, instance, raw=False, **kwargs):
+    from django.apps import apps
     if raw:
         return
-    from .models import UserComponent, Protection, UserInfo
+
+    Protection = apps.get_model("spider_base", "Protection")
+    UserComponent = apps.get_model("spider_base", "UserComponent")
+    UserInfo = apps.get_model("spider_base", "UserInfo")
 
     # overloaded get_or_create calculates strength, ...
     uc = UserComponent.objects.get_or_create(
@@ -240,7 +247,9 @@ def InitUserCb(sender, instance, raw=False, **kwargs):
 
 
 def RemoveTokensLogout(sender, user, request, **kwargs):
-    from .models import AuthToken
+    from django.apps import apps
+
+    AuthToken = apps.get_model("spider_base", "AuthToken")
     AuthToken.objects.filter(
         created_by_special_user=user,
         session_key=request.session.session_key

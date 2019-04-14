@@ -1,2 +1,1 @@
-<div{% include "spider_base/forms/widgets/wrapper_attrs.html" %}><textarea name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
-{% if widget.value %}{{ widget.value }}{% endif %}</textarea></div>
+<div{% include "spider_base/forms/widgets/wrapper_attrs.html" %}><textarea name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>{% if widget.value %}{{ widget.value }}{% endif %}</textarea></div>
