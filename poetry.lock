@@ -321,11 +321,11 @@ version = "1.12.0"
 
 [[package]]
 category = "dev"
-description = "A CSS4 selector implementation for Beautiful Soup."
+description = "A modern CSS selector implementation for Beautiful Soup."
 name = "soupsieve"
 optional = false
 python-versions = "*"
-version = "1.9"
+version = "1.9.1"
 
 [[package]]
 category = "dev"
@@ -460,7 +460,7 @@ pytz = ["303879e36b721603cc54604edcac9d20401bdbe31e1e4fdee5b9f98d5d31dfda", "d74
 rdflib = ["58d5994610105a457cff7fdfe3d683d87786c5028a45ae032982498a7e913d6f", "da1df14552555c5c7715d8ce71c08f404c988c58a1ecd38552d0da4fc261280d"]
 requests = ["502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e", "7bf2a778576d825600030a110f3c0e3e8edc51dfaafe1c146e39a2027784957b"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
-soupsieve = ["3aef141566afd07201b525c17bfaadd07580a8066f82b57f7c9417f26adbd0a3", "e41a65e99bd125972d84221022beb1e4b5cfc68fa12c170c39834ce32d1b294c"]
+soupsieve = ["6898e82ecb03772a0d82bd0d0a10c0d6dcc342f77e0701d0ec4a8271be465ece", "b20eff5e564529711544066d7dc0f7661df41232ae263619dede5059799cdfca"]
 sqlalchemy = ["d5432832f91d200c3d8b473a266d59442d825f9ea744c467e68c5d9a9479fbce"]
 sqlparse = ["40afe6b8d4b1117e7dff5504d7a8ce07d9a1b15aeeade8a2d10f130a834f8177", "7c3dca29c022744e95b547e867cee89f4fce4373f3549ccd8797d8eb52cdb873"]
 urllib3 = ["06330f386d6e4b195fbfc736b297f58c5a892e4440e54d294d7004e3a9bbea1b", "cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f"]
