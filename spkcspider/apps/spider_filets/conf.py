@@ -23,15 +23,11 @@ if not callable(DEFAULT_LICENSE_FILE):
         return _DEFAULT_LICENSE_FILE
 
 LICENSE_CHOICES_TEXT = getattr(
-    settings, "SPIDER_LICENSE_CHOICES_TEXT", {
-        "other": (_("Other"), ""),
-        "pd": (_("Public Domain"), _("Public Domain"))
-    }
+    settings, "SPIDER_LICENSE_CHOICES_TEXT", LICENSE_CHOICES_FILE
 )
 
 DEFAULT_LICENSE_TEXT = getattr(
-    settings, "DEFAULT_LICENSE_TEXT",
-    lambda uc, user: "pd"
+    settings, "SPIDER_DEFAULT_LICENSE_TEXT", DEFAULT_LICENSE_FILE
 )
 
 if not callable(DEFAULT_LICENSE_TEXT):

@@ -10,6 +10,11 @@ document.addEventListener("DOMContentLoaded", function(){
   let target = document.getElementById("id_license");
   if(el.value != "other"){
     target.disabled = true;
+    try{
+      target.value = licenses[el.value];
+    } catch(e){
+      console.log(e);
+    }
   }
   el.addEventListener("change", function(event){
     if(event.target.value == "other"){

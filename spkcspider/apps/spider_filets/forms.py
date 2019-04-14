@@ -2,6 +2,7 @@ __all__ = ["FileForm", "TextForm", "RawTextForm"]
 
 from django.db import models
 from django.conf import settings
+from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from django import forms
 
@@ -86,15 +87,16 @@ class FileForm(forms.ModelForm):
             return
         self.fields["file"].editable = False
         self.fields["name"].editable = False
-        self.fields["license_name"].editable = False
-        self.fields["license"].editable = False
-        # sources stay enabled
-        self.fields["sources"].editable = True
 
     def clean(self):
         ret = super().clean()
         if "file" not in ret:
             return ret
+        if self.cleaned_data["license_name"] != "other":
+            with translation.override(None):
+                self.cleaned_data["license"] = str(LICENSE_CHOICES_FILE[
+                    self.cleaned_data["license_name"]
+                ][1])
         # has to raise ValidationError
         get_settings_func(
             "UPLOAD_FILTER_FUNC",
@@ -161,12 +163,25 @@ class TextForm(forms.ModelForm):
 
         del self.fields["editable_from"]
         del self.fields["push"]
+        self.fields["license_name"].editable = False
+        self.fields["license"].editable = False
 
         allow_edit = False
         if scope == "update_guest":
             allow_edit = True
 
-        self.fields["text"].disabled = not allow_edit
+        self.fields["text"].editable = allow_edit
+        # sources stay enabled
+        self.fields["sources"].editable = allow_edit
+
+    def clean(self):
+        ret = super().clean()
+        if self.cleaned_data["license_name"] != "other":
+            with translation.override(None):
+                self.cleaned_data["license"] = str(LICENSE_CHOICES_FILE[
+                    self.cleaned_data["license_name"]
+                ][1])
+        return ret
 
 
 class RawTextForm(forms.ModelForm):

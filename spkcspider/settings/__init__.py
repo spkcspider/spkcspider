@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 
+from django.utils.translation import gettext_lazy as _
 from cryptography.hazmat.primitives import hashes
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -239,6 +240,22 @@ SPIDER_SERIALIZED_PER_PAGE = 50
 SPIDER_MAX_EMBED_DEPTH = 5
 # how many search parameters are allowed
 SPIDER_MAX_SEARCH_PARAMETERS = 30
+# licences for media
+SPIDER_LICENSE_CHOICES_FILE = {
+    "pd": (_("Public Domain"), _("Public Domain")),
+    "CC BY": (_("CC BY"), _("Creative Commons by-name")),
+    "CC BY-SA": (_("CC BY-SA"), _("Creative Commons name, share alike")),
+    "CC BY-ND": (_("CC BY-ND"), ""),
+    "CC BY-NC": (_("CC BY-NC"), ""),
+    "CC BY-NC-SA": (_("CC BY-NC-SA"), ""),
+    "CC BY-NC-ND": (_("CC BY-NC-ND"), ""),
+    "other": (_("Other"), ""),
+}
+SPIDER_DEFAULT_LICENSE_FILE = "CC BY"
+
+# licences for text (default file licenses are used)
+# SPIDER_LICENSE_CHOICES_TEXT
+# SPIDER_DEFAULT_LICENSE_TEXT
 
 # disable when importing backup
 # ease deploy
