@@ -48,11 +48,17 @@ class TagLayout(models.Model):
         "spider_tags.UserTagLayout", on_delete=models.CASCADE,
         related_name="layout", null=True, blank=True
     )
+    description = models.TextField(default="", blank=True)
 
     class Meta(object):
         unique_together = [
             ("name", "usertag")
         ]
+
+    def get_description(self):
+        if self.usertag:
+            return self.usertag.associated.description
+        return self.description
 
     def full_clean(self, **kwargs):
         # checked with clean
@@ -114,12 +120,17 @@ class UserTagLayout(BaseContent):
         }
     ]
     expose_name = False
+    expose_description = True
 
     def get_content_name(self):
         return "%s: %s" % (
             self.layout.name,
             self.associated.usercomponent.username
         )
+
+    def localized_description(self):
+        """ localize and perform other transforms before rendering to user """
+        return gettext(self.associated.description)
 
     def get_size(self):
         return len(str(self.layout.layout).encode("utf8"))
@@ -201,6 +212,9 @@ class SpiderTag(BaseContent):
     )
     primary = models.BooleanField(default=False, blank=True)
 
+    expose_name = False
+    expose_description = False
+
     def __str__(self):
         if not self.id:
             return self.localize_name(self.associated.ctype.name)
@@ -222,6 +236,14 @@ class SpiderTag(BaseContent):
         return [
             ActionUrl(reverse("spider_tags:create-pushtag"), "pushtag")
         ]
+
+    def get_content_description(self):
+        self.layout.get_description()
+
+    def get_content_name(self):
+        if not self.layout.usertag:
+            return self.layout.name
+        return self.layout.usertag.get_content_name()
 
     def get_template_name(self, scope):
         if scope == "update":

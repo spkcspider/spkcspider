@@ -222,6 +222,12 @@ class BaseContent(models.Model):
     def get_content_description(self):
         return " "
 
+    def localized_description(self):
+        """ localize and perform other transforms before rendering to user """
+        if not self.expose_description:
+            return self.associated.description
+        return gettext(self.associated.description)
+
     def get_strength(self):
         """ get required strength """
         return self.associated.ctype.strength

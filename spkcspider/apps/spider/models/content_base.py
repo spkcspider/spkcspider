@@ -227,6 +227,11 @@ class AssignedContent(BaseInfoModel):
             return 0
         return self.content.get_size()
 
+    def get_description(self):
+        if not self.content:
+            return self.description
+        return self.content.transformed_description()
+
     def clean(self):
         _ = gettext
         if VariantType.persist.value in self.ctype.ctype:
