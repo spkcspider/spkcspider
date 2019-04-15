@@ -231,7 +231,7 @@ SPIDER_BLACKLISTED_MODULES = [
 ]
 
 # max description length (stripped)
-SPIDER_MAX_DESCRIPTION_LENGTH = 500
+SPIDER_MAX_DESCRIPTION_LENGTH = 200
 # how many user components/contents per page
 SPIDER_OBJECTS_PER_PAGE = 25
 # how many raw/serialized results per page?

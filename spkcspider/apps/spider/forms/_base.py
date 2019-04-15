@@ -71,6 +71,11 @@ class UserComponentForm(forms.ModelForm):
         }
         widgets = {
             'features': forms.CheckboxSelectMultiple(),
+            'description': forms.Textarea(
+                attrs={
+                    "maxlength": settings.SPIDER_MAX_DESCRIPTION_LENGTH+1
+                }
+            )
 
         }
 
@@ -151,6 +156,14 @@ class UserComponentForm(forms.ModelForm):
             if not protection.is_valid():
                 isvalid = False
         return isvalid
+
+    def clean_description(self):
+        value = self.cleaned_data.get("description", "").strip()
+        if len(value) > settings.SPIDER_MAX_DESCRIPTION_LENGTH:
+            return "{}…".format(
+                value[:settings.SPIDER_MAX_DESCRIPTION_LENGTH]
+            )
+        return value
 
     def clean(self):
         ret = super().clean()
@@ -327,6 +340,11 @@ class UserContentForm(forms.ModelForm):
         }
         widgets = {
             'features': forms.CheckboxSelectMultiple(),
+            'description': forms.Textarea(
+                attrs={
+                    "maxlength": settings.SPIDER_MAX_DESCRIPTION_LENGTH+1
+                }
+            )
 
         }
 
@@ -394,6 +412,17 @@ class UserContentForm(forms.ModelForm):
 
         if not show_primary_anchor_mig:
             del self.fields["migrate_primary_anchor"]
+
+    def clean_description(self):
+        value = self.cleaned_data.get("description", "")
+        if not self.expose_description:
+            return value
+        value = value.strip()
+        if len(value) > settings.SPIDER_MAX_DESCRIPTION_LENGTH:
+            return "{}…".format(
+                value[:settings.SPIDER_MAX_DESCRIPTION_LENGTH]
+            )
+        return value
 
     def clean(self):
         super().clean()

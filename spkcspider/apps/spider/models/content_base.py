@@ -10,7 +10,6 @@ __all__ = [
 
 import logging
 
-from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext, gettext_lazy as _
 from django.urls import reverse
@@ -240,9 +239,6 @@ class AssignedContent(BaseInfoModel):
 
     def clean(self):
         _ = gettext
-        self.description = self.description[
-            :settings.SPIDER_MAX_DESCRIPTION_LENGTH
-        ]
         if VariantType.persist.value in self.ctype.ctype:
             if not self.attached_to_token:
                 raise ValidationError(
