@@ -415,7 +415,7 @@ class UserContentForm(forms.ModelForm):
 
     def clean_description(self):
         value = self.cleaned_data.get("description", "")
-        if not self.expose_description:
+        if not self.instance.content.expose_description:
             return value
         value = value.strip()
         if len(value) > settings.SPIDER_MAX_DESCRIPTION_LENGTH:
