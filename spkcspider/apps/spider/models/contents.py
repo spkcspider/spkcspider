@@ -68,6 +68,8 @@ class LinkContent(BaseContent):
         "name": "Link",
         "ctype": VariantType.raw_update.value
     }]
+    expose_name = False
+    expose_description = False
 
     content = models.ForeignKey(
         "spider_base.AssignedContent", related_name="+",

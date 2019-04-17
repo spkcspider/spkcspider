@@ -133,7 +133,10 @@ class UserTagLayout(BaseContent):
         return gettext(self.associated.description)
 
     def get_size(self):
-        return len(str(self.layout.layout).encode("utf8"))
+        s = super().get_size()
+        s += len(str(self.layout.default_verifiers))
+        s += len(str(self.layout.layout))
+        return s
 
     def get_template_name(self, scope):
         if scope == "view":
@@ -253,7 +256,10 @@ class SpiderTag(BaseContent):
         return super().get_template_name(scope)
 
     def get_size(self):
-        return len(str(self.tagdata).encode("utf8"))
+        s = super().get_size()
+        s += len(str(self.verified_by))
+        s += len(str(self.tagdata))
+        return s
 
     def get_strength_link(self):
         return 0

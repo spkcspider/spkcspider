@@ -195,7 +195,11 @@ class BaseContent(models.Model):
         )
 
     def get_size(self):
-        return 0
+        # 255 = length name no matter what encoding
+        s = 255
+        if self.expose_description:
+            s += len(self.associated.description)
+        return s
 
     def get_priority(self):
         return 0

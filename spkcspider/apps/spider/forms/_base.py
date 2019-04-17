@@ -167,12 +167,23 @@ class UserComponentForm(forms.ModelForm):
 
     def clean(self):
         ret = super().clean()
+        assert(self.instance.user)
         self.cleaned_data["can_auth"] = False
         self.cleaned_data["allow_domain_mode"] = False
         if 'name' not in self.cleaned_data:
             # ValidationError so return, calculations won't work here
             return
-        if not self.instance or not getattr(self.instance, "id", None):
+
+        if not getattr(self.instance, "id", None):
+            quota = self.instance.get_component_quota()
+            if UserComponent.objects.filter(
+                user=self.instance.user
+            ).count() >= quota:
+                raise forms.ValidationError(
+                    _("Maximal amount of usercomponents reached %(amount)s."),
+                    code='quota_exceeded',
+                    params={'amount': quota},
+                )
             # TODO: cleanup into protected_names/forbidden_names
             if self.cleaned_data['name'] in protected_names:
                 raise forms.ValidationError(
@@ -189,7 +200,7 @@ class UserComponentForm(forms.ModelForm):
         if not self.cleaned_data["public"]:
             self.cleaned_data["strength"] += 5
 
-        if self.instance and getattr(self.instance, "id", None):
+        if getattr(self.instance, "id", None):
             # instant fail strength
             fail_strength = 0
             # regular protections strength

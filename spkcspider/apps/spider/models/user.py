@@ -224,11 +224,18 @@ class UserComponent(models.Model):
     def __repr__(self):
         return "<UserComponent: (%s: %s)>" % (self.username, self.__str__())
 
+    def get_component_quota(self):
+        return get_settings_func(
+            "SPIDER_GET_QUOTA",
+            "spkcspider.apps.spider.functions.get_quota"
+        )(self.user, "usercomponents")
+
     def clean(self):
         _ = gettext
         self.public = (self.public and self.is_public_allowed)
         self.featured = (self.featured and self.public)
         assert(self.is_index or self.strength < 10)
+
         obj = self.contents.filter(
             strength__gt=self.strength
         ).order_by("strength").last()

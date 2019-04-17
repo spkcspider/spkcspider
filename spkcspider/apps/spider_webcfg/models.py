@@ -33,6 +33,9 @@ class WebConfig(BaseContent):
 
     config = models.TextField(default="", blank=True)
 
+    def get_content_name(self):
+        return self.associated.attached_to_token.referrer.url[:255]
+
     @classmethod
     def feature_urls(cls, name):
         return [
@@ -40,7 +43,7 @@ class WebConfig(BaseContent):
         ]
 
     def get_size(self):
-        return len(self.config)
+        return super().get_size() + len(self.config)
 
     def get_priority(self):
         # low priority

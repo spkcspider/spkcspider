@@ -203,6 +203,8 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # SPIDER_GET_QUOTA
 # SPIDER_USER_QUOTA_LOCAL
 # SPIDER_USER_QUOTA_REMOTE
+## in units  # noqa: E266
+# SPIDER_USER_QUOTA_USERCOMPONENTS
 
 # unbreak old links after switch to a new machine friendly url layout
 SPIDER_LEGACY_REDIRECT = True

@@ -2,7 +2,6 @@ __all__ = ["FileForm", "TextForm", "RawTextForm"]
 
 from django.db import models
 from django.conf import settings
-from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from django import forms
 
@@ -65,12 +64,15 @@ class FileForm(forms.ModelForm):
         setattr(self.fields['file'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
-        raw_value = self.initial.get("license_name", "other")
-        value = self.fields['license_name'].to_python(raw_value)
+        value = self.fields['license_name'].to_python(
+            self.initial["license_name"]
+        )
         if value == "other":
             setattr(self.fields['license'], "hashable", True)
         else:
             setattr(self.fields['license_name'], "hashable", True)
+            self.fields['license'].initial = \
+                LICENSE_CHOICES_FILE[value][1]
         if request.user.is_superuser:
             # no upload limit
             pass
@@ -93,10 +95,7 @@ class FileForm(forms.ModelForm):
         if "file" not in ret:
             return ret
         if self.cleaned_data["license_name"] != "other":
-            with translation.override(None):
-                self.cleaned_data["license"] = str(LICENSE_CHOICES_FILE[
-                    self.cleaned_data["license_name"]
-                ][1])
+            self.cleaned_data["license"] = ""
         # has to raise ValidationError
         get_settings_func(
             "UPLOAD_FILTER_FUNC",
@@ -143,6 +142,11 @@ class TextForm(forms.ModelForm):
             "license_name", DEFAULT_LICENSE_TEXT(source, request.user)
         )
         super().__init__(initial=initial, **kwargs)
+        value = self.fields['license_name'].to_python(
+            self.initial["license_name"]
+        )
+        if value != "other":
+            self.fields['license'].initial = LICENSE_CHOICES_FILE[value][1]
         if scope in ("add", "update"):
             self.fields["editable_from"].help_text = \
                 _(
@@ -177,10 +181,7 @@ class TextForm(forms.ModelForm):
     def clean(self):
         ret = super().clean()
         if self.cleaned_data["license_name"] != "other":
-            with translation.override(None):
-                self.cleaned_data["license"] = str(LICENSE_CHOICES_FILE[
-                    self.cleaned_data["license_name"]
-                ][1])
+            self.cleaned_data["license"] = ""
         return ret
 
 
@@ -201,8 +202,9 @@ class RawTextForm(forms.ModelForm):
         setattr(self.fields['text'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
-        raw_value = self.initial.get("license_name", "other")
-        value = self.fields['license_name'].to_python(raw_value)
+        value = self.fields['license_name'].to_python(
+            self.initial.get("license_name", "other")
+        )
         if value == "other":
             setattr(self.fields['license'], "hashable", True)
         else:

@@ -72,6 +72,12 @@ class ContentWithLicense(BaseContent):
             self.license_name, (_(self.license_name), "")
         )[0]
 
+    def get_size(self):
+        s = super().get_size()
+        s += len(str(self.sources))
+        s += len(self.license)
+        return s
+
 
 @add_content
 class FileFilet(ContentWithLicense):
@@ -88,7 +94,7 @@ class FileFilet(ContentWithLicense):
         return 'spider_base/view_form.html'
 
     def get_size(self):
-        return self.file.size
+        return self.file.size + super().get_size()
 
     def get_content_name(self):
         # in case no name is set
@@ -237,7 +243,7 @@ class TextFilet(ContentWithLicense):
         )
 
     def get_size(self):
-        return len(self.text.encode("utf8"))
+        return len(self.text.encode("utf8")) + super().get_size()
 
     def get_form(self, scope):
         if scope in ("raw", "export", "list"):
