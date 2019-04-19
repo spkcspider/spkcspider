@@ -105,92 +105,92 @@ main.footer-fix{
 
 .color-fresh-contentvariant{
   /* pale green more green */
-  color:#000!important;
-  background-color:#d9ffb3!important;
+  color:#000;
+  background-color:#d9ffb3;
 }
 
 .color-used-contentvariant{
   /* pale green more blue */
-  color:#000!important;
-  background-color:#ddffdd!important;
+  color:#000;
+  background-color:#ddffdd;
 }
 
 
 .color-used-and-unique-contentvariant{
   /* orange */
-  color:#000!important;
-  background-color:#ffe6b3!important;
+  color:#000;
+  background-color:#ffe6b3;
 }
 
 
 .color-front-0{
   /* pale blue */
-  color:#000!important;
-  background-color:#ddffff!important;
+  color:#000;
+  background-color:#ddffff;
 }
 
 .color-back-0{
   /* blue */
-  color:#fff!important;
-  background-color:#2196F3!important;
+  color:#fff;
+  background-color:#2196F3;
 }
 
 .color-front-1, .color-front-2, .color-front-3, .color-front-4{
   /* pale blue2 */
-  color:#000!important;
-  background-color:#ccf5ff!important;
+  color:#000;
+  background-color:#ccf5ff;
 }
 
 .color-back-1, .color-back-2, .color-back-3, .color-back-4{
   /* blue2 */
-  color:#fff!important;
-  background-color:#005266!important;
+  color:#fff;
+  background-color:#005266;
 }
 
 .color-front-5{
   /* pale green */
-  color:#000!important;
-  background-color:#ddffdd!important;
+  color:#000;
+  background-color:#ddffdd;
 }
 
 .color-back-5{
   /* green */
-  color:#fff!important;
-  background-color:#4CAF50!important;
+  color:#fff;
+  background-color:#4CAF50;
 }
 
 .color-front-6, .color-front-7, .color-front-8{
   /* pale green */
-  color:#000!important;
-  background-color:#d9ffb3!important;
+  color:#000;
+  background-color:#d9ffb3;
 }
 
 .color-back-6, .color-back-7, .color-back-8{
   /* green */
-  color:#fff!important;
-  background-color:#264d00!important;
+  color:#fff;
+  background-color:#264d00;
 }
 
 .color-front-9{
   /* pale violet */
-  color:#000!important;
-  background-color:#ffccff!important;
+  color:#000;
+  background-color:#ffccff;
 }
 
 .color-back-9{
   /* dark violet */
-  color:#fff!important;
-  background-color:#660066!important;
+  color:#fff;
+  background-color:#660066;
 }
 
 .color-front-10{
   /* pale yellow */
-  color:#000!important;
-  background-color:#ffffcc!important;
+  color:#000;
+  background-color:#ffffcc;
 }
 
 .color-back-10{
   /* yellow */
-  color:#000!important;
-  background-color:#ffeb3b!important;
+  color:#000;
+  background-color:#ffeb3b;
 }

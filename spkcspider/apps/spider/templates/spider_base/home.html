@@ -72,7 +72,7 @@
   </div>
   <div class="page-manipulation w3-padding" style="margin-top:40px">
     {% url 'spider_base:ucomponent-listpublic' as searchpath %}
-    {% include 'spider_base/list_footer.html' with searchpath=searchpath %}
+    {% include 'spider_base/partials/list_footer.html' with searchpath=searchpath %}
   </div>
   {% endif %}
   {% endblock featured_components %}

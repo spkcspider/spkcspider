@@ -68,18 +68,12 @@
 {% endif %}
 
 <script>
-jQuery.noConflict();
-var list_footer_scripts_initialized = false;
-
-jQuery( document ).ready(function( $ ) {
-  if (list_footer_scripts_initialized)
-    return;
-  list_footer_scripts_initialized = true;
+document.addEventListener("DOMContentLoaded", function(){
   $("#search_field_list_footer").select2({
     tags: true,
     width: '80%',
-    placeholder: '{% trans "Search" %}'
+    placeholder: '{% trans "Search" %}',
+    language: document.documentElement.lang || "en",
   });
-})
-
+});
 </script>

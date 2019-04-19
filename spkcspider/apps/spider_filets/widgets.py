@@ -26,6 +26,7 @@ class LicenseChooserWidget(OpenChoiceWidget):
     def build_attrs(self, base_attrs, extra_attrs=None):
         """ add license_urls to attrs."""
         ret = super().build_attrs(base_attrs, extra_attrs)
-        d = dict(map(lambda x: (x[0], x[1]["url"])))
+        d = dict(map(lambda x: (x[0], x[1]["url"]), self.licenses.items()))
         ret["license_urls"] = json.dumps(d)
+        # ret.setdefault("style", "color:black;")
         return ret

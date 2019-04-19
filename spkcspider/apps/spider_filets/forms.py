@@ -32,7 +32,9 @@ class FileForm(forms.ModelForm):
     license_name = OpenChoiceField(
         label=_("License"), help_text=_("Select license"),
         choices=map(_extract_choice, LICENSE_CHOICES.items()),
-        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES)
+        widget=LicenseChooserWidget(
+            licenses=LICENSE_CHOICES
+        )
     )
     sources = OpenChoiceField(
         required=False, initial=False,
