@@ -32,7 +32,9 @@
     {% block extrahead %}{% endblock %}
   </head>
 
-  <body class="bodyflex {% block body_class %}{% endblock %}">
+  <body>
+  {# use sub div instead body because of select2 uses wrong colors elsewise #}
+  <div class="bodyflex {% block body_class %}{% endblock %}">
     {# Deco content, e.g.base.html  #}
     {% block layout %}
       {% block headerbar %}
@@ -78,6 +80,6 @@
 
     {# e.g. modals #}
     {% block outercontent %}{% endblock %}
-
+  </div>
   </body>
 </html>
