@@ -243,15 +243,30 @@ SPIDER_MAX_EMBED_DEPTH = 5
 # how many search parameters are allowed
 SPIDER_MAX_SEARCH_PARAMETERS = 30
 # licences for media
-SPIDER_LICENSE_CHOICES_FILE = {
-    "pd": (_("Public Domain"), _("Public Domain")),
-    "CC BY": (_("CC BY"), _("Creative Commons by-name")),
-    "CC BY-SA": (_("CC BY-SA"), _("Creative Commons name, share alike")),
-    "CC BY-ND": (_("CC BY-ND"), ""),
-    "CC BY-NC": (_("CC BY-NC"), ""),
-    "CC BY-NC-SA": (_("CC BY-NC-SA"), ""),
-    "CC BY-NC-ND": (_("CC BY-NC-ND"), ""),
-    "other": (_("Other"), ""),
+SPIDER_LICENSE_CHOICES = {
+    "pd": {
+        "name": _("Public Domain/CC0"),
+        "url":
+            "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+    },
+    "CC BY": {
+        "url": "https://creativecommons.org/licenses/by/4.0/legalcode"
+    },
+    "CC BY-SA": {
+        "url": "https://creativecommons.org/licenses/by-sa/4.0/legalcode"
+    },
+    "CC BY-ND": {
+        "url": "https://creativecommons.org/licenses/by-nd/4.0/legalcode"
+    },
+    "CC BY-NC": {
+        "url": "https://creativecommons.org/licenses/by-nc/4.0/legalcode"
+    },
+    "CC BY-NC-SA": {
+        "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode"
+    },
+    "CC BY-NC-ND": {
+        "url": "https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode"
+    },
 }
 SPIDER_DEFAULT_LICENSE_FILE = "CC BY"
 

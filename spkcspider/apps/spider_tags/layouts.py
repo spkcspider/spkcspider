@@ -262,6 +262,30 @@ default_layouts["emergency"] = {
 }
 
 
+default_layouts["license"] = {
+    "description": _(
+        "License."
+    ),
+    "layout": [
+        {
+            "key": "license_name",
+            "label": _("Name"),
+            "localize": True,
+            "field": "CharField",
+            "required": True
+        },
+        {
+            "key": "license_body",
+            "label": _("License"),
+            "localize": True,
+            "initial": "",
+            "field": "TextareaField",
+            "required": True
+        },
+    ]
+}
+
+
 def initialize_layouts(apps=None):
     if not apps:
         from django.apps import apps

@@ -1,15 +1,17 @@
 __all__ = (
-    "DEFAULT_LICENSE_FILE", "LICENSE_CHOICES_FILE",
-    "DEFAULT_LICENSE_TEXT", "LICENSE_CHOICES_TEXT"
+    "DEFAULT_LICENSE_FILE", "DEFAULT_LICENSE_TEXT", "LICENSE_CHOICES"
 )
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-LICENSE_CHOICES_FILE = getattr(
-    settings, "SPIDER_LICENSE_CHOICES_FILE", {
-        "other": (_("Other"), ""),
-        "pd": (_("Public Domain"), _("Public Domain"))
+LICENSE_CHOICES = getattr(
+    settings, "SPIDER_LICENSE_CHOICES", {
+        "pd": {
+            "name": _("Public Domain/CC0"),
+            "url":
+                "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
+        }
     }
 )
 DEFAULT_LICENSE_FILE = getattr(
@@ -21,10 +23,6 @@ if not callable(DEFAULT_LICENSE_FILE):
 
     def DEFAULT_LICENSE_FILE(uc, user):
         return _DEFAULT_LICENSE_FILE
-
-LICENSE_CHOICES_TEXT = getattr(
-    settings, "SPIDER_LICENSE_CHOICES_TEXT", LICENSE_CHOICES_FILE
-)
 
 DEFAULT_LICENSE_TEXT = getattr(
     settings, "SPIDER_DEFAULT_LICENSE_TEXT", DEFAULT_LICENSE_FILE

@@ -26,7 +26,7 @@ from spkcspider.apps.spider.helpers import (
 )
 
 from .conf import (
-    LICENSE_CHOICES_FILE, LICENSE_CHOICES_TEXT
+    LICENSE_CHOICES
 )
 
 logger = logging.getLogger(__name__)
@@ -59,9 +59,9 @@ class ContentWithLicense(BaseContent):
     license_name = models.CharField(
         max_length=255, null=False, default="other"
     )
-    license = models.TextField(default="", blank=True)
+    license_url = models.URLField(max_length=400, blank=True, null=True)
     sources = JSONField(default=list, blank=True)
-    license_name_translation_list = None
+    license_name_translation_list = LICENSE_CHOICES
 
     class Meta(BaseContent.Meta):
         abstract = True
@@ -75,7 +75,6 @@ class ContentWithLicense(BaseContent):
     def get_size(self):
         s = super().get_size()
         s += len(str(self.sources))
-        s += len(self.license)
         return s
 
 
@@ -83,7 +82,6 @@ class ContentWithLicense(BaseContent):
 class FileFilet(ContentWithLicense):
     expose_name = True
     expose_description = True
-    license_name_translation_list = LICENSE_CHOICES_FILE
 
     appearances = [{"name": "File"}]
     file = models.FileField(upload_to=get_file_path, null=False, blank=False)
@@ -196,7 +194,6 @@ class FileFilet(ContentWithLicense):
 class TextFilet(ContentWithLicense):
     expose_name = "force"
     expose_description = True
-    license_name_translation_list = LICENSE_CHOICES_TEXT
 
     appearances = [{"name": "Text"}]
 

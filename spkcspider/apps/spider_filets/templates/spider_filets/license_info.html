@@ -10,8 +10,7 @@
     <div class="">
       <hr/>
       <div class="w3-padding">
-        <h4>{{object.full_license_name}}:</h4>
-        {{object.license}}
+        <b>{{object.full_license_name}}:</b> - <a href="{{object.license_url}}">{{object.license_url}}</a>
       </div>
       {% if object.sources %}
         <hr/>

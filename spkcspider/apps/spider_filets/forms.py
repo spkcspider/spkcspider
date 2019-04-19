@@ -9,8 +9,7 @@ from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.fields import SanitizedHtmlField
 from .models import FileFilet, TextFilet
 from .conf import (
-    DEFAULT_LICENSE_FILE, LICENSE_CHOICES_FILE,
-    DEFAULT_LICENSE_TEXT, LICENSE_CHOICES_TEXT
+    DEFAULT_LICENSE_FILE, DEFAULT_LICENSE_TEXT, LICENSE_CHOICES
 )
 from .widgets import LicenseChooserWidget
 
@@ -26,14 +25,14 @@ def check_attrs_func(tag, name, value):
 
 
 def _extract_choice(item):
-    return (item[0], item[1][0])
+    return (item[0], item[1].get("name", item[0]))
 
 
 class FileForm(forms.ModelForm):
-    license_name = forms.ChoiceField(
+    license_name = OpenChoiceField(
         label=_("License"), help_text=_("Select license"),
-        choices=map(_extract_choice, LICENSE_CHOICES_FILE.items()),
-        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES_FILE)
+        choices=map(_extract_choice, LICENSE_CHOICES.items()),
+        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES)
     )
     sources = OpenChoiceField(
         required=False, initial=False,
@@ -44,7 +43,7 @@ class FileForm(forms.ModelForm):
 
     class Meta:
         model = FileFilet
-        fields = ['file', 'license_name', 'license', 'sources']
+        fields = ['file', 'license_name', 'license_url', 'sources']
         widgets = {
             # "sources": ListWidget(item_label=_("Source"))
         }
@@ -64,15 +63,7 @@ class FileForm(forms.ModelForm):
         setattr(self.fields['file'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
-        value = self.fields['license_name'].to_python(
-            self.initial["license_name"]
-        )
-        if value == "other":
-            setattr(self.fields['license'], "hashable", True)
-        else:
-            setattr(self.fields['license_name'], "hashable", True)
-            self.fields['license'].initial = \
-                LICENSE_CHOICES_FILE[value][1]
+        setattr(self.fields['license_url'], "hashable", True)
         if request.user.is_superuser:
             # no upload limit
             pass
@@ -94,8 +85,6 @@ class FileForm(forms.ModelForm):
         ret = super().clean()
         if "file" not in ret:
             return ret
-        if self.cleaned_data["license_name"] != "other":
-            self.cleaned_data["license"] = ""
         # has to raise ValidationError
         get_settings_func(
             "UPLOAD_FILTER_FUNC",
@@ -106,10 +95,10 @@ class FileForm(forms.ModelForm):
 
 class TextForm(forms.ModelForm):
     text = SanitizedHtmlField(localize=True)
-    license_name = forms.ChoiceField(
+    license_name = OpenChoiceField(
         label=_("License"), help_text=_("Select license"),
-        choices=map(_extract_choice, LICENSE_CHOICES_TEXT.items()),
-        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES_TEXT)
+        choices=map(_extract_choice, LICENSE_CHOICES.items()),
+        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES)
     )
     sources = OpenChoiceField(
         required=False, initial=False,
@@ -122,7 +111,7 @@ class TextForm(forms.ModelForm):
         model = TextFilet
         fields = [
             'text', 'push', 'editable_from',
-            'license_name', 'license', 'sources'
+            'license_name', 'license_url', 'sources'
         ]
 
         widgets = {
@@ -142,11 +131,6 @@ class TextForm(forms.ModelForm):
             "license_name", DEFAULT_LICENSE_TEXT(source, request.user)
         )
         super().__init__(initial=initial, **kwargs)
-        value = self.fields['license_name'].to_python(
-            self.initial["license_name"]
-        )
-        if value != "other":
-            self.fields['license'].initial = LICENSE_CHOICES_FILE[value][1]
         if scope in ("add", "update"):
             self.fields["editable_from"].help_text = \
                 _(
@@ -168,7 +152,7 @@ class TextForm(forms.ModelForm):
         del self.fields["editable_from"]
         del self.fields["push"]
         self.fields["license_name"].editable = False
-        self.fields["license"].editable = False
+        self.fields["license_url"].editable = False
 
         allow_edit = False
         if scope == "update_guest":
@@ -177,12 +161,6 @@ class TextForm(forms.ModelForm):
         self.fields["text"].editable = allow_edit
         # sources stay enabled
         self.fields["sources"].editable = allow_edit
-
-    def clean(self):
-        ret = super().clean()
-        if self.cleaned_data["license_name"] != "other":
-            self.cleaned_data["license"] = ""
-        return ret
 
 
 class RawTextForm(forms.ModelForm):
@@ -193,7 +171,7 @@ class RawTextForm(forms.ModelForm):
 
     class Meta:
         model = TextFilet
-        fields = ['text', 'license_name', 'license', 'sources']
+        fields = ['text', 'license_name', 'license_url', 'sources']
 
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
@@ -202,12 +180,4 @@ class RawTextForm(forms.ModelForm):
         setattr(self.fields['text'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
-        value = self.fields['license_name'].to_python(
-            self.initial.get("license_name", "other")
-        )
-        if value == "other":
-            setattr(self.fields['license'], "hashable", True)
-        else:
-            setattr(self.fields['license_name'], "hashable", True)
-            self.fields['license'].initial = \
-                LICENSE_CHOICES_TEXT[value][1]
+        setattr(self.fields['license_url'], "hashable", True)
