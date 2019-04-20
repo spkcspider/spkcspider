@@ -20,6 +20,7 @@ from ..constants import (
 )
 from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
 from ..signals import move_persistent
+from ..widgets import Select2Widget
 
 _help_text_static_token = _("""Generate a new static token with variable strength<br/>
 Tokens protect against bruteforce and attackers<br/>
@@ -71,11 +72,18 @@ class UserComponentForm(forms.ModelForm):
         }
         widgets = {
             'features': forms.CheckboxSelectMultiple(),
+            'default_content_features': forms.CheckboxSelectMultiple(),
             'description': forms.Textarea(
                 attrs={
                     "maxlength": settings.SPIDER_MAX_DESCRIPTION_LENGTH+1
                 }
-            )
+            ),
+            'primary_anchor': Select2Widget(
+                allow_multiple_selected=False,
+                attrs={
+                    "style": "min-width: 150px; width:100%"
+                }
+            ),
 
         }
 
@@ -350,6 +358,12 @@ class UserContentForm(forms.ModelForm):
             'features': _help_text_features_contents,
         }
         widgets = {
+            'usercomponent': Select2Widget(
+                allow_multiple_selected=False,
+                attrs={
+                    "style": "min-width: 150px; width:100%"
+                }
+            ),
             'features': forms.CheckboxSelectMultiple(),
             'description': forms.Textarea(
                 attrs={

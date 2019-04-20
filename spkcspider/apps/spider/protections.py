@@ -21,7 +21,7 @@ from django.views.decorators.debug import sensitive_variables
 from .helpers import add_by_field
 from django.utils.crypto import constant_time_compare
 from .constants import ProtectionType, ProtectionResult, index_names
-from .fields import OpenChoiceField
+from .fields import MultipleOpenChoiceField
 from .widgets import OpenChoiceWidget
 
 installed_protections = {}
@@ -179,9 +179,10 @@ class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control.value
 
-    users = OpenChoiceField(
+    users = MultipleOpenChoiceField(
         label=_("Users"), required=False,
         widget=OpenChoiceWidget(
+            allow_multiple_selected=True,
             attrs={
                 "style": "min-width: 250px; width:100%"
             }
@@ -322,18 +323,20 @@ class PasswordProtection(BaseProtection):
             widget=forms.PasswordInput,
         )
 
-    passwords = OpenChoiceField(
+    passwords = MultipleOpenChoiceField(
         label=_("Passwords"), required=False,
         widget=OpenChoiceWidget(
+            allow_multiple_selected=True,
             attrs={
                 "style": "min-width: 250px; width:100%"
             }
         )
     )
 
-    auth_passwords = OpenChoiceField(
+    auth_passwords = MultipleOpenChoiceField(
         label=_("Passwords (for component authentication)"), required=False,
         widget=OpenChoiceWidget(
+            allow_multiple_selected=True,
             attrs={
                 "style": "min-width: 250px; width:100%"
             }

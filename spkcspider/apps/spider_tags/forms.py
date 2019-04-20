@@ -21,7 +21,7 @@ from rdflib import XSD
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
 
-from spkcspider.apps.spider.fields import OpenChoiceField, JsonField
+from spkcspider.apps.spider.fields import MultipleOpenChoiceField, JsonField
 from spkcspider.apps.spider.widgets import ListWidget, OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
 from spkcspider.apps.spider.models import (
@@ -48,7 +48,7 @@ class TagLayoutForm(forms.ModelForm):
             }
         )
     )
-    default_verifiers = OpenChoiceField(
+    default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(
             format_type="url", item_label=_("Url to Verifier")
         ), required=False
@@ -92,7 +92,7 @@ class TagLayoutAdminForm(forms.ModelForm):
             }
         )
     )
-    default_verifiers = OpenChoiceField(
+    default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(
             format_type="url", item_label=_("Url to Verifier")
         ), required=False
@@ -119,7 +119,7 @@ class TagLayoutAdminForm(forms.ModelForm):
 
 
 class SpiderTagForm(forms.ModelForm):
-    updateable_by = OpenChoiceField(
+    updateable_by = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
             format_type="url"
@@ -166,7 +166,7 @@ def generate_form(name, layout):
         "primary",
         _temp_field
     ))
-    _temp_field = OpenChoiceField(
+    _temp_field = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=OpenChoiceWidget(
             attrs={
@@ -177,7 +177,7 @@ def generate_form(name, layout):
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)
 
     _gen_fields.append(("updateable_by", _temp_field))
-    _temp_field = OpenChoiceField(
+    _temp_field = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
             format_type="url", item_label=_("Url to Verifier")

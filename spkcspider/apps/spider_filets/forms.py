@@ -13,8 +13,10 @@ from .conf import (
 )
 from .widgets import LicenseChooserWidget
 
-from spkcspider.apps.spider.fields import OpenChoiceField
-from spkcspider.apps.spider.widgets import ListWidget, Select2Multiple
+from spkcspider.apps.spider.fields import (
+    OpenChoiceField, MultipleOpenChoiceField
+)
+from spkcspider.apps.spider.widgets import ListWidget, Select2Widget
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -36,7 +38,7 @@ class FileForm(forms.ModelForm):
             licenses=LICENSE_CHOICES
         )
     )
-    sources = OpenChoiceField(
+    sources = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
             item_label=_("Source")
@@ -106,7 +108,7 @@ class TextForm(forms.ModelForm):
         choices=map(_extract_choice, LICENSE_CHOICES.items()),
         widget=LicenseChooserWidget(licenses=LICENSE_CHOICES)
     )
-    sources = OpenChoiceField(
+    sources = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
             item_label=_("Source")
@@ -121,7 +123,8 @@ class TextForm(forms.ModelForm):
         ]
 
         widgets = {
-            "editable_from": Select2Multiple(
+            "editable_from": Select2Widget(
+                allow_multiple_selected=True,
                 attrs={
                     "style": "min-width: 150px; width:100%"
                 }
@@ -180,7 +183,7 @@ class TextForm(forms.ModelForm):
 
 class RawTextForm(forms.ModelForm):
     name = forms.CharField()
-    sources = OpenChoiceField(
+    sources = MultipleOpenChoiceField(
         required=False, initial=False
     )
 

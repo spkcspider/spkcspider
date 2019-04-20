@@ -17,11 +17,12 @@ _extra = '' if settings.DEBUG else '.min'
 
 class LicenseChooserWidget(OpenChoiceWidget):
     licenses = None
-    allow_multiple_selected = False
 
-    def __init__(self, licenses, **kwargs):
+    def __init__(self, licenses, allow_multiple_selected=False, **kwargs):
         self.licenses = licenses
-        super().__init__(**kwargs)
+        super().__init__(
+            allow_multiple_selected=allow_multiple_selected, **kwargs
+        )
 
     def build_attrs(self, base_attrs, extra_attrs=None):
         """ add license_urls to attrs."""

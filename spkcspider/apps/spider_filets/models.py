@@ -69,8 +69,8 @@ class ContentWithLicense(BaseContent):
     @property
     def full_license_name(self):
         return self.license_name_translation_list.get(
-            self.license_name, (_(self.license_name), "")
-        )[0]
+            self.license_name, {}
+        ).get("name", self.license_name)
 
     def get_size(self):
         s = super().get_size()

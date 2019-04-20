@@ -1,4 +1,4 @@
-__all__ = ["OpenChoiceField", "SanitizedHtmlField"]
+__all__ = ["OpenChoiceField", "MultipleOpenChoiceField", "SanitizedHtmlField"]
 
 import json
 
@@ -17,8 +17,24 @@ class JsonField(fields.Field):
         return value
 
 
-class OpenChoiceField(fields.MultipleChoiceField):
-    widget = OpenChoiceWidget
+class OpenChoiceField(fields.ChoiceField):
+    widget = OpenChoiceWidget(allow_multiple_selected=False)
+    validate_choice = None
+
+    def __init__(
+        self, *, choices=(), initial=None, validate_choice=None, **kwargs
+    ):
+        super().__init__(choices=choices, **kwargs)
+        self.validate_choice = validate_choice
+
+    def valid_value(self, value):
+        if not self.validate_choice:
+            return True
+        return self.validate_choice(value)
+
+
+class MultipleOpenChoiceField(fields.MultipleChoiceField):
+    widget = OpenChoiceWidget(allow_multiple_selected=True)
     validate_choice = None
 
     def __init__(
