@@ -14,7 +14,7 @@ from .conf import (
 from .widgets import LicenseChooserWidget
 
 from spkcspider.apps.spider.fields import OpenChoiceField
-from spkcspider.apps.spider.widgets import ListWidget
+from spkcspider.apps.spider.widgets import ListWidget, Select2Multiple
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -47,7 +47,11 @@ class FileForm(forms.ModelForm):
         model = FileFilet
         fields = ['file', 'license_name', 'license_url', 'sources']
         widgets = {
-            # "sources": ListWidget(item_label=_("Source"))
+            "license_url": forms.URLInput(
+                attrs={
+                    "style": "width:100%"
+                }
+            )
         }
 
     class Media:
@@ -117,7 +121,16 @@ class TextForm(forms.ModelForm):
         ]
 
         widgets = {
-            "editable_from": forms.CheckboxSelectMultiple(),
+            "editable_from": Select2Multiple(
+                attrs={
+                    "style": "min-width: 150px; width:100%"
+                }
+            ),
+            "license_url": forms.URLInput(
+                attrs={
+                    "style": "width:100%"
+                }
+            )
         }
 
     class Media:
