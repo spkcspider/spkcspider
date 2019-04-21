@@ -72,6 +72,7 @@ class FileForm(forms.ModelForm):
         setattr(self.fields['file'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
+        setattr(self.fields['license_name'], "hashable", True)
         setattr(self.fields['license_url'], "hashable", True)
         if request.user.is_superuser:
             # no upload limit
@@ -174,9 +175,7 @@ class TextForm(forms.ModelForm):
         self.fields["license_name"].editable = False
         self.fields["license_url"].editable = False
 
-        allow_edit = False
-        if scope == "update_guest":
-            allow_edit = True
+        allow_edit = scope == "update_guest"
 
         self.fields["text"].editable = allow_edit
         # sources stay enabled
@@ -200,4 +199,5 @@ class RawTextForm(forms.ModelForm):
         setattr(self.fields['text'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
+        setattr(self.fields['license_name'], "hashable", True)
         setattr(self.fields['license_url'], "hashable", True)
