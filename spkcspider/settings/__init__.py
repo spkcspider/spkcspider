@@ -244,6 +244,9 @@ SPIDER_MAX_EMBED_DEPTH = 5
 SPIDER_MAX_SEARCH_PARAMETERS = 30
 # licences for media
 SPIDER_LICENSE_CHOICES = {
+    "other": {
+        "url": ""
+    },
     "pd": {
         "name": _("Public Domain/CC0"),
         "url":

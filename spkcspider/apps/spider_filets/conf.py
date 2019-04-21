@@ -3,20 +3,13 @@ __all__ = (
 )
 
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 
 LICENSE_CHOICES = getattr(
-    settings, "SPIDER_LICENSE_CHOICES", {
-        "pd": {
-            "name": _("Public Domain/CC0"),
-            "url":
-                "https://creativecommons.org/publicdomain/zero/1.0/legalcode"
-        }
-    }
+    settings, "SPIDER_LICENSE_CHOICES", {}
 )
 DEFAULT_LICENSE_FILE = getattr(
     settings, "SPIDER_DEFAULT_LICENSE_FILE",
-    lambda uc, user: "pd"
+    lambda uc, user: "other"
 )
 if not callable(DEFAULT_LICENSE_FILE):
     _DEFAULT_LICENSE_FILE = DEFAULT_LICENSE_FILE
