@@ -10,7 +10,7 @@
     <div class="">
       <hr/>
       <div class="w3-padding">
-        <b>{{object.full_license_name}}:</b> - <a href="{{object.license_url}}">{{object.license_url}}</a>
+        <b>{{object.full_license_name}}:</b> - {% if object.license_url %}<a href="{{object.license_url}}">{{object.license_url}}</a>{% else %}–{% endif %}
       </div>
       {% if object.sources %}
         <hr/>
