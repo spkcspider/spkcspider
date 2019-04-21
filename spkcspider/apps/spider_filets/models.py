@@ -1,7 +1,6 @@
 
 import logging
 import posixpath
-from urllib.parse import quote_plus
 
 from django.utils.html import escape
 from django.db import models
@@ -166,8 +165,11 @@ class FileFilet(ContentWithLicense):
             ext = self.file.name.rsplit(".", 1)
             if len(ext) > 1:
                 name = "%s.%s" % (name, ext[1])
+        # name is sanitized to not contain \n, and other ugly control chars
         response['Content-Disposition'] = \
-            'attachment; filename=%s' % quote_plus(name)
+            'attachment; filename="%s"' % posixpath.basename(name.replace(
+                r'"', r'\"'
+            ))
 
         response["Access-Control-Allow-Origin"] = "*"
         return response
