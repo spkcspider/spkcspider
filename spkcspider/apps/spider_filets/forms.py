@@ -64,9 +64,10 @@ class FileForm(forms.ModelForm):
     def __init__(self, request, uc=None, initial=None, **kwargs):
         if initial is None:
             initial = {}
-        initial.setdefault(
-            "license_name", DEFAULT_LICENSE_FILE(uc, request.user)
-        )
+        if not getattr(kwargs.get("instance", None), "id", None):
+            initial.setdefault(
+                "license_name", DEFAULT_LICENSE_FILE(uc, request.user)
+            )
         super().__init__(initial=initial, **kwargs)
         setattr(self.fields['file'], "hashable", True)
         # sources should not be hashed as they don't affect result
@@ -145,9 +146,10 @@ class TextForm(forms.ModelForm):
     def __init__(self, request, source, scope, initial=None, **kwargs):
         if initial is None:
             initial = {}
-        initial.setdefault(
-            "license_name", DEFAULT_LICENSE_TEXT(source, request.user)
-        )
+        if not getattr(kwargs.get("instance", None), "id", None):
+            initial.setdefault(
+                "license_name", DEFAULT_LICENSE_TEXT(source, request.user)
+            )
         super().__init__(initial=initial, **kwargs)
         if scope in ("add", "update"):
             self.fields["editable_from"].help_text = \

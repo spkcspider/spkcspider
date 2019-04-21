@@ -167,12 +167,16 @@ class OpenChoiceWidget(widgets.Select):
     def optgroups(self, name, value, attrs=None):
         """Return a list of optgroups for this widget."""
         groups = []
+        groups2 = []
         has_selected = False
 
         choices = list(self.choices)
-        if value:
-            choices = [(i, i) for i in value] + choices
+        value_set = set(value)
+        # optimization
+        if isinstance(value, set):
+            value = value_set
 
+        lastindex = 0
         for index, (option_value, option_label) in enumerate(choices):
             if option_value is None:
                 option_value = ''
@@ -189,8 +193,12 @@ class OpenChoiceWidget(widgets.Select):
             groups.append((group_name, subgroup, index))
 
             for subvalue, sublabel in choices:
+                selected = False
+                if str(subvalue) in value_set:
+                    value_set.remove(str(subvalue))
+                    selected = True
                 selected = (
-                    str(subvalue) in value and
+                    selected and
                     (not has_selected or self.allow_multiple_selected)
                 )
                 has_selected |= selected
@@ -200,7 +208,22 @@ class OpenChoiceWidget(widgets.Select):
                 ))
                 if subindex is not None:
                     subindex += 1
-        return groups
+            lastindex = index
+
+        for index, option_value in enumerate(value, lastindex):
+            if option_value not in value_set:
+                continue
+            if option_value is None:
+                option_value = ''
+
+            subgroup = [self.create_option(
+                name, option_value, option_value,
+                (not has_selected or self.allow_multiple_selected), index,
+                subindex=None, attrs=attrs,
+            )]
+            groups2.append((None, subgroup, index))
+
+        return groups2 + groups
 
 
 class TrumbowygWidget(widgets.Textarea):
