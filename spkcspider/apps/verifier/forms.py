@@ -8,13 +8,9 @@ from django.forms import widgets
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
-import requests
-import certifi
-
 
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 from .models import VerifySourceObject
-from .validate import verify_download_size
 
 _source_url_help = _(
     "Url to content or content list to verify"
@@ -66,38 +62,6 @@ class CreateEntryForm(forms.Form):
                         _('Insecure url: %(url)s'),
                         params={"url": url},
                         code="insecure_url"
-                    )
-                )
-                return ret
-            try:
-                resp = requests.get(url, stream=True, verify=certifi.where())
-            except requests.exceptions.ConnectionError:
-                self.add_error(
-                    "url", forms.ValidationError(
-                        _('invalid url: %(url)s'),
-                        params={"url": url},
-                        code="invalid_url"
-                    )
-                )
-            if resp.status_code != 200:
-                self.add_error(
-                    "url", forms.ValidationError(
-                        _("Retrieval failed: %(reason)s"),
-                        params={"reason": resp.reason},
-                        code="error_code:{}".format(resp.status_code)
-                    )
-                )
-                return
-            c_length = resp.headers.get("content-length", None)
-            # release connection
-            resp.close()
-
-            if not verify_download_size(c_length, 0):
-                self.add_error(
-                    "url", forms.ValidationError(
-                        _("Content too big: %(size)s"),
-                        params={"size": c_length},
-                        code="invalid_size"
                     )
                 )
                 return ret

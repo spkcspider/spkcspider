@@ -238,18 +238,11 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 # TODO
 * examples
 * documentation
-* layouts
-* licenses
-* rebuild ListWidget on select field, add compatibility to select and text fields
-* tests for other dbs
-* improve default tag validators to prevent ddos gadgets by weak validators
-  * rate limitting (per domain)
-  * characteristic requester url
-
+* tests for other dbs than sqlite3 and postgresql
+* validators, domain_auth: rate limitting per domain (prevent accelerating ddos)
+  * django-ratelimit
 ## Later
-* use django-cte (common table expressions)
-  * maybe: relax attached_to_content restriction
-* make quota type overridable (maybe add extra nonsaved quota: other or use 0)
+* maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * Localisation
 * govAnchor
 * messages instead error

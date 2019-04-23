@@ -18,6 +18,7 @@ install_requirements = [
     'django-widget-tweaks',
     'django-ranged-response',
     'django-next-prev',
+    'django-ratelimit',
     'lru-dict'
 ]
 
