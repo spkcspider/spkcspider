@@ -2,6 +2,7 @@ __all__ = (
     "UserTestMixin", "UCTestMixin", "EntityDeletionMixin", "ReferrerMixin"
 )
 
+import hashlib
 import logging
 from urllib.parse import quote_plus
 
@@ -21,6 +22,12 @@ from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
 
+try:
+    from ratelimit.core import is_ratelimited, get_usage, user_or_ip
+except ImportError:
+    from ratelimit.utils import (
+        is_ratelimited, user_or_ip, get_usage_count as get_usage
+    )
 
 import requests
 import certifi
@@ -398,6 +405,26 @@ class ReferrerMixin(object):
         # client side rdf is no problem
         # NOTE: csrf must be disabled or use csrf token from GET,
         #       here is no way to know the token value
+
+        h = hashlib.sha256(context["referrer"].encode("utf8")).hexdigest()
+
+        def h_fun(*a):
+            return h
+        # rate limit on errors
+        if is_ratelimited(
+            request=self.request,
+            fn=self.refer_with_post,
+            key=h_fun,
+            rate=settings.SPIDER_DOMAIN_ERROR_RATE,
+            increment=False
+        ):
+            return HttpResponseRedirect(
+                redirect_to=merge_get_url(
+                    context["referrer"],
+                    status="post_failed",
+                    error="error_rate_limit"
+                )
+            )
         try:
             d = {
                 "token": token.token,
@@ -437,6 +464,13 @@ class ReferrerMixin(object):
                 )
             )
         except Exception as exc:
+            get_usage(
+                request=self.request,
+                fn=self.refer_with_post,
+                key=h_fun,
+                rate=settings.SPIDER_DOMAIN_ERROR_RATE,
+                increment=True
+            )
             logging.info(
                 "post failed: \"%s\" failed",
                 context["referrer"], exc_info=exc
@@ -468,6 +502,12 @@ class ReferrerMixin(object):
             )
         )
 
+    def _get_clean_domain_upgrade_key(self, group, request):
+        return "{}:{}".format(
+            self.usercomponent.id,
+            user_or_ip(request)
+        )
+
     def clean_domain_upgrade(self, context, token):
         if "referrer" not in self.request.GET:
             return False
@@ -476,6 +516,18 @@ class ReferrerMixin(object):
             return False
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
+
+        if not getattr(self.request, "_clean_domain_upgrade_checked", False):
+            if is_ratelimited(
+                request=self.request,
+                fn=self.clean_domain_upgrade,
+                key=self._get_clean_domain_upgrade_key,
+                rate=settings.SPIDER_DOMAIN_UPDATE_RATE,
+                increment=True
+            ):
+                return False
+
+            setattr(self.request, "_clean_domain_upgrade_checked", True)
 
         # False for really no token
         if token is False:
@@ -496,7 +548,7 @@ class ReferrerMixin(object):
         if not context["intentions"].issubset(VALID_INTENTIONS):
             return False
 
-        # auth is only for requesting component auth
+        # auth is only for self.requesting component auth
         if "auth" in context["intentions"]:
             return False
         # maximal one main intention
@@ -582,7 +634,7 @@ class ReferrerMixin(object):
 
         action = self.request.POST.get("action", None)
         if "domain" in context["intentions"]:
-            # domain mode only possible for non special user
+            # domain mode only possible for token without user
             token = self.request.auth_token
             if not self.allow_domain_mode:
                 return HttpResponse(
@@ -637,7 +689,7 @@ class ReferrerMixin(object):
                 # token is not auth_token
                 if token:
                     token.extra["strength"] = 10
-                    # request new token
+                    # self.request new token
                     token.create_auth_token()
                 else:
                     token = AuthToken(

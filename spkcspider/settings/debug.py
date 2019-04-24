@@ -13,7 +13,9 @@ INSTALLED_APPS += [
 ]
 USE_CAPTCHAS = True
 
-# Verifier specific options, not required
+# Verifier specific options, normally not required
+# how many verification requests of user/ip per minute
+VERIFIER_REQUEST_RATE = "10/m"
 # 40 mb maximal size
 VERIFIER_MAX_SIZE_ACCEPTED = 40000000
 # 2 mb, set to 0 to disable a direct file upload

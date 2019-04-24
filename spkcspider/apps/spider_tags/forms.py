@@ -169,6 +169,7 @@ def generate_form(name, layout):
     _temp_field = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=OpenChoiceWidget(
+            allow_multiple_selected=True,
             attrs={
                 "style": "min-width: 300px; width:100%"
             }

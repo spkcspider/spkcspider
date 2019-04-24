@@ -232,6 +232,10 @@ SPIDER_BLACKLISTED_MODULES = [
     "spkcspider.apps.spider.protections.TravelProtection",
 ]
 
+# maximal domain_mode activation per usercomponent/domain
+SPIDER_DOMAIN_UPDATE_RATE = "10/m"
+# maximal error rate for a domain before blocking requests
+SPIDER_DOMAIN_ERROR_RATE = "10/10m"
 # max description length (stripped)
 SPIDER_MAX_DESCRIPTION_LENGTH = 200
 # how many user components/contents per page

@@ -153,7 +153,7 @@ class FeaturesTest(TransactionWebTest):
         self.app.set_user("testuser1")
 
         with self.subTest(msg="Persist inactive"):
-            with override_settings(DEBUG=True):
+            with override_settings(DEBUG=True, RATELIMIT_ENABLE=False):
                 purl = "{}?intention=persist&referrer=http://{}:{}".format(
                     home.get_absolute_url(),
                     *self.refserver.socket.getsockname()
@@ -183,7 +183,7 @@ class FeaturesTest(TransactionWebTest):
         token = None
         # now test persistence feature
         with self.subTest(msg="Persist"):
-            with override_settings(DEBUG=True):
+            with override_settings(DEBUG=True, RATELIMIT_ENABLE=False):
                 purl = "{}?intention=persist".format(
                     home.get_absolute_url()
                 )

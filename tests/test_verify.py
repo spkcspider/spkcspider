@@ -58,6 +58,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         "spkcspider.apps.verifier.views.async_validate",
         new=MockAsyncValidate
     )
+    @override_settings(RATELIMIT_ENABLE=False)
     def test_verify(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
@@ -201,6 +202,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         "spkcspider.apps.verifier.views.async_validate",
         new=MockAsyncValidate
     )
+    @override_settings(RATELIMIT_ENABLE=False)
     def test_request_verify(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         verifierurl = "{}{}".format(

@@ -35,19 +35,17 @@ class TextFiletTest(TransactionWebTest):
         form = response.form
         form.set("content_control-name", "foo")
         form.set("text", "foooo")
-        # form["editable_from"].select_multiple([str(home.id)])
-        for field in form.fields["editable_from"]:
-            if field._value == str(home.id):
-                field.checked = True
-                break
-        else:
-            self.fail(msg="editable_from was not selected")
+        form["editable_from"].select_multiple([str(home.id)])
+        # force non-existing license name (should be created)
+        form["license_name"].force_value("testval")
         response = form.submit()
         updateurl = response.location
         response = response.follow()
         self.assertEqual(response.status_code, 200)
         # check that parameters are saved (don't reuse form from request)
-        self.assertEqual(self.app.get(updateurl).form["text"].value, "foooo")
+        form = self.app.get(updateurl).form
+        self.assertEqual(form["text"].value, "foooo")
+        self.assertEqual(form["license_name"].value, "testval")
         # logout and clean session
         self.app.set_user(user=None)
         self.app.reset()

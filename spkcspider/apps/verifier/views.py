@@ -14,6 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
 
+from ratelimit.decorators import ratelimit as ratelimit_deco
 
 from celery.exceptions import TimeoutError
 from rdflib import Literal
@@ -40,10 +41,19 @@ class CreateEntry(UpdateView):
             self.kwargs[self.task_id_field]
         )
 
-    # exempt from csrf checks
-    # if you want to enable them mark post with csrf_protect
-    # this allows enforcing upload limits
-    @method_decorator(csrf_exempt)
+    # exempt from csrf checks for API usage
+    @method_decorator(
+        [
+            csrf_exempt,
+            ratelimit_deco(
+                key="user_or_ip",
+                group="create_verification_request",
+                rate=settings.VERIFIER_REQUEST_RATE,
+                block=True,
+                method=ratelimit_deco.UNSAFE
+            )
+        ]
+    )
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 

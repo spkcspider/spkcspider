@@ -227,7 +227,7 @@ class TagTest(TransactionWebTest):
             ), g
         )
 
-    @override_settings(DEBUG=True)
+    @override_settings(DEBUG=True, RATELIMIT_ENABLE=False)
     def test_pushed_tags(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
