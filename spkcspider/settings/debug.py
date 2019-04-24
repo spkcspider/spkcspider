@@ -14,6 +14,8 @@ INSTALLED_APPS += [
 USE_CAPTCHAS = True
 
 # Verifier specific options, normally not required
+# timeout for verifier "requests" requests
+VERIFIER_REQUESTS_TIMEOUT = 6
 # how many verification requests of user/ip per minute
 VERIFIER_REQUEST_RATE = "10/m"
 # 40 mb maximal size

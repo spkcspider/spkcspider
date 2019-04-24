@@ -188,6 +188,7 @@ class TokenRenewal(UCTestMixin, View):
                         self.request.path
                     )
                 },
+                timeout=settings.SPIDER_REQUESTS_TIMEOUT,
                 verify=certifi.where()
             )
             ret.raise_for_status()

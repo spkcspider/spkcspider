@@ -437,6 +437,7 @@ class ReferrerMixin(object):
             ret = requests.post(
                 context["referrer"],
                 data=d,
+                timeout=settings.SPIDER_REQUESTS_TIMEOUT,
                 headers={
                     "Referer": merge_get_url(
                         "%s%s" % (
@@ -464,13 +465,27 @@ class ReferrerMixin(object):
                 )
             )
         except Exception as exc:
-            get_usage(
-                request=self.request,
-                fn=self.refer_with_post,
-                key=h_fun,
-                rate=settings.SPIDER_DOMAIN_ERROR_RATE,
-                increment=True
-            )
+            apply_error_limit = False
+            if isinstance(
+                exc, (
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout
+                )
+            ):
+                apply_error_limit = True
+            elif (
+                isinstance(exc, requests.exceptions.HTTPError) and
+                exc.response.status_code >= 500
+            ):
+                apply_error_limit = True
+            if apply_error_limit:
+                get_usage(
+                    request=self.request,
+                    fn=self.refer_with_post,
+                    key=h_fun,
+                    rate=settings.SPIDER_DOMAIN_ERROR_RATE,
+                    increment=True
+                )
             logging.info(
                 "post failed: \"%s\" failed",
                 context["referrer"], exc_info=exc

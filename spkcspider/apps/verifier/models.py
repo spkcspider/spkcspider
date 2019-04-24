@@ -4,6 +4,7 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.core import exceptions
+from django.conf import settings
 
 import requests
 import certifi
@@ -93,7 +94,16 @@ class DataVerificationTag(models.Model):
                 )
             }
             try:
-                resp = requests.post(vurl, data=body, verify=certifi.where())
+                resp = requests.post(
+                    vurl, data=body, verify=certifi.where(),
+                    timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+                )
+            except requests.exceptions.Timeout:
+                raise exceptions.ValidationError(
+                    _('url timed out: %(url)s'),
+                    params={"url": vurl},
+                    code="timeout_url"
+                )
             except requests.exceptions.ConnectionError:
                 raise exceptions.ValidationError(
                     _('invalid url: %(url)s'),

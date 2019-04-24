@@ -55,7 +55,10 @@ def domain_auth(source, hostpart):
     )
     ret = True
     try:
-        resp = requests.get(url, verify=certifi.where())
+        resp = requests.get(
+            url, verify=certifi.where(),
+            timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+        )
         resp.raise_for_status()
     except Exception:
         if settings.DEBUG:

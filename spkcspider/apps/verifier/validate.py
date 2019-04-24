@@ -90,7 +90,16 @@ def validate(ob, hostpart, task=None):
         url = source.get_url()
 
         try:
-            resp = requests.get(url, stream=True, verify=certifi.where())
+            resp = requests.get(
+                url, stream=True, verify=certifi.where(),
+                timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+            )
+        except requests.exceptions.Timeout:
+            raise exceptions.ValidationError(
+                _('url timed out: %(url)s'),
+                params={"url": url},
+                code="timeout_url"
+            )
         except requests.exceptions.ConnectionError:
             raise exceptions.ValidationError(
                 _('invalid url: %(url)s'),
@@ -220,7 +229,18 @@ def validate(ob, hostpart, task=None):
         )
         # validation not neccessary here (base url is verified)
         try:
-            resp = requests.get(url, stream=True, verify=certifi.where())
+            resp = requests.get(
+                url, stream=True, verify=certifi.where(),
+                timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+            )
+        except requests.exceptions.Timeout:
+            dvfile.close()
+            os.unlink(dvfile.name)
+            raise exceptions.ValidationError(
+                _('url timed out: %(url)s'),
+                params={"url": url},
+                code="timeout_url"
+            )
         except requests.exceptions.ConnectionError:
             dvfile.close()
             os.unlink(dvfile.name)
@@ -315,7 +335,18 @@ def validate(ob, hostpart, task=None):
             )
 
         try:
-            resp = requests.get(url, stream=True, verify=certifi.where())
+            resp = requests.get(
+                url, stream=True, verify=certifi.where(),
+                timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+            )
+        except requests.exceptions.Timeout:
+            dvfile.close()
+            os.unlink(dvfile.name)
+            raise exceptions.ValidationError(
+                _('url timed out: %(url)s'),
+                params={"url": url},
+                code="timeout_url"
+            )
         except requests.exceptions.ConnectionError:
             raise exceptions.ValidationError(
                 _('Invalid url: %(url)s'),

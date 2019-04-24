@@ -68,7 +68,10 @@ def clean_verifier(view, request):
         # don't spam verifier
         return True
     try:
-        resp = requests.get(url, stream=True, verify=certifi.where())
+        resp = requests.get(
+            url, stream=True, verify=certifi.where(),
+            timeout=settings.SPIDER_REQUESTS_TIMEOUT
+        )
         resp.close()
         resp.raise_for_status()
     except Exception:

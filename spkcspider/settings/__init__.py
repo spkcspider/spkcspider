@@ -232,6 +232,8 @@ SPIDER_BLACKLISTED_MODULES = [
     "spkcspider.apps.spider.protections.TravelProtection",
 ]
 
+# timeout for spkcspider outgoing requests
+SPIDER_REQUESTS_TIMEOUT = 3
 # maximal domain_mode activation per usercomponent/domain
 SPIDER_DOMAIN_UPDATE_RATE = "10/m"
 # maximal error rate for a domain before blocking requests
