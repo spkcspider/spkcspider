@@ -238,9 +238,7 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 # TODO
 * examples
 * documentation
-* tests for other dbs than sqlite3 and postgresql
-* validators, domain_auth: rate limitting per domain (prevent accelerating ddos)
-  * django-ratelimit
+* tests for other dbs than sqlite3 (and postgresql)
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
