@@ -170,7 +170,7 @@ class AnchorBase(BaseContent):
         if not self.associated.id:
             return None
         ret = urljoin(
-            get_anchor_domain(), reverse(
+            "{}://{}".format(request.scheme, get_anchor_domain()), reverse(
                 "spider_keys:anchor-permanent",
                 kwargs={"pk": self.associated.id}
             )
