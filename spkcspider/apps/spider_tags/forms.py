@@ -70,8 +70,10 @@ class TagLayoutForm(forms.ModelForm):
         values = self.cleaned_data["default_verifiers"]
         if not isinstance(values, list):
             raise forms.ValidationError(
-                _("Invalid format")
+                _("Invalid format"),
+                code='invalid_format'
             )
+        values = list(map(merge_get_url, values))
         return values
 
     def save(self, commit=True):
@@ -113,8 +115,10 @@ class TagLayoutAdminForm(forms.ModelForm):
         values = self.cleaned_data["default_verifiers"]
         if not isinstance(values, list):
             raise forms.ValidationError(
-                _("Invalid format")
+                _("Invalid format"),
+                code='invalid_format'
             )
+        values = list(map(merge_get_url, values))
         return values
 
 
