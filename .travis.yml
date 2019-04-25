@@ -10,7 +10,7 @@ branches:
   - master
   - develop
 env:
-  - DJANGO_DEP="django=2.2"
+  - DJANGO_DEP="django==2.2"
   - DJANGO_DEP="https://github.com/django/django.git"
 matrix:
   allow_failures:
