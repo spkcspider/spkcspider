@@ -11,8 +11,6 @@ import spkcspider.apps.spider.models.protections
 
 class Migration(migrations.Migration):
 
-    replaces = [('spider_base', '0002_20181231_squashed'), ('spider_base', '0003_remove_usercomponent_avail_features'), ('spider_base', '0004_auto_20190103_0156'), ('spider_base', '0005_auto_20190109_1505'), ('spider_base', '0006_assignedcontent_priority'), ('spider_base', '0007_linkcontent_push'), ('spider_base', '0008_authtoken_referrer'), ('spider_base', '0009_authtoken_persist'), ('spider_base', '0010_usercomponent_can_auth'), ('spider_base', '0011_auto_20190117_1256'), ('spider_base', '0012_auto_20190118_1017'), ('spider_base', '0013_assignedcontent_persist_token')]
-
     dependencies = [
         ('spider_base', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
