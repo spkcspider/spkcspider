@@ -10,6 +10,9 @@ from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from django.utils.translation import pgettext
+from django.http import HttpResponseRedirect, JsonResponse
+
+from jsonfield import JSONField
 
 from spkcspider.apps.spider.helpers import get_hashob
 from spkcspider.apps.spider.contents import BaseContent, add_content
@@ -63,12 +66,16 @@ class PublicKey(BaseContent):
     def localize_name(cls, name):
         return pgettext("content name", "Public Key")
 
+    def get_size(self):
+        s = super().get_size()
+        s += len(self.key)
+        return s
+
     def get_info(self):
         ret = super().get_info()
         key = self.get_key_name()[0]
         h = get_hashob()
         h.update(key.encode("ascii", "ignore"))
-        # don't put use_for_encryption state here; this would break unique
         return "%shash=%s=%s\x1e" % (
             ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex()
         )
@@ -136,35 +143,23 @@ class PublicKey(BaseContent):
 # TODO: make hash algorithm configurable
 
 
-@add_content
-class AnchorServer(BaseContent):
-    """ identify by server """
+class AnchorBase(BaseContent):
     expose_name = False
     expose_description = True
-    appearances = [
-        {
-            "name": "AnchorServer",
-            "ctype": VariantType.anchor.value,
-            "strength": 0
-        }
-    ]
 
-    def get_form(self, scope):
-        from .forms import AnchorServerForm
-        return AnchorServerForm
+    class Meta(BaseContent.Meta):
+        abstract = True
+
+    def get_abilities(self, context):
+        return {"anchor"}
 
     def get_priority(self):
         return -10
 
-    def get_content_name(self):
-        return "Anchor: {}".format(self.associated.id)
-
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
         ret.setdefault("initial", {})
-        ret["initial"]["identifier"] = self.get_identifier(
-            kwargs["request"]
-        )
+        ret["initial"]["identifier"] = self.get_identifier(kwargs["request"])
         ret["scope"] = kwargs["scope"]
         return ret
 
@@ -184,7 +179,53 @@ class AnchorServer(BaseContent):
 
 
 @add_content
-class AnchorKey(AnchorServer):
+class AnchorServer(AnchorBase):
+    """ identify by server """
+    appearances = [
+        {
+            "name": "AnchorServer",
+            "ctype": VariantType.anchor.value,
+            "strength": 0
+        }
+    ]
+
+    new_url = models.URLField(
+        max_length=400, blank=True, null=True,
+        help_text=_(
+            "Url to new anchor (in case this one is superseded)"
+        )
+    )
+    old_urls = JSONField(
+        default=list, blank=True,
+        help_text=_(
+           "Superseded anchor urls"
+        )
+    )
+
+    def get_size(self):
+        s = super().get_size()
+        s += 400
+        s += len(str(self.old_urls))
+        return s
+
+    def get_form(self, scope):
+        from .forms import AnchorServerForm
+        return AnchorServerForm
+
+    def get_content_name(self):
+        return "Anchor: {}".format(self.associated.id)
+
+    def access_anchor(self, **kwargs):
+        if self.new_url:
+            ret = HttpResponseRedirect(location=self.new_url)
+        else:
+            ret = JsonResponse(self.old_urls)
+        ret["Access-Control-Allow-Origin"] = "*"
+        return ret
+
+
+@add_content
+class AnchorKey(AnchorBase):
     """ domain name of pc, signed """
     expose_name = False
     expose_description = True
@@ -205,6 +246,11 @@ class AnchorKey(AnchorServer):
         max_length=1024, help_text=_help_text_sig, null=False
     )
 
+    def get_size(self):
+        s = super().get_size()
+        s += 1024
+        return s
+
     def get_content_name(self):
         st = self.key.get_key_name()
         if st[1]:
@@ -219,33 +265,52 @@ class AnchorKey(AnchorServer):
         from .forms import AnchorKeyForm
         return AnchorKeyForm
 
+    def access_anchor(self, **kwargs):
+        ret = JsonResponse([])
+        ret["Access-Control-Allow-Origin"] = "*"
+        return ret
+
+    def get_info(self):
+        ret = super().get_info()
+        key = self.key.get_key_name()[0]
+        h = get_hashob()
+        h.update(key.encode("ascii", "ignore"))
+        return "%shash=%s=%s\x1e" % (
+            ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex()
+        )
+
 
 # TODO: implement
 # @add_content
-class AnchorGov(object):
+class AnchorLink(AnchorBase):
     """
         Anchor by Organisation, e.g. government,
         verifier returns token pointing to url
     """
-    url = models.URLField()
-    token = models.CharField(max_length=100, null=False)
+
+    class Meta(AnchorBase.Meta):
+        abstract = True
+
+    verified_by = models.URLField(max_length=400)
 
     appearances = [
         {
-            "name": "AnchorGov",
-            "ctype": VariantType.anchor+VariantType.unique,
-            "strength": 7
+            "name": "AnchorLink",
+            "ctype": VariantType.anchor + VariantType.unique,
+            "strength": 10
         }
     ]
+
+    def access_anchor(self, **kwargs):
+        ret = JsonResponse(self.verified_by)
+        ret["Access-Control-Allow-Origin"] = "*"
+        return ret
 
     def get_form(self, scope):
         raise NotImplementedError
 
-    def get_form_kwargs(self, **kwargs):
-        ret = super().get_form_kwargs(**kwargs)
-        ret.setdefault("initial", {})
-        ret["initial"]["identifier"] = self.get_identifier(
-            kwargs["request"]
+    def get_info(self):
+        return "{}verified_by={}\x1e".format(
+            super().get_info(unique=True, unlisted=False),
+            self.verified_by
         )
-        ret["scope"] = kwargs["scope"]
-        return ret

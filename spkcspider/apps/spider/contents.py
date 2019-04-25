@@ -611,6 +611,17 @@ class BaseContent(models.Model):
         kwargs["scope"] = "raw"
         return self.render_serialize(**kwargs)
 
+    def access_anchor(self, **kwargs):
+        """
+            Called for anchors
+            WARNING: this means the context is completely different
+                     "access", "get_abilities" method of anchors
+                     (and links on them) must be robust
+            WARNING: it is expected that get_abilities returns "anchor"
+            WARNING: it is expected that access_anchor returns a HttpResponse
+        """
+        raise NotImplementedError()
+
     @csrf_exempt
     def access_default(self, **kwargs):
         raise Http404()

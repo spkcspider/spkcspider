@@ -6,7 +6,7 @@ import binascii
 from django import forms
 from django.db import models
 from django.conf import settings
-# from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 
 from cryptography import exceptions
@@ -15,8 +15,10 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.backends import default_backend
 
+from spkcspider.apps.spider.fields import MultipleOpenChoiceField
+from spkcspider.apps.spider.widgets import ListWidget
+
 from .models import PublicKey, AnchorServer, AnchorKey
-# AnchorGov, ID_VERIFIERS
 
 
 class KeyForm(forms.ModelForm):
@@ -48,10 +50,15 @@ class AnchorServerForm(forms.ModelForm):
     anchor_type = forms.CharField(disabled=True, initial="url")
     setattr(identifier, "hashable", True)
     scope = ""
+    old_urls = MultipleOpenChoiceField(
+        widget=ListWidget(
+            format_type="url", item_label=_("Url to superseded anchor")
+        ), required=False
+    )
 
     class Meta:
         model = AnchorServer
-        fields = []
+        fields = ["new_url", "old_urls"]
 
     def __init__(self, scope, **kwargs):
         self.scope = scope
@@ -59,6 +66,29 @@ class AnchorServerForm(forms.ModelForm):
         if self.scope == "add":
             del self.fields["identifier"]
             del self.fields["anchor_type"]
+            del self.fields["new_url"]
+
+    def clean_old_urls(self):
+        values = self.cleaned_data["old_urls"]
+        if not isinstance(values, list):
+            raise forms.ValidationError(
+                _("Invalid format"),
+                code='invalid_format'
+            )
+        return values
+
+    def clean(self):
+        _ = gettext
+        ret = super().clean()
+        if ret.get("new_url", None) and ret.get("old_urls", []):
+            raise forms.ValidationError(
+                _(
+                    "Specify either replacement url or "
+                    "urls to superseding anchors"
+                ),
+                code='invalid_choices'
+            )
+        return ret
 
 
 class AnchorKeyForm(forms.ModelForm):

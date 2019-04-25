@@ -35,7 +35,7 @@ from ..queryfilters import filter_contents
 from ..constants import spkcgraph, VariantType
 from ..serializing import paginate_stream, serialize_stream
 
-_forbidden_scopes = frozenset(["add", "list", "raw", "delete"])
+_forbidden_scopes = frozenset(["add", "list", "raw", "delete", "anchor"])
 
 
 class ContentBase(UCTestMixin):
@@ -565,28 +565,6 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             minstrength = 4
         return self.test_token(minstrength)
 
-    def render_to_response(self, context):
-        # context is updated and used outside!!
-        rendered = self.object.content.access(context)
-
-        if self.scope == "update":
-            # token changed => path has changed
-            if self.object.token != self.kwargs["token"]:
-                return redirect(
-                    'spider_base:ucontent-access',
-                    token=self.object.token, access="update"
-                )
-
-            if context["form"].is_valid():
-                context["form"] = self.get_form_class()(
-                    **self.get_form_success_kwargs()
-                )
-        if isinstance(rendered, HttpResponseBase):
-            return rendered
-
-        context["content"] = rendered
-        return super().render_to_response(context)
-
     def get_usercomponent(self):
         return get_object_or_404(
             UserComponent.objects.prefetch_related("protections"),
@@ -610,6 +588,28 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         ob.previous_object = prev_in_order(ob, queryset)
         ob.next_object = next_in_order(ob, queryset)
         return ob
+
+    def render_to_response(self, context):
+        # context is updated and used outside!!
+        rendered = self.object.content.access(context)
+
+        if self.scope == "update":
+            # token changed => path has changed
+            if self.object.token != self.kwargs["token"]:
+                return redirect(
+                    'spider_base:ucontent-access',
+                    token=self.object.token, access="update"
+                )
+
+            if context["form"].is_valid():
+                context["form"] = self.get_form_class()(
+                    **self.get_form_success_kwargs()
+                )
+        if isinstance(rendered, HttpResponseBase):
+            return rendered
+
+        context["content"] = rendered
+        return super().render_to_response(context)
 
 
 class ContentDelete(EntityDeletionMixin, DeleteView):

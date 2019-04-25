@@ -84,6 +84,12 @@ class LinkContent(BaseContent):
         help_text=_("Improve ranking of this Link.")
     )
 
+    def get_abilities(self, context):
+        ret = set()
+        if self.associated.getflag("anchor"):
+            ret.add("anchor")
+        return ret
+
     def get_content_name(self):
         return self.content.content.get_content_name()
 
