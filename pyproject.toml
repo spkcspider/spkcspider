@@ -2,10 +2,13 @@
 name = "spkcspider"
 description = "Safe online identity"
 version = "0.1"
+license = "MIT"
 authors = ["Alexander Kaftan"]
 homepage = "https://spkcspider.net"
 readme = "README.md"
-repository = ""
+repository = "https://https://github.com/spkcspider/spkcspider"
+classifiers = [
+]
 
 [tool.poetry.dependencies]
 python = ">=3.5"

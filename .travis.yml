@@ -10,15 +10,18 @@ branches:
   - master
   - develop
 env:
-  - DJANGO="2.2"
-  - DJANGO="master"
+  - DJANGO_DEP="django=2.2"
+  - DJANGO_DEP="https://github.com/django/django.git"
 matrix:
   allow_failures:
     - python: "3.5"
-      env: DJANGO="master"
+      env: DJANGO_DEP="https://github.com/django/django.git"
     - python: "3.6"
-      env: DJANGO="master"
+      env: DJANGO_DEP="https://github.com/django/django.git"
     - python: "3.7"
-      env: DJANGO="master"
-install: pip install -e ".[debug]"
-script: ./manage.py test
+      env: DJANGO_DEP="https://github.com/django/django.git"
+install:
+  - pip install poetry
+  - poetry install
+  - poetry run pip install "${DJANGO_DEP}"
+script: poetry run ./manage.py test
