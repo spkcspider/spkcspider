@@ -459,7 +459,7 @@ class PasswordProtection(BaseProtection):
         min_length = None
         max_length = None
 
-        for pw in self.cleaned_data.get("apasswords", _empty_set):
+        for pw in self.cleaned_data.get("passwords", _empty_set):
             lenpw = len(pw)
             if not min_length or lenpw < min_length:
                 min_length = lenpw
@@ -492,16 +492,12 @@ class PasswordProtection(BaseProtection):
             for pw in obj.data["passwords"]:
                 if constant_time_compare(pw, password):
                     success = True
-            if success:
-                max_length = max(len(password), max_length)
-
-        for password in request.POST.getlist("password")[:2]:
             for pw in obj.data["auth_passwords"]:
                 if constant_time_compare(pw, password):
                     success = True
+                    auth = True
             if success:
                 max_length = max(len(password), max_length)
-                auth = True
 
         if success:
             if auth:
