@@ -1,6 +1,7 @@
 __all__ = [
-    "OpenChoiceWidget", "StateButtonWidget", "HTMLWidget",
-    "SubSectionStartWidget", "SubSectionStopWidget", "ListWidget"
+    "Select2Widget", "OpenChoiceWidget", "StateButtonWidget",
+    "TrumbowygWidget", "HTMLWidget", "SubSectionStartWidget",
+    "SubSectionStopWidget", "ListWidget"
 ]
 
 
@@ -122,6 +123,8 @@ class SubSectionStopWidget(HTMLWidget):
 
 
 class Select2Widget(widgets.Select):
+    anchor_class = "Select2WidgetTarget"
+
     class Media:
         js = [
             'node_modules/jquery/dist/jquery%s.js' % _extra,
@@ -139,11 +142,13 @@ class Select2Widget(widgets.Select):
         if not attrs:
             attrs = {"class": ""}
         attrs.setdefault("class", "")
-        attrs["class"] += " Select2WidgetTarget"
+        attrs["class"] += " %s" % self.anchor_class
         super().__init__(attrs=attrs, **kwargs)
 
 
 class OpenChoiceWidget(widgets.Select):
+    anchor_class = "OpenChoiceTarget"
+
     class Media:
         css = {
             'all': [
@@ -161,7 +166,7 @@ class OpenChoiceWidget(widgets.Select):
         if not attrs:
             attrs = {"class": ""}
         attrs.setdefault("class", "")
-        attrs["class"] += " OpenChoiceTarget"
+        attrs["class"] += " %s" % self.anchor_class
         super().__init__(attrs=attrs, **kwargs)
 
     def optgroups(self, name, value, attrs=None):

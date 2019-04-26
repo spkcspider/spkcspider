@@ -116,7 +116,6 @@ class UserComponentForm(forms.ModelForm):
         ).order_by("name")
 
         if self.instance and self.instance.id:
-            assigned = self.instance.protections
             if self.instance.name in protected_names:
                 self.fields["name"].disabled = True
             if not self.instance.is_public_allowed:
@@ -139,7 +138,7 @@ class UserComponentForm(forms.ModelForm):
                 ptype = ProtectionType.access_control.value
             self.protections = Protection.get_forms(data=data, files=files,
                                                     prefix=prefix,
-                                                    assigned=assigned,
+                                                    uc=self.instance,
                                                     ptype=ptype,
                                                     request=request)
             self.protections = list(self.protections)
@@ -186,10 +185,12 @@ class UserComponentForm(forms.ModelForm):
             for protection in self.protections:
                 if not protection.cleaned_data.get("active", False):
                     continue
+                if not protection.is_valid():
+                    continue
 
-                if len(str(protection.cleaned_data)) > 1000000:
+                if len(str(protection.cleaned_data)) > 100000:
                     raise forms.ValidationError(
-                        _("Protection >1 mb: %(name)s"),
+                        _("Protection >100 kb: %(name)s"),
                         params={"name": protection}
                     )
                 if protection.cleaned_data.get("instant_fail", False):
@@ -305,20 +306,16 @@ class UserComponentForm(forms.ModelForm):
     def _save_protections(self):
         for protection in self.protections:
             cleaned_data = protection.cleaned_data
-            t = AssignedProtection.objects.filter(
-                usercomponent=self.instance, protection=protection.protection
-            ).first()
-            if not cleaned_data["active"] and not t:
-                continue
-            if not t:
-                t = AssignedProtection(
-                    usercomponent=self.instance,
+            d = {
+                "active": cleaned_data.pop("active"),
+                "instant_fail": cleaned_data.pop("instant_fail")
+            }
+            d["data"] = cleaned_data
+            if d["active"]:
+                AssignedProtection.objects.update_or_create(
+                    defaults=d, usercomponent=self.instance,
                     protection=protection.protection
                 )
-            t.active = cleaned_data.pop("active")
-            t.instant_fail = cleaned_data.pop("instant_fail")
-            t.data = cleaned_data
-            t.save()
 
     def _save_m2m(self):
         super()._save_m2m()

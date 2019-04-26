@@ -2,7 +2,8 @@ __all__ = (
     "create_b64_token", "create_b64_id_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
     "merge_get_url", "add_property", "is_decimal", "validator_token",
-    "extract_host", "get_hashob"
+    "extract_host", "get_hashob", "aesgcm_scrypt_cryptor",
+    "aesgcm_pbkdf2_cryptor"
 )
 
 
@@ -11,6 +12,7 @@ import re
 import base64
 import logging
 import inspect
+from hashlib import pbkdf2_hmac
 from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
 
 from functools import lru_cache
@@ -22,9 +24,12 @@ from django.conf import settings
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils.encoding import force_bytes
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from .constants import MAX_TOKEN_SIZE, spkcgraph
 
@@ -33,6 +38,18 @@ _empty_set = frozenset()
 # for not spamming dicts
 _empty_dict = dict()
 
+_pbkdf2_params = {
+    "iterations": 120000,
+    "hash_name": "sha512",
+    "dklen": 32
+}
+
+_Scrypt_params = {
+    "length": 32,
+    "n": 2**14,
+    "r": 16,
+    "p": 2
+}
 
 validator_token = validators.RegexValidator(
     r'^[-a-zA-Z0-9_/]+\Z',
@@ -44,6 +61,34 @@ validator_token = validators.RegexValidator(
 def get_hashob():
     return hashes.Hash(
         settings.SPIDER_HASH_ALGORITHM, backend=default_backend()
+    )
+
+
+def aesgcm_scrypt_cryptor(pw, salt=None, params=_Scrypt_params):
+    if salt is None:
+        salt = settings.SECRET_KEY
+    salt = force_bytes(salt)
+
+    return AESGCM(
+        Scrypt(
+            salt=salt,
+            backend=default_backend(),
+            **params
+        ).derive(pw[:128].encode("utf-8"))
+    )
+
+
+def aesgcm_pbkdf2_cryptor(pw, salt=None, params=_pbkdf2_params):
+    if salt is None:
+        salt = settings.SECRET_KEY
+    salt = force_bytes(salt)
+
+    return AESGCM(
+        pbkdf2_hmac(
+            password=pw[:128].encode("utf-8"),
+            salt=salt,
+            **params
+        )
     )
 
 

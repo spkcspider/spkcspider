@@ -7,7 +7,11 @@ namespace: spider_base
 __all__ = ("installed_protections", "BaseProtection", "ProtectionResult",
            "initialize_protection_models")
 
+import logging
+import binascii
 from random import SystemRandom
+from hashlib import sha256
+from base64 import b64encode, b64decode
 
 from django.conf import settings
 from django import forms
@@ -20,12 +24,16 @@ from django.views.decorators.debug import sensitive_variables
 # from django.contrib.auth.hashers import make_password
 
 import ratelimit
+from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from .helpers import add_by_field
+from .helpers import add_by_field, create_b64_token, aesgcm_pbkdf2_cryptor
 from .constants import ProtectionType, ProtectionResult, index_names
 from .fields import MultipleOpenChoiceField
-from .widgets import OpenChoiceWidget
+from .widgets import OpenChoiceWidget, PWOpenChoiceWidget
 
+logger = logging.getLogger(__name__)
 installed_protections = {}
 _sysrand = SystemRandom()
 
@@ -34,6 +42,19 @@ _empty_set = frozenset()
 
 # for debug/min switch
 _extra = '' if settings.DEBUG else '.min'
+
+_pbkdf2_params = {
+    "iterations": 120000,
+    "hash_name": "sha512",
+    "dklen": 32
+}
+
+_Scrypt_params = {
+    "length": 64,
+    "n": 2**14,
+    "r": 16,
+    "p": 2,
+}
 
 
 def initialize_protection_models(apps=None):
@@ -108,15 +129,18 @@ class BaseProtection(forms.Form):
     # auto populated, instance
     protection = None
     instance = None
+    usercomponent = None
 
     # initial values
     initial = {}
 
-    def __init__(self, protection, ptype, request, assigned=None, **kwargs):
+    def __init__(self, protection, ptype, request, uc, **kwargs):
         self.protection = protection
+        self.usercomponent = uc
         self.ptype = ptype
-        if assigned:
-            self.instance = assigned.filter(protection=self.protection).first()
+        self.instance = uc.protections.filter(
+            protection=self.protection
+        ).first()
         initial = self.get_initial()
         # does assigned protection exist?
         if self.instance:
@@ -267,7 +291,7 @@ class RateLimitProtection(BaseProtection):
     )
 
     description = _(
-        ""
+        "Ratelimit access tries"
     )
 
     def __init__(self, **kwargs):
@@ -376,6 +400,19 @@ class PasswordProtection(BaseProtection):
     description = _("Protect with extra passwords")
     prefix = "protection_passwords"
 
+    class Media:
+        css = {
+            'all': [
+                'node_modules/select2/dist/css/select2.min.css'
+            ]
+        }
+        js = [
+            'node_modules/base64-js/base64js.min.js',
+            'node_modules/jquery/dist/jquery%s.js' % _extra,
+            'node_modules/select2/dist/js/select2%s.js' % _extra,
+            'spider_base/protections/PasswordProtection.js'
+        ]
+
     class auth_form(forms.Form):
         use_required_attribute = False
         password = forms.CharField(
@@ -384,10 +421,20 @@ class PasswordProtection(BaseProtection):
             widget=forms.PasswordInput,
         )
 
+    salt = forms.CharField(
+        widget=forms.HiddenInput
+    )
+    default_master_pw = forms.CharField(
+        widget=forms.HiddenInput, disabled=True
+    )
+    master_pw = forms.CharField(
+        widget=forms.PasswordInput, required=False
+    )
+
     # TODO: hash and encrypt passwords
     passwords = MultipleOpenChoiceField(
         label=_("Passwords"), required=False,
-        widget=OpenChoiceWidget(
+        widget=PWOpenChoiceWidget(
             allow_multiple_selected=True,
             attrs={
                 "style": "min-width: 250px; width:100%"
@@ -397,7 +444,7 @@ class PasswordProtection(BaseProtection):
 
     auth_passwords = MultipleOpenChoiceField(
         label=_("Passwords (for component authentication)"), required=False,
-        widget=OpenChoiceWidget(
+        widget=PWOpenChoiceWidget(
             allow_multiple_selected=True,
             attrs={
                 "style": "min-width: 250px; width:100%"
@@ -405,8 +452,23 @@ class PasswordProtection(BaseProtection):
         )
     )
 
+    _master_pw = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # FIXME: can most probably solved cleaner
+        if self.instance and self.instance.data.get("salt"):
+            salt = self.instance.data["salt"]
+        if not salt:
+            salt = self.fields["salt"].widget.value_from_datadict(
+                self.data, self.files, self.add_prefix("salt")
+            )
+        if not salt:
+            salt = create_b64_token()
+        self.fields["salt"].initial = salt
+        self.fields["default_master_pw"].initial = sha256(
+            "".join([salt, settings.SECRET_KEY]).encode("utf-8")
+        ).hexdigest()
         if ProtectionType.authentication.value in self.ptype:
             del self.fields["auth_passwords"]
 
@@ -429,46 +491,135 @@ class PasswordProtection(BaseProtection):
             maxstrength
         )
 
-    def clean_passwords(self):
-        passwords = set()
-        for pw in self.cleaned_data["passwords"]:
-            if len(pw) > 0:
-                passwords.add(pw)
-        return list(passwords)
-
-    def clean_auth_passwords(self):
-        passwords = set()
-        for pw in self.cleaned_data["auth_passwords"]:
-            if self.eval_strength(len(pw)) >= 2:
-                passwords.add(pw)
-        return list(passwords)
+    @classmethod
+    def hash_pw(cls, pw, salt, params=_Scrypt_params):
+        return b64encode(Scrypt(
+            salt=salt,
+            backend=default_backend(),
+            **params
+        ).derive(pw[:128].encode("utf-8"))).decode("ascii")
 
     def clean(self):
-        ret = super().clean()
+        super().clean()
         # prevents user self lockout
         if ProtectionType.authentication.value in self.ptype and \
            len(self.cleaned_data["passwords"]) == 0:
             self.cleaned_data["active"] = False
 
+        if self.instance and not self.has_changed():
+            self.cleaned_data.update(self.instance.data)
+            return self.cleaned_data
+
+        # eliminate duplicates
+        self.cleaned_data["passwords"] = list(set(
+            self.cleaned_data.get("passwords", _empty_set)
+        ))
+        self.cleaned_data["auth_passwords"] = list(set(
+            self.cleaned_data.get("auth_passwords", _empty_set)
+        ))
+        self.cleaned_data["pbkdf2_params"] = _pbkdf2_params
+        self.cleaned_data["scrypt_params"] = _Scrypt_params
+
         min_length = None
         max_length = None
+        cryptor = None
+        salt = self.cleaned_data.get("salt", "").encode("ascii")
+        if not salt:
+            return self.cleaned_data
+        self._master_pw = self.cleaned_data.pop("master_pw", None)
+        self.cleaned_data.pop("default_master_pw", None)
+        has_master_pw = True
+        if not self._master_pw:
+            has_master_pw = False
+            self._master_pw = self.fields["default_master_pw"].initial
+        cryptor = aesgcm_pbkdf2_cryptor(
+            self._master_pw, salt=salt,
+            params=self.cleaned_data["pbkdf2_params"]
+        )
 
-        for pw in self.cleaned_data.get("passwords", _empty_set):
-            lenpw = len(pw)
-            if not min_length or lenpw < min_length:
-                min_length = lenpw
-            if not max_length or lenpw > max_length:
-                max_length = lenpw
+        hashed_passwords = []
+        auth_passwords = []
+        hashed_auth_passwords = []
+        current_field = "passwords"
+        try:
+            for pw in self.cleaned_data["passwords"]:
+                if pw.startswith("bogo"):
+                    raise ValueError("bogo not allowed here")
+                nonce, pw = map(b64decode, pw.split(":", 1))
+                pw = cryptor.decrypt(nonce, pw, None).decode("utf-8")
+                lenpw = len(pw)
+                if not min_length or lenpw < min_length:
+                    min_length = lenpw
+                if not max_length or lenpw > max_length:
+                    max_length = lenpw
+                hashed_passwords.append(self.hash_pw(
+                    pw, salt, params=self.cleaned_data["scrypt_params"]
+                ))
 
-        for pw in self.cleaned_data.get("auth_passwords", _empty_set):
-            lenpw = len(pw)
-            if not min_length or lenpw < min_length:
-                min_length = lenpw
-            if not max_length or lenpw > max_length:
-                max_length = lenpw
-        ret["min_length"] = min_length
-        ret["max_length"] = max_length
-        return ret
+            current_field = "auth_passwords"
+
+            for pw in self.cleaned_data["auth_passwords"]:
+                if pw.startswith("bogo"):
+                    raise ValueError("bogo not allowed here")
+                pwsource = pw
+                nonce, pw = map(b64decode, pw.split(":", 1))
+                pw = cryptor.decrypt(nonce, pw, None).decode("utf-8")
+                lenpw = len(pw)
+                if self.eval_strength(lenpw) < 2:
+                    continue
+                if not min_length or lenpw < min_length:
+                    min_length = lenpw
+                if not max_length or lenpw > max_length:
+                    max_length = lenpw
+                auth_passwords.append(pwsource)
+                hashed_auth_passwords.append(self.hash_pw(
+                    pw, salt, params=self.cleaned_data["scrypt_params"]
+                ))
+
+            self.cleaned_data["hashed_passwords"] = hashed_passwords
+            self.cleaned_data["auth_passwords"] = hashed_auth_passwords
+            self.cleaned_data["hashed_auth_passwords"] = hashed_auth_passwords
+            self.cleaned_data["min_length"] = min_length
+            self.cleaned_data["max_length"] = max_length
+        except InvalidTag as exc:
+            if self.instance:
+                if has_master_pw:
+                    self.add_error(
+                        "master_pw",
+                        forms.ValidationError(
+                            _(
+                                "Invalid master password? "
+                                "Verification tag invalid"
+                            )
+                        )
+                    )
+                else:
+                    self.add_error(
+                        current_field,
+                        forms.ValidationError(
+                            _("Verification tag invalid")
+                        )
+                    )
+            else:
+                logger.warning("PWProtection: problems with pw", exc_info=exc)
+                self.add_error(
+                    current_field,
+                    forms.ValidationError(
+                        _("Format error, check passwords")
+                    )
+                )
+        except (ValueError, binascii.Error) as exc:
+            logger.warning("PWProtection: pw encoding problems", exc_info=exc)
+            self.add_error(
+                current_field,
+                forms.ValidationError(
+                    _("Format error, check passwords")
+                )
+            )
+        if not has_master_pw:
+            self._master_pw = None
+
+        return self.cleaned_data
 
     @classmethod
     @sensitive_variables("password", "pw")
@@ -482,14 +633,32 @@ class PasswordProtection(BaseProtection):
         success = False
         auth = False
         max_length = 0
+        salt = obj.data.get("salt", "").encode("ascii")
         for password in request.POST.getlist("password")[:2]:
-            for pw in obj.data["passwords"]:
-                if constant_time_compare(pw, password):
-                    success = True
-            for pw in obj.data["auth_passwords"]:
-                if constant_time_compare(pw, password):
-                    success = True
-                    auth = True
+            if salt:
+                password = cls.hash_pw(
+                    password, salt, params=obj.data.get(
+                        "scrypt_params", _Scrypt_params
+                    )
+                )
+                for pw in obj.data["hashed_auth_passwords"]:
+                    if constant_time_compare(pw, password):
+                        success = True
+                        auth = True
+
+                for pw in obj.data["hashed_passwords"]:
+                    if constant_time_compare(pw, password):
+                        success = True
+            else:
+
+                for pw in obj.data["auth_passwords"]:
+                    if constant_time_compare(pw, password):
+                        success = True
+                        auth = True
+
+                for pw in obj.data["passwords"]:
+                    if constant_time_compare(pw, password):
+                        success = True
             if success:
                 max_length = max(len(password), max_length)
 
