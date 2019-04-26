@@ -390,6 +390,7 @@ class PasswordProtection(BaseProtection):
             widget=forms.PasswordInput,
         )
 
+    # TODO: hash and encrypt passwords
     passwords = MultipleOpenChoiceField(
         label=_("Passwords"), required=False,
         widget=OpenChoiceWidget(

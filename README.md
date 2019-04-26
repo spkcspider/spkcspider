@@ -239,7 +239,9 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * examples
 * documentation
 * tests for other dbs than sqlite3 (and postgresql)
-* ratelimits
+* hashed passwords
+  * encrypt copy with login pw and salt
+  * js ?
 * Localisation
   * remove . from strings to translate
 
