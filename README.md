@@ -240,8 +240,11 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * documentation
 * tests for other dbs than sqlite3 (and postgresql)
 * hashed passwords
-  * encrypt copy with login pw and salt
-  * js ?
+  * encrypted copy of pws
+  * js cares for encryption/decryption with master pw (use webcrypto api)
+    * reencrypt values of options, decrypt names
+    * for this use error detection of aead encryption
+  * error handling
 * Localisation
   * remove . from strings to translate
 
@@ -250,6 +253,7 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * govAnchor
 * messages instead error
 * create client side script for import (pushing to server, index token for auth?)
+  * use browerside javascript?
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
