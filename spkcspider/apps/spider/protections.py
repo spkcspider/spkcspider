@@ -15,6 +15,7 @@ from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.contrib.auth import authenticate
+from django.utils.crypto import constant_time_compare
 from django.views.decorators.debug import sensitive_variables
 # from django.contrib.auth.hashers import make_password
 
@@ -24,7 +25,6 @@ except ImportError:
     from ratelimit.utils import is_ratelimited
 
 from .helpers import add_by_field
-from django.utils.crypto import constant_time_compare
 from .constants import ProtectionType, ProtectionResult, index_names
 from .fields import MultipleOpenChoiceField
 from .widgets import OpenChoiceWidget
