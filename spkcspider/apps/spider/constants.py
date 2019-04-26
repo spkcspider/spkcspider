@@ -1,6 +1,7 @@
 
 __all__ = (
     "ProtectionType", "VariantType", "ProtectionResult",
+    "MIN_PROTECTION_STRENGTH_LOGIN",
     "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
     "hex_size_of_bigid",
     "TokenCreationError", "index_names", "protected_names", "spkcgraph",
@@ -24,6 +25,9 @@ if MAX_TOKEN_SIZE % 3 != 0:
     raise Exception("MAX_TOKEN_SIZE must be multiple of 3")
 
 MAX_TOKEN_B64_SIZE = MAX_TOKEN_SIZE*4//3
+
+
+MIN_PROTECTION_STRENGTH_LOGIN = 2
 
 
 class TokenCreationError(Exception):

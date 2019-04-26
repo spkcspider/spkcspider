@@ -18,6 +18,11 @@ from django.contrib.auth import authenticate
 from django.views.decorators.debug import sensitive_variables
 # from django.contrib.auth.hashers import make_password
 
+try:
+    from ratelimit.core import is_ratelimited
+except ImportError:
+    from ratelimit.utils import is_ratelimited
+
 from .helpers import add_by_field
 from django.utils.crypto import constant_time_compare
 from .constants import ProtectionType, ProtectionResult, index_names
@@ -227,18 +232,8 @@ class RandomFailProtection(BaseProtection):
         "to disguise correct access."
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        if ProtectionType.authentication.value in self.ptype:
-            # login should not be possible alone with it
-            self.fields["instant_fail"].initial = True
-            self.initial["instant_fail"] = True
-            self.fields["instant_fail"].disabled = True
-
     def get_strength(self):
-        if self.cleaned_data["success_rate"] > 70:
-            return (0, 0)
-        return (1, 1)
+        return (0, 0)
 
     @classmethod
     def localize_name(cls, name=None):
@@ -260,12 +255,22 @@ class RateLimitProtection(BaseProtection):
     ptype = ProtectionType.access_control.value
     ptype += ProtectionType.authentication.value
 
-    rate_static_token_error = forms.RegexField
-    rate_login_failed_ip = forms.RegexField
-    rate_login_failed_account = forms.RegexField
-    # spider_static_token_error
-    # spider_login_failed_ip
-    # spider_login_failed_account
+    rate_accessed = forms.RegexField(
+        regex=r'([\d]+)/([\d]*)([smhd])?',
+        required=False
+    )
+    rate_static_token_error = forms.RegexField(
+        regex=r'([\d]+)/([\d]*)([smhd])?',
+        required=False
+    )
+    rate_login_failed_ip = forms.RegexField(
+        regex=r'([\d]+)/([\d]*)([smhd])?',
+        required=False
+    )
+    rate_login_failed_account = forms.RegexField(
+        regex=r'([\d]+)/([\d]*)([smhd])?',
+        required=False
+    )
 
     description = _(
         ""
@@ -285,12 +290,35 @@ class RateLimitProtection(BaseProtection):
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
-        if obj and obj.data.get("success_rate", None):
-            if _sysrand.randrange(1, 101) <= obj.data["success_rate"]:
-                return 0
-            elif obj.data.get("use_404", False):
-                raise Http404()
-        return False
+        if not obj:
+            return False
+        if obj:
+            temp = obj.data.get("rate_accessed", None)
+            if temp and is_ratelimited(
+                request, group="spider_ratelimit_accessed",
+                key="ip", rate=temp, increment=True
+            ):
+                return False
+            temp = obj.data.get("rate_static_token_error", None)
+            if temp and is_ratelimited(
+                request, group="spider_static_token_error",
+                key="user_or_ip", rate=temp, increment=False
+            ):
+                return False
+            temp = obj.data.get("rate_login_failed_ip", None)
+            if temp and is_ratelimited(
+                request, group="spider_login_failed_ip",
+                key="ip", rate=temp, increment=False
+            ):
+                return False
+            temp = obj.data.get("rate_login_failed_account", None)
+            if temp and is_ratelimited(
+                request, group="spider_login_failed_account",
+                key=lambda x, y: obj.usercomponent.username,
+                rate=temp, increment=False
+            ):
+                return False
+        return True
 
 
 @add_by_field(installed_protections, "name")

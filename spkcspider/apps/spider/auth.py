@@ -1,3 +1,6 @@
+
+import logging
+
 from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
 from django.utils import timezone
@@ -8,7 +11,11 @@ except ImportError:
     from ratelimit.utils import get_usage_count as get_usage
 
 from .models import UserComponent, Protection, TravelProtection, AuthToken
-from .constants import ProtectionType, TravelLoginType
+from .constants import (
+    ProtectionType, TravelLoginType, MIN_PROTECTION_STRENGTH_LOGIN
+)
+
+logger = logging.getLogger(__name__)
 
 
 class SpiderTokenAuthBackend(ModelBackend):
@@ -96,6 +103,11 @@ class SpiderAuthBackend(ModelBackend):
             if type(protections) is int:
                 request.protections = protections
                 request.session["is_fake"] = False
+                if request.protections < MIN_PROTECTION_STRENGTH_LOGIN:
+                    logger.warning(
+                        "Low login protection strength: %s, %s",
+                        request.protections, username
+                    )
                 return uc.user
             # there was no fake so set protections
             if not uc_fake:
@@ -103,6 +115,7 @@ class SpiderAuthBackend(ModelBackend):
         except Http404:
             # for Http404 auth abort by protections (e.g. Random Fail)
             pass
+        # error path
 
         get_usage(
             request=self.request, group="spider_login_failed_ip", key="ip",

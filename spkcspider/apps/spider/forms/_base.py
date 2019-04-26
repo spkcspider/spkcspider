@@ -16,7 +16,8 @@ from ..models import (
 
 from ..helpers import create_b64_id_token
 from ..constants import (
-    ProtectionType, VariantType, index_names, protected_names
+    ProtectionType, VariantType, index_names, protected_names,
+    MIN_PROTECTION_STRENGTH_LOGIN
 )
 from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
 from ..signals import move_persistent
@@ -173,41 +174,9 @@ class UserComponentForm(forms.ModelForm):
             )
         return value
 
-    def clean(self):
-        ret = super().clean()
-        assert(self.instance.user)
-        self.cleaned_data["can_auth"] = False
-        self.cleaned_data["allow_domain_mode"] = False
-        if 'name' not in self.cleaned_data:
-            # ValidationError so return, calculations won't work here
-            return
-
-        if not getattr(self.instance, "id", None):
-            quota = self.instance.get_component_quota()
-            if UserComponent.objects.filter(
-                user=self.instance.user
-            ).count() >= quota:
-                raise forms.ValidationError(
-                    _("Maximal amount of usercomponents reached %(amount)s."),
-                    code='quota_exceeded',
-                    params={'amount': quota},
-                )
-            # TODO: cleanup into protected_names/forbidden_names
-            if self.cleaned_data['name'] in protected_names:
-                raise forms.ValidationError(
-                    _('Forbidden Name'),
-                    code="forbidden_name"
-                )
-        for protection in self.protections:
-            protection.full_clean()
-        self.cleaned_data["strength"] = 0
+    def calc_protection_strength(self):
+        prot_strength = None
         max_prot_strength = 0
-        if self.cleaned_data["name"] in index_names:
-            self.cleaned_data["strength"] = 10
-            return ret
-        if not self.cleaned_data["public"]:
-            self.cleaned_data["strength"] += 5
-
         if getattr(self.instance, "id", None):
             # instant fail strength
             fail_strength = 0
@@ -243,10 +212,58 @@ class UserComponentForm(forms.ModelForm):
                     # not 10 because 10 is also used for uniqueness
                     strengths = 4
                 else:
-                    strengths = round(mean(strengths[:ret["required_passes"]]))
+                    strengths = round(mean(
+                        strengths[:self.cleaned_data["required_passes"]]
+                    ))
             else:
                 strengths = 0
-            self.cleaned_data["strength"] += max(strengths, fail_strength)
+            prot_strength = max(strengths, fail_strength)
+
+        return (prot_strength, max_prot_strength)
+
+    def clean(self):
+        ret = super().clean()
+        assert(self.instance.user)
+        self.cleaned_data["can_auth"] = False
+        self.cleaned_data["allow_domain_mode"] = False
+        if 'name' not in self.cleaned_data:
+            # ValidationError so return, calculations won't work here
+            return
+
+        if not getattr(self.instance, "id", None):
+            quota = self.instance.get_component_quota()
+            if UserComponent.objects.filter(
+                user=self.instance.user
+            ).count() >= quota:
+                raise forms.ValidationError(
+                    _("Maximal amount of usercomponents reached %(amount)s."),
+                    code='quota_exceeded',
+                    params={'amount': quota},
+                )
+            # TODO: cleanup into protected_names/forbidden_names
+            if self.cleaned_data['name'] in protected_names:
+                raise forms.ValidationError(
+                    _('Forbidden Name'),
+                    code="forbidden_name"
+                )
+
+        for protection in self.protections:
+            protection.full_clean()
+        prot_strength, max_prot_strength = self.calc_protection_strength()
+
+        self.cleaned_data["strength"] = 0
+        if self.cleaned_data["name"] in index_names:
+            if prot_strength < MIN_PROTECTION_STRENGTH_LOGIN:
+                self.add_error(None, forms.ValidationError(
+                    _("Login requires higher strength: %(strength)s"),
+                    code="insufficient_strength_login",
+                    params={"strength": MIN_PROTECTION_STRENGTH_LOGIN}
+                ))
+            self.cleaned_data["strength"] = 10
+            return ret
+        if not self.cleaned_data["public"]:
+            self.cleaned_data["strength"] += 5
+            self.cleaned_data["strength"] += prot_strength or 0
         else:
             # check on creation
             if self.cleaned_data["required_passes"] > 0:
@@ -278,9 +295,10 @@ class UserComponentForm(forms.ModelForm):
             self.add_error("features", forms.ValidationError(
                 _(
                     "selected features require "
-                    "higher protection strength: %s"
-                ) % min_strength,
-                code="insufficient_strength"
+                    "higher protection strength: %(strength)s"
+                ),
+                code="insufficient_strength",
+                params={"strength": min_strength}
             ))
         return self.cleaned_data
 
