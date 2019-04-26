@@ -132,6 +132,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     model = AssignedContent
     scope = "list"
     no_token_usercomponent = False
+    rate_limit_group = "spider_static_token_error"
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.allow_domain_mode = self.usercomponent.allow_domain_mode
@@ -452,6 +453,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
     scope = "access"
     form_class = UserContentForm
     model = AssignedContent
+    rate_limit_group = "spider_static_token_error"
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.object = self.get_object()

@@ -2,6 +2,11 @@ from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
 from django.utils import timezone
 
+try:
+    from ratelimit.core import get_usage
+except ImportError:
+    from ratelimit.utils import get_usage_count as get_usage
+
 from .models import UserComponent, Protection, TravelProtection, AuthToken
 from .constants import ProtectionType, TravelLoginType
 
@@ -57,6 +62,14 @@ class SpiderAuthBackend(ModelBackend):
         uc = UserComponent.objects.filter(
             user__username=username, name="index"
         ).first()
+        if not uc:
+            request.protections = Protection.authall(
+                request, scope="auth",
+                ptype=ProtectionType.authentication.value,
+                protection_codes=protection_codes
+            )
+            if type(request.protections) is int:  # should never happen
+                return None
 
         uc_fake = None
         if travel.exists():
@@ -64,38 +77,38 @@ class SpiderAuthBackend(ModelBackend):
                 user__username=username, name="fake_index"
             ).first()
         try:
-            if not uc:
-                request.protections = Protection.authall(
+            if uc_fake:
+                request.protections = uc_fake.auth(
                     request, scope="auth",
                     ptype=ProtectionType.authentication.value,
                     protection_codes=protection_codes
                 )
-                if type(request.protections) is int:  # should never happen
-                    return None
-            else:
-                if uc_fake:
-                    request.protections = uc_fake.auth(
-                        request, scope="auth",
-                        ptype=ProtectionType.authentication.value,
-                        protection_codes=protection_codes
-                    )
-                    if type(request.protections) is int:
-                        request.session["is_fake"] = True
-                        return uc_fake.user
-                # don't overwrite request.protections yet to serve fake version
-                # in case the real login doesn't work either
-                protections = uc.auth(
-                    request, scope="auth",
-                    ptype=ProtectionType.authentication.value,
-                    protection_codes=protection_codes
-                )
-                if type(protections) is int:
-                    request.protections = protections
-                    request.session["is_fake"] = False
-                    return uc.user
-                # there was no fake so set protections
-                if not uc_fake:
-                    request.protections = protections
+                if type(request.protections) is int:
+                    request.session["is_fake"] = True
+                    return uc_fake.user
+            # don't overwrite request.protections yet to serve fake version
+            # in case the real login doesn't work either
+            protections = uc.auth(
+                request, scope="auth",
+                ptype=ProtectionType.authentication.value,
+                protection_codes=protection_codes
+            )
+            if type(protections) is int:
+                request.protections = protections
+                request.session["is_fake"] = False
+                return uc.user
+            # there was no fake so set protections
+            if not uc_fake:
+                request.protections = protections
         except Http404:
             # for Http404 auth abort by protections (e.g. Random Fail)
             pass
+
+        get_usage(
+            request=self.request, group="spider_login_failed_ip", key="ip",
+            increment=True
+        )
+        get_usage(
+            request=self.request, group="spider_login_failed_account",
+            key=lambda x, y: username, increment=True
+        )

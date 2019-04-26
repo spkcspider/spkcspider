@@ -239,10 +239,12 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * examples
 * documentation
 * tests for other dbs than sqlite3 (and postgresql)
+* ratelimits
+* Localisation
+  * remove . from strings to translate
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
-* Localisation
 * govAnchor
 * messages instead error
 * create client side script for import (pushing to server, index token for auth?)

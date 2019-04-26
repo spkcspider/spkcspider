@@ -255,6 +255,45 @@ class RandomFailProtection(BaseProtection):
 
 
 @add_by_field(installed_protections, "name")
+class RateLimitProtection(BaseProtection):
+    name = "ratelimit"
+    ptype = ProtectionType.access_control.value
+    ptype += ProtectionType.authentication.value
+
+    rate_static_token_error = forms.RegexField
+    rate_login_failed_ip = forms.RegexField
+    rate_login_failed_account = forms.RegexField
+    # spider_static_token_error
+    # spider_login_failed_ip
+    # spider_login_failed_account
+
+    description = _(
+        ""
+    )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if ProtectionType.authentication.value in self.ptype:
+            pass
+
+    def get_strength(self):
+        return (0, 0)
+
+    @classmethod
+    def localize_name(cls, name=None):
+        return pgettext("protection name", "Rate Limit")
+
+    @classmethod
+    def auth(cls, request, obj, **kwargs):
+        if obj and obj.data.get("success_rate", None):
+            if _sysrand.randrange(1, 101) <= obj.data["success_rate"]:
+                return 0
+            elif obj.data.get("use_404", False):
+                raise Http404()
+        return False
+
+
+@add_by_field(installed_protections, "name")
 class LoginProtection(BaseProtection):
     name = "login"
     ptype = ProtectionType.authentication.value
