@@ -239,7 +239,8 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * examples
 * documentation
 * tests for other dbs than sqlite3 (and postgresql)
-* hashed passwords
+* per domain proxy overwrites for requests (e.g. for .onion)
+* hashed passwords (in progress)
   * encrypted copy of pws
   * js cares for encryption/decryption with master pw (use webcrypto api)
     * reencrypt values of options, decrypt names
@@ -250,8 +251,6 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
-* govAnchor
-* messages instead error
 * create client side script for import (pushing to server, index token for auth?)
   * use browerside javascript?
 * textfilet hot reloading
@@ -260,22 +259,25 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * Travelprotection
 
 
-### Implement Web Comments
-* every internal page can be annotated (to keep contact to author)
-* reactions and likes
-* you see only the comments of your friends
-* Later/Maybe:
-  * way to register your comment url on webpage, so others can see all comments
-  * social media stuff: find content via comments and likes
-  * annotation of other pages
-
 ### Implement Emails/messaging
 * email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
   * delta chat integration
+  * webinterface
 * implement webreferences
 * WebReference on an "email" object is an "email"
 * Webreferences can contain cache
 * can optionally contain tags used for encryption and/or refcounting for automatic deletion
+
+
+### Implement Web Comments
+* every internal page can be annotated (to keep contact to author)
+* reactions and likes
+* you see only the comments of your friends
+* implement with messaging? Would keep comments private
+* Later/Maybe:
+  * way to register your comment url on webpage, so others can see all comments
+  * social media stuff: find content via comments and likes
+  * annotation of other pages
 
 ### re-implement TravelProtection
 * hide contents
