@@ -118,10 +118,10 @@ class SpiderAuthBackend(ModelBackend):
         # error path
 
         get_usage(
-            request=self.request, group="spider_login_failed_ip", key="ip",
+            request=request, group="spider_login_failed_ip", key="ip",
             increment=True
         )
         get_usage(
-            request=self.request, group="spider_login_failed_account",
+            request=request, group="spider_login_failed_account",
             key=lambda x, y: username, increment=True
         )
