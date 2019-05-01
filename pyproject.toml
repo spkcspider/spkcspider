@@ -23,7 +23,7 @@ cryptography = "*"
 django-ranged-response = "*"
 django-widget-tweaks = "*"
 django-next-prev = "*"
-django-ratelimit = "*"
+django-fast-ratelimit = "*"
 lru-dict = "*"
 
 [tool.poetry.dev-dependencies]

@@ -25,10 +25,7 @@ from django.urls import reverse
 from django.conf import settings
 
 from rdflib import Literal, XSD
-try:
-    from ratelimit.core import get_usage
-except ImportError:
-    from ratelimit.utils import get_usage_count as get_usage
+import ratelimit
 
 from .signals import failed_guess
 from .constants import spkcgraph
@@ -37,7 +34,7 @@ from .constants import spkcgraph
 def rate_limit_default(view, request):
     group = getattr(view, "rate_limit_group", None)
     if group:
-        get_usage(
+        ratelimit(
             request=request, group=group, key="user_or_ip",
             increment=True
         )

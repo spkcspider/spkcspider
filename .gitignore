@@ -1,6 +1,15 @@
 db.sqlite3
 celery.sqlite3
 
+cgihandler.cgi
+cgihandler.fcgi
+cgihandler.build
+cgihandler.dist
+media
+node_modules
+pip-wheel-metadata/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -105,11 +114,3 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-
-cgihandler.cgi
-cgihandler.fcgi
-cgihandler.build
-cgihandler.dist
-media
-node_modules
-pip-wheel-metadata/

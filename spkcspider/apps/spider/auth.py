@@ -5,10 +5,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
 from django.utils import timezone
 
-try:
-    from ratelimit.core import get_usage
-except ImportError:
-    from ratelimit.utils import get_usage_count as get_usage
+import ratelimit
 
 from .models import UserComponent, Protection, TravelProtection, AuthToken
 from .constants import (
@@ -117,11 +114,11 @@ class SpiderAuthBackend(ModelBackend):
             pass
         # error path
 
-        get_usage(
+        ratelimit.get_ratelimit(
             request=request, group="spider_login_failed_ip", key="ip",
-            increment=True
+            inc=True
         )
-        get_usage(
+        ratelimit.get_ratelimit(
             request=request, group="spider_login_failed_account",
-            key=lambda x, y: username, increment=True
+            key=lambda x, y: username, inc=True
         )

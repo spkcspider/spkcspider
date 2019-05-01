@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
 
-from ratelimit.decorators import ratelimit as ratelimit_deco
+import ratelimit
 
 from celery.exceptions import TimeoutError
 from rdflib import Literal
@@ -45,12 +45,12 @@ class CreateEntry(UpdateView):
     @method_decorator(
         [
             csrf_exempt,
-            ratelimit_deco(
+            ratelimit.decorate(
                 key="user_or_ip",
                 group="create_verification_request",
                 rate=settings.VERIFIER_REQUEST_RATE,
                 block=True,
-                method=ratelimit_deco.UNSAFE
+                method=ratelimit.UNSAFE
             )
         ]
     )

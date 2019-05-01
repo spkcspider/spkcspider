@@ -13,9 +13,10 @@ env:
   - DJANGO_DEP="django==2.2"
   - DJANGO_DEP="git+https://github.com/django/django.git"
 matrix:
-  allow_failures:
+  exclude:
     - python: "3.5"
       env: DJANGO_DEP="git+https://github.com/django/django.git"
+  allow_failures:
     - python: "3.6"
       env: DJANGO_DEP="git+https://github.com/django/django.git"
     - python: "3.7"

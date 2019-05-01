@@ -22,12 +22,7 @@ from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
 
-try:
-    from ratelimit.core import is_ratelimited, get_usage, user_or_ip
-except ImportError:
-    from ratelimit.utils import (
-        is_ratelimited, user_or_ip, get_usage_count as get_usage
-    )
+import ratelimit
 
 import requests
 import certifi
@@ -411,13 +406,13 @@ class ReferrerMixin(object):
         def h_fun(*a):
             return h
         # rate limit on errors
-        if is_ratelimited(
+        if ratelimit.decorate(
             request=self.request,
             fn=self.refer_with_post,
             key=h_fun,
             rate=settings.SPIDER_DOMAIN_ERROR_RATE,
             increment=False
-        ):
+        )["request_limit"] > 0:
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
@@ -479,7 +474,7 @@ class ReferrerMixin(object):
             ):
                 apply_error_limit = True
             if apply_error_limit:
-                get_usage(
+                ratelimit.get_ratelimit(
                     request=self.request,
                     fn=self.refer_with_post,
                     key=h_fun,
@@ -518,9 +513,9 @@ class ReferrerMixin(object):
         )
 
     def _get_clean_domain_upgrade_key(self, group, request):
-        return "{}:{}".format(
+        return "{}{}".format(
             self.usercomponent.id,
-            user_or_ip(request)
+            ratelimit.user_or_ip(request, group)
         )
 
     def clean_domain_upgrade(self, context, token):
@@ -533,13 +528,13 @@ class ReferrerMixin(object):
             return False
 
         if not getattr(self.request, "_clean_domain_upgrade_checked", False):
-            if is_ratelimited(
+            if ratelimit.get_ratelimit(
                 request=self.request,
                 fn=self.clean_domain_upgrade,
                 key=self._get_clean_domain_upgrade_key,
                 rate=settings.SPIDER_DOMAIN_UPDATE_RATE,
                 increment=True
-            ):
+            )["request_limit"] > 0:
                 return False
 
             setattr(self.request, "_clean_domain_upgrade_checked", True)

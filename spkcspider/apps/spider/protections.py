@@ -19,10 +19,7 @@ from django.utils.crypto import constant_time_compare
 from django.views.decorators.debug import sensitive_variables
 # from django.contrib.auth.hashers import make_password
 
-try:
-    from ratelimit.core import is_ratelimited
-except ImportError:
-    from ratelimit.utils import is_ratelimited
+import ratelimit
 
 from .helpers import add_by_field
 from .constants import ProtectionType, ProtectionResult, index_names
@@ -294,29 +291,29 @@ class RateLimitProtection(BaseProtection):
             return False
         if obj:
             temp = obj.data.get("rate_accessed", None)
-            if temp and is_ratelimited(
+            if temp and ratelimit.get_ratelimit(
                 request, group="spider_ratelimit_accessed",
-                key="ip", rate=temp, increment=True
-            ):
+                key="ip", rate=temp, inc=True
+            )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_static_token_error", None)
-            if temp and is_ratelimited(
+            if temp and ratelimit.get_ratelimit(
                 request, group="spider_static_token_error",
-                key="user_or_ip", rate=temp, increment=False
-            ):
+                key="user_or_ip", rate=temp, inc=False
+            )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_login_failed_ip", None)
-            if temp and is_ratelimited(
+            if temp and ratelimit.get_ratelimit(
                 request, group="spider_login_failed_ip",
-                key="ip", rate=temp, increment=False
-            ):
+                key="ip", rate=temp, inc=False
+            )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_login_failed_account", None)
-            if temp and is_ratelimited(
+            if temp and ratelimit.get_ratelimit(
                 request, group="spider_login_failed_account",
                 key=lambda x, y: obj.usercomponent.username,
-                rate=temp, increment=False
-            ):
+                rate=temp, inc=False
+            )["request_limit"] > 0:
                 return False
         return True
 
