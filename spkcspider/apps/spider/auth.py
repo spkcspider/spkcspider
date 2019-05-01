@@ -114,11 +114,12 @@ class SpiderAuthBackend(ModelBackend):
             pass
         # error path
 
+        # allow blocking per hour
         ratelimit.get_ratelimit(
             request=request, group="spider_login_failed_ip", key="ip",
-            inc=True
+            inc=True, rate=(float("inf"), 3600)
         )
         ratelimit.get_ratelimit(
             request=request, group="spider_login_failed_account",
-            key=lambda x, y: username, inc=True
+            key=lambda x, y: username, inc=True, rate=(float("inf"), 3600)
         )

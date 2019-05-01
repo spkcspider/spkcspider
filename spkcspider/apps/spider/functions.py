@@ -9,6 +9,7 @@ __all__ = [
 import time
 import base64
 import logging
+import math
 from decimal import Decimal
 from urllib.parse import urlsplit
 
@@ -34,9 +35,9 @@ from .constants import spkcgraph
 def rate_limit_default(view, request):
     group = getattr(view, "rate_limit_group", None)
     if group:
-        ratelimit(
+        ratelimit.get_ratelimit(
             request=request, group=group, key="user_or_ip",
-            increment=True
+            inc=True, rate=(math.inf, 3600)
         )
     results = failed_guess.send_robust(sender=view, request=request)
     for (receiver, result) in results:

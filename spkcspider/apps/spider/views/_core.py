@@ -406,12 +406,12 @@ class ReferrerMixin(object):
         def h_fun(*a):
             return h
         # rate limit on errors
-        if ratelimit.decorate(
+        if ratelimit.get_ratelimit(
             request=self.request,
-            fn=self.refer_with_post,
+            group="refer_with_post.refer_with_post",
             key=h_fun,
             rate=settings.SPIDER_DOMAIN_ERROR_RATE,
-            increment=False
+            inc=False
         )["request_limit"] > 0:
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
@@ -476,10 +476,10 @@ class ReferrerMixin(object):
             if apply_error_limit:
                 ratelimit.get_ratelimit(
                     request=self.request,
-                    fn=self.refer_with_post,
+                    group="refer_with_post",
                     key=h_fun,
                     rate=settings.SPIDER_DOMAIN_ERROR_RATE,
-                    increment=True
+                    inc=True
                 )
             logging.info(
                 "post failed: \"%s\" failed",
@@ -512,12 +512,6 @@ class ReferrerMixin(object):
             )
         )
 
-    def _get_clean_domain_upgrade_key(self, group, request):
-        return "{}{}".format(
-            self.usercomponent.id,
-            ratelimit.user_or_ip(request, group)
-        )
-
     def clean_domain_upgrade(self, context, token):
         if "referrer" not in self.request.GET:
             return False
@@ -530,10 +524,10 @@ class ReferrerMixin(object):
         if not getattr(self.request, "_clean_domain_upgrade_checked", False):
             if ratelimit.get_ratelimit(
                 request=self.request,
-                fn=self.clean_domain_upgrade,
-                key=self._get_clean_domain_upgrade_key,
+                group="clean_domain_upgrade",
+                key=("get", {"IP": True, "USER": True}),
                 rate=settings.SPIDER_DOMAIN_UPDATE_RATE,
-                increment=True
+                inc=True
             )["request_limit"] > 0:
                 return False
 

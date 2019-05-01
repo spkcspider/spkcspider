@@ -256,16 +256,13 @@ class RateLimitProtection(BaseProtection):
         regex=r'([\d]+)/([\d]*)([smhd])?',
         required=False
     )
-    rate_static_token_error = forms.RegexField(
-        regex=r'([\d]+)/([\d]*)([smhd])?',
+    rate_static_token_error = forms.IntegerField(
         required=False
     )
-    rate_login_failed_ip = forms.RegexField(
-        regex=r'([\d]+)/([\d]*)([smhd])?',
+    rate_login_failed_ip = forms.IntegerField(
         required=False
     )
-    rate_login_failed_account = forms.RegexField(
-        regex=r'([\d]+)/([\d]*)([smhd])?',
+    rate_login_failed_account = forms.IntegerField(
         required=False
     )
 
@@ -299,20 +296,20 @@ class RateLimitProtection(BaseProtection):
             temp = obj.data.get("rate_static_token_error", None)
             if temp and ratelimit.get_ratelimit(
                 request, group="spider_static_token_error",
-                key="user_or_ip", rate=temp, inc=False
+                key="user_or_ip", rate=(int(temp), 3600), inc=False
             )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_login_failed_ip", None)
             if temp and ratelimit.get_ratelimit(
                 request, group="spider_login_failed_ip",
-                key="ip", rate=temp, inc=False
+                key="ip", rate=(int(temp), 3600), inc=False
             )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_login_failed_account", None)
             if temp and ratelimit.get_ratelimit(
                 request, group="spider_login_failed_account",
                 key=lambda x, y: obj.usercomponent.username,
-                rate=temp, inc=False
+                rate=(int(temp), 3600), inc=False
             )["request_limit"] > 0:
                 return False
         return True

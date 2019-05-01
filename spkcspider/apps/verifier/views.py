@@ -50,7 +50,7 @@ class CreateEntry(UpdateView):
                 group="create_verification_request",
                 rate=settings.VERIFIER_REQUEST_RATE,
                 block=True,
-                method=ratelimit.UNSAFE
+                methods=ratelimit.UNSAFE
             )
         ]
     )
