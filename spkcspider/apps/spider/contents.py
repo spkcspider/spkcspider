@@ -212,7 +212,7 @@ class BaseContent(models.Model):
     @classmethod
     @lru_cache(typed=True)
     def cached_feature_urls(cls, name):
-        return list(map(
+        return frozenset(map(
             lambda x: ActionUrl(*x),
             cls.feature_urls(name)
         ))

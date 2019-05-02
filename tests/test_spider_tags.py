@@ -249,7 +249,7 @@ class TagTest(TransactionWebTest):
         self.assertEqual(response.status_code, 200)
         urls = home.features.first().feature_urls
         self.assertEqual(len(urls), 1)
-        pushed_url = urls[0].url
+        pushed_url = next(iter(urls)).url
         response = response.click(
             href=home.get_absolute_url(), index=0
         )
