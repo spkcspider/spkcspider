@@ -278,7 +278,7 @@ SPIDER_LICENSE_CHOICES = {
 }
 SPIDER_DEFAULT_LICENSE_FILE = "CC BY"
 
-# licences for text (default file licenses are used)
+# licences for text (default: file licenses are used)
 # SPIDER_LICENSE_CHOICES_TEXT
 # SPIDER_DEFAULT_LICENSE_TEXT
 
