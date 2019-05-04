@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spkcspider"
-description = "Safe online identity"
+description = "A safe, decentral platform for maintaining your online identity"
 version = "0.2.1"
 license = "MIT"
 authors = ["Alexander Kaftan"]
@@ -8,6 +8,19 @@ homepage = "https://spkcspider.net"
 readme = "README.md"
 repository = "https://https://github.com/spkcspider/spkcspider"
 classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: Django",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+  "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: Content Management System",
+  "Topic :: Internet :: WWW/HTTP :: WSGI :: Application"
+]
+
+keywords = [
+  "online identity", "decentral networks"
 ]
 
 [tool.poetry.dependencies]
