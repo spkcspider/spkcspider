@@ -1,3 +1,6 @@
+import os
+from base64 import b64encode
+
 from django.test import override_settings
 from django_webtest import TransactionWebTest
 from django.urls import reverse
@@ -9,6 +12,8 @@ from rdflib import Graph, Literal, URIRef, XSD
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
+from spkcspider.apps.spider.helpers import aesgcm_pbkdf2_cryptor
+from spkcspider.apps.spider.protections import _pbkdf2_params
 
 
 class ProtectionTest(TransactionWebTest):
@@ -145,9 +150,25 @@ class ProtectionTest(TransactionWebTest):
         form = response.forms["componentForm"]
         form["required_passes"] = 1
         form["protections_password-active"] = True
-        form.fields["protections_password-passwords"][0].force_value(weak_pw)
+        salt = form["protections_password-salt"].value.encode("ascii")
+        c = aesgcm_pbkdf2_cryptor(
+            form["protections_password-default_master_pw"].value,
+            salt=salt, params=_pbkdf2_params
+        )
+        nonce = os.urandom(16)
+        w = c.encrypt(nonce, weak_pw.encode("ascii"), None)
+        form.fields["protections_password-passwords"][0].force_value(
+            ":".join(map(lambda x: b64encode(x).decode("ascii"), [
+                nonce, w
+            ]))
+        )
+
+        nonce = os.urandom(16)
+        w = c.encrypt(nonce, strong_pw.encode("ascii"), None)
         form.fields["protections_password-auth_passwords"][0].force_value(
-            strong_pw
+            ":".join(map(lambda x: b64encode(x).decode("ascii"), [
+                nonce, w
+            ]))
         )
         response = form.submit()
         home.refresh_from_db()

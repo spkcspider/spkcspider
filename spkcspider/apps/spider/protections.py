@@ -457,6 +457,7 @@ class PasswordProtection(BaseProtection):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         # FIXME: can most probably solved cleaner
+        salt = None
         if self.instance and self.instance.data.get("salt"):
             salt = self.instance.data["salt"]
         if not salt:

@@ -106,7 +106,7 @@ class FeaturesTest(TransactionWebTest):
         form.set("protections_login-allow_auth", True)
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(home.protections.all().count(), 1)
+        self.assertEqual(home.protections.filter(active=True).count(), 1)
         self.assertEqual(home.strength, 5)
         # logout and clean session
         self.app.set_user(user=None)
