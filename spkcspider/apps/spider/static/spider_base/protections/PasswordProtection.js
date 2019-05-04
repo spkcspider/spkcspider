@@ -23,6 +23,26 @@ let getKeyForPw = function(pw,salt){
   });
 }
 
+let init_select2 = function(){
+  /* also for refreshing, at least tag attribute is required */
+  $(".PWProtectionTarget").select2({
+    tags: true,
+    width: 'element',
+    language: document.documentElement.lang || "en",
+    createTag: function (params) {
+      let term = $.trim(params.term);
+
+      if (term == '') {
+        return null;
+      }
+      all_succeeded = false;
+      return {
+        "id": `bogo:${term}`,
+        "text": term
+      };
+    }
+  });
+}
 
 let updatePWs = async function(pwfrom, pwto, salt){
   let tencoder = new TextEncoder();
@@ -86,7 +106,10 @@ let updatePWs = async function(pwfrom, pwto, salt){
   });
   await Promise.all(promises);
   if (needs_update){
-    $(".PWProtectionTarget").select2();
+    /*$(".PWProtectionTarget").each(function(e) {
+      e.trigger()
+    })*/
+    init_select2();
   }
   return !has_error;
 }
@@ -96,9 +119,9 @@ document.addEventListener("DOMContentLoaded", async function(){
   /* for encode/decoding */
   let tencoder = new TextEncoder();
   let tdecoder = new TextDecoder();
-  let successful_decryption = false;
+  let some_succeeded = false;
+  let pseudo_mutex_locked = false;
   let promises = [];
-  let active = document.getElementById("id_protections_password-active");
   let master_pw = document.getElementById("id_protections_password-master_pw");
   let default_master_pw = document.getElementById("id_protections_password-default_master_pw").value;
   let salt = document.getElementById("id_protections_password-salt").value;
@@ -128,11 +151,12 @@ document.addEventListener("DOMContentLoaded", async function(){
       promises.push(
         _promise.then(
           function(result){
-            successful_decryption = true;
+            some_succeeded = true;
             opt.text = tdecoder.decode(result);
             return Promise.resolve();
           },
           function(error){
+            all_succeeded = false;
             opt.text = iv_val[1];
             return Promise.resolve();
           }
@@ -143,42 +167,30 @@ document.addEventListener("DOMContentLoaded", async function(){
     }
   });
   await Promise.all(promises);
+  init_select2();
 
-  $(".PWProtectionTarget").select2({
-    tags: true,
-    width: 'element',
-    language: document.documentElement.lang || "en",
-    createTag: function (params) {
-      let term = $.trim(params.term);
 
-      if (term == '') {
-        return null;
-      }
-      return {
-        "id": `bogo:${term}`,
-        "text": term
-      };
-    }
-  });
-  let change_pw_handler = async function (event){
+  let change_master_pw_handler = async function (event){
     let effective_pw = default_master_pw;
     if (event.target.value != ""){
       effective_pw = event.target.value;
     }
     $(".PWProtectionTarget").prop("disabled", true);
-    if (successful_decryption){
+    if (some_succeeded){
       await updatePWs(last_pw, effective_pw, salt);
     } else {
       if (await updatePWs(effective_pw, effective_pw, salt)){
-        successful_decryption = true;
+        some_succeeded = true;
       }
     }
     last_pw = effective_pw;
     $(".PWProtectionTarget").prop("disabled", false);
   }
-  master_pw.addEventListener("change", change_pw_handler);
-  $(".PWProtectionTarget").each(function() {
-    this.addEventListener("change", change_pw_handler);
-  })
+
+  master_pw.addEventListener("change", change_master_pw_handler, false);
+  $(".PWProtectionTarget").on('change', function (event){
+    master_pw.dispatchEvent(new CustomEvent("change"));
+    return true;
+  });
 
 })

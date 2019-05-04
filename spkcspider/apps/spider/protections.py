@@ -144,9 +144,11 @@ class BaseProtection(forms.Form):
         initial = self.get_initial()
         # does assigned protection exist?
         if self.instance:
-            # if yes force instance.active information
+            # if it does, use instance informations
             initial["active"] = self.instance.active
             initial["instant_fail"] = self.instance.instant_fail
+        # copy of initial is saved as self.initial, so safe to change it
+        # after __init__ is called
         super().__init__(initial=initial, **kwargs)
         self.fields["active"].help_text = self.description
 
@@ -428,7 +430,7 @@ class PasswordProtection(BaseProtection):
         widget=forms.HiddenInput, disabled=True
     )
     master_pw = forms.CharField(
-        widget=forms.PasswordInput, required=False
+        widget=forms.PasswordInput(render_value=True), required=False
     )
 
     passwords = MultipleOpenChoiceField(
@@ -451,25 +453,27 @@ class PasswordProtection(BaseProtection):
         )
     )
 
-    _master_pw = None
     _successful_clean = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # FIXME: can most probably solved cleaner
-        salt = None
-        if self.instance and self.instance.data.get("salt"):
-            salt = self.instance.data["salt"]
+        salt = self.initial.get("salt")
         if not salt:
             salt = self.fields["salt"].widget.value_from_datadict(
                 self.data, self.files, self.add_prefix("salt")
             )
         if not salt:
             salt = create_b64_token()
-        self.fields["salt"].initial = salt
-        self.fields["default_master_pw"].initial = sha256(
+        self.initial["salt"] = salt
+        self.initial["default_master_pw"] = sha256(
             "".join([salt, settings.SECRET_KEY]).encode("utf-8")
         ).hexdigest()
+
+        self.initial["master_pw"] = \
+            self.fields["master_pw"].widget.value_from_datadict(
+                kwargs["request"].POST, self.files,
+                self.add_prefix("master_pw")
+            )
         if ProtectionType.authentication.value in self.ptype:
             del self.fields["auth_passwords"]
 
@@ -537,14 +541,14 @@ class PasswordProtection(BaseProtection):
         salt = self.cleaned_data.get("salt", "").encode("ascii")
         if not salt:
             return self.cleaned_data
-        self._master_pw = self.cleaned_data.pop("master_pw", None)
+        self.initial["master_pw"] = self.cleaned_data.pop("master_pw", None)
         self.cleaned_data.pop("default_master_pw", None)
         has_master_pw = True
-        if not self._master_pw:
+        if not self.initial["master_pw"]:
             has_master_pw = False
-            self._master_pw = self.fields["default_master_pw"].initial
+            self.initial["master_pw"] = self.initial["default_master_pw"]
         cryptor = aesgcm_pbkdf2_cryptor(
-            self._master_pw, salt=salt,
+            self.initial["master_pw"], salt=salt,
             params=self.cleaned_data["pbkdf2_params"]
         )
 
@@ -630,7 +634,7 @@ class PasswordProtection(BaseProtection):
                 )
             )
         if not has_master_pw:
-            self._master_pw = None
+            self.initial.pop("master_pw", None)
 
         return self.cleaned_data
 

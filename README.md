@@ -41,26 +41,28 @@ spkcspider.apps.verifier: verifier base utils WARNING: has spider_verifier names
 
 
 
-## Requirements
+## Build Requirements
 * npm
-* poetry or setuptools
+* pip >=19 (and poetry)
 
-## Poetry
-~~~~.sh
+## Poetry (within virtual environment)
+~~~~ sh
 poetry install
-npm install
+# for installing with extras specify -E extra1 -E extra2
 ~~~~
 
-## Setuptools
-~~~~.sh
+## Pip
+~~~~ sh
 pip install .
-npm install
 ~~~~
 
 # Setup
-~~~~.sh
+~~~~ sh
+npm install --no-save
 ./manager.py migrate
 ./manager.py collectstatic
+# or simply use
+./tools/install_deps.sh
 ~~~~
 
 ## Caveats
@@ -69,7 +71,7 @@ Mysql works with some special settings:
 Require mysql to use utf8 charset
 To unbreak tests, use 'CHARSET': 'utf8':
 
-~~~~.python
+~~~~ python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',

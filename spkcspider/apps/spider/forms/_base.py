@@ -136,11 +136,10 @@ class UserComponentForm(forms.ModelForm):
             else:
 
                 ptype = ProtectionType.access_control.value
-            self.protections = Protection.get_forms(data=data, files=files,
-                                                    prefix=prefix,
-                                                    uc=self.instance,
-                                                    ptype=ptype,
-                                                    request=request)
+            self.protections = Protection.get_forms(
+                data=data, files=files, prefix=prefix, uc=self.instance,
+                ptype=ptype, request=request
+            )
             self.protections = list(self.protections)
         else:
             self.fields.pop("primary_anchor", None)
