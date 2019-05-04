@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "spkcspider"
 description = "A secure, decentral platform for maintaining your online identity"
-version = "0.3.2"
+version = "0.4"
 license = "MIT"
 authors = ["Alexander Kaftan"]
 homepage = "https://spkcspider.net"
