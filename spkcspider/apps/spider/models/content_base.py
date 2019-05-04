@@ -22,11 +22,11 @@ from ..contents import installed_contents
 from ..protections import installed_protections
 
 # from ..constants import VariantType
-from ..helpers import validator_token, create_b64_id_token
+from ..helpers import create_b64_id_token
 from ..constants import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid
 )
-from ..validators import content_name_validator
+from ..validators import content_name_validator, validator_token
 
 from .base import BaseInfoModel
 
@@ -76,21 +76,21 @@ class UserContentManager(models.Manager):
     def create(self, **kwargs):
         ret = self.get_queryset().create(**kwargs)
         if not ret.token:
-            ret.token = create_b64_id_token(ret.id, "/")
+            ret.token = create_b64_id_token(ret.id, "_")
             ret.save(update_fields=["token"])
         return ret
 
     def update_or_create(self, **kwargs):
         ret = self.get_queryset().update_or_create(**kwargs)
         if not ret[0].token:
-            ret[0].token = create_b64_id_token(ret[0].id, "/")
+            ret[0].token = create_b64_id_token(ret[0].id, "_")
             ret[0].save(update_fields=["token"])
         return ret
 
     def get_or_create(self, defaults=None, **kwargs):
         ret = self.get_queryset().get_or_create(**kwargs)
         if not ret[0].token:
-            ret[0].token = create_b64_id_token(ret[0].id, "/")
+            ret[0].token = create_b64_id_token(ret[0].id, "_")
             ret[0].save(update_fields=["token"])
         return ret
 

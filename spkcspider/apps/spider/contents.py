@@ -764,7 +764,7 @@ class BaseContent(models.Model):
                     )
                 assignedcontent.token = create_b64_id_token(
                     assignedcontent.id,
-                    "/",
+                    "_",
                     assignedcontent.token_generate_new_size
                 )
                 assignedcontent.token_generate_new_size = None

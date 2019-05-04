@@ -8,12 +8,12 @@ def move_tokens_forward(apps, schema_editor):
     UserComponent = apps.get_model('spider_base', 'UserComponent')
     for row in AssignedContent.objects.all():
         if row.nonce:
-            row.token = '%s/%s' % (row.id, row.nonce)
+            row.token = '%s_%s' % (row.id, row.nonce)
         row.nonce = None
         row.save()
     for row in UserComponent.objects.all():
         if row.nonce:
-            row.token = '%s/%s' % (row.id, row.nonce)
+            row.token = '%s_%s' % (row.id, row.nonce)
         row.nonce = None
         row.save()
 

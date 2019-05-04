@@ -174,7 +174,7 @@ def UpdateSpiderCb(**_kwargs):
         # works only with django.apps.apps
         row.info = row.content.get_info()
         if not row.token:
-            row.token = create_b64_id_token(row.id, "/")
+            row.token = create_b64_id_token(row.id, "_")
         if not row.content.expose_name or not row.name:
             row.name = row.content.get_content_name()
         if not row.content.expose_description:
@@ -185,7 +185,7 @@ def UpdateSpiderCb(**_kwargs):
 
     for row in UserComponent.objects.all():
         if not row.token:
-            row.token = create_b64_id_token(row.id, "/")
+            row.token = create_b64_id_token(row.id, "_")
             row.save(update_fields=["token"])
 
     for row in get_user_model().objects.prefetch_related(

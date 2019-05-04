@@ -1,7 +1,7 @@
 __all__ = (
     "create_b64_token", "create_b64_id_token", "get_settings_func",
     "extract_app_dicts", "add_by_field", "prepare_description",
-    "merge_get_url", "add_property", "is_decimal", "validator_token",
+    "merge_get_url", "add_property", "is_decimal",
     "extract_host", "get_hashob", "aesgcm_scrypt_cryptor",
     "aesgcm_pbkdf2_cryptor", "get_requests_params"
 )
@@ -21,7 +21,6 @@ from importlib import import_module
 from rdflib import Literal, BNode, XSD, RDF
 
 from django.conf import settings
-from django.core import validators
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.encoding import force_bytes
@@ -50,12 +49,6 @@ _Scrypt_params = {
     "r": 16,
     "p": 2
 }
-
-validator_token = validators.RegexValidator(
-    r'^[-a-zA-Z0-9_/]+\Z',
-    _("Enter a valid token."),
-    'invalid'
-)
 
 
 def get_hashob():

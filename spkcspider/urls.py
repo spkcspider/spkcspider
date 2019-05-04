@@ -77,9 +77,9 @@ if getattr(settings, "SPIDER_LEGACY_REDIRECT", False):
     urlpatterns_i18n.insert(
         0,
         path(
-            'spider/content/access/<path:token>/<slug:access>/',
+            'spider/content/<int:token1>/<str:token2>/<slug:access>/',
             RedirectView.as_view(
-                pattern_name='spider_base:ucontent-access',
+                url='/spider/content/%(token1)s_%(token2)s/%(access)s/',
                 permanent=True
             )
         )
@@ -87,9 +87,29 @@ if getattr(settings, "SPIDER_LEGACY_REDIRECT", False):
     urlpatterns_i18n.insert(
         0,
         path(
-            'spider/ucs/list/<path:token>/',
+            'spider/components/<int:token1>/<str:token2>/list/',
             RedirectView.as_view(
-                pattern_name='spider_base:ucontent-list',
+                url='/spider/components/%(token1)s_%(token2)s/list/',
+                permanent=True
+            )
+        )
+    )
+    urlpatterns_i18n.insert(
+        0,
+        path(
+            'spider/content/access/<int:token1>/<str:token2>/<slug:access>/',
+            RedirectView.as_view(
+                url='/spider/content/%(token1)s_%(token2)s/%(access)s/',
+                permanent=True
+            )
+        )
+    )
+    urlpatterns_i18n.insert(
+        0,
+        path(
+            'spider/ucs/list/<int:token1>/<str:token2>/',
+            RedirectView.as_view(
+                url='/components/%(token1)s_%(token2)s/list/',
                 permanent=True
             )
         )

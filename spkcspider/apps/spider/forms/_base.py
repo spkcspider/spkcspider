@@ -330,7 +330,7 @@ class UserComponentForm(forms.ModelForm):
                     "is", self.instance.token
                 )
             self.instance.token = create_b64_id_token(
-                self.instance.id, "/",
+                self.instance.id, "_",
                 int(self.cleaned_data["new_static_token"])
             )
             self.instance.save(update_fields=["token"])
@@ -537,7 +537,7 @@ class UserContentForm(forms.ModelForm):
                 )
             self.instance.token = create_b64_id_token(
                 self.instance.id,
-                "/",
+                "_",
                 self.instance.token_generate_new_size
             )
             self.instance.token_generate_new_size = None

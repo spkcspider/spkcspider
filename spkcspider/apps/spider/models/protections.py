@@ -19,7 +19,8 @@ from jsonfield import JSONField
 from ..constants import (
     MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError
 )
-from ..helpers import create_b64_id_token, validator_token
+from ..helpers import create_b64_id_token
+from ..validators import validator_token
 from ..protections import installed_protections
 from ..constants import ProtectionType, ProtectionResult
 

@@ -20,7 +20,8 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.core import validators
 
-from ..helpers import get_settings_func, validator_token, create_b64_id_token
+from ..helpers import get_settings_func, create_b64_id_token
+from ..validators import validator_token
 from ..constants import (
     ProtectionType, VariantType, MAX_TOKEN_B64_SIZE, TokenCreationError,
     index_names, hex_size_of_bigid
@@ -85,7 +86,7 @@ class UserComponentManager(models.Manager):
             **self._update_args(kwargs, None)
         )
         if not ret.token:
-            ret.token = create_b64_id_token(ret.id, "/")
+            ret.token = create_b64_id_token(ret.id, "_")
             ret.save(update_fields=["token"])
         return ret
 
@@ -94,7 +95,7 @@ class UserComponentManager(models.Manager):
             defaults=self._update_args(defaults, kwargs), **kwargs
         )
         if not ret[0].token:
-            ret[0].token = create_b64_id_token(ret[0].id, "/")
+            ret[0].token = create_b64_id_token(ret[0].id, "_")
             ret[0].save(update_fields=["token"])
         return ret
 
@@ -103,7 +104,7 @@ class UserComponentManager(models.Manager):
             defaults=self._update_args(defaults, kwargs), **kwargs
         )
         if not ret[0].token:
-            ret[0].token = create_b64_id_token(ret[0].id, "/")
+            ret[0].token = create_b64_id_token(ret[0].id, "_")
             ret[0].save(update_fields=["token"])
         return ret
 
