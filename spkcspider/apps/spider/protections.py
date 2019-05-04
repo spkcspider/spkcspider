@@ -222,7 +222,7 @@ class FriendProtection(BaseProtection):
     @classmethod
     def auth(cls, request, obj, **kwargs):
         if (
-            obj and
+            obj and request.user.is_authenticated and
             (
                 getattr(request.user, request.user.USERNAME_FIELD) in
                 obj.data["users"]
@@ -431,7 +431,6 @@ class PasswordProtection(BaseProtection):
         widget=forms.PasswordInput, required=False
     )
 
-    # TODO: hash and encrypt passwords
     passwords = MultipleOpenChoiceField(
         label=_("Passwords"), required=False,
         widget=PWOpenChoiceWidget(
@@ -453,6 +452,7 @@ class PasswordProtection(BaseProtection):
     )
 
     _master_pw = None
+    _successful_clean = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -499,15 +499,26 @@ class PasswordProtection(BaseProtection):
             **params
         ).derive(pw[:128].encode("utf-8"))).decode("ascii")
 
+    def is_valid(self):
+        if not self._successful_clean:
+            return False
+        return super().is_valid()
+
     def clean(self):
         super().clean()
         # prevents user self lockout
         if ProtectionType.authentication.value in self.ptype and \
            len(self.cleaned_data["passwords"]) == 0:
             self.cleaned_data["active"] = False
+        elif (
+            len(self.cleaned_data["passwords"]) == 0 and
+            len(self.cleaned_data["auth_passwords"]) == 0
+        ):
+            self.cleaned_data["active"] = False
 
         if self.instance and not self.has_changed():
             self.cleaned_data.update(self.instance.data)
+            self._successful_clean = True
             return self.cleaned_data
 
         # eliminate duplicates
@@ -518,7 +529,6 @@ class PasswordProtection(BaseProtection):
             self.cleaned_data.get("auth_passwords", _empty_set)
         ))
         self.cleaned_data["pbkdf2_params"] = _pbkdf2_params
-        self.cleaned_data["scrypt_params"] = _Scrypt_params
 
         min_length = None
         max_length = None
@@ -553,7 +563,7 @@ class PasswordProtection(BaseProtection):
                 if not max_length or lenpw > max_length:
                     max_length = lenpw
                 hashed_passwords.append(self.hash_pw(
-                    pw, salt, params=self.cleaned_data["scrypt_params"]
+                    pw, salt, params=_Scrypt_params
                 ))
 
             current_field = "auth_passwords"
@@ -573,14 +583,16 @@ class PasswordProtection(BaseProtection):
                     max_length = lenpw
                 auth_passwords.append(pwsource)
                 hashed_auth_passwords.append(self.hash_pw(
-                    pw, salt, params=self.cleaned_data["scrypt_params"]
+                    pw, salt, params=_Scrypt_params
                 ))
 
             self.cleaned_data["hashed_passwords"] = hashed_passwords
-            self.cleaned_data["auth_passwords"] = hashed_auth_passwords
+            self.cleaned_data["auth_passwords"] = auth_passwords
+            self.cleaned_data["scrypt_params"] = _Scrypt_params
             self.cleaned_data["hashed_auth_passwords"] = hashed_auth_passwords
             self.cleaned_data["min_length"] = min_length
             self.cleaned_data["max_length"] = max_length
+            self._successful_clean = True
         except InvalidTag as exc:
             if self.instance:
                 if has_master_pw:
@@ -636,29 +648,30 @@ class PasswordProtection(BaseProtection):
         salt = obj.data.get("salt", "").encode("ascii")
         for password in request.POST.getlist("password")[:2]:
             if salt:
-                password = cls.hash_pw(
+                pwhash = cls.hash_pw(
                     password, salt, params=obj.data.get(
                         "scrypt_params", _Scrypt_params
                     )
                 )
-                for pw in obj.data["hashed_auth_passwords"]:
-                    if constant_time_compare(pw, password):
-                        success = True
-                        auth = True
 
                 for pw in obj.data["hashed_passwords"]:
+                    if constant_time_compare(pw, pwhash):
+                        success = True
+
+                for pw in obj.data["hashed_auth_passwords"]:
+                    if constant_time_compare(pw, pwhash):
+                        success = True
+                        auth = True
+            else:
+
+                for pw in obj.data["passwords"]:
                     if constant_time_compare(pw, password):
                         success = True
-            else:
 
                 for pw in obj.data["auth_passwords"]:
                     if constant_time_compare(pw, password):
                         success = True
                         auth = True
-
-                for pw in obj.data["passwords"]:
-                    if constant_time_compare(pw, password):
-                        success = True
             if success:
                 max_length = max(len(password), max_length)
 

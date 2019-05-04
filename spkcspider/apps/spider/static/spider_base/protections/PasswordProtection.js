@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", async function(){
       };
     }
   });
-  let change_mpw = async function (event){
+  let change_pw_handler = async function (event){
     let effective_pw = default_master_pw;
     if (event.target.value != ""){
       effective_pw = event.target.value;
@@ -176,5 +176,9 @@ document.addEventListener("DOMContentLoaded", async function(){
     last_pw = effective_pw;
     $(".PWProtectionTarget").prop("disabled", false);
   }
-  master_pw.addEventListener("change", change_mpw);
+  master_pw.addEventListener("change", change_pw_handler);
+  $(".PWProtectionTarget").each(function() {
+    this.addEventListener("change", change_pw_handler);
+  })
+
 })

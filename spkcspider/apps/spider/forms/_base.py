@@ -213,9 +213,12 @@ class UserComponentForm(forms.ModelForm):
                     # not 10 because 10 is also used for uniqueness
                     strengths = 4
                 else:
-                    strengths = round(mean(
+                    # avg strength but maximal 3,
+                    # (4 can appear because of component auth)
+                    # clamp
+                    strengths = min(round(mean(
                         strengths[:self.cleaned_data["required_passes"]]
-                    ))
+                    )), 3)
             else:
                 strengths = 0
             prot_strength = max(strengths, fail_strength)
@@ -305,17 +308,18 @@ class UserComponentForm(forms.ModelForm):
 
     def _save_protections(self):
         for protection in self.protections:
+            if not protection.is_valid():
+                continue
             cleaned_data = protection.cleaned_data
             d = {
                 "active": cleaned_data.pop("active"),
                 "instant_fail": cleaned_data.pop("instant_fail")
             }
             d["data"] = cleaned_data
-            if d["active"]:
-                AssignedProtection.objects.update_or_create(
-                    defaults=d, usercomponent=self.instance,
-                    protection=protection.protection
-                )
+            AssignedProtection.objects.update_or_create(
+                defaults=d, usercomponent=self.instance,
+                protection=protection.protection
+            )
 
     def _save_m2m(self):
         super()._save_m2m()
