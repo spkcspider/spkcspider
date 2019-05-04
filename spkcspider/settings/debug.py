@@ -14,8 +14,14 @@ INSTALLED_APPS += [
 USE_CAPTCHAS = True
 
 # Verifier specific options, normally not required
-# timeout for verifier "requests" requests
-VERIFIER_REQUESTS_TIMEOUT = 6
+# tld requests parameter overwrites, b"default": default parameters
+# why binary? Because it cannot clash with default tld this way
+VERIFIER_TLD_PARAMS_MAPPING = {
+    b"default": {
+        "verify": certifi.where(),
+        "timeout": 6
+    }
+}
 # how many verification requests of user/ip per minute
 VERIFIER_REQUEST_RATE = "10/m"
 # 40 mb maximal size

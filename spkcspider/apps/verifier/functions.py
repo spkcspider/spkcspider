@@ -4,7 +4,7 @@ __all__ = [
 ]
 
 import logging
-from urllib.parse import parse_qs, urlencode
+from urllib.parse import parse_qs, urlencode, urlsplit
 
 from django.conf import settings
 from django.urls import reverse
@@ -15,7 +15,6 @@ from cryptography.hazmat.primitives import hashes
 from rdflib import XSD, URIRef, Literal
 
 import requests
-import certifi
 
 from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.helpers import create_b64_token
@@ -56,8 +55,7 @@ def domain_auth(source, hostpart):
     ret = True
     try:
         resp = requests.get(
-            url, verify=certifi.where(),
-            timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+            url, **get_requests_params(url)
         )
         resp.raise_for_status()
     except Exception:
@@ -103,4 +101,20 @@ def get_hashob():
            settings.SPIDER_HASH_ALGORITHM
         ),
         backend=default_backend()
+    )
+
+
+def get_requests_params(url):
+    _url = urlsplit(url)
+    tld = _url.netloc.rsplit(".", 1)
+    if len(tld) == 2:
+        tld = tld[1]
+    else:
+        # e.g. localhost or ip address
+        tld = b"default"
+    # note: default tld must be bytes for beeing able to difference from
+    # a potential defaults tld
+    return settings.VERIFIER_TLD_PARAMS_MAPPING.get(
+        tld,
+        settings.VERIFIER_TLD_PARAMS_MAPPING[b"default"]
     )

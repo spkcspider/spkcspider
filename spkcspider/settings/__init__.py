@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 
+import certifi
 from django.utils.translation import gettext_lazy as _
 from cryptography.hazmat.primitives import hashes
 
@@ -232,8 +233,6 @@ SPIDER_BLACKLISTED_MODULES = [
     "spkcspider.apps.spider.protections.TravelProtection",
 ]
 
-# timeout for spkcspider outgoing requests
-SPIDER_REQUESTS_TIMEOUT = 3
 # maximal domain_mode activation per usercomponent/domain
 SPIDER_DOMAIN_UPDATE_RATE = "10/m"
 # maximal error rate for a domain before blocking requests
@@ -282,6 +281,15 @@ SPIDER_DEFAULT_LICENSE_FILE = "CC BY"
 # licences for text (default file licenses are used)
 # SPIDER_LICENSE_CHOICES_TEXT
 # SPIDER_DEFAULT_LICENSE_TEXT
+
+# tld requests parameter overwrites, b"default": default parameters
+# why binary? Because it cannot clash with default tld this way
+SPIDER_TLD_PARAMS_MAPPING = {
+    b"default": {
+        "verify": certifi.where(),
+        "timeout": 3
+    }
+}
 
 # disable when importing backup
 # ease deploy

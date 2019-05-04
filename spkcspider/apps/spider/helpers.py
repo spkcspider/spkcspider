@@ -3,7 +3,7 @@ __all__ = (
     "extract_app_dicts", "add_by_field", "prepare_description",
     "merge_get_url", "add_property", "is_decimal", "validator_token",
     "extract_host", "get_hashob", "aesgcm_scrypt_cryptor",
-    "aesgcm_pbkdf2_cryptor"
+    "aesgcm_pbkdf2_cryptor", "get_requests_params"
 )
 
 
@@ -244,3 +244,19 @@ def merge_get_url(_url, **kwargs):
         GET.pop(item, None)
     ret = urlunsplit((*urlparsed[:3], urlencode(GET), ""))
     return ret
+
+
+def get_requests_params(url):
+    _url = urlsplit(url)
+    tld = _url.netloc.rsplit(".", 1)
+    if len(tld) == 2:
+        tld = tld[1]
+    else:
+        # e.g. localhost or ip address
+        tld = b"default"
+    # note: default tld must be bytes for beeing able to difference from
+    # a potential defaults tld
+    return settings.SPIDER_TLD_PARAMS_MAPPING.get(
+        tld,
+        settings.SPIDER_TLD_PARAMS_MAPPING[b"default"]
+    )

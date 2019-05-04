@@ -4,10 +4,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.core import exceptions
-from django.conf import settings
 
 import requests
-import certifi
 
 from spkcspider.apps.spider.constants import (
     MAX_TOKEN_B64_SIZE
@@ -15,6 +13,7 @@ from spkcspider.apps.spider.constants import (
 from .constants import (
     VERIFICATION_CHOICES
 )
+from .functions import get_requests_params
 
 
 def dv_path(instance, filename):
@@ -95,8 +94,7 @@ class DataVerificationTag(models.Model):
             }
             try:
                 resp = requests.post(
-                    vurl, data=body, verify=certifi.where(),
-                    timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+                    vurl, data=body, **get_requests_params(vurl)
                 )
             except requests.exceptions.Timeout:
                 raise exceptions.ValidationError(

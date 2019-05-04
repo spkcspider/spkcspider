@@ -14,7 +14,6 @@ from decimal import Decimal
 from urllib.parse import urlsplit
 
 import requests
-import certifi
 
 from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
@@ -30,6 +29,7 @@ import ratelimit
 
 from .signals import failed_guess
 from .constants import spkcgraph
+from .helpers import get_requests_params
 
 
 def rate_limit_default(view, request):
@@ -78,8 +78,7 @@ def clean_verifier(view, request):
         return True
     try:
         resp = requests.get(
-            url, stream=True, verify=certifi.where(),
-            timeout=settings.SPIDER_REQUESTS_TIMEOUT
+            url, stream=True, **get_requests_params(url)
         )
         resp.close()
         resp.raise_for_status()

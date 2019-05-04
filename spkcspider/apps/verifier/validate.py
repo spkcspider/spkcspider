@@ -16,7 +16,6 @@ from django.core import exceptions
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import XSD
 import requests
-import certifi
 
 from spkcspider import celery_app
 
@@ -24,7 +23,7 @@ from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
 from .constants import BUFFER_SIZE
-from .functions import get_hashob
+from .functions import get_hashob, get_requests_params
 from .models import VerifySourceObject, DataVerificationTag
 
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
@@ -91,8 +90,7 @@ def validate(ob, hostpart, task=None):
 
         try:
             resp = requests.get(
-                url, stream=True, verify=certifi.where(),
-                timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+                url, stream=True, **get_requests_params(url)
             )
         except requests.exceptions.Timeout:
             raise exceptions.ValidationError(
@@ -230,8 +228,7 @@ def validate(ob, hostpart, task=None):
         # validation not neccessary here (base url is verified)
         try:
             resp = requests.get(
-                url, stream=True, verify=certifi.where(),
-                timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+                url, stream=True, **get_requests_params(url)
             )
         except requests.exceptions.Timeout:
             dvfile.close()
@@ -336,8 +333,7 @@ def validate(ob, hostpart, task=None):
 
         try:
             resp = requests.get(
-                url, stream=True, verify=certifi.where(),
-                timeout=settings.VERIFIER_REQUESTS_TIMEOUT
+                url, stream=True, **get_requests_params(url)
             )
         except requests.exceptions.Timeout:
             dvfile.close()

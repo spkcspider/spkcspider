@@ -25,9 +25,10 @@ from django.utils.translation import gettext
 import ratelimit
 
 import requests
-import certifi
 
-from ..helpers import merge_get_url, get_settings_func, get_hashob
+from ..helpers import (
+    merge_get_url, get_requests_params, get_settings_func, get_hashob
+)
 from ..constants import VariantType, TokenCreationError, ProtectionType
 from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
 from ..models import UserComponent, AuthToken, ReferrerObject
@@ -432,7 +433,6 @@ class ReferrerMixin(object):
             ret = requests.post(
                 context["referrer"],
                 data=d,
-                timeout=settings.SPIDER_REQUESTS_TIMEOUT,
                 headers={
                     "Referer": merge_get_url(
                         "%s%s" % (
@@ -444,7 +444,7 @@ class ReferrerMixin(object):
                         # sl=None, payload=None
                     )
                 },
-                verify=certifi.where()
+                **get_requests_params(context["referrer"])
             )
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:

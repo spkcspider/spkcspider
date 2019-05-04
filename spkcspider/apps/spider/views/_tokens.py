@@ -10,18 +10,16 @@ from django.http import (
     Http404, HttpResponseServerError, JsonResponse, HttpResponseRedirect,
     HttpResponse
 )
-from django.conf import settings
 
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
 
 import requests
-import certifi
 
 from ._core import UCTestMixin
 from ..models import AuthToken
-from ..helpers import get_settings_func
+from ..helpers import get_settings_func, get_requests_params
 from ..constants import TokenCreationError
 
 
@@ -189,8 +187,7 @@ class TokenRenewal(UCTestMixin, View):
                         self.request.path
                     )
                 },
-                timeout=settings.SPIDER_REQUESTS_TIMEOUT,
-                verify=certifi.where()
+                **get_requests_params(self.request.auth_token.referrer)
             )
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:
