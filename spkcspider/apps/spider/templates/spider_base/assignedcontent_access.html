@@ -81,7 +81,7 @@
         </a>
       {% endif %}
       <div>
-        <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{{uc.strength}}</data>
+        <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}</data>
       </div>
     </span>
     <h1 class="w3-center">

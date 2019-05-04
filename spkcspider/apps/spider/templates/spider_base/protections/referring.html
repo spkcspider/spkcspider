@@ -1,6 +1,9 @@
 {% extends "spider_base/protections/base.html" %}
 {% load i18n static spider_paging %}
 
+{% block main_classes %}{{block.super}} color-front-{{uc.strength}}{% endblock %}
+{% block body_class %}{{block.super}} color-back-{{uc.strength}}{% endblock %}
+
 {% block extrahead %}
 {{block.super}}
 <link rel="stylesheet" href="{% static 'node_modules/select2/dist/css/select2.min.css' %}">

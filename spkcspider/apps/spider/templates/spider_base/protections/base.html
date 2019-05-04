@@ -16,6 +16,6 @@
 {{block.super}}
 {% endblock context_actions %}
 
-{% block main_classes %}{{block.super}} spkc-content w3-card-4 color-front-{{uc.strength}}{% endblock %}
-{% block body_class %}{{block.super}} color-back-{{uc.strength}}{% endblock %}
+{# don't include color information here; they could leak the strength  #}
+{% block main_classes %}{{block.super}} spkc-content w3-card-4{% endblock %}
 {% block main_attributes %}{{block.super}} prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema# rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#" resource="{{hostpart}}{{ request.path }}"{% endblock %}

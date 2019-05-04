@@ -4,6 +4,9 @@
   Delete AuthToken
 {% endblocktrans %}{% endblock %}
 
+{% block main_classes %}{{block.super}} color-front-{{uc.strength}}{% endblock %}
+{% block body_class %}{{block.super}} color-back-{{uc.strength}}{% endblock %}
+
 {% block content %}
 <div class="">
   <div class="w3-padding">

@@ -275,6 +275,17 @@ class UserComponent(models.Model):
         )
 
     @property
+    def untrusted_strength(self):
+        if self.strength in {0, 4, 5, 9, 10}:
+            return self.strength
+        elif self.strength < 4:
+            return 3
+        elif self.strength < 9:
+            return 8
+        else:
+            logger.warning("Invalid strength: %s", self.strength)
+
+    @property
     def username(self):
         return getattr(self.user, self.user.USERNAME_FIELD)
 
