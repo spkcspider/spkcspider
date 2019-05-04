@@ -447,19 +447,19 @@ def async_validate(self, ob, hostpart):
     return ret.get_absolute_url()
 
 
-def verify(tagid, task=None):
-    tag = DataVerificationTag.objects.get(id=tagid)
-    get_settings_func(
-        "VERIFIER_TAG_VERIFIER",
-        "spkcspider.apps.verifier.functions.verify_tag_default"
-    )(tag)
-    if tag.verification_state == "verified":
-        try:
-            tag.callback()
-        except exceptions.ValidationError:
-            logging.exception("Error while calling back")
+# def verify(tagid, task=None):
+#    tag = DataVerificationTag.objects.get(id=tagid)
+#    get_settings_func(
+#        "VERIFIER_TAG_VERIFIER",
+#        "spkcspider.apps.verifier.functions.verify_tag_default"
+#    )(tag)
+#    if tag.verification_state == "verified":
+#        try:
+#            tag.callback()
+#        except exceptions.ValidationError:
+#            logging.exception("Error while calling back")
 
 
-@celery_app.task(bind=True, name='async verification', ignore_results=True)
-def async_verify(self, tagid):
-    verify(tagid, self)
+# @celery_app.task(bind=True, name='async verification', ignore_results=True)
+# def async_verify(self, tagid):
+#     verify(tagid, self)

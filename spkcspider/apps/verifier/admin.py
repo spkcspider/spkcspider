@@ -55,8 +55,8 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
                     request.scheme, request.get_host()
                 )
             )
-        except Exception:
-            logger.exception("Callback failed")
+        except Exception as exc:
+            logger.exception("Callback failed", exc_info=exc)
         return ret
 
     # def save_model(self, request, obj, form, change):
