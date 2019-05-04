@@ -19,7 +19,8 @@ USE_CAPTCHAS = True
 VERIFIER_TLD_PARAMS_MAPPING = {
     b"default": {
         "verify": certifi.where(),
-        "timeout": 6
+        "timeout": 6,
+        "proxies": {}
     }
 }
 # how many verification requests of user/ip per minute

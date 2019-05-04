@@ -287,8 +287,17 @@ SPIDER_DEFAULT_LICENSE_FILE = "CC BY"
 SPIDER_TLD_PARAMS_MAPPING = {
     b"default": {
         "verify": certifi.where(),
-        "timeout": 3
-    }
+        "timeout": 3,
+        "proxies": {}
+    },
+    # example for usage with tor (requires requests[socks])
+    # "onion": {
+    #     "timeout": 10,
+    #     "proxies": {
+    #        'http': 'socks5://localhost:9050',
+    #        'https': 'socks5://localhost:9050'
+    #     }
+    # }
 }
 
 # disable when importing backup
