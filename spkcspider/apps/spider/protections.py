@@ -12,6 +12,7 @@ import binascii
 from random import SystemRandom
 from hashlib import sha256
 from base64 import b64encode, b64decode
+import ipaddress
 
 from django.conf import settings
 from django import forms
@@ -286,16 +287,31 @@ class RateLimitProtection(BaseProtection):
 
     rate_accessed = forms.RegexField(
         regex=r'([\d]+)/([\d]*)([smhd])?',
-        required=False
+        required=False,
+        help_text=_(
+            "Maximal access tries to this component per ip "
+            "before blocking. Format: tries/multiplier"
+            "(smhdw, second till week)"
+        )
     )
     rate_static_token_error = forms.IntegerField(
-        required=False
+        required=False,
+        help_text=_(
+            "Maximal http404 errors per hour per user/ip before blocking"
+        )
     )
     rate_login_failed_ip = forms.IntegerField(
-        required=False
+        required=False,
+        help_text=_(
+            "Maximal failed logins per ip per hour before blocking"
+        )
     )
     rate_login_failed_account = forms.IntegerField(
-        required=False
+        required=False,
+        help_text=_(
+            "Maximal failed logins per hour for this user before blocking. "
+            "Useful for login"
+        )
     )
 
     description = _(
@@ -308,11 +324,19 @@ class RateLimitProtection(BaseProtection):
             pass
 
     def get_strength(self):
-        return (0, 0)
+        return (1, 1)
 
     @classmethod
     def localize_name(cls, name=None):
         return pgettext("protection name", "Rate Limit")
+
+    @classmethod
+    def count_access(cls, request, obj):
+        return b"%b:%b" % (
+            str(obj.usercomponent.pk).encode("ascii"), ipaddress.ip_network(
+                request.META['REMOTE_ADDR'], strict=False
+            ).compressed.encode("ascii")
+        )
 
     @classmethod
     def auth(cls, request, obj, **kwargs):
@@ -321,30 +345,30 @@ class RateLimitProtection(BaseProtection):
         if obj:
             temp = obj.data.get("rate_accessed", None)
             if temp and ratelimit.get_ratelimit(
-                request, group="spider_ratelimit_accessed",
-                key="ip", rate=temp, inc=True
+                request=request, group="spider_ratelimit_accessed",
+                key=cls.count_access(request, obj), rate=temp, inc=True
             )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_static_token_error", None)
             if temp and ratelimit.get_ratelimit(
-                request, group="spider_static_token_error",
+                request=request, group="spider_static_token_error",
                 key="user_or_ip", rate=(int(temp), 3600), inc=False
             )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_login_failed_ip", None)
             if temp and ratelimit.get_ratelimit(
-                request, group="spider_login_failed_ip",
+                request=request, group="spider_login_failed_ip",
                 key="ip", rate=(int(temp), 3600), inc=False
             )["request_limit"] > 0:
                 return False
             temp = obj.data.get("rate_login_failed_account", None)
             if temp and ratelimit.get_ratelimit(
-                request, group="spider_login_failed_account",
+                request=request, group="spider_login_failed_account",
                 key=lambda x, y: obj.usercomponent.username,
                 rate=(int(temp), 3600), inc=False
             )["request_limit"] > 0:
                 return False
-        return True
+        return 1
 
 
 @add_by_field(installed_protections, "name")

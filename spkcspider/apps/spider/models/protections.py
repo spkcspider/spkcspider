@@ -115,7 +115,7 @@ class Protection(models.Model):
                     max_result = result
             if result is not False:  # False will be not rendered
                 ret.append(ProtectionResult(result, item))
-        # after side effects like raise Http404
+        # after side effects like RandomFail with http404 errors
         if (
                 request.GET.get("protection", "") == "false" and
                 initial_required_passes > 0
