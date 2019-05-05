@@ -10,8 +10,7 @@ from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
 from ..models import (
-    AssignedProtection, Protection, UserComponent, AssignedContent,
-    ContentVariant, AuthToken
+    Protection, UserComponent, AssignedContent, ContentVariant, AuthToken
 )
 
 from ..helpers import create_b64_id_token
@@ -309,16 +308,7 @@ class UserComponentForm(forms.ModelForm):
         for protection in self.protections:
             if not protection.is_valid():
                 continue
-            cleaned_data = protection.cleaned_data
-            d = {
-                "active": cleaned_data.pop("active"),
-                "instant_fail": cleaned_data.pop("instant_fail")
-            }
-            d["data"] = cleaned_data
-            AssignedProtection.objects.update_or_create(
-                defaults=d, usercomponent=self.instance,
-                protection=protection.protection
-            )
+            protection.save()
 
     def _save_m2m(self):
         super()._save_m2m()

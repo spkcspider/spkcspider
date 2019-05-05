@@ -251,6 +251,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * tests for other dbs than sqlite3 (and postgresql)
 * Localisation
   * harmonize punctation
+* cleanup authentication key logic and document it
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)

@@ -117,22 +117,28 @@ class UserTestMixin(AccessMixin):
         return token
 
     def create_admin_token(self):
+        # if auth_token is set, use it (component authentication)
+        if self.request.auth_token:
+            return self.request.auth_token
+        # elsewise session should work to not spam keys
+        if not self.request.session.session_key:
+            logging.warning(
+                "Logged in, but session not set, spam new auth token: %s",
+                self.usercomponent.username
+            )
         expire = timezone.now()-self.usercomponent.token_duration
-        # delete old token, so no confusion happen
+        # delete old tokens, so no confusion happen
         self.usercomponent.authtokens.filter(
             created__lt=expire
         ).delete()
-        # delete tokens from old sessions
-        self.usercomponent.authtokens.exclude(
-            session_key=self.request.session.session_key,
-        ).filter(created_by_special_user=self.request.user).delete()
 
-        # use session_key, causes deletion on logout
+        # use session_key to search for keys to reuse
         token = self.usercomponent.authtokens.filter(
             session_key=self.request.session.session_key
         ).first()
         if token:
             return token
+        # elsewise create new token
         return self.create_token(
             self.request.user,
             extra={
@@ -854,8 +860,7 @@ class EntityDeletionMixin(UserTestMixin):
         return HttpResponseRedirect(self.get_success_url())
 
     def post(self, request, *args, **kwargs):
-        # because forms are screwed (delete not possible)
-        # UPDATE: delete works if allowed in CORS
+        # delete works if allowed in CORS
         if request.POST.get("action") == "reset":
             return self.reset(request, *args, **kwargs)
         elif request.POST.get("action") == "delete":

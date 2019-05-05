@@ -8,7 +8,8 @@ from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
 from django.db import models
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
+from django.core.exceptions import PermissionDenied
 from django.conf import settings
 from django.urls import reverse
 from django.contrib import messages
@@ -342,6 +343,16 @@ class ComponentCreate(UserTestMixin, CreateView):
     model = UserComponent
     form_class = UserComponentForm
 
+    def dispatch(self, request, *args, **kwargs):
+        # can leak elsewise usernames, who have no public components
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except PermissionDenied as exc:
+            if request.is_staff:
+                raise exc
+            # elsewise disguise
+            raise Http404
+
     def form_valid(self, form):
         _ = gettext
         messages.success(
@@ -378,7 +389,13 @@ class ComponentUpdate(UserTestMixin, UpdateView):
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.usercomponent = self.object
-        return super().dispatch(request, *args, **kwargs)
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except PermissionDenied as exc:
+            if request.is_staff:
+                raise exc
+            # elsewise disguise
+            raise Http404
 
     def get(self, request, *args, **kwargs):
         return self.render_to_response(self.get_context_data())
@@ -499,7 +516,13 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
         self.object = self.get_object()
         self.usercomponent = self.object
         self.user = self.get_user()
-        return super().dispatch(request, *args, **kwargs)
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except PermissionDenied as exc:
+            if request.is_staff:
+                raise exc
+            # elsewise disguise
+            raise Http404()
 
     def get_success_url(self):
         username = getattr(self.user, self.user.USERNAME_FIELD)

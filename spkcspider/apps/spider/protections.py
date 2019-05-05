@@ -15,6 +15,8 @@ from base64 import b64encode, b64decode
 
 from django.conf import settings
 from django import forms
+
+from django.apps import apps as django_apps
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
@@ -59,7 +61,7 @@ _Scrypt_params = {
 
 def initialize_protection_models(apps=None):
     if not apps:
-        from django.apps import apps
+        apps = django_apps
     UserComponent = apps.get_model("spider_base", "UserComponent")
     AssignedProtection = apps.get_model("spider_base", "AssignedProtection")
     ProtectionModel = apps.get_model("spider_base", "Protection")
@@ -122,10 +124,6 @@ class BaseProtection(forms.Form):
     # optional render function
     # render = None
 
-    @classmethod
-    def render_raw(cls, result):
-        return {}
-
     # auto populated, instance
     protection = None
     instance = None
@@ -135,18 +133,21 @@ class BaseProtection(forms.Form):
     initial = {}
 
     def __init__(self, protection, ptype, request, uc, **kwargs):
-        self.protection = protection
-        self.usercomponent = uc
+        AssignedProtection = django_apps.get_model(
+            "spider_base", "AssignedProtection"
+        )
         self.ptype = ptype
         self.instance = uc.protections.filter(
-            protection=self.protection
+            protection=protection
         ).first()
+        if not self.instance:
+            self.instance = AssignedProtection(
+                usercomponent=uc, protection=protection, active=False
+            )
         initial = self.get_initial()
-        # does assigned protection exist?
-        if self.instance:
-            # if it does, use instance informations
-            initial["active"] = self.instance.active
-            initial["instant_fail"] = self.instance.instant_fail
+        # use instance informations
+        initial["active"] = self.instance.active
+        initial["instant_fail"] = self.instance.instant_fail
         # copy of initial is saved as self.initial, so safe to change it
         # after __init__ is called
         super().__init__(initial=initial, **kwargs)
@@ -154,8 +155,7 @@ class BaseProtection(forms.Form):
 
     def get_initial(self):
         initial = self.initial.copy()
-        if self.instance:
-            initial.update(self.instance.data)
+        initial.update(self.instance.data)
         return initial
 
     def get_strength(self):
@@ -199,6 +199,12 @@ class BaseProtection(forms.Form):
 
     def __str__(self):
         return self.localize_name(self.name)
+
+    def save(self):
+        self.instance.active = self.cleaned_data.pop("active")
+        self.instance.instant_fail = self.cleaned_data.pop("instant_fail")
+        self.instance.data = self.cleaned_data
+        self.instance.save()
 
 
 # only friends have access
@@ -521,7 +527,7 @@ class PasswordProtection(BaseProtection):
         ):
             self.cleaned_data["active"] = False
 
-        if self.instance and not self.has_changed():
+        if getattr(self.instance, "id", None) and not self.has_changed():
             self.cleaned_data.update(self.instance.data)
             self._successful_clean = True
             return self.cleaned_data
@@ -598,31 +604,25 @@ class PasswordProtection(BaseProtection):
             self.cleaned_data["min_length"] = min_length
             self.cleaned_data["max_length"] = max_length
             self._successful_clean = True
-        except InvalidTag as exc:
-            if self.instance:
-                if has_master_pw:
-                    self.add_error(
-                        "master_pw",
-                        forms.ValidationError(
-                            _(
-                                "Invalid master password? "
-                                "Verification tag invalid"
-                            )
+        except InvalidTag:
+            if has_master_pw:
+                self.add_error(
+                    "master_pw",
+                    forms.ValidationError(
+                        _(
+                            "Invalid master password? "
+                            "Passwords were not readable"
                         )
                     )
-                else:
-                    self.add_error(
-                        current_field,
-                        forms.ValidationError(
-                            _("Verification tag invalid")
-                        )
-                    )
+                )
             else:
-                logger.warning("PWProtection: problems with pw", exc_info=exc)
                 self.add_error(
                     current_field,
                     forms.ValidationError(
-                        _("Format error, check passwords")
+                        _(
+                            "Forgot to enter master password? "
+                            "Passwords were not readable"
+                        )
                     )
                 )
         except (ValueError, binascii.Error) as exc:

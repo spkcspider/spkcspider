@@ -241,8 +241,10 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(response.status_code, 200)
 
         self.app.set_user("testuser2")
-        response = self.app.get(updateurl, status=403)
-        self.assertEqual(response.status_code, 403)
+        # disguised
+        response = self.app.get(updateurl, status=404)
+        self.assertEqual(response.status_code, 404)
+        # misuse of token
         response = form.submit(status=403).maybe_follow()
         self.assertEqual(response.status_code, 403)
 

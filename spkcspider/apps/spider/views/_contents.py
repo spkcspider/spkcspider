@@ -618,17 +618,23 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
     model = AssignedContent
     usercomponent = None
 
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.usercomponent = self.get_usercomponent()
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except PermissionDenied as exc:
+            if request.is_staff:
+                raise exc
+            # elsewise disguise
+            raise Http404()
+
     def form_valid(self, form):
         _ = gettext
         messages.error(
             self.request, _('Content deleted.')
         )
         return super().form_valid(form)
-
-    def dispatch(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.usercomponent = self.get_usercomponent()
-        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
@@ -640,6 +646,20 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
                 "token": self.usercomponent.token,
             }
         )
+
+    def test_func(self):
+        # can do it over admin panel but for convenience and \
+        # allowing users to cancel (in case of timeouts)
+        staff_perm = not self.usercomponent.is_index
+        if staff_perm:
+            staff_perm = "spider_base.delete_assignedcontent"
+        if self.has_special_access(
+            user_by_login=True, user_by_token=True,
+            staff=staff_perm, superuser=True
+        ):
+            self.request.auth_token = self.create_admin_token()
+            return True
+        return False
 
     def get_required_timedelta(self):
         _time = self.object.content.deletion_period
