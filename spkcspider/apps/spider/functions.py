@@ -10,6 +10,8 @@ import time
 import base64
 import logging
 import math
+import random
+import os
 from decimal import Decimal
 from urllib.parse import urlsplit
 
@@ -32,6 +34,10 @@ from .constants import spkcgraph
 from .helpers import get_requests_params
 
 
+# seed with real random
+_nonexhaustRandom = random.Random(os.urandom(30))
+
+
 def rate_limit_default(view, request):
     group = getattr(view, "rate_limit_group", None)
     if group:
@@ -45,7 +51,10 @@ def rate_limit_default(view, request):
             logging.error(
                 "%s failed", receiver, exc_info=result
             )
-    time.sleep(1)
+    # with 0.4% chance reseed
+    if _nonexhaustRandom.randint(0, 249) == 0:
+        _nonexhaustRandom.seed(os.urandom(10))
+    time.sleep(_nonexhaustRandom.random())
     raise Http404()
 
 
