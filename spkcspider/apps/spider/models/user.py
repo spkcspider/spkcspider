@@ -108,6 +108,20 @@ class UserComponentManager(models.Manager):
             ret[0].save(update_fields=["token"])
         return ret
 
+    def from_url_part(self, url):
+        """ can be full url or token/accessmethod """
+        res = static_token_matcher.match(url)
+        if not res:
+            raise self.model.DoesNotExist()
+        if res["access"] == "list":
+            return self.get(
+                token=res["static_token"]
+            )
+        else:
+            return self.get(
+                contents__token=res["static_token"]
+            )
+
 
 class UserComponent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -274,21 +288,6 @@ class UserComponent(models.Model):
                 "token": self.token
             }
         )
-
-    @classmethod
-    def from_url_part(cls, urlp):
-        """ can be full url or token/accessmethod """
-        res = static_token_matcher.match(urlp)
-        if not res:
-            raise cls.DoesNotExist()
-        if res["access"] == "list":
-            return cls.objects.get(
-                token=res["static_token"]
-            )
-        else:
-            return cls.objects.get(
-                contents__token=res["static_token"]
-            )
 
     @property
     def untrusted_strength(self):

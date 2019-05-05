@@ -17,6 +17,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core import validators
+from django.apps import apps
 
 from ..contents import installed_contents
 from ..protections import installed_protections
@@ -93,6 +94,96 @@ class UserContentManager(models.Manager):
             ret[0].token = create_b64_id_token(ret[0].id, "_")
             ret[0].save(update_fields=["token"])
         return ret
+
+    def from_token(
+        self, token, *, info=frozenset(), variant=frozenset(),
+        check_feature=False
+    ):
+        if isinstance(variant, str):
+            variant = [variant]
+
+        if isinstance(info, str):
+            info = [info]
+
+        q = models.Q()
+        if variant:
+            if isinstance(variant, models.QuerySet):
+                q &= models.Q(ctype__in=variant)
+            else:
+                q &= models.Q(ctype__name__in=variant)
+        for i in info:
+            q &= models.Q(info__contains="\x1e%s\x1e" % i)
+        if check_feature:
+            q &= models.Q(ctype__feature_for_components__authtokens=token)
+        return self.get(
+            q, attached_to_token=token
+        )
+
+    def from_url_part(
+        self, url, *, info=frozenset(), variant=frozenset(),
+        check_feature=False
+    ):
+        """
+            url: can be full url or token/accessmethod
+            info: should be either string or iterable which will be matched
+                  against info to retrieve an unique content
+            returns: (<matched content>, <current content>/None)
+        """
+        UserComponent = apps.get_model("spider_base", "UserComponent")
+        res = static_token_matcher.match(url)
+        if not res:
+            raise self.model.DoesNotExist()
+        # shortcut, we don't need to look up db to see that without
+        # info field multiple items can match easily
+        # the special case: only one content is unreliable and should
+        # never tried to match
+        if not info and not variant:
+            raise self.model.MultipleObjectsReturned()
+
+        if isinstance(variant, str):
+            variant = [variant]
+
+        if isinstance(info, str):
+            info = [info]
+
+        q = models.Q()
+        if variant:
+            if isinstance(variant, models.QuerySet):
+                q &= models.Q(ctype__in=variant)
+            else:
+                q &= models.Q(ctype__name__in=variant)
+        for i in info:
+            q &= models.Q(info__contains="\x1e%s\x1e" % i)
+        if res["access"] == "list":
+            uc = UserComponent.objects.filter(
+                token=res["static_token"]
+            ).first()
+            if check_feature:
+                q &= (
+                    models.Q(
+                        ctype__feature_for_components=uc
+                    )
+                )
+            return (self.get(q, usercomponent=uc), None)
+        else:
+            content = self.get(
+                token=res["static_token"]
+            )
+            if check_feature:
+                q &= (
+                    models.Q(
+                        ctype__feature_for_contents=content
+                    ) |
+                    models.Q(
+                        ctype__feature_for_components=content.usercomponent
+                    )
+                )
+            return (
+                self.get(
+                    q, usercomponent=content.usercomponent
+                ),
+                content
+            )
 
 
 class AssignedContent(BaseInfoModel):
@@ -208,6 +299,11 @@ class AssignedContent(BaseInfoModel):
             # )
         ]
 
+    def __init__(self, *args, **kwargs):
+        if isinstance(kwargs.get("ctype"), str):
+            kwargs["ctype"] = ContentVariant.objects.get(name=kwargs["ctype"])
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -260,42 +356,3 @@ class AssignedContent(BaseInfoModel):
                 params={'strength': self.strength},
             )
         super().clean()
-
-    @classmethod
-    def from_url_part(cls, url, info):
-        """
-            urlp: can be full url or token/accessmethod
-            info: should be either string or iterable which will be matched
-                  against info to retrieve an unique content
-            returns: (<matched content>, <current content>/None)
-        """
-        res = static_token_matcher.match(url)
-        if not res:
-            raise cls.DoesNotExist()
-        # shortcut, we don't need to look up db to see that without
-        # info field multiple items can match easily
-        # the special case: only one content is unreliable and should
-        # never tried to match
-        if not info:
-            raise cls.MultipleObjectsReturned()
-        q = models.Q()
-        if isinstance(info, str):
-            info = [info]
-        for i in info:
-            q &= models.Q(info__contains="\x1e%s\x1e" % i)
-        if res["access"] == "list":
-            return (
-                cls.objects.get(
-                    q, usercomponent__token=res["static_token"]
-                ), None
-            )
-        else:
-            content = cls.objects.get(
-                token=res["static_token"]
-            )
-            return (
-                cls.objects.get(
-                    q, usercomponent=content.usercomponent
-                ),
-                content
-            )

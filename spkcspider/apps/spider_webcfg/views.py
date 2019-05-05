@@ -50,34 +50,28 @@ class WebConfigView(UCTestMixin, View):
         return True
 
     def get_object(self, queryset=None):
-        variant = self.usercomponent.features.filter(
-            name="WebConfig"
-        ).first()
-        if not variant:
-            variant = self.usercomponent.features.filter(
-                name="TmpConfig"
-            ).first()
-        # can only access feature if activated even WebConfig exists already
-        if not variant:
-            raise Http404()
-
-        if (
-            variant == "WebConfig" and
-            "persist" not in self.request.auth_token.extra.get(
-                "intentions", _empty_set
-            )
+        variants = {"TmpConfig"}
+        if "persist" in self.request.auth_token.extra.get(
+            "intentions", _empty_set
         ):
+            variants.add("WebConfig")
+        variants = self.usercomponent.features.filter(
+            name__in=variants
+        )
+        if not variants:
             raise Http404()
-        ret = AssignedContent.objects.filter(
-            attached_to_token=self.request.auth_token, ctype=variant
-        ).first()
-        if ret:
-            return ret.content
+        try:
+            return AssignedContent.objects.from_token(
+                token=self.request.auth_token, check_feature=True,
+                variant=["WebConfig", "TmpConfig"]
+            ).content
+        except AssignedContent.DoesNotExist:
+            pass
         ret = self.model.static_create(
             token_size=getattr(settings, "TOKEN_SIZE", 30),
             associated_kwargs={
                 "usercomponent": self.usercomponent,
-                "ctype": variant,
+                "ctype": "WebConfig",
                 "attached_to_token": self.request.auth_token
             }
         )
