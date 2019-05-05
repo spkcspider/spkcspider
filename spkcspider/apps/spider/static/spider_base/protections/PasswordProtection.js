@@ -120,9 +120,10 @@ document.addEventListener("DOMContentLoaded", async function(){
   let tencoder = new TextEncoder();
   let tdecoder = new TextDecoder();
   let some_succeeded = false;
-  let pseudo_mutex_locked = false;
+  let block_submits = true;
   let promises = [];
   let master_pw = document.getElementById("id_protections_password-master_pw");
+  let active = document.getElementById("id_protections_password-active");
   let default_master_pw = document.getElementById("id_protections_password-default_master_pw").value;
   let salt = document.getElementById("id_protections_password-salt").value;
   let last_pw;
@@ -130,6 +131,14 @@ document.addEventListener("DOMContentLoaded", async function(){
   if (master_pw.value != ""){
     effective_pw = master_pw.value;
   }
+  let submit_block_handler = function (ev){
+    if (block_submits && active.checked){
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+  };
+  master_pw.form.addEventListener("submit", submit_block_handler, false);
+
   let init_key = await getKeyForPw(effective_pw, salt);
   $(".PWProtectionTarget > option").each(function() {
     let iv_val = this.value.split(":", 2);
@@ -175,6 +184,7 @@ document.addEventListener("DOMContentLoaded", async function(){
     if (event.target.value != ""){
       effective_pw = event.target.value;
     }
+    block_submits=true;
     $(".PWProtectionTarget").prop("disabled", true);
     if (some_succeeded){
       await updatePWs(last_pw, effective_pw, salt);
@@ -185,6 +195,7 @@ document.addEventListener("DOMContentLoaded", async function(){
     }
     last_pw = effective_pw;
     $(".PWProtectionTarget").prop("disabled", false);
+    block_submits=false;
   }
 
   master_pw.addEventListener("change", change_master_pw_handler, false);
