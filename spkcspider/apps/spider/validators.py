@@ -22,7 +22,7 @@ def content_name_validator(value):
 
 
 validator_token = validators.RegexValidator(
-    r'^[-a-zA-Z0-9_]+\Z',
+    r'\A[-a-zA-Z0-9_]+\Z',
     _("Enter a valid token."),
-    'invalid'
+    'invalid_token'
 )
