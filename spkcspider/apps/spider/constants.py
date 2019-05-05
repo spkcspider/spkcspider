@@ -5,11 +5,12 @@ __all__ = (
     "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
     "hex_size_of_bigid",
     "TokenCreationError", "index_names", "protected_names", "spkcgraph",
-    "dangerous_login_choices", "ActionUrl"
+    "dangerous_login_choices", "ActionUrl", "static_token_matcher"
 )
 
 import enum
 from collections import namedtuple
+import re
 
 from rdflib.namespace import Namespace
 
@@ -28,6 +29,12 @@ MAX_TOKEN_B64_SIZE = MAX_TOKEN_SIZE*4//3
 
 
 MIN_PROTECTION_STRENGTH_LOGIN = 2
+
+
+# user can change static token but elsewise the token stays static
+static_token_matcher = re.compile(
+    r"(?:[^?]*/|^)(?P<static_token>[^/?]+)/(?P<access>[^/?]+)"
+)
 
 
 class TokenCreationError(Exception):

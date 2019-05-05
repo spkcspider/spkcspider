@@ -24,7 +24,7 @@ from ..protections import installed_protections
 # from ..constants import VariantType
 from ..helpers import create_b64_id_token
 from ..constants import (
-    MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid
+    MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid, static_token_matcher
 )
 from ..validators import content_name_validator, validator_token
 
@@ -260,3 +260,42 @@ class AssignedContent(BaseInfoModel):
                 params={'strength': self.strength},
             )
         super().clean()
+
+    @classmethod
+    def from_url_part(cls, url, info):
+        """
+            urlp: can be full url or token/accessmethod
+            info: should be either string or iterable which will be matched
+                  against info to retrieve an unique content
+            returns: (<matched content>, <current content>/None)
+        """
+        res = static_token_matcher.match(url)
+        if not res:
+            raise cls.DoesNotExist()
+        # shortcut, we don't need to look up db to see that without
+        # info field multiple items can match easily
+        # the special case: only one content is unreliable and should
+        # never tried to match
+        if not info:
+            raise cls.MultipleObjectsReturned()
+        q = models.Q()
+        if isinstance(info, str):
+            info = [info]
+        for i in info:
+            q &= models.Q(info__contains="\x1e%s\x1e" % i)
+        if res["access"] == "list":
+            return (
+                cls.objects.get(
+                    q, usercomponent__token=res["static_token"]
+                ), None
+            )
+        else:
+            content = cls.objects.get(
+                token=res["static_token"]
+            )
+            return (
+                cls.objects.get(
+                    q, usercomponent=content.usercomponent
+                ),
+                content
+            )

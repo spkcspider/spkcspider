@@ -12,7 +12,7 @@ from rdflib import Graph
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants import spkcgraph
-from spkcspider.apps.spider.models import UserComponent
+from spkcspider.apps.spider.models import UserComponent, AssignedContent
 from spkcspider.apps.spider.signals import update_dynamic
 # Create your tests here.
 
@@ -302,7 +302,7 @@ class AdvancedComponentTest(TransactionWebTest):
         form = self.app.get(createurlindex).forms[0]
         form.action = createurlindex
         form['content_control-usercomponent'] = public.id
-        form['content_control-name'] = "name"
+        form['content_control-name'] = "newfieldname"
         form['text'] = "foobar"
         response = form.submit()
         location = response.location
@@ -311,13 +311,76 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(public.contents.count(), 2)
         url = public.contents.get(
-            info__contains="\x1ename=name\x1e"
+            info__contains="\x1ename=newfieldname\x1e"
         ).get_absolute_url("update")
         self.assertEqual(location, url)
         form = response.forms[0]
         self.assertEqual(form["text"].value, "foobar")
         form['content_control-new_static_token'] = "12"
         form['text'] = "foobart"
-        form['content_control-name'] = "hubert"
+        form['content_control-name'] = "newfieldname2"
         response = form.submit().follow()
         self.assertEqual(response.forms[0]["text"].value, "foobart")
+        with self.assertRaises(AssignedContent.DoesNotExist):
+            public.contents.get(
+                info__contains="\x1ename=newfieldname\x1e"
+            )
+
+        with self.subTest(msg="match uc with from_url_part"):
+            url = public.contents.get(
+                info__contains="\x1ename=newfieldname2\x1e"
+            ).get_absolute_url("fsooso")
+            self.assertEquals(public, public.from_url_part(url))
+            url = public.get_absolute_url()
+            self.assertEquals(public, public.from_url_part(url))
+            self.assertEquals(
+                public, public.from_url_part(
+                    "{}/list".format(public.token)
+                )
+            )
+            with self.assertRaises(public.DoesNotExist):
+                public.from_url_part("7_8383/list")
+            with self.assertRaises(public.DoesNotExist):
+                public.from_url_part("7_8383")
+
+        with self.subTest(msg="match content with from_url_part"):
+            content = public.contents.get(
+                info__contains="\x1ename=newfieldname2\x1e"
+            )
+            url = content.get_absolute_url("slksdkl")
+            cs = content.from_url_part(url, "name=newfieldname2")
+            self.assertEquals(content, cs[0])
+            self.assertEquals(content, cs[1])
+            self.assertEquals(
+                content, content.from_url_part(url, ["name=newfieldname2"])[0]
+            )
+            with self.assertRaises(content.DoesNotExist):
+                content.from_url_part(
+                    url, ["name=notexistent"]
+                )
+            url = public.get_absolute_url()
+            cs = content.from_url_part(
+                url, ["type=Text", "id={}".format(content.id)]
+            )
+            self.assertEquals(content, cs[0])
+            self.assertEquals(None, cs[1])
+            self.assertEquals(
+                content, content.from_url_part(
+                    "{}/list".format(public.token),
+                    ["name=newfieldname2"]
+                )[0]
+            )
+            with self.assertRaises(content.MultipleObjectsReturned):
+                content.from_url_part("7_8383/view", "")
+            with self.assertRaises(content.MultipleObjectsReturned):
+                content.from_url_part("7_8383/list", [])
+            with self.assertRaises(content.DoesNotExist):
+                content.from_url_part(
+                    "7_8383/view", ["name=newfieldname2"]
+                )
+            with self.assertRaises(content.DoesNotExist):
+                content.from_url_part(
+                    "7_8383/list", ["name=newfieldname2"]
+                )
+            with self.assertRaises(content.DoesNotExist):
+                self.assertEquals(content, content.from_url_part("7_8383", []))

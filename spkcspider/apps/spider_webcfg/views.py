@@ -69,7 +69,7 @@ class WebConfigView(UCTestMixin, View):
         ):
             raise Http404()
         ret = AssignedContent.objects.filter(
-            attached_to_token=self.request.auth_token
+            attached_to_token=self.request.auth_token, ctype=variant
         ).first()
         if ret:
             return ret.content

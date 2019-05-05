@@ -237,6 +237,14 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * 1-3: weak, medium, strong
 * 4: do component authentication
 
+## get usercomponent/content from url/urlpart for features
+
+Use UserComponent.from_url_part(url) / AssignedContent.from_url_part(url, [matchers]) for that
+or use a domain_mode or persistent token.
+Note: the difference between a domain_mode and a persistent token is, that the domain_mode token has a variable lifetime (user specific but defaults to 7 days)
+
+
+
 # TODO
 * examples
 * documentation

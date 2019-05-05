@@ -24,7 +24,7 @@ from ..helpers import get_settings_func, create_b64_id_token
 from ..validators import validator_token
 from ..constants import (
     ProtectionType, VariantType, MAX_TOKEN_B64_SIZE, TokenCreationError,
-    index_names, hex_size_of_bigid
+    index_names, hex_size_of_bigid, static_token_matcher
 )
 from ..conf import default_uctoken_duration, force_captcha
 
@@ -274,6 +274,21 @@ class UserComponent(models.Model):
                 "token": self.token
             }
         )
+
+    @classmethod
+    def from_url_part(cls, urlp):
+        """ can be full url or token/accessmethod """
+        res = static_token_matcher.match(urlp)
+        if not res:
+            raise cls.DoesNotExist()
+        if res["access"] == "list":
+            return cls.objects.get(
+                token=res["static_token"]
+            )
+        else:
+            return cls.objects.get(
+                contents__token=res["static_token"]
+            )
 
     @property
     def untrusted_strength(self):
