@@ -54,7 +54,7 @@ def rate_limit_default(view, request):
     # with 0.4% chance reseed
     if _nonexhaustRandom.randint(0, 249) == 0:
         _nonexhaustRandom.seed(os.urandom(10))
-    time.sleep(_nonexhaustRandom.random())
+    time.sleep(_nonexhaustRandom.random()/2)
     raise Http404()
 
 

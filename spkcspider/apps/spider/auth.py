@@ -1,5 +1,8 @@
 
 import logging
+import random
+import os
+import time
 
 from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
@@ -13,6 +16,9 @@ from .constants import (
 )
 
 logger = logging.getLogger(__name__)
+
+# seed with real random
+_nonexhaustRandom = random.Random(os.urandom(30))
 
 
 class SpiderTokenAuthBackend(ModelBackend):
@@ -123,3 +129,5 @@ class SpiderAuthBackend(ModelBackend):
             request=request, group="spider_login_failed_account",
             key=lambda x, y: username, inc=True, rate=(float("inf"), 3600)
         )
+        # be less secure here, most probably the user is already known
+        time.sleep(_nonexhaustRandom.random()/2)
