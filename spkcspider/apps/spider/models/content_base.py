@@ -133,6 +133,7 @@ class UserContentManager(models.Manager):
         res = static_token_matcher.match(url)
         if not res:
             raise self.model.DoesNotExist()
+        res = res.groupdict()
         # shortcut, we don't need to look up db to see that without
         # info field multiple items can match easily
         # the special case: only one content is unreliable and should

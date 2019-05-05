@@ -113,6 +113,7 @@ class UserComponentManager(models.Manager):
         res = static_token_matcher.match(url)
         if not res:
             raise self.model.DoesNotExist()
+        res = res.groupdict()
         if res["access"] == "list":
             return self.get(
                 token=res["static_token"]
