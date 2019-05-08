@@ -182,6 +182,10 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
                     models.Q(ctype__contains=VariantType.unlisted.value)
                 )
         context["active_features"] = self.usercomponent.features.all()
+        context["active_listed_features"] = \
+            context["active_features"].exclude(
+                ctype__contains=VariantType.unlisted.value
+            )
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(
             info__contains="\x1eunlisted\x1e"
@@ -384,6 +388,10 @@ class ContentAdd(ContentBase, CreateView):
         kwargs["content_type"] = self.object.installed_class
         kwargs["form"] = self.get_form()
         kwargs["active_features"] = self.usercomponent.features.all()
+        kwargs["active_listed_features"] = \
+            kwargs["active_features"].exclude(
+                ctype__contains=VariantType.unlisted.value
+            )
         return super().get_context_data(**kwargs)
 
     def get_form(self, allow_data=True):
@@ -526,6 +534,10 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             context["active_features"] = ContentVariant.objects.filter(
                 models.Q(feature_for_contents=self.object) |
                 models.Q(feature_for_components=self.usercomponent)
+            )
+        context["active_listed_features"] = \
+            context["active_features"].exclude(
+                ctype__contains=VariantType.unlisted.value
             )
         return context
 

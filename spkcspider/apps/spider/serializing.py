@@ -38,6 +38,10 @@ def list_features(graph, entity, ref_entity, context):
             Q(feature_for_contents=entity) |
             Q(feature_for_components=entity.usercomponent)
         )
+    if context["scope"] != "export":
+        active_features = active_features.exclude(
+            ctype__contains=VariantType.unlisted.value
+        )
     add_property(
         graph, "features", ref=ref_entity,
         literal=active_features.values_list("name", flat=True),

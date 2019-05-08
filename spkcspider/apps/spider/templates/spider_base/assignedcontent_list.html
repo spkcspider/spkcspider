@@ -77,7 +77,7 @@
         {% endblocktrans %}
       {% endif %}
     </h1>
-    {% for f in active_features %}
+    {% for f in active_listed_features %}
       {% for action in f.feature_urls %}
         <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
           <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{action.name}}</data>
@@ -101,7 +101,7 @@
       <data hidden="hidden" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        {% for f in active_features %}
+        {% for f in active_listed_features %}
           <data hidden="hidden" datatype="xsd:string" property="spkc:value">{{f.name}}</data>
         {% empty %}
           <data hidden="hidden" rel="spkc:value" resource="rdf:nil"></data>
@@ -144,12 +144,12 @@
     </div>
   {% endif %}
 
-  {% if active_features.exists %}
+  {% if active_listed_features.exists %}
   <div class="w3-padding">
     <div class="w3-white w3-padding">
       <h4>{% trans 'Active Component Features' %}:</h4>
       <div>
-        {% for f in active_features %}
+        {% for f in active_listed_features %}
           <span class="" style="display:inline-block;white-space:nowrap;">{{f}}{% if not forloop.last %}, {% endif %}</span>
         {% endfor %}
       </div>

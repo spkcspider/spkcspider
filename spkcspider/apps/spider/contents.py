@@ -9,7 +9,7 @@ from functools import lru_cache
 from django.utils.html import escape
 from django.apps import apps as django_apps
 from django.db import models, transaction
-from django.utils.translation import gettext
+from django.utils.translation import gettext, pgettext
 from django.template.loader import render_to_string
 from django.core.files.base import File
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
@@ -19,7 +19,6 @@ from django.middleware.csrf import CsrfViewMiddleware
 from django.contrib.contenttypes.fields import GenericRelation
 from django.http.response import HttpResponseBase, HttpResponse
 from django.conf import settings
-from django.utils.translation import pgettext
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
@@ -65,6 +64,7 @@ def initialize_content_models(apps=None):
         apps = django_apps
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
     all_content = models.Q()
+    valid_for = {}
     for code, val in installed_contents.items():
         appearances = val.appearances
         if callable(appearances):
@@ -79,6 +79,7 @@ def initialize_content_models(apps=None):
             require_save = False
             assert dic["name"] not in forbidden_names, \
                 "Forbidden content name: %" % dic["name"]
+            _v_for = dic.pop("valid_feature_for", None)
             try:
                 with transaction.atomic():
                     if update:
@@ -96,6 +97,12 @@ def initialize_content_models(apps=None):
                 variant.code = code
                 require_save = True
 
+            if _v_for:
+                if _v_for == "*":
+                    valid_for[dic["name"]] = (variant, set("*"))
+                else:
+                    valid_for[dic["name"]] = (variant, set(_v_for))
+
             for key in _attribute_list:
                 val = dic.get(
                     key, variant._meta.get_field(key).get_default()
@@ -106,6 +113,18 @@ def initialize_content_models(apps=None):
             if require_save:
                 variant.save()
             all_content |= models.Q(name=dic["name"], code=code)
+    for val in valid_for.values():
+        try:
+            # try first to exclude by stripping "*" and checking error
+            val[1].remove("*")
+            val[0].valid_feature_for.set(ContentVariant.objects.exclude(
+                name__in=val[1]
+            ))
+        except KeyError:
+            val[0].valid_feature_for.set(ContentVariant.objects.filter(
+                name__in=val[1]
+            ))
+
     invalid_models = ContentVariant.objects.exclude(all_content)
     if invalid_models.exists():
         print("Invalid content, please update or remove them:",
@@ -120,8 +139,11 @@ class BaseContent(models.Model):
     # iterable or callable returning iterable containing dicts
     # required keys: name
     # optional: strength (default=0), ctype (default="")
+    # conditional required: valid_feature_for
     # max name length is 50 chars
     # max ctype length is 10 chars (10 attributes)
+    # valid_feature_for is  a list or if "*" also an string.
+    #  "*" inverts choices so parameters are blacklisted instead whitelisted
 
     # use case: addons for usercontent, e.g. dependencies on external libraries
     # use case: model with different abilities

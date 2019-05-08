@@ -7,8 +7,7 @@ from django.db import models
 from django.urls import reverse
 from django.conf import settings
 from django.template.loader import render_to_string
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import gettext
+from django.utils.translation import gettext, pgettext, gettext_lazy as _
 from django.http import HttpResponseRedirect
 from django.core.files.storage import default_storage
 
@@ -16,6 +15,7 @@ from jsonfield import JSONField
 
 from ranged_response import RangedFileResponse
 
+from spkcspider.apps.spider.constants import VariantType
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.conf import (
     image_extensions, media_extensions
@@ -52,6 +52,27 @@ def get_file_path(instance, filename):
     else:
         raise Exception("Unlikely event: no free filename")
     return ret_path
+
+
+@add_content
+class DisclaimerFeature(BaseContent):
+    appearances = [
+        {
+            "name": "EUDisclaimer",
+            "ctype": (
+                VariantType.content_feature + VariantType.unlisted
+            ),
+            "valid_feature_for": ["Text"]
+        }
+    ]
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def localize_name(cls, name):
+        name = "Disclaimer advertisment (EU)"
+        return pgettext("feature name", name)
 
 
 class ContentWithLicense(BaseContent):

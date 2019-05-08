@@ -20,7 +20,6 @@ from django.core import validators
 from django.apps import apps
 
 from ..contents import installed_contents
-from ..protections import installed_protections
 
 # from ..constants import VariantType
 from ..helpers import create_b64_id_token
@@ -47,6 +46,10 @@ class ContentVariant(models.Model):
     strength = models.PositiveSmallIntegerField(
         default=0, validators=[validators.MaxValueValidator(10)]
     )
+    # for content features
+    valid_feature_for = models.ManyToManyField(
+        "self", blank=True, related_name="valid_features", symmetrical=False
+    )
 
     @property
     def installed_class(self):
@@ -57,7 +60,7 @@ class ContentVariant(models.Model):
         return installed_contents[self.code].cached_feature_urls(self.name)
 
     def localize_name(self):
-        if self.code not in installed_protections:
+        if self.code not in installed_contents:
             return self.name
         return self.installed_class.localize_name(self.name)
 

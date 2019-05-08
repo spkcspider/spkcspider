@@ -82,3 +82,8 @@ def expires_delta(expires):
 @register.simple_tag()
 def token_expires(usercomponent, token):
     return token.created + usercomponent.token_duration
+
+
+@register.simple_tag(takes_context=True)
+def active_feature_names(context):
+    return context["active_features"].values_list("name", flat=True)

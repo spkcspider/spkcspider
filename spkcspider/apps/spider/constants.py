@@ -75,8 +75,9 @@ class VariantType(str, enum.Enum):
 
     # don't list as contentvariant for user (for computer only stuff)
     #  works like unlisted in info field, just for ContentVariants
-    # don't appear in allowed_content in contrast to feature
-    # => should either depend on feature or normal content
+    # don't appear in allowed_content in contrast to feature except
+    #   if specified with a feature
+    #   here it unlists the contentvariant from public feature list
     unlisted = "d"
     # activates domain mode
     domain_mode = "e"

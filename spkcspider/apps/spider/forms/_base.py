@@ -39,12 +39,13 @@ public attribute from component for restoring protection</td>
 
 
 _help_text_features_components = _("""
+Features which should be active on component and user content<br/>
 Note: persistent Features (=features which use a persistent token) require and enable "Persistence"
 """)  # noqa: E501
 
 _help_text_features_contents = _("""
-Note: persistent Features (=features which use a persistent token) require active "Persistence" Feature on usercomponent
-They are elsewise excluded
+Features which should be active on user content<br/>
+Note: persistent Features (=features which use a persistent token) require the active "Persistence" Feature on usercomponent. They are elsewise excluded.
 """)  # noqa: E501
 
 
@@ -435,10 +436,13 @@ class UserContentForm(forms.ModelForm):
                 user = self.instance.usercomponent.user
             self.fields["features"].queryset = (
                 self.fields["features"].queryset &
-                user.spider_info.allowed_content.all()
+                user.spider_info.allowed_content.all() &
+                self.instance.ctype.valid_features.all()
             ).order_by("name")
-            self.fields["features"].initial = \
-                self.instance.usercomponent.default_content_features.all()
+            self.fields["features"].initial = (
+                self.instance.usercomponent.default_content_features.all() &
+                self.instance.ctype.valid_features.all()
+            )
 
         if request.user != user and not request.is_staff:
             del self.fields["usercomponent"]

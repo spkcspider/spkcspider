@@ -5,7 +5,7 @@ namespace: spider_base
 """
 
 __all__ = [
-    "LinkContent", "TravelProtection"
+    "LinkContent", "PersistenceFeature", "TravelProtection"
 ]
 
 import logging

@@ -319,7 +319,7 @@ class UserComponent(models.Model):
 
     @property
     def is_public_allowed(self):
-        """ Can the public attribute be set """
+        """ Is the public attribute allowed """
         return not self.is_index and not self.contents.filter(
             strength__gte=5
         ).exists()
@@ -356,8 +356,10 @@ class UserInfo(models.Model):
             "spkcspider.apps.spider.functions.allow_all_filter"
         )
         # Content types which are not "installed" should be removed/never used
-        # unlisted needs not to be allowed as it is only a side product
+        # unlisted can be removed as sideproduct if not specified with feature
         for variant in ContentVariant.objects.exclude(
+            ~models.Q(ctype__contains=VariantType.content_feature.value) |
+            ~models.Q(ctype__contains=VariantType.component_feature.value),
             ctype__contains=VariantType.unlisted.value
         ).filter(
             code__in=installed_contents

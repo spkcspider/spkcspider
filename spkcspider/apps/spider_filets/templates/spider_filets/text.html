@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n spider_base %}
 <data hidden="hidden" rel="spkc:properties">
   <data hidden="hidden" typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name">name</data>
@@ -14,6 +14,14 @@
   </div>
 </div>
 {% include "spider_filets/license_info.html" %}
+{% active_feature_names as fnames %}
+{% if "EUDisclaimer" in fnames %}
+<div class="w3-padding w3-small w3-text-red">
+  {% blocktrans %}
+  The author maybe profits financially from this blog post.
+  {% endblocktrans %}
+</div>
+{% endif %}
 {% if "update_guest" in abilities %}
 <div class="w3-padding">
   <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_guest' %}?{{spider_GET.urlencode}}">{% trans "Update" %}</a>
