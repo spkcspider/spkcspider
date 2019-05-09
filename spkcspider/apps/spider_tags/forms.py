@@ -25,7 +25,7 @@ from spkcspider.apps.spider.fields import MultipleOpenChoiceField, JsonField
 from spkcspider.apps.spider.widgets import ListWidget, OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
 from spkcspider.apps.spider.models import (
-    AssignedContent, ReferrerObject
+    AssignedContent, ReferrerObject, TravelProtection
 )
 from spkcspider.apps.spider.contents import BaseContent
 
@@ -207,7 +207,9 @@ def generate_form(name, layout):
                 }
             }
 
-        def __init__(self, instance, *, uc=None, initial=None, **kwargs):
+        def __init__(
+            self, instance, *, request=None, uc=None, initial=None, **kwargs
+        ):
             if not initial:
                 initial = {}
             self.instance = instance
@@ -217,6 +219,14 @@ def generate_form(name, layout):
             super().__init__(
                 initial=_initial, **kwargs
             )
+            if request:
+                travel = TravelProtection.objects.get_active_for_request(
+                    request
+                )
+            else:
+                # read only, no updates, so disable protections
+                travel = TravelProtection.objects.none()
+                assert(not self.data and not self.files)
 
             for field in self.fields.values():
                 if hasattr(field, "queryset"):
@@ -235,6 +245,11 @@ def generate_form(name, layout):
                     if attrs:
                         for i in attrs:
                             q_uc |= Q(**{i: uc})
+                    attrs = getattr(field, "exclude_travel", _empty_set)
+                    # must be last
+                    if attrs:
+                        for i in attrs:
+                            q_uc &= ~Q(**{i: travel})
                     field.queryset = field.queryset.filter(
                         q_user, q_uc, **filters
                     )

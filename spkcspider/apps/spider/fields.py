@@ -1,13 +1,21 @@
-__all__ = ["OpenChoiceField", "MultipleOpenChoiceField", "SanitizedHtmlField"]
+__all__ = [
+    "OpenChoiceField", "MultipleOpenChoiceField", "SanitizedHtmlField",
+    "ContentMultipleChoiceField"
+]
 
 import json
 
-from django.forms import fields
+from django.forms import fields, models
 
 from html5lib.filters.sanitizer import allowed_css_properties
 from bleach import sanitizer
 
 from .widgets import OpenChoiceWidget, TrumbowygWidget
+
+
+class ContentMultipleChoiceField(models.ModelMultipleChoiceField):
+    def label_from_instance(self, obj):
+        return "{}: {} ({})".format(obj.usercomponent, obj, obj.ctype)
 
 
 class JsonField(fields.Field):

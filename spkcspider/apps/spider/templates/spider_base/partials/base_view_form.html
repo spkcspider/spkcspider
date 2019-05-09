@@ -18,7 +18,7 @@
         <div>{{ field.label_tag }}</div>
         {% if field.field.widget.allow_multiple_selected %}
           <ul class="w3-white">
-            {% for val in field.value %}
+            {% for val in field|field_to_python %}
               {% literalize val field as LiteralData %}
               {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
                 {% if LiteralData|is_uriref %}
@@ -41,15 +41,15 @@
         {% else %}
           {% literalize field as LiteralData %}
           {% if LiteralData|is_uriref %}
-            <a class="w3-white" property="spkc:value" href="{{LiteralData}}">{{field.value|default_if_none:""}}</a>
+            <a class="w3-white" property="spkc:value" href="{{LiteralData}}">{{field|field_to_python|default_if_none:""}}</a>
           {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref %}
             <span>
               <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
-              <a class="w3-white" href="{{LiteralData}}" resource="">{{field.value|default_if_none:""}}</a>
+              <a class="w3-white" href="{{LiteralData}}" resource="">{{field|field_to_python|default_if_none:""}}</a>
             </span>
           {% else %}
             {% literalize field as LiteralData %}
-            <span property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}" class="w3-white">{{field.value|default_if_none:""}}</span>
+            <span property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}" class="w3-white">{{field|field_to_python|default_if_none:""}}</span>
           {% endif %}
         {% endif %}
       </li>

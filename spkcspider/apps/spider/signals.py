@@ -7,7 +7,9 @@ __all__ = (
 )
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
+from django.db import transaction
 from .constants import VariantType
 from .helpers import create_b64_id_token
 import logging
@@ -47,7 +49,7 @@ def CleanupCb(sender, instance, **kwargs):
     if sender._meta.model_name == "usercomponent":
         # if component is deleted the content deletion handler cannot find
         # the user. Here if the user is gone counting doesn't matter anymore
-        if instance.user and instance.user.spider_info:
+        if instance.user:
             try:
                 s = instance.get_accumulated_size()
                 # because of F expressions no atomic is required
@@ -56,11 +58,18 @@ def CleanupCb(sender, instance, **kwargs):
                 instance.user.spider_info.save(
                     update_fields=["used_space_local", "used_space_remote"]
                 )
+            except ObjectDoesNotExist:
+                pass
             except Exception as exc:
                 logging.exception(
-                    "update size failed, trigger expensive recalculation"
+                    "update size failed, trigger expensive recalculation",
+                    exc_inf=exc
                 )
-                stored_exc = exc
+                user = instance.user
+                with transaction.atomic():
+                    user.spider_info.calculate_allowed_content()
+                    user.spider_info.calculate_used_space()
+                    user.spider_info.save()
 
     elif sender._meta.model_name == "assignedcontent":
         if instance.usercomponent and instance.usercomponent.user:
@@ -79,15 +88,19 @@ def CleanupCb(sender, instance, **kwargs):
                     update_fields=["used_space_local", "used_space_remote"]
                 )
             except Exception as exc:
-                logging.exception(
-                    "update size failed, trigger expensive recalculation"
+                logging.error(
+                    "update size failed, trigger expensive recalculation",
+                    exc_info=exc
                 )
                 stored_exc = exc
         if instance.content:
             instance.content.delete(False)
-    if stored_exc:
-        update_dynamic.send(sender)
-        raise stored_exc
+        if stored_exc:
+            user = instance.usercomponent.user
+            with transaction.atomic():
+                user.spider_info.calculate_allowed_content()
+                user.spider_info.calculate_used_space()
+                user.spider_info.save()
 
 
 def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
@@ -161,7 +174,6 @@ def UpdateSpiderCb(**_kwargs):
     # provided apps argument lacks model function support
     # so use this
     from django.apps import apps
-    from django.db import transaction
     from .contents import initialize_content_models
     from .protections import initialize_protection_models
     initialize_content_models(apps)
@@ -170,6 +182,7 @@ def UpdateSpiderCb(**_kwargs):
     # regenerate info field
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
     UserComponent = apps.get_model("spider_base", "UserComponent")
+    UserComponent.objects.filter(name="index").update(strength=10)
     for row in AssignedContent.objects.all():
         # works only with django.apps.apps
         row.info = row.content.get_info()

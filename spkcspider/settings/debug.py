@@ -52,7 +52,9 @@ DATABASES = {
     }
 }
 
-
+# these are very dangerous and should be only enabled on instances
+#  where people know what they are doing
+DANGEROUS_TRAVEL_PROTECTIONS = True
 # how many user contents/components per page
 SPIDER_OBJECTS_PER_PAGE = 3
 # how many raw/serialized results per page?

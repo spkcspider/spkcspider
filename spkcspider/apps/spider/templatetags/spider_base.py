@@ -35,8 +35,6 @@ def current_url(context):
 @register.simple_tag(takes_context=True)
 def list_own_content(context):
     ucname = "index"
-    if context["request"].session.get("is_fake", False):
-        ucname = "fake_index"
     if context["request"].user.is_authenticated:
         return context["request"].user.usercomponent_set.get(
             name=ucname
@@ -46,12 +44,9 @@ def list_own_content(context):
 
 @register.simple_tag(takes_context=True)
 def update_component(context, name):
-    ucname = name
-    if ucname == "index" and context["request"].session.get("is_fake", False):
-        ucname = "fake_index"
     if context["request"].user.is_authenticated:
         uc = context["request"].user.usercomponent_set.only("token").get(
-            name=ucname
+            name=name
         )
         return reverse("spider_base:ucomponent-update", kwargs={
             "token": uc.token

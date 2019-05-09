@@ -1,7 +1,8 @@
 """ Content Views """
 
 __all__ = (
-    "ContentIndex", "ContentAdd", "ContentAccess", "ContentDelete"
+    "ContentIndex", "ContentAdd", "ContentAccess", "ContentDelete",
+    "TravelProtectionManagement"
 )
 
 from datetime import timedelta
@@ -10,11 +11,11 @@ from django.views.generic.edit import DeleteView, UpdateView, CreateView
 from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.http.response import HttpResponseBase, HttpResponse
+from django.http.response import HttpResponseBase
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
 from django.contrib import messages
 from django.utils.translation import gettext
 from django.views.decorators.csrf import csrf_exempt
@@ -25,14 +26,16 @@ from next_prev import next_in_order, prev_in_order
 from rdflib import Graph, Literal, URIRef, XSD
 
 
-from ._core import UCTestMixin, EntityDeletionMixin, ReferrerMixin
-from ..models import (
-    AssignedContent, ContentVariant, UserComponent
+from ._core import (
+    UCTestMixin, EntityDeletionMixin, ReferrerMixin, UserTestMixin
 )
-from ..forms import UserContentForm
+from ..models import (
+    AssignedContent, ContentVariant, UserComponent, TravelProtection
+)
+from ..forms import UserContentForm, TravelProtectionManagementForm
 from ..helpers import get_settings_func, add_property, merge_get_url
-from ..queryfilters import filter_contents
-from ..constants import spkcgraph, VariantType
+from ..queryfilters import filter_contents, listed_variants_q
+from ..constants import spkcgraph, VariantType, static_token_matcher
 from ..serializing import paginate_stream, serialize_stream
 
 _forbidden_scopes = frozenset(["add", "list", "raw", "delete", "anchor"])
@@ -144,42 +147,33 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     def get_queryset(self):
         return super().get_queryset().filter(
             usercomponent=self.usercomponent
-        )
+        ).exclude(travel_protected__in=self.get_travel_for_request())
 
     def get_usercomponent(self):
-        query = {"token": self.kwargs["token"]}
+        travel = self.get_travel_for_request()
         return get_object_or_404(
             UserComponent.objects.select_related(
                 "user", "user__spider_info",
             ).prefetch_related("protections"),
-            **query
+            ~models.Q(
+                travel_protected__in=travel
+            ),
+            token=self.kwargs["token"]
         )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        travel = self.get_travel_for_request()
         if self.request.is_owner:
             # request.user is maybe anonymous
             context["content_variants"] = \
-                self.usercomponent.user.spider_info.allowed_content.exclude(
-                    models.Q(
-                        ctype__contains=VariantType.component_feature.value
-                    ) |
-                    models.Q(
-                        ctype__contains=VariantType.content_feature.value
-                    ) |
-                    models.Q(ctype__contains=VariantType.unlisted.value)
+                self.usercomponent.user.spider_info.allowed_content.filter(
+                    listed_variants_q
                 )
             context["content_variants_used"] = \
-                self.usercomponent.user.spider_info.allowed_content.filter(
+                context["content_variants"].filter(
+                    ~models.Q(assignedcontent__travel_protected__in=travel),
                     assignedcontent__usercomponent=self.usercomponent
-                ).exclude(
-                    models.Q(
-                        ctype__contains=VariantType.component_feature.value
-                    ) |
-                    models.Q(
-                        ctype__contains=VariantType.content_feature.value
-                    ) |
-                    models.Q(ctype__contains=VariantType.unlisted.value)
                 )
         context["active_features"] = self.usercomponent.features.all()
         context["active_listed_features"] = \
@@ -189,7 +183,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(
             info__contains="\x1eunlisted\x1e"
-        ).exists()
+        ).exclude(travel_protected__in=travel).exists()
 
         context["remotelink"] = context["spider_GET"].copy()
         context["auth_token"] = None
@@ -366,14 +360,12 @@ class ContentAdd(ContentBase, CreateView):
     def get_queryset(self):
         # use requesting user as base if he can add this type of content
         if self.request.user.is_authenticated:
-            return self.request.user.spider_info.allowed_content.exclude(
-                models.Q(ctype__contains=VariantType.component_feature.value) |
-                models.Q(ctype__contains=VariantType.unlisted.value)
+            return self.request.user.spider_info.allowed_content.filter(
+                listed_variants_q
             )
         else:
-            return self.usercomponent.user.spider_info.allowed_content.exclude(
-                models.Q(ctype__contains=VariantType.component_feature.value) |
-                models.Q(ctype__contains=VariantType.unlisted.value)
+            return self.usercomponent.user.spider_info.allowed_content.filter(
+                listed_variants_q
             )
 
     def test_func(self):
@@ -416,9 +408,11 @@ class ContentAdd(ContentBase, CreateView):
         return UserContentForm(**form_kwargs)
 
     def get_usercomponent(self):
+        travel = self.get_travel_for_request()
         return get_object_or_404(
             UserComponent.objects.prefetch_related("protections"),
-            token=self.kwargs["token"]
+            ~models.Q(travel_protected__in=travel),
+            token=self.kwargs["token"],
         )
 
     def get_object(self, queryset=None):
@@ -580,8 +574,12 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return self.test_token(minstrength)
 
     def get_usercomponent(self):
+        travel = self.get_travel_for_request()
         return get_object_or_404(
             UserComponent.objects.prefetch_related("protections"),
+            ~models.Q(
+                travel_protected__in=travel
+            ),
             contents__token=self.kwargs["token"]
         )
 
@@ -589,6 +587,8 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         # can bypass idlist and searchlist with own queryset arg
         if not queryset:
             queryset = self.get_queryset()
+        # doesn't matter if it is same user, lazy
+        travel = self.get_travel_for_request()
 
         # required for next/previous token
         queryset = queryset.select_related(
@@ -597,16 +597,28 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         ).filter(usercomponent=self.usercomponent).order_by("priority", "id")
         ob = get_object_or_404(
             queryset,
+            (
+                ~models.Q(travel_protected__in=travel) |
+                models.Q(
+                    ctype__name__in={"SelfProtection", "TravelProtection"}
+                )
+            ),
             token=self.kwargs["token"]
         )
         ob.previous_object = prev_in_order(ob, queryset)
         ob.next_object = next_in_order(ob, queryset)
+        # for receiving updates without refresh_from_db
+        ob.content.associated_obj = ob
         return ob
 
     def render_to_response(self, context):
         # context is updated and used outside!!
         rendered = self.object.content.access(context)
 
+        # allow contents to redirect from update
+        #   (e.g. if user should not know static token)
+        if isinstance(rendered, HttpResponseBase):
+            return rendered
         if self.scope == "update":
             # token changed => path has changed
             if self.object.token != self.kwargs["token"]:
@@ -619,8 +631,6 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
                 context["form"] = self.get_form_class()(
                     **self.get_form_success_kwargs()
                 )
-        if isinstance(rendered, HttpResponseBase):
-            return rendered
 
         context["content"] = rendered
         return super().render_to_response(context)
@@ -687,6 +697,97 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
+        travel = self.get_travel_for_request()
         return get_object_or_404(
-            queryset, token=self.kwargs["token"]
+            queryset,
+            ~(
+                models.Q(travel_protected__in=travel) |
+                models.Q(usercomponent__travel_protected__in=travel)
+            ),
+            token=self.kwargs["token"]
         )
+
+
+class TravelProtectionManagement(UserTestMixin, UpdateView):
+    model = TravelProtection
+    template_name = "spider_base/travelprotection.html"
+    form_class = TravelProtectionManagementForm
+
+    def dispatch(self, request, *args, **kwargs):
+        _ = gettext
+        try:
+            self.object = self.get_object()
+            if not self.object.active:
+                messages.success(
+                    self.request, _('Protection not active')
+                )
+                return redirect("home")
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return get_settings_func(
+                "RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
+
+    def get_object(self, queryset=None):
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        url = self.request.GET.get("url")
+        if url:
+            url = static_token_matcher.match(url)
+        if not url:
+            raise Http404()
+        url = url.groupdict()
+        return get_object_or_404(
+            queryset,
+            associated_rel__token=url["static_token"]
+        )
+
+    def get(self, request, *args, **kwargs):
+        return self.render_to_response(self.get_context_data())
+
+    def post(self, request, *args, **kwargs):
+        form = self.get_form()
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+    def render_to_response(self, context):
+        if not (
+            self.object.associated.getflag("anonymous_deactivation") or
+            #  not implemented yet
+            self.object.associated.getflag("anonymous_trigger")
+        ):
+            return HttpResponseRedirect(
+                self.object.associated.get_absolute_url("update")
+            )
+        return super().render_to_response(context)
+
+    def form_valid(self, form):
+        _ = gettext
+        self.object.active = False
+        self.object._anonymous_deactivation = \
+            self.object.associated.getflag("anonymous_deactivation")
+        self.object._encoded_pwhashes = "".join(
+            map(
+                lambda x: "pwhash={}\x1e".format(x),
+                self.object.associated.getlist("pwhash", 20)
+            )
+        )
+        self.object.clean()
+        self.object.save(update_fields=["active"])
+        messages.success(
+            self.request, _('{} disabled').format(self.object.associated.ctype)
+        )
+        return redirect("home")
+
+    def options(self, request, *args, **kwargs):
+        ret = super().options()
+        ret["Access-Control-Allow-Origin"] = "*"
+        ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+        return ret
+
+    def test_func(self):
+        return True

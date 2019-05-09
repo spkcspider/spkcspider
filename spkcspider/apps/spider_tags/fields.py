@@ -7,7 +7,6 @@ from django.apps import apps
 from django.utils.translation import gettext, gettext_lazy
 
 from spkcspider.apps.spider.helpers import add_by_field
-from spkcspider.apps.spider.models import TravelProtection
 
 from spkcspider.apps.spider.widgets import (
     SubSectionStartWidget, SubSectionStopWidget
@@ -50,6 +49,10 @@ installed_fields["MultipleLocalizedChoiceField"] = \
 @add_by_field(installed_fields, "__name__")
 class UserContentRefField(forms.ModelChoiceField):
     filter_strength_link = "associated_rel__usercomponent__strength__lte"
+    exclude_travel = (
+        "associated_rel__usercomponent__travel_protected__in",
+        "associated_rel__travel_protected__in",
+    )
 
     # limit_to_uc: limit to usercomponent, if False to user
     # True is strongly recommended to prevent info leak gadgets
@@ -63,17 +66,12 @@ class UserContentRefField(forms.ModelChoiceField):
         else:
             self.filters_user = ("associated_rel__usercomponent__user",)
 
-        model = apps.get_model(
-            modelname
-        )
+        model = apps.get_model(modelname)
         if not issubclass(model, BaseContent):
             raise Exception("Not a content (inherit from BaseContent)")
 
-        travel = TravelProtection.objects.get_active()
         kwargs["queryset"] = model.objects.filter(
             **kwargs.pop("limit_choices_to", {})
-        ).exclude(
-            associated_rel__usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
 
@@ -89,6 +87,10 @@ class UserContentRefField(forms.ModelChoiceField):
 @add_by_field(installed_fields, "__name__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
     filter_strength_link = "associated_rel__usercomponent__strength__lte"
+    exclude_travel = (
+        "associated_rel__usercomponent__travel_protected__in",
+        "associated_rel__travel_protected__in",
+    )
 
     # limit_to_uc: limit to usercomponent, if False to user
     # True is strongly recommended to prevent info leak gadgets
@@ -108,11 +110,8 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
         if not issubclass(model, BaseContent):
             raise Exception("Not a content (inherit from BaseContent)")
 
-        travel = TravelProtection.objects.get_active()
         kwargs["queryset"] = model.objects.filter(
             **kwargs.pop("limit_choices_to", {})
-        ).exclude(
-            associated_rel__usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
 
@@ -130,6 +129,10 @@ class AnchorField(forms.ModelChoiceField):
     spkc_use_uriref = True
     use_default_anchor = None
     filter_strength_link = "usercomponent__strength__lte"
+    exclude_travel = (
+        "associated_rel__usercomponent__travel_protected__in",
+        "associated_rel__travel_protected__in",
+    )
 
     # limit_to_uc: limit to usercomponent, if False to user
     def __init__(
@@ -147,13 +150,10 @@ class AnchorField(forms.ModelChoiceField):
         if use_default_anchor and not kwargs.get("empty_label", None):
             kwargs["empty_label"] = _("(Use default anchor)")
 
-        travel = TravelProtection.objects.get_active()
         # can also use Links to anchor as anchor
         kwargs["queryset"] = AssignedContent.objects.filter(
             info__contains="\x1eanchor\x1e",
             **kwargs.pop("limit_choices_to", {})
-        ).exclude(
-            usercomponent__travel_protected__in=travel
         )
         super().__init__(**kwargs)
 

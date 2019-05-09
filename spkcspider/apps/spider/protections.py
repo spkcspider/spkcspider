@@ -32,7 +32,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from .helpers import add_by_field, create_b64_token, aesgcm_pbkdf2_cryptor
-from .constants import ProtectionType, ProtectionResult, index_names
+from .constants import ProtectionType, ProtectionResult
 from .fields import MultipleOpenChoiceField
 from .widgets import OpenChoiceWidget, PWOpenChoiceWidget
 
@@ -84,8 +84,6 @@ def initialize_protection_models(apps=None):
             if not asuc.active:
                 asuc.active = True
                 asuc.save()
-
-    UserComponent.objects.filter(name__in=index_names).update(strength=10)
 
     invalid_models = ProtectionModel.objects.exclude(
         code__in=installed_protections.keys()
@@ -409,7 +407,7 @@ class LoginProtection(BaseProtection):
             return cls.auth_form()
 
         username = obj.usercomponent.username
-        for password in request.POST.getlist("password")[:2]:
+        for password in request.POST.getlist("password")[:4]:
             if authenticate(
                 request, username=username, password=password, nospider=True
             ):
@@ -675,7 +673,7 @@ class PasswordProtection(BaseProtection):
         auth = False
         max_length = 0
         salt = obj.data.get("salt", "").encode("ascii")
-        for password in request.POST.getlist("password")[:2]:
+        for password in request.POST.getlist("password")[:4]:
             if salt:
                 pwhash = cls.hash_pw(
                     password, salt, params=obj.data.get(
@@ -761,29 +759,3 @@ if getattr(settings, "USE_CAPTCHAS", False):
             if request.method != "GET" and form.is_valid():
                 return 1
             return form
-
-
-# travel protection
-@add_by_field(installed_protections, "name")
-class TravelProtection(BaseProtection):
-    name = "travel"
-    ptype = ProtectionType.access_control.value
-    ptype += ProtectionType.authentication.value
-
-    description = _("Deny access if valid travel protection is active")
-
-    def get_strength(self):
-        return (0, 0)
-
-    @classmethod
-    def auth(cls, request, obj, **kwargs):
-        if obj:
-            from .models import TravelProtection as TravelProtectionContent
-            travel = TravelProtectionContent.objects.get_active()
-            # simple: disallow cannot be changed by user in fake mode
-            travel = travel.filter(
-                disallow__contains=obj.usercomponent
-            )
-            if not travel.exists():
-                return 0
-        return False

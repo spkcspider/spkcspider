@@ -212,9 +212,13 @@ def has_admin_permission(self, request):
     if not request.user.is_active or not request.user.is_staff:
         return False
     from .models import TravelProtection as TravelProtectionContent
-    if TravelProtectionContent.objects.get_active().filter(
-        associated_rel__usercomponent__user=request.user
-    ).exists():
+    t = TravelProtectionContent.objects.get_active_for_request(
+        request
+    ).exists()
+    # auto activate but not deactivate
+    if t:
+        request.session["is_travel_protected"] = t
+    if request.session["is_travel_protected"]:
         return False
     return True
 

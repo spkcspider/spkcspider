@@ -301,7 +301,8 @@ class AdvancedComponentTest(TransactionWebTest):
                 "type": "Text"
             }
         )
-        form = self.app.get(createurlindex).forms[0]
+        response = self.app.get(createurlindex)
+        form = response.forms[0]
         form.action = createurlindex
         form['content_control-usercomponent'] = public.id
         form['content_control-name'] = "newfieldname"

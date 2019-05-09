@@ -24,7 +24,7 @@ from ..helpers import get_settings_func, create_b64_id_token
 from ..validators import validator_token
 from ..constants import (
     ProtectionType, VariantType, MAX_TOKEN_B64_SIZE, TokenCreationError,
-    index_names, hex_size_of_bigid, static_token_matcher
+    hex_size_of_bigid, static_token_matcher
 )
 from ..conf import default_uctoken_duration, force_captcha
 
@@ -57,10 +57,10 @@ class UserComponentManager(models.Manager):
         if kwargs is None:
             kwargs = defaults
         name = kwargs.get("name", defaults.get("name", None))
-        if name in index_names and force_captcha:
+        if name == "index" and force_captcha:
             defaults["required_passes"] = 2
             defaults["strength"] = 10
-        elif name in index_names:
+        elif name == "index":
             defaults["required_passes"] = 1
             defaults["strength"] = 10
         elif kwargs.get("public", defaults.get("public", False)):
@@ -144,10 +144,10 @@ class UserComponent(models.Model):
             "because of assigned content"
         )
     )
-    # special name: index, (fake_index):
+    # special name: index:
     #    protections are used for authentication
     #    attached content is only visible for admin and user
-    # db_index=True: "index", "fake_index" requests can speed up
+    # db_index=True: "index" requests can speed up
     # regex disables controlcars and disable special spaces
     name = models.CharField(
         max_length=255,
@@ -233,8 +233,6 @@ class UserComponent(models.Model):
         permissions = [("can_feature", "Can feature User Components")]
 
     def __str__(self):
-        if self.strength == 10:
-            return "index"
         return self.name
 
     def __repr__(self):
@@ -315,7 +313,7 @@ class UserComponent(models.Model):
 
     @property
     def is_index(self):
-        return (self.name in index_names)
+        return (self.name == "index")
 
     @property
     def is_public_allowed(self):

@@ -1,7 +1,7 @@
 __all__ = [
     "Select2Widget", "OpenChoiceWidget", "StateButtonWidget",
     "TrumbowygWidget", "HTMLWidget", "SubSectionStartWidget",
-    "SubSectionStopWidget", "ListWidget"
+    "SubSectionStopWidget", "ListWidget", "RomeDatetimePickerWidget"
 ]
 
 
@@ -100,6 +100,28 @@ class HTMLWidget(widgets.Input):
 
     def value_omitted_from_data(self, data, files, name):
         return None
+
+
+class RomeDatetimePickerWidget(widgets.DateTimeInput):
+    anchor_class = "RomeDatetimeTarget"
+
+    def __init__(self, *, attrs=None, **kwargs):
+        if not attrs:
+            attrs = {"class": ""}
+        attrs.setdefault("class", "")
+        attrs["class"] += " %s" % self.anchor_class
+        super().__init__(attrs=attrs, **kwargs)
+
+    class Media:
+        css = {
+            "all": [
+                "node_modules/@bevacqua/rome/dist/rome%s.css" % _extra
+            ]
+        }
+        js = [
+            'node_modules/@bevacqua/rome/dist/rome%s.js' % _extra,  # noqa:E501
+            'spider_base/RomePickerWidget.js'
+        ]
 
 
 class SubSectionStartWidget(HTMLWidget):

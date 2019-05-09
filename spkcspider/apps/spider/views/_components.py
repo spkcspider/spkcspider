@@ -18,9 +18,11 @@ from django.utils.translation import gettext
 from rdflib import Graph, Literal, URIRef, XSD
 
 from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
-from ..constants import spkcgraph, VariantType
+from ..constants import spkcgraph
 from ..forms import UserComponentForm
-from ..queryfilters import filter_contents, filter_components
+from ..queryfilters import (
+    filter_contents, filter_components, listed_variants_q
+)
 from ..models import (
     UserComponent, TravelProtection, AssignedContent
 )
@@ -223,6 +225,16 @@ class ComponentPublicIndex(ComponentIndexBase):
         q = models.Q(public=True)
         if self.is_home:
             q &= models.Q(featured=True)
+
+        # doesn't matter if it is same user, lazy
+        # only apply unconditional travelprotections here
+        travel = TravelProtection.objects.get_active().exclude(
+            associated_rel__info__contains="\x1epwhash="
+        )
+        # remove all travel protected components if not admin or
+        # if is is_travel_protected
+        if not self.request.is_staff:
+            q &= ~models.Q(travel_protected__in=travel)
         return query.filter(q)
 
     def get_queryset_contents(self):
@@ -230,6 +242,16 @@ class ComponentPublicIndex(ComponentIndexBase):
         q = models.Q(usercomponent__strength=0)
         if self.is_home:
             q &= models.Q(usercomponent__featured=True)
+        # doesn't matter if it is same user, lazy
+        # only apply unconditional travelprotections here
+        travel = TravelProtection.objects.get_active().exclude(
+            associated_rel__info__contains="\x1epwhash="
+        )
+        # remove all travel protected components if not admin or
+        # if is is_travel_protected
+        if not self.request.is_staff:
+            q &= ~models.Q(travel_protected__in=travel)
+            q &= ~models.Q(usercomponent__travel_protected__in=travel)
         return query.filter(q)
 
     def get_ordering(self, issearching=False):
@@ -279,63 +301,33 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         return False
 
     def get_queryset_components(self):
-        query = super().get_queryset_components()
-        q = models.Q()
+        query = super().get_queryset_components().filter(user=self.user)
         # doesn't matter if it is same user, lazy
-        travel = TravelProtection.objects.get_active()
-        if self.request.session.get("is_fake", False):
-            # remove access to index
-            q &= ~models.Q(name="index")
-            q &= ~models.Q(
-                travel_protected__in=travel
-            )
-        else:
-            # remove all travel protected components if not admin or is_fake
-            if not self.request.is_staff:
-                q &= ~models.Q(
-                    travel_protected__in=travel
-                )
-            # and remove access to fake index
-            q &= ~models.Q(name="fake_index")
-        return query.filter(
-            q, user=self.user
-        )
+        travel = self.get_travel_for_request()
+        # remove all travel protected components if not admin or
+        # if is is_travel_protected
+        if not self.request.is_staff:
+            query = query.exclude(travel_protected__in=travel)
+        return query
 
     def get_queryset_contents(self):
-        query = super().get_queryset_contents()
-        q = models.Q()
-        # doesn't matter if it is same user, lazy
-        travel = TravelProtection.objects.get_active()
-        if self.request.session.get("is_fake", False):
-            # remove access to index
-            q &= ~models.Q(name="usercomponent__index")
-            # q &= ~models.Q(
-            #     travel_protected__in=travel
-            # )
-            q &= ~models.Q(
-                usercomponent__travel_protected__in=travel
-            )
-        else:
-            # remove all travel protected components if not admin or is_fake
-            if not self.request.is_staff:
-                # q &= ~models.Q(
-                #    travel_protected__in=travel
-                # )
-                q &= ~models.Q(
-                    usercomponent__travel_protected__in=travel
-                )
-            # and remove access to fake index
-            q &= ~models.Q(name="fake_index")
-        return query.filter(
-            q, user=self.user
+        query = super().get_queryset_contents().filter(
+            usercomponent__user=self.user
         )
 
+        # doesn't matter if it is same user, lazy
+        travel = self.get_travel_for_request()
+        # remove all travel protected components if not admin or
+        # if is is_travel_protected
+        if not self.request.is_staff:
+            query = query.exclude(travel_protected__in=travel)
+            query = query.exclude(usercomponent__travel_protected__in=travel)
+
+        return query
+
     def get_usercomponent(self):
-        ucname = "index"
-        if self.request.session.get("is_fake", False):
-            ucname = "fake_index"
         return get_object_or_404(
-            UserComponent, user=self.user, name=ucname
+            UserComponent, user=self.user, name="index"
         )
 
 
@@ -368,11 +360,8 @@ class ComponentCreate(UserTestMixin, CreateView):
         )
 
     def get_usercomponent(self):
-        ucname = "index"
-        if self.request.session.get("is_fake", False):
-            ucname = "fake_index"
         return get_object_or_404(
-            UserComponent, user=self.get_user(), name=ucname
+            UserComponent, user=self.get_user(), name="index"
         )
 
     def get_form_kwargs(self):
@@ -418,29 +407,15 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        travel = self.get_travel_for_request()
         context["content_variants"] = \
-            self.usercomponent.user_info.allowed_content.exclude(
-                ctype__contains=VariantType.component_feature.value
-            ).exclude(
-                models.Q(
-                    ctype__contains=VariantType.component_feature.value
-                ) |
-                models.Q(
-                    ctype__contains=VariantType.content_feature.value
-                ) |
-                models.Q(ctype__contains=VariantType.unlisted.value)
+            self.usercomponent.user_info.allowed_content.filter(
+                listed_variants_q
             )
         context["content_variants_used"] = \
-            self.usercomponent.user_info.allowed_content.filter(
+            context["content_variants"].filter(
+                ~models.Q(assignedcontent__travel_protected__in=travel),
                 assignedcontent__usercomponent=self.usercomponent
-            ).exclude(
-                models.Q(
-                    ctype__contains=VariantType.component_feature.value
-                ) |
-                models.Q(
-                    ctype__contains=VariantType.content_feature.value
-                ) |
-                models.Q(ctype__contains=VariantType.unlisted.value)
             )
         context["remotelink"] = context["spider_GET"].copy()
         context["remotelink"] = "{}{}?{}".format(
@@ -457,10 +432,12 @@ class ComponentUpdate(UserTestMixin, UpdateView):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
+        travel = self.get_travel_for_request()
         return get_object_or_404(
             queryset.prefetch_related(
                 "protections",
             ),
+            ~models.Q(travel_protected__in=travel),
             token=self.kwargs["token"]
         )
 
@@ -552,6 +529,8 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
+        travel = self.get_travel_for_request()
         return get_object_or_404(
-            queryset, token=self.kwargs["token"]
+            queryset, ~models.Q(travel_protected__in=travel),
+            token=self.kwargs["token"]
         )

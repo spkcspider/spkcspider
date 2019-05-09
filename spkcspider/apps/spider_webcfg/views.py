@@ -106,7 +106,7 @@ class WebConfigView(UCTestMixin, View):
             return HttpResponse(
                 str(exc), status_code=400
             )
-        self.object.save()
+        self.object.save(update_fields=["config"])
         return self.render_to_response(oldconfig)
 
     def render_to_response(self, config):

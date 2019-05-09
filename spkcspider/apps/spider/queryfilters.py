@@ -1,7 +1,20 @@
-__all__ = ("filter_components", "filter_contents")
+__all__ = ("filter_components", "filter_contents", "listed_variants_q")
 
 from django.db.models import Q
 from django.conf import settings
+
+from .constants import VariantType
+
+
+listed_variants_q = ~(
+    Q(
+        ctype__contains=VariantType.component_feature.value
+    ) |
+    Q(
+        ctype__contains=VariantType.content_feature.value
+    ) |
+    Q(ctype__contains=VariantType.unlisted.value)
+)
 
 
 def filter_components(searchlist, filter_unlisted=True, use_contents=True):

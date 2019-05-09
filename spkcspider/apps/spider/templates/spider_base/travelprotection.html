@@ -1,0 +1,19 @@
+{% extends "spider_base/nouc_base.html" %}
+{% load i18n %}
+{% block title %}{% blocktrans trimmed with name=object.associated.ctype %}
+  Disable: {{name}}
+{% endblocktrans %}{% endblock %}
+
+{% block content %}
+  <div class=w3-padding">
+    <h1>
+      {% trans 'Disable' %} "{{object.associated.ctype}}": {{object}}
+    </h1>
+  </div>
+
+  <form class="w3-padding" method="post" action="">
+    {% csrf_token %}
+    <button name="confirm" class="w3-button w3-grey">{% trans 'Disable' %}</button>
+  </form>
+</div>
+{% endblock %}

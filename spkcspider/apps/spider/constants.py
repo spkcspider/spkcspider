@@ -3,9 +3,9 @@ __all__ = (
     "ProtectionType", "VariantType", "ProtectionResult",
     "MIN_PROTECTION_STRENGTH_LOGIN",
     "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
-    "hex_size_of_bigid",
-    "TokenCreationError", "index_names", "protected_names", "spkcgraph",
-    "dangerous_login_choices", "ActionUrl", "static_token_matcher"
+    "hex_size_of_bigid", "TokenCreationError", "protected_names", "spkcgraph",
+    "dangerous_login_choices", "ActionUrl", "static_token_matcher",
+    "travel_scrypt_params"
 )
 
 import enum
@@ -43,8 +43,15 @@ class TokenCreationError(Exception):
 
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
 ActionUrl = namedtuple("ActionUrl", ["url", "name"])
-index_names = ["index", "fake_index"]
-protected_names = ["index", "fake_index"]
+protected_names = {"index"}
+
+
+travel_scrypt_params = {
+    "length": 32,
+    "n": 2**14,
+    "r": 16,
+    "p": 2
+}
 
 
 class ProtectionType(str, enum.Enum):
@@ -98,19 +105,20 @@ class VariantType(str, enum.Enum):
 
 
 class TravelLoginType(str, enum.Enum):
-    # no protection, login works as usual
-    none = "a"
-    # experimental, creates a fake subset view
-    fake_login = "b"
-    # wipe travel protected data and index as soon as login occurs
+    # don't show protected contents and components
+    hide = "a"
+    # switches to hiding if trigger was activated
+    trigger_hide = "b"
+    # disable login for a period
+    disable = "c"
+    # wipe travel protected contents and components
     # Note: noticable if shared contents are removed
-    wipe = "c"
+    wipe = "d"
     # wipe user, self destruct user on login, Note: maybe noticable
-    wipe_user = "d"
+    wipe_user = "e"
 
 
 dangerous_login_choices = (
-    TravelLoginType.fake_login.value,
     TravelLoginType.wipe.value,
     TravelLoginType.wipe_user.value
 )

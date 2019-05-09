@@ -285,7 +285,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 
 ### re-implement TravelProtection
 * hide contents
-* remove fake_index?
 * also: harden pws
 
 

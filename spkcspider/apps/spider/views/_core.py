@@ -31,7 +31,7 @@ from ..helpers import (
 )
 from ..constants import VariantType, TokenCreationError, ProtectionType
 from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
-from ..models import UserComponent, AuthToken, ReferrerObject
+from ..models import UserComponent, AuthToken, ReferrerObject, TravelProtection
 
 
 class UserTestMixin(AccessMixin):
@@ -41,6 +41,7 @@ class UserTestMixin(AccessMixin):
         "LOGIN_URL",
         "auth:login"
     ))
+    _travel_request = None
 
     def dispatch_extra(self, request, *args, **kwargs):
         return None
@@ -75,6 +76,12 @@ class UserTestMixin(AccessMixin):
             if key not in self.preserved_GET_parameters:
                 GET.pop(key, None)
         return GET
+
+    def get_travel_for_request(self):
+        if self._travel_request is None:
+            self._travel_request = \
+                TravelProtection.objects.get_active_for_request(self.request)
+        return self._travel_request
 
     def get_context_data(self, **kwargs):
         kwargs["raw_update_type"] = VariantType.raw_update.value
@@ -126,11 +133,8 @@ class UserTestMixin(AccessMixin):
                 "Logged in, but session not set, spam new auth token: %s",
                 self.usercomponent.username
             )
-        expire = timezone.now()-self.usercomponent.token_duration
         # delete old tokens, so no confusion happen
-        self.usercomponent.authtokens.filter(
-            created__lt=expire
-        ).delete()
+        self.remove_old_tokens()
 
         # use session_key to search for keys to reuse
         token = self.usercomponent.authtokens.filter(
@@ -247,6 +251,11 @@ class UserTestMixin(AccessMixin):
         self, user_by_login=True, user_by_token=False,
         staff=False, superuser=False
     ):
+        if self.request.user.is_authenticated:
+            t = self.get_travel_for_request().exists()
+            # auto activate but not deactivate
+            if t:
+                self.request.session["is_travel_protected"] = t
         if not hasattr(self, "usercomponent"):
             self.usercomponent = self.get_usercomponent()
         if user_by_login and self.request.user == self.usercomponent.user:
@@ -256,8 +265,8 @@ class UserTestMixin(AccessMixin):
         if user_by_token and self.test_token(4) is True:
             return True
 
-        # remove user special state if is_fake
-        if self.request.session.get("is_fake", False):
+        # remove user special state if is_travel_protected
+        if self.request.session.get("is_travel_protected", False):
             return False
         if superuser and self.request.user.is_superuser:
             self.request.is_special_user = True

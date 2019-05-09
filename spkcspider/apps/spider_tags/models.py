@@ -401,6 +401,7 @@ class SpiderTag(BaseContent):
                 **kwargs
             )
             ret["initial"] = self.tagdata.copy()
+            ret["request"] = kwargs["request"]
             ret["uc"] = self.associated.usercomponent
         return ret
 

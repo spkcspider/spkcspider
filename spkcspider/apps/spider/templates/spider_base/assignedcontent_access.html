@@ -87,20 +87,17 @@
     <h1 class="w3-center">
       {% if scope == "add" %}
         <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{object.name}}</data>
-        {% trans object.name as local_name %}
         {% blocktrans trimmed %}
           Create Content
-        {% endblocktrans %}: <em>{{local_name}}</em>
+        {% endblocktrans %}: <em>{{object}}</em>
       {% elif scope == "update" %}
         <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{object.ctype.name}}</data>
-        {% trans object.ctype.name as local_name %}
         {% blocktrans trimmed %}
           Update
-        {% endblocktrans %} "<b>{{object}}</b>" <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component' %}: {{uc}}"{% endif %}><em>({{local_name}})</em></small>
+        {% endblocktrans %} "<b>{{object}}</b>" <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component' %}: {{uc}}"{% endif %}><em>({{object.ctype}})</em></small>
       {% else %}
         <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{object.ctype.name}}</data>
-        {% trans object.ctype.name as local_name %}
-        <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{local_name}})</em></small>
+        <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{object.ctype}})</em></small>
       {% endif %}
     </h1>
     {% if object %}

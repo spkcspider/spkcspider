@@ -10,7 +10,9 @@ __all__ = [
 
 import logging
 from datetime import timedelta
+from base64 import b64encode
 
+from django.conf import settings
 from django.db import models
 from django.utils.html import escape
 from django.shortcuts import redirect
@@ -19,14 +21,15 @@ from django.middleware.csrf import CsrfViewMiddleware
 from django.http.response import HttpResponseBase
 from django.utils import timezone
 from django.urls import reverse
-from django.contrib.auth.hashers import (
-    check_password, make_password
-)
 from django.utils.translation import gettext_lazy as _
+
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from ..contents import BaseContent, add_content
 from ..constants import (
-    TravelLoginType, VariantType, ActionUrl
+    TravelLoginType, VariantType, ActionUrl, travel_scrypt_params,
 )
 
 logger = logging.getLogger(__name__)
@@ -185,40 +188,95 @@ class LinkContent(BaseContent):
 
 
 login_choices = [
-    (TravelLoginType.none.value, _("No Login protection")),
-
-    (TravelLoginType.fake_login.value, _("Fake login")),
+    (TravelLoginType.hide.value, _("Hide")),
+    (TravelLoginType.trigger_hide.value, _("Hide if triggered")),
+    (TravelLoginType.disable.value, _("Disable login")),
     # TODO: to prevent circumventing deletion_period, tie to modified
     (TravelLoginType.wipe.value, _("Wipe")),
     (TravelLoginType.wipe_user.value, _("Wipe User")),
 ]
 
-
-_login_protection = _(
-    "No Login Protection: normal, default<br/>"
-    "Fake Login: fake login and index<br/>"
-    "Wipe: Wipe protected content, "
-    "except they are protected by a deletion period<br/>"
-    "Wipe User: destroy user on login"
-)
+login_choices_dict = dict(login_choices)
 
 
 class TravelProtectionManager(models.Manager):
-    def get_active(self, now=None, no_stop=False):
+    def get_active(self, now=None):
         if not now:
             now = timezone.now()
-        q = models.Q(active=True, start__lte=now)
-        if not no_stop:
-            q &= (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
-        return self.get_queryset().filter(q)
+        q = models.Q(active=True)
+        q &= (
+            models.Q(start__isnull=True) | models.Q(start__lte=now)
+        )
+        q &= (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
+        return self.filter(q)
 
+    def get_active_for_session(self, session, user, now=None):
+        q = ~models.Q(associated_rel__info__contains="\x1epwhash=")
+        for pw in session.get("travel_hashed_pws", []):
+            q |= models.Q(
+                associated_rel__info__contains="\x1epwhash=%s\x1e" % pw,
+                associated_rel__usercomponent__user=user
+            )
+        return self.get_active(now).filter(q)
 
-def default_start():
-    return timezone.now()+timedelta(hours=3)
+    def get_active_for_request(self, request, now=None):
+        return self.get_active_for_session(request.session, request.user)
 
+    def auth(self, request, uc, now=None):
+        active = self.get_active(now).filter(associated_rel__usercomponent=uc)
 
-def default_stop():
-    return timezone.now()+timedelta(days=7)
+        request.session["travel_hashed_pws"] = list(map(
+            lambda x: b64encode(Scrypt(
+                salt=settings.SECRET_KEY.encode("ascii"),
+                backend=default_backend(),
+                **travel_scrypt_params
+            ).derive(x[:128].encode("utf-8"))).decode("ascii"),
+            request.POST.getlist("password")[:4]
+        ))
+
+        q = ~models.Q(associated_rel__info__contains="\x1epwhash=")
+        for pw in request.session["travel_hashed_pws"]:
+            q |= models.Q(
+                associated_rel__info__contains="\x1epwhash=%s\x1e" % pw
+            )
+
+        active = active.filter(q)
+
+        request.session["is_travel_protected"] = active.exists()
+
+        # use cached result instead querying
+        if not request.session["is_travel_protected"]:
+            return True
+
+        for i in active:
+            if TravelLoginType.disable.value == i.login_protection:
+                return False
+            elif TravelLoginType.trigger_hide.value == i.login_protection:
+                i.login_protection = TravelLoginType.hide.value
+                # don't re-add trigger passwords here
+                if i.associated.getflag("anonymous_deactivation"):
+                    i._encoded_form_info = \
+                        "{}anonymous_deactivation\x1e".format(
+                            i._encoded_form_info
+                        )
+                if i.associated.getflag("anonymous_trigger"):
+                    i._encoded_form_info = \
+                        "{}anonymous_trigger\x1e".format(
+                            i._encoded_form_info
+                        )
+                i.clean()
+                # assignedcontent is fully updated
+                i.save(update_fields=["login_protection"])
+            elif TravelLoginType.wipe_user.value == i.login_protection:
+                uc.user.delete()
+                return False
+            elif TravelLoginType.wipe.value == i.login_protection:
+                # first components have to be deleted
+                i.protect_components.all().delete()
+                # as this deletes itself and therefor the information
+                # about affected components
+                i.protect_contents.all().delete()
+        return True
 
 
 @add_content
@@ -227,49 +285,80 @@ class TravelProtection(BaseContent):
         {
             "name": "TravelProtection",
             "strength": 10,
-            # "ctype": VariantType.unique.value
+        },
+        {
+            "name": "SelfProtection",
+            "strength": 10,
         }
     ]
 
     objects = TravelProtectionManager()
 
-    active = models.BooleanField(default=False)
-    is_fake = models.BooleanField(default=False)
-    start = models.DateTimeField(default=default_start, null=False)
+    active = models.BooleanField(default=False, blank=True)
+    # no start for always valid = self protection
+    start = models.DateTimeField(blank=True, null=True)
     # no stop for no termination
-    stop = models.DateTimeField(default=default_stop, null=True)
+    stop = models.DateTimeField(blank=True, null=True)
 
     login_protection = models.CharField(
-        max_length=10, choices=login_choices,
-        default=TravelLoginType.none.value, help_text=_login_protection
-    )
-    # use defaults from user
-    hashed_secret = models.CharField(
-        null=True, max_length=128
+        max_length=1, choices=login_choices,
+        default=TravelLoginType.hide.value
     )
 
-    disallow = models.ManyToManyField(
+    protect_components = models.ManyToManyField(
         "spider_base.UserComponent", related_name="travel_protected",
+        blank=True, limit_choices_to={
+            "strength__lt": 10,
+        }
+    )
+    protect_contents = models.ManyToManyField(
+        "spider_base.AssignedContent", related_name="travel_protected",
         blank=True
     )
 
-    def get_abilities(self, context):
-        return ("deactivate",)
+    force_token_size = 60
+    expose_name = False
+    expose_description = False
 
-    def check_password(self, raw_password):
-        """
-        Return a boolean of whether the raw_password was correct. Handles
-        hashing formats behind the scenes.
-        """
-        def setter(raw_password):
-            self.hashed_secret = make_password(raw_password)
-            self.save(update_fields=["hashed_secret"])
-        return check_password(
-            raw_password, self.hashed_secret, setter
+    _anonymous_deactivation = False
+    _encoded_form_info = ""
+    @classmethod
+    def localize_name(cls, name):
+        if name == "TravelProtection":
+            name = "Travel-Protection"
+        else:
+            name = "Self-Protection"
+        return super().localize_name(name)
+
+    def get_content_name(self):
+        if self.start and self.stop:
+            if self.stop - self.start < timedelta(days=1):
+                return "{}:{}–{}".format(
+                    login_choices_dict[self.login_protection],
+                    self.start.time(), self.stop.time()
+                )
+            return "{}:{}–{}".format(
+                login_choices_dict[self.login_protection],
+                self.start.date(), self.stop.date()
+            )
+        elif self.start:
+            return "{}:{}–{}".format(
+                login_choices_dict[self.login_protection],
+                self.start.date()
+            )
+        else:
+            return "{}: -".format(
+                login_choices_dict[self.login_protection]
+            )
+
+        stop = self.stop or "-"
+        return "{}:{}–{}".format(
+            login_choices_dict[self.login_protection],
+            self.start.date(), stop != "-" and stop.date()
         )
 
     def get_strength_link(self):
-        return 5
+        return 11
 
     def get_priority(self):
         # pin to top with higher priority
@@ -281,29 +370,44 @@ class TravelProtection(BaseContent):
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
-        ret["uc"] = kwargs["uc"]
+        ret["uc"] = kwargs.get("source", self.associated.usercomponent)
         ret["request"] = kwargs["request"]
         return ret
 
     def access_add(self, **kwargs):
         _ = gettext
         kwargs["legend"] = escape(_("Create Travel Protection"))
-        return super().access_add(**kwargs)
+        # token = self.associated.token
+        ret = super().access_add(**kwargs)
+        # if (
+        #     token != self.associated.token and
+        #     TravelProtection.objects.get_active().filter(pk=self.pk).exists()
+        # ):
+        #     return redirect(
+        #         'spider_base:ucontent-list', kwargs={
+        #            "token": kwargs.get("source", self.usercomponent).token
+        #        }
+        #    )
+        return ret
 
     def access_update(self, **kwargs):
         _ = gettext
         kwargs["legend"] = escape(_("Update Travel Protection"))
-        return super().access_update(**kwargs)
+        # token = self.associated.token
+        ret = super().access_update(**kwargs)
+        # if (
+        #     token != self.associated.token and
+        #     TravelProtection.objects.get_active().filter(pk=self.pk).exists()
+        # ):
+        #     return redirect(
+        #         'spider_base:ucontent-list', kwargs={
+        #             "token": kwargs.get("source", self.usercomponent).token
+        #        }
+        #    )
+        return ret
 
-    def access_view(self, **kwargs):
-        return ""
-
-    def access_deactivate(self, **kwargs):
-        if self.hashed_secret:
-            if not self.check_password(
-                kwargs["request"].GET.get("travel", "")
-            ):
-                return "failure"
-        self.active = False
-        self.save()
-        return "success"
+    def get_info(self):
+        return "{}{}".format(
+            super().get_info(unlisted=True),
+            self._encoded_form_info
+        )

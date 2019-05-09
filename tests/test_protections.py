@@ -1,5 +1,6 @@
 import os
 from base64 import b64encode
+from datetime import datetime as dt, timedelta as td
 
 from django.test import override_settings
 from django_webtest import TransactionWebTest
@@ -10,7 +11,8 @@ from rdflib import Graph, Literal, URIRef, XSD
 
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants import spkcgraph
+from spkcspider.apps.spider.models import UserComponent
+from spkcspider.apps.spider.constants import spkcgraph, TravelLoginType
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.spider.helpers import aesgcm_pbkdf2_cryptor
 from spkcspider.apps.spider.protections import _pbkdf2_params
@@ -136,8 +138,9 @@ class ProtectionTest(TransactionWebTest):
         self.assertNotIn("SPKCProtectionForm", response.forms)
 
     @override_settings(DEBUG=True)
-    def test_protections(self):
+    def test_pw_protection(self):
         weak_pw = "fooobar"
+        # not really but for the test
         strong_pw = "nubadkkkkkkkkkkkkkkkkkkkkkkkkkkdkskdksdkdkdkdkr"
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
@@ -224,3 +227,316 @@ class ProtectionTest(TransactionWebTest):
         response = self.app.get(createurl).form.submit()
         # home.refresh_from_db()
         self.assertGreater(home.contents.count(), 0)
+
+
+class TravelProtectionTest(TransactionWebTest):
+    fixtures = ['test_default.json']
+
+    def setUp(self):
+        self.user = SpiderUser.objects.get(
+            username="testuser1"
+        )
+        update_dynamic.send_robust(self)
+
+    def test_simple_login_without_travelprotection(self):
+        response = self.app.get(reverse("auth:login"))
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit().follow()
+        response = self.app.get(reverse("spider_base:ucomponent-list"))
+        g = Graph()
+        g.parse(data=str(response.content, "utf8"), format="html")
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("public", datatype=XSD.string)
+            ),
+            g
+        )
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("home", datatype=XSD.string)
+            ),
+            g
+        )
+
+    def test_hide(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        home = self.user.usercomponent_set.filter(name="home").first()
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TravelProtection"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        response = self.app.get(createurl)
+        form = response.form
+        form.set("start", dt.utcnow()-td(days=1))
+        form.set("protect_components", (home.id,))
+        response = form.submit()
+        listurl = reverse("spider_base:ucomponent-list")
+        response = self.app.get(listurl)
+        g = Graph()
+        g.parse(data=str(response.content, "utf8"), format="html")
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("public", datatype=XSD.string)
+            ),
+            g
+        )
+        self.assertNotIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("home", datatype=XSD.string)
+            ),
+            g
+        )
+
+    def test_trigger_hide(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        home = self.user.usercomponent_set.filter(name="home").first()
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TravelProtection"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        response = self.app.get(createurl)
+        form = response.form
+        form.set("start", dt.utcnow()-td(days=1))
+        form.set("login_protection", TravelLoginType.trigger_hide.value)
+        form.set("protect_components", (home.id,))
+        form["trigger_pws"].force_value(("abc",))
+        response = form.submit()
+
+        # must be resetted to set hashed passwords
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+        response = self.app.get(reverse("auth:login"))
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit().follow()
+        # now even without trigger contents should be hidden
+        # so reset session
+        self.app.set_user(user=None)
+        self.app.reset()
+
+        # and fake login
+        self.app.set_user(user="testuser1")
+
+        listurl = reverse("spider_base:ucomponent-list")
+        response = self.app.get(listurl)
+        g = Graph()
+        g.parse(data=str(response.content, "utf8"), format="html")
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("public", datatype=XSD.string)
+            ),
+            g
+        )
+        self.assertNotIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("home", datatype=XSD.string)
+            ),
+            g
+        )
+
+    def test_hide_with_trigger(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        home = self.user.usercomponent_set.filter(name="home").first()
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TravelProtection"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        response = self.app.get(createurl)
+        form = response.form
+        form.set("start", dt.utcnow()-td(days=1))
+        form.set("protect_components", (home.id,))
+        form["trigger_pws"].force_value(("abc",))
+        response = form.submit()
+
+        # must be resetted to set hashed passwords
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+        response = self.app.get(reverse("auth:login"))
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit().follow()
+
+        listurl = reverse("spider_base:ucomponent-list")
+        response = self.app.get(listurl)
+        g = Graph()
+        g.parse(data=str(response.content, "utf8"), format="html")
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("public", datatype=XSD.string)
+            ),
+            g
+        )
+        self.assertNotIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("home", datatype=XSD.string)
+            ),
+            g
+        )
+
+    def test_hide_with_failing_trigger(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        home = self.user.usercomponent_set.filter(name="home").first()
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TravelProtection"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        response = self.app.get(createurl)
+        form = response.form
+        form.set("start", dt.utcnow()-td(days=1))
+        form.set("protect_components", (home.id,))
+        form["trigger_pws"].force_value(("nope",))
+        response = form.submit()
+
+        # must be resetted to set hashed passwords
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+        response = self.app.get(reverse("auth:login"))
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit().follow()
+
+        listurl = reverse("spider_base:ucomponent-list")
+        response = self.app.get(listurl)
+        g = Graph()
+        g.parse(data=str(response.content, "utf8"), format="html")
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("public", datatype=XSD.string)
+            ),
+            g
+        )
+        self.assertIn(
+            (
+                None,
+                spkcgraph["value"],
+                Literal("home", datatype=XSD.string)
+            ),
+            g
+        )
+
+    def test_wipe(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        index_count = index.contents.count()
+        home = self.user.usercomponent_set.filter(name="home").first()
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TravelProtection"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        response = self.app.get(createurl)
+        form = response.form
+        form.set("start", dt.utcnow()-td(days=1))
+        form.set("login_protection", TravelLoginType.wipe.value)
+        form.set("protect_components", (home.id,))
+        response = form.submit()
+
+        self.assertEqual(
+            index.contents.count(), index_count+1
+        )
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+
+        response = self.app.get(reverse("auth:login"))
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit().follow()
+        self.assertFalse(
+            UserComponent.objects.filter(user=self.user, name="home").exists()
+        )
+        self.assertFalse(
+            self.user.usercomponent_set.filter(name="home").exists()
+        )
+        self.assertEqual(
+            index.contents.count(), index_count
+        )
+
+    def test_wipe_user(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        index_count = index.contents.count()
+        home = self.user.usercomponent_set.filter(name="home").first()
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TravelProtection"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        response = self.app.get(createurl)
+        form = response.form
+        form.set("start", dt.utcnow()-td(days=1))
+        form.set("login_protection", TravelLoginType.wipe_user.value)
+        form.set("protect_components", (home.id,))
+        response = form.submit()
+
+        self.assertEqual(
+            index.contents.count(), index_count+1
+        )
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+
+        response = self.app.get(reverse(
+            "auth:login"
+        ))
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit()
+        self.assertFalse(
+            SpiderUser.objects.filter(
+                username="testuser1"
+            ).first()
+        )

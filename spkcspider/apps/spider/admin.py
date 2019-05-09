@@ -134,9 +134,9 @@ class UserComponentAdmin(admin.ModelAdmin):
         return True
 
     def feature(self, request, queryset):
-        queryset.exclude(
-            name__in=("index", "fake_index")
-        ).exclude(public=False).update(featured=True)
+        queryset.exclude(name="index").exclude(
+            public=False
+        ).update(featured=True)
     feature.allowed_permissions = ('can_feature',)
 
     def unfeature(self, request, queryset):

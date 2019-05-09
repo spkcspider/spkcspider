@@ -22,6 +22,17 @@ def is_uriref(value):
     return isinstance(value, URIRef)
 
 
+@register.filter()
+def field_to_python(value):
+    if isinstance(value, BoundField):
+        data = value.initial
+        if value.form.is_bound:
+            value = value.field.bound_data(value.data, data)
+        else:
+            value = data
+    return value
+
+
 @register.simple_tag(takes_context=True)
 def action_view(context):
     token = getattr(context["request"], "auth_token", None)
@@ -40,7 +51,7 @@ def literalize(ob, datatype=None, use_uriref=None):
             datatype = getattr(ob.field, "spkc_datatype", None)
         if use_uriref is None:
             use_uriref = getattr(ob.field, "spkc_use_uriref", None)
-        ob = ob.value()
+        ob = field_to_python(ob)
     elif isinstance(datatype, BoundField):
         if use_uriref is None:
             use_uriref = getattr(datatype.field, "spkc_use_uriref", None)

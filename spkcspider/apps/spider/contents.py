@@ -32,6 +32,8 @@ from .helpers import (
 )
 from .templatetags.spider_rdf import literalize
 
+logger = logging.getLogger(__name__)
+
 installed_contents = {}
 
 # don't spam set objects
@@ -75,36 +77,43 @@ def initialize_content_models(apps=None):
         if len(appearances) == 1:
             update = True
 
-        for dic in appearances:
+        for attr_dict in appearances:
             require_save = False
-            assert dic["name"] not in forbidden_names, \
-                "Forbidden content name: %" % dic["name"]
-            _v_for = dic.pop("valid_feature_for", None)
+            assert attr_dict["name"] not in forbidden_names, \
+                "Forbidden content name: %" % attr_dict["name"]
+            attr_dict = attr_dict.copy()
+            _v_for = attr_dict.pop("valid_feature_for", None)
             try:
                 with transaction.atomic():
                     if update:
                         variant = ContentVariant.objects.get_or_create(
-                            defaults=dic, code=code
+                            defaults=attr_dict, code=code
                         )[0]
                     else:
                         variant = ContentVariant.objects.get_or_create(
-                            defaults=dic, code=code, name=dic["name"]
+                            defaults=attr_dict, code=code,
+                            name=attr_dict["name"]
                         )[0]
 
             except IntegrityError:
                 # renamed model = code changed
-                variant = ContentVariant.objects.get(name=dic["name"])
+                variant = ContentVariant.objects.get(name=attr_dict["name"])
                 variant.code = code
                 require_save = True
 
             if _v_for:
                 if _v_for == "*":
-                    valid_for[dic["name"]] = (variant, set("*"))
+                    valid_for[attr_dict["name"]] = (variant, set("*"))
                 else:
-                    valid_for[dic["name"]] = (variant, set(_v_for))
+                    valid_for[attr_dict["name"]] = (variant, set(_v_for))
+            elif VariantType.content_feature.value in variant.ctype:
+                logger.warning(
+                    "%s defines content_feature but defines no "
+                    "\"valid_feature_for\"", variant.name
+                )
 
             for key in _attribute_list:
-                val = dic.get(
+                val = attr_dict.get(
                     key, variant._meta.get_field(key).get_default()
                 )
                 if getattr(variant, key) != val:
@@ -112,7 +121,7 @@ def initialize_content_models(apps=None):
                     require_save = True
             if require_save:
                 variant.save()
-            all_content |= models.Q(name=dic["name"], code=code)
+            all_content |= models.Q(name=attr_dict["name"], code=code)
     for val in valid_for.values():
         try:
             # try first to exclude by stripping "*" and checking error
@@ -156,14 +165,19 @@ class BaseContent(models.Model):
     )
     # if created associated is None (will be set later)
     # use usercomponent in form instead
-    associated_rel = GenericRelation("spider_base.AssignedContent")
-    _associated_tmp = None
+    associated_rel = GenericRelation(
+        "spider_base.AssignedContent",
+        content_type_field='content_type', object_id_field='object_id'
+    )
+    associated_obj = None
 
     # user can set name
     # if set to "force" name will be enforced
     expose_name = True
     # user can set description
     expose_description = False
+    # use if you want to force a token size
+    force_token_size = None
 
     associated_errors = None
 
@@ -171,8 +185,8 @@ class BaseContent(models.Model):
 
     @property
     def associated(self):
-        if self._associated_tmp:
-            return self._associated_tmp
+        if self.associated_obj:
+            return self.associated_obj
         return self.associated_rel.first()
 
     class Meta:
@@ -189,16 +203,16 @@ class BaseContent(models.Model):
         else:
             ob = cls()
         if associated:
-            ob._associated_tmp = associated
+            ob.associated_obj = associated
         else:
             from .models import AssignedContent
             ob = cls()
             if not associated_kwargs:
                 associated_kwargs = {}
-            ob._associated_tmp = AssignedContent(**associated_kwargs)
-        ob._associated_tmp.content = ob
+            associated_kwargs["content"] = ob
+            ob.associated_obj = AssignedContent(**associated_kwargs)
         if token_size is not None:
-            ob._associated_tmp.token_generate_new_size = token_size
+            ob.associated_obj.token_generate_new_size = token_size
         return ob
 
     @classmethod
@@ -219,7 +233,7 @@ class BaseContent(models.Model):
     def get_size(self):
         # 255 = length name no matter what encoding
         s = 255
-        if self.expose_description:
+        if self.expose_description and self.associated:
             s += len(self.associated.description)
         return s
 
@@ -355,6 +369,7 @@ class BaseContent(models.Model):
                 **self.get_form_kwargs(
                     scope=scope,
                     instance=instance,
+                    disable_data=True,  # required for using object data
                     **kwargs
                 )
             )
@@ -440,7 +455,7 @@ class BaseContent(models.Model):
                 level = logging.WARNING
                 if getattr(form, "layout_generating_form", False):
                     level = logging.DEBUG
-                logging.log(
+                logger.log(
                     level,
                     "Corrupted field: %s, form: %s, error: %s",
                     name, form, exc
@@ -673,9 +688,11 @@ class BaseContent(models.Model):
                 return csrferror
         ret = func(**context)
         if context["scope"] == "update":
-            # update function should never return HttpResponse
-            #  (except csrf error)
-            assert(not isinstance(ret, HttpResponseBase))
+            # update function should never return HttpResponse for GET
+            assert(
+                not isinstance(ret, HttpResponseBase) or
+                context["request"].method != "GET"
+            )
         return ret
 
     def get_info(self, unique=None, unlisted=None):
@@ -720,8 +737,8 @@ class BaseContent(models.Model):
 
     def clean(self):
         _ = gettext
-        if self._associated_tmp:
-            self._associated_tmp.content = self
+        if self.associated_obj:
+            self.associated_obj.content = self
         assignedcontent = self.associated
         assignedcontent.info = self.get_info()
         if getattr(self, "id", None):
@@ -737,7 +754,7 @@ class BaseContent(models.Model):
         except ValidationError as exc:
             self.associated_errors = exc
         # persist AssignedContent for saving
-        self._associated_tmp = assignedcontent
+        self.associated_obj = assignedcontent
         if self.associated_errors:
             raise ValidationError(
                 _('AssignedContent validation failed'),
@@ -751,7 +768,7 @@ class BaseContent(models.Model):
         super().save(*args, **kwargs)
         assignedcontent = self.associated
         if not assignedcontent.content:
-            # add requires this
+            # add requires this, needs maybe no second save
             assignedcontent.content = self
             assignedcontent.info = self.get_info()
             assignedcontent.strength = self.get_strength()
@@ -772,11 +789,15 @@ class BaseContent(models.Model):
                 )
                 to_save.add("info")
             if (
-                assignedcontent.token_generate_new_size is not None and
+                assignedcontent.token_generate_new_size is None and
                 not assignedcontent.token
             ):
-                assignedcontent.token_generate_new_size = \
-                    getattr(settings, "TOKEN_SIZE", 30)
+                if self.force_token_size:
+                    assignedcontent.token_generate_new_size = \
+                        self.force_token_size
+                else:
+                    assignedcontent.token_generate_new_size = \
+                        getattr(settings, "INITIAL_STATIC_TOKEN_SIZE", 30)
             # set token
             if assignedcontent.token_generate_new_size is not None:
                 if assignedcontent.token:

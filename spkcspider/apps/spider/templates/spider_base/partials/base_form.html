@@ -24,7 +24,7 @@
             </div>
             {% if field.field.widget.allow_multiple_selected %}
               <data hidden="hidden" rel="spkc:value">
-              {% for q in field.value %}
+              {% for q in field|field_to_python %}
                 {% literalize q field as LiteralData %}
                 {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
                   {% if LiteralData|is_uriref %}

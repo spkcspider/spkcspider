@@ -10,13 +10,13 @@ from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
 from ..models import (
-    Protection, UserComponent, AssignedContent, ContentVariant, AuthToken
+    Protection, UserComponent, AssignedContent, ContentVariant, AuthToken,
+    TravelProtection
 )
 
 from ..helpers import create_b64_id_token
 from ..constants import (
-    ProtectionType, VariantType, index_names, protected_names,
-    MIN_PROTECTION_STRENGTH_LOGIN
+    ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
 )
 from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
 from ..signals import move_persistent
@@ -102,7 +102,7 @@ class UserComponentForm(forms.ModelForm):
         if not (
             request.user.is_superuser or
             request.user.has_perm('spider_base.can_feature')
-        ) or request.session.get("is_fake", False):
+        ) or request.session.get("is_travel_protected", False):
             self.fields['featured'].disabled = True
 
         self.fields["features"].queryset = (
@@ -255,7 +255,7 @@ class UserComponentForm(forms.ModelForm):
         prot_strength, max_prot_strength = self.calc_protection_strength()
 
         self.cleaned_data["strength"] = 0
-        if self.cleaned_data["name"] in index_names:
+        if self.cleaned_data["name"] == "index":
             if prot_strength < MIN_PROTECTION_STRENGTH_LOGIN:
                 self.add_error(None, forms.ValidationError(
                     _("Login requires higher strength: %(strength)s"),
@@ -397,14 +397,23 @@ class UserContentForm(forms.ModelForm):
         )
         user = self.instance.usercomponent.user
 
-        if request.session.get("is_fake", False):
-            q = ~models.Q(name="index")
-        else:
-            q = ~models.Q(name="fake_index")
+        travel = TravelProtection.objects.get_active_for_request(request)
+
         query = UserComponent.objects.filter(
-            q, user=user, strength__gte=self.instance.ctype.strength
-        )
+            user=user, strength__gte=self.instance.ctype.strength
+        ).exclude(travel_protected__in=travel)
         self.fields["usercomponent"].queryset = query
+
+        if self.instance.content.force_token_size:
+            sforced = [
+                ("", ""),
+                (
+                    str(self.instance.content.force_token_size),
+                    _("New ({})").format(
+                        self.instance.content.force_token_size
+                    )
+                )
+            ]
 
         show_primary_anchor_mig = False
         if self.instance.id:
@@ -414,10 +423,18 @@ class UserContentForm(forms.ModelForm):
             ):
                 # can only migrate if a) created, b) real user
                 show_primary_anchor_mig = True
+            if self.instance.content.force_token_size:
+                self.fields["new_static_token"].choices = sforced
         else:
-            self.fields["new_static_token"].initial = INITIAL_STATIC_TOKEN_SIZE
-            self.fields["new_static_token"].choices = \
-                self.fields["new_static_token"].choices[1:]
+            if self.instance.content.force_token_size:
+                self.fields["new_static_token"].initial = \
+                    self.instance.content.force_token_size
+                self.fields["new_static_token"].choices = sforced[1:]
+            else:
+                self.fields["new_static_token"].initial = \
+                    INITIAL_STATIC_TOKEN_SIZE
+                self.fields["new_static_token"].choices = \
+                    self.fields["new_static_token"].choices[1:]
 
         if self.instance.usercomponent.is_index:
             # contents in index has no features as they could allow
@@ -543,11 +560,11 @@ class UserContentForm(forms.ModelForm):
         # field maybe not available
         self.instance.allow_domain_mode = \
             self.cleaned_data["allow_domain_mode"]
-        if not self.instance.token:
-            self.instance.token_generate_new_size = \
-                getattr(settings, "TOKEN_SIZE", 30)
         if self.cleaned_data.get("new_static_token", ""):
             self.instance.token_generate_new_size = \
                 int(self.cleaned_data["new_static_token"])
+        elif not self.instance.token:
+            self.instance.token_generate_new_size = \
+                self.fields["new_static_token"].initial
         return super().save(commit=commit)
     save.alters_data = True

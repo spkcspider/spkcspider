@@ -12,7 +12,7 @@ import ratelimit
 
 from .models import UserComponent, Protection, TravelProtection, AuthToken
 from .constants import (
-    ProtectionType, TravelLoginType, MIN_PROTECTION_STRENGTH_LOGIN
+    ProtectionType, MIN_PROTECTION_STRENGTH_LOGIN,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,33 +29,20 @@ class SpiderTokenAuthBackend(ModelBackend):
         tokenstring = request.GET.get("token", None)
         if not tokenstring:
             return
-        travel = TravelProtection.objects.get_active().filter(
-            associated_rel__usercomponent__user__username=username
-        ).exclude(login_protection=TravelLoginType.none.value)
 
-        is_fake = False
+        now = timezone.now()
 
-        if travel.exists():
-            uc = UserComponent.objects.filter(
-                user__username=username, name="fake_index"
-            ).first(),
-            is_fake = True
-        else:
-            uc = UserComponent.objects.filter(
-                user__username=username, name="index"
-            ).first()
-
-        expire = timezone.now()-uc.token_duration
-        # delete old token, so no confusion happen
-        AuthToken.objects.filter(
-            usercomponent=uc, created__lt=expire
-        ).delete()
-        if AuthToken.objects.filter(
-            usercomponent=uc,
+        token = AuthToken.objects.filter(
+            usercomponent__name="index",
             token=tokenstring
-        ).exists():
-            request.session["is_fake"] = is_fake
-            return uc.user
+        ).first()
+        if token:
+            uc = token.usercomponent
+            if token.persist == -1 and token.created < now - uc.token_duration:
+                token.delete()
+                return
+            if TravelProtection.objects.auth(request, uc, now):
+                return uc.user
 
 
 class SpiderAuthBackend(ModelBackend):
@@ -66,9 +53,6 @@ class SpiderAuthBackend(ModelBackend):
         # disable SpiderAuthBackend backend (against recursion)
         if nospider:
             return
-        travel = TravelProtection.objects.get_active().filter(
-            associated_rel__usercomponent__user__username=username
-        ).exclude(login_protection=TravelLoginType.none.value)
         uc = UserComponent.objects.filter(
             user__username=username, name="index"
         ).first()
@@ -79,45 +63,31 @@ class SpiderAuthBackend(ModelBackend):
                 protection_codes=protection_codes
             )
             if type(request.protections) is int:  # should never happen
+                logger.warning(
+                    "Login try without username, should never "
+                    "happen, archieved strength: %s",
+                    request.protections
+                )
                 return None
-
-        uc_fake = None
-        if travel.exists():
-            uc_fake = UserComponent.objects.filter(
-                user__username=username, name="fake_index"
-            ).first()
-        try:
-            if uc_fake:
-                request.protections = uc_fake.auth(
+        else:
+            try:
+                request.protections = uc.auth(
                     request, scope="auth",
                     ptype=ProtectionType.authentication.value,
                     protection_codes=protection_codes
                 )
-                if type(request.protections) is int:
-                    request.session["is_fake"] = True
-                    return uc_fake.user
-            # don't overwrite request.protections yet to serve fake version
-            # in case the real login doesn't work either
-            protections = uc.auth(
-                request, scope="auth",
-                ptype=ProtectionType.authentication.value,
-                protection_codes=protection_codes
-            )
-            if type(protections) is int:
-                request.protections = protections
-                request.session["is_fake"] = False
-                if request.protections < MIN_PROTECTION_STRENGTH_LOGIN:
-                    logger.warning(
-                        "Low login protection strength: %s, %s",
-                        request.protections, username
-                    )
-                return uc.user
-            # there was no fake so set protections
-            if not uc_fake:
-                request.protections = protections
-        except Http404:
-            # for Http404 auth abort by protections (e.g. Random Fail)
-            pass
+            except Http404:
+                # for Http404 auth abort by protections (e.g. Random Fail)
+                pass
+
+            if type(request.protections) is int:
+                if TravelProtection.objects.auth(request, uc):
+                    if request.protections < MIN_PROTECTION_STRENGTH_LOGIN:
+                        logger.warning(
+                            "Low login protection strength: %s, %s",
+                            request.protections, username
+                        )
+                    return uc.user
         # error path
 
         # allow blocking per hour

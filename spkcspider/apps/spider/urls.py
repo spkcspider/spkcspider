@@ -8,7 +8,8 @@ from .views import (
 )
 
 from .views import (
-    ContentAdd, ContentIndex, ContentAccess, ContentDelete
+    ContentAdd, ContentIndex, ContentAccess, ContentDelete,
+    TravelProtectionManagement
 )
 
 from .views import (
@@ -103,6 +104,11 @@ urlpatterns = [
         'token/renew/',
         TokenRenewal.as_view(),
         name='token-renew'
+    ),
+    path(
+        'travelprotection/',
+        TravelProtectionManagement.as_view(),
+        name='travelprotection-manage'
     ),
     path(
         'components/',
