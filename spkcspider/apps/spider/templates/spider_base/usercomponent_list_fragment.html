@@ -62,7 +62,7 @@
         </div>
       </td>
     </tr>
-    <tr><td colspan="3" style="padding:0">
+    <tr><td colspan="3" style="padding:0; word-break: break-all;">
       <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
         {% if not uc.description|is_not_or_space %}
           {{uc.description|escape|linebreaksbr}}
