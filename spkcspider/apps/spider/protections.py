@@ -27,6 +27,10 @@ from django.views.decorators.debug import sensitive_variables
 # from django.contrib.auth.hashers import make_password
 
 import ratelimit
+try:
+    from ratelimit import parse_rate
+except ImportError:
+    from ratelimit import _parse_rate as parse_rate
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -295,19 +299,19 @@ class RateLimitProtection(BaseProtection):
         )
     )
     rate_static_token_error = forms.IntegerField(
-        required=False,
+        required=False, min_value=1,
         help_text=_(
             "Maximal http404 errors per hour per user/ip before blocking"
         )
     )
     rate_login_failed_ip = forms.IntegerField(
-        required=False,
+        required=False, min_value=1,
         help_text=_(
             "Maximal failed logins per ip per hour before blocking"
         )
     )
     rate_login_failed_account = forms.IntegerField(
-        required=False,
+        required=False, min_value=1,
         help_text=_(
             "Maximal failed logins per hour for this user before blocking. "
             "Useful for login"
@@ -325,6 +329,12 @@ class RateLimitProtection(BaseProtection):
 
     def get_strength(self):
         return (1, 1)
+
+    def clean_rate_accessed(self):
+        ret = parse_rate(self.cleaned_data.get("rate_accessed"))
+        if ret[0] <= 0 or ret[1] <= 0:
+            return "1/s"
+        return self.cleaned_data.get("rate_accessed")
 
     @classmethod
     def localize_name(cls, name=None):
