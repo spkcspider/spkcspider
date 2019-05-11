@@ -13,13 +13,32 @@ INSTALLED_APPS += [
 ]
 USE_CAPTCHAS = True
 
+
+# for tests
+SPIDER_REQUEST_KWARGS_MAP["localhost"] = {
+    "verify": False,
+    "timeout": 1,
+    "proxies": {}
+}
+
 # Verifier specific options, normally not required
-# tld requests parameter overwrites, b"default": default parameters
-# why binary? Because it cannot clash with default tld this way
-VERIFIER_TLD_PARAMS_MAPPING = {
+# requests parameter overwrites
+# * "hostname.foo": parameter for specific domain
+# * "".foo": parameter for a tld
+# * b"default": default parameters for request
+# why binary? Because it cannot clash with a "default" host this way
+# hierarchy: host > tld > b"default"
+# NOTE: if VERIFIER_REQUEST_KWARGS_MAP is not specified
+#       SPIDER_REQUEST_KWARGS_MAP is used
+VERIFIER_REQUEST_KWARGS_MAP = {
     b"default": {
         "verify": certifi.where(),
         "timeout": 6,
+        "proxies": {}
+    },
+    "localhost": {  # for tests
+        "verify": False,
+        "timeout": 1,
         "proxies": {}
     }
 }

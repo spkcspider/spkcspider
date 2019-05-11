@@ -23,23 +23,6 @@ Further features and advantages of spkcspider are:
 
 This project can either be used as a standalone project (clone repo) or as a set of reusable apps (setup.py installation).
 
-## spider:
-For spiders and contents
-
-* spkcspider.apps.spider: store User Components, common base, WARNING: has spider_base namespace to not break existing apps
-* spkcspider.apps.spider_accounts: user implementation suitable for the spiders. You can supply your own user model instead.
-* spkcspider.apps.spider_filets: File and Text Content types
-* spkcspider.apps.spider_keys: Public keys and anchors
-* spkcspider.apps.spider_tags: verified information tags
-* spkcspider.apps.spider_webcfg: WebConfig Feature
-* spkcspider: contains spkcspider url detection and wsgi handler
-
-## verifier:
-Base reference implementation of a verifier.
-
-spkcspider.apps.verifier: verifier base utils WARNING: has spider_verifier namespace to not break existing apps
-
-
 
 ## Build Requirements
 * npm
@@ -56,7 +39,7 @@ poetry install
 pip install .
 ~~~~
 
-# Setup
+## Setup
 ~~~~ sh
 npm install --no-save
 ./manager.py migrate
@@ -191,9 +174,30 @@ Otherwise security could be compromised.
 
 * Persistence: Allow referrer to save data (used and activated by persistent features)
 * WebConfig: Allow remote websites and servers to save config data on your server (requires Persistence)
+* TmpConfig: Allow remote websites and servers to save config data on your server, attached to temporary tokens (means: they are gone after a while)
 
 
 # internal API
+
+
+## Structure
+
+### spider:
+For spiders and contents
+
+* spkcspider.apps.spider: store User Components, common base, WARNING: has spider_base namespace to not break existing apps
+* spkcspider.apps.spider_accounts: user implementation suitable for the spiders. You can supply your own user model instead.
+* spkcspider.apps.spider_filets: File and Text Content types
+* spkcspider.apps.spider_keys: Public keys and anchors
+* spkcspider.apps.spider_tags: verified information tags
+* spkcspider.apps.spider_webcfg: WebConfig Feature
+* spkcspider: contains spkcspider url detection and wsgi handler
+
+### verifier:
+Base reference implementation of a verifier.
+
+spkcspider.apps.verifier: verifier base utils WARNING: has spider_verifier namespace to not break existing apps
+
 
 ## info field syntax
 
@@ -244,6 +248,9 @@ or use a domain_mode or persistent token.
 Note: the difference between a domain_mode and a persistent token is, that the domain_mode token has a variable lifetime (user specific but defaults to 7 days)
 
 
+# API Breaks
+* >0.5: settings rename\*\_ TLD_PARAMS_MAPPING to \*\_REQUEST_KWARGS_MAP with new syntax (hosts are allowed, tlds start with .)
+  * Note: port arguments are stripped, localhost matches localhost:80, localhost:8000, ...
 
 # TODO
 * examples
@@ -252,6 +259,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * Localisation
   * harmonize punctation
 * cleanup authentication key logic and document it
+* lock protections in index with login password (master pw must match it)
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
@@ -260,8 +268,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * textfilet hot reloading
 * log changes
 * improve protections, add protections
-* Travelprotection
-
 
 ### Implement Emails/messaging
 * email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
@@ -283,9 +289,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
   * social media stuff: find content via comments and likes
   * annotation of other pages
 
-### re-implement TravelProtection
-* hide contents
-* also: harden pws
 
 
 # Thanks

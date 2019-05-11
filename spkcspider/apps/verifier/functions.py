@@ -4,10 +4,12 @@ __all__ = [
 ]
 
 import logging
-from urllib.parse import parse_qs, urlencode, urlsplit
+from urllib.parse import parse_qs, urlencode
 
 from django.conf import settings
 from django.urls import reverse
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -16,7 +18,7 @@ from rdflib import XSD, URIRef, Literal
 
 import requests
 
-from spkcspider.apps.spider.constants import spkcgraph
+from spkcspider.apps.spider.constants import spkcgraph, host_tld_matcher
 from spkcspider.apps.spider.helpers import create_b64_token
 
 
@@ -105,16 +107,22 @@ def get_hashob():
 
 
 def get_requests_params(url):
-    _url = urlsplit(url)
-    tld = _url.netloc.rsplit(".", 1)
-    if len(tld) == 2:
-        tld = tld[1]
-    else:
-        # e.g. localhost or ip address
-        tld = b"default"
-    # note: default tld must be bytes for beeing able to difference from
-    # a potential defaults tld
-    return settings.VERIFIER_TLD_PARAMS_MAPPING.get(
-        tld,
-        settings.VERIFIER_TLD_PARAMS_MAPPING[b"default"]
+    _url = host_tld_matcher.match(url)
+    if not _url:
+        raise ValidationError(
+            _("Invalid URL: \"%(url)s\""),
+            code="invalid_url",
+            params={"url": url}
+        )
+    _url = _url.groupdict()
+    mapper = getattr(
+        settings, "VERIFIER_REQUEST_KWARGS_MAP",
+        settings.SPIDER_REQUEST_KWARGS_MAP
+    )
+    return mapper.get(
+        _url["host"],
+        mapper.get(
+            _url["tld"],  # maybe None but then fall to retrieval 3
+            mapper[b"default"]
+        )
     )

@@ -30,7 +30,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from .constants import MAX_TOKEN_SIZE, spkcgraph
+from .constants import MAX_TOKEN_SIZE, spkcgraph, host_tld_matcher
 
 # for not spamming sets
 _empty_set = frozenset()
@@ -240,16 +240,19 @@ def merge_get_url(_url, **kwargs):
 
 
 def get_requests_params(url):
-    _url = urlsplit(url)
-    tld = _url.netloc.rsplit(".", 1)
-    if len(tld) == 2:
-        tld = tld[1]
-    else:
-        # e.g. localhost or ip address
-        tld = b"default"
-    # note: default tld must be bytes for beeing able to difference from
-    # a potential defaults tld
-    return settings.SPIDER_TLD_PARAMS_MAPPING.get(
-        tld,
-        settings.SPIDER_TLD_PARAMS_MAPPING[b"default"]
+    _url = host_tld_matcher.match(url)
+    if not _url:
+        raise ValidationError(
+            _("Invalid URL: \"%(url)s\""),
+            code="invalid_url",
+            params={"url": url}
+        )
+    _url = _url.groupdict()
+    mapper = settings.SPIDER_REQUEST_KWARGS_MAP
+    return mapper.get(
+        _url["host"],
+        mapper.get(
+            _url["tld"],  # maybe None but then fall to retrieval 3
+            mapper[b"default"]
+        )
     )

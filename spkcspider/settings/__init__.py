@@ -279,21 +279,30 @@ SPIDER_DEFAULT_LICENSE_FILE = "CC BY"
 # SPIDER_LICENSE_CHOICES_TEXT
 # SPIDER_DEFAULT_LICENSE_TEXT
 
-# tld requests parameter overwrites, b"default": default parameters
-# why binary? Because it cannot clash with default tld this way
-SPIDER_TLD_PARAMS_MAPPING = {
+# requests parameter overwrites
+# * "hostname.foo": parameter for specific domain
+# * "".foo": parameter for a tld
+# * b"default": default parameters for request
+# why binary? Because it cannot clash with a "default" host this way
+# hierarchy: host > tld > b"default"
+SPIDER_REQUEST_KWARGS_MAP = {
     b"default": {
         "verify": certifi.where(),
         "timeout": 3,
         "proxies": {}
     },
     # example for usage with tor (requires requests[socks])
-    # "onion": {
+    # ".onion": {
     #     "timeout": 10,
     #     "proxies": {
     #        'http': 'socks5://localhost:9050',
     #        'https': 'socks5://localhost:9050'
     #     }
+    # }
+    # example for a slow domain
+    # "veryslow.example": {
+    #     "timeout": 60,
+    #     "proxies": {}
     # }
 }
 

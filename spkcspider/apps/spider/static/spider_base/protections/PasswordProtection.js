@@ -200,6 +200,7 @@ document.addEventListener("DOMContentLoaded", async function(){
 
   master_pw.addEventListener("change", change_master_pw_handler, false);
   $(".PWProtectionTarget").on('change', function (event){
+    /* fix missing compatibility to async by triggering events*/
     master_pw.dispatchEvent(new CustomEvent("change"));
     return true;
   });

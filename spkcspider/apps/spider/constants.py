@@ -5,7 +5,7 @@ __all__ = (
     "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
     "hex_size_of_bigid", "TokenCreationError", "protected_names", "spkcgraph",
     "dangerous_login_choices", "ActionUrl", "static_token_matcher",
-    "travel_scrypt_params"
+    "host_tld_matcher", "travel_scrypt_params"
 )
 
 import enum
@@ -34,6 +34,10 @@ MIN_PROTECTION_STRENGTH_LOGIN = 2
 # user can change static token but elsewise the token stays static
 static_token_matcher = re.compile(
     r"(?:[^?]*/|^)(?P<static_token>[^/?]+)/(?P<access>[^/?]+)"
+)
+
+host_tld_matcher = re.compile(
+    r'^[^.]*?(?!\.)(?P<host>[^/?:]+?(?P<tld>\.[^/?:.]+)?)(?=[/?:]|$)(?!:/)'
 )
 
 
