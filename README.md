@@ -259,7 +259,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * Localisation
   * harmonize punctation
 * cleanup authentication key logic and document it
-* lock protections in index with login password (master pw must match it)
+* pw protection: add migration tool for changed SECRET_KEY
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)

@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", async function(){
   let some_succeeded = false;
   let block_submits = true;
   let promises = [];
-  let master_pw = document.getElementById("id_protections_password-master_pw");
+  let master_pw = document.getElementById("id_master_pw");
   let active = document.getElementById("id_protections_password-active");
   let default_master_pw = document.getElementById("id_protections_password-default_master_pw").value;
   let salt = document.getElementById("id_protections_password-salt").value;

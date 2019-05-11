@@ -56,6 +56,11 @@ class UserComponentForm(forms.ModelForm):
         required=False, initial="", choices=STATIC_TOKEN_CHOICES
     )
 
+    master_pw = forms.CharField(
+        label=_("Master Password"),
+        widget=forms.PasswordInput(render_value=True), required=False
+    )
+
     class Meta:
         model = UserComponent
         fields = [
@@ -115,7 +120,16 @@ class UserComponentForm(forms.ModelForm):
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 
-        if self.instance and self.instance.id:
+        # data and files field maybe not filled (to load from component)
+        # remove pw if index because it is used for legitimating changes
+        if getattr(self.instance, "id", None) and not self.instance.is_index:
+            self.initial["master_pw"] = \
+                self.fields["master_pw"].widget.value_from_datadict(
+                    request.POST, request.FILES,
+                    self.add_prefix("master_pw")
+                )
+
+        if self.instance.id:
             if self.instance.name in protected_names:
                 self.fields["name"].disabled = True
             if not self.instance.is_public_allowed:
@@ -126,6 +140,7 @@ class UserComponentForm(forms.ModelForm):
                     usercomponent=self.instance
                 )
             if self.instance.is_index:
+                self.fields["master_pw"].required = True
                 self.fields.pop("features", None)
                 self.fields.pop("featured", None)
                 self.fields["required_passes"].help_text = _(
@@ -138,7 +153,7 @@ class UserComponentForm(forms.ModelForm):
                 ptype = ProtectionType.access_control.value
             self.protections = Protection.get_forms(
                 data=data, files=files, prefix=prefix, uc=self.instance,
-                ptype=ptype, request=request
+                ptype=ptype, request=request, form=self
             )
             self.protections = list(self.protections)
         else:
@@ -229,6 +244,7 @@ class UserComponentForm(forms.ModelForm):
         assert(self.instance.user)
         self.cleaned_data["can_auth"] = False
         self.cleaned_data["allow_domain_mode"] = False
+        self.initial["master_pw"] = self.cleaned_data.pop("master_pw", None)
         if 'name' not in self.cleaned_data:
             # ValidationError so return, calculations won't work here
             return

@@ -127,15 +127,17 @@ class BaseProtection(forms.Form):
     protection = None
     instance = None
     usercomponent = None
+    parent_form = None
 
     # initial values
     initial = {}
 
-    def __init__(self, protection, ptype, request, uc, **kwargs):
+    def __init__(self, *, protection, ptype, request, uc, form, **kwargs):
         AssignedProtection = django_apps.get_model(
             "spider_base", "AssignedProtection"
         )
         self.ptype = ptype
+        self.parent_form = form
         self.instance = uc.protections.filter(
             protection=protection
         ).first()
@@ -380,6 +382,7 @@ class LoginProtection(BaseProtection):
     allow_auth = forms.BooleanField(
         label=_("Component authentication"), required=False
     )
+    _request = None
 
     class auth_form(forms.Form):
         use_required_attribute = False
@@ -391,11 +394,28 @@ class LoginProtection(BaseProtection):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self._request = kwargs.get("request")
         if ProtectionType.authentication.value in self.ptype:
             self.fields["active"].initial = True
             self.initial["active"] = True
             self.fields["active"].disabled = True
             del self.fields["allow_auth"]
+
+    def clean(self):
+        super().clean()
+        if ProtectionType.authentication.value in self.ptype:
+            if not authenticate(
+                self._request, username=self.instance.usercomponent.username,
+                password=self.parent_form.initial["master_pw"], nospider=True
+            ):
+                self.parent_form.add_error(
+                    "master_pw",
+                    forms.ValidationError(
+                        _("Invalid Password"),
+                        code="invalid_password"
+                    )
+                )
+        return self.cleaned_data
 
     def get_strength(self):
         return (3, 4 if self.cleaned_data.get("allow_auth", False) else 3)
@@ -457,9 +477,6 @@ class PasswordProtection(BaseProtection):
     default_master_pw = forms.CharField(
         widget=forms.HiddenInput, disabled=True
     )
-    master_pw = forms.CharField(
-        widget=forms.PasswordInput(render_value=True), required=False
-    )
 
     passwords = MultipleOpenChoiceField(
         label=_("Passwords"), required=False,
@@ -496,12 +513,6 @@ class PasswordProtection(BaseProtection):
         self.initial["default_master_pw"] = sha256(
             "".join([salt, settings.SECRET_KEY]).encode("utf-8")
         ).hexdigest()
-
-        self.initial["master_pw"] = \
-            self.fields["master_pw"].widget.value_from_datadict(
-                kwargs["request"].POST, self.files,
-                self.add_prefix("master_pw")
-            )
         if ProtectionType.authentication.value in self.ptype:
             del self.fields["auth_passwords"]
 
@@ -569,14 +580,14 @@ class PasswordProtection(BaseProtection):
         salt = self.cleaned_data.get("salt", "").encode("ascii")
         if not salt:
             return self.cleaned_data
-        self.initial["master_pw"] = self.cleaned_data.pop("master_pw", None)
+        master_pw = self.parent_form.initial.get("master_pw", None)
         self.cleaned_data.pop("default_master_pw", None)
         has_master_pw = True
-        if not self.initial["master_pw"]:
+        if not master_pw:
             has_master_pw = False
-            self.initial["master_pw"] = self.initial["default_master_pw"]
+            master_pw = self.initial["default_master_pw"]
         cryptor = aesgcm_pbkdf2_cryptor(
-            self.initial["master_pw"], salt=salt,
+            master_pw, salt=salt,
             params=self.cleaned_data["pbkdf2_params"]
         )
 
@@ -628,7 +639,7 @@ class PasswordProtection(BaseProtection):
             self._successful_clean = True
         except InvalidTag:
             if has_master_pw:
-                self.add_error(
+                self.parent_form.add_error(
                     "master_pw",
                     forms.ValidationError(
                         _(
@@ -655,8 +666,6 @@ class PasswordProtection(BaseProtection):
                     _("Format error, check passwords")
                 )
             )
-        if not has_master_pw:
-            self.initial.pop("master_pw", None)
 
         return self.cleaned_data
 
