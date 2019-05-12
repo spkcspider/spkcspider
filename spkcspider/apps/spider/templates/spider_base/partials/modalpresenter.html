@@ -15,13 +15,13 @@
     </div>
     <div class="w3-container w3-text-black">
       <div class="" id="share_remotelink_wrapper"  style="word-break: break-all">
-        <a type="text" href="{{remotelink|escapejs}}" id="share_remotelink"></a>
+        <a type="text" rel="nofollow" href="{{remotelink}}" id="share_remotelink"></a>
       </div>
       <div style="padding-bottom:20px">
         <h2>{% trans "Select Token "%}</h2>
         <select id="share_token_selector">
           <option value="" selected=""></option>
-          {% if request.auth_token %}<option value="{{request.auth_token.token|escapejs}}">{{request.auth_token.token}}</option>{% endif %}
+          {% if request.auth_token %}<option value="{{request.auth_token.token}}">{{request.auth_token.token}}</option>{% endif %}
         </select>
         {% if request.is_special_user %}
         <div style="padding-top:10px">
@@ -43,7 +43,8 @@ let token_selector = document.getElementById('share_token_selector');
 
 
 function update_qrmodal(){
-  let _remotelink = "{{remotelink|escapejs}}{{remotelink_extra}}";
+  {# don't use escapejs it is a weaker escape #}
+  let _remotelink = "{{remotelink}}{{remotelink_extra}}";
   if(token_selector.value != ""){
     _remotelink = `${_remotelink}token=${token_selector.options[token_selector.options.selectedIndex].text}&`;
   }

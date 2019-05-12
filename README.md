@@ -236,10 +236,20 @@ Why not a json field? Django has no uniform json field for every db adapter yet.
 * 9: login only, user password + public attribute not set
 * 10: index, login only, special protected. Protections are used for login. Content here can be made unique per user by using unique per component attribute
 
+= extra["strength"] on token (if available elsewise treat as zero):
+
+the strength of the usercomponent for which it was created at the creation point
+
 ## strength (protection)
 * 0: no protection
 * 1-3: weak, medium, strong
 * 4: do component authentication
+
+= extra["prot_strength"] on token (if available elsewise treat as zero):
+
+the strength of protections which was passed for creating the token
+
+Note: access tokens created by admin have strength 0
 
 ## get usercomponent/content from url/urlpart for features
 
@@ -258,7 +268,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * tests for other dbs than sqlite3 (and postgresql)
 * Localisation
   * harmonize punctation
-* cleanup authentication key logic and document it
 * pw protection: add migration tool for changed SECRET_KEY
 
 ## Later

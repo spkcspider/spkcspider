@@ -14,6 +14,7 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.models import UserComponent, AssignedContent
 from spkcspider.apps.spider.signals import update_dynamic
+from spkcspider.apps.spider.helpers import create_b64_id_token
 # Create your tests here.
 
 
@@ -27,6 +28,14 @@ class BasicComponentTest(TransactionTestCase):
     def test_welcome(self):
         self.user.usercomponent_set.get(name="public")
         self.user.usercomponent_set.get(name="home")
+
+    def test_token_generation(self):
+        for i in range(0, 100):
+            i2 = create_b64_id_token(i, "_")
+            self.assertTrue(i2.isascii())
+            self.assertIsInstance(i2, str)
+            self.assertNotIn("–", i2)
+            self.assertNotIn("\\", i2)
 
     def test_index(self):
         SpiderUser.objects.create_user(
