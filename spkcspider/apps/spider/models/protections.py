@@ -293,10 +293,6 @@ class AuthToken(models.Model):
         "spider_base.ReferrerObject", on_delete=models.CASCADE,
         related_name="tokens", blank=True, null=True
     )
-    created_by_special_user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name="+", blank=True, null=True
-    )
     session_key = models.CharField(max_length=40, null=True)
     extra = JSONField(default=dict, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)

@@ -1,15 +1,16 @@
 __all__ = (
-    "UpdateSpiderCb", "InitUserCb", "UpdateAnchorContent",
-    "UpdateAnchorTargets", "UpdateAnchorComponent", "update_dynamic",
-    "DeleteContentCb",
-    "RemoveTokensLogout", "CleanupCb", "MovePersistentCb",
-    "move_persistent", "failed_guess"
+    "UpdateSpiderCb", "InitUserCb", "update_dynamic",
+    "DeleteContentCb", "CleanupCb", "MovePersistentCb",
+    "move_persistent", "failed_guess",
+    "UpdateAnchorContentCb", "UpdateAnchorComponentCb"
 )
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.db import transaction
+
+from django.apps import apps
 from .constants import VariantType
 from .helpers import create_b64_id_token
 import logging
@@ -34,7 +35,6 @@ def TriggerUpdate(sender, **_kwargs):
 
 def DeleteContentCb(sender, instance, **_kwargs):
     # connect if your content object can be deleted without AssignedContent
-    from django.apps import apps
     ContentType = apps.get_model("contenttypes", "ContentType")
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
 
@@ -103,27 +103,13 @@ def CleanupCb(sender, instance, **kwargs):
                 user.spider_info.save()
 
 
-def UpdateAnchorContent(sender, instance, raw=False, **kwargs):
+def UpdateAnchorComponentCb(sender, instance, raw=False, **kwargs):
     if raw:
         return
-    from django.apps import apps
-    AuthToken = apps.get_model("spider_base", "AuthToken")
-    if instance.primary_anchor_for.exists():
-        if "\x1eanchor\x1e" not in instance.info:
-            # don't call signals, be explicit with bulk=True (default)
-            instance.primary_anchor_for.clear(bulk=True)
-            # update here
-            AuthToken.objects.filter(
-                persist=instance.id
-            ).update(persist=0)
-
-
-def UpdateAnchorComponent(sender, instance, raw=False, **kwargs):
-    if raw:
-        return
-    from django.apps import apps
-    AuthToken = apps.get_model("spider_base", "AuthToken")
     UserComponent = apps.get_model("spider_base", "UserComponent")
+    AuthToken = apps.get_model("spider_base", "AuthToken")
+    AssignedContent = apps.get_model("spider_base", "AssignedContent")
+
     old = UserComponent.objects.filter(pk=instance.pk).first()
     if old and old.primary_anchor != instance.primary_anchor:
         if instance.primary_anchor:
@@ -138,23 +124,6 @@ def UpdateAnchorComponent(sender, instance, raw=False, **kwargs):
                 persist=old.primary_anchor.id
             ).update(persist=0)
 
-
-def MovePersistentCb(sender, tokens, to, **kwargs):
-    from django.apps import apps
-    AssignedContent = apps.get_model("spider_base", "AssignedContent")
-    AssignedContent.objects.filter(
-        attached_to_token__in=tokens
-    ).update(usercomponent=to)
-
-
-def UpdateAnchorTargets(sender, instance, raw=False, **kwargs):
-    if raw:
-        return
-    from django.apps import apps
-    UserComponent = apps.get_model("spider_base", "UserComponent")
-    AssignedContent = apps.get_model("spider_base", "AssignedContent")
-    old = UserComponent.objects.filter(pk=instance.pk).first()
-    if old and old.primary_anchor != instance.primary_anchor:
         if old.primary_anchor:
             old.primary_anchor.referenced_by.clear(
                 old.primary_anchor.referenced_by.filter(
@@ -170,10 +139,32 @@ def UpdateAnchorTargets(sender, instance, raw=False, **kwargs):
             )
 
 
+def UpdateAnchorContentCb(sender, instance, raw=False, **kwargs):
+    if raw:
+        return
+    AuthToken = apps.get_model("spider_base", "AuthToken")
+    if (
+        instance.primary_anchor_for.exists() and
+        "\x1eanchor\x1e" not in instance.info
+    ):
+        # don't call signals, be explicit with bulk=True (default)
+        instance.primary_anchor_for.clear(bulk=True)
+        # update here
+        AuthToken.objects.filter(
+            persist=instance.id
+        ).update(persist=0)
+
+
+def MovePersistentCb(sender, tokens, to, **kwargs):
+    AssignedContent = apps.get_model("spider_base", "AssignedContent")
+    AssignedContent.objects.filter(
+        attached_to_token__in=tokens
+    ).update(usercomponent=to)
+
+
 def UpdateSpiderCb(**_kwargs):
     # provided apps argument lacks model function support
     # so use this
-    from django.apps import apps
     from .contents import initialize_content_models
     from .protections import initialize_protection_models
     initialize_content_models(apps)
@@ -211,7 +202,6 @@ def UpdateSpiderCb(**_kwargs):
 
 
 def InitUserCb(sender, instance, raw=False, **kwargs):
-    from django.apps import apps
     if raw:
         return
 
@@ -257,13 +247,3 @@ def InitUserCb(sender, instance, raw=False, **kwargs):
                     ).first()
                     if feature:
                         ob.features.add(feature)
-
-
-def RemoveTokensLogout(sender, user, request, **kwargs):
-    from django.apps import apps
-
-    AuthToken = apps.get_model("spider_base", "AuthToken")
-    AuthToken.objects.filter(
-        created_by_special_user=user,
-        session_key=request.session.session_key
-    ).delete()

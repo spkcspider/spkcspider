@@ -522,7 +522,7 @@ class ReferrerMixin(object):
         # False for really no token
         if token is False:
             return True
-        if not token or token.created_by_special_user:
+        if not token or token.extra.get("strength", 0) >= 10:
             return False
         return True
 

@@ -4,15 +4,13 @@ from django.apps import AppConfig
 from django.db.models.signals import (
     post_migrate, post_save, pre_save, post_delete
 )
-from django.contrib.auth.signals import user_logged_out
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from .helpers import extract_app_dicts
 from .signals import (
-    UpdateSpiderCb, InitUserCb, UpdateAnchorContent,
-    UpdateAnchorComponent, update_dynamic, TriggerUpdate, RemoveTokensLogout,
-    CleanupCb, MovePersistentCb, move_persistent, DeleteContentCb,
-    UpdateAnchorTargets
+    UpdateSpiderCb, InitUserCb, UpdateAnchorComponentCb, UpdateAnchorContentCb,
+    update_dynamic, TriggerUpdate,
+    CleanupCb, MovePersistentCb, move_persistent, DeleteContentCb
 )
 
 
@@ -34,19 +32,12 @@ class SpiderBaseConfig(AppConfig):
                 extract_app_dicts(app, "spider_protections", "name")
             )
 
-        user_logged_out.connect(
-            RemoveTokensLogout, dispatch_uid="delete_token_logout"
-        )
         pre_save.connect(
-            UpdateAnchorComponent, sender=UserComponent,
+            UpdateAnchorComponentCb, sender=UserComponent,
             dispatch_uid="spider_update_anchors_component"
         )
-        pre_save.connect(
-            UpdateAnchorTargets, sender=UserComponent,
-            dispatch_uid="spider_update_anchors_targets"
-        )
         post_save.connect(
-            UpdateAnchorContent, sender=AssignedContent,
+            UpdateAnchorContentCb, sender=AssignedContent,
             dispatch_uid="spider_update_anchors_content"
         )
         move_persistent.connect(

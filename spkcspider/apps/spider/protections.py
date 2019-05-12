@@ -328,9 +328,12 @@ class RateLimitProtection(BaseProtection):
         return (1, 1)
 
     def clean_rate_accessed(self):
-        ret = parse_rate(self.cleaned_data.get("rate_accessed"))
-        if ret[0] <= 0 or ret[1] <= 0:
-            return "1/s"
+        try:
+            ret = parse_rate(self.cleaned_data.get("rate_accessed"))
+            if ret[0] <= 0 or ret[1] <= 0:
+                return None
+        except ValueError:
+            return None
         return self.cleaned_data.get("rate_accessed")
 
     @classmethod
