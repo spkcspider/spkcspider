@@ -36,8 +36,8 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     </span>
     {% if object %}
       <span class="w3-right w3-left-align">
-        <a class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
-          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
+        <a rel="nofollow" class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){return open_qrmodal(event);}; return false;" href="#">
+          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Share' %}
         </a>
         {% if not object.is_index %}
           <div style="margin-bottom:5px">
@@ -64,7 +64,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     </h1>
   </div>
   {% if object %}
-    <form hidden="hidden" id="deleteForm" onsubmit="return delete_token(event)" method="post" action='{% url "spider_base:token-delete" token=object.token %}'>
+    <form hidden="hidden" id="deleteForm" onsubmit="return delete_token(event)" method="post" action='{% url "spider_base:token-admin-delete" token=object.token %}'>
       {% csrf_token %}
     </form>
   {% endif %}
@@ -177,8 +177,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block outercontent %}
 {% if object %}
-  {% url 'spider_base:ucontent-export' token=object.token as exportlink %}
-  {% include "spider_base/partials/modalpresenter.html" %}
+  {% include "spider_base/partials/modalpresenter.html" with uc=object %}
   <script>
     let allselector=document.getElementById("deleteAllSelector");
     let deleteform=document.getElementById("deleteForm");
@@ -232,15 +231,15 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       }
       let body = new URLSearchParams();
       for(let count=0; count < tokens.length; count++){
-        body.append("tokens", tokens[count]);
+        body.append("delete_tokens", tokens[count]);
       }
-      req = new Request('{% url "spider_base:token-delete" token=object.token %}', {
+      req = new Request('{% url "spider_base:token-admin-delete" token=object.token %}', {
           method: 'POST',
           body: body,
           credentials: "same-origin",
           headers: {
              "X-CSRFToken": event.target.csrfmiddlewaretoken.value,
-         }
+          }
       });
       await fetch(req)
         .then(function(response) { return response.json(); })
@@ -268,8 +267,6 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
         }
         allselector.checked = false;
-        // renew authtoken of modalpresenter
-        auth_token = data["admin"]
       })
       return false;
     };

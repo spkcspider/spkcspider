@@ -397,13 +397,9 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             return self.form_invalid(form)
 
     def test_func(self):
-        if self.has_special_access(
+        return self.has_special_access(
             user_by_login=True
-        ):
-            # for create_admin_token
-            self.request.auth_token = self.create_admin_token()
-            return True
-        return False
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -417,16 +413,12 @@ class ComponentUpdate(UserTestMixin, UpdateView):
                 ~models.Q(assignedcontent__travel_protected__in=travel),
                 assignedcontent__usercomponent=self.usercomponent
             )
-        context["remotelink"] = context["spider_GET"].copy()
-        context["remotelink"] = "{}{}?{}".format(
+        context["remotelink"] = "{}{}?".format(
             context["hostpart"],
             reverse("spider_base:ucontent-list", kwargs={
                 "token": self.usercomponent.token
-            }),
-            context["remotelink"].urlencode()
+            })
         )
-        # this is always available
-        context["auth_token"] = self.request.auth_token.token
         return context
 
     def get_object(self, queryset=None):

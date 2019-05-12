@@ -49,8 +49,8 @@
           <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'User' %}
         </a>
       {% endif %}
-      <a class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
-        <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
+      <a rel="nofollow" class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){return open_qrmodal(event);}; return false;" href="#">
+        <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Share' %}
       </a>
       <div>
         <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}</data>
@@ -238,12 +238,5 @@
 {% endblock %}
 
 {% block outercontent %}
-{% if request.is_owner %}
-{% url 'spider_base:ucontent-export' token=uc.token as exportlink %}
-{% with exportlink=exportlink|add:"?"|add:spider_GET.urlencode %}
 {% include "spider_base/partials/modalpresenter.html" %}
-{% endwith %}
-{% else %}
-{% include "spider_base/partials/modalpresenter.html" %}
-{% endif %}
 {% endblock %}

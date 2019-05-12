@@ -76,8 +76,8 @@
       </div>
       {% endif %}
       {% if scope != "add" %}
-        <a rel="nofollow" class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){open_qrmodal();}; return false;" href="#">
-          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Link/Export' %}
+        <a rel="nofollow" class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){return open_qrmodal(event);}; return false;" href="#">
+          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Share' %}
         </a>
       {% endif %}
       <div>
@@ -181,9 +181,6 @@
 {% endblock %}
 
 {% block outercontent %}
-{% if request.is_owner %}
-{% url 'spider_base:ucontent-access' token=object.token access='export' as exportlink %}
-{% endif %}
 {% if scope != "add" %}
   {# remotelink generated in view #}
   {% include "spider_base/partials/modalpresenter.html" %}

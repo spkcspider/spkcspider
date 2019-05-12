@@ -1,94 +1,123 @@
 {% load i18n %}
 
-
 {# z-index important for trumbowyg, set higher if not enough #}
-<div id="qrpresenter" class="w3-modal" style="height:100%; z-index:100;">
+<div id="share_modal_presenter" class="w3-modal" style="height:100%; z-index:100;">
   <div class="w3-modal-content">
     <header class="w3-container w3-teal">
-      <span onclick="close_qrmodal(); return false;"
+      <span onclick="close_qrmodal(event)"
       class="w3-button w3-black w3-display-topright">&times;</span>
-      <h2>{% trans "QR/Export-Mode" %}</h2>
+      <h2>{% trans "Share" %}</h2>
     </header>
     <div style="margin-bottom:10px">
       <div class="w3-container w3-cell w3-mobile">
-        <canvas id="qrcanvas"></canvas>
-      </div>
-      <div id="use_access_token_wrapper" style="display:none" class="w3-container w3-cell w3-text-red w3-mobile">
-        <label class="w3-left">
-          <input type="checkbox" id="use_access_token" onchange="open_qrmodal()"{% if not request.is_owner %} checked="checked"{% endif %}/>
-          {% trans "With access token" %}
-        </label>
+        <canvas id="share_qrcanvas"></canvas>
       </div>
     </div>
     <div class="w3-container w3-text-black">
-      <div class="" id="remotelink_wrapper"  style="word-break: break-all">
-        {# important for href check, elsewise same url #}
-        {% trans "Link"%}: <a type="text" href="#" id="remotelink"></a>
+      <div class="" id="share_remotelink_wrapper"  style="word-break: break-all">
+        <a type="text" href="{{remotelink|escapejs}}" id="share_remotelink"></a>
       </div>
-      <div id="rawlink_wrapper"  style="word-break: break-all">
-        {# important for href check, elsewise same url #}
-        <a href="#" id="rawlink">{% trans "Raw" %}</a>
+      <div style="padding-bottom:20px">
+        <h2>{% trans "Select Token "%}</h2>
+        <select id="share_token_selector">
+          <option value="" selected=""></option>
+          {% if request.auth_token %}<option value="{{request.auth_token.token|escapejs}}">{{request.auth_token.token}}</option>{% endif %}
+        </select>
+        {% if request.is_special_user %}
+        <div style="padding-top:10px">
+          <button class="w3-button w3-grey" id="share_add_button" value="add">{% trans "Add" %}</button>
+          <button class="w3-button w3-grey" id="share_refresh_button" value="refresh">{% trans "Refresh" %}</button>
+          <button class="w3-button w3-grey" id="share_delete_button" value="delete">{% trans "Delete" %}</button>
+        </div>
+        {% endif %}
       </div>
-      <a style="display:none; word-break: break-all" id="exportlink" href="">{% trans 'Export' %}</a>
-    </div>
-    <div class="w3-container">
-      <br/>
     </div>
   </div>
 </div>
 
 <script type="text/javascript">
-var remotelink = "{{remotelink|escapejs}}";
-var exportlink = "{{exportlink|escapejs}}";
-var auth_token = "{{auth_token|default:''|escapejs}}";
-function open_qrmodal(){
-  let _qrcanvas = document.getElementById('qrcanvas');
-  let remotelink_link = document.getElementById('remotelink');
-  let use_access_token = document.getElementById('use_access_token');
-  let use_access_token_wrapper = document.getElementById('use_access_token_wrapper');
-  let rawlink_link = document.getElementById('rawlink');
-  let rawlink_wrapper = document.getElementById('rawlink_wrapper');
-  let exportlink_link = document.getElementById('exportlink');
-  rawlink_wrapper.style.display = "block";
-  let _remotelink = remotelink.slice();
-  if (auth_token==""){
-    use_access_token_wrapper.style.display = "none";
-  } else {
-    use_access_token_wrapper.style.display = "table-cell";
+let remotelink = document.getElementById('share_remotelink');
+let qrcanvas = document.getElementById('share_qrcanvas');
+let presenter = document.getElementById('share_modal_presenter');
+let token_selector = document.getElementById('share_token_selector');
+
+
+function update_qrmodal(){
+  let _remotelink = "{{remotelink|escapejs}}{{remotelink_extra}}";
+  if(token_selector.value != ""){
+    _remotelink = `${_remotelink}token=${token_selector.options[token_selector.options.selectedIndex].text}&`;
   }
-  if (auth_token != "" && use_access_token.checked){
-    if (_remotelink.slice(-1)=="?"){
-      _remotelink = `${_remotelink}token=${auth_token}`;
-    } else {
-      _remotelink = `${_remotelink}&token=${auth_token}`;
-    }
-  }
-  if (_remotelink.slice(-1)=="?"){
-    rawlink_link.href = `${_remotelink}raw=true`;
-  } else {
-    rawlink_link.href = `${_remotelink}&raw=true`;
-  }
-  remotelink_link.href = _remotelink;
-  remotelink_link.text = _remotelink;
+  remotelink.href = _remotelink;
+  remotelink.text = _remotelink;
   QRCode.toCanvas(
-    _qrcanvas, _remotelink, { errorCorrectionLevel: 'H' },
+    qrcanvas, _remotelink, { errorCorrectionLevel: 'H' },
     function (error) {
       if (error)
         console.error(error)
     }
   )
-  if (exportlink != "" && exportlink_link.href != exportlink){
-    exportlink_link.href = exportlink;
-    exportlink_link.style.display = "block";
-  } else {
-    exportlink_link.href = "#";
-    exportlink_link.style.display = "none";
+  return false;
+}
+
+async function update_share_tokens(event){
+  if(token_selector.disabled==true)
+    return;
+  token_selector.disabled=true;
+  let body = new URLSearchParams();
+  if(event){
+    event.preventDefault();
+    if (event.target.value == "delete"){
+      body.append("delete_tokens", token_selector.value);
+    } else if(event.target.value == "add") {
+      body.append("add_token", true);
+    }
+
   }
-  document.getElementById('qrpresenter').style.display='block';
+  req = new Request('{% url "spider_base:token-admin-share" token=uc.token %}', {
+      method: 'POST',
+      body: body,
+      credentials: "same-origin",
+      headers: {
+         "X-CSRFToken": "{{csrf_token}}",
+      }
+  });
+  let fetch_req = fetch(req).then(function(response) { return response.json(); })
+  while(token_selector.options.length != 1) {
+    token_selector.options.remove(token_selector.options.length-1);
+  }
+  data = await fetch_req;
+  for(let count=0; count<data["tokens"].length; count++){
+    let token = data["tokens"][count];
+    if (token.created){
+      token_selector.options.add(new Option(token.name, token.id, true, true));
+    } else {
+      token_selector.options.add(new Option(token.name, token.id));
+    }
+  }
+  token_selector.disabled=false;
+  update_qrmodal();
+  return false;
+};
+
+document.getElementById('share_delete_button').addEventListener("click",update_share_tokens);
+document.getElementById('share_add_button').addEventListener("click",update_share_tokens);
+document.getElementById('share_refresh_button').addEventListener("click",update_share_tokens);
+
+token_selector.addEventListener("change",update_qrmodal);
+
+async function open_qrmodal(event){
+  if(event)
+    event.preventDefault();
+  await update_share_tokens(null);
+  update_qrmodal();
+  presenter.style.display='block';
+  return false;
 }
 
 
-function close_qrmodal(){
-  document.getElementById('qrpresenter').style.display='none'
+function close_qrmodal(event){
+  if(event)
+    event.preventDefault()
+  presenter.style.display='none'
 }
 </script>

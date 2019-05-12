@@ -1,10 +1,11 @@
 __all__ = (
-    "TokenDelete", "TokenDeletionRequest", "TokenRenewal"
+    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal"
 )
 
 import logging
 
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from django.views.generic.edit import DeleteView
 from django.http import (
     Http404, HttpResponseServerError, JsonResponse, HttpResponseRedirect,
@@ -23,58 +24,118 @@ from ..helpers import get_settings_func, get_requests_params
 from ..constants import TokenCreationError
 
 
-class TokenDelete(UCTestMixin, DeleteView):
+logger = logging.getLogger(__name__)
 
-    def get_object(self):
-        return None
 
-    def delete(self, request, *args, **kwargs):
+class AdminTokenManagement(UCTestMixin, View):
+    scope = None
+    created_token = None
+
+    def dispatch_extra(self, request, *args, **kwargs):
         self.remove_old_tokens()
-        query = AuthToken.objects.filter(
-            usercomponent=self.usercomponent,
-            id__in=self.request.POST.getlist("tokens")
-        )
-        # replace active admin token
-        if query.filter(
-            created_by_special_user=self.request.user
-        ).exists():
-            self.request.auth_token = self.create_token(
-                self.request.user,
-                extra={
-                    "strength": 10
-                }
+
+    def test_func(self):
+        if self.scope == "delete":
+            return self.has_special_access(
+                user_by_login=True
             )
-        query.delete()
-        del query
-        return self.get(request, *args, **kwargs)
+        else:
+            return self.has_special_access(
+                user_by_login=True, user_by_token=True
+            )
 
     def post(self, request, *args, **kwargs):
-        return self.delete(self, request, *args, **kwargs)
+        if self.request.POST.get("add_token"):
+            self.created_token = self.create_token(
+                extra={
+                    "strength": self.usercomponent.strength
+                }
+            )
+        delids = self.request.POST.getlist("delete_tokens")
+        if delids:
+            delquery = AuthToken.objects.filter(
+                usercomponent=self.usercomponent,
+                id__in=delids
+            )
+            if self.scope == "share":
+                delquery = delquery.filter(
+                    Q(session_key=request.session.session_key) |
+                    Q(token=request.auth_token)
+                )
+            shall_redirect = delquery.filter(token=request.auth_token).exists()
+            delquery.delete()
+            del delquery
+            if shall_redirect:
+                return HttpResponseRedirect(
+                    location=request.get_full_path()
+                )
+
+        return self.get(request, *args, **kwargs)
+
+    def _token_dict(self, token):
+        if token.session_key == self.request.session.session_key:
+            assert(not token.referrer)
+            return {
+                "expires": None if token.persist >= 0 else (
+                    token.created +
+                    self.usercomponent.token_duration
+                ).strftime("%a, %d %b %Y %H:%M:%S %z"),
+                "referrer": token.referrer if token.referrer else "",
+                "name": token.token,
+                "id": token.id,
+                "same_session": True,
+                "created": self.created_token == token,
+                "admin_key": self.request.auth_token == token
+            }
+        elif self.request.auth_token == token:
+            assert(not token.referrer)
+            return {
+                "expires": None if token.persist >= 0 else (
+                    token.created +
+                    self.usercomponent.token_duration
+                ).strftime("%a, %d %b %Y %H:%M:%S %z"),
+                "referrer": token.referrer if token.referrer else "",
+                "name": token.token,
+                "id": token.id,
+                "same_session": True,
+                "created": self.created_token == token,
+                "admin_key": True
+            }
+        else:
+            return {
+                "expires": None if token.persist >= 0 else (
+                    token.created +
+                    self.usercomponent.token_duration
+                ).strftime("%a, %d %b %Y %H:%M:%S %z"),
+                "referrer": token.referrer if token.referrer else "",
+                "name": str(token),
+                "id": token.id,
+                "same_session": False,
+                "created": self.created_token == token,
+                "admin_key": False
+            }
 
     def get(self, request, *args, **kwargs):
-        self.remove_old_tokens()
-        response = {
-            "tokens": [
-                {
-                    "expires": None if i.persist >= 0 else (
-                        i.created +
-                        self.usercomponent.token_duration
-                    ).strftime("%a, %d %b %Y %H:%M:%S %z"),
-                    "referrer": i.referrer if i.referrer else "",
-                    "name": str(i),
-                    "id": i.id
-                } for i in AuthToken.objects.filter(
-                    usercomponent=self.usercomponent
-                )
-            ],
-            "admin": AuthToken.objects.filter(
-                usercomponent=self.usercomponent,
-                created_by_special_user=self.request.user
-            ).first()
-        }
-        if response["admin"]:
-            # don't censor, required in modal presenter
-            response["admin"] = response["admin"].token
+        if self.scope == "delete":
+            response = {
+                "tokens": list(map(
+                    self._token_dict,
+                    AuthToken.objects.filter(
+                        usercomponent=self.usercomponent
+                    )  # TODO: add order function which sorts admin_key higher
+                )),
+            }
+        else:
+            response = {
+                "tokens": list(map(
+                    self._token_dict,
+                    AuthToken.objects.filter(
+                        Q(session_key=request.session.session_key) |
+                        Q(token=request.auth_token),
+                        usercomponent=self.usercomponent,
+                    )
+                )),
+            }
         return JsonResponse(response)
 
 
@@ -191,13 +252,13 @@ class TokenRenewal(UCTestMixin, View):
             )
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:
-            logging.info(
+            logger.info(
                 "referrer: \"%s\" has a broken ssl configuration",
                 self.request.auth_token.referrer, exc_info=exc
             )
             return False
         except Exception as exc:
-            logging.info(
+            logger.info(
                 "post failed: \"%s\" failed",
                 self.request.auth_token.referrer, exc_info=exc
             )
@@ -223,7 +284,7 @@ class TokenRenewal(UCTestMixin, View):
             except TokenCreationError:
                 success = False
         if not success:
-            logging.exception("Token creation failed")
+            logger.exception("Token creation failed")
             return HttpResponseServerError(
                 "Token update failed, try again"
             )

@@ -185,17 +185,18 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             info__contains="\x1eunlisted\x1e"
         ).exclude(travel_protected__in=travel).exists()
 
-        context["remotelink"] = context["spider_GET"].copy()
-        context["auth_token"] = None
-        if self.request.auth_token:
-            context["auth_token"] = self.request.auth_token.token
-        context["remotelink"] = "{}{}?{}".format(
+        context["remotelink"] = "{}{}?".format(
             context["hostpart"],
             reverse("spider_base:ucontent-list", kwargs={
                 "token": self.usercomponent.token
-            }),
-            context["remotelink"].urlencode()
+            })
         )
+        try:
+            context["remotelink_extra"] = "page={}&".format(
+                int(self.request.GET.get("page", "1"))
+            )
+        except ValueError:
+            pass
         return context
 
     def test_func(self):
@@ -207,7 +208,6 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             user_by_login=True, user_by_token=False,
             staff=staff_perm, superuser=True
         ):
-            self.request.auth_token = self.create_admin_token()
             return True
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_index:
@@ -510,17 +510,12 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         )
         context = super().get_context_data(**kwargs)
 
-        context["remotelink"] = context["spider_GET"].copy()
-        context["auth_token"] = None
-        if self.request.auth_token:
-            context["auth_token"] = self.request.auth_token.token
-        context["remotelink"] = "{}{}?{}".format(
+        context["remotelink"] = "{}{}?".format(
             context["hostpart"],
             reverse("spider_base:ucontent-access", kwargs={
                 "token": self.object.token,
                 "access": "view"
-            }),
-            context["remotelink"].urlencode()
+            })
         )
         if self.scope == "update":
             context["active_features"] = self.usercomponent.features.all()
@@ -566,7 +561,6 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             staff=staff_perm, superuser=uncritically,
             user_by_token=False, user_by_login=True
         ):
-            self.request.auth_token = self.create_admin_token()
             return True
         minstrength = 0
         if self.scope in {"update", "raw_update", "export"}:
@@ -675,13 +669,10 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
         staff_perm = not self.usercomponent.is_index
         if staff_perm:
             staff_perm = "spider_base.delete_assignedcontent"
-        if self.has_special_access(
+        return self.has_special_access(
             user_by_login=True, user_by_token=True,
             staff=staff_perm, superuser=True
-        ):
-            self.request.auth_token = self.create_admin_token()
-            return True
-        return False
+        )
 
     def get_required_timedelta(self):
         _time = self.object.content.deletion_period

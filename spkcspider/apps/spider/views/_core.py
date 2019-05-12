@@ -94,11 +94,9 @@ class UserTestMixin(AccessMixin):
 
     # by default only owner with login can access view
     def test_func(self):
-        if self.has_special_access(
+        return self.has_special_access(
             user_by_login=True
-        ):
-            return True
-        return False
+        )
 
     def replace_token(self):
         GET = self.request.GET.copy()
@@ -107,48 +105,21 @@ class UserTestMixin(AccessMixin):
             redirect_to="?".join((self.request.path, GET.urlencode()))
         )
 
-    def create_token(self, special_user=None, extra=None):
+    def create_token(self, extra=None):
         d = {
             "usercomponent": self.usercomponent,
             "session_key": None,
-            "created_by_special_user": special_user,
             "extra": {}
         }
         if "token" not in self.request.GET:
             d["session_key"] = self.request.session.session_key
 
         token = AuthToken(**d)
+        # to copy dictionary
         if extra:
             token.extra.update(extra)
         token.save()
         return token
-
-    def create_admin_token(self):
-        # if auth_token is set, use it (component authentication)
-        if self.request.auth_token:
-            return self.request.auth_token
-        # elsewise session should work to not spam keys
-        if not self.request.session.session_key:
-            logging.warning(
-                "Logged in, but session not set, spam new auth token: %s",
-                self.usercomponent.username
-            )
-        # delete old tokens, so no confusion happen
-        self.remove_old_tokens()
-
-        # use session_key to search for keys to reuse
-        token = self.usercomponent.authtokens.filter(
-            session_key=self.request.session.session_key
-        ).first()
-        if token:
-            return token
-        # elsewise create new token
-        return self.create_token(
-            self.request.user,
-            extra={
-                "strength": 10
-            }
-        )
 
     def remove_old_tokens(self, expire=None):
         if not expire:
@@ -250,7 +221,7 @@ class UserTestMixin(AccessMixin):
     def has_special_access(
         self, user_by_login=True, user_by_token=False,
         staff=False, superuser=False
-    ):
+    ) -> bool:
         if self.request.user.is_authenticated:
             t = self.get_travel_for_request().exists()
             # auto activate but not deactivate
