@@ -27,10 +27,7 @@ from django.views.decorators.debug import sensitive_variables
 # from django.contrib.auth.hashers import make_password
 
 import ratelimit
-try:
-    from ratelimit import parse_rate
-except ImportError:
-    from ratelimit import _parse_rate as parse_rate
+from ratelimit import parse_rate
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
