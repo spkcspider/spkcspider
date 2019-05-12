@@ -264,7 +264,7 @@ class TravelProtectionForm(forms.ModelForm):
         if "trigger_pws" in self.cleaned_data:
             pwset = set(map(
                 lambda x: b64encode(Scrypt(
-                    salt=settings.SECRET_KEY.encode("ascii"),
+                    salt=settings.SECRET_KEY.encode("utf-8"),
                     backend=default_backend(),
                     **travel_scrypt_params
                 ).derive(x[:128].encode("utf-8"))).decode("ascii"),
