@@ -251,7 +251,7 @@ class UserComponentForm(forms.ModelForm):
 
         if not getattr(self.instance, "id", None):
             quota = self.instance.get_component_quota()
-            if UserComponent.objects.filter(
+            if quota and UserComponent.objects.filter(
                 user=self.instance.user
             ).count() >= quota:
                 raise forms.ValidationError(
