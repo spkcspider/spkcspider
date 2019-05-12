@@ -159,9 +159,7 @@ class TravelProtectionForm(forms.ModelForm):
         }
 
     class Media:
-        js = [
-            # 'spider_base/travelprotection.js'
-        ]
+        js = []
 
     @staticmethod
     def _filter_travelprotection(x):
