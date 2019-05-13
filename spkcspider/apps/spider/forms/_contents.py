@@ -170,10 +170,6 @@ class TravelProtectionForm(forms.ModelForm):
     class Media:
         js = []
 
-    @staticmethod
-    def _filter_travelprotection(x):
-        return True
-
     @classmethod
     def _filter_selfprotection(cls, x):
         if x[0] == TravelLoginType.disable.value:
@@ -184,7 +180,6 @@ class TravelProtectionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.request = request
         if self.instance.associated.ctype.name == "TravelProtection":
-            filter_func = self._filter_travelprotection
             self.fields["start"].help_text = str(
                 self.fields["start"].help_text
             ).format(timezone.get_current_timezone_name())
@@ -196,14 +191,16 @@ class TravelProtectionForm(forms.ModelForm):
                 self.initial["start"] = now + timedelta(hours=3)
                 self.initial["stop"] = now + timedelta(days=7)
         else:
-            filter_func = self._filter_selfprotection
+            self.fields["login_protection"].choices = \
+                filter(
+                    self._filter_selfprotection,
+                    self.fields["login_protection"].choices
+                )
             del self.fields["start"]
             del self.fields["stop"]
         if not getattr(self.instance, "id") and not self.data:
             self.initial["active"] = True
 
-        self.fields["login_protection"].choices = \
-            filter(filter_func, self.fields["login_protection"].choices)
         travel = TravelProtection.objects.get_active_for_request(request)
         selfid = getattr(self.instance, "id", -1)
         if self.initial["login_protection"] not in dangerous_login_choices:
@@ -334,7 +331,7 @@ class TravelProtectionForm(forms.ModelForm):
                 )
         if self.cleaned_data["login_protection"] in dangerous_login_choices:
             self.cleaned_data["approved"] = get_settings_func(
-                "SPIDER_APPROVE_DANGEROUS_FUNC",
+                "SPIDER_DANGEROUS_APPROVE",
                 "spkcspider.apps.spider.functions.approve_dangerous"
             )(self)
             if self.cleaned_data["approved"] is False:

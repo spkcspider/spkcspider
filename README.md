@@ -265,6 +265,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 # TODO
 * examples
 * documentation
+* test admin
 * tests for other dbs than sqlite3 (and postgresql)
 * Localisation
   * harmonize punctation

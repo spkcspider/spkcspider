@@ -63,11 +63,13 @@
             <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>
             {% trans 'Security' %}
           </a>
-          {% if request.user.is_superuser or request.user.is_staff %}
-            <a class="w3-bar-item w3-button" href="{% url 'admin:index' %}">
-              <i class="fas fa-toolbox" style="margin-right:10px" aria-hidden="true"></i>
-              {% trans 'Admin' %}
-            </a>
+          {% if not request.session.is_travel_protected %}
+            {% if request.user.is_superuser or request.user.is_staff %}
+              <a class="w3-bar-item w3-button" href="{% url 'admin:index' %}">
+                <i class="fas fa-toolbox" style="margin-right:10px" aria-hidden="true"></i>
+                {% trans 'Admin' %}
+              </a>
+            {% endif %}
           {% endif %}
           <a class="w3-bar-item w3-button w3-black" href="{% url 'auth:logout'%}">
             <i class="fas fa-sign-out-alt" style="margin-right:10px" aria-hidden="true"></i>

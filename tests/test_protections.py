@@ -503,9 +503,10 @@ class TravelProtectionTest(TransactionWebTest):
         self.assertTrue(
             self.user.usercomponent_set.filter(name="home").exists()
         )
-        c = index.contents.get(ctype__name="TravelProtection")
-        c.approved = True
-        c.save()
+        g = index.contents.get(ctype__name="TravelProtection")
+        g.content.approved = True
+        g.content.clean()
+        g.content.save()
 
         self.app.set_user(user=None)
         # resets session
@@ -554,15 +555,17 @@ class TravelProtectionTest(TransactionWebTest):
         # resets session
         self.app.reset()
 
+        response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
         form.set("password", "abc", index=0)
         response = form.submit().follow()
 
         # approve
-        c = index.contents.get(ctype__name="TravelProtection")
-        c.approved = True
-        c.save()
+        g = index.contents.get(ctype__name="TravelProtection")
+        g.content.approved = True
+        g.content.clean()
+        g.content.save()
 
         self.app.set_user(user=None)
         # resets session

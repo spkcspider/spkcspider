@@ -182,6 +182,10 @@ UPDATE_DYNAMIC_AFTER_MIGRATION = True
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True
 
+## Approval function for allowing dangerous self and travel protections  # noqa: E266, E501
+##   Note: return False means don't allow and None ask admin  # noqa: E266
+# SPIDER_DANGEROUS_APPROVE
+
 # DIRECT_FILE_DOWNLOAD = True
 
 # SPIDER_CONTENTVARIANT_FILTER

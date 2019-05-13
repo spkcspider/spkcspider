@@ -63,7 +63,9 @@ def allow_all_filter(*args, **kwargs):
 
 
 def approve_dangerous(form):
-    return not getattr(settings, "DANGEROUS_TRAVEL_PROTECTIONS", False)
+    if form.request.is_staff:
+        return True
+    return None
 
 
 def get_quota(user, quota_type):
