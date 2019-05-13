@@ -64,7 +64,8 @@ class PublicKey(BaseContent):
 
     @classmethod
     def localize_name(cls, name):
-        return pgettext("content name", "Public Key")
+        _ = pgettext
+        return _("content name", "Public Key")
 
     def get_size(self):
         s = super().get_size()
@@ -202,6 +203,11 @@ class AnchorServer(AnchorBase):
         )
     )
 
+    @classmethod
+    def localize_name(cls, name):
+        _ = pgettext
+        return _("content name", "Server-based Anchor")
+
     def get_size(self):
         s = super().get_size()
         s += 400
@@ -245,6 +251,11 @@ class AnchorKey(AnchorBase):
     signature = models.CharField(
         max_length=1024, help_text=_help_text_sig, null=False
     )
+
+    @classmethod
+    def localize_name(cls, name):
+        _ = pgettext
+        return _("content name", "Key-based Anchor")
 
     def get_size(self):
         s = super().get_size()

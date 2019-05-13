@@ -55,6 +55,11 @@ class TagLayout(models.Model):
             ("name", "usertag")
         ]
 
+    @classmethod
+    def localize_name(cls, name):
+        _ = pgettext
+        return _("content name", "Tag Layout")
+
     def get_description(self):
         if self.usertag:
             return self.usertag.associated.description
@@ -121,6 +126,11 @@ class UserTagLayout(BaseContent):
     ]
     expose_name = False
     expose_description = True
+
+    @classmethod
+    def localize_name(cls, name):
+        _ = pgettext
+        return _("content name", "Tag Layout")
 
     def get_content_name(self):
         return "%s: %s" % (
