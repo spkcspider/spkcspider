@@ -714,7 +714,7 @@ class PasswordProtection(BaseProtection):
                     if constant_time_compare(pw, password):
                         success = True
 
-                for pw in obj.data["auth_passwords"]:
+                for pw in obj.data.get("auth_passwords", []):
                     if constant_time_compare(pw, password):
                         success = True
                         auth = True
