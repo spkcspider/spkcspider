@@ -136,11 +136,11 @@ class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):
     def check_allowed_size(self, content_length):
         if self.request.user.is_staff:
             max_length = getattr(
-                settings, "MAX_FILE_SIZE_STAFF", None
+                settings, "SPIDER_MAX_FILE_SIZE_STAFF", None
             )
         else:
             max_length = getattr(
-                settings, "MAX_FILE_SIZE", None
+                settings, "SPIDER_MAX_FILE_SIZE", None
             )
         if not max_length:
             return True

@@ -149,7 +149,7 @@ LOGOUT_REDIRECT_URL = "home"
 AUTH_USER_MODEL = 'spider_accounts.SpiderUser'
 # uses cryptography, can automatically determinate size
 SPIDER_HASH_ALGORITHM = hashes.SHA512()
-MIN_STRENGTH_EVELATION = 2
+SPIDER_MIN_STRENGTH_EVELATION = 2
 # change size of request token.
 # Note: should be high to prevent token exhaustion
 # TOKEN_SIZE = 30
@@ -200,6 +200,8 @@ UPDATE_DYNAMIC_AFTER_MIGRATION = True
 # FILE_FILET_SALT_SIZE
 # SPIDER_UPLOAD_FILTER_FUNC
 # SPIDER_GET_QUOTA
+# SPIDER_MAX_FILE_SIZE
+# SPIDER_MAX_FILE_SIZE_STAFF
 # SPIDER_USER_QUOTA_LOCAL
 # SPIDER_USER_QUOTA_REMOTE
 ## in units  # noqa: E266

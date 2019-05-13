@@ -26,10 +26,6 @@ class CreateEntryForm(forms.Form):
     dvfile = forms.FileField(
         required=False, max_length=settings.VERIFIER_MAX_SIZE_DIRECT_ACCEPTED
     )
-    # MAX_FILE_SIZE = forms.CharField(
-    #    disabled=True, widget=forms.HiddenInput(), required=False,
-    #    initial=settings.VERIFIER_MAX_SIZE_ACCEPTED
-    # )
 
     def __init__(self, instance, *args, **kwargs):
         super().__init__(*args, **kwargs)

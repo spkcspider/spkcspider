@@ -81,11 +81,11 @@ class FileForm(forms.ModelForm):
             pass
         elif request.user.is_staff:
             self.fields["file"].max_length = getattr(
-                settings, "MAX_FILE_SIZE_STAFF", None
+                settings, "SPIDER_MAX_FILE_SIZE_STAFF", None
             )
         else:
             self.fields["file"].max_length = getattr(
-                settings, "MAX_FILE_SIZE", None
+                settings, "SPIDER_MAX_FILE_SIZE", None
             )
         if request.is_owner:
             # self.user = request.user
@@ -161,14 +161,16 @@ class TextForm(forms.ModelForm):
                 _(
                     "Allow editing from selected components. "
                     "Requires protection strength >=%s."
-                ) % settings.MIN_STRENGTH_EVELATION
+                ) % settings.SPIDER_MIN_STRENGTH_EVELATION
 
             query = models.Q(pk=self.instance.associated.usercomponent.pk)
             if scope == "update":
                 query |= models.Q(
                     contents__references=self.instance.associated
                 )
-            query &= models.Q(strength__gte=settings.MIN_STRENGTH_EVELATION)
+            query &= models.Q(
+                strength__gte=settings.SPIDER_MIN_STRENGTH_EVELATION
+            )
             query &= models.Q(strength__lt=9)
             self.fields["editable_from"].queryset = \
                 self.fields["editable_from"].queryset.filter(query).distinct()
