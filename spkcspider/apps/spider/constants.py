@@ -113,8 +113,10 @@ class TravelLoginType(str, enum.Enum):
     hide = "a"
     # switches to hiding if trigger was activated
     trigger_hide = "b"
-    # disable login for a period
+    # disable login
     disable = "c"
+    # disable login if triggered
+    trigger_disable = "C"
     # wipe travel protected contents and components
     # Note: noticable if shared contents are removed
     wipe = "d"

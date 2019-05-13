@@ -10,6 +10,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.contrib.auth import authenticate
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -19,6 +20,7 @@ from ..constants import (
 )
 from ..models import LinkContent, TravelProtection, AssignedContent
 from ..fields import MultipleOpenChoiceField, ContentMultipleChoiceField
+from ..helpers import get_settings_func
 from ..widgets import (
     OpenChoiceWidget, RomeDatetimePickerWidget, Select2Widget
 )
@@ -34,8 +36,9 @@ _time_help_text = _(
 
 _login_protection = _(
     "Hide: Hide protected contents and components<br/>"
-    "Disable: Disable Login temporary<br/>"
     "Hide if triggered: Hide protected contents and components if triggered<br/>"  # noqa: E501
+    "Disable: Disable Login (not available on Self-Protection (useless))<br/>"
+    "Disable if triggered: Hide protected contents and components and disable login if triggered<br/>"  # noqa: E501
     "Wipe: Wipe protected content on login (maybe not available)<br/>"
     "Wipe User: destroy user on login (maybe not available)<br/><br/>"
     "Note: login protections work only partly on logged in users (just hiding contents and components)"  # noqa: E501
@@ -116,6 +119,7 @@ class TravelProtectionForm(forms.ModelForm):
             }
         )
     )
+    approved = forms.BooleanField(disabled=True)
     overwrite_pws = forms.BooleanField(
         required=False, initial=False,
         help_text=_(
@@ -138,6 +142,11 @@ class TravelProtectionForm(forms.ModelForm):
                 "style": "min-width: 250px; width:100%"
             }
         )
+    )
+
+    master_pw = forms.CharField(
+        label=_("Master Login Password"),
+        widget=forms.PasswordInput(render_value=True), required=True
     )
 
     class Meta:
@@ -163,20 +172,16 @@ class TravelProtectionForm(forms.ModelForm):
 
     @staticmethod
     def _filter_travelprotection(x):
-        if not getattr(settings, "DANGEROUS_TRAVEL_PROTECTIONS", False):
-            if x[0] in dangerous_login_choices:
-                return False
         return True
 
     @classmethod
     def _filter_selfprotection(cls, x):
         if x[0] == TravelLoginType.disable.value:
             return False
-        return cls._filter_travelprotection(x)
+        return True
 
-    def __init__(self, request, uc, *args, **kwargs):
+    def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.uc = uc
         self.request = request
         if self.instance.associated.ctype.name == "TravelProtection":
             filter_func = self._filter_travelprotection
@@ -201,9 +206,14 @@ class TravelProtectionForm(forms.ModelForm):
             filter(filter_func, self.fields["login_protection"].choices)
         travel = TravelProtection.objects.get_active_for_request(request)
         selfid = getattr(self.instance, "id", -1)
+        if self.initial["login_protection"] not in dangerous_login_choices:
+            del self.fields["approved"]
+        if self.initial["login_protection"] == TravelLoginType.disable.value:
+            self.initial["login_protection"] = \
+                TravelLoginType.trigger_disable.value
 
         q = models.Q(
-            user=self.uc.user
+            user=request.user
         ) & (
             ~models.Q(
                 travel_protected__in=travel
@@ -220,7 +230,7 @@ class TravelProtectionForm(forms.ModelForm):
             )
 
         q = models.Q(
-            usercomponent__user=self.uc.user
+            usercomponent__user=request.user
         ) & (
             ~(
                 models.Q(usercomponent__travel_protected__in=travel) |
@@ -249,8 +259,11 @@ class TravelProtectionForm(forms.ModelForm):
                     "No trigger passwords set."
                 )
                 del self.fields["overwrite_pws"]
-                if self.instance.associated.ctype.name == "SelfProtection":
-                    self.fields["trigger_pws"].required = True
+        if (
+            not self.instance.associated.getlist("pwhash", 1) and
+            self.instance.associated.ctype.name == "SelfProtection"
+        ):
+            self.fields["trigger_pws"].required = True
         # use q for filtering (including own)
         self.fields["protect_contents"].queryset = \
             self.fields["protect_contents"].queryset.filter(
@@ -261,6 +274,20 @@ class TravelProtectionForm(forms.ModelForm):
 
     def clean(self):
         super().clean()
+        self.initial["master_pw"] = self.cleaned_data.pop("master_pw", None)
+        if not authenticate(
+            self.request,
+            username=self.instance.associated.usercomponent.username,
+            password=self.initial.get("master_pw", None),
+            nospider=True
+        ):
+            self.add_error(
+                "master_pw",
+                forms.ValidationError(
+                    _("Invalid Password"),
+                    code="invalid_password"
+                )
+            )
         if "trigger_pws" in self.cleaned_data:
             pwset = set(map(
                 lambda x: b64encode(Scrypt(
@@ -268,8 +295,19 @@ class TravelProtectionForm(forms.ModelForm):
                     backend=default_backend(),
                     **travel_scrypt_params
                 ).derive(x[:128].encode("utf-8"))).decode("ascii"),
-                self.cleaned_data["trigger_pws"][:20]
+                self.cleaned_data["trigger_pws"]
             ))
+            if (
+                self.instance.associated.ctype.name == "SelfProtection" and
+                self.cleaned_data.get("overwrite_pws") and
+                len(pwset) == 0
+            ):
+                self.add_error("trigger_pws", forms.ValidationError(
+                    _(
+                        "Clearing trigger passwords not allowed "
+                        "(for Self-Protection)"
+                    )
+                ))
             if not self.cleaned_data.get("overwrite_pws") and len(pwset) < 20:
                 pwset.update(self.instance.associated.getlist(
                     "pwhash", 20-len(pwset)
@@ -294,6 +332,17 @@ class TravelProtectionForm(forms.ModelForm):
                 "{}anonymous_trigger\x1e".format(
                     self.instance._encoded_form_info
                 )
+        if self.cleaned_data["login_protection"] in dangerous_login_choices:
+            self.cleaned_data["approved"] = get_settings_func(
+                "SPIDER_APPROVE_DANGEROUS_FUNC",
+                "spkcspider.apps.spider.functions.approve_dangerous"
+            )(self)
+            if self.cleaned_data["approved"] is False:
+                self.add_error("login_protection", forms.ValidationError(
+                    _("This login protection is not allowed")
+                ))
+        else:
+            self.cleaned_data["approved"] = None
         try:
             self.cleaned_data["protect_contents"] = \
                 self.cleaned_data["protect_contents"].exclude(
@@ -312,3 +361,7 @@ class TravelProtectionForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         self.instance.protect_contents.add(self.instance.associated)
+
+    def save(self, commit=True):
+        self.instance.approved = bool(self.cleaned_data["approved"])
+        return super().save(commit)

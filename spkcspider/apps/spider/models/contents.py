@@ -31,6 +31,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from ..contents import BaseContent, add_content
 from ..constants import (
     TravelLoginType, VariantType, ActionUrl, travel_scrypt_params,
+    dangerous_login_choices
 )
 
 logger = logging.getLogger(__name__)
@@ -192,6 +193,7 @@ login_choices = [
     (TravelLoginType.hide.value, _("Hide")),
     (TravelLoginType.trigger_hide.value, _("Hide if triggered")),
     (TravelLoginType.disable.value, _("Disable login")),
+    (TravelLoginType.trigger_disable.value, _("Disable login if triggered")),
     # TODO: to prevent circumventing deletion_period, tie to modified
     (TravelLoginType.wipe.value, _("Wipe")),
     (TravelLoginType.wipe_user.value, _("Wipe User")),
@@ -209,6 +211,11 @@ class TravelProtectionManager(models.Manager):
             models.Q(start__isnull=True) | models.Q(start__lte=now)
         )
         q &= (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
+
+        q &= (
+            models.Q(approved=True) |
+            ~models.Q(login_protection__in=dangerous_login_choices)
+        )
         return self.filter(q)
 
     def get_active_for_session(self, session, user, now=None):
@@ -268,6 +275,22 @@ class TravelProtectionManager(models.Manager):
                 i.clean()
                 # assignedcontent is fully updated
                 i.save(update_fields=["login_protection"])
+            elif TravelLoginType.trigger_disable.value == i.login_protection:
+                i.login_protection = TravelLoginType.disable.value
+                # don't re-add trigger passwords here
+                if i.associated.getflag("anonymous_deactivation"):
+                    i._encoded_form_info = \
+                        "{}anonymous_deactivation\x1e".format(
+                            i._encoded_form_info
+                        )
+                if i.associated.getflag("anonymous_trigger"):
+                    i._encoded_form_info = \
+                        "{}anonymous_trigger\x1e".format(
+                            i._encoded_form_info
+                        )
+                i.clean()
+                # assignedcontent is fully updated
+                i.save(update_fields=["login_protection"])
             elif TravelLoginType.wipe_user.value == i.login_protection:
                 uc.user.delete()
                 return False
@@ -300,6 +323,7 @@ class TravelProtection(BaseContent):
     start = models.DateTimeField(blank=True, null=True)
     # no stop for no termination
     stop = models.DateTimeField(blank=True, null=True)
+    approved = models.BooleanField(default=False, blank=True)
 
     login_protection = models.CharField(
         max_length=1, choices=login_choices,
@@ -371,7 +395,6 @@ class TravelProtection(BaseContent):
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)
-        ret["uc"] = kwargs.get("source", self.associated.usercomponent)
         ret["request"] = kwargs["request"]
         return ret
 

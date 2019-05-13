@@ -3,7 +3,7 @@ __all__ = [
     "embed_file_default", "has_admin_permission",
     "LimitedTemporaryFileUploadHandler", "validate_url_default",
     "get_quota", "validate_payment_default", "clean_verifier",
-    "clean_verifier_url"
+    "clean_verifier_url", "approve_dangerous"
 ]
 
 import time
@@ -60,6 +60,10 @@ def rate_limit_default(view, request):
 
 def allow_all_filter(*args, **kwargs):
     return True
+
+
+def approve_dangerous(form):
+    return not getattr(settings, "DANGEROUS_TRAVEL_PROTECTIONS", False)
 
 
 def get_quota(user, quota_type):
