@@ -92,7 +92,7 @@ class FileForm(forms.ModelForm):
             return
         self.fields["file"].editable = False
         self.fields["name"].editable = False
-        # for SPIDER_UPLOAD_FILTER_FUNC
+        # for SPIDER_UPLOAD_FILTER
         self.request = request
 
     def clean(self):
@@ -101,7 +101,7 @@ class FileForm(forms.ModelForm):
             return ret
         # has to raise ValidationError
         get_settings_func(
-            "SPIDER_UPLOAD_FILTER_FUNC",
+            "SPIDER_UPLOAD_FILTER",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )(self, ret["file"])
         return ret

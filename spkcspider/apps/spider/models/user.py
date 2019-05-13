@@ -350,7 +350,7 @@ class UserInfo(models.Model):
         ContentVariant = apps.get_model("spider_base.ContentVariant")
         allowed = []
         cfilterfunc = get_settings_func(
-            "SPIDER_CONTENTTYPE_FILTER",
+            "SPIDER_CONTENTVARIANT_FILTER",
             "spkcspider.apps.spider.functions.allow_all_filter"
         )
         # Content types which are not "installed" should be removed/never used
