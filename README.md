@@ -271,6 +271,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
   * harmonize punctation
 * pw protection: add migration tool for changed SECRET_KEY
 * good permission model for TravelProtection
+* indicate for master_pw on index component that it must match the login password
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
