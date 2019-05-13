@@ -279,6 +279,7 @@ class TravelProtectionTest(TransactionWebTest):
         form = response.form
         form.set("start", dt.utcnow()-td(days=1))
         form.set("protect_components", (home.id,))
+        form.set("master_pw", "abc")
         response = form.submit()
         listurl = reverse("spider_base:ucomponent-list")
         response = self.app.get(listurl)
@@ -317,6 +318,7 @@ class TravelProtectionTest(TransactionWebTest):
         form.set("start", dt.utcnow()-td(days=1))
         form.set("login_protection", TravelLoginType.trigger_hide.value)
         form.set("protect_components", (home.id,))
+        form.set("master_pw", "abc")
         form["trigger_pws"].force_value(("abc",))
         response = form.submit()
 
@@ -374,6 +376,7 @@ class TravelProtectionTest(TransactionWebTest):
         form = response.form
         form.set("start", dt.utcnow()-td(days=1))
         form.set("protect_components", (home.id,))
+        form.set("master_pw", "abc")
         form["trigger_pws"].force_value(("abc",))
         response = form.submit()
 
@@ -424,6 +427,7 @@ class TravelProtectionTest(TransactionWebTest):
         form = response.form
         form.set("start", dt.utcnow()-td(days=1))
         form.set("protect_components", (home.id,))
+        form.set("master_pw", "abc")
         form["trigger_pws"].force_value(("nope",))
         response = form.submit()
 
@@ -476,11 +480,32 @@ class TravelProtectionTest(TransactionWebTest):
         form.set("start", dt.utcnow()-td(days=1))
         form.set("login_protection", TravelLoginType.wipe.value)
         form.set("protect_components", (home.id,))
+        form.set("master_pw", "abc")
         response = form.submit()
 
         self.assertEqual(
             index.contents.count(), index_count+1
         )
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+
+        # needs approval
+        response = self.app.get(reverse("auth:login"))
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit().follow()
+        self.assertTrue(
+            UserComponent.objects.filter(user=self.user, name="home").exists()
+        )
+        self.assertTrue(
+            self.user.usercomponent_set.filter(name="home").exists()
+        )
+        c = index.contents.get(ctype__name="TravelProtection")
+        c.approved = True
+        c.save()
 
         self.app.set_user(user=None)
         # resets session
@@ -518,11 +543,26 @@ class TravelProtectionTest(TransactionWebTest):
         form.set("start", dt.utcnow()-td(days=1))
         form.set("login_protection", TravelLoginType.wipe_user.value)
         form.set("protect_components", (home.id,))
+        form.set("master_pw", "abc")
         response = form.submit()
 
         self.assertEqual(
             index.contents.count(), index_count+1
         )
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+
+        form = response.form
+        form.set("username", "testuser1")
+        form.set("password", "abc", index=0)
+        response = form.submit().follow()
+
+        # approve
+        c = index.contents.get(ctype__name="TravelProtection")
+        c.approved = True
+        c.save()
 
         self.app.set_user(user=None)
         # resets session

@@ -32,8 +32,10 @@ class BasicComponentTest(TransactionTestCase):
     def test_token_generation(self):
         for i in range(0, 100):
             i2 = create_b64_id_token(i, "_")
-            with self.assertNotRaises(UnicodeEncodeError):
+            try:
                 i2.encode("ascii")
+            except UnicodeEncodeError:
+                self.assertTrue(False)
             self.assertIsInstance(i2, str)
             self.assertNotIn("–", i2)
             self.assertNotIn("\\", i2)
