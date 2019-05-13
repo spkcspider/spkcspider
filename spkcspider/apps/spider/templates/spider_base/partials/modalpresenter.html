@@ -17,6 +17,9 @@
       <div class="" id="share_remotelink_wrapper"  style="word-break: break-all">
         {# escapejs is a weaker escape, don't use it #}
         <a type="text" rel="nofollow" href="{{remotelink}}{{remotelink_extra}}" id="share_remotelink"></a>
+        <span style="margin-left:10px;padding:1px 10px" id="share_copy_clipboard" class="w3-round w3-grey">
+          <i class="fas fa-clipboard" aria-label="{% trans 'Clipboard' %}"></i>
+        </span>
       </div>
       <div style="padding-bottom:20px">
         <h2>{% trans "Select Token "%}</h2>
@@ -47,7 +50,7 @@ let remotelink = document.getElementById('share_remotelink');
 let qrcanvas = document.getElementById('share_qrcanvas');
 let presenter = document.getElementById('share_modal_presenter');
 let token_selector = document.getElementById('share_token_selector');
-
+let share_copy_clipboard = document.getElementById('share_copy_clipboard');
 
 function update_qrmodal(){
   {# escapejs is a weaker escape, don't use it #}
@@ -66,6 +69,18 @@ function update_qrmodal(){
   )
   return false;
 }
+
+
+async function link_to_clipboard(event){
+  await navigator.clipboard.writeText(remotelink.href);
+  share_copy_clipboard.firstElementChild.classList.replace("fa-clipboard", "fa-clipboard-check");
+  share_copy_clipboard.classList.replace("w3-grey", "w3-green");
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  share_copy_clipboard.classList.replace("w3-green", "w3-grey");
+  share_copy_clipboard.firstElementChild.classList.replace("fa-clipboard-check", "fa-clipboard");
+  return false;
+}
+share_copy_clipboard.addEventListener("click", link_to_clipboard);
 
 async function update_share_tokens(event){
   if(token_selector.disabled==true)
