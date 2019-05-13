@@ -31,6 +31,8 @@ def _extract_choice(item):
 
 
 class FileForm(forms.ModelForm):
+    request = None
+
     license_name = OpenChoiceField(
         label=_("License"), help_text=_("Select license"),
         choices=map(_extract_choice, LICENSE_CHOICES.items()),
@@ -90,6 +92,8 @@ class FileForm(forms.ModelForm):
             return
         self.fields["file"].editable = False
         self.fields["name"].editable = False
+        # for SPIDER_UPLOAD_FILTER_FUNC
+        self.request = request
 
     def clean(self):
         ret = super().clean()
@@ -97,9 +101,9 @@ class FileForm(forms.ModelForm):
             return ret
         # has to raise ValidationError
         get_settings_func(
-            "UPLOAD_FILTER_FUNC",
+            "SPIDER_UPLOAD_FILTER_FUNC",
             "spkcspider.apps.spider.functions.allow_all_filter"
-        )(ret["file"])
+        )(self, ret["file"])
         return ret
 
 
