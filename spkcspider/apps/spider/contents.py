@@ -280,6 +280,9 @@ class BaseContent(models.Model):
         """ Override for declaring content extra abilities """
         return set()
 
+    def get_propagate_modified(self):
+        return "\x1eunlisted\x1e" not in self.associated.info
+
     def get_instance_form(self, context):
         return self
 
@@ -826,7 +829,7 @@ class BaseContent(models.Model):
         s.update(self.get_references())
         assignedcontent.references.set(s)
         # message usercomponent about change
-        if "\x1eunlisted\x1e" not in self.associated.info:
+        if self.get_propagate_modified():
             self.associated.usercomponent.save(update_fields=["modified"])
         # delete saved errors
         self.associated_errors = None
