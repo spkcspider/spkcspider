@@ -31,7 +31,7 @@ class PushTagView(UCTestMixin, FormView):
             return super().dispatch(request, *args, **kwargs)
         except Http404:
             return get_settings_func(
-                "RATELIMIT_FUNC",
+                "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
             )(self, request)
 

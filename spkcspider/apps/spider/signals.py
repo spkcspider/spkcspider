@@ -233,7 +233,7 @@ def InitUserCb(sender, instance, raw=False, **kwargs):
 
     if kwargs.get("created", False):
         for name, value in getattr(
-            settings, "DEFAULT_USERCOMPONENTS", {}
+            settings, "SPIDER_DEFAULT_COMPONENTS", {}
         ).items():
             # overloaded get_or_create calculates strength, ...
             ob, created = UserComponent.objects.get_or_create(

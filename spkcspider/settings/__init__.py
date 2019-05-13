@@ -147,10 +147,8 @@ LOGIN_REDIRECT_URL = "auth:profile"
 LOGOUT_REDIRECT_URL = "home"
 
 AUTH_USER_MODEL = 'spider_accounts.SpiderUser'
-# uses cryptography
+# uses cryptography, can automatically determinate size
 SPIDER_HASH_ALGORITHM = hashes.SHA512()
-# as hex digest
-MAX_HASH_SIZE = 128
 MIN_STRENGTH_EVELATION = 2
 # change size of request token.
 # Note: should be high to prevent token exhaustion
@@ -165,7 +163,9 @@ MIN_STRENGTH_EVELATION = 2
 SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 
 ## Update dynamic content, ... after migrations, default=true  # noqa: E266
-# UPDATE_DYNAMIC_AFTER_MIGRATION = False
+# disable when importing backup
+# ease deploy
+UPDATE_DYNAMIC_AFTER_MIGRATION = True
 
 ## extensions of images (used in file_filets)  # noqa: E266
 # SPIDER_IMAGE_EXTENSIONS
@@ -178,16 +178,13 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 ## validator function for url requests  # noqa: E266
 # SPIDER_URL_VALIDATOR
 
-## validator function for payment intentions  # noqa: E266
-# SPIDER_PAYMENT_VALIDATOR
-
 ## Enable captchas  # noqa: E266
 # INSTALLED_APPS.append('captcha')
 # USE_CAPTCHAS = True
 
 # DIRECT_FILE_DOWNLOAD = True
 
-# ALLOWED_CONTENT_FILTER
+# SPIDER_CONTENTTYPE_FILTER
 
 # SPIDER_TAG_VERIFIER_VALIDATOR
 # SPIDER_TAG_VERIFY_REQUEST_VALIDATOR
@@ -195,7 +192,7 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # SPIDER_ANCHOR_DOMAIN
 # SPIDER_COMPONENTS_DELETION_PERIODS
 # SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD
-# RATELIMIT_FUNC_CONTENTS
+# SPIDER_RATELIMIT_FUNC
 ## Enable direct file downloads (handled by webserver)  # noqa: E266
 # disadvantage: blocking access requires file name change
 # FILE_DIRECT_DOWNLOAD
@@ -214,7 +211,7 @@ SPIDER_LEGACY_REDIRECT = True
 # SPIDER_ID_USE_SUBPATH
 
 # usercomponents created with user
-DEFAULT_USERCOMPONENTS = {
+SPIDER_DEFAULT_COMPONENTS = {
     "home": {
         "public": False,
         "features": ["Persistence", "WebConfig"]
@@ -306,8 +303,6 @@ SPIDER_REQUEST_KWARGS_MAP = {
     # }
 }
 
-# disable when importing backup
-# ease deploy
-UPDATE_DYNAMIC_AFTER_MIGRATION = True
 
+# for sites
 SITE_ID = 1
