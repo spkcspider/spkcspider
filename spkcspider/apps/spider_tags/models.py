@@ -3,7 +3,7 @@ import logging
 
 from django.utils.html import escape
 from django.db import models
-from django.utils.translation import gettext, gettext_lazy as _
+from django.utils.translation import gettext, pgettext, gettext_lazy as _
 
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
@@ -223,16 +223,24 @@ class SpiderTag(BaseContent):
             return self.localize_name(self.associated.ctype.name)
         if not self.layout.usertag:
             return "%s: <%s>: %s" % (
-                self.localize_name("Tag"),
+                self.localize_name("SpiderTag"),
                 self.layout.name,
                 self.associated.id
             )
         return "%s: <%s: %s>: %s" % (
-            self.localize_name("Tag"),
+            self.localize_name("SpiderTag"),
             self.layout.name,
             self.layout.id,
             self.associated.id
         )
+
+    @classmethod
+    def localize_name(cls, name):
+        _ = pgettext
+        if name == "PushedTag":
+            return _("content name", "Allow receiving tags")
+        else:
+            return _("content name", "Tag")
 
     @classmethod
     def feature_urls(cls, name):

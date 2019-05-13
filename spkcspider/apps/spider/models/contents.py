@@ -22,6 +22,7 @@ from django.http.response import HttpResponseBase
 from django.utils import timezone
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext
 
 
 from cryptography.hazmat.backends import default_backend
@@ -324,11 +325,11 @@ class TravelProtection(BaseContent):
     _encoded_form_info = ""
     @classmethod
     def localize_name(cls, name):
+        _ = pgettext
         if name == "TravelProtection":
-            name = "Travel-Protection"
+            return _("content name", "Travel-Protection")
         else:
-            name = "Self-Protection"
-        return super().localize_name(name)
+            return _("content name", "Self-Protection")
 
     def get_content_name(self):
         if self.start and self.stop:

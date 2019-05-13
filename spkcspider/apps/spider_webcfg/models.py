@@ -3,6 +3,7 @@ __all__ = ["WebConfig"]
 
 from django.db import models
 from django.urls import reverse
+from django.utils.translation import pgettext
 
 from spkcspider.apps.spider.constants import VariantType, ActionUrl
 from spkcspider.apps.spider.contents import BaseContent, add_content
@@ -32,6 +33,14 @@ class WebConfig(BaseContent):
     ]
 
     config = models.TextField(default="", blank=True)
+
+    @classmethod
+    def localize_name(cls, name):
+        _ = pgettext
+        if name == "TmpConfig":
+            return _("content name", "Temporary Web Configuration")
+        else:
+            return _("content name", "Web Configuration")
 
     def get_content_name(self):
         return self.associated.attached_to_token.referrer.url[:255]
