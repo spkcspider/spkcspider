@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   dest_element.addEventListener("input", function(event){
     val = clean_description_text(source_element.html()).substr(0,max_length);
-    /* || dest_element.value.substr(0,500)==val*/
     if(event.target.value==""){
       modify_dest = true;
       dest_element.value = val
@@ -25,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   });
   source_element.on("tbwchange", function(event){
-    if (modify_dest){
+    if (modify_dest && dest_element != document.activeElement){
       dest_element.value = clean_description_text(event.target.value).substr(0,max_length);
     }
   });

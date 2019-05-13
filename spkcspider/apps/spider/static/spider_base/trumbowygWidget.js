@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function(){
     imageWidthModalEdit: true,
     resetCss:true,
     minimalLinks: true,
+    autogrow: false,
     urlProtocol: true,
     lang: document.documentElement.lang || "en",
     btnsDef: {

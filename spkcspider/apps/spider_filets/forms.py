@@ -16,7 +16,9 @@ from .widgets import LicenseChooserWidget
 from spkcspider.apps.spider.fields import (
     OpenChoiceField, MultipleOpenChoiceField
 )
-from spkcspider.apps.spider.widgets import ListWidget, Select2Widget
+from spkcspider.apps.spider.widgets import (
+    ListWidget, Select2Widget, TrumbowygWidget
+)
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -108,7 +110,14 @@ class FileForm(forms.ModelForm):
 
 
 class TextForm(forms.ModelForm):
-    text = SanitizedHtmlField(localize=True)
+    text = SanitizedHtmlField(
+        widget=TrumbowygWidget(
+            wrapper_attrs={
+                "style": "width:60vw"
+            }
+        ),
+        localize=True
+    )
     license_name = OpenChoiceField(
         label=_("License"), help_text=_("Select license"),
         choices=map(_extract_choice, LICENSE_CHOICES.items()),
