@@ -825,6 +825,9 @@ class BaseContent(models.Model):
         s = set(assignedcontent.attached_contents.all())
         s.update(self.get_references())
         assignedcontent.references.set(s)
+        # message usercomponent about change
+        if "\x1eunlisted\x1e" not in self.associated.info:
+            self.associated.usercomponent.save(update_fields=["modified"])
         # delete saved errors
         self.associated_errors = None
         # require cleaning again

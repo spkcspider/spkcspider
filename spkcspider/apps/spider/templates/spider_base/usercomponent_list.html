@@ -60,7 +60,7 @@
           </a>
         {% else %}
           <a rel="nofollow" class="w3-block" href="{% if not request.is_owner %}{% url 'spider_base:ucomponent-export' user=collection_user %}{% else %}{% url 'spider_base:ucomponent-export' %}{% endif %}">
-            <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Export' %}
+            <i class="fas fa-cloud-download-alt" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Export' %}
           </a>
         {% endif %}
       </span>

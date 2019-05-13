@@ -15,7 +15,8 @@
     </div>
     <div class="w3-container w3-text-black">
       <div class="" id="share_remotelink_wrapper"  style="word-break: break-all">
-        <a type="text" rel="nofollow" href="{{remotelink}}" id="share_remotelink"></a>
+        {# escapejs is a weaker escape, don't use it #}
+        <a type="text" rel="nofollow" href="{{remotelink}}{{remotelink_extra}}" id="share_remotelink"></a>
       </div>
       <div style="padding-bottom:20px">
         <h2>{% trans "Select Token "%}</h2>
@@ -25,9 +26,15 @@
         </select>
         {% if request.is_special_user %}
         <div style="padding-top:10px">
-          <button class="w3-button w3-grey" id="share_add_button" value="add">{% trans "Add" %}</button>
-          <button class="w3-button w3-grey" id="share_refresh_button" value="refresh">{% trans "Refresh" %}</button>
-          <button class="w3-button w3-grey" id="share_delete_button" value="delete">{% trans "Delete" %}</button>
+          <button class="w3-button w3-grey" id="share_add_button" value="add">
+            <i class="fas fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Add' %}
+          </button>
+          <button class="w3-button w3-grey" id="share_refresh_button" value="refresh">
+            <i class="fas fa-sync" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Refresh' %}
+          </button>
+          <button class="w3-button w3-grey" id="share_delete_button" value="delete">
+            <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i> {% trans 'Delete' %}
+          </button>
         </div>
         {% endif %}
       </div>
@@ -43,7 +50,7 @@ let token_selector = document.getElementById('share_token_selector');
 
 
 function update_qrmodal(){
-  {# don't use escapejs it is a weaker escape #}
+  {# escapejs is a weaker escape, don't use it #}
   let _remotelink = "{{remotelink}}{{remotelink_extra}}";
   if(token_selector.value != ""){
     _remotelink = `${_remotelink}token=${token_selector.options[token_selector.options.selectedIndex].text}&`;

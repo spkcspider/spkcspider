@@ -20,6 +20,7 @@ from django.contrib import messages
 from django.utils.translation import gettext
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.utils.safestring import mark_safe
 
 from next_prev import next_in_order, prev_in_order
 
@@ -192,9 +193,11 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             })
         )
         try:
-            context["remotelink_extra"] = "page={}&".format(
+            # mark_safe required for &
+            # especially because of mark_safe DON'T remove int()
+            context["remotelink_extra"] = mark_safe("page={}&".format(
                 int(self.request.GET.get("page", "1"))
-            )
+            ))
         except ValueError:
             pass
         return context
