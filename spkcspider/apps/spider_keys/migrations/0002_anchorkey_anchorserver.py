@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
-                'default_permissions': [],
+                'default_permissions': (),
             },
         ),
         migrations.CreateModel(
@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
-                'default_permissions': [],
+                'default_permissions': (),
             },
             bases=('spider_keys.anchorserver',),
         ),

@@ -13,31 +13,43 @@ class TravelProtectionAdmin(admin.ModelAdmin):
     readonly_fields = [
         'start', 'stop', 'login_protection'
     ]
+    actions = ["approve"]
+    list_display = (
+        "__str__", 'login_protection', 'active', 'approved', 'start', 'stop'
+    )
 
     def has_module_permission(self, request):
         return True
 
+    def approve(self, request, queryset):
+        queryset.update(approved=True)
+    approve.allowed_permissions = ('approve_travelprotection',)
+
+    def has_approve_travelprotection_permission(self, request, obj=None):
+        if not request.user.is_active:
+            return False
+        if request.user.has_perm("spider_base.approve_travelprotection"):
+            return True
+        return request.user.has_perm("spider_base.change_assignedcontent")
+
     def has_delete_permission(self, request, obj=None):
         if not request.user.is_active:
             return False
-        # not obj allows deletion of users
-        if not obj or request.user.is_superuser:
+        if self.has_approve_travelprotection_permission(request, obj):
             return True
         return request.user.has_perm("spider_base.delete_assignedcontent")
 
     def has_view_permission(self, request, obj=None):
-        if request.user.is_superuser:
+        if not request.user.is_active:
+            return False
+        if request.user.has_perm("spider_base.approve_travelprotection"):
+            return True
+        if request.user.has_perm("spider_base.change_assignedcontent"):
             return True
         return request.user.has_perm("spider_base.view_assignedcontent")
 
     def has_change_permission(self, request, obj=None):
-        if not request.user.is_active:
-            return False
-        if not obj:
-            return False
-        if request.user.is_superuser:
-            return True
-        return request.user.has_perm("spider_base.change_assignedcontent")
+        return False
 
     def has_add_permission(self, request, obj=None):
         return False

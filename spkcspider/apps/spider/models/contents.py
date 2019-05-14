@@ -194,7 +194,6 @@ login_choices = [
     (TravelLoginType.trigger_hide.value, _("Hide if triggered")),
     (TravelLoginType.disable.value, _("Disable login")),
     (TravelLoginType.trigger_disable.value, _("Disable login if triggered")),
-    # TODO: to prevent circumventing deletion_period, tie to modified
     (TravelLoginType.wipe.value, _("Wipe")),
     (TravelLoginType.wipe_user.value, _("Wipe User")),
 ]
@@ -222,16 +221,18 @@ class TravelProtectionManager(models.Manager):
         q = ~models.Q(associated_rel__info__contains="\x1epwhash=")
         for pw in session.get("travel_hashed_pws", []):
             q |= models.Q(
-                associated_rel__info__contains="\x1epwhash=%s\x1e" % pw,
-                associated_rel__usercomponent__user=user
+                associated_rel__info__contains="\x1epwhash=%s\x1e" % pw
             )
+        q &= models.Q(associated_rel__usercomponent__user=user)
         return self.get_active(now).filter(q)
 
     def get_active_for_request(self, request, now=None):
         return self.get_active_for_session(request.session, request.user)
 
     def auth(self, request, uc, now=None):
-        active = self.get_active(now).filter(associated_rel__usercomponent=uc)
+        active = self.get_active(now).filter(
+            associated_rel__usercomponent=uc
+        )
 
         request.session["travel_hashed_pws"] = list(map(
             lambda x: b64encode(Scrypt(
@@ -347,6 +348,16 @@ class TravelProtection(BaseContent):
 
     _anonymous_deactivation = False
     _encoded_form_info = ""
+
+    class Meta:
+        default_permissions = ()
+        permissions = [
+            (
+                "approve_travelprotection",
+                "Can approve dangerous TravelProtections"
+            )
+        ]
+
     @classmethod
     def localize_name(cls, name):
         _ = pgettext

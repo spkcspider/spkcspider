@@ -343,7 +343,7 @@ class UserInfo(models.Model):
     used_space_remote = models.BigIntegerField(default=0, editable=False)
 
     class Meta:
-        default_permissions = []
+        default_permissions = ()
 
     def calculate_allowed_content(self):
         from ..contents import installed_contents

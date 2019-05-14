@@ -191,7 +191,7 @@ class BaseContent(models.Model):
 
     class Meta:
         abstract = True
-        default_permissions = []
+        default_permissions = ()
 
     @classmethod
     def static_create(

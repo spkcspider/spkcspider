@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
-                'default_permissions': [],
+                'default_permissions': (),
             },
         ),
         migrations.AlterField(
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
-                'default_permissions': [],
+                'default_permissions': (),
             },
         ),
     ]

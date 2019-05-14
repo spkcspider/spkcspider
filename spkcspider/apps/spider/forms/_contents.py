@@ -41,7 +41,8 @@ _login_protection = _(
     "Disable if triggered: Hide protected contents and components and disable login if triggered<br/>"  # noqa: E501
     "Wipe: Wipe protected content on login (maybe not available)<br/>"
     "Wipe User: destroy user on login (maybe not available)<br/><br/>"
-    "Note: login protections work only partly on logged in users (just hiding contents and components)"  # noqa: E501
+    "Note: login protections work only partly on logged in users (just hiding contents and components)<br/>"  # noqa: E501
+    "Note: login protections disable admin permissions when active and triggered (elsewise easy overwritable)"  # noqa: E501
 )
 
 
@@ -342,7 +343,7 @@ class TravelProtectionForm(forms.ModelForm):
                     _("This login protection is not allowed")
                 ))
         else:
-            self.cleaned_data["approved"] = None
+            self.cleaned_data["approved"] = True
         try:
             self.cleaned_data["protect_contents"] = \
                 self.cleaned_data["protect_contents"].exclude(

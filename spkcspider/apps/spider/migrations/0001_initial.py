@@ -71,7 +71,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
-                'default_permissions': [],
+                'default_permissions': (),
             },
         ),
         migrations.CreateModel(
@@ -109,7 +109,7 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(editable=False, on_delete=django.db.models.deletion.CASCADE, related_name='spider_info', to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'default_permissions': [],
+                'default_permissions': (),
             },
         ),
         migrations.AddField(
