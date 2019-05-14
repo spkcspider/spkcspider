@@ -164,7 +164,10 @@ class TravelProtectionForm(forms.ModelForm):
             )
         }
         help_texts = {
-            "login_protection": _login_protection
+            "login_protection": _login_protection,
+            "master_pw": _(
+                "Enter Password used for the user account"
+            )
         }
 
     class Media:

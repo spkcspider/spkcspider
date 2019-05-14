@@ -58,7 +58,11 @@ class UserComponentForm(forms.ModelForm):
 
     master_pw = forms.CharField(
         label=_("Master Password"),
-        widget=forms.PasswordInput(render_value=True), required=False
+        widget=forms.PasswordInput(render_value=True), required=False,
+        help_text=_(
+            "If you don't set a password the unlocking may fail "
+            "in future (change of server secrets)"
+        )
     )
 
     class Meta:
@@ -141,6 +145,14 @@ class UserComponentForm(forms.ModelForm):
                 )
             if self.instance.is_index:
                 self.fields["master_pw"].required = True
+                self.fields["master_pw"].label = _(
+                    "Master Login Password"
+                )
+                self.fields["master_pw"].help_text = _(
+                    "Enter Password used for user account<br/>"
+                    "Note: to migrate data, first enter old password then the "
+                    "new one"
+                )
                 self.fields.pop("features", None)
                 self.fields.pop("featured", None)
                 self.fields["required_passes"].help_text = _(

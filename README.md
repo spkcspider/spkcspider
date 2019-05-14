@@ -269,15 +269,14 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * tests for other dbs than sqlite3 (and postgresql)
 * Localisation
   * harmonize punctation
-* pw protection: add migration tool for changed SECRET_KEY
 * good permission model for TravelProtection
-* indicate for master_pw on index component that it must match the login password
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * create client side script for import (pushing to server, index token for auth?)
   * use browerside javascript?
 * textfilet hot reloading
+* pw protection: add migration tool for changed SECRET_KEY
 * log changes
 * improve protections, add protections
 
