@@ -17,7 +17,8 @@ class UserAdmin(user_admin.UserAdmin):
         (_('Personal info'), {'fields': ('email',)}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff',
                                        'is_superuser',
-                                       'quota_local', 'quota_remote', 'groups',
+                                       'quota_local', 'quota_remote',
+                                       'quota_usercomponents', 'groups',
                                        'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
