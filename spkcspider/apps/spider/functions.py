@@ -217,6 +217,8 @@ def has_admin_permission(self, request):
     # allow only non travel protected user with superuser and staff permissions
     if not request.user.is_active or not request.user.is_staff:
         return False
+    # user is authenticate now
+    assert(request.user.is_authenticated)
     from .models import TravelProtection as TravelProtectionContent
     t = TravelProtectionContent.objects.get_active_for_request(
         request
