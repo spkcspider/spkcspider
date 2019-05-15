@@ -218,16 +218,14 @@ class TravelProtectionManager(models.Manager):
         return self.filter(q)
 
     def get_active_for_session(self, session, user, now=None):
+        q = ~models.Q(associated_rel__info__contains="\x1epwhash=")
         if user.is_authenticated:
-            q = ~models.Q(associated_rel__info__contains="\x1epwhash=")
             for pw in session.get("travel_hashed_pws", []):
                 q |= models.Q(
                     associated_rel__info__contains="\x1epwhash=%s\x1e" % pw
                 )
             q &= models.Q(associated_rel__usercomponent__user=user)
-            return self.get_active(now).filter(q)
-        else:
-            return self.get_active(now)
+        return self.get_active(now).filter(q)
 
     def get_active_for_request(self, request, now=None):
         return self.get_active_for_session(request.session, request.user)

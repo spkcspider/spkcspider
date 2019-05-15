@@ -16,7 +16,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from ..constants import (
-    dangerous_login_choices, travel_scrypt_params, TravelLoginType
+    dangerous_login_choices, travel_scrypt_params, TravelLoginType,
+    loggedin_active_tprotections
 )
 from ..models import LinkContent, TravelProtection, AssignedContent
 from ..fields import MultipleOpenChoiceField, ContentMultipleChoiceField
@@ -41,8 +42,8 @@ _login_protection = _(
     "Disable if triggered: Hide protected contents and components and disable login if triggered<br/>"  # noqa: E501
     "Wipe: Wipe protected content on login (maybe not available)<br/>"
     "Wipe User: destroy user on login (maybe not available)<br/><br/>"
-    "Note: login protections work only partly on logged in users (just hiding contents and components)<br/>"  # noqa: E501
-    "Note: login protections disable admin permissions when active and triggered (elsewise easy overwritable)"  # noqa: E501
+    "Note: login protections work only on login. Except hide and disable protections, which works also for logged in users<br/>"  # noqa: E501
+    "Note: the hide and disable protections disable also admin access when active (elsewise easy circumventable)"  # noqa: E501
 )
 
 
@@ -59,6 +60,9 @@ class LinkForm(forms.ModelForm):
         #         self.fields["content"].disabled = True
         q = self.fields["content"].queryset
         travel = TravelProtection.objects.get_active_for_request(request)
+        travel = travel.filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         self.fields["content"].queryset = q.filter(
             strength__lte=uc.strength
         ).exclude(usercomponent__travel_protected__in=travel)
@@ -205,7 +209,9 @@ class TravelProtectionForm(forms.ModelForm):
         if not getattr(self.instance, "id") and not self.data:
             self.initial["active"] = True
 
-        travel = TravelProtection.objects.get_active_for_request(request)
+        travel = TravelProtection.objects.get_active_for_request(
+            request
+        ).filter(login_protection__in=loggedin_active_tprotections)
         selfid = getattr(self.instance, "id", -1)
         if self.initial["login_protection"] not in dangerous_login_choices:
             del self.fields["approved"]
@@ -213,26 +219,20 @@ class TravelProtectionForm(forms.ModelForm):
             self.initial["login_protection"] = \
                 TravelLoginType.trigger_disable.value
 
-        q = models.Q(
+        q_component = models.Q(
             user=request.user
         ) & (
-            ~models.Q(
-                travel_protected__in=travel
-            ) |
-            models.Q(
-                travel_protected__id=selfid
-            )
+            ~models.Q(travel_protected__in=travel) |
+            models.Q(travel_protected__id=selfid)
         )
         self.fields["protect_components"].queryset = \
             self.fields["protect_components"].queryset.filter(
-                q
+                q_component
             ).distinct().order_by(
                 "name"
             )
 
-        q = models.Q(
-            usercomponent__user=request.user
-        ) & (
+        q_content = models.Q(usercomponent__user=request.user) & (
             ~(
                 models.Q(usercomponent__travel_protected__in=travel) |
                 models.Q(travel_protected__in=travel) |
@@ -247,7 +247,7 @@ class TravelProtectionForm(forms.ModelForm):
         )
         if getattr(self.instance, "id", None):
             # exlude own content
-            q &= ~models.Q(pk=self.instance.associated.pk)
+            q_content &= ~models.Q(pk=self.instance.associated.pk)
             self.initial["anonymous_deactivation"] = \
                 self.instance.associated.getflag("anonymous_deactivation")
             if self.instance.associated.getlist("pwhash", 1):
@@ -268,7 +268,7 @@ class TravelProtectionForm(forms.ModelForm):
         # use q for filtering (including own)
         self.fields["protect_contents"].queryset = \
             self.fields["protect_contents"].queryset.filter(
-                q
+                q_content
             ).distinct().order_by(
                 "name"
             )

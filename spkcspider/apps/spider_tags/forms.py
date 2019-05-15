@@ -21,6 +21,7 @@ from rdflib import XSD
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
 
+from spkcspider.apps.spider.constants import loggedin_active_tprotections
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField, JsonField
 from spkcspider.apps.spider.widgets import ListWidget, OpenChoiceWidget
 from spkcspider.apps.spider.helpers import merge_get_url
@@ -222,7 +223,7 @@ def generate_form(name, layout):
             if request:
                 travel = TravelProtection.objects.get_active_for_request(
                     request
-                )
+                ).filter(login_protection__in=loggedin_active_tprotections)
             else:
                 # read only, no updates, so disable protections
                 travel = TravelProtection.objects.none()

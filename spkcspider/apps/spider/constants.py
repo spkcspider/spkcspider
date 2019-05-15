@@ -5,7 +5,7 @@ __all__ = (
     "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
     "hex_size_of_bigid", "TokenCreationError", "protected_names", "spkcgraph",
     "dangerous_login_choices", "ActionUrl", "static_token_matcher",
-    "host_tld_matcher", "travel_scrypt_params"
+    "host_tld_matcher", "travel_scrypt_params", "loggedin_active_tprotections"
 )
 
 import enum
@@ -124,7 +124,12 @@ class TravelLoginType(str, enum.Enum):
     wipe_user = "e"
 
 
-dangerous_login_choices = (
+dangerous_login_choices = {
     TravelLoginType.wipe.value,
     TravelLoginType.wipe_user.value
-)
+}
+
+loggedin_active_tprotections = {
+    TravelLoginType.hide.value,
+    TravelLoginType.disable.value
+}

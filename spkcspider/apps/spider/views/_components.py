@@ -18,7 +18,7 @@ from django.utils.translation import gettext
 from rdflib import Graph, Literal, URIRef, XSD
 
 from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
-from ..constants import spkcgraph
+from ..constants import spkcgraph, loggedin_active_tprotections
 from ..forms import UserComponentForm
 from ..queryfilters import (
     filter_contents, filter_components, listed_variants_q
@@ -303,7 +303,9 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
     def get_queryset_components(self):
         query = super().get_queryset_components().filter(user=self.user)
         # doesn't matter if it is same user, lazy
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
         if not self.request.is_staff:
@@ -316,7 +318,9 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         )
 
         # doesn't matter if it is same user, lazy
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
         if not self.request.is_staff:
@@ -403,7 +407,9 @@ class ComponentUpdate(UserTestMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         context["content_variants"] = \
             self.usercomponent.user_info.allowed_content.filter(
                 listed_variants_q
@@ -424,7 +430,9 @@ class ComponentUpdate(UserTestMixin, UpdateView):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         return get_object_or_404(
             queryset.prefetch_related(
                 "protections",
@@ -521,7 +529,9 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         return get_object_or_404(
             queryset, ~models.Q(travel_protected__in=travel),
             token=self.kwargs["token"]

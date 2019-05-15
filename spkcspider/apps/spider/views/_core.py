@@ -29,7 +29,10 @@ import requests
 from ..helpers import (
     merge_get_url, get_requests_params, get_settings_func, get_hashob
 )
-from ..constants import VariantType, TokenCreationError, ProtectionType
+from ..constants import (
+    VariantType, TokenCreationError, ProtectionType,
+    loggedin_active_tprotections
+)
 from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
 from ..models import UserComponent, AuthToken, ReferrerObject, TravelProtection
 
@@ -223,7 +226,9 @@ class UserTestMixin(AccessMixin):
         staff=False, superuser=False
     ) -> bool:
         if self.request.user.is_authenticated:
-            t = self.get_travel_for_request().exists()
+            t = self.get_travel_for_request().filter(
+                login_protection__in=loggedin_active_tprotections
+            ).exists()
             # auto activate but not deactivate
             if t:
                 self.request.session["is_travel_protected"] = t

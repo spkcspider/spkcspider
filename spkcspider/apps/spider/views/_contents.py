@@ -36,7 +36,9 @@ from ..models import (
 from ..forms import UserContentForm, TravelProtectionManagementForm
 from ..helpers import get_settings_func, add_property, merge_get_url
 from ..queryfilters import filter_contents, listed_variants_q
-from ..constants import spkcgraph, VariantType, static_token_matcher
+from ..constants import (
+    spkcgraph, VariantType, static_token_matcher, loggedin_active_tprotections
+)
 from ..serializing import paginate_stream, serialize_stream
 
 _forbidden_scopes = frozenset(["add", "list", "raw", "delete", "anchor"])
@@ -146,12 +148,17 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         return None
 
     def get_queryset(self):
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         return super().get_queryset().filter(
             usercomponent=self.usercomponent
-        ).exclude(travel_protected__in=self.get_travel_for_request())
+        ).exclude(travel_protected__in=travel)
 
     def get_usercomponent(self):
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         return get_object_or_404(
             UserComponent.objects.select_related(
                 "user", "user__spider_info",
@@ -164,7 +171,9 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         if self.request.is_owner:
             # request.user is maybe anonymous
             context["content_variants"] = \
@@ -411,7 +420,9 @@ class ContentAdd(ContentBase, CreateView):
         return UserContentForm(**form_kwargs)
 
     def get_usercomponent(self):
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         return get_object_or_404(
             UserComponent.objects.prefetch_related("protections"),
             ~models.Q(travel_protected__in=travel),
@@ -571,7 +582,9 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         return self.test_token(minstrength)
 
     def get_usercomponent(self):
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         return get_object_or_404(
             UserComponent.objects.prefetch_related("protections"),
             ~models.Q(
@@ -585,7 +598,9 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         if not queryset:
             queryset = self.get_queryset()
         # doesn't matter if it is same user, lazy
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
 
         # required for next/previous token
         queryset = queryset.select_related(
@@ -691,7 +706,9 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
     def get_object(self, queryset=None):
         if not queryset:
             queryset = self.get_queryset()
-        travel = self.get_travel_for_request()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
         return get_object_or_404(
             queryset,
             ~(
