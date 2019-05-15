@@ -318,14 +318,19 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         )
 
         # doesn't matter if it is same user, lazy
-        travel = self.get_travel_for_request().filter(
+        travel = self.get_travel_for_request()
+        t_ids = travel.values_list("associated_rel__id", flat=True)
+        travel = travel.filter(
             login_protection__in=loggedin_active_tprotections
         )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
         if not self.request.is_staff:
-            query = query.exclude(travel_protected__in=travel)
-            query = query.exclude(usercomponent__travel_protected__in=travel)
+            query = query.exclude(
+                models.Q(travel_protected__in=travel) |
+                models.Q(usercomponent__travel_protected__in=travel) |
+                models.Q(id__in=t_ids)
+            )
 
         return query
 

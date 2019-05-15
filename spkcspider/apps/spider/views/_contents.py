@@ -148,12 +148,17 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         return None
 
     def get_queryset(self):
-        travel = self.get_travel_for_request().filter(
+        travel = self.get_travel_for_request()
+        t_ids = travel.values_list("associated_rel__id", flat=True)
+        travel = travel.filter(
             login_protection__in=loggedin_active_tprotections
         )
         return super().get_queryset().filter(
             usercomponent=self.usercomponent
-        ).exclude(travel_protected__in=travel)
+        ).exclude(
+            models.Q(travel_protected__in=travel) |
+            models.Q(id__in=t_ids)
+        )
 
     def get_usercomponent(self):
         travel = self.get_travel_for_request().filter(
