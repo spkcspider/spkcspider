@@ -38,7 +38,7 @@ VERIFIER_REQUEST_KWARGS_MAP = {
     },
     "localhost": {  # for tests
         "verify": False,
-        "timeout": 1,
+        "timeout": 3,
         "proxies": {}
     }
 }

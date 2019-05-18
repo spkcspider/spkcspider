@@ -73,9 +73,7 @@ def initialize_content_models(apps=None):
             appearances = appearances()
 
         # update name if only one name exists
-        update = False
-        if len(appearances) == 1:
-            update = True
+        update = (len(appearances) == 1)
 
         for attr_dict in appearances:
             require_save = False
