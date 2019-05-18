@@ -15,6 +15,7 @@ from base64 import b64encode
 from django.conf import settings
 from django.db import models
 from django.utils.html import escape
+from django.http import Http404
 from django.shortcuts import redirect
 from django.utils.translation import gettext
 from django.middleware.csrf import CsrfViewMiddleware
@@ -65,6 +66,9 @@ class PersistenceFeature(BaseContent):
                 "delete-token"
             )
         ]
+
+    def access_add(self, **kwargs):
+        raise Http404()
 
 
 @add_content

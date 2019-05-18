@@ -187,10 +187,9 @@ def UpdateSpiderCb(**_kwargs):
         assert(row.name is not None)
         row.save(update_fields=['name', 'description', 'info', "token"])
 
-    for row in UserComponent.objects.all():
-        if not row.token:
-            row.token = create_b64_id_token(row.id, "_")
-            row.save(update_fields=["token"])
+    for row in UserComponent.objects.filter(token__isnull=True):
+        row.token = create_b64_id_token(row.id, "_")
+        row.save(update_fields=["token"])
 
     for row in get_user_model().objects.prefetch_related(
         "spider_info", "usercomponent_set", "usercomponent_set__contents"

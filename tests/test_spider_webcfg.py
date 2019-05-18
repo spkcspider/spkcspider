@@ -37,6 +37,21 @@ class WebCfgTest(TransactionWebTest):
         )
         update_dynamic.send_robust(self)
 
+    def test_not_add(self):
+        home = self.user.usercomponent_set.filter(name="home").first()
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "WebCfg"
+            }
+        )
+        self.app.set_user("testuser1")
+        self.app.get(createurl, status=404)
+        self.app.post(createurl, {
+            "csrfmiddlewaretoken": self.app.cookies["csrftoken"]
+        }, status=404)
+
     def test_webcfg(self):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)

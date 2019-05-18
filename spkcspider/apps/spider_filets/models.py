@@ -16,6 +16,7 @@ from jsonfield import JSONField
 from ranged_response import RangedFileResponse
 
 from spkcspider.apps.spider.constants import VariantType
+from django.http import Http404
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.conf import (
     image_extensions, media_extensions
@@ -73,6 +74,9 @@ class DisclaimerFeature(BaseContent):
     def localize_name(cls, name):
         name = "Disclaimer advertisment (EU)"
         return pgettext("feature name", name)
+
+    def access_add(self, **kwargs):
+        raise Http404()
 
 
 class ContentWithLicense(BaseContent):

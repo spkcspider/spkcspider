@@ -4,6 +4,7 @@ __all__ = ["WebConfig"]
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import pgettext
+from django.http import Http404
 
 from spkcspider.apps.spider.constants import VariantType, ActionUrl
 from spkcspider.apps.spider.contents import BaseContent, add_content
@@ -44,6 +45,9 @@ class WebConfig(BaseContent):
 
     def get_content_name(self):
         return self.associated.attached_to_token.referrer.url[:255]
+
+    def access_add(self, **kwargs):
+        raise Http404()
 
     @classmethod
     def feature_urls(cls, name):
