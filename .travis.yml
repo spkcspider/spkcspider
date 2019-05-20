@@ -10,8 +10,8 @@ branches:
   - master
   - develop
 env:
-  - DJANGO_DEP="django22"
-  - DJANGO_DEP="djangomaster"
+  - DJANGO_DEP=django22
+  - DJANGO_DEP=djangomaster
 matrix:
   exclude:
     - python: "3.5"
