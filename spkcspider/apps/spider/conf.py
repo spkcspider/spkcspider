@@ -1,7 +1,7 @@
 __all__ = [
     "media_extensions", "image_extensions", "get_anchor_domain",
     "INITIAL_STATIC_TOKEN_SIZE", "STATIC_TOKEN_CHOICES",
-    "default_uctoken_duration",
+    "default_uctoken_duration", "TOKEN_SIZE", "FILE_TOKEN_SIZE",
     "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS"
 ]
 
@@ -56,6 +56,9 @@ VALID_INTENTIONS = set(getattr(
     {"auth", "domain", "live", "login", "payment", "persist", "sl"}
 ))
 VALID_SUB_INTENTIONS = {"sl", "live"}
+
+TOKEN_SIZE = getattr(settings, "TOKEN_SIZE", 30)
+FILE_TOKEN_SIZE = getattr(settings, "FILE_TOKEN_SIZE", TOKEN_SIZE)
 
 force_captcha = getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False)
 

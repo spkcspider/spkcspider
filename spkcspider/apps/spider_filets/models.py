@@ -19,7 +19,7 @@ from spkcspider.apps.spider.constants import VariantType
 from django.http import Http404
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.conf import (
-    image_extensions, media_extensions
+    image_extensions, media_extensions, FILE_TOKEN_SIZE
 )
 from spkcspider.apps.spider.helpers import (
     create_b64_token, prepare_description
@@ -37,7 +37,6 @@ logger = logging.getLogger(__name__)
 
 def get_file_path(instance, filename):
     ret = getattr(settings, "FILE_FILET_DIR", "file_filet")
-    size = getattr(settings, "FILE_FILET_SALT_SIZE", 45)
     # try 100 times to find free filename
     # but should not take more than 1 try
     # IMPORTANT: strip . to prevent creation of htaccess files or similar
@@ -45,13 +44,13 @@ def get_file_path(instance, filename):
         ret_path = default_storage.generate_filename(
             posixpath.join(
                 ret, str(instance.associated.usercomponent.user.pk),
-                create_b64_token(size), filename.lstrip(".")
+                create_b64_token(FILE_TOKEN_SIZE), filename.lstrip(".")
             )
         )
         if not default_storage.exists(ret_path):
             break
     else:
-        raise Exception("Unlikely event: no free filename")
+        raise FileExistsError("Unlikely event: no free filename")
     return ret_path
 
 

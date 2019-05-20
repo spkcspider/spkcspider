@@ -153,6 +153,9 @@ SPIDER_MIN_STRENGTH_EVELATION = 2
 # change size of request token.
 # Note: should be high to prevent token exhaustion
 # TOKEN_SIZE = 30
+# Change size of token for files (should be >=TOKEN_SIZE),
+#  defaults to TOKEN_SIZE
+# FILE_TOKEN_SIZE
 # OPEN_FOR_REGISTRATION = True # allow registration
 # ALLOW_USERNAME_CHANGE = True # allow users changing their username
 
