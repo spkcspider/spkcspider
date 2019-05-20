@@ -10,20 +10,19 @@ branches:
   - master
   - develop
 env:
-  - DJANGO_DEP="django==2.2"
-  - DJANGO_DEP="git+https://github.com/django/django.git"
+  - DJANGO_DEP="django22"
+  - DJANGO_DEP="djangomaster"
 matrix:
   exclude:
     - python: "3.5"
-      env: DJANGO_DEP="git+https://github.com/django/django.git"
+      env: DJANGO_DEP=djangomaster
   allow_failures:
     - python: "3.6"
-      env: DJANGO_DEP="git+https://github.com/django/django.git"
+      env: DJANGO_DEP=djangomaster
     - python: "3.7"
-      env: DJANGO_DEP="git+https://github.com/django/django.git"
+      env: DJANGO_DEP=djangomaster
 install:
-  - pip install poetry
-  - poetry install
-  - poetry run pip install --upgrade pip
-  - poetry run pip install "${DJANGO_DEP}"
-script: poetry run ./manage.py test
+  - pip install tox
+script: tox -e "py$(echo ${TRAVIS_PYTHON_VERSION} | tr -d .)-$DJANGO_DEP"
+
+cache: pip

@@ -56,6 +56,45 @@ mysql = ["mysqlclient"]
 pgsql = ["psycopg-binary"]
 celery = ["celery", "sqlalchemy"]
 
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+minversion = 3.4.0
+skipsdist=true
+envlist = py{35,36,37}-django{22,master}
+
+[testenv]
+commands = python -Wd ./manage.py test
+
+
+setenv =
+    PYTHONDONTWRITEBYTECODE=1
+
+deps =
+  django-simple-jsonfield>=0.3
+  requests
+  certifi
+  bleach
+  rdflib
+  html5lib
+  cryptography
+  django-ranged-response
+  django-widget-tweaks
+  django-next-prev
+  django-fast-ratelimit
+  lru-dict
+  django-extensions
+  Werkzeug
+  pyOpenSSL
+  django-webtest
+  django-simple-captcha
+  WSGIProxy2
+  celery
+  sqlalchemy
+  django22: Django>=2.2a1,<=2.2.99
+  djangomaster: https://github.com/django/django/archive/master.zip
+
+"""
 
 [build-system]
 requires = ["poetry>=0.12"]
