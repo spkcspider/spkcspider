@@ -43,11 +43,7 @@ lru-dict = "*"
 django-extensions = '*'
 Werkzeug = '*'
 pyOpenSSL = '*'
-django-webtest = '*'
 django-simple-captcha = "*"
-WSGIProxy2 = "*"
-celery = '*'
-sqlalchemy = '*'
 
 [tool.poetry.extras]
 captcha = ["django-simple-captcha"]
@@ -83,9 +79,6 @@ deps =
   django-next-prev
   django-fast-ratelimit
   lru-dict
-  django-extensions
-  Werkzeug
-  pyOpenSSL
   django-webtest
   django-simple-captcha
   WSGIProxy2
