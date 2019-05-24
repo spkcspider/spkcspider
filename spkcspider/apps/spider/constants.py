@@ -85,18 +85,18 @@ class VariantType(str, enum.Enum):
     # raw_add not required, archieved by returning response
 
     # don't list as contentvariant for user (for computer only stuff)
-    #  works like unlisted in info field, just for ContentVariants
-    # don't appear in allowed_content in contrast to feature except
-    #   if specified with a feature
-    #   here it unlists the contentvariant from public feature list
+    # set unlisted as default in info field
+    # if feature: unlist as a public visible feature
     unlisted = "d"
     # activates domain mode
     domain_mode = "e"
     # allow outside applications push content to spiders
-    # adds by default unlisted attribute
+    # adds by default unlisted info attribute
     # appears in features of userComponent
     # counts as foreign content
-    # don't list as content variant for user
+    # don't list as content variant for user (
+    #    except feature_connect and not unique
+    # )
     component_feature = "f"
     # same, but assigns to contents
     content_feature = "g"
@@ -104,8 +104,15 @@ class VariantType(str, enum.Enum):
     # is content unique for usercomponent
     # together with strength level 10: unique for user
     unique = "h"
-    # can be used as anchor, hash is automatically embedded
+    # can be used as anchor, will be hashed on verification if primary
     anchor = "i"
+    # unique:
+    #  auto create if content does not exist, auto unset if content is deleted
+    # non-unique:
+    #  add as contentvariant (except if unlisted), and create feature
+    feature_connect = "j"
+    # add as machine creatable content
+    machine = "k"
 
 
 class TravelLoginType(str, enum.Enum):

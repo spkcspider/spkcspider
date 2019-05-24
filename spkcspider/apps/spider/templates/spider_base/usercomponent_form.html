@@ -24,6 +24,9 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block content %}
   <div class="w3-padding" style="min-height:120px">
+    {% for name in machine_variants %}
+      <data hidden="hidden" property="spkc:create:name" datatype="xsd:string">{{name}}</data>
+    {% endfor %}
     <span class="w3-left">
     {% if object %}
       <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-list' token=object.token %}">

@@ -1,18 +1,34 @@
-__all__ = ("filter_components", "filter_contents", "listed_variants_q")
+__all__ = (
+    "filter_components", "filter_contents", "listed_variants_q",
+    "machine_variants_q"
+)
 
 from django.db.models import Q
 from django.conf import settings
 
 from .constants import VariantType
 
+_base_variants = (
+    (
+        Q(ctype__contains=VariantType.unique.value) &
+        Q(ctype__contains=VariantType.feature_connect.value) &
+        Q(ctype__contains=VariantType.component_feature.value)
+    ) |
+    (
+        ~Q(ctype__contains=VariantType.feature_connect.value) &
+        Q(ctype__contains=VariantType.component_feature.value)
+    ) |
+    Q(ctype__contains=VariantType.content_feature.value)
+)
+
+machine_variants_q = (
+    Q(ctype__contains=VariantType.machine.value) &
+    ~_base_variants
+)
+
 
 listed_variants_q = ~(
-    Q(
-        ctype__contains=VariantType.component_feature.value
-    ) |
-    Q(
-        ctype__contains=VariantType.content_feature.value
-    ) |
+    _base_variants |
     Q(ctype__contains=VariantType.unlisted.value)
 )
 

@@ -65,11 +65,7 @@ def CleanupCb(sender, instance, **kwargs):
                     "update size failed, trigger expensive recalculation",
                     exc_inf=exc
                 )
-                user = instance.user
-                with transaction.atomic():
-                    user.spider_info.calculate_allowed_content()
-                    user.spider_info.calculate_used_space()
-                    user.spider_info.save()
+            user = instance.user
 
     elif sender._meta.model_name == "assignedcontent":
         if instance.usercomponent and instance.usercomponent.user:
@@ -95,12 +91,16 @@ def CleanupCb(sender, instance, **kwargs):
                 stored_exc = exc
         if instance.content:
             instance.content.delete(False)
-        if stored_exc:
-            user = instance.usercomponent.user
-            with transaction.atomic():
-                user.spider_info.calculate_allowed_content()
-                user.spider_info.calculate_used_space()
-                user.spider_info.save()
+        if VariantType.feature_connect.value in instance.ctype.ctype:
+            instance.usercomponent.features.remove(instance.ctype)
+        user = instance.usercomponent.user
+
+    # expensive path
+    if stored_exc:
+        with transaction.atomic():
+            user.spider_info.calculate_allowed_content()
+            user.spider_info.calculate_used_space()
+            user.spider_info.save()
 
 
 def UpdateAnchorComponentCb(sender, instance, raw=False, **kwargs):

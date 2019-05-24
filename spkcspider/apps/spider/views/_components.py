@@ -21,7 +21,7 @@ from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
 from ..constants import spkcgraph, loggedin_active_tprotections
 from ..forms import UserComponentForm
 from ..queryfilters import (
-    filter_contents, filter_components, listed_variants_q
+    filter_contents, filter_components, listed_variants_q, machine_variants_q
 )
 from ..models import (
     UserComponent, TravelProtection, AssignedContent
@@ -418,6 +418,10 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         context["content_variants"] = \
             self.usercomponent.user_info.allowed_content.filter(
                 listed_variants_q
+            )
+        context["machine_variants"] = \
+            self.usercomponent.user.spider_info.allowed_content.filter(
+                machine_variants_q
             )
         context["content_variants_used"] = \
             context["content_variants"].filter(

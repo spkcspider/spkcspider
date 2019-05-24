@@ -177,6 +177,13 @@ spkc:ability:name a rdf:value ;
   rdfs:domain rdfs:Resource ;
   rdfs:range rdf:string .
 
+spkc:create:name a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "name" ;
+  rdfs:comment "Content-variants available for creation" ;
+  rdfs:domain spkc:Entity ;
+  rdfs:range xsd:string .
+
 spkc:pages.num_pages a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Amount Pages" ;

@@ -115,7 +115,10 @@ class UserComponentForm(forms.ModelForm):
             self.fields['featured'].disabled = True
 
         self.fields["features"].queryset = (
-            self.fields["features"].queryset &
+            self.fields["features"].queryset.exclude(
+                models.Q(ctype__contains=VariantType.feature_connect.value) &
+                ~models.Q(ctype__contains=VariantType.unique.value)
+            ) &
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 
@@ -124,16 +127,15 @@ class UserComponentForm(forms.ModelForm):
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 
-        # data and files field maybe not filled (to load from component)
-        # remove pw if index because it is used for legitimating changes
-        if getattr(self.instance, "id", None) and not self.instance.is_index:
-            self.initial["master_pw"] = \
-                self.fields["master_pw"].widget.value_from_datadict(
-                    request.POST, request.FILES,
-                    self.add_prefix("master_pw")
-                )
-
         if self.instance.id:
+            # data and files field maybe not filled (to load from component)
+            # remove pw if index because it is used for legitimating changes
+            if not self.instance.is_index:
+                self.initial["master_pw"] = \
+                    self.fields["master_pw"].widget.value_from_datadict(
+                        request.POST, request.FILES,
+                        self.add_prefix("master_pw")
+                    )
             if self.instance.name in protected_names:
                 self.fields["name"].disabled = True
             if not self.instance.is_public_allowed:
@@ -202,7 +204,7 @@ class UserComponentForm(forms.ModelForm):
     def calc_protection_strength(self):
         prot_strength = None
         max_prot_strength = 0
-        if getattr(self.instance, "id", None):
+        if self.instance.id:
             # instant fail strength
             fail_strength = 0
             # regular protections strength
@@ -261,7 +263,7 @@ class UserComponentForm(forms.ModelForm):
             # ValidationError so return, calculations won't work here
             return
 
-        if not getattr(self.instance, "id", None):
+        if not self.instance.id:
             quota = self.instance.get_component_quota()
             if quota and UserComponent.objects.filter(
                 user=self.instance.user
@@ -300,10 +302,27 @@ class UserComponentForm(forms.ModelForm):
             if self.cleaned_data["required_passes"] > 0:
                 self.cleaned_data["strength"] += 4
         self.cleaned_data["can_auth"] = max_prot_strength >= 4
-        if any(map(
-            lambda x: VariantType.persist.value in x.ctype,
-            self.cleaned_data["features"]
-        )):
+        # must be first to pull further dependencies
+        if self.instance.id:
+            extra_variants = ContentVariant.objects.filter(
+                models.Q(ctype__contains=VariantType.feature_connect.value) &
+                ~models.Q(ctype__contains=VariantType.unique.value),
+                assignedcontent__usercomponent=self.instance
+            ).values_list("id", flat=True)
+            if extra_variants:
+                # fixes strange union bug
+                self.cleaned_data["features"] = ContentVariant.objects.filter(
+                    models.Q(id__in=extra_variants) |
+                    models.Q(
+                        id__in=self.cleaned_data["features"].values_list(
+                            "id", flat=True
+                        )
+                    )
+                )
+
+        if self.cleaned_data["features"].filter(
+            ctype__contains=VariantType.persist.value
+        ).exists():
             # fixes strange union bug
             self.cleaned_data["features"] = ContentVariant.objects.filter(
                 models.Q(name="Persistence") |
@@ -313,10 +332,27 @@ class UserComponentForm(forms.ModelForm):
                     )
                 )
             )
-        self.cleaned_data["allow_domain_mode"] = any(map(
-            lambda x: VariantType.domain_mode.value in x.ctype,
-            self.cleaned_data["features"]
-        ))
+        self.cleaned_data["allow_domain_mode"] = \
+            self.cleaned_data["features"].filter(
+                ctype__contains=VariantType.domain_mode.value
+            ).exists()
+
+        if self.instance.id:
+            for variant in self.cleaned_data["features"].filter(
+                models.Q(ctype__contains=VariantType.feature_connect.value) &
+                models.Q(ctype__contains=VariantType.unique.value) &
+                ~models.Q(assignedcontent__usercomponent=self.instance)
+            ):
+                ret = variant.installed_class.static_create(
+                    token_size=getattr(settings, "TOKEN_SIZE", 30),
+                    associated_kwargs={
+                        "usercomponent": self.usercomponent,
+                        "ctype": variant,
+                        "attached_to_token": self.request.auth_token
+                    }
+                )
+                ret.clean()
+                ret.save()
         min_strength = self.cleaned_data["features"].filter(
             strength__gt=self.cleaned_data["strength"]
         ).aggregate(m=models.Max("strength"))["m"]

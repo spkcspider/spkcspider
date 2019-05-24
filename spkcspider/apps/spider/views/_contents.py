@@ -35,7 +35,9 @@ from ..models import (
 )
 from ..forms import UserContentForm, TravelProtectionManagementForm
 from ..helpers import get_settings_func, add_property, merge_get_url
-from ..queryfilters import filter_contents, listed_variants_q
+from ..queryfilters import (
+    filter_contents, listed_variants_q, machine_variants_q
+)
 from ..constants import (
     spkcgraph, VariantType, static_token_matcher, loggedin_active_tprotections
 )
@@ -184,6 +186,10 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             context["content_variants"] = \
                 self.usercomponent.user.spider_info.allowed_content.filter(
                     listed_variants_q
+                )
+            context["machine_variants"] = \
+                self.usercomponent.user.spider_info.allowed_content.filter(
+                    machine_variants_q
                 )
             context["content_variants_used"] = \
                 context["content_variants"].filter(
