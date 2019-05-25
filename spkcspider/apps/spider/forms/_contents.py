@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from ..constants import (
     dangerous_login_choices, travel_scrypt_params, TravelLoginType,
-    loggedin_active_tprotections
+    loggedin_active_tprotections, VariantType
 )
 from ..models import LinkContent, TravelProtection, AssignedContent
 from ..fields import MultipleOpenChoiceField, ContentMultipleChoiceField
@@ -238,7 +238,9 @@ class TravelProtectionForm(forms.ModelForm):
                 models.Q(travel_protected__in=travel) |
                 # don't allow detectable contents
                 models.Q(info__contains="\x1eanchor\x1e") |
-                models.Q(info__contains="\x1eprimary\x1e")
+                models.Q(info__contains="\x1eprimary\x1e") |
+                # contents also appearing as features are easily detectable
+                models.Q(ctype__contains=VariantType.feature_connect.value)
             ) |
             (
                 models.Q(usercomponent__travel_protected__id=selfid) |
