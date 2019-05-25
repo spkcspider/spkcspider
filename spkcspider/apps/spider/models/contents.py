@@ -311,6 +311,7 @@ class TravelProtectionManager(models.Manager):
 
 @add_content
 class TravelProtection(BaseContent):
+    # should not be a feature as it would be detectable this way
     appearances = [
         {
             "name": "TravelProtection",
