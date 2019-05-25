@@ -51,6 +51,7 @@ fcgi = ["flipflop"]
 mysql = ["mysqlclient"]
 pgsql = ["psycopg-binary"]
 celery = ["celery", "sqlalchemy"]
+test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery"]
 
 [tool.tox]
 legacy_tox_ini = """
@@ -83,7 +84,6 @@ deps =
   django-simple-captcha
   WSGIProxy2
   celery
-  sqlalchemy
   django22: Django>=2.2a1,<=2.2.99
   djangomaster: https://github.com/django/django/archive/master.zip
 

@@ -302,9 +302,10 @@ celery = []
 fcgi = []
 mysql = []
 pgsql = []
+test = []
 
 [metadata]
-content-hash = "2a1dc72d03f35bde76a1f976d34b7d84dcf219e6bbcbc32fc9826c147635683a"
+content-hash = "bfd405f97aab7df488e3ae407d72f48032466b2e301d60fa3954460cd0f33e8e"
 python-versions = ">=3.5"
 
 [metadata.hashes]

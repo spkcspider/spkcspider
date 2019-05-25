@@ -240,7 +240,9 @@ class TravelProtectionForm(forms.ModelForm):
                 models.Q(info__contains="\x1eanchor\x1e") |
                 models.Q(info__contains="\x1eprimary\x1e") |
                 # contents also appearing as features are easily detectable
-                models.Q(ctype__contains=VariantType.feature_connect.value)
+                models.Q(
+                    ctype__ctype__contains=VariantType.feature_connect.value
+                )
             ) |
             (
                 models.Q(usercomponent__travel_protected__id=selfid) |
