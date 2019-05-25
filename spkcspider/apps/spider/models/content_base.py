@@ -112,6 +112,8 @@ class UserContentManager(models.Manager):
         if variant:
             if isinstance(variant, models.QuerySet):
                 q &= models.Q(ctype__in=variant)
+            elif isinstance(variant, models.Model):
+                q &= models.Q(ctype=variant)
             else:
                 q &= models.Q(ctype__name__in=variant)
         for i in info:
@@ -154,6 +156,8 @@ class UserContentManager(models.Manager):
         if variant:
             if isinstance(variant, models.QuerySet):
                 q &= models.Q(ctype__in=variant)
+            elif isinstance(variant, models.Model):
+                q &= models.Q(ctype=variant)
             else:
                 q &= models.Q(ctype__name__in=variant)
         for i in info:
