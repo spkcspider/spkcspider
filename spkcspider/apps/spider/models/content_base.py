@@ -102,6 +102,8 @@ class UserContentManager(models.Manager):
         self, token, *, info=frozenset(), variant=frozenset(),
         check_feature=False
     ):
+        # check_feature requires that ctype of the selected content is in
+        #  component features
         if isinstance(variant, str):
             variant = [variant]
 
@@ -119,7 +121,9 @@ class UserContentManager(models.Manager):
         for i in info:
             q &= models.Q(info__contains="\x1e%s\x1e" % i)
         if check_feature:
-            q &= models.Q(ctype__feature_for_components__authtokens=token)
+            q &= models.Q(
+                ctype__feature_for_components__authtokens=token
+            )
         return self.get(
             q, attached_to_token=token
         )

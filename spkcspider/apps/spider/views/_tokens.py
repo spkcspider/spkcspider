@@ -1,9 +1,11 @@
 __all__ = (
-    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal"
+    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal",
+    "ReverseTokenView"
 )
 
 import logging
 
+from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.views.generic.edit import DeleteView
@@ -19,7 +21,7 @@ from django.views import View
 import requests
 
 from ._core import UCTestMixin
-from ..models import AuthToken
+from ..models import AuthToken, ReverseToken
 from ..helpers import get_settings_func, get_requests_params
 from ..constants import TokenCreationError
 
@@ -186,6 +188,7 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
 
 class TokenRenewal(UCTestMixin, View):
     model = AuthToken
+    oldtoken = None
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
@@ -207,13 +210,11 @@ class TokenRenewal(UCTestMixin, View):
             persist__gte=0,
             referrer__isnull=False
         )
-        if (
-            not self.request.auth_token.referrer or
-            "persist" not in self.request.auth_token.extra.get(
+        assert (
+            "persist" in self.request.auth_token.extra.get(
                 "intentions", []
             )
-        ):
-            raise Http404()
+        )
         return self.request.auth_token.usercomponent
 
     def test_func(self):
@@ -234,13 +235,15 @@ class TokenRenewal(UCTestMixin, View):
         #       here is no way to know the token value
         try:
             d = {
+                "oldtoken": self.oldtoken,
                 "token": self.request.auth_token.token,
+                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
                 "renew": "true"
             }
             if "payload" in self.request.POST:
                 d["payload"] = self.request.POST["payload"]
             ret = requests.post(
-                self.request.auth_token.referrer,
+                self.request.auth_token.referrer.url,
                 data=d,
                 headers={
                     "Referer": "%s://%s" % (
@@ -248,7 +251,7 @@ class TokenRenewal(UCTestMixin, View):
                         self.request.path
                     )
                 },
-                **get_requests_params(self.request.auth_token.referrer)
+                **get_requests_params(self.request.auth_token.referrer.url)
             )
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:
@@ -266,12 +269,15 @@ class TokenRenewal(UCTestMixin, View):
         return True
 
     def post(self, request, *args, **kwargs):
-        self.request.auth_token.create_token()
+        self.oldtoken = self.request.auth_token.token
+        self.request.auth_token.initialize_token()
         success = True
-        if "sl" in self.request.extra.get("intentions", []):
+        if "sl" in self.request.auth_token.extra.get("intentions", []):
             # only the original referer can access this
             success = (
-                self.request["Referer"] == self.request.auth_token.referrer
+                self.request.headers.get("Referer", "").startswith(
+                    self.request.auth_token.referrer.url
+                )
             )
         else:
             # if not serverless:
@@ -288,18 +294,57 @@ class TokenRenewal(UCTestMixin, View):
             return HttpResponseServerError(
                 "Token update failed, try again"
             )
-        if "sl" in self.request.extra.get("intentions", []):
+        if "sl" in self.request.auth_token.extra.get("intentions", []):
             ret = HttpResponse(
                 self.request.auth_token.token.encode(
                     "ascii"
-                ), content_type="text/plain"
+                ),
+                content_type="text/plain",
+                status=200
             )
-            ret["Access-Control-Allow-Origin"] = \
-                self.request.auth_token.referrer
         else:
-            ret = HttpResponse(status_code=200)
+            ret = HttpResponse(status=200)
         # no sl: simplifies update logic for thirdparty web servers
         # sl: safety (but anyway checked by referer check)
         ret["Access-Control-Allow-Origin"] = \
             self.request.auth_token.referrer.host
+        return ret
+
+
+class ReverseTokenView(View):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return get_settings_func(
+                "SPIDER_RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
+
+    def post(self, request, *args, **kwargs):
+        payload = self.request.POST.get(
+            "payload"
+        )
+        newtoken = self.request.POST.get("token", None)
+        if not payload or not newtoken:
+            raise Http404()
+        try:
+            token, rid = payload.rsplit(",", 1)
+            rid = int(rid)
+        except Exception:
+            raise Http404()
+
+        self.object = get_object_or_404(
+            ReverseToken,
+            assignedcontent__token=token, id=rid
+        )
+        self.object.token = newtoken
+        self.object.save(update_fields=["token"])
+        return HttpResponse(status=200)
+
+    def options(self, request, *args, **kwargs):
+        ret = super().options()
+        ret["Access-Control-Allow-Origin"] = "*"
+        ret["Access-Control-Allow-Methods"] = "POST, OPTIONS"
         return ret

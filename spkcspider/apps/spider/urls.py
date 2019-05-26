@@ -13,7 +13,7 @@ from .views import (
 )
 
 from .views import (
-    AdminTokenManagement, TokenDeletionRequest, TokenRenewal
+    AdminTokenManagement, TokenDeletionRequest, TokenRenewal, ReverseTokenView
 )
 
 app_name = "spider_base"
@@ -109,6 +109,11 @@ urlpatterns = [
         'token/renew/',
         TokenRenewal.as_view(),
         name='token-renew'
+    ),
+    path(
+        'token/reverse/',
+        ReverseTokenView.as_view(),
+        name='reverse-token'
     ),
     path(
         'travelprotection/',

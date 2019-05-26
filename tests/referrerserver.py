@@ -31,6 +31,10 @@ class ReferrerHandler(BaseHTTPRequestHandler):
         self.query = parse_qs(self.rfile.read(int(length)))
         self.log_message("query: %s", str(self.query))
 
+        renew = self.query.get(
+            b"renew", [b"false"]
+        )[0] == b"true"
+
         algo = self.query.get(
             b"hash_algorithm", [b"sha512"]
         )[0].decode("ascii")
@@ -38,13 +42,32 @@ class ReferrerHandler(BaseHTTPRequestHandler):
         h.update(self.query[b"token"][0])
         hdigest = h.hexdigest()
 
-        self.server.unverified[hdigest] = {
-            "token": self.query[b"token"][0].decode("ascii"),
-            "referrer": self.headers.get("Referer", "None"),
-            "digest": hdigest
-        }
-        self.send_response(200)
-        self.end_headers()
+        if renew:
+            algo = self.query.get(
+                b"hash_algorithm", [b"sha512"]
+            )[0].decode("ascii")
+            h = hashlib.new(algo)
+            h.update(self.query[b"oldtoken"][0])
+            hdigestold = h.hexdigest()
+            self.server.tokens[hdigest] = {
+                "token": self.query[b"token"][0].decode("ascii"),
+                "referrer": self.headers.get("Referer", "None"),
+                "digest": hdigest,
+                "renew": True
+            }
+            del self.server.tokens[hdigestold]
+            self.send_response(200)
+            self.end_headers()
+        else:
+
+            self.server.unverified[hdigest] = {
+                "token": self.query[b"token"][0].decode("ascii"),
+                "referrer": self.headers.get("Referer", "None"),
+                "digest": hdigest,
+                "renew": False
+            }
+            self.send_response(200)
+            self.end_headers()
 
     def do_GET(self):
         sp = urlsplit(self.path)

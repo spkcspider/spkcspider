@@ -83,7 +83,10 @@ class ProtectionTest(TransactionWebTest):
         form.set("username", "testuser1")
         form.set("password", "abc", index=0)
         response = form.submit()
-        self.assertTrue(response.location.startswith(viewurl))
+        self.assertIn(
+            viewurl.split("?", 1)[0],
+            response.location
+        )
         # self.assertNotIn("token=", response.location)
         response = response.follow()
         self.assertNotIn("SPKCProtectionForm", response.forms)
@@ -132,7 +135,10 @@ class ProtectionTest(TransactionWebTest):
         form.set("username", "testuser1")
         form.set("password", "abc", index=0)
         response = form.submit()
-        self.assertTrue(response.location.startswith(viewurl))
+        self.assertIn(
+            viewurl.split("?", 1)[0],
+            response.location
+        )
         # self.assertNotIn("token=", response.location)
         response = response.follow()
         self.assertNotIn("SPKCProtectionForm", response.forms)

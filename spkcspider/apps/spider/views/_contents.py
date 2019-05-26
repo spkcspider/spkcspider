@@ -227,7 +227,8 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         if staff_perm:
             staff_perm = "spider_base.view_usercomponent"
         # user token is tested later
-        if self.has_special_access(
+        # only test if no token is specified
+        if not self.request.GET.get("token") and self.has_special_access(
             user_by_login=True, user_by_token=False,
             staff=staff_perm, superuser=True
         ):
@@ -238,7 +239,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         # export is only available for user and staff with permission
 
         minstrength = 0
-        if self.scope in ["export"]:
+        if self.scope in ["export"] or self.usercomponent.strength in (4, 9):
             minstrength = 4
 
         return self.test_token(minstrength)
@@ -575,20 +576,26 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         # except it is index, in this case only the user can update
         # reason: admins could be tricked into malicious updates
         # for index the same reason as for add
-        uncritically = self.usercomponent.name != "index"
-        staff_perm = uncritically
+        is_index = self.usercomponent.is_index
+        staff_perm = not is_index
         if staff_perm:
             staff_perm = "spider_base.view_assignedcontent"
             if self.scope in {"update", "raw_update"}:
                 staff_perm = "spider_base.update_assignedcontent"
         # user token is tested later
-        if self.has_special_access(
-            staff=staff_perm, superuser=uncritically,
+        # only test if no token is specified
+        if not self.request.GET.get("token") and self.has_special_access(
+            staff=staff_perm, superuser=(not is_index),
             user_by_token=False, user_by_login=True
         ):
             return True
+        if is_index:
+            return False
         minstrength = 0
-        if self.scope in {"update", "raw_update", "export"}:
+        if (
+            self.scope in {"update", "raw_update", "export"} or
+            self.usercomponent.strength in (4, 9)
+        ):
             minstrength = 4
         return self.test_token(minstrength)
 

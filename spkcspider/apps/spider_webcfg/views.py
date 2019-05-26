@@ -62,11 +62,27 @@ class WebConfigView(UCTestMixin, View):
             raise Http404()
         try:
             return AssignedContent.objects.from_token(
-                token=self.request.auth_token, check_feature=True,
+                token=self.request.auth_token,
                 variant=["WebConfig", "TmpConfig"]
             ).content
         except AssignedContent.DoesNotExist:
-            pass
+            if (
+                variants.filter(name="TmpConfig") and
+                self.request.auth_token.persist < 0
+            ):
+                ret = AssignedContent.objects.filter(
+                    usercomponent=self.usercomponent,
+                    attached_to_token__referrer=self.request.auth_token.referrer,  # noqa: E501
+                    attached_to_token__persist__lt=0,
+                    ctype__name="WebConfig"
+                )
+                if ret:
+                    assert (
+                        ret.first().attached_to_token !=
+                        self.request.auth_token
+                    )
+                    ret.update(attached_to_token=self.request.auth_token)
+                    return ret.first().content
         ret = self.model.static_create(
             token_size=getattr(settings, "TOKEN_SIZE", 30),
             associated_kwargs={

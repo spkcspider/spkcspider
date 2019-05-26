@@ -4,7 +4,7 @@ namespace: spider_base
 
 """
 
-__all__ = ["Protection", "AssignedProtection", "AuthToken"]
+__all__ = ["Protection", "AssignedProtection", "AuthToken", "ReverseToken"]
 
 import logging
 
@@ -271,6 +271,22 @@ class AssignedProtection(models.Model):
         return self.usercomponent.user
 
 
+class ReverseToken(models.Model):
+    id = models.BigAutoField(primary_key=True, editable=False)
+    token = models.CharField(
+        max_length=MAX_TOKEN_B64_SIZE+hex_size_of_bigid+2
+    )
+    created = models.DateTimeField(auto_now_add=True, editable=False)
+    # for automatic deletion
+    assignedcontent = models.ForeignKey(
+        "spider_base.AssignedContent", on_delete=models.CASCADE,
+        related_name="reversetokens"
+    )
+
+    def __str__(self):
+        return "{}...".format(self.token[:-_striptoken])
+
+
 class AuthToken(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     usercomponent = models.ForeignKey(
@@ -300,21 +316,28 @@ class AuthToken(models.Model):
     def __str__(self):
         return "{}...".format(self.token[:-_striptoken])
 
-    def create_auth_token(self):
+    def initialize_token(self):
         self.token = create_b64_id_token(
             self.usercomponent.id, "_", getattr(settings, "TOKEN_SIZE", 30)
         )
 
     def save(self, *args, **kwargs):
-        for i in range(0, 1000):
-            if i >= 999:
-                raise TokenCreationError(
-                    'A possible infinite loop was detected'
-                )
-            self.create_auth_token()
+        start = not self.token
+        if not start:
             try:
                 self.validate_unique()
-                break
             except ValidationError:
-                pass
+                start = True
+        if start:
+            for i in range(0, 1000):
+                if i >= 999:
+                    raise TokenCreationError(
+                        'A possible infinite loop was detected'
+                    )
+                self.initialize_token()
+                try:
+                    self.validate_unique()
+                    break
+                except ValidationError:
+                    pass
         super().save(*args, **kwargs)

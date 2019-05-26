@@ -44,6 +44,8 @@ class UserTestMixin(AccessMixin):
         "LOGIN_URL",
         "auth:login"
     ))
+    # don't allow AccessMixin to redirect, handle in test_token
+    raise_exception = True
     _travel_request = None
 
     def dispatch_extra(self, request, *args, **kwargs):
@@ -172,6 +174,9 @@ class UserTestMixin(AccessMixin):
 
         # if result is impossible and token invalid try to login
         if minstrength >= 4 and not self.usercomponent.can_auth:
+            # auth won't work for logged in users
+            if self.request.user.is_authenticated:
+                return False
             # remove token and redirect
             # login_url can be also on a different host => merge_get_url
             target = "{}?{}={}".format(
@@ -179,7 +184,7 @@ class UserTestMixin(AccessMixin):
                 REDIRECT_FIELD_NAME,
                 quote_plus(
                     merge_get_url(
-                        self.request.get_full_path(),
+                        self.request.build_absolute_uri(),
                         token=None
                     )
                 )
@@ -198,7 +203,7 @@ class UserTestMixin(AccessMixin):
             type(self.request.protections) is int and  # because: False==0
             self.request.protections >= minstrength
         ):
-            # generate no token if not required
+            # generate only tokens if required
             if no_token:
                 return True
 
@@ -485,7 +490,7 @@ class ReferrerMixin(object):
             )
         context["post_success"] = True
         h = get_hashob()
-        h.update(token.token.encode("ascii", "ignore"))
+        h.update(token.token.encode("utf-8", "ignore"))
         return HttpResponseRedirect(
             redirect_to=merge_get_url(
                 context["referrer"],
@@ -595,13 +600,15 @@ class ReferrerMixin(object):
             self.request.user != self.usercomponent.user and
             not self.request.auth_token
         ):
+            if self.request.user.is_authenticated:
+                return self.handle_no_permission()
             return HttpResponseRedirect(
                 redirect_to="{}?{}={}".format(
                     self.get_login_url(),
                     REDIRECT_FIELD_NAME,
                     quote_plus(
                         merge_get_url(
-                            self.request.get_full_path(),
+                            self.request.build_absolute_uri(),
                             token=None
                         )
                     )
@@ -629,8 +636,9 @@ class ReferrerMixin(object):
 
         action = self.request.POST.get("action", None)
         if "domain" in context["intentions"]:
-            # domain mode only possible for token without user
             token = self.request.auth_token
+            assert token or self.request.is_special_user, \
+                "special user and no token"
             if not self.allow_domain_mode:
                 return HttpResponse(
                     status=400,
@@ -641,7 +649,7 @@ class ReferrerMixin(object):
                     status=400,
                     content='Invalid token'
                 )
-            token.create_auth_token()
+            token.initialize_token()
             token.referrer = ReferrerObject.objects.get_or_create(
                 url=context["referrer"]
             )[0]
@@ -685,7 +693,7 @@ class ReferrerMixin(object):
                 if token:
                     token.extra["strength"] = 10
                     # self.request new token
-                    token.create_auth_token()
+                    token.initialize_token()
                 else:
                     token = AuthToken(
                         usercomponent=self.usercomponent,

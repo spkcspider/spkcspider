@@ -73,7 +73,10 @@ class WebConfig(BaseContent):
         return f
 
     def get_info(self):
-        ret = super().get_info(unique=True)
+        # persistent tokens automatically enforce uniqueness
+        ret = super().get_info(
+            unique=(self.associated.attached_to_token.persist < 0)
+        )
         return "{}url={}\x1e".format(
             ret, self.associated.attached_to_token.referrer.url
         )
