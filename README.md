@@ -270,6 +270,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * Localisation
   * harmonize punctation
 * good permission model for TravelProtection
+* MAYBE: remove dispatch_uid of signals or harmonize
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
