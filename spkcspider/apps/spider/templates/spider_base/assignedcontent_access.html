@@ -33,10 +33,18 @@
 
 {% block content %}
   <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
-  {% if scope != "add" and feature_type in object.ctype.ctype %}
-    <data hidden="hidden" property="spkc:type" datatype="xsd:string">Feature</data>
+  {% if scope == "add" %}
+    {% if component_feature_type in object.ctype or content_feature_type in object.ctype %}
+      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Feature</data>
+    {% else %}
+      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
+    {% endif %}
   {% else %}
-    <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
+    {% if component_feature_type in object.ctype.ctype or content_feature_type in object.ctype.ctype %}
+      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Feature</data>
+    {% else %}
+      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
+    {% endif %}
   {% endif %}
   {% for f in active_listed_features %}
     {% for action in f.feature_urls %}
@@ -80,7 +88,7 @@
           <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Share' %}
         </a>
       {% endif %}
-      {% if scope != "add" and request.is_special_user %}
+      {% if scope != "add" and request.is_special_user and no_export_type not in object.ctype.ctype %}
       <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' token=object.token access='export' %}">
         <i class="fas fa-cloud-download-alt" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Export' %}
       </a>

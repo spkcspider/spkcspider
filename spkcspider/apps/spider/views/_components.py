@@ -18,7 +18,7 @@ from django.utils.translation import gettext
 from rdflib import Graph, Literal, URIRef, XSD
 
 from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
-from ..constants import spkcgraph, loggedin_active_tprotections
+from ..constants import spkcgraph, loggedin_active_tprotections, VariantType
 from ..forms import UserComponentForm
 from ..queryfilters import (
     filter_contents, filter_components, listed_variants_q, machine_variants_q
@@ -78,6 +78,11 @@ class ComponentIndexBase(ListView):
 
         if self.request.GET.get("protection", "") == "false":
             filter_q &= models.Q(required_passes=0)
+
+        if self.scope == "export":
+            filter_q &= ~models.Q(
+                ctype__ctype__contains=VariantType.no_export.value
+            )
 
         return AssignedContent.objects.select_related(
             "usercomponent"

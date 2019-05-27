@@ -127,6 +127,10 @@ class ContentBase(UCTestMixin):
         filter_q, counter = filter_contents(
             searchlist, idlist, filter_unlisted
         )
+        if self.scope == "export":
+            ret = ret.exclude(
+                ctype__ctype__contains=VariantType.no_export.value
+            )
 
         order = self.get_ordering(counter > 0)
         # distinct required?

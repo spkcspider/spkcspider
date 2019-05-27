@@ -280,15 +280,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * log changes
 * improve protections, add protections
 
-### Implement Emails/messaging
-* email to spkcspider transport wrapper (also script)+component (encrypt, transparent gpg)
-  * delta chat integration
-  * webinterface
-* implement webreferences
-* WebReference on an "email" object is an "email"
-* Webreferences can contain cache
-* can optionally contain tags used for encryption and/or refcounting for automatic deletion
-
 
 ### Implement Web Comments
 * every internal page can be annotated (to keep contact to author)

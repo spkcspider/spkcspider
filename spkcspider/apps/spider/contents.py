@@ -643,6 +643,8 @@ class BaseContent(models.Model):
 
     def access_export(self, **kwargs):
         kwargs["scope"] = "export"
+        if VariantType.no_export.value in self.associated.ctype.ctype:
+            raise Http404()
         return self.render_serialize(**kwargs)
 
     def access_raw(self, **kwargs):

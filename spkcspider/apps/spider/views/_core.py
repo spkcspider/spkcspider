@@ -36,6 +36,8 @@ from ..constants import (
 from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
 from ..models import UserComponent, AuthToken, ReferrerObject, TravelProtection
 
+logger = logging.getLogger(__name__)
+
 
 class UserTestMixin(AccessMixin):
     preserved_GET_parameters = set(["token", "protection"])
@@ -61,7 +63,7 @@ class UserTestMixin(AccessMixin):
         try:
             user_test_result = self.test_func()
         except TokenCreationError:
-            logging.exception("Token creation failed")
+            logger.exception("Token creation failed")
             return HttpResponseServerError(
                 _("Token creation failed, try again")
             )
@@ -90,7 +92,9 @@ class UserTestMixin(AccessMixin):
 
     def get_context_data(self, **kwargs):
         kwargs["raw_update_type"] = VariantType.raw_update.value
-        kwargs["feature_type"] = VariantType.component_feature.value
+        kwargs["component_feature_type"] = VariantType.component_feature.value
+        kwargs["content_feature_type"] = VariantType.content_feature.value
+        kwargs["no_export_type"] = VariantType.no_export.value
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )
@@ -444,7 +448,7 @@ class ReferrerMixin(object):
             )
             ret.raise_for_status()
         except requests.exceptions.SSLError as exc:
-            logging.info(
+            logger.info(
                 "referrer: \"%s\" has a broken ssl configuration",
                 context["referrer"], exc_info=exc
             )
@@ -477,7 +481,7 @@ class ReferrerMixin(object):
                     rate=settings.SPIDER_DOMAIN_ERROR_RATE,
                     inc=True
                 )
-            logging.info(
+            logger.info(
                 "post failed: \"%s\" failed",
                 context["referrer"], exc_info=exc
             )
@@ -657,7 +661,7 @@ class ReferrerMixin(object):
             try:
                 token.save()
             except TokenCreationError:
-                logging.exception("Token creation failed")
+                logger.exception("Token creation failed")
                 return HttpResponseServerError(
                     "Token creation failed, try again"
                 )
@@ -746,7 +750,7 @@ class ReferrerMixin(object):
                         self.request.auth_token.delete()
                     token.save()
             except TokenCreationError:
-                logging.exception("Token creation failed")
+                logger.exception("Token creation failed")
                 return HttpResponseServerError(
                     _("Token creation failed, try again")
                 )

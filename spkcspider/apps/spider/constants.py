@@ -113,6 +113,8 @@ class VariantType(str, enum.Enum):
     feature_connect = "j"
     # add as machine creatable content
     machine = "k"
+    # exclude from exports
+    no_export = "l"
 
 
 class TravelLoginType(str, enum.Enum):
