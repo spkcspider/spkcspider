@@ -16,6 +16,7 @@ class WebConfig(BaseContent):
     expose_name = False
     appearances = [
         {
+            # only one per domain
             "name": "WebConfig",
             "ctype": (
                 VariantType.unique + VariantType.component_feature +
@@ -24,6 +25,7 @@ class WebConfig(BaseContent):
             "strength": 0
         },
         {
+            # only one per domain, times out, don't require user permission
             "name": "TmpConfig",
             "ctype": (
                 VariantType.unique + VariantType.component_feature +

@@ -284,7 +284,11 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 
 ### Implement Web Comments
 * every internal page can be annotated (to keep contact to author)
-* reactions and likes
+  * send as message?
+  * CommentBox?
+* Comment: url, subcommentlist, commenttext, reactionlist (reaction, counter)
+* view: load iframe with original content?
+* js for loading subcomments (only 1 level), sanitize!
 * you see only the comments of your friends
 * implement with messaging? Would keep comments private
 * Later/Maybe:
