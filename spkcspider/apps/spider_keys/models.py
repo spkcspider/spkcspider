@@ -10,7 +10,7 @@ from django.utils.translation import gettext
 from django.core.exceptions import ValidationError
 from django.template.loader import render_to_string
 from django.utils.translation import pgettext
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import HttpResponsePermanentRedirect, JsonResponse
 
 from jsonfield import JSONField
 
@@ -223,7 +223,7 @@ class AnchorServer(AnchorBase):
 
     def access_anchor(self, **kwargs):
         if self.new_url:
-            ret = HttpResponseRedirect(location=self.new_url)
+            ret = HttpResponsePermanentRedirect(redirect_to=self.new_url)
         else:
             ret = JsonResponse(self.old_urls)
         ret["Access-Control-Allow-Origin"] = "*"

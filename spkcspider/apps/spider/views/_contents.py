@@ -473,7 +473,7 @@ class ContentAdd(ContentBase, CreateView):
             assert(ucontent.token)
             assert(ucontent.usercomponent)
             return redirect(
-                'spider_base:ucontent-access',
+                'spider_base:ucontent-access', permanent=True,
                 token=ucontent.token, access="update"
             )
         else:
@@ -657,7 +657,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             # token changed => path has changed
             if self.object.token != self.kwargs["token"]:
                 return redirect(
-                    'spider_base:ucontent-access',
+                    'spider_base:ucontent-access', permanent=True,
                     token=self.object.token, access="update"
                 )
 
@@ -794,7 +794,7 @@ class TravelProtectionManagement(UserTestMixin, UpdateView):
             self.object.associated.getflag("anonymous_trigger")
         ):
             return HttpResponseRedirect(
-                self.object.associated.get_absolute_url("update")
+                redirect_to=self.object.associated.get_absolute_url("update")
             )
         return super().render_to_response(context)
 

@@ -69,7 +69,7 @@ class AdminTokenManagement(UCTestMixin, View):
             del delquery
             if shall_redirect:
                 return HttpResponseRedirect(
-                    location=request.get_full_path()
+                    redirect_to=request.get_full_path()
                 )
 
         return self.get(request, *args, **kwargs)

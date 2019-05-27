@@ -2,7 +2,9 @@ __all__ = ["PermAnchorView"]
 
 from urllib.parse import urljoin
 
-from django.http.response import HttpResponseRedirect, HttpResponseBase
+from django.http.response import (
+    HttpResponsePermanentRedirect, HttpResponseBase
+)
 from django.views.generic.detail import DetailView
 
 from spkcspider.apps.spider.conf import get_anchor_domain
@@ -17,8 +19,8 @@ class PermAnchorView(DetailView):
 
     def get(self, request, *args, **kwargs):
         if request.get_host() != get_anchor_domain():
-            return HttpResponseRedirect(
-                location=urljoin(
+            return HttpResponsePermanentRedirect(
+                redirect_to=urljoin(
                     get_anchor_domain(), request.get_full_path()
                 )
             )

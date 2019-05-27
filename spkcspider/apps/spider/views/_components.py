@@ -481,7 +481,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         if self.kwargs["token"] != self.object.token:
             return redirect(
                 "spider_base:ucomponent-update",
-                token=self.object.token
+                token=self.object.token, permanent=True
             )
         messages.success(self.request, _('Component updated.'))
         return self.render_to_response(

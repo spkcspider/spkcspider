@@ -176,7 +176,7 @@ class FileFilet(ContentWithLicense):
     def access_download(self, **kwargs):
         if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
             response = HttpResponseRedirect(
-                self.file.url,
+                redirect_to=self.file.url,
             )
         else:
             response = RangedFileResponse(

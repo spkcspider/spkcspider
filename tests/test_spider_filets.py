@@ -113,4 +113,4 @@ class FileFiletTest(TransactionWebTest):
             with override_settings(FILE_DIRECT_DOWNLOAD=True):
                 response = self.app.get(durl)
                 self.assertEqual(response.status_code, 302)
-                # no server so skip, as it doesn't work
+                # no server so skip, as redirect won't work
