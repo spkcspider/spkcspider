@@ -15,7 +15,6 @@ from base64 import b64encode
 from django.conf import settings
 from django.db import models
 from django.utils.html import escape
-from django.http import Http404
 from django.shortcuts import redirect
 from django.utils.translation import gettext
 from django.middleware.csrf import CsrfViewMiddleware
@@ -58,12 +57,12 @@ class PersistenceFeature(BaseContent):
     def feature_urls(cls, name):
         return [
             ActionUrl(
-                reverse("spider_base:token-renew"),
-                "renew-token"
+                "renew-token",
+                reverse("spider_base:token-renew")
             ),
             ActionUrl(
-                reverse("spider_base:token-delete-request"),
-                "delete-token"
+                "delete-token",
+                reverse("spider_base:token-delete-request")
             )
         ]
 
@@ -74,7 +73,8 @@ class DomainModeFeature(BaseContent):
         {
             "name": "DomainMode",
             "ctype": (
-                VariantType.component_feature + VariantType.content_feature
+                VariantType.component_feature + VariantType.content_feature +
+                VariantType.no_export
             ),
             "valid_feature_for": "*",
             "strength": 0
@@ -88,8 +88,8 @@ class DomainModeFeature(BaseContent):
     def feature_urls(cls, name):
         return [
             ActionUrl(
-                reverse("spider_base:token-delete-request"),
-                "delete-token"
+                "delete-token",
+                reverse("spider_base:token-delete-request")
             )
         ]
 

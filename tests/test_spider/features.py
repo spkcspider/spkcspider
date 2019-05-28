@@ -240,7 +240,9 @@ class FeaturesTest(TransactionWebTest):
                 self.assertIn("hash", query)
                 self.assertIn(query["hash"][0], self.refserver.unverified)
                 # confirm token
-                requests.get(response.location)
+                requests.get(
+                    response.location, headers={"Connection": "close"}
+                )
                 self.assertIn(query["hash"][0], self.refserver.tokens)
                 token = AuthToken.objects.get(
                     token=self.refserver.tokens[query["hash"][0]]["token"]

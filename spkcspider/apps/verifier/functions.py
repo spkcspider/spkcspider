@@ -56,10 +56,11 @@ def domain_auth(source, hostpart):
     )
     ret = True
     try:
-        resp = requests.get(
-            url, **get_requests_params(url)
-        )
-        resp.raise_for_status()
+        with requests.get(
+            url, headers={"Connection": "close"}, **get_requests_params(url)
+        ) as resp:
+            resp.close()
+            resp.raise_for_status()
     except Exception:
         if settings.DEBUG:
             logging.exception("domain_auth failed")

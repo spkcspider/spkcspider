@@ -247,7 +247,7 @@ class TagTest(TransactionWebTest):
                 break
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        urls = home.features.first().feature_urls
+        urls = home.features.get(name="PushedTag").feature_urls
         self.assertEqual(len(urls), 1)
         pushed_url = next(iter(urls)).url
         response = response.click(
@@ -298,7 +298,9 @@ class TagTest(TransactionWebTest):
             )
         )
 
-        response = requests.get(response.location)
+        response = requests.get(
+            response.location, headers={"Connection": "close"}
+        )
         response.raise_for_status()
         self.assertIn(query["hash"][0], response.text)
         token = self.refserver.tokens[query["hash"][0]]["token"]

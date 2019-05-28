@@ -302,49 +302,7 @@ class UserComponentForm(forms.ModelForm):
             if self.cleaned_data["required_passes"] > 0:
                 self.cleaned_data["strength"] += 4
         self.cleaned_data["can_auth"] = max_prot_strength >= 4
-        # must be first to pull further dependencies
-        if self.instance.id:
-            extra_variants = ContentVariant.objects.filter(
-                models.Q(ctype__contains=VariantType.feature_connect.value) &
-                ~models.Q(ctype__contains=VariantType.unique.value),
-                assignedcontent__usercomponent=self.instance
-            ).values_list("id", flat=True)
-            if extra_variants:
-                # fixes strange union bug
-                self.cleaned_data["features"] = ContentVariant.objects.filter(
-                    models.Q(id__in=extra_variants) |
-                    models.Q(
-                        id__in=self.cleaned_data["features"].values_list(
-                            "id", flat=True
-                        )
-                    )
-                )
 
-        if self.cleaned_data["features"].filter(
-            ctype__contains=VariantType.persist.value
-        ).exists():
-            # fixes strange union bug
-            self.cleaned_data["features"] = ContentVariant.objects.filter(
-                models.Q(name="Persistence") |
-                models.Q(
-                    id__in=self.cleaned_data["features"].values_list(
-                        "id", flat=True
-                    )
-                )
-            )
-
-        if self.cleaned_data["features"].filter(
-            ctype__contains=VariantType.domain_mode.value
-        ).exists():
-            # fixes strange union bug
-            self.cleaned_data["features"] = ContentVariant.objects.filter(
-                models.Q(name="DomainMode") |
-                models.Q(
-                    id__in=self.cleaned_data["features"].values_list(
-                        "id", flat=True
-                    )
-                )
-            )
         if self.instance.id:
             for variant in self.cleaned_data["features"].filter(
                 models.Q(ctype__contains=VariantType.feature_connect.value) &

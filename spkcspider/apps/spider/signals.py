@@ -2,13 +2,14 @@ __all__ = (
     "UpdateSpiderCb", "InitUserCb", "update_dynamic",
     "DeleteContentCb", "CleanupCb", "MovePersistentCb",
     "move_persistent", "failed_guess",
-    "UpdateAnchorContentCb", "UpdateAnchorComponentCb"
+    "UpdateContentCb", "UpdateAnchorComponentCb",
+    "UpdateComponentFeaturesCb", "UpdateContentFeaturesCb"
 )
 from django.dispatch import Signal
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
-from django.db import transaction
+from django.db import transaction, models
 
 from django.apps import apps
 from .constants import VariantType
@@ -21,6 +22,7 @@ move_persistent = Signal(providing_args=["tokens", "to"])
 failed_guess = Signal(providing_args=["request"])
 
 _empty_set = frozenset()
+_feature_update_actions = frozenset({"post_add", "post_remove", "post_clear"})
 
 
 def TriggerUpdate(sender, **_kwargs):
@@ -139,10 +141,29 @@ def UpdateAnchorComponentCb(sender, instance, raw=False, **kwargs):
             )
 
 
-def UpdateAnchorContentCb(sender, instance, raw=False, **kwargs):
+def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
+    if action not in _feature_update_actions:
+        return
+    ContentVariant = apps.get_model("spider_base", "ContentVariant")
+    if instance.features.filter(
+        ctype__contains=VariantType.domain_mode.value
+    ) and not instance.features.filter(name="DomainMode"):
+        instance.features.add(ContentVariant.objects.get(
+            name="DomainMode"
+        ))
+    if instance.features.filter(
+        ctype__contains=VariantType.persist.value
+    ) and not instance.features.filter(name="Persistence"):
+        instance.features.add(ContentVariant.objects.get(
+            name="Persistence"
+        ))
+
+
+def UpdateContentCb(sender, instance, raw=False, **kwargs):
     if raw:
         return
     AuthToken = apps.get_model("spider_base", "AuthToken")
+    ContentVariant = apps.get_model("spider_base", "ContentVariant")
     if (
         instance.primary_anchor_for.exists() and
         "\x1eanchor\x1e" not in instance.info
@@ -153,6 +174,31 @@ def UpdateAnchorContentCb(sender, instance, raw=False, **kwargs):
         AuthToken.objects.filter(
             persist=instance.id
         ).update(persist=0)
+    if VariantType.domain_mode.value in instance.ctype.ctype:
+        instance.features.add(ContentVariant.objects.get(
+            name="DomainMode"
+        ))
+    if (
+        VariantType.domain_mode.value in instance.ctype.ctype and
+        VariantType.unique.value not in instance.ctype.ctype
+    ):
+        instance.usercomponent.features.add(instance.ctype)
+
+
+def UpdateContentFeaturesCb(sender, instance, action, **kwargs):
+    if action not in _feature_update_actions:
+        return
+    ContentVariant = apps.get_model("spider_base", "ContentVariant")
+
+    features = instance.features.prefetch_related("ctype")
+
+    if features.filter(
+        ctype__contains=VariantType.domain_mode.value
+    ) and not features.filter(name="DomainMode"):
+        print("domainmode")
+        instance.features.add(ContentVariant.objects.get(
+            name="DomainMode"
+        ))
 
 
 def MovePersistentCb(sender, tokens, to, **kwargs):
@@ -190,27 +236,16 @@ def UpdateSpiderCb(**_kwargs):
         row.save(update_fields=['name', 'description', 'info', "token"])
 
     for row in UserComponent.objects.all():
-        update_fields = {}
-        # TODO: add Persistence/DomainMode
         if not row.token:
             row.token = create_b64_id_token(row.id, "_")
-            update_fields.add("token")
-
-        if row.features.filter(
-            ctype__contains=VariantType.persist.value
-        ).exists() and not row.features.filter(name="Persistence"):
-            row.features.add(
-                ContentVariant.objects.get(name="Persistence")
-            )
-
-        if row.features.filter(
-            ctype__contains=VariantType.persist.value
-        ).exists() and not row.features.filter(name="DomainMode"):
-            row.features.add(
-                ContentVariant.objects.get(name="DomainMode")
-            )
-        if update_fields:
-            row.save(update_fields=update_fields)
+            row.save(update_fields=["token"])
+        extra_variants = ContentVariant.objects.filter(
+            models.Q(ctype__contains=VariantType.component_feature.value) &
+            models.Q(ctype__contains=VariantType.feature_connect.value) &
+            ~models.Q(ctype__contains=VariantType.unique.value),
+            assignedcontent__usercomponent=row
+        )
+        row.features.add(*extra_variants)
 
     for row in get_user_model().objects.prefetch_related(
         "spider_info", "usercomponent_set", "usercomponent_set__contents"

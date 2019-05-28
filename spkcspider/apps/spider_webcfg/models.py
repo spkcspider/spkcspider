@@ -50,7 +50,7 @@ class WebConfig(BaseContent):
     @classmethod
     def feature_urls(cls, name):
         return [
-            ActionUrl(reverse("spider_webcfg:webconfig-view"), "webcfg")
+            ActionUrl("webcfg", reverse("spider_webcfg:webconfig-view"))
         ]
 
     def get_size(self):

@@ -268,7 +268,8 @@ class TokenRenewal(UCTestMixin, View):
                     "Referer": "%s://%s" % (
                         self.request.scheme,
                         self.request.path
-                    )
+                    ),
+                    "Connection": "close"
                 },
                 **get_requests_params(self.request.auth_token.referrer.url)
             )

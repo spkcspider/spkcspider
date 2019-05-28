@@ -2,7 +2,7 @@ __all__ = [
     "rate_limit_default", "allow_all_filter",
     "embed_file_default", "has_admin_permission",
     "LimitedTemporaryFileUploadHandler", "validate_url_default",
-    "get_quota", "validate_payment_default", "clean_verifier",
+    "get_quota", "clean_verifier",
     "clean_verifier_url", "approve_dangerous"
 ]
 
@@ -12,7 +12,6 @@ import logging
 import math
 import random
 import os
-from decimal import Decimal
 from urllib.parse import urlsplit
 
 import requests
@@ -93,21 +92,14 @@ def clean_verifier(view, request):
         return True
     try:
         resp = requests.get(
-            url, stream=True, **get_requests_params(url)
+            url, stream=True, **get_requests_params(url),
+            headers={"Connection": "close"}
         )
         resp.close()
         resp.raise_for_status()
     except Exception:
         return False
     return True
-
-
-def validate_payment_default(amountstr, cur):
-    if amountstr in ("", "0"):
-        return Decimal(0), ""
-    if len(cur) != 3:
-        return None, None
-    return Decimal(amountstr), cur.upper()
 
 
 class LimitedTemporaryFileUploadHandler(TemporaryFileUploadHandler):

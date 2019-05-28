@@ -442,7 +442,8 @@ class ReferrerMixin(object):
                         # sending full url not required anymore, payload
                         # token=None, referrer=None, raw=None, intention=None,
                         # sl=None, payload=None
-                    )
+                    ),
+                    "Connection": "close"
                 },
                 **get_requests_params(context["referrer"])
             )

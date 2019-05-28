@@ -101,7 +101,7 @@ class TokenTest(TransactionWebTest):
             query = parse_qs(urlsplit(response.location).query)
             self.assertEqual(query.get("status"), ["success"])
             self.assertIn("hash", query)
-            requests.get(response.location)
+            requests.get(response.location, headers={"Connection": "close"})
             token = AuthToken.objects.get(
                 token=self.refserver.tokens[query["hash"][0]]["token"]
             )
@@ -148,7 +148,7 @@ class TokenTest(TransactionWebTest):
             response = self.app.get(purl)
             response = response.form.submit("action", value="confirm")
             query = parse_qs(urlsplit(response.location).query)
-            requests.get(response.location)
+            requests.get(response.location, headers={"Connection": "close"})
             token = AuthToken.objects.get(
                 token=query["token"][0]
             )

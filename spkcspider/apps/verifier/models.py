@@ -94,7 +94,8 @@ class DataVerificationTag(models.Model):
             }
             try:
                 resp = requests.post(
-                    vurl, data=body, **get_requests_params(vurl)
+                    vurl, data=body, headers={"Connection": "close"},
+                    **get_requests_params(vurl)
                 )
             except requests.exceptions.Timeout:
                 raise exceptions.ValidationError(

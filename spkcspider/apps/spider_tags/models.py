@@ -255,7 +255,7 @@ class SpiderTag(BaseContent):
     @classmethod
     def feature_urls(cls, name):
         return [
-            ActionUrl(reverse("spider_tags:create-pushtag"), "pushtag")
+            ActionUrl("pushtag", reverse("spider_tags:create-pushtag"))
         ]
 
     def get_content_description(self):

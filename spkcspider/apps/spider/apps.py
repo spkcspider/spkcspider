@@ -2,15 +2,16 @@ __all__ = ["SpiderBaseConfig"]
 
 from django.apps import AppConfig
 from django.db.models.signals import (
-    post_migrate, post_save, pre_save, post_delete
+    post_migrate, post_save, pre_save, post_delete, m2m_changed
 )
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from .helpers import extract_app_dicts
 from .signals import (
-    UpdateSpiderCb, InitUserCb, UpdateAnchorComponentCb, UpdateAnchorContentCb,
+    UpdateSpiderCb, InitUserCb, UpdateAnchorComponentCb, UpdateContentCb,
     update_dynamic, TriggerUpdate,
-    CleanupCb, MovePersistentCb, move_persistent, DeleteContentCb
+    CleanupCb, MovePersistentCb, move_persistent, DeleteContentCb,
+    UpdateComponentFeaturesCb, UpdateContentFeaturesCb
 )
 
 
@@ -37,8 +38,13 @@ class SpiderBaseConfig(AppConfig):
             dispatch_uid="spider_update_anchors_component"
         )
         post_save.connect(
-            UpdateAnchorContentCb, sender=AssignedContent,
-            dispatch_uid="spider_update_anchors_content"
+            UpdateContentCb, sender=AssignedContent,
+        )
+        m2m_changed.connect(
+            UpdateComponentFeaturesCb, sender=UserComponent.features.through
+        )
+        m2m_changed.connect(
+            UpdateContentFeaturesCb, sender=AssignedContent.features.through,
         )
         move_persistent.connect(
             MovePersistentCb, sender=AuthToken,

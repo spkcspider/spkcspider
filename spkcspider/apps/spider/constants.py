@@ -46,7 +46,7 @@ class TokenCreationError(Exception):
 
 
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
-ActionUrl = namedtuple("ActionUrl", ["url", "name"])
+ActionUrl = namedtuple("ActionUrl", ["name", "url"])
 protected_names = {"index"}
 
 

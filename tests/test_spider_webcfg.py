@@ -93,7 +93,7 @@ class WebCfgTest(TransactionWebTest):
             query = parse_qs(urlsplit(response.location).query)
             self.assertEqual(query.get("status"), ["success"])
             self.assertIn("hash", query)
-            requests.get(response.location)
+            requests.get(response.location, headers={"Connection": "close"})
             token = self.refserver.tokens[query["hash"][0]]["token"]
 
         # logout and clean session
@@ -155,7 +155,7 @@ class WebCfgTest(TransactionWebTest):
             query = parse_qs(urlsplit(response.location).query)
             self.assertEqual(query.get("status"), ["success"])
             self.assertIn("hash", query)
-            requests.get(response.location)
+            requests.get(response.location, headers={"Connection": "close"})
             token = self.refserver.tokens[query["hash"][0]]["token"]
 
         webcfgurl = "{}?token={}".format(reverse(

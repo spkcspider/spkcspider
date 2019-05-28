@@ -50,7 +50,7 @@ def list_features(graph, entity, ref_entity, context):
     )
     for feature in active_features:
         if context["scope"] != "export":
-            for url_feature, name in feature.feature_urls:
+            for name, url_feature in feature.feature_urls:
                 url_feature = urljoin(
                     context["hostpart"],
                     url_feature
@@ -129,6 +129,14 @@ def serialize_content(graph, content, context, embed=False):
             graph, "attached_to_content", ref=ref_content, ob=content
         )
 
+        add_property(
+            graph, "features", ref=ref_content,
+            literal=content.features.exclude(
+                name="DomainMode"
+            ).values_list("name", flat=True),
+            datatype=XSD.string, iterate=True
+        )
+
     if embed:
         list_features(graph, content, ref_content, context)
         content.content.serialize(graph, ref_content, context)
@@ -182,7 +190,9 @@ def serialize_component(graph, component, context, visible=True):
         ))
         add_property(
             graph, "features", ref=ref_component,
-            literal=component.features.values_list("name", flat=True),
+            literal=component.features.exclude(
+                name="DomainMode"
+            ).values_list("name", flat=True),
             datatype=XSD.string, iterate=True
         )
     if (
