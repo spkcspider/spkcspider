@@ -213,7 +213,6 @@ class AssignedContent(BaseInfoModel):
         "self", blank=True, null=True,
         related_name="attached_contents", on_delete=models.CASCADE
     )
-    allow_domain_mode = models.BooleanField(default=False)
     # set to indicate creating a new token
     token_generate_new_size = None
     # brute force protection and identifier, replaces nonce

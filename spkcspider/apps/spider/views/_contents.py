@@ -147,7 +147,10 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     rate_limit_group = "spider_static_token_error"
 
     def dispatch_extra(self, request, *args, **kwargs):
-        self.allow_domain_mode = self.usercomponent.allow_domain_mode
+        self.allow_domain_mode = ContentVariant.objects.filter(
+            feature_for_components=self.usercomponent,
+            name="DomainMode"
+        ).exists()
         if "referrer" in self.request.GET:
             self.object_list = self.get_queryset()
             return self.handle_referrer()
@@ -389,11 +392,13 @@ class ContentAdd(ContentBase, CreateView):
         # use requesting user as base if he can add this type of content
         if self.request.user.is_authenticated:
             return self.request.user.spider_info.allowed_content.filter(
-                listed_variants_q
+                listed_variants_q |
+                models.Q(ctype__contains=VariantType.machine.value)
             )
         else:
             return self.usercomponent.user.spider_info.allowed_content.filter(
-                listed_variants_q
+                listed_variants_q |
+                models.Q(ctype__contains=VariantType.machine.value)
             )
 
     def test_func(self):
@@ -489,10 +494,11 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.allow_domain_mode = (
-            self.usercomponent.allow_domain_mode or
-            self.object.allow_domain_mode
-        )
+        self.allow_domain_mode = ContentVariant.objects.filter(
+            models.Q(feature_for_components=self.usercomponent) |
+            models.Q(feature_for_contents=self.object),
+            name="DomainMode"
+        ).exists()
         # done in get_queryset
         # if getattr(self.request, "auth_token", None):
         #     ids = self.request.auth_token.extra.get("ids", None)

@@ -67,8 +67,31 @@ class PersistenceFeature(BaseContent):
             )
         ]
 
-    def access_add(self, **kwargs):
-        raise Http404()
+
+@add_content
+class DomainModeFeature(BaseContent):
+    appearances = [
+        {
+            "name": "DomainMode",
+            "ctype": (
+                VariantType.component_feature + VariantType.content_feature
+            ),
+            "valid_feature_for": "*",
+            "strength": 0
+        },
+    ]
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def feature_urls(cls, name):
+        return [
+            ActionUrl(
+                reverse("spider_base:token-delete-request"),
+                "delete-token"
+            )
+        ]
 
 
 @add_content

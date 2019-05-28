@@ -156,12 +156,15 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
             )(self, request)
 
     def test_func(self):
+        # tokens which are not persistent can be easily deleted
+        if self.object.persist < 0:
+            return True
         if self.has_special_access(
             user_by_token=True, user_by_login=True,
             superuser=True, staff="spider_base.delete_authtoken"
         ):
             return True
-        return self.test_token()
+        return False
 
     def get_usercomponent(self):
         return self.object.usercomponent
@@ -173,17 +176,33 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
         return get_object_or_404(
             queryset,
             token=self.request.GET.get("delete", ""),
-            persist__gte=0
         )
 
+    def get(self, request, *args, **kwargs):
+        # tokens which are not persistent can be easily deleted
+        if self.object.persist < 0:
+            return self.delete(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
+
     def delete(self, request, *args, **kwargs):
+        url = None
+        if self.object.referrer:
+            url = self.object.referrer.url
         self.object.delete()
+        if not url:
+            return HttpResponse(status=200)
         return HttpResponseRedirect(
-            redirect_to=self.object.referrer
+            redirect_to=url
         )
 
     def post(self, request, *args, **kwargs):
         return self.delete(request, *args, **kwargs)
+
+    def options(self, request, *args, **kwargs):
+        ret = super().options()
+        ret["Access-Control-Allow-Origin"] = "*"
+        ret["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
+        return ret
 
 
 class TokenRenewal(UCTestMixin, View):

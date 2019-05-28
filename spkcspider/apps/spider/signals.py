@@ -173,6 +173,8 @@ def UpdateSpiderCb(**_kwargs):
     # regenerate info field
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
     UserComponent = apps.get_model("spider_base", "UserComponent")
+    ContentVariant = apps.get_model("spider_base", "ContentVariant")
+
     UserComponent.objects.filter(name="index").update(strength=10)
     for row in AssignedContent.objects.all():
         # works only with django.apps.apps
@@ -187,9 +189,28 @@ def UpdateSpiderCb(**_kwargs):
         assert(row.name is not None)
         row.save(update_fields=['name', 'description', 'info', "token"])
 
-    for row in UserComponent.objects.filter(token__isnull=True):
-        row.token = create_b64_id_token(row.id, "_")
-        row.save(update_fields=["token"])
+    for row in UserComponent.objects.all():
+        update_fields = {}
+        # TODO: add Persistence/DomainMode
+        if not row.token:
+            row.token = create_b64_id_token(row.id, "_")
+            update_fields.add("token")
+
+        if row.features.filter(
+            ctype__contains=VariantType.persist.value
+        ).exists() and not row.features.filter(name="Persistence"):
+            row.features.add(
+                ContentVariant.objects.get(name="Persistence")
+            )
+
+        if row.features.filter(
+            ctype__contains=VariantType.persist.value
+        ).exists() and not row.features.filter(name="DomainMode"):
+            row.features.add(
+                ContentVariant.objects.get(name="DomainMode")
+            )
+        if update_fields:
+            row.save(update_fields=update_fields)
 
     for row in get_user_model().objects.prefetch_related(
         "spider_info", "usercomponent_set", "usercomponent_set__contents"

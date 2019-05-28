@@ -103,7 +103,6 @@ class UserComponentForm(forms.ModelForm):
             *args, data=data, files=files, auto_id=auto_id,
             prefix=prefix, **kwargs
         )
-        # self.fields["allow_domain_mode"].disabled = True
         self.fields["new_static_token"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),
             self.fields["new_static_token"].choices
@@ -118,12 +117,14 @@ class UserComponentForm(forms.ModelForm):
             self.fields["features"].queryset.exclude(
                 models.Q(ctype__contains=VariantType.feature_connect.value) &
                 ~models.Q(ctype__contains=VariantType.unique.value)
-            ) &
+            ).exclude(name="DomainMode") &
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 
         self.fields["default_content_features"].queryset = (
-            self.fields["default_content_features"].queryset &
+            self.fields["default_content_features"].queryset.exclude(
+                name="DomainMode"
+            ) &
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 
@@ -257,7 +258,6 @@ class UserComponentForm(forms.ModelForm):
         ret = super().clean()
         assert(self.instance.user)
         self.cleaned_data["can_auth"] = False
-        self.cleaned_data["allow_domain_mode"] = False
         self.initial["master_pw"] = self.cleaned_data.pop("master_pw", None)
         if 'name' not in self.cleaned_data:
             # ValidationError so return, calculations won't work here
@@ -332,11 +332,19 @@ class UserComponentForm(forms.ModelForm):
                     )
                 )
             )
-        self.cleaned_data["allow_domain_mode"] = \
-            self.cleaned_data["features"].filter(
-                ctype__contains=VariantType.domain_mode.value
-            ).exists()
 
+        if self.cleaned_data["features"].filter(
+            ctype__contains=VariantType.domain_mode.value
+        ).exists():
+            # fixes strange union bug
+            self.cleaned_data["features"] = ContentVariant.objects.filter(
+                models.Q(name="DomainMode") |
+                models.Q(
+                    id__in=self.cleaned_data["features"].values_list(
+                        "id", flat=True
+                    )
+                )
+            )
         if self.instance.id:
             for variant in self.cleaned_data["features"].filter(
                 models.Q(ctype__contains=VariantType.feature_connect.value) &
@@ -393,9 +401,6 @@ class UserComponentForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.strength = self.cleaned_data["strength"]
         self.instance.can_auth = self.cleaned_data["can_auth"]
-        # field maybe not available
-        self.instance.allow_domain_mode = \
-            self.cleaned_data["allow_domain_mode"]
         return super().save(commit=commit)
     save.alters_data = True
 
@@ -519,7 +524,7 @@ class UserContentForm(forms.ModelForm):
                 self.fields["features"].queryset &
                 user.spider_info.allowed_content.all() &
                 self.instance.ctype.valid_features.all()
-            ).order_by("name")
+            ).exclude(name="DomainMode").order_by("name")
             self.fields["features"].initial = (
                 self.instance.usercomponent.default_content_features.all() &
                 self.instance.ctype.valid_features.all()
@@ -544,8 +549,6 @@ class UserContentForm(forms.ModelForm):
 
     def clean(self):
         super().clean()
-        self.cleaned_data["allow_domain_mode"] = \
-            VariantType.domain_mode.value in self.instance.ctype.ctype
         if "features" in self.cleaned_data:
             min_strength = self.cleaned_data["features"].filter(
                 strength__gt=self.instance.usercomponent.strength
@@ -560,11 +563,18 @@ class UserContentForm(forms.ModelForm):
                     ) % min_strength,
                     code="insufficient_strength"
                 ))
-            if not self.cleaned_data["allow_domain_mode"]:
-                self.cleaned_data["allow_domain_mode"] = any(map(
-                    lambda x: VariantType.domain_mode.value in x.ctype,
-                    self.cleaned_data["features"]
-                ))
+            if self.cleaned_data["features"].filter(
+                ctype__contains=VariantType.domain_mode.value
+            ).exists():
+                # fixes strange union bug
+                self.cleaned_data["features"] = ContentVariant.objects.filter(
+                    models.Q(name="DomainMode") |
+                    models.Q(
+                        id__in=self.cleaned_data["features"].values_list(
+                            "id", flat=True
+                        )
+                    )
+                )
         return self.cleaned_data
 
     def update_anchor(self):
@@ -621,9 +631,6 @@ class UserContentForm(forms.ModelForm):
             self.instance.save(update_fields=update_fields)
 
     def save(self, commit=True):
-        # field maybe not available
-        self.instance.allow_domain_mode = \
-            self.cleaned_data["allow_domain_mode"]
         if self.cleaned_data.get("new_static_token", ""):
             self.instance.token_generate_new_size = \
                 int(self.cleaned_data["new_static_token"])

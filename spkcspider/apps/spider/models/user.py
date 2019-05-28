@@ -212,7 +212,6 @@ class UserComponent(models.Model):
 
     # both should not be edited
     can_auth = models.BooleanField(default=False, editable=False)
-    allow_domain_mode = models.BooleanField(default=False)
 
     token_duration = models.DurationField(
         default=default_uctoken_duration,
