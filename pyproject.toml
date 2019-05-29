@@ -6,7 +6,7 @@ license = "MIT"
 authors = ["Alexander Kaftan"]
 homepage = "https://spkcspider.net"
 readme = "README.md"
-repository = "https://https://github.com/spkcspider/spkcspider"
+repository = "https://github.com/spkcspider/spkcspider"
 classifiers = [
   "Development Status :: 4 - Beta",
   "Framework :: Django",
