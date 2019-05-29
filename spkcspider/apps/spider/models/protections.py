@@ -4,7 +4,7 @@ namespace: spider_base
 
 """
 
-__all__ = ["Protection", "AssignedProtection", "AuthToken", "ReverseToken"]
+__all__ = ["Protection", "AssignedProtection", "AuthToken"]
 
 import logging
 
@@ -269,22 +269,6 @@ class AssignedProtection(models.Model):
     @property
     def user(self):
         return self.usercomponent.user
-
-
-class ReverseToken(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
-    token = models.CharField(
-        max_length=MAX_TOKEN_B64_SIZE+hex_size_of_bigid+2
-    )
-    created = models.DateTimeField(auto_now_add=True, editable=False)
-    # for automatic deletion
-    assignedcontent = models.ForeignKey(
-        "spider_base.AssignedContent", on_delete=models.CASCADE,
-        related_name="reversetokens"
-    )
-
-    def __str__(self):
-        return "{}...".format(self.token[:-_striptoken])
 
 
 class AuthToken(models.Model):

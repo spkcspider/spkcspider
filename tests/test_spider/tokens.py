@@ -9,7 +9,7 @@ import requests
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants import VariantType
 from spkcspider.apps.spider.models import (
-    ContentVariant, AuthToken, ReverseToken
+    ContentVariant, AuthToken
 )
 from spkcspider.apps.spider.signals import update_dynamic
 
@@ -37,37 +37,6 @@ class TokenTest(TransactionWebTest):
             username="testuser1"
         )
         update_dynamic.send_robust(self)
-
-    def test_reverse_token(self):
-        home = self.user.usercomponent_set.filter(name="home").first()
-        self.assertTrue(home)
-        self.app.set_user("testuser1")
-
-        # try to create
-        createurl = reverse(
-            "spider_base:ucontent-add",
-            kwargs={
-                "token": home.token,
-                "type": "AnchorServer"
-            }
-        )
-        form = self.app.get(createurl).forms[0]
-        response = form.submit().follow()
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(home.contents.count(), 1)
-        content = home.contents.first()
-        ntoken = "abcdefg"
-        e = ReverseToken.objects.create(assignedcontent=content)
-        url = reverse("spider_base:reverse-token")
-        self.app.post(
-            url, {
-                "payload": "{},{}".format(
-                    content.token, e.id
-                ), "token": ntoken
-            }
-        )
-        e.refresh_from_db()
-        self.assertEqual(e.token, ntoken)
 
     def test_renew_post(self):
         home = self.user.usercomponent_set.filter(name="home").first()

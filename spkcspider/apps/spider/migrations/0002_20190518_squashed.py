@@ -292,4 +292,12 @@ class Migration(migrations.Migration):
             name='valid_feature_for',
             field=models.ManyToManyField(blank=True, related_name='valid_features', to='spider_base.ContentVariant'),
         ),
+        migrations.RemoveField(
+            model_name='assignedcontent',
+            name='allow_domain_mode',
+        ),
+        migrations.RemoveField(
+            model_name='usercomponent',
+            name='allow_domain_mode',
+        ),
     ]

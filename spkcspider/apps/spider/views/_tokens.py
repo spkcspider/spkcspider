@@ -1,6 +1,5 @@
 __all__ = (
-    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal",
-    "ReverseTokenView"
+    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal"
 )
 
 import logging
@@ -21,7 +20,7 @@ from django.views import View
 import requests
 
 from ._core import UCTestMixin
-from ..models import AuthToken, ReverseToken
+from ..models import AuthToken
 from ..helpers import get_settings_func, get_requests_params
 from ..constants import TokenCreationError
 
@@ -328,43 +327,4 @@ class TokenRenewal(UCTestMixin, View):
         # sl: safety (but anyway checked by referer check)
         ret["Access-Control-Allow-Origin"] = \
             self.request.auth_token.referrer.host
-        return ret
-
-
-class ReverseTokenView(View):
-    @method_decorator(csrf_exempt)
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            return super().dispatch(request, *args, **kwargs)
-        except Http404:
-            return get_settings_func(
-                "SPIDER_RATELIMIT_FUNC",
-                "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
-
-    def post(self, request, *args, **kwargs):
-        payload = self.request.POST.get(
-            "payload"
-        )
-        newtoken = self.request.POST.get("token", None)
-        if not payload or not newtoken:
-            raise Http404()
-        try:
-            token, rid = payload.rsplit(",", 1)
-            rid = int(rid)
-        except Exception:
-            raise Http404()
-
-        self.object = get_object_or_404(
-            ReverseToken,
-            assignedcontent__token=token, id=rid
-        )
-        self.object.token = newtoken
-        self.object.save(update_fields=["token"])
-        return HttpResponse(status=200)
-
-    def options(self, request, *args, **kwargs):
-        ret = super().options()
-        ret["Access-Control-Allow-Origin"] = "*"
-        ret["Access-Control-Allow-Methods"] = "POST, OPTIONS"
         return ret
