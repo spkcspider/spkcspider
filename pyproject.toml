@@ -61,7 +61,7 @@ skipsdist=true
 envlist = py{35,36,37}-django{22,master}
 
 [testenv]
-commands = python -Wd ./manage.py test
+commands = python -Wd ./manage.py test tests
 
 
 setenv =
