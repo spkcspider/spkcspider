@@ -6,6 +6,8 @@ import os
 
 CONF_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "my.cnf")
 
+SPIDER_DISABLE_FAKE_CLIENT = "SPIDER_NO_INLINE" in os.environ
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',

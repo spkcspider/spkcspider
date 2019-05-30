@@ -61,10 +61,10 @@ class Command(BaseCommand):
                 datetime.timedelta(days=int(days))
             q.filter(created__lt=dt)
         if oldest:
-            # create list with ids
-            ids = q.order_by("created").values_list(
+            # create list with ids (liat for mysql required)
+            ids = list(q.order_by("created").values_list(
                 'id', flat=True
-            )[:int(oldest)]
+            )[:int(oldest)])
             # recreate Query
             q = AuthToken.objects.filter(id__in=ids)
         self.stdout.write("count: %s\n" % q.delete()[0])

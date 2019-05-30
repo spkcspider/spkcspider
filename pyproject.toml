@@ -69,6 +69,7 @@ commands = python -Wd ./manage.py test tests
 setenv =
     PYTHONDONTWRITEBYTECODE=1
     sqlite3: DJANGO_SETTINGS_MODULE=testsettings.test_sqlite3
+    sqlite3: SPIDER_NO_INLINE=true
     postgresql: DJANGO_SETTINGS_MODULE=testsettings.test_postgresql
     mysql: DJANGO_SETTINGS_MODULE=testsettings.test_mysql
 
