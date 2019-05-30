@@ -3,8 +3,7 @@ dist: xenial
 language: python
 services:
   - postgresql
-addons:
-  mariadb: '10.3'
+  - mysql
 before_script:
   - psql -c 'create database spkcspider_tests;' -U postgres
 python:
@@ -29,6 +28,6 @@ matrix:
       env: DJANGO_DEP=djangomaster
 install:
   - pip install tox
-script: tox -e "py$(echo ${TRAVIS_PYTHON_VERSION} | tr -d .)-$DJANGO_DEP-{sqlite3,mysql}"
+script: tox -e "py$(echo ${TRAVIS_PYTHON_VERSION} | tr -d .)-$DJANGO_DEP-{sqlite3,mysql,postgresql}"
 
 cache: pip
