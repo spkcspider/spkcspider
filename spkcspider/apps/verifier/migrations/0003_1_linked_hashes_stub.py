@@ -8,9 +8,6 @@ class Migration(migrations.Migration):
         Introduced new field which was not required after integrating the hashes
         in the graph file
     """
-
-    replaces = [('spider_verifier', '0003_dataverificationtag_linked_hashes'), ('spider_verifier', '0004_remove_dataverificationtag_linked_hashes')]
-
     dependencies = [
         ('spider_verifier', '0002_auto_20181031_2121'),
     ]
