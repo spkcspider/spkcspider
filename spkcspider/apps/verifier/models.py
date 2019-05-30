@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
@@ -27,7 +28,12 @@ def dv_path(instance, filename):
 class VerifySourceObject(BaseReverseToken):
     id = models.BigAutoField(primary_key=True, editable=False)
     url = models.URLField(
-        max_length=400, db_index=True, unique=True
+        max_length=(
+            400 if (
+                settings.DATABASES["default"]["ENGINE"] !=
+                "django.db.backends.mysql"
+            ) else 255
+        ), db_index=True, unique=True
     )
     get_params = models.TextField()
 
@@ -48,7 +54,8 @@ class DataVerificationTag(models.Model):
     modified = models.DateTimeField(auto_now=True, editable=False)
 
     hash = models.SlugField(
-        unique=True, db_index=True, null=False, max_length=512
+        unique=True, db_index=True, null=False,
+        max_length=255
     )
     dvfile = models.FileField(
         upload_to=dv_path, null=True, blank=True, help_text=_(

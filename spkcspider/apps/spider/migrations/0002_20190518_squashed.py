@@ -201,7 +201,10 @@ class Migration(migrations.Migration):
             name='ReferrerObject',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('url', models.URLField(db_index=True, editable=False, max_length=600, unique=True)),
+                ('url', models.URLField(db_index=True, editable=False, max_length=600 if (
+                    settings.DATABASES["default"]["ENGINE"] !=
+                    "django.db.backends.mysql"
+                ) else 255, unique=True)),
             ],
         ),
         migrations.AlterField(

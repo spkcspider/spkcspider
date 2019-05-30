@@ -11,14 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='VerifySourceObject',
-            fields=[
-                ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('url', models.URLField(db_index=True, max_length=400, unique=True)),
-                ('get_params', models.TextField()),
-            ],
-        ),
         migrations.AlterField(
             model_name='dataverificationtag',
             name='verification_state',

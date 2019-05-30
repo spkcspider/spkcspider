@@ -2,6 +2,7 @@ __all__ = ["BaseInfoModel", "ReferrerObject", "info_and", "info_or"]
 
 import re
 
+from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
@@ -91,7 +92,13 @@ def info_field_validator(value):
 class ReferrerObject(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     url = models.URLField(
-        max_length=600, db_index=True, unique=True, editable=False
+        max_length=(
+            600 if (
+                settings.DATABASES["default"]["ENGINE"] !=
+                "django.db.backends.mysql"
+            ) else 255
+        ),
+        db_index=True, unique=True, editable=False
     )
 
     @cached_property
