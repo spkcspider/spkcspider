@@ -168,6 +168,10 @@ class AdvancedComponentTest(TransactionWebTest):
             response = self.app.get(createurl)
             self.assertEqual(response.status_code, 200)
 
+        # reset user
+        self.app.set_user(user=None)
+        self.app.reset()
+
         # check that other non admins have no access
         self.app.set_user("testuser2")
         with self.subTest("test access foreign resources"):

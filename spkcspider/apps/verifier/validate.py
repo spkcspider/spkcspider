@@ -121,6 +121,7 @@ def validate(ob, hostpart, task=None):
             for chunk in resp:
                 dvfile.write(chunk)
             dvfile.seek(0, 0)
+            resp.close()
         else:
             try:
                 with session.get(
@@ -135,6 +136,7 @@ def validate(ob, hostpart, task=None):
 
                     c_length = resp.headers.get("content-length", None)
                     if not verify_download_size(c_length, current_size):
+                        resp.close()
                         raise exceptions.ValidationError(
                             _("Content too big: %(size)s"),
                             params={"size": c_length},
@@ -282,6 +284,7 @@ def validate(ob, hostpart, task=None):
 
             c_length = resp.get("content-length", None)
             if not verify_download_size(c_length, current_size):
+                resp.close()
                 session.close()
                 dvfile.close()
                 os.unlink(dvfile.name)
@@ -298,6 +301,7 @@ def validate(ob, hostpart, task=None):
 
             for chunk in resp:
                 dvfile.write(chunk)
+            resp.close()
             dvfile.seek(0, 0)
         else:
             try:
@@ -425,6 +429,7 @@ def validate(ob, hostpart, task=None):
             h.update(XSD.base64Binary.encode("utf8"))
             for chunk in resp.iter_content(BUFFER_SIZE):
                 h.update(chunk)
+            resp.close()
             # do not use add as it could be corrupted by user
             # (user can provide arbitary data)
             g.set((
