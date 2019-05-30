@@ -4,12 +4,12 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse
 from django.core import exceptions
+from django.test import Client
 
 import requests
 
-from spkcspider.apps.spider.constants import (
-    MAX_TOKEN_B64_SIZE
-)
+from spider_domainauth.abstract_models import BaseReverseToken
+
 from .constants import (
     VERIFICATION_CHOICES
 )
@@ -24,15 +24,12 @@ def dv_path(instance, filename):
     )
 
 
-class VerifySourceObject(models.Model):
+class VerifySourceObject(BaseReverseToken):
     id = models.BigAutoField(primary_key=True, editable=False)
     url = models.URLField(
         max_length=400, db_index=True, unique=True
     )
     get_params = models.TextField()
-    update_secret = models.CharField(
-        max_length=MAX_TOKEN_B64_SIZE, unique=True, null=True, blank=True
-    )
 
     def get_url(self, access=None):
         if access:
@@ -92,26 +89,40 @@ class DataVerificationTag(models.Model):
                     hostpart, self.get_absolute_url()
                 )
             }
-            try:
-                resp = requests.post(
-                    vurl, data=body, headers={"Connection": "close"},
-                    **get_requests_params(vurl)
+            params, can_inline = get_requests_params(vurl)
+
+            if can_inline:
+                resp = Client().post(
+                    vurl, follow=True, secure=True, data=body,
+                    Connection="close"
                 )
-            except requests.exceptions.Timeout:
-                raise exceptions.ValidationError(
-                    _('url timed out: %(url)s'),
-                    params={"url": vurl},
-                    code="timeout_url"
-                )
-            except requests.exceptions.ConnectionError:
-                raise exceptions.ValidationError(
-                    _('invalid url: %(url)s'),
-                    params={"url": vurl},
-                    code="invalid_url"
-                )
-            if resp.status_code != 200:
-                raise exceptions.ValidationError(
-                    _("Retrieval failed: %(reason)s"),
-                    params={"reason": resp.reason},
-                    code="error_code:{}".format(resp.status_code)
-                )
+                if resp.status_code != 200:
+                    raise exceptions.ValidationError(
+                        _("Retrieval failed: %(reason)s"),
+                        params={"reason": resp.content},
+                        code="error_code:{}".format(resp.status_code)
+                    )
+            else:
+                try:
+                    with requests.post(
+                        vurl, data=body, headers={"Connection": "close"},
+                        **params
+                    ) as resp:
+                        if resp.status_code != 200:
+                            raise exceptions.ValidationError(
+                                _("Retrieval failed: %(reason)s"),
+                                params={"reason": resp.reason},
+                                code="error_code:{}".format(resp.status_code)
+                            )
+                except requests.exceptions.Timeout:
+                    raise exceptions.ValidationError(
+                        _('url timed out: %(url)s'),
+                        params={"url": vurl},
+                        code="timeout_url"
+                    )
+                except requests.exceptions.ConnectionError:
+                    raise exceptions.ValidationError(
+                        _('invalid url: %(url)s'),
+                        params={"url": vurl},
+                        code="invalid_url"
+                    )

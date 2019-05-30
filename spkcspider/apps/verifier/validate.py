@@ -88,10 +88,10 @@ def validate(ob, hostpart, task=None):
             id=ob
         )
         url = source.get_url()
-
+        params, can_inline = get_requests_params(url)
         try:
             with session.get(
-                url, stream=True, **get_requests_params(url)
+                url, stream=True, **params
             ) as resp:
                 if resp.status_code != 200:
                     raise exceptions.ValidationError(
@@ -234,9 +234,10 @@ def validate(ob, hostpart, task=None):
             source.get_url(), raw="embed", page=str(page)
         )
         # validation not neccessary here (base url is verified)
+        params, can_inline = get_requests_params(url)
         try:
             with session.get(
-                url, stream=True, **get_requests_params(url)
+                url, stream=True, **params
             ) as resp:
                 if resp.status_code != 200:
                     session.close()
@@ -346,9 +347,10 @@ def validate(ob, hostpart, task=None):
                 code="insecure_url"
             )
 
+        params, can_inline = get_requests_params(url)
         try:
             with session.get(
-                url, stream=True, **get_requests_params(url)
+                url, stream=True, **params
             ) as resp:
                 if resp.status_code != 200:
                     raise exceptions.ValidationError(

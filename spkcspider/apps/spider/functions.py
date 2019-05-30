@@ -24,6 +24,7 @@ from django.shortcuts import redirect
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
 from django.conf import settings
+from django.test import Client
 
 from rdflib import Literal, XSD
 import ratelimit
@@ -90,15 +91,23 @@ def clean_verifier(view, request):
     if request.method == "GET":
         # don't spam verifier
         return True
-    try:
-        resp = requests.get(
-            url, stream=True, **get_requests_params(url),
-            headers={"Connection": "close"}
+    params, can_inline = get_requests_params(url)
+    if can_inline:
+        response = Client().get(
+            url, follow=True, secure=True, Connection="close"
         )
-        resp.close()
-        resp.raise_for_status()
-    except Exception:
-        return False
+        if response.status_code >= 400:
+            return False
+    else:
+        try:
+            with requests.get(
+                url, stream=True, **params,
+                headers={"Connection": "close"}
+            ) as resp:
+                resp.close()
+                resp.raise_for_status()
+        except Exception:
+            return False
     return True
 
 

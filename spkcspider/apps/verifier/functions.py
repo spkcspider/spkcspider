@@ -10,6 +10,8 @@ from django.conf import settings
 from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.test import Client
+from django.http.request import validate_host
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -19,7 +21,6 @@ from rdflib import XSD, URIRef, Literal
 import requests
 
 from spkcspider.apps.spider.constants import spkcgraph, host_tld_matcher
-from spkcspider.apps.spider.helpers import create_b64_token
 
 
 def validate_request_default(request, form):
@@ -42,12 +43,12 @@ def domain_auth(source, hostpart):
         hostpart,
         reverse("spider_verifier:create")
     )
-    source.update_secret = create_b64_token()
-    source.save(update_fields=["update_secret"])
+    source.initialize_token()
+    source.save(update_fields=["token"])
     GET["payload"] = urlencode(
         {
             "url": source.url,
-            "update_secret": source.update_secret
+            "update_secret": source.token
         }
     )
 
@@ -55,16 +56,26 @@ def domain_auth(source, hostpart):
         source.url, urlencode(GET)
     )
     ret = True
-    try:
-        with requests.get(
-            url, headers={"Connection": "close"}, **get_requests_params(url)
-        ) as resp:
-            resp.close()
-            resp.raise_for_status()
-    except Exception:
-        if settings.DEBUG:
-            logging.exception("domain_auth failed")
-        ret = False
+    params, can_inline = get_requests_params(url)
+
+    if can_inline:
+        response = Client().get(
+            url, follow=True, secure=True, Connection="close"
+        )
+        if response.status_code >= 400:
+            ret = False
+    else:
+        try:
+            with requests.get(
+                url, headers={"Connection": "close"},
+                **params
+            ) as resp:
+                resp.close()
+                resp.raise_for_status()
+        except Exception:
+            if settings.DEBUG:
+                logging.exception("domain_auth failed")
+            ret = False
     # other or own update_secret was successful or url has problems
     source.refresh_from_db()
     return ret
@@ -120,10 +131,14 @@ def get_requests_params(url):
         settings, "VERIFIER_REQUEST_KWARGS_MAP",
         settings.SPIDER_REQUEST_KWARGS_MAP
     )
-    return mapper.get(
-        _url["host"],
+    return (
         mapper.get(
-            _url["tld"],  # maybe None but then fall to retrieval 3
-            mapper[b"default"]
-        )
+            _url["host"],
+            mapper.get(
+                _url["tld"],  # maybe None but then fall to retrieval 3
+                mapper[b"default"]
+            )
+        ),
+        not getattr(settings, "SPIDER_DISABLE_FAKE_CLIENT", None) and
+        validate_host(_url["host"], settings.ALLOWED_HOSTS)
     )

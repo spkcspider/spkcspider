@@ -24,6 +24,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.encoding import force_bytes
+from django.http.request import validate_host
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -249,10 +250,14 @@ def get_requests_params(url):
         )
     _url = _url.groupdict()
     mapper = settings.SPIDER_REQUEST_KWARGS_MAP
-    return mapper.get(
-        _url["host"],
+    return (
         mapper.get(
-            _url["tld"],  # maybe None but then fall to retrieval 3
-            mapper[b"default"]
-        )
+            _url["host"],
+            mapper.get(
+                _url["tld"],  # maybe None but then fall to retrieval 3
+                mapper[b"default"]
+            )
+        ),
+        not getattr(settings, "SPIDER_DISABLE_FAKE_CLIENT", None) and
+        validate_host(_url["host"], settings.ALLOWED_HOSTS)
     )

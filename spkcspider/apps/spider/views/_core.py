@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
+from django.test import Client
 
 import ratelimit
 
@@ -421,78 +422,98 @@ class ReferrerMixin(object):
                     error="error_rate_limit"
                 )
             )
-        try:
-            d = {
-                "token": token.token,
-                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
-                "renew": "false"
-            }
-            if context["payload"]:
-                d["payload"] = context["payload"]
-
-            ret = requests.post(
+        d = {
+            "token": token.token,
+            "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
+            "renew": "false"
+        }
+        if context["payload"]:
+            d["payload"] = context["payload"]
+        params, can_inline = get_requests_params(context["referrer"])
+        if can_inline:
+            response = Client().post(
                 context["referrer"],
                 data=d,
-                headers={
-                    "Referer": merge_get_url(
-                        "%s%s" % (
-                            context["hostpart"],
-                            self.request.path
-                        )
-                        # sending full url not required anymore, payload
-                        # token=None, referrer=None, raw=None, intention=None,
-                        # sl=None, payload=None
-                    ),
-                    "Connection": "close"
-                },
-                **get_requests_params(context["referrer"])
+                Connection="close",
+                Referer=merge_get_url(
+                    "%s%s" % (
+                        context["hostpart"],
+                        self.request.path
+                    )
+                    # sending full url not required anymore, payload
+                )
             )
-            ret.raise_for_status()
-        except requests.exceptions.SSLError as exc:
-            logger.info(
-                "referrer: \"%s\" has a broken ssl configuration",
-                context["referrer"], exc_info=exc
-            )
-            return HttpResponseRedirect(
-                redirect_to=merge_get_url(
+            if response.status_code != 200:
+                return HttpResponseRedirect(
+                    redirect_to=merge_get_url(
+                        context["referrer"],
+                        status="post_failed",
+                        error="other"
+                    )
+                )
+        else:
+            try:
+                with requests.post(
                     context["referrer"],
-                    status="post_failed",
-                    error="ssl"
+                    data=d,
+                    headers={
+                        "Referer": merge_get_url(
+                            "%s%s" % (
+                                context["hostpart"],
+                                self.request.path
+                            )
+                            # sending full url not required anymore, payload
+                        ),
+                        "Connection": "close"
+                    },
+                    **params
+                ) as resp:
+                    resp.raise_for_status()
+            except requests.exceptions.SSLError as exc:
+                logger.info(
+                    "referrer: \"%s\" has a broken ssl configuration",
+                    context["referrer"], exc_info=exc
                 )
-            )
-        except Exception as exc:
-            apply_error_limit = False
-            if isinstance(
-                exc, (
-                    requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout
+                return HttpResponseRedirect(
+                    redirect_to=merge_get_url(
+                        context["referrer"],
+                        status="post_failed",
+                        error="ssl"
+                    )
                 )
-            ):
-                apply_error_limit = True
-            elif (
-                isinstance(exc, requests.exceptions.HTTPError) and
-                exc.response.status_code >= 500
-            ):
-                apply_error_limit = True
-            if apply_error_limit:
-                ratelimit.get_ratelimit(
-                    request=self.request,
-                    group="refer_with_post",
-                    key=h_fun,
-                    rate=settings.SPIDER_DOMAIN_ERROR_RATE,
-                    inc=True
+            except Exception as exc:
+                apply_error_limit = False
+                if isinstance(
+                    exc, (
+                        requests.exceptions.ConnectionError,
+                        requests.exceptions.Timeout
+                    )
+                ):
+                    apply_error_limit = True
+                elif (
+                    isinstance(exc, requests.exceptions.HTTPError) and
+                    exc.response.status_code >= 500
+                ):
+                    apply_error_limit = True
+                if apply_error_limit:
+                    ratelimit.get_ratelimit(
+                        request=self.request,
+                        group="refer_with_post",
+                        key=h_fun,
+                        rate=settings.SPIDER_DOMAIN_ERROR_RATE,
+                        inc=True
+                    )
+                logger.info(
+                    "post failed: \"%s\" failed",
+                    context["referrer"], exc_info=exc
                 )
-            logger.info(
-                "post failed: \"%s\" failed",
-                context["referrer"], exc_info=exc
-            )
-            return HttpResponseRedirect(
-                redirect_to=merge_get_url(
-                    context["referrer"],
-                    status="post_failed",
-                    error="other"
+                return HttpResponseRedirect(
+                    redirect_to=merge_get_url(
+                        context["referrer"],
+                        status="post_failed",
+                        error="other"
+                    )
                 )
-            )
         context["post_success"] = True
         h = get_hashob()
         h.update(token.token.encode("utf-8", "ignore"))

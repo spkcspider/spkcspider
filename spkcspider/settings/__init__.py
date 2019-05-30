@@ -170,6 +170,12 @@ SPIDER_CAPTCHA_FIELD_NAME = "sunglasses"
 # ease deploy
 UPDATE_DYNAMIC_AFTER_MIGRATION = True
 
+# disables usage of fake client for internal urls (default: False)
+# by faking requests calls on urls which are internal
+# deadlocking hazards are avoided and the speed is increased
+# so it is really recommended to not set this setting on True
+# SPIDER_DISABLE_FAKE_CLIENT = True
+
 ## extensions of images (used in file_filets)  # noqa: E266
 # SPIDER_IMAGE_EXTENSIONS
 ## extensions of media (used in file_filets)  # noqa: E266

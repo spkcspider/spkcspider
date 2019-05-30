@@ -107,14 +107,14 @@ class CreateEntry(UpdateView):
                 return HttpResponse(400)
             ob = VerifySourceObject.objects.filter(
                 url=payload.get("url", [None])[0],
-                update_secret=payload.get("update_secret", ["x"])[0]
+                token=payload.get("update_secret", ["x"])[0]
             ).first()
             if ob:
                 GET = parse_qs(ob.get_params)
                 GET["token"] = request.POST["token"]
                 ob.get_params = urlencode(GET)
-                ob.update_secret = None
-                ob.save(update_fields=["get_params", "update_secret"])
+                ob.token = None
+                ob.save(update_fields=["get_params", "token"])
                 return HttpResponse(200)
             return HttpResponse(404)
         form = self.get_form()

@@ -16,6 +16,8 @@ from django.http import (
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.test import Client
+
 
 import requests
 
@@ -251,40 +253,57 @@ class TokenRenewal(UCTestMixin, View):
         # client side rdf is no problem
         # NOTE: csrf must be disabled or use csrf token from GET,
         #       here is no way to know the token value
-        try:
-            d = {
-                "oldtoken": self.oldtoken,
-                "token": self.request.auth_token.token,
-                "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
-                "renew": "true"
-            }
-            if "payload" in self.request.POST:
-                d["payload"] = self.request.POST["payload"]
-            ret = requests.post(
+        d = {
+            "oldtoken": self.oldtoken,
+            "token": self.request.auth_token.token,
+            "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
+            "renew": "true"
+        }
+        if "payload" in self.request.POST:
+            d["payload"] = self.request.POST["payload"]
+
+        params, can_inline = get_requests_params(
+            self.request.auth_token.referrer.url
+        )
+        if can_inline:
+            response = Client().post(
                 self.request.auth_token.referrer.url,
                 data=d,
-                headers={
-                    "Referer": "%s://%s" % (
-                        self.request.scheme,
-                        self.request.path
-                    ),
-                    "Connection": "close"
-                },
-                **get_requests_params(self.request.auth_token.referrer.url)
+                Connection="close",
+                Referer="%s://%s" % (
+                    self.request.scheme,
+                    self.request.path
+                )
             )
-            ret.raise_for_status()
-        except requests.exceptions.SSLError as exc:
-            logger.info(
-                "referrer: \"%s\" has a broken ssl configuration",
-                self.request.auth_token.referrer, exc_info=exc
-            )
-            return False
-        except Exception as exc:
-            logger.info(
-                "post failed: \"%s\" failed",
-                self.request.auth_token.referrer, exc_info=exc
-            )
-            return False
+            if response.status_code >= 400:
+                return False
+        else:
+            try:
+                with requests.post(
+                    self.request.auth_token.referrer.url,
+                    data=d,
+                    headers={
+                        "Referer": "%s://%s" % (
+                            self.request.scheme,
+                            self.request.path
+                        ),
+                        "Connection": "close"
+                    },
+                    **params
+                ) as resp:
+                    resp.raise_for_status()
+            except requests.exceptions.SSLError as exc:
+                logger.info(
+                    "referrer: \"%s\" has a broken ssl configuration",
+                    self.request.auth_token.referrer, exc_info=exc
+                )
+                return False
+            except Exception as exc:
+                logger.info(
+                    "post failed: \"%s\" failed",
+                    self.request.auth_token.referrer, exc_info=exc
+                )
+                return False
         return True
 
     def post(self, request, *args, **kwargs):
