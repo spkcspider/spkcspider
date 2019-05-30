@@ -104,6 +104,7 @@ def validate(ob, hostpart, task=None):
 
             c_length = resp.get("content-length", None)
             if not verify_download_size(c_length, current_size):
+                resp.close()
                 session.close()
                 dvfile.close()
                 os.unlink(dvfile.name)
@@ -128,6 +129,9 @@ def validate(ob, hostpart, task=None):
                     url, stream=True, **params
                 ) as resp:
                     if resp.status_code != 200:
+                        session.close()
+                        dvfile.close()
+                        os.unlink(dvfile.name)
                         raise exceptions.ValidationError(
                             _("Retrieval failed: %(reason)s"),
                             params={"reason": resp.reason},
@@ -136,7 +140,9 @@ def validate(ob, hostpart, task=None):
 
                     c_length = resp.headers.get("content-length", None)
                     if not verify_download_size(c_length, current_size):
-                        resp.close()
+                        session.close()
+                        dvfile.close()
+                        os.unlink(dvfile.name)
                         raise exceptions.ValidationError(
                             _("Content too big: %(size)s"),
                             params={"size": c_length},
