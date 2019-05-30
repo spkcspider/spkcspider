@@ -29,6 +29,6 @@ matrix:
       env: DJANGO_DEP=djangomaster
 install:
   - pip install tox
-script: tox -e "py$(echo ${TRAVIS_PYTHON_VERSION} | tr -d .)-$DJANGO_DEP-{sqlite3,postgresql,mariadb}"
+script: tox -e "py$(echo ${TRAVIS_PYTHON_VERSION} | tr -d .)-$DJANGO_DEP-{sqlite3,postgresql,mysql}"
 
 cache: pip
