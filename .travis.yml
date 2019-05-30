@@ -6,7 +6,7 @@ services:
 addons:
   mariadb: '10.3'
 before_script:
-  - psql -c 'create spkcspider_tests;' -U postgres
+  - psql -c 'create database spkcspider_tests;' -U postgres
 python:
   - "3.5"
   - "3.6"
