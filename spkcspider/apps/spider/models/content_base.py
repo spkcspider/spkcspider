@@ -11,6 +11,7 @@ __all__ = [
 import logging
 
 from django.db import models
+from django.conf import settings
 from django.utils.translation import gettext, gettext_lazy as _
 from django.urls import reverse
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -300,15 +301,16 @@ class AssignedContent(BaseInfoModel):
         unique_together = [
             ('content_type', 'object_id'),
         ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=['usercomponent', 'info'], name='unique_info'
-            ),
-            # models.UniqueConstraint(
-            #     fields=['usercomponent', 'name'], name='unique_name',
-            #     condition=~models.Q(name='')
-            # )
-        ]
+        constraints = []
+        if (
+            settings.DATABASES["default"]["ENGINE"] !=
+            "django.db.backends.mysql"
+        ):
+            constraints.append(
+                models.UniqueConstraint(
+                    fields=['usercomponent', 'info'], name='unique_info'
+                )
+            )
 
     def __init__(self, *args, **kwargs):
         if isinstance(kwargs.get("ctype"), str):
@@ -366,4 +368,18 @@ class AssignedContent(BaseInfoModel):
                 code="strength",
                 params={'strength': self.strength},
             )
+        if (
+            settings.DATABASES["default"]["ENGINE"] ==
+            "django.db.backends.mysql"
+        ):
+            obj = AssignedContent.objects.filter(
+                usercomponent=self.usercomponent,
+                info=self.info
+            ).first()
+
+            if obj and obj.id != getattr(self, "id", None):
+                raise ValidationError(
+                    message=_("Unique Content already exists"),
+                    code='unique_together',
+                )
         super().clean()

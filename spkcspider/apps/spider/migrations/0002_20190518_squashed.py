@@ -268,10 +268,6 @@ class Migration(migrations.Migration):
             name='assignedcontent',
             unique_together={('content_type', 'object_id')},
         ),
-        migrations.AddConstraint(
-            model_name='assignedcontent',
-            constraint=models.UniqueConstraint(fields=('usercomponent', 'info'), name='unique_info'),
-        ),
         migrations.AlterField(
             model_name='assignedcontent',
             name='token',
@@ -301,3 +297,13 @@ class Migration(migrations.Migration):
             name='allow_domain_mode',
         ),
     ]
+    if (
+        settings.DATABASES["default"]["ENGINE"] !=
+        "django.db.backends.mysql"
+    ):
+        operations.append(
+            migrations.AddConstraint(
+                model_name='assignedcontent',
+                constraint=models.UniqueConstraint(fields=('usercomponent', 'info'), name='unique_info'),
+            )
+        )

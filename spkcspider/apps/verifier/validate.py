@@ -12,6 +12,7 @@ from django.utils.translation import gettext as _
 from django.core.files import File
 from django.conf import settings
 from django.core import exceptions
+from django.test import Client
 
 from rdflib import Graph, URIRef, Literal
 from rdflib.namespace import XSD
@@ -89,47 +90,79 @@ def validate(ob, hostpart, task=None):
         )
         url = source.get_url()
         params, can_inline = get_requests_params(url)
-        try:
-            with session.get(
-                url, stream=True, **params
-            ) as resp:
-                if resp.status_code != 200:
-                    raise exceptions.ValidationError(
-                        _("Retrieval failed: %(reason)s"),
-                        params={"reason": resp.reason},
-                        code="error_code:{}".format(resp.status_code)
-                    )
+        if can_inline:
+            resp = Client().get(url)
+            if resp.status_code != 200:
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _("Retrieval failed: %(reason)s"),
+                    params={"reason": resp.reason},
+                    code="error_code:{}".format(resp.status_code)
+                )
 
-                c_length = resp.headers.get("content-length", None)
-                if not verify_download_size(c_length, current_size):
-                    raise exceptions.ValidationError(
-                        _("Content too big: %(size)s"),
-                        params={"size": c_length},
-                        code="invalid_size"
-                    )
-                c_length = int(c_length)
-                current_size += c_length
-                # preallocate file
-                dvfile.truncate(c_length)
-                dvfile.seek(0, 0)
+            c_length = resp.get("content-length", None)
+            if not verify_download_size(c_length, current_size):
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _("Content too big: %(size)s"),
+                    params={"size": c_length},
+                    code="invalid_size"
+                )
+            c_length = int(c_length)
+            current_size += c_length
+            # clear file
+            dvfile.truncate(c_length)
+            dvfile.seek(0, 0)
 
-                for chunk in resp.iter_content(BUFFER_SIZE):
-                    dvfile.write(chunk)
-                dvfile.seek(0, 0)
-        except requests.exceptions.Timeout:
-            session.close()
-            raise exceptions.ValidationError(
-                _('url timed out: %(url)s'),
-                params={"url": url},
-                code="timeout_url"
-            )
-        except requests.exceptions.ConnectionError:
-            session.close()
-            raise exceptions.ValidationError(
-                _('invalid url: %(url)s'),
-                params={"url": url},
-                code="invalid_url"
-            )
+            for chunk in resp:
+                dvfile.write(chunk)
+            dvfile.seek(0, 0)
+        else:
+            try:
+                with session.get(
+                    url, stream=True, **params
+                ) as resp:
+                    if resp.status_code != 200:
+                        raise exceptions.ValidationError(
+                            _("Retrieval failed: %(reason)s"),
+                            params={"reason": resp.reason},
+                            code="error_code:{}".format(resp.status_code)
+                        )
+
+                    c_length = resp.headers.get("content-length", None)
+                    if not verify_download_size(c_length, current_size):
+                        raise exceptions.ValidationError(
+                            _("Content too big: %(size)s"),
+                            params={"size": c_length},
+                            code="invalid_size"
+                        )
+                    c_length = int(c_length)
+                    current_size += c_length
+                    # preallocate file
+                    dvfile.truncate(c_length)
+                    dvfile.seek(0, 0)
+
+                    for chunk in resp.iter_content(BUFFER_SIZE):
+                        dvfile.write(chunk)
+                    dvfile.seek(0, 0)
+            except requests.exceptions.Timeout:
+                session.close()
+                raise exceptions.ValidationError(
+                    _('url timed out: %(url)s'),
+                    params={"url": url},
+                    code="timeout_url"
+                )
+            except requests.exceptions.ConnectionError:
+                session.close()
+                raise exceptions.ValidationError(
+                    _('invalid url: %(url)s'),
+                    params={"url": url},
+                    code="invalid_url"
+                )
     g = Graph()
     g.namespace_manager.bind("spkc", spkcgraph, replace=True)
     try:
@@ -235,57 +268,89 @@ def validate(ob, hostpart, task=None):
         )
         # validation not neccessary here (base url is verified)
         params, can_inline = get_requests_params(url)
-        try:
-            with session.get(
-                url, stream=True, **params
-            ) as resp:
-                if resp.status_code != 200:
-                    session.close()
-                    dvfile.close()
-                    os.unlink(dvfile.name)
-                    raise exceptions.ValidationError(
-                        _("Retrieval failed: %(reason)s"),
-                        params={"reason": resp.reason},
-                        code="error_code:{}".format(resp.status_code)
-                    )
+        if can_inline:
+            resp = Client().get(url)
+            if resp.status_code != 200:
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _("Retrieval failed: %(reason)s"),
+                    params={"reason": resp.reason},
+                    code="error_code:{}".format(resp.status_code)
+                )
 
-                c_length = resp.headers.get("content-length", None)
-                if not verify_download_size(c_length, current_size):
-                    session.close()
-                    dvfile.close()
-                    os.unlink(dvfile.name)
-                    raise exceptions.ValidationError(
-                        _("Content too big: %(size)s"),
-                        params={"size": c_length},
-                        code="invalid_size"
-                    )
-                c_length = int(c_length)
-                current_size += c_length
-                # clear file
-                dvfile.truncate(c_length)
-                dvfile.seek(0, 0)
+            c_length = resp.get("content-length", None)
+            if not verify_download_size(c_length, current_size):
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _("Content too big: %(size)s"),
+                    params={"size": c_length},
+                    code="invalid_size"
+                )
+            c_length = int(c_length)
+            current_size += c_length
+            # clear file
+            dvfile.truncate(c_length)
+            dvfile.seek(0, 0)
 
-                for chunk in resp.iter_content(BUFFER_SIZE):
-                    dvfile.write(chunk)
-                dvfile.seek(0, 0)
-        except requests.exceptions.Timeout:
-            session.close()
-            dvfile.close()
-            os.unlink(dvfile.name)
-            raise exceptions.ValidationError(
-                _('url timed out: %(url)s'),
-                params={"url": url},
-                code="timeout_url"
-            )
-        except requests.exceptions.ConnectionError:
-            session.close()
-            dvfile.close()
-            os.unlink(dvfile.name)
-            raise exceptions.ValidationError(
-                _('Invalid url: %(url)s'),
-                params={"url": url},
-                code="innvalid_url"
-            )
+            for chunk in resp:
+                dvfile.write(chunk)
+            dvfile.seek(0, 0)
+        else:
+            try:
+                with session.get(
+                    url, stream=True, **params
+                ) as resp:
+                    if resp.status_code != 200:
+                        session.close()
+                        dvfile.close()
+                        os.unlink(dvfile.name)
+                        raise exceptions.ValidationError(
+                            _("Retrieval failed: %(reason)s"),
+                            params={"reason": resp.reason},
+                            code="error_code:{}".format(resp.status_code)
+                        )
+
+                    c_length = resp.headers.get("content-length", None)
+                    if not verify_download_size(c_length, current_size):
+                        session.close()
+                        dvfile.close()
+                        os.unlink(dvfile.name)
+                        raise exceptions.ValidationError(
+                            _("Content too big: %(size)s"),
+                            params={"size": c_length},
+                            code="invalid_size"
+                        )
+                    c_length = int(c_length)
+                    current_size += c_length
+                    # clear file
+                    dvfile.truncate(c_length)
+                    dvfile.seek(0, 0)
+
+                    for chunk in resp.iter_content(BUFFER_SIZE):
+                        dvfile.write(chunk)
+                    dvfile.seek(0, 0)
+            except requests.exceptions.Timeout:
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _('url timed out: %(url)s'),
+                    params={"url": url},
+                    code="timeout_url"
+                )
+            except requests.exceptions.ConnectionError:
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _('Invalid url: %(url)s'),
+                    params={"url": url},
+                    code="innvalid_url"
+                )
 
         try:
             g.parse(
@@ -348,52 +413,79 @@ def validate(ob, hostpart, task=None):
             )
 
         params, can_inline = get_requests_params(url)
-        try:
-            with session.get(
-                url, stream=True, **params
-            ) as resp:
-                if resp.status_code != 200:
-                    raise exceptions.ValidationError(
-                        _("Retrieval failed: %(reason)s"),
-                        params={"reason": resp.reason},
-                        code="code_{}".format(resp.status_code)
-                    )
-                h = get_hashob()
-                h.update(XSD.base64Binary.encode("utf8"))
-                for chunk in resp.iter_content(BUFFER_SIZE):
-                    h.update(chunk)
-                # do not use add as it could be corrupted by user
-                # (user can provide arbitary data)
-                g.set((
-                    URIRef(t[2].value),
-                    spkcgraph["hash"],
-                    Literal(h.finalize().hex())
-                ))
-                if task:
-                    task.update_state(
-                        state='RETRIEVING',
-                        meta={
-                            'hashable_urls_checked': count
-                        }
-                    )
-        except requests.exceptions.Timeout:
-            session.close()
-            dvfile.close()
-            os.unlink(dvfile.name)
-            raise exceptions.ValidationError(
-                _('url timed out: %(url)s'),
-                params={"url": url},
-                code="timeout_url"
-            )
-        except requests.exceptions.ConnectionError:
-            session.close()
-            dvfile.close()
-            os.unlink(dvfile.name)
-            raise exceptions.ValidationError(
-                _('Invalid url: %(url)s'),
-                params={"url": url},
-                code="innvalid_url"
-            )
+        if can_inline:
+            resp = Client().get(url)
+            if resp.status_code != 200:
+                raise exceptions.ValidationError(
+                    _("Retrieval failed: %(reason)s"),
+                    params={"reason": resp.reason},
+                    code="code_{}".format(resp.status_code)
+                )
+            h = get_hashob()
+            h.update(XSD.base64Binary.encode("utf8"))
+            for chunk in resp.iter_content(BUFFER_SIZE):
+                h.update(chunk)
+            # do not use add as it could be corrupted by user
+            # (user can provide arbitary data)
+            g.set((
+                URIRef(t[2].value),
+                spkcgraph["hash"],
+                Literal(h.finalize().hex())
+            ))
+            if task:
+                task.update_state(
+                    state='RETRIEVING',
+                    meta={
+                        'hashable_urls_checked': count
+                    }
+                )
+        else:
+            try:
+                with session.get(
+                    url, stream=True, **params
+                ) as resp:
+                    if resp.status_code != 200:
+                        raise exceptions.ValidationError(
+                            _("Retrieval failed: %(reason)s"),
+                            params={"reason": resp.reason},
+                            code="code_{}".format(resp.status_code)
+                        )
+                    h = get_hashob()
+                    h.update(XSD.base64Binary.encode("utf8"))
+                    for chunk in resp.iter_content(BUFFER_SIZE):
+                        h.update(chunk)
+                    # do not use add as it could be corrupted by user
+                    # (user can provide arbitary data)
+                    g.set((
+                        URIRef(t[2].value),
+                        spkcgraph["hash"],
+                        Literal(h.finalize().hex())
+                    ))
+                    if task:
+                        task.update_state(
+                            state='RETRIEVING',
+                            meta={
+                                'hashable_urls_checked': count
+                            }
+                        )
+            except requests.exceptions.Timeout:
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _('url timed out: %(url)s'),
+                    params={"url": url},
+                    code="timeout_url"
+                )
+            except requests.exceptions.ConnectionError:
+                session.close()
+                dvfile.close()
+                os.unlink(dvfile.name)
+                raise exceptions.ValidationError(
+                    _('Invalid url: %(url)s'),
+                    params={"url": url},
+                    code="innvalid_url"
+                )
     # not required anymore
     session.close()
     if task:
