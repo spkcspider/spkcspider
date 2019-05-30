@@ -61,9 +61,10 @@ minversion = 3.4.0
 isolated_build = True
 envlist = py35-django22-{sqlite3,postgresql,mysql}, py{36,37}-django{22,master}-{sqlite3,postgresql,mysql}
 # extras = test
-whitelist_externals = psql
 
 [testenv]
+whitelist_externals =
+  psql
 commands =
   !postgresql: python -Wd ./manage.py test tests
   postgresql: python -Wd ./manage.py test --keepdb tests
@@ -73,7 +74,6 @@ commands =
 setenv =
     PYTHONDONTWRITEBYTECODE=1
     sqlite3: DJANGO_SETTINGS_MODULE=testsettings.test_sqlite3
-    sqlite3: SPIDER_NO_INLINE=true
     postgresql: DJANGO_SETTINGS_MODULE=testsettings.test_postgresql
     mysql: DJANGO_SETTINGS_MODULE=testsettings.test_mysql
 
