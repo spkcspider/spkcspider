@@ -79,7 +79,8 @@ deps =
   django22: Django>=2.2a1,<=2.2.99
   djangomaster: https://github.com/django/django/archive/master.zip
   postgresql: psycopg2-binary
-  mysql: mysqlclient>=1.3.13, django-mysql
+  mysql: mysqlclient>=1.3.13
+  mysql: django-mysql
 
 """
 
