@@ -128,7 +128,7 @@
     "fields": {
       "protection": "login",
       "usercomponent": 2,
-      "data": "{}",
+      "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
       "active": true,
@@ -141,7 +141,7 @@
     "fields": {
       "protection": "captcha",
       "usercomponent": 2,
-      "data": "{}",
+      "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
       "active": false,
@@ -154,7 +154,7 @@
     "fields": {
       "protection": "login",
       "usercomponent": 5,
-      "data": "{}",
+      "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
       "active": true,
@@ -167,7 +167,7 @@
     "fields": {
       "protection": "captcha",
       "usercomponent": 5,
-      "data": "{}",
+      "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
       "active": false,
