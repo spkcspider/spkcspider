@@ -48,7 +48,7 @@ django-simple-captcha = "*"
 [tool.poetry.extras]
 captcha = ["django-simple-captcha"]
 fcgi = ["flipflop"]
-mysql = ["mysqlclient"]
+mysql = ["mysqlclient", "django-mysql"]
 pgsql = ["psycopg2"]
 celery = ["celery", "sqlalchemy"]
 test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery"]
@@ -79,7 +79,7 @@ deps =
   django22: Django>=2.2a1,<=2.2.99
   djangomaster: https://github.com/django/django/archive/master.zip
   postgresql: psycopg2-binary
-  mysql: mysqlclient>=1.3.13
+  mysql: mysqlclient>=1.3.13 django-mysql
 
 """
 

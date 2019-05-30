@@ -305,7 +305,7 @@ pgsql = []
 test = []
 
 [metadata]
-content-hash = "0d3e4f2d96dab17ec150f2ce6c167da2c857f5c9323e9efe6a0fd295e893da5a"
+content-hash = "4579472fabd1038b2786da99fc46096ca3c3ce3e2ae2776baec0546bdd539f8f"
 python-versions = ">=3.5"
 
 [metadata.hashes]
