@@ -61,11 +61,13 @@ minversion = 3.4.0
 isolated_build = True
 envlist = py35-django22-{sqlite3,postgresql,mysql}, py{36,37}-django{22,master}-{sqlite3,postgresql,mysql}
 # extras = test
+whitelist_externals = psql
 
 [testenv]
 commands =
   !postgresql: python -Wd ./manage.py test tests
   postgresql: python -Wd ./manage.py test --keepdb tests
+  postgresql: psql -c 'drop database spkcspider_tests;' -U postgres
 
 
 setenv =
