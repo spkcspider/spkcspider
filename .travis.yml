@@ -6,6 +6,7 @@ services:
   - mysql
 before_script:
   - psql -c 'create database spkcspider_tests;' -U postgres
+  - mysql -e 'CREATE DATABASE spkcspider_tests;'
 python:
   - "3.5"
   - "3.6"
