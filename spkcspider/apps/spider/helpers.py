@@ -130,7 +130,7 @@ def add_property(
 
 
 @lru_cache(maxsize=None)
-def get_settings_func(*args, default=None):
+def get_settings_func(*args, default=None, exclude=frozenset()):
     if default is None:
         names, default = args[:-1], args[-1]
     filterpath = None
@@ -140,6 +140,9 @@ def get_settings_func(*args, default=None):
             break
     if filterpath is None:
         filterpath = default
+    # note: cannot distinguish between False and 0 and True and 1
+    if filterpath in exclude:
+        raise ValueError("invalid setting")
     if callable(filterpath):
         return filterpath
     elif isinstance(filterpath, bool):
@@ -266,6 +269,7 @@ def get_requests_params(url):
         ),
         get_settings_func(
             "SPIDER_INLINE",
-            "spkcspider.apps.spider.functions.clean_spider_inline"
+            "spkcspider.apps.spider.functions.clean_spider_inline",
+            exclude=frozenset({True})
         )(_url["host"])
     )

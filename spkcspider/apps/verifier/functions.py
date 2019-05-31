@@ -141,6 +141,7 @@ def get_requests_params(url):
         ),
         get_settings_func(
             "VERIFIER_INLINE", "SPIDER_INLINE",
-            "spkcspider.apps.spider.functions.clean_spider_inline"
+            "spkcspider.apps.spider.functions.clean_spider_inline",
+            exclude=frozenset({True})
         )(_url["host"])
     )
