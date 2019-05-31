@@ -5,7 +5,8 @@ namespace: spider_base
 """
 
 __all__ = [
-    "LinkContent", "PersistenceFeature", "TravelProtection"
+    "LinkContent", "PersistenceFeature", "DomainMode", "DefaultActions",
+    "TravelProtection"
 ]
 
 import logging
@@ -20,7 +21,7 @@ from django.utils.translation import gettext
 from django.middleware.csrf import CsrfViewMiddleware
 from django.http.response import HttpResponseBase
 from django.utils import timezone
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 
@@ -60,15 +61,11 @@ class PersistenceFeature(BaseContent):
                 "renew-token",
                 reverse("spider_base:token-renew")
             ),
-            ActionUrl(
-                "delete-token",
-                reverse("spider_base:token-delete-request")
-            )
         ]
 
 
 @add_content
-class DomainModeFeature(BaseContent):
+class DomainMode(BaseContent):
     appearances = [
         {
             "name": "DomainMode",
@@ -84,14 +81,32 @@ class DomainModeFeature(BaseContent):
     class Meta:
         abstract = True
 
+
+@add_content
+class DefaultActions(BaseContent):
+    appearances = [
+        {
+            "name": "DefaultActions",
+            "ctype": (
+                VariantType.component_feature + VariantType.no_export +
+                VariantType.unlisted
+            ),
+            "strength": 0
+        },
+    ]
+
+    actions = {
+        ActionUrl(
+            "delete-token", reverse_lazy("spider_base:token-delete-request")
+        )
+    }
+
     @classmethod
     def feature_urls(cls, name):
-        return [
-            ActionUrl(
-                "delete-token",
-                reverse("spider_base:token-delete-request")
-            )
-        ]
+        return cls.actions
+
+    class Meta:
+        abstract = True
 
 
 @add_content
@@ -441,6 +456,7 @@ class TravelProtection(BaseContent):
     def access_add(self, **kwargs):
         _ = gettext
         kwargs["legend"] = escape(_("Create Travel Protection"))
+        # redirect, so user does not see token, needs msg foo for sending token
         # token = self.associated.token
         ret = super().access_add(**kwargs)
         # if (
@@ -457,6 +473,7 @@ class TravelProtection(BaseContent):
     def access_update(self, **kwargs):
         _ = gettext
         kwargs["legend"] = escape(_("Update Travel Protection"))
+        # redirect, so user does not see token, needs msg foo for sending token
         # token = self.associated.token
         ret = super().access_update(**kwargs)
         # if (

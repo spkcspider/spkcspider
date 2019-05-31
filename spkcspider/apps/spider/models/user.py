@@ -5,8 +5,7 @@ namespace: spider_base
 """
 
 __all__ = [
-    "UserComponent", "UserComponentManager", "TokenCreationError",
-    "UserInfo"
+    "UserComponent", "UserComponentManager", "TokenCreationError", "UserInfo"
 ]
 
 import logging

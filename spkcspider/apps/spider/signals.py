@@ -85,6 +85,8 @@ def CleanupCb(sender, instance, **kwargs):
                 instance.usercomponent.user.spider_info.save(
                     update_fields=["used_space_local", "used_space_remote"]
                 )
+            except ObjectDoesNotExist:
+                pass
             except Exception as exc:
                 logging.error(
                     "update size failed, trigger expensive recalculation",
@@ -174,12 +176,19 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
         AuthToken.objects.filter(
             persist=instance.id
         ).update(persist=0)
+
+    if not instance.features.filter(name="DefaultActions"):
+        instance.features.add(ContentVariant.objects.get(
+            name="DefaultActions"
+        ))
     if VariantType.domain_mode.value in instance.ctype.ctype:
         instance.features.add(ContentVariant.objects.get(
             name="DomainMode"
         ))
+    # auto add self as feature
     if (
-        VariantType.domain_mode.value in instance.ctype.ctype and
+        VariantType.component_feature.value in instance.ctype.ctype and
+        VariantType.feature_connect.value in instance.ctype.ctype and
         VariantType.unique.value not in instance.ctype.ctype
     ):
         instance.usercomponent.features.add(instance.ctype)
@@ -190,12 +199,14 @@ def UpdateContentFeaturesCb(sender, instance, action, **kwargs):
         return
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
 
-    features = instance.features.prefetch_related("ctype")
+    if not instance.features.filter(name="DefaultActions"):
+        instance.features.add(ContentVariant.objects.get(
+            name="DefaultActions"
+        ))
 
-    if features.filter(
+    if instance.features.filter(
         ctype__contains=VariantType.domain_mode.value
-    ) and not features.filter(name="DomainMode"):
-        print("domainmode")
+    ) and not instance.features.filter(name="DomainMode"):
         instance.features.add(ContentVariant.objects.get(
             name="DomainMode"
         ))

@@ -24,7 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD
 
-from .constants import VariantType, spkcgraph, ActionUrl
+from .constants import VariantType, spkcgraph, ActionUrl, essential_contents
 from .conf import get_anchor_domain
 from .serializing import paginate_stream, serialize_stream
 from .helpers import (
@@ -39,12 +39,16 @@ installed_contents = {}
 # don't spam set objects
 _empty_set = frozenset()
 
+_blacklisted = set(getattr(
+    settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
+))
+
 default_abilities = frozenset(
-    ("add", "view", "update", "export", "list", "raw", "raw_update")
+    {"add", "view", "update", "export", "list", "raw", "raw_update"}
 )
 
 # never use these names
-forbidden_names = ["Content", "UserComponent"]
+forbidden_names = {"Content", "UserComponent"}
 
 # updated attributes of ContentVariant
 _attribute_list = ["name", "ctype", "strength"]
@@ -54,9 +58,8 @@ def add_content(klass):
     code = klass._meta.model_name
     if code in installed_contents:
         raise Exception("Duplicate content")
-    if "{}.{}".format(klass.__module__, klass.__qualname__) not in getattr(
-        settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
-    ):
+    klassname = "{}.{}".format(klass.__module__, klass.__qualname__)
+    if klassname not in _blacklisted:
         installed_contents[code] = klass
     return klass
 
@@ -67,6 +70,15 @@ def initialize_content_models(apps=None):
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
     all_content = models.Q()
     valid_for = {}
+
+    diff = essential_contents.difference(
+        installed_contents.keys()
+    )
+    if diff:
+        logger.warning(
+            "Missing essential contents: %s" % diff
+        )
+
     for code, val in installed_contents.items():
         appearances = val.appearances
         if callable(appearances):
@@ -247,7 +259,7 @@ class BaseContent(models.Model):
     @lru_cache(typed=True)
     def cached_feature_urls(cls, name):
         return frozenset(map(
-            lambda x: ActionUrl(*x),
+            lambda x: ActionUrl(*map(str, x)),
             cls.feature_urls(name)
         ))
 

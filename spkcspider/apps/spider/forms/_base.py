@@ -117,7 +117,10 @@ class UserComponentForm(forms.ModelForm):
             self.fields["features"].queryset.exclude(
                 models.Q(ctype__contains=VariantType.feature_connect.value) &
                 ~models.Q(ctype__contains=VariantType.unique.value)
-            ).exclude(name="DomainMode") &
+            ).exclude(
+                models.Q(name="DomainMode") |
+                models.Q(name="DefaultActions")
+            ) &
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 

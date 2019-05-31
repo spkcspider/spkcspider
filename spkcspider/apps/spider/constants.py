@@ -5,7 +5,8 @@ __all__ = (
     "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
     "hex_size_of_bigid", "TokenCreationError", "protected_names", "spkcgraph",
     "dangerous_login_choices", "ActionUrl", "static_token_matcher",
-    "host_tld_matcher", "travel_scrypt_params", "loggedin_active_tprotections"
+    "host_tld_matcher", "travel_scrypt_params", "loggedin_active_tprotections",
+    "essential_contents"
 )
 
 import enum
@@ -39,6 +40,11 @@ static_token_matcher = re.compile(
 host_tld_matcher = re.compile(
     r'^[^.]*?(?!\.)(?P<host>[^/?:]+?(?P<tld>\.[^/?:.]+)?)(?=[/?:]|$)(?!:/)'
 )
+
+
+essential_contents = {
+    "domainmode", "defaultactions"
+}
 
 
 class TokenCreationError(Exception):
