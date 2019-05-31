@@ -21,7 +21,7 @@ from django.utils.translation import gettext
 from django.middleware.csrf import CsrfViewMiddleware
 from django.http.response import HttpResponseBase
 from django.utils import timezone
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 
@@ -96,14 +96,14 @@ class DefaultActions(BaseContent):
     ]
 
     actions = {
-        ActionUrl(
-            "delete-token", reverse_lazy("spider_base:token-delete-request")
+        (
+            "delete-token", "spider_base:token-delete-request"
         )
     }
 
     @classmethod
     def feature_urls(cls, name):
-        return cls.actions
+        return map(lambda x: ActionUrl(x.name, reverse(x.url)), cls.actions)
 
     class Meta:
         abstract = True

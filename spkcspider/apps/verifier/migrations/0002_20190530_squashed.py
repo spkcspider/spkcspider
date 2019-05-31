@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    replaces = [('spider_verifier', '0002_auto_20181031_2121'), ('spider_verifier', '0003_1_linked_hashes_stub'), ('spider_verifier', '0004_auto_20190225_2153'), ('spider_verifier', '0005_auto_20190302_1741'), ('spider_verifier', '0006_verifysourceobject_update_secret'), ('spider_verifier', '0007_auto_20190530_1636')]
 
     dependencies = [
         ('spider_verifier', '0001_initial'),
