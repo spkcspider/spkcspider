@@ -125,7 +125,7 @@ USE_TZ = True
 
 STATICFILES_DIRS = [
     # add node_modules as node_modules under static
-    ("node_modules", os.path.join(BASE_DIR, "node_modules"))
+    ("node_modules", "node_modules")
 ]
 
 # Static files (CSS, JavaScript, Images)
