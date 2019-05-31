@@ -3,7 +3,8 @@ __all__ = [
     "embed_file_default", "has_admin_permission",
     "LimitedTemporaryFileUploadHandler", "validate_url_default",
     "get_quota", "clean_verifier",
-    "clean_verifier_url", "approve_dangerous"
+    "clean_verifier_url", "approve_dangerous",
+    "clean_spider_inline"
 ]
 
 import time
@@ -20,6 +21,7 @@ from django.core.files.uploadhandler import (
     TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
 )
 from django.http import Http404
+from django.http.request import validate_host
 from django.shortcuts import redirect
 from django.views.decorators.cache import never_cache
 from django.urls import reverse
@@ -76,6 +78,10 @@ def clean_verifier_url(url):
     if "://" not in url:
         return False
     return True
+
+
+def clean_spider_inline(url):
+    return validate_host(url, settings.ALLOWED_HOSTS)
 
 
 def clean_verifier(view, request):

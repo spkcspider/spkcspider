@@ -3,7 +3,7 @@
 from spkcspider.settings.debug import *  # noqa: F403, F401
 import os
 
-SPIDER_DISABLE_FAKE_CLIENT = "SPIDER_NO_INLINE" in os.environ
+SPIDER_INLINE = "SPIDER_NO_INLINE" in os.environ or None
 
 DATABASES = {
   'default': {

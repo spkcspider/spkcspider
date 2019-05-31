@@ -24,7 +24,6 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.encoding import force_bytes
-from django.http.request import validate_host
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -131,13 +130,20 @@ def add_property(
 
 
 @lru_cache(maxsize=None)
-def get_settings_func(name, default):
-    filterpath = getattr(
-        settings, name,
-        default
-    )
+def get_settings_func(*args, default=None):
+    if default is None:
+        names, default = args[:-1], args[-1]
+    filterpath = None
+    for name in names:
+        if getattr(settings, name, None) is not None:
+            filterpath = getattr(settings, name)
+            break
+    if filterpath is None:
+        filterpath = default
     if callable(filterpath):
         return filterpath
+    elif isinstance(filterpath, bool):
+        return lambda *args, **kwargs: filterpath
     else:
         module, name = filterpath.rsplit(".", 1)
         return getattr(import_module(module), name)
@@ -258,6 +264,8 @@ def get_requests_params(url):
                 mapper[b"default"]
             )
         ),
-        not getattr(settings, "SPIDER_DISABLE_FAKE_CLIENT", None) and
-        validate_host(_url["host"], settings.ALLOWED_HOSTS)
+        get_settings_func(
+            "SPIDER_INLINE",
+            "spkcspider.apps.spider.functions.clean_spider_inline"
+        )(_url["host"])
     )

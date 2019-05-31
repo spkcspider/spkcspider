@@ -6,7 +6,7 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SPIDER_DISABLE_FAKE_CLIENT = "SPIDER_NO_INLINE" in os.environ
+SPIDER_INLINE = "SPIDER_NO_INLINE" in os.environ or None
 
 DATABASES = {
     'default': {

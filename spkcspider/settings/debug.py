@@ -48,6 +48,8 @@ VERIFIER_REQUEST_RATE = "10/m"
 VERIFIER_MAX_SIZE_ACCEPTED = 40000000
 # 2 mb, set to 0 to disable a direct file upload
 VERIFIER_MAX_SIZE_DIRECT_ACCEPTED = 2000000
+# controls inlining of verifier, defaults to SPIDER_INLINE
+# VERIFIER_INLINE = False
 
 # not required, SpiderTokenAuthBackend have to be tested, so here active
 AUTHENTICATION_BACKENDS = [

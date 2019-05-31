@@ -11,7 +11,6 @@ from django.urls import reverse
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.test import Client
-from django.http.request import validate_host
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -21,6 +20,7 @@ from rdflib import XSD, URIRef, Literal
 import requests
 
 from spkcspider.apps.spider.constants import spkcgraph, host_tld_matcher
+from spkcspider.apps.spider.helpers import get_settings_func
 
 
 def validate_request_default(request, form):
@@ -139,6 +139,8 @@ def get_requests_params(url):
                 mapper[b"default"]
             )
         ),
-        not getattr(settings, "SPIDER_DISABLE_FAKE_CLIENT", None) and
-        validate_host(_url["host"], settings.ALLOWED_HOSTS)
+        get_settings_func(
+            "VERIFIER_INLINE", "SPIDER_INLINE",
+            "spkcspider.apps.spider.functions.clean_spider_inline"
+        )(_url["host"])
     )
