@@ -160,6 +160,21 @@ def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
             name="Persistence"
         ))
 
+    for variant in instance.features.filter(
+        models.Q(ctype__contains=VariantType.feature_connect.value) &
+        models.Q(ctype__contains=VariantType.unique.value) &
+        ~models.Q(assignedcontent__usercomponent=instance)
+    ):
+        ret = variant.installed_class.static_create(
+            token_size=getattr(settings, "TOKEN_SIZE", 30),
+            associated_kwargs={
+                "usercomponent": instance,
+                "ctype": variant
+            }
+        )
+        ret.clean()
+        ret.save()
+
 
 def UpdateContentCb(sender, instance, raw=False, **kwargs):
     if raw:

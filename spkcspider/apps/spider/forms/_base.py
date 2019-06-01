@@ -306,22 +306,6 @@ class UserComponentForm(forms.ModelForm):
                 self.cleaned_data["strength"] += 4
         self.cleaned_data["can_auth"] = max_prot_strength >= 4
 
-        if self.instance.id:
-            for variant in self.cleaned_data["features"].filter(
-                models.Q(ctype__contains=VariantType.feature_connect.value) &
-                models.Q(ctype__contains=VariantType.unique.value) &
-                ~models.Q(assignedcontent__usercomponent=self.instance)
-            ):
-                ret = variant.installed_class.static_create(
-                    token_size=getattr(settings, "TOKEN_SIZE", 30),
-                    associated_kwargs={
-                        "usercomponent": self.usercomponent,
-                        "ctype": variant,
-                        "attached_to_token": self.request.auth_token
-                    }
-                )
-                ret.clean()
-                ret.save()
         min_strength = self.cleaned_data["features"].filter(
             strength__gt=self.cleaned_data["strength"]
         ).aggregate(m=models.Max("strength"))["m"]
