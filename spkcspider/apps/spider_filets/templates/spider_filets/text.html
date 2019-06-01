@@ -1,16 +1,16 @@
 {% load i18n spider_base %}
 <data hidden="hidden" rel="spkc:properties">
   <data hidden="hidden" typeof="spkc:Property">
-    <data hidden="hidden" property="spkc:name">name</data>
-    <data hidden="hidden" property="spkc:value">{{object}}</data>
+    <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
+    <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{object}}</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
   </data>
 </data>
 <div class="w3-padding">
   <div class="w3-white w3-padding" typeof="spkc:Property">
-    <data hidden="hidden" property="spkc:name">text</data>
+    <data hidden="hidden" property="spkc:name" datatype="xsd:string">text</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-    <data property="spkc:value">{{object.text|safe}}</data>
+    <data property="spkc:value" datatype="xsd:string">{{object.text|safe}}</data>
   </div>
 </div>
 {% include "spider_filets/license_info.html" %}

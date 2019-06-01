@@ -11,6 +11,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
+from rdflib import Graph, XSD, Literal
+
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.signals import update_dynamic
 
@@ -70,9 +72,32 @@ class KeyTest(TransactionWebTest):
             form["key"] = pempub
             form["content_control-description"] = "valid"
             response = form.submit().follow()
-            self.assertTrue(PublicKey.objects.filter(
+            key = PublicKey.objects.filter(
                 associated_rel__description="valid"
-            ))
+            ).first()
+            self.assertTrue(key)
+            response = self.app.get(key.get_absolute_url())
+            g = Graph()
+            g.parse(data=response.body, format="html")
+            self.assertIn(
+                (
+                    None,
+                    None,
+                    Literal("hash_algo", datatype=XSD.string)),
+                g
+            )
+            self.assertIn(
+                (None, None, Literal("hash", datatype=XSD.string)),
+                g
+            )
+            self.assertIn(
+                (None, None, Literal("pubkeyhash", datatype=XSD.string)),
+                g
+            )
+            self.assertIn(
+                (None, None, Literal("key", datatype=XSD.string)),
+                g
+            )
 
     def test_anchor_server(self):
         home = self.user.usercomponent_set.get(name="home")

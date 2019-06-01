@@ -4,16 +4,12 @@ __all__ = ["KeyForm", "AnchorServerForm", "AnchorKeyForm"]
 import binascii
 
 from django import forms
-from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
 
 from cryptography import exceptions
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.backends import default_backend
 
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
 from spkcspider.apps.spider.widgets import ListWidget
@@ -114,8 +110,7 @@ class AnchorKeyForm(forms.ModelForm):
 
         if self.scope in ("add", "update"):
             self.fields["key"].queryset = self.fields["key"].queryset.filter(
-                models.Q(key__contains="-----BEGIN CERTIFICATE-----") |
-                models.Q(key__contains="-----BEGIN PUBLIC KEY-----")
+                associated_rel__info__contains="\x1epubkeyhash="
             )
         elif self.scope in ("raw", "list", "view"):
             self.fields["key"] = forms.CharField(
@@ -127,16 +122,8 @@ class AnchorKeyForm(forms.ModelForm):
     def clean(self):
         _ = gettext
         ret = super().clean()
-        try:
-            if "-----BEGIN CERTIFICATE-----" in self.cleaned_data["key"].key:
-                pubkey = load_pem_x509_certificate(
-                    ret["key"].key.encode("utf-8"), default_backend()
-                ).public_key()
-            else:
-                pubkey = serialization.load_pem_public_key(
-                    ret["key"].key.encode("utf-8"), default_backend()
-                )
-        except exceptions.UnsupportedAlgorithm:
+        pubkey = self.cleaned_data["key"].get_key_ob()
+        if not pubkey:
             self.add_error("key", forms.ValidationError(
                 _("key not usable for signing"),
                 code="unusable_key"

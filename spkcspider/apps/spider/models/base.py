@@ -126,7 +126,7 @@ class BaseInfoModel(models.Model):
             return True
         return False
 
-    def getlist(self, key, amount=None):
+    def getlist(self, key, amount=None, fullkey=False):
         info = self.info
         ret = []
         pstart = info.find("\x1e%s=" % key)
@@ -138,6 +138,8 @@ class BaseInfoModel(models.Model):
                     "Info field error: doesn't end with \"\\x1e\": \"%s\"" %
                     info
                 )
+            if fullkey:
+                tmpstart = pstart + 1
             ret.append(info[tmpstart:pend])
             pstart = info.find("\x1e%s=" % key, pend)
             # if amount=0 => bool(amount) == false

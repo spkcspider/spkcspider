@@ -17,13 +17,13 @@
     </div>
   {% endif %}
   <data hidden="hidden" typeof="spkc:Property">
-    <data hidden="hidden" property="spkc:name">name</data>
+    <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
     <data hidden="hidden" property="spkc:value">{{object.name}}</data>
   </data>
   {% include "spider_filets/license_info.html" %}
   <div typeof="spkc:Property">
-    <data hidden="hidden" property="spkc:name">file</data>
+    <data hidden="hidden" property="spkc:name" datatype="xsd:string">file</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
     <data hidden="hidden" property="spkc:value" datatype="spkc:hashableURI">{{download}}</data>
     <a class="w3-xlarge" href="{{download}}">{% trans "Download" %}</a>

@@ -755,8 +755,8 @@ class BaseContent(models.Model):
         if self.associated_obj:
             self.associated_obj.content = self
         assignedcontent = self.associated
-        assignedcontent.info = self.get_info()
         if getattr(self, "id", None):
+            assignedcontent.info = self.get_info()
             if not self.expose_name or not assignedcontent.name:
                 assignedcontent.name = self.get_content_name()
             if not self.expose_description or not assignedcontent.description:

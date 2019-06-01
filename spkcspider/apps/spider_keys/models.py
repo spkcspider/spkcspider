@@ -12,6 +12,11 @@ from django.template.loader import render_to_string
 from django.utils.translation import pgettext
 from django.http import HttpResponsePermanentRedirect, JsonResponse
 
+from cryptography import exceptions
+from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
+
 from jsonfield import JSONField
 
 from spkcspider.apps.spider.helpers import get_hashob
@@ -23,9 +28,6 @@ logger = logging.getLogger(__name__)
 
 
 # Create your models here.
-
-_htest = get_hashob()
-_htest.update(b"test")
 
 _help_text_sig = _("""Signature of Identifier (hexadecimal-encoded)""")
 
@@ -74,37 +76,58 @@ class PublicKey(BaseContent):
 
     def get_info(self):
         ret = super().get_info()
-        key = self.get_key_name()[0]
         h = get_hashob()
-        h.update(key.encode("ascii", "ignore"))
-        return "%shash=%s=%s\x1e" % (
-            ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex()
+        h.update(self.key.encode("ascii", "ignore"))
+        pubkeyhash = ""
+        k = self.get_key_ob()
+        if k:
+            pem = k.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo
+            )
+            h2 = get_hashob()
+            h2.update(pem)
+            pubkeyhash = "pubkeyhash=%s=%s\x1e" % (
+                settings.SPIDER_HASH_ALGORITHM.name, h2.finalize().hex()
+            )
+        return "%shash=%s=%s\x1e%s" % (
+            ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex(),
+            pubkeyhash
         )
 
-    def get_key_name(self):
-        # PEM key
-        split = self.key.split("\n")
-        if len(split) > 1:
-            h = get_hashob()
-            h.update(self.key.encode("ascii", "ignore"))
-            return (h.finalize().hex(), None)
+    def get_key_ob(self):
+        try:
+            if "-----BEGIN CERTIFICATE-----" in self.key:
+                pubkey = load_pem_x509_certificate(
+                    self.key.encode("utf-8"), default_backend()
+                ).public_key()
+            else:
+                pubkey = serialization.load_pem_public_key(
+                    self.key.encode("utf-8"), default_backend()
+                )
+            return pubkey
+        except exceptions.UnsupportedAlgorithm:
+            return None
+        except ValueError:
+            pass
 
+    def get_key_name(self):
         # ssh key
         split = self.key.rsplit(" ", 1)
         if len(split) == 2 and "@" in split[1]:
             return split
-        # other key
+        # other key, e.g PEM
         return (self.key, None)
 
     def get_content_name(self):
-        st = self.get_key_name()
-        if st[1]:
-            st = st[1]
-        else:
-            st = "{}...".format(st[0][:10])
+        name = self.get_key_name()[1]
+        if not name:
+            name = "{}...".format(
+                self.associated.getlist("hash", amount=1)[0][:10]
+            )
         if len(self.associated.description) > 0:
-            st = "{}: {}".format(st, self.associated.description[:20])
-        return "Key: {}".format(st)
+            name = "{}: {}".format(name, self.associated.description[:20])
+        return "Key: {}".format(name)
 
     def get_form(self, scope):
         from .forms import KeyForm
@@ -112,10 +135,15 @@ class PublicKey(BaseContent):
 
     def access_view(self, **kwargs):
         kwargs["object"] = self
-        kwargs["algo"] = settings.SPIDER_HASH_ALGORITHM.name
+        kwargs["hash_algo"] = settings.SPIDER_HASH_ALGORITHM.name
         kwargs["hash"] = self.associated.getlist(
-            "hash:%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
+            "hash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
         )[0]
+        k = self.associated.getlist(
+            "pubkeyhash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
+        )
+        if k:
+            kwargs["pubkeyhash"] = k[0]
         return (
             render_to_string(
                 "spider_keys/key.html", request=kwargs["request"],
@@ -263,14 +291,14 @@ class AnchorKey(AnchorBase):
         return s
 
     def get_content_name(self):
-        st = self.key.get_key_name()
-        if st[1]:
-            st = st[1]
-        else:
-            st = "{}...".format(st[0][:10])
-        if len(self.key.associated.description) > 0:
-            st = "{}: {}".format(st, self.key.associated.description[:20])
-        return st
+        name = self.key.get_key_name()[1]
+        if not name:
+            name = "{}...".format(
+                self.key.associated.getlist("hash", amount=1)[0][:10]
+            )
+        if len(self.associated.description) > 0:
+            name = "{}: {}".format(name, self.associated.description[:20])
+        return "AnchorKey: {}".format(name)
 
     def get_form(self, scope):
         from .forms import AnchorKeyForm
@@ -283,11 +311,11 @@ class AnchorKey(AnchorBase):
 
     def get_info(self):
         ret = super().get_info()
-        key = self.key.get_key_name()[0]
-        h = get_hashob()
-        h.update(key.encode("ascii", "ignore"))
-        return "%shash=%s=%s\x1e" % (
-            ret, settings.SPIDER_HASH_ALGORITHM.name, h.finalize().hex()
+        k = self.key.associated.getlist("pubkeyhash", amount=1, fullkey=True)
+        return "%s%s\x1e%s\x1e" % (
+            ret,
+            self.key.associated.getlist("hash", amount=1, fullkey=True)[0],
+            k[0] if k else ""
         )
 
 
