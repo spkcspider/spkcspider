@@ -14,7 +14,7 @@ def content_name_validator(value):
             code="control_characters"
         )
     if value:
-        if value[0].isspace() or value[1].isspace():
+        if value[0].isspace() or value[-1].isspace():
             raise ValidationError(
                 _("Contains hidden spaces"),
                 code="hidden_spaces"

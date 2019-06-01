@@ -1,7 +1,6 @@
 __all__ = (
     "UpdateSpiderCb", "InitUserCb", "update_dynamic",
-    "DeleteContentCb", "CleanupCb", "MovePersistentCb",
-    "move_persistent", "failed_guess",
+    "DeleteContentCb", "CleanupCb", "failed_guess",
     "UpdateContentCb", "UpdateAnchorComponentCb",
     "UpdateComponentFeaturesCb", "UpdateContentFeaturesCb"
 )
@@ -17,7 +16,6 @@ from .helpers import create_b64_id_token
 import logging
 
 update_dynamic = Signal(providing_args=[])
-move_persistent = Signal(providing_args=["tokens", "to"])
 # failed guess of token
 failed_guess = Signal(providing_args=["request"])
 
@@ -123,21 +121,19 @@ def UpdateAnchorComponentCb(sender, instance, raw=False, **kwargs):
             AuthToken.objects.filter(
                 persist=persist
             ).update(persist=instance.primary_anchor.id)
-        else:
+            instance.primary_anchor.referenced_by.add(
+                AssignedContent.objects.filter(
+                    usercomponent=instance,
+                    attached_to_primary_anchor=True
+                )
+            )
+        elif old.primary_anchor:
             AuthToken.objects.filter(
                 persist=old.primary_anchor.id
             ).update(persist=0)
 
-        if old.primary_anchor:
             old.primary_anchor.referenced_by.clear(
                 old.primary_anchor.referenced_by.filter(
-                    attached_to_primary_anchor=True
-                )
-            )
-        if instance.primary_anchor:
-            instance.primary_anchor.referenced_by.add(
-                AssignedContent.objects.filter(
-                    usercomponent=instance,
                     attached_to_primary_anchor=True
                 )
             )
@@ -225,13 +221,6 @@ def UpdateContentFeaturesCb(sender, instance, action, **kwargs):
         instance.features.add(ContentVariant.objects.get(
             name="DomainMode"
         ))
-
-
-def MovePersistentCb(sender, tokens, to, **kwargs):
-    AssignedContent = apps.get_model("spider_base", "AssignedContent")
-    AssignedContent.objects.filter(
-        attached_to_token__in=tokens
-    ).update(usercomponent=to)
 
 
 def UpdateSpiderCb(**_kwargs):

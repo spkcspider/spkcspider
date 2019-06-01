@@ -19,8 +19,9 @@ from ..constants import (
     ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
 )
 from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
-from ..signals import move_persistent
 # from ..widgets import Select2Widget
+
+logger = logging.getLogger(__name__)
 
 _help_text_static_token = _("""Generate a new static token with variable strength<br/>
 Tokens protect against bruteforce and attackers<br/>
@@ -412,11 +413,16 @@ class UserContentForm(forms.ModelForm):
         user = self.instance.usercomponent.user
 
         travel = TravelProtection.objects.get_active_for_request(request)
-
         query = UserComponent.objects.filter(
             user=user, strength__gte=self.instance.ctype.strength
         ).exclude(travel_protected__in=travel)
         self.fields["usercomponent"].queryset = query
+
+        if VariantType.feature_connect.value in self.instance.ctype.ctype:
+            self.fields["usercomponent"].disabled = True
+            self.fields["usercomponent"].help_text = _(
+                "Features cannot move between components"
+            )
 
         if self.instance.content.force_token_size:
             sforced = [
@@ -538,16 +544,10 @@ class UserContentForm(forms.ModelForm):
             tokens.update(
                 usercomponent=self.instance.usercomponent,
             )
-            # this is how to move persistent content
-            results = move_persistent.send_robust(
-                AuthToken, tokens=tokens,
-                to=self.instance.usercomponent
-            )
-            for (receiver, result) in results:
-                if isinstance(result, Exception):
-                    logging.error(
-                        "%s failed", receiver, exc_info=result
-                    )
+
+            AssignedContent.objects.filter(
+                attached_to_token__in=tokens
+            ).update(usercomponent=self.instance.usercomponent)
         else:
             self.instance.primary_anchor_for.clear(bulk=False)
             # token migrate to component via signal
@@ -557,7 +557,6 @@ class UserContentForm(forms.ModelForm):
         self.update_anchor()
         update_fields = set()
         if not self.instance.name:
-
             update_fields.add("name")
         if self.instance.token_generate_new_size is not None:
             if self.instance.token:

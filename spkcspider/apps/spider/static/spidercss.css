@@ -25,6 +25,12 @@
   }
 }
 
+@media (min-width:1253px){
+  .spkc-modal-content {
+      width: 1250px;
+  }
+}
+
 .spkc-form input[type=text] {
   padding:8px;
   display:block;

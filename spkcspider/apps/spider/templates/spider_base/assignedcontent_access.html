@@ -56,7 +56,7 @@
   {% for ability in abilities %}
     <data hidden="hidden" property="spkc:ability:name" datatype="xsd:string">{{ability}}</data>
   {% endfor %}
-  <div class="w3-padding"  style="min-height:120px">
+  <div class="w3-padding"  style="min-height:140px">
     {% if request.is_special_user or uc.public %}
       {# index is redirected in view #}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' token=uc.token %}?{{request.GET.urlencode}}">
@@ -179,7 +179,7 @@
   {% if active_listed_features.exists %}
   <div class="w3-padding">
     <div class="w3-white w3-padding">
-      <h4>{% trans 'Active Component Features' %}:</h4>
+      <h4>{% trans 'Active Features' %}:</h4>
       <div>
         {% for f in active_listed_features %}
           <span class="" style="display:inline-block;white-space:nowrap;">{{f}}{% if not forloop.last %}, {% endif %}</span>

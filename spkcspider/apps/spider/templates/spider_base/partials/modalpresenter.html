@@ -2,7 +2,7 @@
 
 {# z-index important for trumbowyg, set higher if not enough #}
 <div id="share_modal_presenter" class="w3-modal" style="height:100%; z-index:100;">
-  <div class="w3-modal-content">
+  <div class="w3-modal-content spkc-modal-content">
     <header class="w3-container w3-teal">
       <span onclick="close_qrmodal(event)"
       class="w3-button w3-black w3-display-topright">&times;</span>
@@ -17,7 +17,7 @@
       <div class="" id="share_remotelink_wrapper"  style="word-break: break-all">
         {# escapejs is a weaker escape, don't use it #}
         <a type="text" rel="nofollow" href="{{remotelink}}{{remotelink_extra}}" id="share_remotelink"></a>
-        <span style="margin-left:10px;padding:1px 10px;white-space: nowrap" id="share_copy_clipboard" class="w3-round w3-grey">
+        <span style="margin-left:10px;padding:1px 10px;white-space: nowrap;word-break: normal;display:inline-block" id="share_copy_clipboard" class="w3-round w3-grey">
           <i class="fas fa-clipboard" aria-label="{% trans 'Clipboard' %}"></i>
         </span>
       </div>
