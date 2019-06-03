@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.contrib.auth import get_permission_codename
 
 from .models import DataVerificationTag
+from .validate import async_verify_tag
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,9 @@ class DataVerificationTagAdmin(admin.ModelAdmin):
         if 'verification_state' in form.changed_data:
             form.instance.checked = now()
         ret = super().save_form(request, form, change)
+        async_verify_tag.apply_async(
+            args=(form.instance.id,),
+        )
         try:
             form.instance.callback(
                 "{}://{}".format(
