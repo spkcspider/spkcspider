@@ -30,8 +30,9 @@ def validate_request_default(request, form):
     return True
 
 
-def verify_tag_default(tag):
-    tag.save()
+def verify_tag_default(tag, from_validate) -> bool:
+    """ return True if callback should be fired (if possible) """
+    return tag.verification_state == "verified"
 
 
 def domain_auth(source, hostpart):

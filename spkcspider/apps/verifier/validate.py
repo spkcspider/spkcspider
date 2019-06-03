@@ -559,6 +559,7 @@ def validate(ob, hostpart, task=None):
         result.data_type = data_type
         update_fields.add("data_type")
     result.save(update_fields=update_fields)
+    verify_tag(result, task, from_validate=True)
     if task:
         task.update_state(
             state='SUCCESS'
@@ -572,19 +573,26 @@ def async_validate(self, ob, hostpart):
     return ret.get_absolute_url()
 
 
-# def verify(tagid, task=None):
-#    tag = DataVerificationTag.objects.get(id=tagid)
-#    get_settings_func(
-#        "VERIFIER_TAG_VERIFIER",
-#        "spkcspider.apps.verifier.functions.verify_tag_default"
-#    )(tag)
-#    if tag.verification_state == "verified":
-#        try:
-#            tag.callback()
-#        except exceptions.ValidationError:
-#            logging.exception("Error while calling back")
+def verify_tag(tag, task=None, from_validate=False):
+    """ for auto validation or hooks"""
+    if task:
+        task.update_state(
+            state='VERIFY'
+        )
+
+    if get_settings_func(
+        "VERIFIER_TAG_VERIFIER",
+        False
+    )(tag, from_validate):
+        try:
+            tag.callback()
+        except exceptions.ValidationError:
+            logging.exception("Error while calling back")
 
 
-# @celery_app.task(bind=True, name='async verification', ignore_results=True)
-# def async_verify(self, tagid):
-#     verify(tagid, self)
+@celery_app.task(bind=True, name='async verification', ignore_results=True)
+def async_verify_tag(self, tagid):
+    verify_tag(DataVerificationTag.objects.get(id=tagid), self)
+    self.update_state(
+        state='SUCCESS'
+    )

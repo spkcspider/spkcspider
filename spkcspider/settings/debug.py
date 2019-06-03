@@ -48,6 +48,10 @@ VERIFIER_REQUEST_RATE = "10/m"
 VERIFIER_MAX_SIZE_ACCEPTED = 40000000
 # 2 mb, set to 0 to disable a direct file upload
 VERIFIER_MAX_SIZE_DIRECT_ACCEPTED = 2000000
+# hook for verifing tag, return: should callback should be fired?, takes:
+#    tag, from_validate
+# arguments
+# VERIFIER_TAG_VERIFIER
 # controls inlining of verifier, defaults to SPIDER_INLINE
 # VERIFIER_INLINE = False
 
