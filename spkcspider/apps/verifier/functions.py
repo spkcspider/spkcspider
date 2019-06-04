@@ -1,9 +1,10 @@
 __all__ = [
     "clean_graph", "get_hashob", "validate_request_default",
-    "verify_tag_default", "domain_auth"
+    "verify_tag_default", "domain_auth", "get_anchor_domain"
 ]
 
 import logging
+import functools
 from urllib.parse import parse_qs, urlencode
 
 from django.conf import settings
@@ -23,6 +24,20 @@ from spkcspider.apps.spider.constants import spkcgraph, host_tld_matcher
 from spkcspider.apps.spider.helpers import get_settings_func
 
 
+@functools.lru_cache(1)
+def get_anchor_domain():
+    # if None, set to default Site ID if models are ready
+    _anchor_domain = getattr(
+        settings, "VERIFIER_ANCHOR_DOMAIN", getattr(
+            settings, "SPIDER_ANCHOR_DOMAIN", None
+        )
+    )
+    if _anchor_domain:
+        return _anchor_domain
+    from django.contrib.sites.models import Site
+    return Site.objects.get(id=settings.SITE_ID).domain
+
+
 def validate_request_default(request, form):
     if not form.is_valid():
         return False
@@ -30,7 +45,7 @@ def validate_request_default(request, form):
     return True
 
 
-def verify_tag_default(tag, from_validate) -> bool:
+def verify_tag_default(tag, hostpart, ffrom) -> bool:
     """ return True if callback should be fired (if possible) """
     return tag.verification_state == "verified"
 

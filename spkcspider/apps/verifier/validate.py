@@ -1,6 +1,6 @@
 __all__ = {
     "validate", "valid_wait_states", "verify_download_size",
-    "async_validate", "verify", "async_verify"
+    "async_validate", "verify_tag", "async_verify_tag"
 }
 
 import logging
@@ -24,7 +24,7 @@ from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
 from .constants import BUFFER_SIZE
-from .functions import get_hashob, get_requests_params
+from .functions import get_hashob, get_requests_params, get_anchor_domain
 from .models import VerifySourceObject, DataVerificationTag
 
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
@@ -559,7 +559,7 @@ def validate(ob, hostpart, task=None):
         result.data_type = data_type
         update_fields.add("data_type")
     result.save(update_fields=update_fields)
-    verify_tag(result, task, from_validate=True)
+    verify_tag(result, task=task, ffrom="validate")
     if task:
         task.update_state(
             state='SUCCESS'
@@ -573,8 +573,10 @@ def async_validate(self, ob, hostpart):
     return ret.get_absolute_url()
 
 
-def verify_tag(tag, task=None, from_validate=False):
+def verify_tag(tag, hostpart=None, ffrom="sync_call", task=None):
     """ for auto validation or hooks"""
+    if not hostpart:
+        hostpart = get_anchor_domain()
     if task:
         task.update_state(
             state='VERIFY'
@@ -582,17 +584,21 @@ def verify_tag(tag, task=None, from_validate=False):
 
     if get_settings_func(
         "VERIFIER_TAG_VERIFIER",
-        False
-    )(tag, from_validate):
+        "spkcspider.apps.verifier.functions.verify_tag_default"
+    )(tag, hostpart, ffrom):
         try:
-            tag.callback()
+            tag.callback(hostpart)
         except exceptions.ValidationError:
             logging.exception("Error while calling back")
+    if task:
+        task.update_state(
+            state='SUCCESS'
+        )
 
 
 @celery_app.task(bind=True, name='async verification', ignore_results=True)
-def async_verify_tag(self, tagid):
-    verify_tag(DataVerificationTag.objects.get(id=tagid), self)
-    self.update_state(
-        state='SUCCESS'
+def async_verify_tag(self, tagid, hostpart=None, ffrom="async_call"):
+    verify_tag(
+        tag=DataVerificationTag.objects.get(id=tagid),
+        hostpart=hostpart, task=self, ffrom=ffrom
     )

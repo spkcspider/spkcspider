@@ -4,7 +4,7 @@ __all__ = [
     "default_uctoken_duration", "TOKEN_SIZE", "FILE_TOKEN_SIZE",
     "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS"
 ]
-
+import functools
 import datetime
 from django.conf import settings
 
@@ -23,20 +23,17 @@ media_extensions = set(getattr(
     }
 ))
 
-# if None, set to default Site ID if models are ready
-_anchor_domain = getattr(
-    settings, "SPIDER_ANCHOR_DOMAIN", None
-)
 
-
+@functools.lru_cache(1)
 def get_anchor_domain():
-    global _anchor_domain
+    # if None, set to default Site ID if models are ready
+    _anchor_domain = getattr(
+        settings, "SPIDER_ANCHOR_DOMAIN", None
+    )
     if _anchor_domain:
         return _anchor_domain
     from django.contrib.sites.models import Site
-    _anchor_domain = \
-        Site.objects.get(id=settings.SITE_ID).domain
-    return _anchor_domain
+    return Site.objects.get(id=settings.SITE_ID).domain
 
 
 INITIAL_STATIC_TOKEN_SIZE = str(

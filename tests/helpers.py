@@ -39,7 +39,6 @@ class MockAsyncValidate(object):
 
 class MockAsyncVerifyTag(object):
     value_captured = frozenset()
-    task_id = None
     tasks = {}
 
     @classmethod
@@ -52,11 +51,5 @@ class MockAsyncVerifyTag(object):
     @classmethod
     def apply_async(cls, *args, **kwargs):
         self = cls()
-        self.value_captured = kwargs["args"]
-        self.task_id = uuid()
-        cls.tasks[self.task_id] = self
+        verify_tag(**kwargs["kwargs"])
         return self
-
-    def get(self, *args, **kwargs):
-        ret = verify_tag(*self.value_captured)
-        return ret.get_absolute_url()

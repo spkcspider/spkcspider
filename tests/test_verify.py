@@ -18,11 +18,12 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.verifier.models import DataVerificationTag
+from spkcspider.apps.verifier.functions import get_anchor_domain
 from spkcspider.apps.spider_tags.models import SpiderTag, TagLayout
 
 from tests.referrerserver import create_referrer_server
 from tests.helpers import (
-    LiveDjangoTestApp, MockAsyncValidate, MockAsyncVerifyTag
+    LiveDjangoTestApp, MockAsyncValidate
 )
 # Create your tests here.
 
@@ -47,6 +48,9 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
+        settings.SPIDER_ANCHOR_DOMAIN = self.live_server_url
+        get_anchor_domain.cache_clear()
+
         update_dynamic.send_robust(self)
 
     def renew_app(self):
@@ -59,10 +63,6 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
     @patch(
         "spkcspider.apps.verifier.views.async_validate",
         new=MockAsyncValidate
-    )
-    @patch(
-        "spkcspider.apps.verifier.admin.async_verify_tag",
-        new=MockAsyncVerifyTag
     )
     @override_settings(RATELIMIT_ENABLE=False)
     def test_verify(self):
@@ -210,10 +210,6 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
     @patch(
         "spkcspider.apps.verifier.views.async_validate",
         new=MockAsyncValidate
-    )
-    @patch(
-        "spkcspider.apps.verifier.admin.async_verify_tag",
-        new=MockAsyncVerifyTag
     )
     @override_settings(RATELIMIT_ENABLE=False)
     def test_request_verify(self):

@@ -14,7 +14,7 @@ from spider_domainauth.abstract_models import BaseReverseToken
 from .constants import (
     VERIFICATION_CHOICES
 )
-from .functions import get_requests_params
+from .functions import get_requests_params, get_anchor_domain
 
 
 def dv_path(instance, filename):
@@ -88,7 +88,9 @@ class DataVerificationTag(models.Model):
             }
         )
 
-    def callback(self, hostpart):
+    def callback(self, hostpart=None):
+        if not hostpart:
+            hostpart = get_anchor_domain()
         if self.source and self.data_type.endswith("_cb"):
             vurl = self.source.get_url("verify")
             body = {
