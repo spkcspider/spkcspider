@@ -122,7 +122,7 @@ class FeaturesTest(TransactionWebTest):
             response = self.app.get(purl)
             self.assertEqual(response.status_code, 200)
             form = response.forms[0]
-            form["password"] = "abc"
+            form["password"].force_value("abc")
             response = form.submit()
             # response.showbrowser()
             location = response.location

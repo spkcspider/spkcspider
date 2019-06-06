@@ -21,7 +21,7 @@ from ..constants import (
 )
 from ..helpers import create_b64_id_token
 from ..validators import validator_token
-from ..protections import installed_protections
+from ..protections import installed_protections, ProtectionList, PseudoPw
 from ..constants import ProtectionType, ProtectionResult
 
 logger = logging.getLogger(__name__)
@@ -74,8 +74,7 @@ class Protection(models.Model):
     @sensitive_variables("kwargs")
     def auth(self, request, obj=None, **kwargs):
         # never ever allow authentication if not active
-        if obj and not obj.active:
-            return False
+        assert not obj or obj.active
         if self.code not in installed_protections:
             return False
         return self.installed_class.auth(
@@ -86,7 +85,7 @@ class Protection(models.Model):
     @sensitive_variables("kwargs")
     def auth_query(cls, request, query, required_passes=1, **kwargs):
         initial_required_passes = required_passes
-        ret = []
+        ret = ProtectionList()
         max_result = 0
         for item in query:
             obj = None
@@ -102,6 +101,8 @@ class Protection(models.Model):
                 request=request, obj=obj, query=query,
                 required_passes=initial_required_passes, **kwargs
             )
+            if ProtectionType.password.value in item.ptype:
+                ret.uses_password = True
             if _instant_fail:  # instant_fail does not reduce required_passes
                 if type(result) is not int:  # False or form
                     # set limit unreachable
@@ -114,7 +115,12 @@ class Protection(models.Model):
                 if result > max_result:
                     max_result = result
             if result is not False:  # False will be not rendered
+                ret.media += item.installed_class.get_auth_media(result)
                 ret.append(ProtectionResult(result, item))
+        if ret.uses_password:
+            p = PseudoPw()
+            ret.insert(0, ProtectionResult(p, p))
+            ret.media += p.media
         # after side effects like RandomFail with http404 errors
         if (
                 request.GET.get("protection", "") == "false" and

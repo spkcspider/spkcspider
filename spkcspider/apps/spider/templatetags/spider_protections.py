@@ -1,7 +1,7 @@
 from django import template
 from django import forms
 from django.template.loader import render_to_string
-
+from ..protections import ProtectionList
 
 register = template.Library()
 
@@ -21,7 +21,7 @@ def render_protection(context, protectiontup):
         ctx["form"] = ctx["data"]
     elif hasattr(protection, "auth_form"):
         ctx["form"] = protection.auth_form(**ctx["data"])
-    template_name = getattr(protection, "template_name")
+    template_name = getattr(protection, "template_name", None)
     if not template_name:
         template_name = "spider_base/protections/protection_form.html"
 
@@ -32,7 +32,10 @@ def render_protection(context, protectiontup):
 
 @register.simple_tag(takes_context=True)
 def extract_protections(context, extract_name="protections"):
-    if hasattr(context.get("request", None), extract_name):
-        if getattr(context["request"], extract_name) is not True:
-            return getattr(context["request"], extract_name)
-    return []
+    if isinstance(
+        getattr(
+            context["request"], extract_name, None
+        ), ProtectionList
+    ):
+        return getattr(context["request"], extract_name)
+    return ProtectionList()

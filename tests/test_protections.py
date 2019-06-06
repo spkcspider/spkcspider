@@ -65,15 +65,6 @@ class ProtectionTest(TransactionWebTest):
             (
                 None,
                 spkcgraph["name"],
-                Literal("login", datatype=XSD.string)
-            ),
-            g
-        )
-
-        self.assertIn(
-            (
-                None,
-                spkcgraph["name"],
                 Literal("password", datatype=XSD.string)
             ),
             g
@@ -81,7 +72,7 @@ class ProtectionTest(TransactionWebTest):
 
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit()
         self.assertIn(
             viewurl.split("?", 1)[0],
@@ -114,14 +105,6 @@ class ProtectionTest(TransactionWebTest):
             ),
             g
         )
-        self.assertIn(
-            (
-                None,
-                spkcgraph["name"],
-                Literal("login", datatype=XSD.string)
-            ),
-            g
-        )
 
         self.assertIn(
             (
@@ -133,7 +116,7 @@ class ProtectionTest(TransactionWebTest):
         )
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit()
         self.assertIn(
             viewurl.split("?", 1)[0],
@@ -201,7 +184,6 @@ class ProtectionTest(TransactionWebTest):
             ),
             g
         )
-
         self.assertIn(
             (
                 None,
@@ -212,7 +194,7 @@ class ProtectionTest(TransactionWebTest):
         )
 
         form = response.form
-        form.set("password", weak_pw, index=0)
+        form["password"].force_value(weak_pw)
         response = form.submit()
         self.assertTrue(response.location.startswith(home.get_absolute_url()))
 
@@ -221,7 +203,7 @@ class ProtectionTest(TransactionWebTest):
         )
         response = self.app.get(authurl)
         form = response.form
-        form.set("password", strong_pw, index=0)
+        form["password"].force_value(strong_pw)
         response = form.submit()
         createurl = reverse(
             "spider_base:ucontent-add",
@@ -248,7 +230,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit().follow()
         response = self.app.get(reverse("spider_base:ucomponent-list"))
         g = Graph()
@@ -336,7 +318,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit().follow()
         # now even without trigger contents should be hidden
         # so reset session
@@ -394,7 +376,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit().follow()
 
         listurl = reverse("spider_base:ucomponent-list")
@@ -445,7 +427,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit().follow()
 
         listurl = reverse("spider_base:ucomponent-list")
@@ -501,7 +483,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit().follow()
         self.assertTrue(
             UserComponent.objects.filter(user=self.user, name="home").exists()
@@ -521,7 +503,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit().follow()
         self.assertFalse(
             UserComponent.objects.filter(user=self.user, name="home").exists()
@@ -564,7 +546,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse("auth:login"))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit().follow()
 
         # approve
@@ -582,7 +564,7 @@ class TravelProtectionTest(TransactionWebTest):
         ))
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit()
         self.assertFalse(
             SpiderUser.objects.filter(

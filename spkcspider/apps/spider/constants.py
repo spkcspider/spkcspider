@@ -52,6 +52,8 @@ class TokenCreationError(Exception):
 
 
 ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
+
+
 ActionUrl = namedtuple("ActionUrl", ["name", "url"])
 protected_names = {"index"}
 
@@ -74,6 +76,8 @@ class ProtectionType(str, enum.Enum):
     no_count = "d"
     # protections which have side effects
     side_effects = "e"
+    # show password dialog
+    password = "f"
     # forget about recovery, every recovery method is authentication
     # and will be misused this way
     # The only real recovery is by staff and only if there is a secret

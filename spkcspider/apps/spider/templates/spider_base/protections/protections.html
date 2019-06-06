@@ -1,6 +1,12 @@
 {% extends "spider_base/protections/base.html" %}
 {% load spider_protections i18n spider_rdf %}
 
+{% block extrahead %}
+{% extract_protections "protections" as protections %}
+{{block.super}}
+{{protections.media|safe}}
+{% endblock %}
+
 {% block main_classes %}{{block.super}} color-front-{{uc.untrusted_strength}}{% endblock %}
 {% block body_class %}{{block.super}} color-back-{{uc.untrusted_strength}}{% endblock %}
 

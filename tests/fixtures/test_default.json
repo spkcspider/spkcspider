@@ -98,14 +98,14 @@
     "model": "spider_base.protection",
     "pk": "login",
     "fields": {
-      "ptype": "ba"
+      "ptype": "baf"
     }
   },
   {
     "model": "spider_base.protection",
     "pk": "password",
     "fields": {
-      "ptype": "ab"
+      "ptype": "abf"
     }
   },
   {

@@ -24,6 +24,10 @@ class SpiderAuthForm(AuthenticationForm):
         if not self.is_bound:
             self.reset_protections()
 
+    @property
+    def media(self):
+        return super().media + self.request.protections.media
+
     def reset_protections(self):
         self.request.protections = Protection.authall(
             self.request, scope="auth",
@@ -35,6 +39,7 @@ class SpiderAuthForm(AuthenticationForm):
         # usercomponent (which is available in clean)
         assert type(self.request.protections) is not int,\
             "login evaluates to success without data"
+        assert len(self.request.protections) > 0
 
     def clean(self):
         username = self.cleaned_data.get('username')

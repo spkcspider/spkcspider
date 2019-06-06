@@ -35,7 +35,7 @@ from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from .helpers import add_by_field, create_b64_token, aesgcm_pbkdf2_cryptor
 from .constants import ProtectionType, ProtectionResult
 from .fields import MultipleOpenChoiceField
-from .widgets import OpenChoiceWidget, PWOpenChoiceWidget
+from .widgets import OpenChoiceWidget, PWOpenChoiceWidget, ListWidget
 
 logger = logging.getLogger(__name__)
 installed_protections = {}
@@ -94,6 +94,11 @@ def initialize_protection_models(apps=None):
               [t.code for t in invalid_models])
 
 
+class ProtectionList(list):
+    uses_password = False
+    media = forms.Media()
+
+
 class BaseProtection(forms.Form):
     """
         Base for Protections
@@ -113,7 +118,7 @@ class BaseProtection(forms.Form):
     # name = foo
 
     # ptype valid for, is overwritten with current ptype
-    ptype = ProtectionType.access_control.value
+    ptype = ""
 
     # description of Protection
     description = None
@@ -199,6 +204,15 @@ class BaseProtection(forms.Form):
     def auth_localize_name(cls, name=None):
         return cls.localize_name(name)
 
+    @classmethod
+    def get_auth_media(cls, result):
+        if isinstance(result, forms.Form):
+            return result.media
+        elif hasattr(cls, "auth_form"):
+            return cls.auth_form(**result).media
+        else:
+            return forms.Media()
+
     def __str__(self):
         return self.localize_name(self.name)
 
@@ -208,6 +222,38 @@ class BaseProtection(forms.Form):
         self.instance.data = self.cleaned_data
         self.instance.save()
 
+
+class PseudoPw(forms.Form):
+    name = "password"
+    code = "password"
+    ptype = ""
+    use_required_attribute = False
+
+    password = MultipleOpenChoiceField(
+        widget=ListWidget(
+            format_type="password",
+            item_label=_("Password")
+        ), required=False, initial=[""]
+    )
+
+    @property
+    def installed_class(self):
+        return self
+
+    @classmethod
+    def auth(cls, request, **kwargs):
+        return cls()
+
+    @classmethod
+    def localize_name(cls, name=None):
+        return pgettext("protection name", "Password")
+
+    @classmethod
+    def auth_localize_name(cls, name=None):
+        return cls.localize_name("Password")
+
+    def __str__(self):
+        return self.localize_name(self.name)
 
 # only friends have access
 @add_by_field(installed_protections, "name")
@@ -246,9 +292,10 @@ class FriendProtection(BaseProtection):
 @add_by_field(installed_protections, "name")
 class RandomFailProtection(BaseProtection):
     name = "randomfail"
-    ptype = ProtectionType.access_control.value
-    ptype += ProtectionType.authentication.value
-    ptype += ProtectionType.side_effects.value
+    ptype = (
+        ProtectionType.access_control + ProtectionType.authentication +
+        ProtectionType.side_effects
+    )
 
     success_rate = forms.IntegerField(
         label=_("Success Rate"), min_value=20, max_value=100, initial=100,
@@ -283,8 +330,9 @@ class RandomFailProtection(BaseProtection):
 @add_by_field(installed_protections, "name")
 class RateLimitProtection(BaseProtection):
     name = "ratelimit"
-    ptype = ProtectionType.access_control.value
-    ptype += ProtectionType.authentication.value
+    ptype = (
+        ProtectionType.access_control + ProtectionType.authentication
+    )
 
     rate_accessed = forms.RegexField(
         regex=r'([\d]+)/([\d]*)([smhd])?',
@@ -384,8 +432,10 @@ class RateLimitProtection(BaseProtection):
 @add_by_field(installed_protections, "name")
 class LoginProtection(BaseProtection):
     name = "login"
-    ptype = ProtectionType.authentication.value
-    ptype += ProtectionType.access_control.value
+    ptype = (
+        ProtectionType.authentication + ProtectionType.access_control +
+        ProtectionType.password
+    )
 
     description = _("Use Login password")
 
@@ -393,14 +443,6 @@ class LoginProtection(BaseProtection):
         label=_("Component authentication"), required=False
     )
     _request = None
-
-    class auth_form(forms.Form):
-        use_required_attribute = False
-        password = forms.CharField(
-            label=_("Password"),
-            strip=False,
-            widget=forms.PasswordInput,
-        )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -434,7 +476,7 @@ class LoginProtection(BaseProtection):
     @sensitive_variables("password")
     def auth(cls, request, obj, **kwargs):
         if not obj:
-            return cls.auth_form()
+            return False
 
         username = obj.usercomponent.username
         for password in request.POST.getlist("password")[:4]:
@@ -444,7 +486,7 @@ class LoginProtection(BaseProtection):
                 if obj.data.get("allow_auth", False):
                     return 4
                 return 3
-        return cls.auth_form()
+        return False
 
     @classmethod
     def auth_localize_name(cls, name=None):
@@ -454,8 +496,10 @@ class LoginProtection(BaseProtection):
 @add_by_field(installed_protections, "name")
 class PasswordProtection(BaseProtection):
     name = "password"
-    ptype = ProtectionType.access_control.value
-    ptype += ProtectionType.authentication.value
+    ptype = (
+        ProtectionType.access_control + ProtectionType.authentication +
+        ProtectionType.password
+    )
 
     description = _("Protect with extra passwords")
     prefix = "protection_passwords"
@@ -472,14 +516,6 @@ class PasswordProtection(BaseProtection):
             'node_modules/select2/dist/js/select2%s.js' % _extra,
             'spider_base/protections/PasswordProtection.js'
         ]
-
-    class auth_form(forms.Form):
-        use_required_attribute = False
-        password = forms.CharField(
-            label=_("Extra Password"),
-            strip=False,
-            widget=forms.PasswordInput,
-        )
 
     salt = forms.CharField(
         widget=forms.HiddenInput
@@ -682,12 +718,8 @@ class PasswordProtection(BaseProtection):
     @classmethod
     @sensitive_variables("password", "pw")
     def auth(cls, request, obj, **kwargs):
-        retfalse = cls.auth_form()
         if not obj:
-            retfalse.fields["password"].label = _(
-                "Extra Password (if required)"
-            )
-            return retfalse
+            return False
         success = False
         auth = False
         max_length = 0
@@ -725,7 +757,11 @@ class PasswordProtection(BaseProtection):
             if auth:
                 return 4
             return cls.eval_strength(max_length)
-        return retfalse
+        return False
+
+    @classmethod
+    def localize_name(cls, name=None):
+        return pgettext("protection name", "Extra Passwords")
 
 
 if getattr(settings, "USE_CAPTCHAS", False):

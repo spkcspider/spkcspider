@@ -84,7 +84,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit()
         self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
         response = response.follow()
@@ -238,7 +238,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
         form = response.form
         form.set("username", "testuser1")
-        form.set("password", "abc", index=0)
+        form["password"].force_value("abc")
         response = form.submit()
         self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
         response = response.follow()

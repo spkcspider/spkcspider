@@ -318,6 +318,7 @@ class UserTestMixin(AccessMixin):
             "object": getattr(self, "object", None),
             "is_public_view": self.usercomponent.public
         }
+        assert len(p) > 0
         return self.response_class(
             request=self.request,
             template=self.get_noperm_template_names(),
