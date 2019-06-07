@@ -9,6 +9,7 @@ __all__ = ("installed_protections", "BaseProtection", "ProtectionResult",
 
 import logging
 import binascii
+import functools
 from random import SystemRandom
 from hashlib import sha256
 from base64 import b64encode, b64decode
@@ -92,6 +93,14 @@ def initialize_protection_models(apps=None):
     if invalid_models.exists():
         print("Invalid protections, please update or remove them:",
               [t.code for t in invalid_models])
+
+
+@functools.lru_cache(maxsize=1)
+def amount_pws():
+    Protection = django_apps.get_model("spider_base", "Protection")
+    return max(Protection.objects.filter(
+        ptype__contains=ProtectionType.password.value
+    ).count(), 2)
 
 
 class ProtectionList(list):
@@ -226,7 +235,7 @@ class BaseProtection(forms.Form):
 class PseudoPw(forms.Form):
     """ Pseudoclass, emulates Protection and AssignedProtection """
     # name clashes with the one of PasswordProtection
-    # works because not used in db
+    # works because it is not used in db
     name = "password"
     code = "password"
     ptype = ""
@@ -482,7 +491,7 @@ class LoginProtection(BaseProtection):
             return False
 
         username = obj.usercomponent.username
-        for password in request.POST.getlist("password")[:4]:
+        for password in request.POST.getlist("password")[:amount_pws()]:
             if authenticate(
                 request, username=username, password=password, nospider=True
             ):
@@ -499,7 +508,7 @@ class LoginProtection(BaseProtection):
 @add_by_field(installed_protections, "name")
 class PasswordProtection(BaseProtection):
     # has same name as pseudo pw field,
-    # works because this name is only used in the db
+    # works because it uses the password form and renders no own auth form
     name = "password"
     ptype = (
         ProtectionType.access_control + ProtectionType.authentication +
@@ -729,7 +738,7 @@ class PasswordProtection(BaseProtection):
         auth = False
         max_length = 0
         salt = obj.data.get("salt", "").encode("ascii")
-        for password in request.POST.getlist("password")[:4]:
+        for password in request.POST.getlist("password")[:amount_pws()]:
             if salt:
                 pwhash = cls.hash_pw(
                     password, salt, params=obj.data.get(
