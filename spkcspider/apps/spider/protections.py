@@ -224,6 +224,9 @@ class BaseProtection(forms.Form):
 
 
 class PseudoPw(forms.Form):
+    """ Pseudoclass, emulates Protection and AssignedProtection """
+    # name clashes with the one of PasswordProtection
+    # works because not used in db
     name = "password"
     code = "password"
     ptype = ""
@@ -495,6 +498,8 @@ class LoginProtection(BaseProtection):
 
 @add_by_field(installed_protections, "name")
 class PasswordProtection(BaseProtection):
+    # has same name as pseudo pw field,
+    # works because this name is only used in the db
     name = "password"
     ptype = (
         ProtectionType.access_control + ProtectionType.authentication +
