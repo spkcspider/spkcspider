@@ -73,7 +73,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   {% endif %}
   {% include "spider_base/partials/form_errors.html" with form=form %}
   <form class="w3-padding" id="componentForm" action="{{ request.get_full_path }}" encdata="multipart/form-data" method="post">
-    {% csrf_token %}
+    <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
     <data hidden="hidden" property="type" datatype="xsd:string">Component</data>
     {% if object %}
     <fieldset class="w3-padding">

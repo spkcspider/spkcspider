@@ -390,6 +390,7 @@ def validate(ob, hostpart, task=None):
                     'num_pages': pages
                 }
             )
+    g.remove((None, spkcgraph["csrftoken"], None))
 
     hashable_nodes = set(g.subjects(
         predicate=spkcgraph["hashable"], object=Literal(True)

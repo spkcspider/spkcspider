@@ -12,7 +12,7 @@
   </div>
 
   <form class="w3-padding" method="post" action="">
-    {% csrf_token %}
+    <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
     <button name="confirm" class="w3-button w3-grey">{% trans 'Disable' %}</button>
   </form>
 </div>

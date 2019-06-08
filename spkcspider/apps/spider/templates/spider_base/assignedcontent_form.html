@@ -4,7 +4,7 @@
 {% block render_content %}
 {% include "spider_base/partials/form_errors.html" with form=form %}
 <form class="w3-padding" id="main_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
-  {% csrf_token %}
+  <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
   <fieldset style="width:100%">
     <legend><h2>{% trans 'Content Settings' %}</h2></legend>
     {% include "spider_base/partials/base_form.html" with form=form %}

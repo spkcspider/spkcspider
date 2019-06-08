@@ -163,6 +163,14 @@ spkc:action:delete a rdf:Property ;
   rdfs:domain spkc:Entity ;
   rdfs:range rdfs:Resource .
 
+spkc:csrftoken a rdf:Property ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "csrf token" ;
+  rdfs:comment "csrf token for post; should be removed from saved graphs." ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range xsd:string .
+
+
 spkc:feature:name a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "feature name" ;
