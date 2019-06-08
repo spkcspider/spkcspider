@@ -138,7 +138,7 @@ class UserTestMixin(AccessMixin):
             created__lt=expire, persist=-1
         ).delete()
 
-    def test_token(self, minstrength=0, force_token=False):
+    def test_token(self, minstrength=0, force_token=False, taint=False):
         expire = timezone.now()-self.usercomponent.token_duration
         no_token = not force_token and self.usercomponent.required_passes == 0
         ptype = ProtectionType.access_control.value
@@ -171,7 +171,10 @@ class UserTestMixin(AccessMixin):
             # case will never enter
             # if not token.session_key and "token" not in self.request.GET:
             #     return self.replace_token()
-            if token.extra.get("prot_strength", 0) >= 4:
+            if (
+                token.extra["prot_strength"] >= 4 and
+                not token.extra.get("taint", False)
+            ):
                 self.request.is_special_user = True
                 self.request.is_owner = True
             self.request.auth_token = token
@@ -215,11 +218,15 @@ class UserTestMixin(AccessMixin):
             token = self.create_token(
                 extra={
                     "strength": self.usercomponent.strength,
-                    "prot_strength": self.request.protections
+                    "prot_strength": self.request.protections,
+                    "taint": taint
                 }
             )
 
-            if token.extra["prot_strength"] >= 4:
+            if (
+                token.extra["prot_strength"] >= 4 and
+                not token.extra.get("taint", False)
+            ):
                 self.request.is_special_user = True
                 self.request.is_owner = True
 
@@ -367,7 +374,7 @@ class ReferrerMixin(object):
             ))
         return super().get_context_data(**kwargs)
 
-    def test_token(self, minstrength, force_token=False):
+    def test_token(self, minstrength, force_token=False, taint=False):
         if "intention" in self.request.GET or "referrer" in self.request.GET:
             # validate early, before auth
             intentions = set(self.request.GET.getlist("intention"))
@@ -389,13 +396,16 @@ class ReferrerMixin(object):
                 # requires token
                 force_token = True
             else:
+                # can be either domain or auth to not have taint flag
+                if "auth" not in intentions:
+                    taint = True
                 # maximal one main intention
                 if len(intentions.difference(VALID_SUB_INTENTIONS)) > 1:
                     return HttpResponse(
                         "invalid intentions", status=400
                     )
                 minstrength = 4
-        return super().test_token(minstrength, force_token)
+        return super().test_token(minstrength, force_token, taint)
 
     def refer_with_post(self, context, token):
         # application/x-www-form-urlencoded is best here,
@@ -725,7 +735,8 @@ class ReferrerMixin(object):
                     token = AuthToken(
                         usercomponent=self.usercomponent,
                         extra={
-                            "strength": 10
+                            "strength": 10,
+                            "taint": False
                         }
                     )
             else:
@@ -742,6 +753,7 @@ class ReferrerMixin(object):
                     token = self.request.auth_token
 
             # set to zero as prot_strength can elevate perms
+            token.extra["taint"] = False
             token.extra["prot_strength"] = 0
             token.extra["intentions"] = list(context["intentions"])
 

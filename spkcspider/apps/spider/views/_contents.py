@@ -243,13 +243,21 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         # block view on special objects for non user and non superusers
         if self.usercomponent.is_index:
             return False
-        # export is only available for user and staff with permission
 
+        # export is only available for user and staff with permission
         minstrength = 0
         if self.scope in ["export"] or self.usercomponent.strength in (4, 9):
             minstrength = 4
 
-        return self.test_token(minstrength)
+        # limit tainted
+        ret = self.test_token(minstrength)
+        if (
+            self.request.auth_token and
+            self.request.auth_token.extra.get("taint", False) and
+            "referrer" not in self.request.GET
+        ):
+            return False
+        return ret
 
     def get_paginate_by(self, queryset):
         if self.scope == "export" or "raw" in self.request.GET:
@@ -406,6 +414,11 @@ class ContentAdd(ContentBase, CreateView):
         if self.has_special_access(
             user_by_login=True, user_by_token=True, superuser=False
         ):
+            if (
+                self.request.auth_token and
+                self.request.auth_token.extra.get("taint", False)
+            ):
+                return False
             return True
         return False
 
@@ -607,7 +620,14 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             self.usercomponent.strength in (4, 9)
         ):
             minstrength = 4
-        return self.test_token(minstrength)
+        ret = self.test_token(minstrength)
+        if (
+            self.request.auth_token and
+            self.request.auth_token.extra.get("taint", False) and
+            "referrer" not in self.request.GET
+        ):
+            return False
+        return ret
 
     def get_usercomponent(self):
         travel = self.get_travel_for_request().filter(
@@ -715,10 +735,17 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
         staff_perm = not self.usercomponent.is_index
         if staff_perm:
             staff_perm = "spider_base.delete_assignedcontent"
-        return self.has_special_access(
+        ret = self.has_special_access(
             user_by_login=True, user_by_token=True,
             staff=staff_perm, superuser=True
         )
+        if (
+            self.request.auth_token and
+            self.request.auth_token.extra.get("taint", False) and
+            "referrer" not in self.request.GET
+        ):
+            return False
+        return ret
 
     def get_required_timedelta(self):
         _time = self.object.content.deletion_period

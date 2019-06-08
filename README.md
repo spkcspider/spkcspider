@@ -266,11 +266,12 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * examples
 * documentation
 * test admin
-* tests for other dbs than sqlite3 (and postgresql)
 * Localisation
   * harmonize punctation
-* good permission model for TravelProtection
-* MAYBE: remove dispatch_uid of signals or harmonize
+* Token management:
+  * rework (or remove) token management in update
+  * allow changing intentions
+  * special handling of auth intention
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
