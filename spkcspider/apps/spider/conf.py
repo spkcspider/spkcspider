@@ -1,9 +1,11 @@
 __all__ = [
-    "media_extensions", "image_extensions", "get_anchor_domain",
+    "media_extensions", "image_extensions",
+    "get_anchor_domain", "get_anchor_scheme",
     "INITIAL_STATIC_TOKEN_SIZE", "STATIC_TOKEN_CHOICES",
     "default_uctoken_duration", "TOKEN_SIZE", "FILE_TOKEN_SIZE",
     "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS"
 ]
+import re
 import functools
 import datetime
 from django.conf import settings
@@ -34,6 +36,19 @@ def get_anchor_domain():
         return _anchor_domain
     from django.contrib.sites.models import Site
     return Site.objects.get(id=settings.SITE_ID).domain
+
+
+@functools.lru_cache(1)
+def get_anchor_scheme():
+    if getattr(settings, "SPIDER_ANCHOR_SCHEME", None) is not None:
+        return settings.SPIDER_ANCHOR_SCHEME
+    _anchor_domain = get_anchor_domain()
+    if any(
+        re.search(pattern, _anchor_domain)
+        for pattern in getattr(settings, "SECURE_REDIRECT_EXEMPT", [])
+    ):
+        return "http"
+    return "https"
 
 
 INITIAL_STATIC_TOKEN_SIZE = str(

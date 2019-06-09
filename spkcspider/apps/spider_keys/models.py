@@ -22,7 +22,7 @@ from jsonfield import JSONField
 from spkcspider.apps.spider.helpers import get_hashob
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.constants import VariantType
-from spkcspider.apps.spider.conf import get_anchor_domain
+from spkcspider.apps.spider.conf import get_anchor_domain, get_anchor_scheme
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +199,9 @@ class AnchorBase(BaseContent):
         if not self.associated.id:
             return None
         ret = urljoin(
-            "{}://{}".format(request.scheme, get_anchor_domain()), reverse(
+            "{}://{}".format(
+                get_anchor_scheme(), get_anchor_domain()
+            ), reverse(
                 "spider_keys:anchor-permanent",
                 kwargs={"pk": self.associated.id}
             )

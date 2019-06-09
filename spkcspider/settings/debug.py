@@ -55,6 +55,9 @@ VERIFIER_MAX_SIZE_DIRECT_ACCEPTED = 2000000
 # controls inlining of verifier, defaults to SPIDER_INLINE
 # VERIFIER_INLINE = False
 
+
+SPIDER_ANCHOR_SCHEME = "http"
+
 # not required, SpiderTokenAuthBackend have to be tested, so here active
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

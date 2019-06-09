@@ -33,6 +33,7 @@ import ratelimit
 
 from .signals import failed_guess
 from .constants import spkcgraph
+from .conf import get_anchor_domain, get_anchor_scheme
 from .helpers import get_requests_params
 
 
@@ -172,6 +173,11 @@ def validate_url_default(url, view=None):
     elif url.scheme == "http":
         # MAKE SURE that you control your dns
         if url.netloc.endswith(".onion"):
+            return True
+        elif (
+            get_anchor_domain() == url.netloc and
+            get_anchor_scheme() == "http"
+        ):
             return True
         elif settings.DEBUG:
             return True
