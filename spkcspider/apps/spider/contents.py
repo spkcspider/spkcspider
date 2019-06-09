@@ -702,12 +702,13 @@ class BaseContent(models.Model):
                 # csrferror is HttpResponse
                 return csrferror
         ret = func(**context)
-        if context["scope"] == "update":
-            # update function should never return HttpResponse for GET
-            assert(
+        # update function should never return HttpResponse for GET
+        assert (
+            context["scope"] != "update" or (
                 not isinstance(ret, HttpResponseBase) or
                 context["request"].method != "GET"
             )
+        )
         return ret
 
     def get_info(self, unique=None, unlisted=None):
