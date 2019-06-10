@@ -1,7 +1,7 @@
 
 document.addEventListener("DOMContentLoaded", function(){
-  $(".OpenChoiceTarget").selectize({
-    create: true,
+  $(".SelectizeWidgetTarget").selectize({
+    create: false,
     delimiter: null,
     plugins: {
       'remove_button': {}

@@ -8,15 +8,17 @@
   <form class="" method="POST" action="{{searchpath}}">
     {% csrf_token %}
     <div style="white-space: nowrap;">
-      <select name="search" id="search_field_list_footer" multiple="multiple">
-        {% if request.is_special_user and "_unlisted" not in cur_search %}
-          <option value="_unlisted">_unlisted</option>
-        {% endif %}
-        {% for elem in cur_search %}
-          <option selected="selected" value="{{elem}}">{{elem}}</option>
-        {% endfor %}
-      </select>
-      <button class="w3-button w3-gray" aria-label="{% trans 'Search' %}"><i class="fas fa-search" aria-hidden="true"></i></button>
+      <span style="display:inline-block; width:80%">
+        <select name="search" id="search_field_list_footer" multiple="multiple">
+          {% if request.is_special_user and "_unlisted" not in cur_search %}
+            <option value="_unlisted">_unlisted</option>
+          {% endif %}
+          {% for elem in cur_search %}
+            <option selected="selected" value="{{elem}}">{{elem}}</option>
+          {% endfor %}
+        </select>
+      </span>
+      <button class="w3-button w3-gray" style="vertical-align: top;" aria-label="{% trans 'Search' %}"><i class="fas fa-search" aria-hidden="true"></i></button>
       {# for clearing search #}
       {% if cur_search %}
         <button class="w3-button w3-gray" form="list_clear_form" aria-label="{% trans 'clear' %}">X</button>
@@ -69,11 +71,13 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  $("#search_field_list_footer").select2({
-    tags: true,
-    width: '80%',
+  $("#search_field_list_footer").selectize({
+    create: true,
     placeholder: '{% trans "Search" %}',
-    language: document.documentElement.lang || "en",
+    delimiter: null,
+    plugins: {
+      'remove_button': {}
+    }
   });
 });
 </script>

@@ -23,7 +23,7 @@ from ..models import LinkContent, TravelProtection, AssignedContent
 from ..fields import MultipleOpenChoiceField, ContentMultipleChoiceField
 from ..helpers import get_settings_func
 from ..widgets import (
-    OpenChoiceWidget, RomeDatetimePickerWidget, Select2Widget
+    OpenChoiceWidget, RomeDatetimePickerWidget, SelectizeWidget
 )
 
 
@@ -141,7 +141,7 @@ class TravelProtectionForm(forms.ModelForm):
     protect_contents = ContentMultipleChoiceField(
         queryset=AssignedContent.objects.all(), required=False,
         to_field_name="id",
-        widget=Select2Widget(
+        widget=SelectizeWidget(
             allow_multiple_selected=True,
             attrs={
                 "style": "min-width: 250px; width:100%"
@@ -161,7 +161,7 @@ class TravelProtectionForm(forms.ModelForm):
             "protect_components", "protect_contents", "trigger_pws"
         ]
         widgets = {
-            "protect_components": Select2Widget(
+            "protect_components": SelectizeWidget(
                  allow_multiple_selected=True,
                  attrs={
                      "style": "min-width: 250px; width:100%"

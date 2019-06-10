@@ -1,5 +1,5 @@
 __all__ = [
-    "Select2Widget", "OpenChoiceWidget", "StateButtonWidget",
+    "SelectizeWidget", "OpenChoiceWidget", "StateButtonWidget",
     "TrumbowygWidget", "HTMLWidget", "SubSectionStartWidget",
     "SubSectionStopWidget", "ListWidget", "RomeDatetimePickerWidget"
 ]
@@ -144,20 +144,20 @@ class SubSectionStopWidget(HTMLWidget):
     template_name = 'spider_base/forms/widgets/subsectionstop.html'
 
 
-class Select2Widget(widgets.Select):
-    anchor_class = "Select2WidgetTarget"
+class SelectizeWidget(widgets.Select):
+    anchor_class = "SelectizeWidgetTarget"
 
     class Media:
-        js = [
-            'node_modules/jquery/dist/jquery%s.js' % _extra,
-            'node_modules/select2/dist/js/select2%s.js' % _extra,
-            'spider_base/Select2Widget.js'
-        ]
         css = {
             'all': [
-                'node_modules/select2/dist/css/select2%s.css' % _extra
+                'node_modules/selectize/dist/css/selectize.default.css'
             ]
         }
+        js = [
+            'node_modules/jquery/dist/jquery%s.js' % _extra,
+            'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra,  # noqa: E501
+            'spider_base/SelectizeWidget.js'
+        ]
 
     def __init__(self, allow_multiple_selected, *, attrs=None, **kwargs):
         self.allow_multiple_selected = allow_multiple_selected
@@ -174,12 +174,12 @@ class OpenChoiceWidget(widgets.Select):
     class Media:
         css = {
             'all': [
-                'node_modules/select2/dist/css/select2.min.css'
+                'node_modules/selectize/dist/css/selectize.default.css'
             ]
         }
         js = [
             'node_modules/jquery/dist/jquery%s.js' % _extra,
-            'node_modules/select2/dist/js/select2%s.js' % _extra,
+            'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra,  # noqa: E501
             'spider_base/OpenChoiceWidget.js'
         ]
 

@@ -19,7 +19,7 @@ from ..constants import (
     ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
 )
 from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
-# from ..widgets import Select2Widget
+# from ..widgets import SelectizeWidget
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class UserComponentForm(forms.ModelForm):
                     "maxlength": settings.SPIDER_MAX_DESCRIPTION_LENGTH+1
                 }
             ),
-            # 'primary_anchor': Select2Widget(
+            # 'primary_anchor': SelectizeWidget(
             #    allow_multiple_selected=False,
             #    attrs={
             #        "style": "min-width: 150px; width:100%"
@@ -382,7 +382,7 @@ class UserContentForm(forms.ModelForm):
             'features': _help_text_features_contents,
         }
         widgets = {
-            # 'usercomponent': Select2Widget(
+            # 'usercomponent': SelectizeWidget(
             #     allow_multiple_selected=False,
             #     attrs={
             #         "style": "min-width: 150px; width:100%"

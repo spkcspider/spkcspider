@@ -17,7 +17,7 @@ from spkcspider.apps.spider.fields import (
     OpenChoiceField, MultipleOpenChoiceField
 )
 from spkcspider.apps.spider.widgets import (
-    ListWidget, Select2Widget, TrumbowygWidget
+    ListWidget, SelectizeWidget, TrumbowygWidget
 )
 
 _extra = '' if settings.DEBUG else '.min'
@@ -138,7 +138,7 @@ class TextForm(forms.ModelForm):
         ]
 
         widgets = {
-            "editable_from": Select2Widget(
+            "editable_from": SelectizeWidget(
                 allow_multiple_selected=True,
                 attrs={
                     "style": "min-width: 150px; width:100%"

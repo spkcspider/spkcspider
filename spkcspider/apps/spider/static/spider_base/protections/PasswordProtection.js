@@ -23,27 +23,6 @@ let getKeyForPw = function(pw,salt){
   });
 }
 
-let init_select2 = function(){
-  /* also for refreshing, at least tag attribute is required */
-  $(".PWProtectionTarget").select2({
-    tags: true,
-    width: 'element',
-    language: document.documentElement.lang || "en",
-    createTag: function (params) {
-      let term = $.trim(params.term);
-
-      if (term == '') {
-        return null;
-      }
-      all_succeeded = false;
-      return {
-        "id": `bogo:${term}`,
-        "text": term
-      };
-    }
-  });
-}
-
 let updatePWs = async function(pwfrom, pwto, salt){
   let tencoder = new TextEncoder();
   let tdecoder = new TextDecoder();
@@ -51,7 +30,6 @@ let updatePWs = async function(pwfrom, pwto, salt){
   let to_key = await getKeyForPw(pwto, salt);
   let promises = [];
   let has_error=false;
-  let needs_update = false;
   $(".PWProtectionTarget > option").each(function() {
     if (!this.selected){
       return;
@@ -77,7 +55,6 @@ let updatePWs = async function(pwfrom, pwto, salt){
       function(result){
         let new_iv = window.crypto.getRandomValues(new Uint8Array(16));
         opt.text = tdecoder.decode(result);
-        needs_update = true;
         return window.crypto.subtle.encrypt(
           {
             name: "AES-GCM",
@@ -87,7 +64,15 @@ let updatePWs = async function(pwfrom, pwto, salt){
           result
         ).then(
           function(result2){
+            let oldval=opt.value;
             opt.value = `${base64js.fromByteArray(new_iv)}:${base64js.fromByteArray(new Uint8Array(result2))}`;
+            opt.parentElement.selectize.updateOption(
+              oldval,
+              {
+                text: opt.text,
+                value: opt.value
+              }
+            );
             return Promise.resolve();
           },
           function(error2){
@@ -105,12 +90,6 @@ let updatePWs = async function(pwfrom, pwto, salt){
     ));
   });
   await Promise.all(promises);
-  if (needs_update){
-    /*$(".PWProtectionTarget").each(function(e) {
-      e.trigger()
-    })*/
-    init_select2();
-  }
   return !has_error;
 }
 
@@ -119,6 +98,7 @@ document.addEventListener("DOMContentLoaded", async function(){
   /* for encode/decoding */
   let tencoder = new TextEncoder();
   let tdecoder = new TextDecoder();
+  let selectizers = null;
   let some_succeeded = false;
   let block_submits = true;
   let promises = [];
@@ -176,8 +156,20 @@ document.addEventListener("DOMContentLoaded", async function(){
     }
   });
   await Promise.all(promises);
-  init_select2();
-
+  selectizers = $(".PWProtectionTarget").selectize({
+    delimiter: null,
+    plugins: {
+      'remove_button': {}
+    },
+    create: function (input) {
+      let term = $.trim(input);
+      all_succeeded = false;
+      return {
+        "value": `bogo:${term}`,
+        "text": term
+      };
+    }
+  });
 
   let change_master_pw_handler = async function (event){
     let effective_pw = default_master_pw;
@@ -185,7 +177,7 @@ document.addEventListener("DOMContentLoaded", async function(){
       effective_pw = event.target.value;
     }
     block_submits=true;
-    $(".PWProtectionTarget").prop("disabled", true);
+    selectizers.each(function(){this.selectize.lock()});
     if (some_succeeded){
       await updatePWs(last_pw, effective_pw, salt);
     } else {
@@ -194,7 +186,7 @@ document.addEventListener("DOMContentLoaded", async function(){
       }
     }
     last_pw = effective_pw;
-    $(".PWProtectionTarget").prop("disabled", false);
+    selectizers.each(function(){this.selectize.unlock()});
     block_submits=false;
   }
 
