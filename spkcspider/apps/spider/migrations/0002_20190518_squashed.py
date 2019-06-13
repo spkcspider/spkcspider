@@ -192,11 +192,6 @@ class Migration(migrations.Migration):
             name='attached_to_token',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='spider_base.AuthToken'),
         ),
-        migrations.AddField(
-            model_name='usercomponent',
-            name='allow_domain_mode',
-            field=models.BooleanField(default=False),
-        ),
         migrations.CreateModel(
             name='ReferrerObject',
             fields=[
@@ -211,11 +206,6 @@ class Migration(migrations.Migration):
             model_name='authtoken',
             name='referrer',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tokens', to='spider_base.ReferrerObject'),
-        ),
-        migrations.AddField(
-            model_name='assignedcontent',
-            name='allow_domain_mode',
-            field=models.BooleanField(default=False),
         ),
         migrations.AddField(
             model_name='assignedcontent',
@@ -290,14 +280,6 @@ class Migration(migrations.Migration):
             model_name='contentvariant',
             name='valid_feature_for',
             field=models.ManyToManyField(blank=True, related_name='valid_features', to='spider_base.ContentVariant'),
-        ),
-        migrations.RemoveField(
-            model_name='assignedcontent',
-            name='allow_domain_mode',
-        ),
-        migrations.RemoveField(
-            model_name='usercomponent',
-            name='allow_domain_mode',
         ),
     ]
     if (

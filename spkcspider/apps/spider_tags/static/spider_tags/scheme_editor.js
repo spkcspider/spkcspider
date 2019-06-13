@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function(){
       theme: 'html',
       iconlib: 'fontawesome5',
       disable_collapse: true,
+      startval: JSON.parse(element.value),
       form_name_root:"",
       schema: {
         "title": "Schema",
@@ -96,7 +97,6 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
     element.style.display = 'none';
-    scheme_editor.setValue(JSON.parse(element.value));
     let clean_handler = function (ev){
       /* if visible ignore */
       if (element.style.display !== 'none'){

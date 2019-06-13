@@ -14,10 +14,18 @@ document.addEventListener("DOMContentLoaded", function(){
     } catch(e){
       console.log(e);
     }
+    let orig_val = [];
+    for (let count=0; count < element.options.length; count++)
+    {
+      if (element.options[count].hasAttribute("selected")){
+        orig_val.push(element.options[count].value)
+      }
+    }
     let editor = new JSONEditor(document.getElementById(`${element.id}_inner_wrapper`), {
       theme: 'html',
       iconlib: 'fontawesome5',
       disable_collapse: true,
+      startval: orig_val,
       form_name_root:"",
       schema: {
         "type": "array",
@@ -34,14 +42,6 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
     element.style.display = "none";
-    let orig_val = [];
-    for (let count=0; count < element.options.length; count++)
-    {
-      if (element.options[count].hasAttribute("selected")){
-        orig_val.push(element.options[count].value)
-      }
-    }
-    editor.setValue(orig_val);
     let handler = function (ev){
       let errors = editor.validate();
       if (errors.length){
