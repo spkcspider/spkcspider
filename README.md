@@ -50,6 +50,22 @@ npm install --no-save
 
 ## Caveats
 
+allow_domain_mode NULL errors:
+
+some migration failed and now it is neccessary to redo them manually
+
+connect to database and execute:
+ALTER TABLE spider_base_usercomponent DROP COLUMN allow_domain_mode;
+ALTER TABLE spider_base_assignedcontent DROP COLUMN allow_domain_mode;
+
+this doesn't work in sqlite3 (
+  export data (and remove allow_domain_mode if specified)
+  recreate db file
+  import data
+  see: http://www.sqlitetutorial.net/sqlite-alter-table/ why you don't want to try it manually
+)
+
+
 Mysql works with some special settings:
 Require mysql to use utf8 charset
 To unbreak tests, use 'CHARSET': 'utf8':
