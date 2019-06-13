@@ -127,7 +127,7 @@ class SpiderTagForm(forms.ModelForm):
     updateable_by = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url"
+            format_type="url", item_label=_("Url to Verifier")
         )
     )
     layout = forms.ModelChoiceField(

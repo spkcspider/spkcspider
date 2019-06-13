@@ -37,7 +37,7 @@ class ListWidget(widgets.SelectMultiple):
 
     def __init__(
         self, *, attrs=None, wrapper_attrs=None,
-        format_type="text", item_label=_("item"), **kwargs
+        format_type="text", item_label=_("Item"), **kwargs
     ):
         if not attrs:
             attrs = {"class": ""}
