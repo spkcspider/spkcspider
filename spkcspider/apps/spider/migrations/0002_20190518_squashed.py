@@ -11,8 +11,6 @@ import spkcspider.apps.spider.validators
 
 class Migration(migrations.Migration):
 
-    replaces = [('spider_base', '0002_20190127_squashed'), ('spider_base', '0003_auto_20190128_1339'), ('spider_base', '0004_auto_20190128_1349'), ('spider_base', '0005_auto_20190128_2230'), ('spider_base', '0006_auto_20190128_2251'), ('spider_base', '0007_usercomponent_allow_domain_mode'), ('spider_base', '0008_auto_20190225_2034'), ('spider_base', '0009_auto_20190317_1405'), ('spider_base', '0010_assignedcontent_attached_to_primary_anchor'), ('spider_base', '0011_auto_20190331_1222'), ('spider_base', '0012_auto_20190404_2116'), ('spider_base', '0013_auto_20190407_1313'), ('spider_base', '0014_auto_20190407_1416'), ('spider_base', '0015_auto_20190414_1743'), ('spider_base', '0016_auto_20190414_1743'), ('spider_base', '0017_auto_20190504_1640'), ('spider_base', '0018_auto_20190505_1336'), ('spider_base', '0019_contentvariant_valid_feature_for'), ('spider_base', '0020_auto_20190509_1520'), ('spider_base', '0021_auto_20190511_1046'), ('spider_base', '0022_auto_20190512_1630'), ('spider_base', '0023_auto_20190513_1506'), ('spider_base', '0024_auto_20190514_1853')]
-
     dependencies = [
         ('spider_base', '0001_initial'),
         ('contenttypes', '0002_remove_content_type_name'),
