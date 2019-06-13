@@ -1,11 +1,11 @@
 
-JSONEditor.plugins.select2.enable = true;
+/* JSONEditor.plugins.selectize.enable = true; */
 
 document.addEventListener("DOMContentLoaded", function(){
   let collection = document.getElementsByClassName("SchemeEditorTarget");
   for (let counter=0;counter<collection.length;counter++){
     let element = collection[counter];
-    let field_types = []
+    let field_types = [];
     try{
       field_types = JSON.parse(element.attributes.field_types.value);
     } catch(e){
@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function(){
       theme: 'html',
       iconlib: 'fontawesome5',
       disable_collapse: true,
+      form_name_root:"",
       schema: {
         "title": "Schema",
         "$ref": "#/definitions/fieldarray",

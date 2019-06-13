@@ -13,17 +13,17 @@ class SchemeWidget(widgets.Textarea):
     template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
 
     class Media:
+        # css = {
+        #     'all': [
+        #         'node_modules/selectize/dist/css/selectize.default.css'
+        #     ]
+        # }
         js = [
-            'node_modules/jquery/dist/jquery%s.js' % _extra,
-            'node_modules/select2/dist/js/select2%s.js' % _extra,
+            # 'node_modules/jquery/dist/jquery%s.js' % _extra,
+            # 'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra,  # noqa: E501
             'node_modules/@json-editor/json-editor/dist/jsoneditor%s.js' % _extra,  # noqa:E501,
             'spider_tags/scheme_editor.js'
         ]
-        css = {
-            'all': [
-                'node_modules/select2/dist/css/select2%s.css' % _extra
-            ]
-        }
 
     def __init__(self, *, attrs=None, wrapper_attrs=None, **kwargs):
         if not attrs:

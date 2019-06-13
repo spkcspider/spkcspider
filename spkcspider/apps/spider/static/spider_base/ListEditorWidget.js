@@ -18,10 +18,11 @@ document.addEventListener("DOMContentLoaded", function(){
       theme: 'html',
       iconlib: 'fontawesome5',
       disable_collapse: true,
+      form_name_root:"",
       schema: {
         "type": "array",
         "options": {
-          "compact": true
+          "compact": true,
         },
         "format": "table",
         "uniqueItems": true,
