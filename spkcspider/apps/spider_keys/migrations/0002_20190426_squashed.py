@@ -8,8 +8,6 @@ import spkcspider.apps.spider_keys.models
 
 class Migration(migrations.Migration):
 
-    replaces = [('spider_keys', '0002_anchorkey_anchorserver'), ('spider_keys', '0003_auto_20190130_1137'), ('spider_keys', '0004_auto_20190221_2253'), ('spider_keys', '0005_remove_publickey_note'), ('spider_keys', '0006_auto_20190425_2159')]
-
     dependencies = [
         ('spider_keys', '0001_initial'),
     ]
