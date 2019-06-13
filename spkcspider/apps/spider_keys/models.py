@@ -59,7 +59,7 @@ class PublicKey(BaseContent):
     key = models.TextField(
         editable=True, validators=[valid_pkey_properties],
         help_text=_(
-            "It is recommended to use different keys"
+            "It is recommended to use different keys "
             "for signing and encryption"
         )
     )

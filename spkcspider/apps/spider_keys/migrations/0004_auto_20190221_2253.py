@@ -24,6 +24,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='publickey',
             name='key',
-            field=models.TextField(help_text='It is recommended to use different keysfor signing and encryption', validators=[spkcspider.apps.spider_keys.models.valid_pkey_properties]),
+            field=models.TextField(help_text='It is recommended to use different keys for signing and encryption', validators=[spkcspider.apps.spider_keys.models.valid_pkey_properties]),
         ),
     ]
