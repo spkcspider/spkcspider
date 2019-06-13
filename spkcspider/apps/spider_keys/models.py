@@ -123,7 +123,9 @@ class PublicKey(BaseContent):
         name = self.get_key_name()[1]
         if not name:
             name = "{}...".format(
-                self.associated.getlist("hash", amount=1)[0][:10]
+                self.associated.getlist("hash", amount=1)[0].split(
+                    "=", 1
+                )[-1][:10]
             )
         if len(self.associated.description) > 0:
             name = "{}: {}".format(name, self.associated.description[:20])
@@ -296,7 +298,9 @@ class AnchorKey(AnchorBase):
         name = self.key.get_key_name()[1]
         if not name:
             name = "{}...".format(
-                self.key.associated.getlist("hash", amount=1)[0][:10]
+                self.key.associated.getlist("hash", amount=1)[0].split(
+                    "=", 1
+                )[-1][:10]
             )
         if len(self.associated.description) > 0:
             name = "{}: {}".format(name, self.associated.description[:20])
