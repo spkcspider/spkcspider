@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('spider_base', '0008_auto_20190225_2034'),
+        ('spider_base', '0002_20190518_squashed'),
         ('spider_tags', '0005_spidertag_updateable_by'),
     ]
 

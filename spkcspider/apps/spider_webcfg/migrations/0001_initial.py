@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('spider_base', '0002_20190127_squashed'),
+        ('spider_base', '0002_20190518_squashed'),
     ]
 
     operations = [
