@@ -11,6 +11,9 @@ class Migration(migrations.Migration):
     dependencies = [
         ('spider_keys', '0001_initial'),
     ]
+    replaces = [
+        ('spider_keys', '0002_0002_20190426_squashed'),
+    ]
 
     operations = [
         migrations.CreateModel(
