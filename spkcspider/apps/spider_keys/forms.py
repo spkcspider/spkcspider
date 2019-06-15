@@ -18,6 +18,11 @@ from .models import PublicKey, AnchorServer, AnchorKey
 
 
 class KeyForm(forms.ModelForm):
+    hash_algorithm = forms.CharField(
+        widget=forms.HiddenInput(), initial=settings.SPIDER_HASH_ALGORITHM.name
+    )
+    setattr(hash_algorithm, "hashable", False)
+
     class Meta:
         model = PublicKey
         fields = ['key']

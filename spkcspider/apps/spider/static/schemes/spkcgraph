@@ -56,7 +56,9 @@ spkc:Feature a rdfs:Class ;
 spkc:Intention a rdfs:Class ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Intention" ;
-  rdfs:comment "What can be done with referred token." .
+  rdfs:comment "What can be done with referred token." ;
+  rdf:Bag xsd:string ;
+  rdfs:domain rdfs:Resource .
 
 
 spkc:Protection a rdfs:Class ;
@@ -71,7 +73,6 @@ spkc:contents a rdf:Property ;
   rdfs:comment "Set of Contents" ;
   rdf:Seq spkc:Content ;
   rdfs:domain rdfs:Resource .
-
 
 spkc:components a rdf:Property ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

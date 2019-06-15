@@ -31,7 +31,11 @@ logger = logging.getLogger(__name__)
 
 _help_text_sig = _("""Signature of Identifier (hexadecimal-encoded)""")
 
-_help_text_key = _(""""Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption.""")  # noqa
+_help_text_key = _(
+    '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501
+    "Reason herefor is, that with a change of the signing key the whole anchor gets invalid and the signing key should be really carefully saved away. "  # noqa: E501
+    "In contrast the encryption keys can be easily exchanged and should be available for encryption"  # noqa: E501
+)
 
 ID_VERIFIERS = {
 
@@ -58,10 +62,6 @@ class PublicKey(BaseContent):
 
     key = models.TextField(
         editable=True, validators=[valid_pkey_properties],
-        help_text=_(
-            "It is recommended to use different keys "
-            "for signing and encryption"
-        )
     )
 
     @classmethod
