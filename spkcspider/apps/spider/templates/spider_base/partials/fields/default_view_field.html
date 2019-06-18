@@ -1,0 +1,45 @@
+{% load i18n spider_rdf %}
+
+<li typeof="spkc:Property">
+  <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.html_name}}</data>
+  <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
+  {% hashable_literalize field as hashable %}
+  <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
+  <div>{{ field.label_tag }}</div>
+  {% if field.field.widget.allow_multiple_selected %}
+    <ul class="w3-white">
+      {% for val in field|field_to_python %}
+        {% literalize val field as LiteralData %}
+        {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
+          {% if LiteralData|is_uriref %}
+            <li style="{{extra_style_field}}" property="spkc:value">
+              <a href="{{LiteralData}}">{{val|default_if_none:""}}</a>
+            </li>
+          {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref %}
+            <li style="{{extra_style_field}}">
+              <data property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
+              <a href="{{LiteralData}}">{{val|default_if_none:""}}</a>
+            </li>
+          {% else %}
+            <li style="{{extra_style_field}}" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{val|default_if_none:""}}</li>
+          {% endif %}
+        {% endif %}
+      {% empty %}
+        <li property="spkc:value" hidden="hidden" resource="rdf:nil"></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {% literalize field as LiteralData %}
+    {% if LiteralData|is_uriref %}
+      <a style="{{extra_style_field}}" class="w3-white" property="spkc:value" href="{{LiteralData}}">{{field|field_to_python|default_if_none:""}}</a>
+    {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref %}
+      <span style="{{extra_style_field}}">
+        <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
+        <a class="w3-white" href="{{LiteralData}}" resource="">{{field|field_to_python|default_if_none:""}}</a>
+      </span>
+    {% else %}
+      {% literalize field as LiteralData %}
+      <span style="{{extra_style_field}}" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}" class="w3-white">{{field|field_to_python|default_if_none:""}}</span>
+    {% endif %}
+  {% endif %}
+</li>
