@@ -445,7 +445,7 @@ def validate(ob, hostpart, task=None):
             # do not use add as it could be corrupted by user
             # (user can provide arbitary data)
             g.set((
-                URIRef(t[2].value),
+                URIRef(lit.value),
                 spkcgraph["hash"],
                 Literal(h.finalize().hex())
             ))
@@ -474,7 +474,7 @@ def validate(ob, hostpart, task=None):
                     # do not use add as it could be corrupted by user
                     # (user can provide arbitary data)
                     g.set((
-                        URIRef(t[2].value),
+                        URIRef(lit.value),
                         spkcgraph["hash"],
                         Literal(h.finalize().hex())
                     ))
