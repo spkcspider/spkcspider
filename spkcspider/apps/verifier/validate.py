@@ -15,6 +15,7 @@ from django.core import exceptions
 from django.test import Client
 
 from rdflib import Graph, URIRef, Literal
+from rdflib.resource import Resource
 from rdflib.namespace import XSD
 import requests
 
@@ -34,35 +35,34 @@ valid_wait_states = {
 }
 
 
-def hash_entry(triple):
+def hash_entry(lit):
     h = get_hashob()
-    if triple[2].datatype == XSD.base64Binary:
-        h.update(triple[2].datatype.encode("utf8"))
-        h.update(triple[2].toPython())
+    if lit.datatype == XSD.base64Binary:
+        h.update(lit.datatype.encode("utf8"))
+        h.update(lit.toPython())
     else:
-        if triple[2].datatype:
-            h.update(triple[2].datatype.encode("utf8"))
+        if lit.datatype:
+            h.update(lit.datatype.encode("utf8"))
         else:
             h.update(XSD.string.encode("utf8"))
-        h.update(triple[2].encode("utf8"))
+        h.update(lit.encode("utf8"))
     return h.finalize()
 
 
 def yield_hashes(graph, hashable_nodes):
-    for t in graph.triples((None, spkcgraph["value"], None)):
-        if (
-            t[0] in hashable_nodes and
-            t[2].datatype != spkcgraph["hashableURI"]
-        ):
-            yield hash_entry(t)
+    for t in hashable_nodes:
+        for t2 in t[spkcgraph["value"]]:
+            if t2.datatype == spkcgraph["hashableURI"]:
+                continue
+            yield hash_entry(t2)
 
 
 def yield_hashable_urls(graph, hashable_nodes):
-    for t in graph.triples(
-        (None, spkcgraph["value"], spkcgraph["hashableURI"])
-    ):
-        if t[0] in hashable_nodes:
-            yield t
+    for t in hashable_nodes:
+        for t2 in t[spkcgraph["value"]]:
+            if t2.datatype != spkcgraph["hashableURI"]:
+                continue
+            yield t2
 
 
 def verify_download_size(length, current_size=0):
@@ -392,12 +392,15 @@ def validate(ob, hostpart, task=None):
             )
     g.remove((None, spkcgraph["csrftoken"], None))
 
-    hashable_nodes = set(g.subjects(
-        predicate=spkcgraph["hashable"], object=Literal(True)
+    hashable_nodes = set(map(
+        lambda x: Resource(g, x),
+        g.subjects(
+            predicate=spkcgraph["hashable"], object=Literal(True)
+        )
     ))
 
     hashes = [
-        i for i in yield_hashes(g, hashable_nodes)
+        *yield_hashes(g, hashable_nodes)
     ]
     if task:
         task.update_state(
@@ -406,10 +409,12 @@ def validate(ob, hostpart, task=None):
                 'hashable_urls_checked': 0
             }
         )
-    for count, t in enumerate(yield_hashable_urls(g, hashable_nodes), start=1):
-        if (URIRef(t[2].value), None, None) in g:
+    for count, lit in enumerate(yield_hashable_urls(
+        g, hashable_nodes
+    ), start=1):
+        if (URIRef(lit.value), None, None) in g:
             continue
-        url = merge_get_url(t[2].value, raw="embed")
+        url = merge_get_url(lit.value, raw="embed")
         if not get_settings_func(
             "SPIDER_URL_VALIDATOR",
             "spkcspider.apps.spider.functions.validate_url_default"

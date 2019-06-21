@@ -281,6 +281,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 # TODO
 * examples
 * documentation
+* use sparql
 * test admin
 * Localisation
   * harmonize punctation
