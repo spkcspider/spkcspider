@@ -69,7 +69,7 @@ def domain_auth(source, hostpart):
     )
 
     url = "{}?{}".format(
-        source.url, urlencode(GET)
+        source.url, urlencode(GET, doseq=True)
     )
     ret = True
     params, can_inline = get_requests_params(url)

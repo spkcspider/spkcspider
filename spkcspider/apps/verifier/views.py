@@ -112,7 +112,7 @@ class CreateEntry(UpdateView):
             if ob:
                 GET = parse_qs(ob.get_params)
                 GET["token"] = request.POST["token"]
-                ob.get_params = urlencode(GET)
+                ob.get_params = urlencode(GET, doseq=True)
                 ob.token = None
                 ob.save(update_fields=["get_params", "token"])
                 return HttpResponse(200)
