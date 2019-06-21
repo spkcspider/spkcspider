@@ -118,14 +118,6 @@ class LinkContent(BaseContent):
     expose_name = False
     expose_description = False
 
-    content = models.ForeignKey(
-        "spider_base.AssignedContent", related_name="+",
-        on_delete=models.CASCADE,
-        limit_choices_to={
-            "strength_link__lte": 10,
-        }
-    )
-
     push = models.BooleanField(
         blank=True, default=False,
         help_text=_("Improve ranking of this Link.")
@@ -138,16 +130,21 @@ class LinkContent(BaseContent):
         return ret
 
     def get_content_name(self):
-        return self.content.content.get_content_name()
+        return self.associated.attached_to_content.content.get_content_name()
 
     def get_content_description(self):
-        return self.content.content.get_content_description()
+        return (
+            self.associated.
+            attached_to_content.
+            content.
+            get_content_description()
+        )
 
     def get_strength(self):
-        return self.content.content.get_strength()
+        return self.associated.attached_to_content.content.get_strength()
 
     def get_priority(self):
-        priority = self.content.content.get_priority()
+        priority = self.associated.attached_to_content.content.get_priority()
         # pin to top
         if self.push and priority < 1:
             return 1
@@ -158,22 +155,17 @@ class LinkContent(BaseContent):
         return 11
 
     def get_info(self):
-        ret = self.content.content.get_info()
+        ret = self.associated.attached_to_content.content.get_info()
         return "%ssource=%s\x1elink\x1e" % (
             ret, self.associated.pk
         )
-
-    def get_references(self):
-        if not self.content:
-            return []
-        return [self.content]
 
     def get_form(self, scope):
         from ..forms import LinkForm
         if scope in link_abilities:
             return LinkForm
         # maybe not required
-        return self.content.content.get_form(scope)
+        return self.associated.attached_to_content.content.get_form(scope)
 
     def get_form_kwargs(self, **kwargs):
         if kwargs["scope"] in link_abilities:
@@ -182,7 +174,9 @@ class LinkContent(BaseContent):
             ret["request"] = kwargs["request"]
         else:
             # maybe not required anymore
-            ret = self.content.content.get_form_kwargs(**kwargs)
+            ret = self.associated.attached_to_content.content.get_form_kwargs(
+                **kwargs
+            )
         return ret
 
     def access_add(self, **kwargs):
@@ -198,7 +192,7 @@ class LinkContent(BaseContent):
     def access_raw_update(self, **kwargs):
         return redirect(
             'spider_base:ucontent-access',
-            token=self.content.token,
+            token=self.associated.attached_to_content.token,
             access='update'
         )
 

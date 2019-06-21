@@ -83,7 +83,8 @@ class KeyTest(TransactionWebTest):
                 (
                     None,
                     None,
-                    Literal("hash_algo", datatype=XSD.string)),
+                    Literal("hash_algorithm", datatype=XSD.string)
+                ),
                 g
             )
             self.assertIn(
@@ -154,7 +155,7 @@ class KeyTest(TransactionWebTest):
         )
         response = self.app.get(createurl)
         form = response.form
-        form.select("key", value=str(keyob.id))
+        form.select("key", value=str(keyob.associated.id))
         response = form.submit()
         updateurl = response.location
         response = response.follow()

@@ -3,6 +3,7 @@ __all__ = ["KeyForm", "AnchorServerForm", "AnchorKeyForm"]
 
 import binascii
 
+from django.db import models
 from django import forms
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -13,8 +14,18 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
 from spkcspider.apps.spider.widgets import ListWidget
+from spkcspider.apps.spider.models import TravelProtection, AssignedContent
+from spkcspider.apps.spider.constants import loggedin_active_tprotections
+
 
 from .models import PublicKey, AnchorServer, AnchorKey
+
+
+_help_text_key = _(
+    '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501
+    "Reason herefor is, that with a change of the signing key the whole anchor gets invalid and the signing key should be really carefully saved away. "  # noqa: E501
+    "In contrast the encryption keys can be easily exchanged and should be available for encryption"  # noqa: E501
+)
 
 
 class KeyForm(forms.ModelForm):
@@ -95,6 +106,13 @@ class AnchorServerForm(forms.ModelForm):
 class AnchorKeyForm(forms.ModelForm):
     identifier = forms.CharField(disabled=True)
     anchor_type = forms.CharField(disabled=True, initial="signature")
+    key = forms.ModelChoiceField(
+        queryset=AssignedContent.objects.filter(
+            ctype__name="PublicKey",
+            info__contains="\x1epubkeyhash="
+        )
+    )
+
     scope = ""
 
     class Meta:
@@ -103,9 +121,12 @@ class AnchorKeyForm(forms.ModelForm):
 
     field_order = ['identifier', 'signature', 'key']
 
-    def __init__(self, scope, **kwargs):
+    def __init__(self, scope, request, **kwargs):
         self.scope = scope
         super().__init__(**kwargs)
+        if self.instance.id:
+            self.fields["key"].initial = \
+                self.instance.associated.attached_to_content
         if self.scope == "add":
             del self.fields["identifier"]
             del self.fields["signature"]
@@ -114,9 +135,17 @@ class AnchorKeyForm(forms.ModelForm):
             # self.fields["signature"].required = False
 
         if self.scope in ("add", "update"):
-            self.fields["key"].queryset = self.fields["key"].queryset.filter(
-                associated_rel__info__contains="\x1epubkeyhash="
+            travel = TravelProtection.objects.get_active_for_request(request)
+            travel = travel.filter(
+                login_protection__in=loggedin_active_tprotections
             )
+            self.fields["key"].queryset = \
+                self.fields["key"].queryset.exclude(
+                    models.Q(usercomponent__travel_protected__in=travel) |
+                    models.Q(travel_protected__in=travel)
+                ).filter(
+                    usercomponent=self.instance.associated.usercomponent
+                )
         elif self.scope in ("raw", "list", "view"):
             self.fields["key"] = forms.CharField(
                 initial=self.instance.key.key,
@@ -127,15 +156,19 @@ class AnchorKeyForm(forms.ModelForm):
     def clean(self):
         _ = gettext
         ret = super().clean()
-        pubkey = self.cleaned_data["key"].get_key_ob()
-        if not pubkey:
-            self.add_error("key", forms.ValidationError(
-                _("key not usable for signing"),
-                code="unusable_key"
-            ))
+        pubkey = self.cleaned_data.get("key")
+        if pubkey:
+            pubkey = pubkey.content.get_key_ob()
+            if not pubkey:
+                self.add_error("key", forms.ValidationError(
+                    _("key not usable for signing"),
+                    code="unusable_key"
+                ))
         if self.scope == "add":
             ret["signature"] = "<replaceme>"
             return ret
+        if not pubkey:
+            return
         chosen_hash = settings.SPIDER_HASH_ALGORITHM
         try:
             pubkey.verify(
@@ -158,6 +191,11 @@ class AnchorKeyForm(forms.ModelForm):
                 code="malformed_signature"
             ))
         return ret
+
+    def save(self, commit=True):
+        self.instance.associated.attached_to_content = \
+            self.cleaned_data["key"]
+        return super().save(commit)
 
 
 # class AnchorGovForm(forms.ModelForm):

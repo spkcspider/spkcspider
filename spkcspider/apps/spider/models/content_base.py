@@ -280,7 +280,8 @@ class AssignedContent(BaseInfoModel):
         )
     )
     content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, editable=False
+        ContentType, on_delete=models.CASCADE, editable=False,
+        related_name="+"
     )
     object_id = models.BigIntegerField(editable=False)
     content = GenericForeignKey(

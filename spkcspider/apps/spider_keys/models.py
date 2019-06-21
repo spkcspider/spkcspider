@@ -31,12 +31,6 @@ logger = logging.getLogger(__name__)
 
 _help_text_sig = _("""Signature of Identifier (hexadecimal-encoded)""")
 
-_help_text_key = _(
-    '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501
-    "Reason herefor is, that with a change of the signing key the whole anchor gets invalid and the signing key should be really carefully saved away. "  # noqa: E501
-    "In contrast the encryption keys can be easily exchanged and should be available for encryption"  # noqa: E501
-)
-
 ID_VERIFIERS = {
 
 }
@@ -275,11 +269,6 @@ class AnchorKey(AnchorBase):
         }
     ]
 
-    key = models.OneToOneField(
-        PublicKey, on_delete=models.CASCADE, related_name="anchorkey",
-        help_text=_help_text_key
-    )
-
     signature = models.CharField(
         max_length=1024, help_text=_help_text_sig, null=False
     )
@@ -294,16 +283,13 @@ class AnchorKey(AnchorBase):
         s += 1024
         return s
 
-    def get_references(self):
-        if not self.key:
-            return []
-        return [self.key.associated]
-
     def get_content_name(self):
-        name = self.key.get_key_name()[1]
+        name = self.associated.attached_to_content.content.get_key_name()[1]
         if not name:
             name = "{}...".format(
-                self.key.associated.getlist("hash", amount=1)[0].split(
+                self.associated.attached_to_content.getlist(
+                    "hash", amount=1
+                )[0].split(
                     "=", 1
                 )[-1][:20]
             )
@@ -320,12 +306,23 @@ class AnchorKey(AnchorBase):
         ret["Access-Control-Allow-Origin"] = "*"
         return ret
 
+    def get_form_kwargs(self, **kwargs):
+        ret = super().get_form_kwargs(**kwargs)
+        ret.setdefault("initial", {})
+        ret["request"] = kwargs["request"]
+        ret["scope"] = kwargs["scope"]
+        return ret
+
     def get_info(self):
         ret = super().get_info()
-        k = self.key.associated.getlist("pubkeyhash", amount=1, fullkey=True)
+        k = self.associated.attached_to_content.getlist(
+            "pubkeyhash", amount=1, fullkey=True
+        )
         return "%s%s\x1e%s\x1e" % (
             ret,
-            self.key.associated.getlist("hash", amount=1, fullkey=True)[0],
+            self.associated.attached_to_content.getlist(
+                "hash", amount=1, fullkey=True
+            )[0],
             k[0] if k else ""
         )
 

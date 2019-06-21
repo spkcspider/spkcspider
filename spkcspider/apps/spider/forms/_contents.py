@@ -48,19 +48,24 @@ _login_protection = _(
 
 
 class LinkForm(forms.ModelForm):
+    content = forms.ModelChoiceField(
+        queryset=AssignedContent.objects.filter(
+            strength__lte=10
+        )
+    )
 
     class Meta:
         model = LinkContent
-        fields = ['content', 'push']
+        fields = ['push']
 
     def __init__(self, uc, request, **kwargs):
         super().__init__(**kwargs)
         # if self.instance.associated:
         #     if "\x1eanchor\x1e" in self.instance.associated:
         #         self.fields["content"].disabled = True
-        # if self.instance.id:
-        #    self.fields["content"].initial = \
-        #        self.instance.associated.attached_to_content
+        if self.instance.id:
+            self.fields["content"].initial = \
+                self.instance.associated.attached_to_content
         q = self.fields["content"].queryset
         travel = TravelProtection.objects.get_active_for_request(request)
         travel = travel.filter(
@@ -68,7 +73,10 @@ class LinkForm(forms.ModelForm):
         )
         self.fields["content"].queryset = q.filter(
             strength__lte=uc.strength
-        ).exclude(usercomponent__travel_protected__in=travel)
+        ).exclude(
+            models.Q(usercomponent__travel_protected__in=travel) |
+            models.Q(travel_protected__in=travel)
+        )
         # component auth should limit links to visible content
         # read access outside from component elsewise possible
         if request.user != uc.user and not request.is_staff:
@@ -77,6 +85,11 @@ class LinkForm(forms.ModelForm):
                 models.Q(usercomponent=uc) |
                 models.Q(referenced_by__usercomponent=uc)
             )
+
+    def save(self, commit=True):
+        self.instance.associated.attached_to_content = \
+            self.cleaned_data["content"]
+        return super().save(commit)
 
 
 class TravelProtectionManagementForm(forms.ModelForm):

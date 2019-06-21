@@ -9,7 +9,7 @@ from django.conf import settings
 from .helpers import extract_app_dicts
 from .signals import (
     UpdateSpiderCb, InitUserCb, UpdateAnchorComponentCb, UpdateContentCb,
-    update_dynamic, TriggerUpdate, CleanupCb, DeleteContentCb,
+    update_dynamic, TriggerUpdate, CleanupCb,
     UpdateComponentFeaturesCb, UpdateContentFeaturesCb
 )
 
@@ -22,7 +22,7 @@ class SpiderBaseConfig(AppConfig):
 
     def ready(self):
         from .models import (
-            AssignedContent, UserComponent, LinkContent
+            AssignedContent, UserComponent
         )
         from django.apps import apps
         from .protections import installed_protections
@@ -52,10 +52,6 @@ class SpiderBaseConfig(AppConfig):
 
         post_delete.connect(
             CleanupCb, sender=AssignedContent,
-        )
-
-        post_delete.connect(
-            DeleteContentCb, sender=LinkContent,
         )
 
         #####################

@@ -34,7 +34,12 @@ def TriggerUpdate(sender, **_kwargs):
 
 
 def DeleteContentCb(sender, instance, **_kwargs):
-    # connect if your content object can be deleted without AssignedContent
+    """
+        Connect if content can be deleted without AssignedContent
+        beeing deleted.
+        Alternative (if AssignedContent is only target):
+            attached_to_content attribute
+    """
     ContentType = apps.get_model("contenttypes", "ContentType")
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
 
