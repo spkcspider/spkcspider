@@ -294,6 +294,11 @@ class AnchorKey(AnchorBase):
         s += 1024
         return s
 
+    def get_references(self):
+        if not self.key:
+            return []
+        return [self.key.associated]
+
     def get_content_name(self):
         name = self.key.get_key_name()[1]
         if not name:

@@ -281,6 +281,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 # TODO
 * examples
 * documentation
+* attached_to_content? for webreferences? or remove?
 * use sparql
 * test admin
 * Localisation

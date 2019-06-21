@@ -58,6 +58,9 @@ class LinkForm(forms.ModelForm):
         # if self.instance.associated:
         #     if "\x1eanchor\x1e" in self.instance.associated:
         #         self.fields["content"].disabled = True
+        # if self.instance.id:
+        #    self.fields["content"].initial = \
+        #        self.instance.associated.attached_to_content
         q = self.fields["content"].queryset
         travel = TravelProtection.objects.get_active_for_request(request)
         travel = travel.filter(
