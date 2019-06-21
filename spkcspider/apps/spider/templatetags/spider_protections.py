@@ -19,6 +19,8 @@ def render_protection(context, protectiontup):
         return protection.render(ctx)
     if isinstance(ctx["data"], forms.Form):
         ctx["form"] = ctx["data"]
+    elif hasattr(protection, "auth_form") and isinstance(ctx["data"], int):
+        ctx["form"] = protection.auth_form()
     elif hasattr(protection, "auth_form"):
         ctx["form"] = protection.auth_form(**ctx["data"])
     template_name = getattr(protection, "template_name", None)

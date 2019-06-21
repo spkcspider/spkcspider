@@ -219,7 +219,7 @@ class BaseProtection(forms.Form):
             return result.media
         elif hasattr(cls, "auth_form"):
             if result is None or isinstance(result, int):
-                return cls.auth_form(result=result).media
+                return cls.auth_form().media
             else:
                 return cls.auth_form(**result).media
         else:
