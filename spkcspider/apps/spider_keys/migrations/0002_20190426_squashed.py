@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='publickey',
             name='key',
-            field=models.TextField(help_text='It is recommended to use different keys for signing and encryption', validators=[spkcspider.apps.spider_keys.models.valid_pkey_properties]),
+            field=models.TextField(validators=[spkcspider.apps.spider_keys.models.valid_pkey_properties]),
         ),
         migrations.RemoveField(
             model_name='publickey',
@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
                 ('signature', models.CharField(help_text='Signature of Identifier (hexadecimal-encoded)', max_length=1024)),
-                ('key', models.OneToOneField(help_text='"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption.', on_delete=django.db.models.deletion.CASCADE, related_name='anchorkey', to='spider_keys.PublicKey')),
+                ('key', models.OneToOneField(help_text='"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. Reason herefor is, that with a change of the signing key the whole anchor gets invalid and the signing key should be really carefully saved away. In contrast the encryption keys can be easily exchanged and should be available for encryption', on_delete=django.db.models.deletion.CASCADE, related_name='anchorkey', to='spider_keys.PublicKey')),
             ],
             options={
                 'abstract': False,
