@@ -99,7 +99,11 @@ def CleanupCb(sender, instance, **kwargs):
         if instance.content:
             instance.content.delete(False)
         if VariantType.feature_connect.value in instance.ctype.ctype:
-            instance.usercomponent.features.remove(instance.ctype)
+            if VariantType.component_feature.value in instance.ctype.ctype:
+                if not instance.usercomponent.contents.filter(
+                    ctype=instance.ctype
+                ):
+                    instance.usercomponent.features.remove(instance.ctype)
         user = instance.usercomponent.user
 
     # expensive path
@@ -161,21 +165,6 @@ def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
             name="Persistence"
         ))
 
-    for variant in instance.features.filter(
-        models.Q(ctype__contains=VariantType.feature_connect.value) &
-        models.Q(ctype__contains=VariantType.unique.value) &
-        ~models.Q(assignedcontent__usercomponent=instance)
-    ):
-        ret = variant.installed_class.static_create(
-            token_size=getattr(settings, "TOKEN_SIZE", 30),
-            associated_kwargs={
-                "usercomponent": instance,
-                "ctype": variant
-            }
-        )
-        ret.clean()
-        ret.save()
-
 
 def UpdateContentCb(sender, instance, raw=False, **kwargs):
     if raw:
@@ -204,8 +193,7 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
     # auto add self as feature
     if (
         VariantType.component_feature.value in instance.ctype.ctype and
-        VariantType.feature_connect.value in instance.ctype.ctype and
-        VariantType.unique.value not in instance.ctype.ctype
+        VariantType.feature_connect.value in instance.ctype.ctype
     ):
         instance.usercomponent.features.add(instance.ctype)
 
@@ -261,8 +249,7 @@ def UpdateSpiderCb(**_kwargs):
             row.save(update_fields=["token"])
         extra_variants = ContentVariant.objects.filter(
             models.Q(ctype__contains=VariantType.component_feature.value) &
-            models.Q(ctype__contains=VariantType.feature_connect.value) &
-            ~models.Q(ctype__contains=VariantType.unique.value),
+            models.Q(ctype__contains=VariantType.feature_connect.value),
             assignedcontent__usercomponent=row
         )
         row.features.add(*extra_variants)

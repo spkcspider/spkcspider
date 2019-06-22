@@ -116,10 +116,7 @@ class VariantType(str, enum.Enum):
     unique = "h"
     # can be used as anchor, will be hashed on verification if primary
     anchor = "i"
-    # unique:
-    #  auto create if content does not exist, auto unset if content is deleted
-    # non-unique:
-    #  add as contentvariant (except if unlisted), and create feature
+    # add as contentvariant (except if unlisted), and create feature
     feature_connect = "j"
     # add as machine creatable content
     machine = "k"

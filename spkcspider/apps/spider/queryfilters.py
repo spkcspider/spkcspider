@@ -10,11 +10,6 @@ from .constants import VariantType
 
 _base_variants = (
     (
-        Q(ctype__contains=VariantType.unique.value) &
-        Q(ctype__contains=VariantType.feature_connect.value) &
-        Q(ctype__contains=VariantType.component_feature.value)
-    ) |
-    (
         ~Q(ctype__contains=VariantType.feature_connect.value) &
         Q(ctype__contains=VariantType.component_feature.value)
     ) |

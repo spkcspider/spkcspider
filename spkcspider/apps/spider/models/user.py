@@ -360,7 +360,11 @@ class UserInfo(models.Model):
         ).filter(
             code__in=installed_contents
         ):
-            if cfilterfunc(self.user, variant):
+            # always include special variants
+            # elsewise unnecessary recalculations are done and other bugs
+            if variant.name in {"DomainMode", "DefaultActions"}:
+                allowed.append(variant)
+            elif cfilterfunc(self.user, variant):
                 allowed.append(variant)
         # save not required, m2m field
         self.allowed_content.set(allowed)

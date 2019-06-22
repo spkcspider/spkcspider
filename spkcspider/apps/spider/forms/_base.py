@@ -52,6 +52,7 @@ Note: persistent Features (=features which use a persistent token) require the a
 
 class UserComponentForm(forms.ModelForm):
     protections = None
+    request = None
     new_static_token = forms.ChoiceField(
         label=_("New static token"), help_text=_help_text_static_token,
         required=False, initial="", choices=STATIC_TOKEN_CHOICES
@@ -104,6 +105,7 @@ class UserComponentForm(forms.ModelForm):
             *args, data=data, files=files, auto_id=auto_id,
             prefix=prefix, **kwargs
         )
+        self.request = request
         self.fields["new_static_token"].choices = map(
             lambda c: (c[0], c[1].format(c[0])),
             self.fields["new_static_token"].choices
@@ -116,9 +118,7 @@ class UserComponentForm(forms.ModelForm):
 
         self.fields["features"].queryset = (
             self.fields["features"].queryset.exclude(
-                models.Q(ctype__contains=VariantType.feature_connect.value) &
-                ~models.Q(ctype__contains=VariantType.unique.value)
-            ).exclude(
+                models.Q(ctype__contains=VariantType.feature_connect.value) |
                 models.Q(name="DomainMode") |
                 models.Q(name="DefaultActions")
             ) &
@@ -306,6 +306,28 @@ class UserComponentForm(forms.ModelForm):
             if self.cleaned_data["required_passes"] > 0:
                 self.cleaned_data["strength"] += 4
         self.cleaned_data["can_auth"] = max_prot_strength >= 4
+
+        if self.instance.id:
+            f = self.instance.features.filter(
+                (
+                    models.Q(
+                        ctype__contains=VariantType.component_feature.value
+                    ) &
+                    models.Q(
+                        ctype__contains=VariantType.feature_connect.value
+                    )
+                ) |
+                models.Q(name="DomainMode") |
+                models.Q(name="DefaultActions")
+            ) & self.request.user.spider_info.allowed_content.all()
+
+            self.cleaned_data["features"] = ContentVariant.objects.filter(
+                models.Q(id__in=f.values_list("id", flat=True)) |
+                models.Q(
+                    id__in=self.cleaned_data["features"]
+                    .values_list("id", flat=True)
+                )
+            )
 
         min_strength = self.cleaned_data["features"].filter(
             strength__gt=self.cleaned_data["strength"]
