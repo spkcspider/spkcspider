@@ -404,6 +404,7 @@ class SpiderTag(BaseContent):
                     "attached_to_primary_anchor"
                 ]
             )
+        _cached_references.append(self.layout.associated)
         self._cached_references = _cached_references
         return self._cached_references
 

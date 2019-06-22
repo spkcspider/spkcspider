@@ -509,6 +509,9 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
         self.user = self.get_user()
         try:
             return super().dispatch(request, *args, **kwargs)
+        except self.model.ProtectedError:
+            # TODO: add to active TravelProtection
+            pass
         except PermissionDenied as exc:
             if request.is_staff:
                 raise exc
