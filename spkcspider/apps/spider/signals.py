@@ -231,6 +231,9 @@ def UpdateSpiderCb(**_kwargs):
 
     UserComponent.objects.filter(name="index").update(strength=10)
     for row in AssignedContent.objects.all():
+        if not row.content:
+            row.delete()
+            continue
         # works only with django.apps.apps
         row.info = row.content.get_info()
         if not row.token:
