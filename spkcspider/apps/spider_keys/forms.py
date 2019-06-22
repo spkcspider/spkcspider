@@ -40,6 +40,7 @@ class KeyForm(forms.ModelForm):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.initial["hash_algorithm"] = self.fields["hash_algorithm"].initial
         setattr(self.fields['key'], "hashable", True)
 
     def clean_key(self):
