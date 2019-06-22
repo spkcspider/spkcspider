@@ -81,6 +81,11 @@ class DomainMode(BaseContent):
     class Meta:
         abstract = True
 
+    @classmethod
+    def localize_name(cls, name):
+        _ = pgettext
+        return _("content name", "Domain Mode")
+
 
 @add_content
 class DefaultActions(BaseContent):
