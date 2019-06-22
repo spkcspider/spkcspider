@@ -205,7 +205,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
                     ~models.Q(assignedcontent__travel_protected__in=travel),
                     assignedcontent__usercomponent=self.usercomponent
                 )
-        context["active_features"] = self.usercomponent.features.all()
+        context["active_features"] = self.usercomponent.features.distinct()
         context["active_listed_features"] = \
             context["active_features"].exclude(
                 ctype__contains=VariantType.unlisted.value
@@ -427,7 +427,7 @@ class ContentAdd(ContentBase, CreateView):
     def get_context_data(self, **kwargs):
         kwargs["content_type"] = self.object.installed_class
         kwargs["form"] = self.get_form()
-        kwargs["active_features"] = self.usercomponent.features.all()
+        kwargs["active_features"] = self.usercomponent.features.distinct()
         kwargs["active_listed_features"] = \
             kwargs["active_features"].exclude(
                 ctype__contains=VariantType.unlisted.value
@@ -569,12 +569,12 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             })
         )
         if self.scope == "update":
-            context["active_features"] = self.usercomponent.features.all()
+            context["active_features"] = self.usercomponent.features.distinct()
         else:
             context["active_features"] = ContentVariant.objects.filter(
                 models.Q(feature_for_contents=self.object) |
                 models.Q(feature_for_components=self.usercomponent)
-            )
+            ).distinct()
         context["active_listed_features"] = \
             context["active_features"].exclude(
                 ctype__contains=VariantType.unlisted.value

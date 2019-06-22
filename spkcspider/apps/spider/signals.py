@@ -51,6 +51,7 @@ def DeleteContentCb(sender, instance, **_kwargs):
 
 def CleanupCb(sender, instance, **kwargs):
     stored_exc = None
+    ContentVariant = apps.get_model("spider_base", "ContentVariant")
     if sender._meta.model_name == "usercomponent":
         # if component is deleted the content deletion handler cannot find
         # the user. Here if the user is gone counting doesn't matter anymore
@@ -104,6 +105,19 @@ def CleanupCb(sender, instance, **kwargs):
                     ctype=instance.ctype
                 ).exclude(id=instance.id):
                     instance.usercomponent.features.remove(instance.ctype)
+
+        if not instance.usercomponent.contents.filter(
+            ctype__ctype__contains=VariantType.domain_mode.value
+        ).exclude(id=instance.id):
+            instance.usercomponent.features.remove(ContentVariant.objects.get(
+                name="DomainMode"
+            ))
+        if not instance.usercomponent.contents.filter(
+            ctype__ctype__contains=VariantType.persist.value
+        ).exclude(id=instance.id):
+            instance.usercomponent.features.remove(ContentVariant.objects.get(
+                name="Persistence"
+            ))
         user = instance.usercomponent.user
 
     # expensive path
@@ -154,14 +168,24 @@ def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
     if instance.features.filter(
         ctype__contains=VariantType.domain_mode.value
-    ) and not instance.features.filter(name="DomainMode"):
-        instance.features.add(ContentVariant.objects.get(
+    ):
+        if not instance.features.filter(name="DomainMode"):
+            instance.features.add(ContentVariant.objects.get(
+                name="DomainMode"
+            ))
+    elif instance.features.filter(name="DomainMode"):
+        instance.features.remove(ContentVariant.objects.get(
             name="DomainMode"
         ))
     if instance.features.filter(
         ctype__contains=VariantType.persist.value
-    ) and not instance.features.filter(name="Persistence"):
-        instance.features.add(ContentVariant.objects.get(
+    ):
+        if not instance.features.filter(name="Persistence"):
+            instance.features.add(ContentVariant.objects.get(
+                name="Persistence"
+            ))
+    elif instance.features.filter(name="Persistence"):
+        instance.features.remove(ContentVariant.objects.get(
             name="Persistence"
         ))
 
