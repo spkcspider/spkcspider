@@ -3,7 +3,7 @@ __all__ = (
     "ComponentIndex", "ComponentPublicIndex", "ComponentCreate",
     "ComponentUpdate", "ComponentDelete"
 )
-
+from django.db.models.deletion import ProtectedError
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.shortcuts import get_object_or_404, redirect
@@ -509,9 +509,6 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
         self.user = self.get_user()
         try:
             return super().dispatch(request, *args, **kwargs)
-        except self.model.ProtectedError:
-            # TODO: add to active TravelProtection
-            pass
         except PermissionDenied as exc:
             if request.is_staff:
                 raise exc
@@ -531,9 +528,17 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
         return super().get_context_data(**kwargs)
 
     def delete(self, request, *args, **kwargs):
+        _ = gettext
         if self.object.is_index:
             return self.handle_no_permission()
-        return super().delete(request, *args, **kwargs)
+        try:
+            return super().delete(request, *args, **kwargs)
+        except ProtectedError:
+            messages.error(
+                self.request,
+                _('Could not delete protected contents.')
+            )
+            return self.get(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         if self.object.is_index:

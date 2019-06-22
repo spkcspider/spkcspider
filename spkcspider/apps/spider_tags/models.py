@@ -7,7 +7,6 @@ from django.utils.translation import gettext, pgettext, gettext_lazy as _
 
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
-from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.http import HttpResponse
 
@@ -19,8 +18,6 @@ from spkcspider.apps.spider.contents import (
     BaseContent, add_content, VariantType, ActionUrl
 )
 from spkcspider.apps.spider.helpers import get_settings_func
-
-from spkcspider.apps.spider.models import AssignedContent
 
 logger = logging.getLogger(__name__)
 
@@ -91,14 +88,14 @@ class TagLayout(models.Model):
     def __repr__(self):
         if self.usertag:
             return "<TagLayout: %s:%s>" % (
-                self.name, self.usertag.associated.usercomponent.user
+                self.name, self.usertag.associated.usercomponent.username
             )
         return "<TagLayout: %s>" % self.name
 
     def __str__(self):
         if self.usertag:
             return "TagLayout: %s:%s" % (
-                self.name, self.usertag.associated.usercomponent.user
+                self.name, self.usertag.associated.usercomponent.username
             )
         return "TagLayout: %s" % self.name
 
@@ -134,8 +131,8 @@ class UserTagLayout(BaseContent):
 
     def get_content_name(self):
         return "%s: %s" % (
+            self.associated.usercomponent.username,
             self.layout.name,
-            self.associated.usercomponent.username
         )
 
     def localized_description(self):
@@ -239,8 +236,8 @@ class SpiderTag(BaseContent):
             )
         return "%s: <%s: %s>: %s" % (
             self.localize_name("SpiderTag"),
+            self.layout.usertag.associated.usercomponent.username,
             self.layout.name,
-            self.layout.id,
             self.associated.id
         )
 
@@ -345,66 +342,20 @@ class SpiderTag(BaseContent):
     def get_references(self):
         if not getattr(self, "layout", None):
             return []
-        if self._cached_references:
+        if self._cached_references is not None:
             return self._cached_references
-        _cached_references = []
         form = self.layout.get_form()(
             initial=self.tagdata.copy(),
             instance=self,
             uc=self.associated.usercomponent
         )
-        attached_to_primary_anchor = False
-        for name, field in form.fields.items():
-            raw_value = form.initial.get(name, None)
-            value = field.to_python(raw_value)
-            # e.g. anchors
-            if isinstance(value, AssignedContent):
-                _cached_references.append(value)
-            if (
-                field.__class__.__name__ == "AnchorField" and
-                field.use_default_anchor
-            ):
-                if value is None:
-                    attached_to_primary_anchor = True
-
-            if issubclass(type(value), BaseContent):
-                _cached_references.append(value.associated)
-
-            # e.g. anchors
-            if isinstance(value, models.QuerySet):
-                if issubclass(value.model, AssignedContent):
-                    _cached_references += list(value)
-
-                if issubclass(value.model, BaseContent):
-                    _cached_references += list(
-                        AssignedContent.objects.filter(
-                            object_id__in=value.values_list(
-                                "id", flat=True
-                            ),
-                            content_type=ContentType.objects.get_for_model(
-                                value.model
-                            )
-                        )
-                    )
-        if (
-            attached_to_primary_anchor and
-            self.associated.usercomponent.primary_anchor
-        ):
-            _cached_references.append(
-                self.associated.usercomponent.primary_anchor
-            )
-        if (
-            self.associated.attached_to_primary_anchor !=
-            attached_to_primary_anchor
-        ):
-            self.associated.attached_to_primary_anchor = \
-                attached_to_primary_anchor
+        _cached_references, needs_update = form.calc_references(True)
+        if needs_update:
             self.associated.save(
                 update_fields=[
                     "attached_to_primary_anchor"
                 ]
             )
-        _cached_references.append(self.layout.associated)
         self._cached_references = _cached_references
         return self._cached_references
 
@@ -438,3 +389,7 @@ class SpiderTag(BaseContent):
             self.encode_verifiers(),
             self.layout.name
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self._cached_references = None

@@ -272,14 +272,34 @@ def generate_form(name, layout):
 
         def clean(self):
             super().clean()
+            self.instance._cached_references = self.calc_references()[0]
+            self.instance.full_clean()
+            return self.cleaned_data
 
+        def calc_references(self, use_fields=False):
             _cached_references = []
-            for key, value in self.cleaned_data.items():
+            attached_to_primary_anchor = False
+            items = {}
+            if use_fields:
+                for name, field in self.fields.items():
+                    raw_value = self.initial.get(name, None)
+                    value = field.to_python(raw_value)
+                    items[name] = (field, value)
+            else:
+                for name, value in self.cleaned_data.items():
+                    items[name] = (self.fields[name], value)
+            for key, (field, value) in items.items():
                 if key in ("verified_by", "updateable_by", "primary"):
                     continue
                 # e.g. anchors
                 if isinstance(value, AssignedContent):
                     _cached_references.append(value)
+                if (
+                    field.__class__.__name__ == "AnchorField" and
+                    field.use_default_anchor
+                ):
+                    if value is None:
+                        attached_to_primary_anchor = True
 
                 if issubclass(type(value), BaseContent):
                     _cached_references.append(value.associated)
@@ -300,9 +320,25 @@ def generate_form(name, layout):
                                 )
                             )
                         )
-            self.instance._cached_references = _cached_references
-            self.instance.full_clean()
-            return self.cleaned_data
+            if (
+                attached_to_primary_anchor and
+                self.instance.associated.usercomponent.primary_anchor
+            ):
+                _cached_references.append(
+                    self.instance.associated.usercomponent.primary_anchor
+                )
+            # will be saved anyway
+            self.instance.associated.attached_to_primary_anchor = \
+                attached_to_primary_anchor
+            if self.instance.layout.usertag:
+                _cached_references.append(
+                    self.instance.layout.usertag.associated
+                )
+            return (
+                _cached_references,
+                self.instance.associated.attached_to_primary_anchor !=
+                attached_to_primary_anchor
+            )
 
         @classmethod
         def encode_initial(cls, initial, prefix="tag", base=None):

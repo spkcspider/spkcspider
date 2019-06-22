@@ -6,7 +6,9 @@ __all__ = (
 )
 
 from datetime import timedelta
+from html import escape
 
+from django.db.models.deletion import ProtectedError
 from django.views.generic.edit import DeleteView, UpdateView, CreateView
 from django.views.generic.list import ListView
 from django.shortcuts import get_object_or_404, redirect
@@ -705,18 +707,60 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
         self.usercomponent = self.get_usercomponent()
         try:
             return super().dispatch(request, *args, **kwargs)
-        except self.model.ProtectedError:
-            # TODO: add to active TravelProtection
-            pass
         except PermissionDenied as exc:
             if request.is_staff:
                 raise exc
             # elsewise disguise
             raise Http404()
 
+    def delete(self, request, *args, **kwargs):
+        _ = gettext
+        try:
+            return super().delete(request, *args, **kwargs)
+        except ProtectedError as exc:
+            # hide if travelprotected causes ProtectedError
+            travel = self.get_travel_for_request()
+            travel = travel.filter(
+                models.Q(
+                    protect_contents__id__in=exc.protected_objects.values_list(
+                        "associated_rel__id", flat=True
+                    )
+                ) |
+                models.Q(
+                    protect_components__id__in=exc.protected_objects.values_list(  # noqa: E501
+                        "associated_rel__usercomponent__id", flat=True
+                    )
+                ),
+                login_protection__in=loggedin_active_tprotections
+            )
+            obj = travel.order_by("-start").filter(stop__isnull=True).first()
+            if not obj:
+                try:
+                    obj = travel.latest("stop")
+                except travel.model.DoesNotExist:
+                    pass
+            if obj:
+                obj.protect_contents.add(self.object)
+                return HttpResponseRedirect(self.get_success_url())
+            else:
+                messages.error(
+                    self.request,
+                    mark_safe(
+                        _(
+                            'Could not delete content dependencies:<br/>{}.'
+                        ).format(
+                            ",<br/>".join(map(
+                                lambda x: escape(repr(x)),
+                                exc.protected_objects
+                            ))
+                        )
+                    )
+                )
+                return self.get(request, *args, **kwargs)
+
     def form_valid(self, form):
         _ = gettext
-        messages.error(
+        messages.success(
             self.request, _('Content deleted.')
         )
         return super().form_valid(form)
