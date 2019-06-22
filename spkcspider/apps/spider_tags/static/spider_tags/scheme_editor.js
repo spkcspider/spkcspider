@@ -42,15 +42,30 @@ document.addEventListener("DOMContentLoaded", function(){
                   "properties": {
                     "key": {
                       "title": "Sub Form Key",
-                      "type": "string"
+                      "type": "string",
+                      "options": {
+                        "inputAttributes": {
+                          "form": "_dump_form"
+                        }
+                      }
                     },
                     "label": {
                       "title": "Sub Form Label",
-                      "type": "string"
+                      "type": "string",
+                      "options": {
+                        "inputAttributes": {
+                          "form": "_dump_form"
+                        }
+                      }
                     },
                     "field": {
                       "title": "Sub Array",
-                      "$ref": "#/definitions/fieldarray"
+                      "$ref": "#/definitions/fieldarray",
+                      "options": {
+                        "inputAttributes": {
+                          "form": "_dump_form"
+                        }
+                      }
                     }
                   }
                 }
@@ -66,30 +81,60 @@ document.addEventListener("DOMContentLoaded", function(){
             "properties": {
               "key": {
                 "title": "Name of the field",
-                "type": "string"
+                "type": "string",
+                "options": {
+                  "inputAttributes": {
+                    "form": "_dump_form"
+                  }
+                }
               },
               "label": {
                 "title": "Field label",
-                "type": "string"
+                "type": "string",
+                "options": {
+                  "inputAttributes": {
+                    "form": "_dump_form"
+                  }
+                }
               },
               "required": {
                 "title": "Required",
                 "type": "boolean",
-                "format": "checkbox"
+                "format": "checkbox",
+                "options": {
+                  "inputAttributes": {
+                    "form": "_dump_form"
+                  }
+                }
               },
               "nonhashable": {
                 "title": "Exclude from verification",
                 "type": "boolean",
-                "format": "checkbox"
+                "format": "checkbox",
+                "options": {
+                  "inputAttributes": {
+                    "form": "_dump_form"
+                  }
+                }
               },
               "help_text": {
                 "title": "Field help text",
-                "type": "string"
+                "type": "string",
+                "options": {
+                  "inputAttributes": {
+                    "form": "_dump_form"
+                  }
+                }
               },
               "field": {
                 "title": "Field type",
                 "type": "string",
-                "enum": field_types
+                "enum": field_types,
+                "options": {
+                  "inputAttributes": {
+                    "form": "_dump_form"
+                  }
+                }
               }
             }
           }

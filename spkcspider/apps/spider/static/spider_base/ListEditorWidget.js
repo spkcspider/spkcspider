@@ -37,7 +37,12 @@ document.addEventListener("DOMContentLoaded", function(){
         "items": {
           "title": ilabel,
           "type": "string",
-          "format": ftype
+          "format": ftype,
+          "options": {
+            "inputAttributes": {
+              "form": "_dump_form"
+            }
+          }
         }
       }
     });
