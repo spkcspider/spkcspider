@@ -102,7 +102,7 @@ def CleanupCb(sender, instance, **kwargs):
             if VariantType.component_feature.value in instance.ctype.ctype:
                 if not instance.usercomponent.contents.filter(
                     ctype=instance.ctype
-                ):
+                ).exclude(id=instance.id):
                     instance.usercomponent.features.remove(instance.ctype)
         user = instance.usercomponent.user
 
