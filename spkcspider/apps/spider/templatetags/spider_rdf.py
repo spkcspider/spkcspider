@@ -56,9 +56,9 @@ def literalize(
 @register.simple_tag()
 def hashable_literalize(field):
     if isinstance(field, BoundField):
-        return literalize(getattr(field.field, "hashable", False))
+        return _literalize(getattr(field.field, "hashable", False))
     else:
-        return literalize(getattr(field, "hashable", False))
+        return _literalize(getattr(field, "hashable", False))
 
 
 @register.simple_tag()

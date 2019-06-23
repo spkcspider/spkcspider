@@ -14,6 +14,16 @@ def is_not_or_space(value):
 
 
 @register.simple_tag(takes_context=True)
+def shall_show_content(context, content, priority=0):
+    return (
+        not content.is_hidden or
+        (context["request"].is_owner and content.priority > priority) or
+        "_unlisted" in context["request"].GET.getlist("info") or
+        "_unlisted" in context["request"].POST.getlist("info")
+    )
+
+
+@register.simple_tag(takes_context=True)
 def current_url(context):
     try:
         return reverse(

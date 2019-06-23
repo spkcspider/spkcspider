@@ -166,10 +166,10 @@
   {% endif %}
   <div class="w3-margin">
     <table class="w3-table w3-bordered" rel="spkc:contents">
-      <thead>
       <tbody>
       {% for content in object_list %}
-        <tr class="w3-light-grey" {% if content.is_hidden %}hidden="hidden"{% endif %} resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
+        {% shall_show_content content 0 as shall_show %}
+        <tr class="w3-light-grey" {% if not shall_show %}hidden="hidden"{% endif %} resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
           <td class="" style="min-height:48px;display:inline-block;word-break: break-all;" rel="spkc:properties">
             <span>{{ content.name }}<span class="w3-small" style="margin-left: 5px">({{ content.ctype }})</span></span>
             <data hidden="hidden" typeof="spkc:Property">
@@ -216,7 +216,7 @@
             </div>
           </td>
         </tr>
-        {% if not content.is_hidden %}
+        {% if shall_show %}
           <tr><td colspan="3" style="padding:0; word-break: break-all;">
             <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
               {% with content.localized_description as description %}
@@ -230,7 +230,10 @@
           </td></tr>
         {% endif %}
       {% empty %}
-        <tr class="w3-light-grey"><td colspan="3"><data hidden="hidden" resource="rdf:nil"/>{% trans 'No User Content available.' %}</td></tr>
+        <tr class="w3-light-grey"><td colspan="3">
+            <data hidden="hidden" resource="rdf:nil"></data>
+            {% trans 'No User Content available.' %}
+        </td></tr>
       {% endfor %}
       </tbody>
     </table>
