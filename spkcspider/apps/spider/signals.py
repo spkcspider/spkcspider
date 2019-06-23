@@ -112,12 +112,7 @@ def CleanupCb(sender, instance, **kwargs):
             instance.usercomponent.features.remove(ContentVariant.objects.get(
                 name="DomainMode"
             ))
-        if not instance.usercomponent.contents.filter(
-            ctype__ctype__contains=VariantType.persist.value
-        ).exclude(id=instance.id):
-            instance.usercomponent.features.remove(ContentVariant.objects.get(
-                name="Persistence"
-            ))
+        # Persistence must not be autoremoved
         user = instance.usercomponent.user
 
     # expensive path
@@ -177,17 +172,11 @@ def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
         instance.features.remove(ContentVariant.objects.get(
             name="DomainMode"
         ))
+    # Persistence must not removed automatically
     if instance.features.filter(
         ctype__contains=VariantType.persist.value
-    ):
-        if not instance.features.filter(name="Persistence"):
-            instance.features.add(ContentVariant.objects.get(
-                name="Persistence"
-            ))
-    elif instance.features.filter(name="Persistence"):
-        instance.features.remove(ContentVariant.objects.get(
-            name="Persistence"
-        ))
+    ) and not instance.features.filter(name="Persistence"):
+        instance.features.add(ContentVariant.objects.get(name="Persistence"))
 
 
 def UpdateContentCb(sender, instance, raw=False, **kwargs):
