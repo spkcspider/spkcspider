@@ -9,8 +9,4 @@ class WebConfigForm(forms.ModelForm):
 
     class Meta:
         model = WebConfig
-        fields = ['config']
-
-    def __init__(self, *, scope=None, user=None, **kwargs):
-        super().__init__(**kwargs)
-        self.fields["creation_url"].initial = self.instance.creation_url
+        fields = ['config', 'creation_url']

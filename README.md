@@ -228,6 +228,11 @@ Note 2: I reverted from using \\x1f instead of = because the info field is used 
 Why not a json field? Django has no uniform json field for every db adapter yet.
 
 
+## forms
+* forms.initial: will be used for rdf
+* field.initial: only for initialization
+
+
 ## authentication/privileges
 
 * request.is_staff: requesting user used staff rights to access view (not true in ComponentPublicIndex)

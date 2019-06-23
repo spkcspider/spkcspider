@@ -209,7 +209,7 @@ class RawTextForm(forms.ModelForm):
 
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
-        self.fields['name'].initial = self.instance.associated.name
+        self.initial['name'] = self.instance.associated.name
         setattr(self.fields['name'], "hashable", True)
         setattr(self.fields['text'], "hashable", True)
         # sources should not be hashed as they don't affect result

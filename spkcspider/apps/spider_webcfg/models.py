@@ -60,12 +60,6 @@ class WebConfig(BaseContent):
         # low priority
         return -10
 
-    def get_form_kwargs(self, **kwargs):
-        ret = super().get_form_kwargs(**kwargs)
-        ret["scope"] = kwargs["scope"]
-        ret["user"] = kwargs["request"].user
-        return ret
-
     def get_form(self, scope):
         from .forms import WebConfigForm as f
         return f

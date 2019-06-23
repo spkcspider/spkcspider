@@ -30,7 +30,7 @@ _help_text_key = _(
 
 class KeyForm(forms.ModelForm):
     hash_algorithm = forms.CharField(
-        widget=forms.HiddenInput(), initial=settings.SPIDER_HASH_ALGORITHM.name
+        widget=forms.HiddenInput(), disabled=True
     )
     setattr(hash_algorithm, "hashable", False)
 
@@ -40,7 +40,7 @@ class KeyForm(forms.ModelForm):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.initial["hash_algorithm"] = self.fields["hash_algorithm"].initial
+        self.initial["hash_algorithm"] = settings.SPIDER_HASH_ALGORITHM.name
         setattr(self.fields['key'], "hashable", True)
 
     def clean_key(self):
@@ -126,7 +126,7 @@ class AnchorKeyForm(forms.ModelForm):
         self.scope = scope
         super().__init__(**kwargs)
         if self.instance.id:
-            self.fields["key"].initial = \
+            self.initial["key"] = \
                 self.instance.associated.attached_to_content
         if self.scope == "add":
             del self.fields["identifier"]
