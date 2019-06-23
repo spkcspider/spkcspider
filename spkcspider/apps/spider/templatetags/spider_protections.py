@@ -12,6 +12,8 @@ def render_protection(context, protectiontup):
     protection = protection.installed_class
     ctx = {}
     ctx["parent_ctx"] = context
+    if "hostpart" in context:
+        ctx["hostpart"] = context["hostpart"]
     ctx["data"] = result
     ctx["protection"] = protection
 
