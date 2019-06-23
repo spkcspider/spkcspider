@@ -1,5 +1,6 @@
 __all__ = (
-    "UserTestMixin", "UCTestMixin", "EntityDeletionMixin", "ReferrerMixin"
+    "UserTestMixin", "UCTestMixin", "EntityDeletionMixin", "ReferrerMixin",
+    "DefinitionsMixin"
 )
 
 import hashlib
@@ -40,7 +41,19 @@ from ..models import UserComponent, AuthToken, ReferrerObject, TravelProtection
 logger = logging.getLogger(__name__)
 
 
-class UserTestMixin(AccessMixin):
+class DefinitionsMixin(object):
+    def get_context_data(self, **kwargs):
+        kwargs["raw_update_type"] = VariantType.raw_update.value
+        kwargs["component_feature_type"] = VariantType.component_feature.value
+        kwargs["content_feature_type"] = VariantType.content_feature.value
+        kwargs["no_export_type"] = VariantType.no_export.value
+        kwargs["hostpart"] = "{}://{}".format(
+            self.request.scheme, self.request.get_host()
+        )
+        return super().get_context_data(**kwargs)
+
+
+class UserTestMixin(DefinitionsMixin, AccessMixin):
     preserved_GET_parameters = set(["token", "protection"])
     login_url = reverse_lazy(getattr(
         settings,
@@ -92,13 +105,6 @@ class UserTestMixin(AccessMixin):
         return self._travel_request
 
     def get_context_data(self, **kwargs):
-        kwargs["raw_update_type"] = VariantType.raw_update.value
-        kwargs["component_feature_type"] = VariantType.component_feature.value
-        kwargs["content_feature_type"] = VariantType.content_feature.value
-        kwargs["no_export_type"] = VariantType.no_export.value
-        kwargs["hostpart"] = "{}://{}".format(
-            self.request.scheme, self.request.get_host()
-        )
         kwargs["spider_GET"] = self.sanitize_GET()
         return super().get_context_data(**kwargs)
 

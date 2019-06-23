@@ -20,12 +20,13 @@ from celery.exceptions import TimeoutError
 from rdflib import Literal
 
 from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.apps.spider.views import DefinitionsMixin
 from .models import DataVerificationTag, VerifySourceObject
 from .forms import CreateEntryForm
 from .validate import valid_wait_states, async_validate
 
 
-class CreateEntry(UpdateView):
+class CreateEntry(DefinitionsMixin, UpdateView):
     # NOTE: this class is csrf_exempted
     # reason for this are cross post requests
     model = DataVerificationTag
@@ -142,7 +143,7 @@ class CreateEntry(UpdateView):
         return ret
 
 
-class VerifyEntry(DetailView):
+class VerifyEntry(DefinitionsMixin, DetailView):
     model = DataVerificationTag
     slug_field = "hash"
     slug_url_kwarg = "hash"

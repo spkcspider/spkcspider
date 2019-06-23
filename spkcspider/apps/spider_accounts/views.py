@@ -15,11 +15,12 @@ from django.conf import settings
 
 from .forms import SignupForm, UserUpdateForm
 from spkcspider.apps.spider.forms import SpiderAuthForm
+from spkcspider.apps.spider.views import DefinitionsMixin
 
 # Create your views here.
 
 
-class SignupView(FormView):
+class SignupView(DefinitionsMixin, FormView):
     template_name = 'registration/signup.html'
     form_class = SignupForm
     success_url = reverse_lazy("auth:signup_thanks")
@@ -38,7 +39,7 @@ class SignupView(FormView):
         return self.success_url
 
 
-class UserLoginView(LoginView):
+class UserLoginView(DefinitionsMixin, LoginView):
     form_class = SpiderAuthForm
 
     def get(self, request, *args, **kwargs):
@@ -65,7 +66,7 @@ class UserLoginView(LoginView):
         return super().form_invalid(form)
 
 
-class UserLogoutView(LogoutView):
+class UserLogoutView(DefinitionsMixin, LogoutView):
     @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
         ret = super().dispatch(request, *args, **kwargs)
@@ -73,11 +74,11 @@ class UserLogoutView(LogoutView):
         return ret
 
 
-class UserUpdateView(LoginRequiredMixin, UpdateView):
+class UserUpdateView(DefinitionsMixin, LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('auth:profile')
     template_name = 'registration/profile.html'
     form_class = UserUpdateForm
 
     def get_object(self, queryset=None):
-        obj = get_user_model().objects.get(id=self.request.user.pk)
-        return obj
+        # clone user object
+        return get_user_model().objects.get(pk=self.request.user.pk)

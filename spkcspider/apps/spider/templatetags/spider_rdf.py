@@ -1,5 +1,7 @@
 __all__ = ["literalize", "uriref", "spkc_namespace"]
 
+import logging
+
 from django import template
 
 from rdflib import Literal
@@ -44,12 +46,21 @@ def action_view(context):
 
 @register.simple_tag(takes_context=True)
 def literalize(
-    context, ob, datatype=None, use_uriref=None, domain_base=""
+    context, ob, datatype=None, use_uriref=None, domain_base=None
 ):
+    if domain_base is None:
+        if "hostpart" not in context:
+            logging.warning(
+                "%s has neither hostpart nor explicit domain_base",
+                context["request"].get_full_path()
+            )
+            context["hostpart"] = "{}://{}".format(
+                context["request"].scheme, context["request"].get_host()
+            )
+        domain_base = context["hostpart"]
     return _literalize(
         ob,
-        datatype=datatype, use_uriref=use_uriref,
-        domain_base=context["hostpart"]
+        datatype=datatype, use_uriref=use_uriref, domain_base=domain_base
     )
 
 

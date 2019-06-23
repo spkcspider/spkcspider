@@ -8,11 +8,11 @@ from django.http.response import (
 from django.views.generic.detail import DetailView
 
 from spkcspider.apps.spider.conf import get_anchor_domain
-
 from spkcspider.apps.spider.models import AssignedContent
+from spkcspider.apps.spider.views import DefinitionsMixin
 
 
-class PermAnchorView(DetailView):
+class PermAnchorView(DefinitionsMixin, DetailView):
     queryset = AssignedContent.objects.filter(
         info__contains="\x1eanchor\x1e"
     )
