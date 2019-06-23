@@ -5,7 +5,7 @@
   <table>
     <tr>
       <td>{% trans 'Hash algorithm' %}</td>
-      <td typeof="spkc:Property">
+      <td class="w3-white w3-padding" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">hash_algorithm</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
         <span property="spkc:value" datatype="xsd:string">{{hash_algo}}</span>
@@ -13,7 +13,7 @@
     </tr>
     <tr>
       <td>{% trans 'Hash' %}</td>
-      <td style="word-break: break-all" typeof="spkc:Property">
+      <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">hash</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
         <span property="spkc:value" datatype="xsd:string">{{hash}}</span>
@@ -22,7 +22,7 @@
     {% if pubkeyhash %}
     <tr>
       <td>{% trans 'Hash of public key' %}</td>
-      <td style="word-break: break-all" typeof="spkc:Property">
+      <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">pubkeyhash</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
         <span property="spkc:value" datatype="xsd:string">{{pubkeyhash}}</span>
@@ -31,10 +31,10 @@
     {% endif %}
     <tr style="margin-top:5px">
       <td>{% trans 'key' %}</td>
-      <td style="word-break: break-all" typeof="spkc:Property">
+      <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">key</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-        <span property="spkc:value" datatype="xsd:string">{{object.key}}</span>
+        <span property="spkc:value" datatype="xsd:string">{{object.key|linebreaksbr}}</span>
       </td>
     </tr>
   </table>

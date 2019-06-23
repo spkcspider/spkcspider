@@ -667,8 +667,12 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             ),
             token=self.kwargs["token"]
         )
-        ob.previous_object = prev_in_order(ob, queryset)
-        ob.next_object = next_in_order(ob, queryset)
+        queryset2 = queryset.exclude(
+            ~models.Q(id=ob.id),
+            info__contains="\x1eunlisted\x1e",
+        )
+        ob.previous_object = prev_in_order(ob, queryset2)
+        ob.next_object = next_in_order(ob, queryset2)
         # for receiving updates without refresh_from_db
         ob.content.associated_obj = ob
         return ob
