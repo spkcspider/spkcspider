@@ -20,6 +20,8 @@
     <legend><h1>{% trans 'Protections' %}</h1></legend>
     {% for prot in protections %}
       {% include "spider_base/protections/protection_item.html" with prot=prot %}
+    {% empty %}
+      <data hidden="hidden" resource="rdf:nil"/>
     {% endfor %}
   </fieldset>
   <button class="w3-button w3-grey">

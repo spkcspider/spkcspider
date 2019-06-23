@@ -384,3 +384,7 @@ class AssignedContent(BaseInfoModel):
                     code='unique_together',
                 )
         super().clean()
+
+    @property
+    def is_hidden(self):
+        return self.getflag("unlisted")

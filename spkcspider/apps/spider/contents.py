@@ -22,7 +22,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 
-from rdflib import Literal, Graph, BNode, URIRef, XSD
+from rdflib import Literal, Graph, BNode, URIRef, XSD, RDF
 
 from .constants import VariantType, spkcgraph, ActionUrl, essential_contents
 from .conf import get_anchor_domain
@@ -30,7 +30,7 @@ from .serializing import paginate_stream, serialize_stream
 from .helpers import (
     get_settings_func, add_property, create_b64_id_token, merge_get_url
 )
-from .templatetags.spider_rdf import literalize
+from .helpers import literalize
 
 logger = logging.getLogger(__name__)
 
@@ -433,7 +433,7 @@ class BaseContent(models.Model):
                 "SPIDER_FILE_EMBED_FUNC",
                 "spkcspider.apps.spider.functions.embed_file_default"
             )(name, data, self, context)
-        return literalize(data, field)
+        return literalize(data, field, domain_base=context["hostpart"])
 
     def serialize(self, graph, ref_content, context):
         form = self.get_form(context["scope"])(
@@ -506,6 +506,12 @@ class BaseContent(models.Model):
                     value_node,
                     spkcgraph["value"],
                     self.map_data(name, field, i, graph, context)
+                ))
+            if not value:
+                graph.add((
+                    value_node,
+                    spkcgraph["value"],
+                    RDF.nil
                 ))
 
     def render_serialize(self, **kwargs):

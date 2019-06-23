@@ -1,13 +1,17 @@
 __all__ = ["literalize", "uriref", "spkc_namespace"]
 
 from django import template
-from django.forms import BoundField, Field
 
 from rdflib import Literal
-from rdflib.namespace import XSD, RDF, URIRef
+from rdflib.namespace import XSD, URIRef
+from django.forms import BoundField
 
 from ..constants import spkcgraph
-from ..helpers import merge_get_url
+from ..helpers import (
+    merge_get_url,
+    literalize as _literalize,
+    field_to_python as _field_to_python
+)
 
 register = template.Library()
 
@@ -24,13 +28,7 @@ def is_uriref(value):
 
 @register.filter()
 def field_to_python(value):
-    if isinstance(value, BoundField):
-        data = value.initial
-        if value.form.is_bound:
-            value = value.field.bound_data(value.data, data)
-        else:
-            value = data
-    return value
+    return _field_to_python(value)
 
 
 @register.simple_tag(takes_context=True)
@@ -44,35 +42,15 @@ def action_view(context):
     return Literal(url2, datatype=XSD.anyURI)
 
 
-@register.simple_tag()
-def literalize(ob, datatype=None, use_uriref=None):
-    if isinstance(ob, BoundField):
-        if not datatype:
-            datatype = getattr(ob.field, "spkc_datatype", None)
-        if use_uriref is None:
-            use_uriref = getattr(ob.field, "spkc_use_uriref", None)
-        ob = field_to_python(ob)
-    elif isinstance(datatype, BoundField):
-        if use_uriref is None:
-            use_uriref = getattr(datatype.field, "spkc_use_uriref", None)
-        datatype = getattr(datatype.field, "spkc_datatype", None)
-    elif isinstance(datatype, Field):
-        if use_uriref is None:
-            use_uriref = getattr(datatype, "spkc_use_uriref", None)
-        datatype = getattr(datatype, "spkc_datatype", None)
-    if ob is None:
-        return RDF.nil
-    if hasattr(ob, "get_absolute_url"):
-        if not datatype:
-            datatype = spkcgraph["hashableURI"]
-        if use_uriref is None:
-            use_uriref = True
-        ob = ob.get_absolute_url()
-    elif isinstance(ob, str) and not datatype:
-        datatype = XSD.string
-    if use_uriref:
-        return URIRef(ob)
-    return Literal(ob, datatype=datatype)
+@register.simple_tag(takes_context=True)
+def literalize(
+    context, ob, datatype=None, use_uriref=None, domain_base=""
+):
+    return _literalize(
+        ob,
+        datatype=datatype, use_uriref=use_uriref,
+        domain_base=context["hostpart"]
+    )
 
 
 @register.simple_tag()

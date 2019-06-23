@@ -3,7 +3,8 @@ __all__ = (
     "extract_app_dicts", "add_by_field", "prepare_description",
     "merge_get_url", "add_property", "is_decimal",
     "extract_host", "get_hashob", "aesgcm_scrypt_cryptor",
-    "aesgcm_pbkdf2_cryptor", "get_requests_params"
+    "aesgcm_pbkdf2_cryptor", "get_requests_params",
+    "literalize", "field_to_python"
 )
 
 
@@ -13,17 +14,18 @@ import base64
 import logging
 import inspect
 from hashlib import pbkdf2_hmac
-from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
+from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode, urljoin
 
 from functools import lru_cache
 from importlib import import_module
 
-from rdflib import Literal, BNode, XSD, RDF
+from rdflib import Literal, BNode, XSD, RDF, URIRef
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.encoding import force_bytes
+from django.forms import BoundField, Field
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -99,6 +101,48 @@ def is_decimal(inp, precision=None, allow_sign=False):
     return (
         None in (precision, prec_start) or len(inp)-prec_start-1 <= precision
     )
+
+
+def field_to_python(value):
+    if isinstance(value, BoundField):
+        data = value.initial
+        if value.form.is_bound:
+            value = value.field.bound_data(value.data, data)
+        else:
+            value = data
+    return value
+
+
+def literalize(
+    ob=None, datatype=None, use_uriref=None, domain_base=""
+):
+    if isinstance(ob, BoundField):
+        if not datatype:
+            datatype = getattr(ob.field, "spkc_datatype", None)
+        if use_uriref is None:
+            use_uriref = getattr(ob.field, "spkc_use_uriref", None)
+        ob = field_to_python(ob)
+    elif isinstance(datatype, BoundField):
+        if use_uriref is None:
+            use_uriref = getattr(datatype.field, "spkc_use_uriref", None)
+        datatype = getattr(datatype.field, "spkc_datatype", None)
+    elif isinstance(datatype, Field):
+        if use_uriref is None:
+            use_uriref = getattr(datatype, "spkc_use_uriref", None)
+        datatype = getattr(datatype, "spkc_datatype", None)
+    if ob is None:
+        return RDF.nil
+    if hasattr(ob, "get_absolute_url"):
+        if not datatype:
+            datatype = spkcgraph["hashableURI"]
+        if use_uriref is None:
+            use_uriref = True
+        ob = ob.get_absolute_url()
+    elif isinstance(ob, str) and not datatype:
+        datatype = XSD.string
+    if use_uriref:
+        return URIRef(urljoin(domain_base, ob))
+    return Literal(ob, datatype=datatype)
 
 
 def add_property(

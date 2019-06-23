@@ -8,7 +8,7 @@ from django.conf import settings
 
 from .constants import VariantType
 
-_base_variants = (
+_base_variants = ~(
     (
         ~Q(ctype__contains=VariantType.feature_connect.value) &
         Q(ctype__contains=VariantType.component_feature.value)
@@ -18,13 +18,13 @@ _base_variants = (
 
 machine_variants_q = (
     Q(ctype__contains=VariantType.machine.value) &
-    ~_base_variants
+    _base_variants  # such features cannot be created
 )
 
 
-listed_variants_q = ~(
+listed_variants_q = (
     _base_variants |
-    Q(ctype__contains=VariantType.unlisted.value)
+    ~Q(ctype__contains=VariantType.unlisted.value)
 )
 
 
@@ -96,7 +96,8 @@ def filter_components(searchlist, filter_unlisted=True, use_contents=True):
 
 
 def filter_contents(
-    searchlist, idlist, filter_unlisted=True, use_components=False
+    searchlist, idlist, filter_unlisted=True, feature_exception=True,
+    use_components=False
 ):
     searchq = Q()
     searchq_exc = Q()
@@ -168,11 +169,25 @@ def filter_contents(
             )
         )
     if not unlisted_active:
+        tmp = None
         if filter_unlisted is True:
-            searchq_exc |= Q(info__contains="\x1eunlisted\x1e")
-        else:
-            searchq_exc |= Q(
+            tmp = Q(info__contains="\x1eunlisted\x1e")
+        elif filter_unlisted is not False:
+            tmp = Q(
                 info__contains="\x1eunlisted\x1e",
                 priority__lte=filter_unlisted
             )
+        if tmp:
+            if feature_exception:
+                tmp &= ~(
+                    Q(
+                        ctype__ctype__contains=VariantType.feature_connect
+                        .value
+                    ) &
+                    ~Q(
+                        ctype__ctype__contains=VariantType.unlisted
+                        .value
+                    )
+                )
+            searchq_exc |= tmp
     return (searchq & ~searchq_exc, counter)
