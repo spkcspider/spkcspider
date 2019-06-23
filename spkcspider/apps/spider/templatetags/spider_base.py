@@ -18,8 +18,8 @@ def shall_show_content(context, content, priority=0):
     return (
         not content.is_hidden or
         (context["request"].is_owner and content.priority > priority) or
-        "_unlisted" in context["request"].GET.getlist("info") or
-        "_unlisted" in context["request"].POST.getlist("info")
+        "_unlisted" in context["request"].GET.getlist("search") or
+        "_unlisted" in context["request"].POST.getlist("search")
     )
 
 
