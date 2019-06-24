@@ -29,34 +29,21 @@
 {% endblock %}
 
 {% block main_classes %}{{block.super}}{% if scope == "add" %} w3-animate-bottom{% endif %}{% endblock %}
-{% block main_attributes %}{{block.super}} typeof="spkc:Content"{% endblock %}
+{% block main_attributes %}{{block.super}} {% if component_feature_type in object.ctype or content_feature_type in object.ctype %}typeof="spkc:Feature"{% else %}typeof="spkc:Content"{% endif %}{% endblock %}
 
 {% block content %}
-  <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
-  {% if scope == "add" %}
-    {% if component_feature_type in object.ctype or content_feature_type in object.ctype %}
-      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Feature</data>
-    {% else %}
-      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
-    {% endif %}
-  {% else %}
-    {% if component_feature_type in object.ctype.ctype or content_feature_type in object.ctype.ctype %}
-      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Feature</data>
-    {% else %}
-      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Content</data>
-    {% endif %}
-  {% endif %}
-  {% for f in active_listed_features %}
-    {% for action in f.feature_urls %}
-      <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
-        <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{action.name}}</data>
-      </data>
-    {% endfor %}
-  {% endfor %}
-  {% for ability in abilities %}
-    <data hidden="hidden" property="spkc:ability:name" datatype="xsd:string">{{ability}}</data>
-  {% endfor %}
   <div class="w3-padding"  style="min-height:140px">
+    <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
+    {% for f in active_listed_features %}
+      {% for action in f.feature_urls %}
+        <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
+          <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{action.name}}</data>
+        </data>
+      {% endfor %}
+    {% endfor %}
+    {% for ability in abilities %}
+      <data hidden="hidden" property="spkc:ability:name" datatype="xsd:string">{{ability}}</data>
+    {% endfor %}
     {% if request.is_special_user or uc.public %}
       {# index is redirected in view #}
       <a class="w3-left" href="{% url 'spider_base:ucontent-list' token=uc.token %}?{{request.GET.urlencode}}">

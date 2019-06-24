@@ -10,7 +10,7 @@ from django.http import Http404
 from django.core.paginator import InvalidPage, Paginator
 from django.db.models import Q
 
-from rdflib import URIRef, Literal, XSD
+from rdflib import URIRef, Literal, XSD, RDF
 
 
 from .constants import spkcgraph, VariantType
@@ -115,14 +115,14 @@ def serialize_content(graph, content, context, embed=False):
     ):
         graph.add((
             ref_content,
-            spkcgraph["type"],
-            Literal("Feature", datatype=XSD.string)
+            RDF["type"],
+            spkcgraph["spkc:Feature"]
         ))
     else:
         graph.add((
             ref_content,
-            spkcgraph["type"],
-            Literal("Content", datatype=XSD.string)
+            RDF["type"],
+            spkcgraph["spkc:Content"]
         ))
     if context["scope"] == "export":
         add_property(
@@ -154,10 +154,15 @@ def serialize_component(graph, component, context, visible=True):
         visible = True
     if not visible and ref_component != context["sourceref"]:
         return None
-    graph.add((
+    graph.set((
         ref_component,
         spkcgraph["type"],
         Literal("Component", datatype=XSD.string)
+    ))
+    graph.add((
+        ref_component,
+        RDF["type"],
+        spkcgraph["spkc:Component"]
     ))
     if component.primary_anchor:
         url_content = urljoin(

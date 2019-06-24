@@ -4,9 +4,8 @@ __all__ = {
 }
 
 import logging
-import binascii
 import tempfile
-import os
+import io
 
 from django.utils.translation import gettext as _
 from django.core.files import File
@@ -15,7 +14,6 @@ from django.core import exceptions
 from django.test import Client
 
 from rdflib import Graph, URIRef, Literal
-from rdflib.resource import Resource
 from rdflib.namespace import XSD
 import requests
 
@@ -25,44 +23,18 @@ from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
 from .constants import BUFFER_SIZE
-from .functions import get_hashob, get_requests_params, get_anchor_domain
+# uses specialized get_hashob from verifier (can be further customized)
+from .functions import get_hashob
+from .functions import get_requests_params, get_anchor_domain
 from .models import VerifySourceObject, DataVerificationTag
+
+logger = logging.getLogger(__name__)
 
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
 
 valid_wait_states = {
     "RETRIEVING", "HASHING", "STARTED"
 }
-
-
-def hash_entry(lit):
-    h = get_hashob()
-    if lit.datatype == XSD.base64Binary:
-        h.update(lit.datatype.encode("utf8"))
-        h.update(lit.toPython())
-    else:
-        if lit.datatype:
-            h.update(lit.datatype.encode("utf8"))
-        else:
-            h.update(XSD.string.encode("utf8"))
-        h.update(lit.encode("utf8"))
-    return h.finalize()
-
-
-def yield_hashes(graph, hashable_nodes):
-    for t in hashable_nodes:
-        for t2 in t[spkcgraph["value"]]:
-            if t2.datatype == spkcgraph["hashableURI"]:
-                continue
-            yield hash_entry(t2)
-
-
-def yield_hashable_urls(graph, hashable_nodes):
-    for t in hashable_nodes:
-        for t2 in t[spkcgraph["value"]]:
-            if t2.datatype != spkcgraph["hashableURI"]:
-                continue
-            yield t2
 
 
 def verify_download_size(length, current_size=0):
@@ -74,28 +46,25 @@ def verify_download_size(length, current_size=0):
     return True
 
 
-def validate(ob, hostpart, task=None):
-    dvfile = None
-    source = None
-    session = requests.session()
-    if isinstance(ob, tuple):
-        dvfile = open(ob[0], "r+b")
-        current_size = ob[1]
-    else:
-        current_size = 0
-        dvfile = tempfile.NamedTemporaryFile(delete=False)
+def retrieve_object(obj, current_size, graph=None, session=None):
+    # without graph return hash
+    ret = None
+    try:
+        if not isinstance(obj, str):
+            if graph is not None:
+                graph.parse(obj, format="turtle")
+            else:
+                h = get_hashob()
+                h.update(XSD.base64Binary.encode("utf8"))
+                for chunk in iter(lambda: obj.read(BUFFER_SIZE), b''):
+                    h.update(chunk)
+                return h.finalize()
 
-        source = VerifySourceObject.objects.get(
-            id=ob
-        )
-        url = source.get_url()
-        params, can_inline = get_requests_params(url)
+            return
+        params, can_inline = get_requests_params(obj)
         if can_inline:
-            resp = Client().get(url)
+            resp = Client().get(obj)
             if resp.status_code != 200:
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
                 raise exceptions.ValidationError(
                     _("Retrieval failed: %(reason)s"),
                     params={"reason": resp.reason},
@@ -103,35 +72,34 @@ def validate(ob, hostpart, task=None):
                 )
 
             c_length = resp.get("content-length", None)
-            if not verify_download_size(c_length, current_size):
+            if not verify_download_size(c_length, current_size[0]):
                 resp.close()
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
                 raise exceptions.ValidationError(
                     _("Content too big: %(size)s"),
                     params={"size": c_length},
                     code="invalid_size"
                 )
             c_length = int(c_length)
-            current_size += c_length
-            # clear file
-            dvfile.truncate(c_length)
-            dvfile.seek(0, 0)
-
-            for chunk in resp:
-                dvfile.write(chunk)
-            dvfile.seek(0, 0)
+            current_size[0] += c_length
+            if graph is not None:
+                graph.parse(getattr(
+                    resp, "streaming_content", io.BytesIO(resp.content)
+                ), format="turtle")
+            else:
+                h = get_hashob()
+                h.update(XSD.base64Binary.encode("utf8"))
+                for chunk in resp:
+                    h.update(chunk)
+                ret = h.finalize()
             resp.close()
         else:
+            if not session:
+                session = requests
             try:
                 with session.get(
-                    url, stream=True, **params
+                    obj, stream=True, **params
                 ) as resp:
                     if resp.status_code != 200:
-                        session.close()
-                        dvfile.close()
-                        os.unlink(dvfile.name)
                         raise exceptions.ValidationError(
                             _("Retrieval failed: %(reason)s"),
                             params={"reason": resp.reason},
@@ -139,10 +107,7 @@ def validate(ob, hostpart, task=None):
                         )
 
                     c_length = resp.headers.get("content-length", None)
-                    if not verify_download_size(c_length, current_size):
-                        session.close()
-                        dvfile.close()
-                        os.unlink(dvfile.name)
+                    if not verify_download_size(c_length, current_size[0]):
                         raise exceptions.ValidationError(
                             _("Content too big: %(size)s"),
                             params={"size": c_length},
@@ -150,385 +115,234 @@ def validate(ob, hostpart, task=None):
                         )
                     c_length = int(c_length)
                     current_size += c_length
-                    # preallocate file
-                    dvfile.truncate(c_length)
-                    dvfile.seek(0, 0)
+                    if graph is not None:
+                        graph.parse(resp.raw, format="turtle")
+                    else:
+                        h = get_hashob()
+                        h.update(XSD.base64Binary.encode("utf8"))
+                        for chunk in resp.iter_content(BUFFER_SIZE):
+                            h.update(chunk)
+                        ret = h.finalize()
 
-                    for chunk in resp.iter_content(BUFFER_SIZE):
-                        dvfile.write(chunk)
-                    dvfile.seek(0, 0)
             except requests.exceptions.Timeout:
-                session.close()
                 raise exceptions.ValidationError(
                     _('url timed out: %(url)s'),
-                    params={"url": url},
+                    params={"url": obj},
                     code="timeout_url"
                 )
             except requests.exceptions.ConnectionError:
-                session.close()
                 raise exceptions.ValidationError(
                     _('invalid url: %(url)s'),
-                    params={"url": url},
+                    params={"url": obj},
                     code="invalid_url"
                 )
-    g = Graph()
-    g.namespace_manager.bind("spkc", spkcgraph, replace=True)
-    try:
-        g.parse(
-            dvfile.name,
-            format="turtle"
-        )
     except Exception:
-        if settings.DEBUG:
-            dvfile.seek(0, 0)
-            logging.exception(dvfile.read())
-        logging.error("Parsing file failed")
-        session.close()
-        dvfile.close()
-        os.unlink(dvfile.name)
+        logger.error("Parsing graph failed", exc_info=settings.DEBUG)
         raise exceptions.ValidationError(
             _('Invalid graph fromat'),
             code="invalid_format"
         )
+    return ret
 
-    tmp = list(g.triples((None, spkcgraph["scope"], None)))
-    if len(tmp) != 1:
-        dvfile.close()
-        os.unlink(dvfile.name)
-        raise exceptions.ValidationError(
-            _('Invalid graph'),
-            code="invalid_graph"
-        )
-    start = tmp[0][0]
-    scope = tmp[0][2].toPython()
-    tmp = list(g.triples((start, spkcgraph["pages.num_pages"], None)))
-    if len(tmp) != 1:
-        session.close()
-        dvfile.close()
-        os.unlink(dvfile.name)
-        raise exceptions.ValidationError(
-            _('Invalid graph'),
-            code="invalid_graph"
-        )
-    pages = tmp[0][2].toPython()
-    tmp = list(g.triples((
-        start,
-        spkcgraph["pages.current_page"],
-        Literal(1, datatype=XSD.positiveInteger)
-    )))
-    if len(tmp) != 1:
-        session.close()
-        dvfile.close()
-        os.unlink(dvfile.name)
-        raise exceptions.ValidationError(
-            _('Must be page 1'),
-            code="invalid_page"
-        )
-    if task:
-        task.update_state(
-            state='RETRIEVING',
-            meta={
-                'page': 1,
-                'num_pages': pages
+
+def validate(ob, hostpart, task=None):
+    dvfile = None
+    source = None
+    g = Graph()
+    g.namespace_manager.bind("spkc", spkcgraph, replace=True)
+    with requests.session() as session:
+        if isinstance(ob, tuple):
+            current_size = ob[1]
+            with open(ob[0], "rb") as f:
+                retrieve_object(f, [current_size], graph=g, session=session)
+        else:
+            current_size = 0
+
+            source = VerifySourceObject.objects.get(
+                id=ob
+            )
+            url = source.get_url()
+            retrieve_object(url, [current_size], graph=g, session=session)
+
+        tmp = list(g.query(
+            """
+                SELECT ?base ?scope ?pages ?view
+                WHERE {
+                    ?base spkc:scope ?scope .
+                    ?base spkc:pages.num_pages ?pages .
+                    ?base spkc:pages.current_page ?current_page .
+                    ?base spkc:action:view ?view .
+                }
+            """,
+            initNs={"spkc": spkcgraph},
+            initBindings={
+                "current_page": Literal(1, datatype=XSD.positiveInteger)
             }
-        )
-    tmp = list(g.objects(start, spkcgraph["action:view"]))
-    if len(tmp) != 1:
-        session.close()
-        dvfile.close()
-        os.unlink(dvfile.name)
-        raise exceptions.ValidationError(
-            _('Invalid graph'),
-            code="invalid_graph"
-        )
-    view_url = tmp[0].toPython()
-    if isinstance(ob, tuple):
-        split = view_url.split("?", 1)
-        source = VerifySourceObject.objects.update_or_create(
-            url=split[0], defaults={"get_params": split[1]}
-        )
-    mtype = set()
-    if scope == "list":
-        mtype.add("UserComponent")
-    else:
-        mtype.update(map(
-            lambda x: x.toPython(), g.objects(start, spkcgraph["type"])
         ))
 
-    data_type = get_settings_func(
-        "VERIFIER_CLEAN_GRAPH",
-        "spkcspider.apps.verifier.functions.clean_graph"
-    )(mtype, g, start, source, hostpart)
-    if not data_type:
-        session.close()
-        dvfile.close()
-        os.unlink(dvfile.name)
-        raise exceptions.ValidationError(
-            _('Invalid graph type: %(type)s'),
-            params={"type": data_type},
-            code="invalid_type"
-        )
-
-    # retrieve further pages
-    for page in range(2, pages+1):
-        url = merge_get_url(
-            source.get_url(), raw="embed", page=str(page)
-        )
-        # validation not neccessary here (base url is verified)
-        params, can_inline = get_requests_params(url)
-        if can_inline:
-            resp = Client().get(url)
-            if resp.status_code != 200:
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
-                raise exceptions.ValidationError(
-                    _("Retrieval failed: %(reason)s"),
-                    params={"reason": resp.reason},
-                    code="error_code:{}".format(resp.status_code)
-                )
-
-            c_length = resp.get("content-length", None)
-            if not verify_download_size(c_length, current_size):
-                resp.close()
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
-                raise exceptions.ValidationError(
-                    _("Content too big: %(size)s"),
-                    params={"size": c_length},
-                    code="invalid_size"
-                )
-            c_length = int(c_length)
-            current_size += c_length
-            # clear file
-            dvfile.truncate(c_length)
-            dvfile.seek(0, 0)
-
-            for chunk in resp:
-                dvfile.write(chunk)
-            resp.close()
-            dvfile.seek(0, 0)
-        else:
-            try:
-                with session.get(
-                    url, stream=True, **params
-                ) as resp:
-                    if resp.status_code != 200:
-                        session.close()
-                        dvfile.close()
-                        os.unlink(dvfile.name)
-                        raise exceptions.ValidationError(
-                            _("Retrieval failed: %(reason)s"),
-                            params={"reason": resp.reason},
-                            code="error_code:{}".format(resp.status_code)
-                        )
-
-                    c_length = resp.headers.get("content-length", None)
-                    if not verify_download_size(c_length, current_size):
-                        session.close()
-                        dvfile.close()
-                        os.unlink(dvfile.name)
-                        raise exceptions.ValidationError(
-                            _("Content too big: %(size)s"),
-                            params={"size": c_length},
-                            code="invalid_size"
-                        )
-                    c_length = int(c_length)
-                    current_size += c_length
-                    # clear file
-                    dvfile.truncate(c_length)
-                    dvfile.seek(0, 0)
-
-                    for chunk in resp.iter_content(BUFFER_SIZE):
-                        dvfile.write(chunk)
-                    dvfile.seek(0, 0)
-            except requests.exceptions.Timeout:
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
-                raise exceptions.ValidationError(
-                    _('url timed out: %(url)s'),
-                    params={"url": url},
-                    code="timeout_url"
-                )
-            except requests.exceptions.ConnectionError:
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
-                raise exceptions.ValidationError(
-                    _('Invalid url: %(url)s'),
-                    params={"url": url},
-                    code="innvalid_url"
-                )
-
-        try:
-            g.parse(
-                dvfile.name,
-                format="turtle"
-            )
-        except Exception as exc:
-            if settings.DEBUG:
-                dvfile.seek(0, 0)
-                logging.error(dvfile.read())
-            logging.exception(exc)
-            session.close()
-            dvfile.close()
-            os.unlink(dvfile.name)
-            # pages could have changed, but still incorrect
+        if len(tmp) != 1:
             raise exceptions.ValidationError(
-                _("%(page)s is not a \"%(format)s\" file"),
-                params={"format": "turtle", "page": page},
-                code="invalid_file"
+                _('Invalid graph'),
+                code="invalid_graph"
             )
+        tmp = tmp[0]
+        start = tmp.base
+        # scope = tmp.scope.toPython()
+        view_url = tmp.view.toPython()
+        pages = tmp.pages.toPython()
 
         if task:
             task.update_state(
                 state='RETRIEVING',
                 meta={
-                    'page': page,
+                    'page': 1,
                     'num_pages': pages
                 }
             )
-    g.remove((None, spkcgraph["csrftoken"], None))
-
-    hashable_nodes = set(map(
-        lambda x: Resource(g, x),
-        g.subjects(
-            predicate=spkcgraph["hashable"], object=Literal(True)
-        )
-    ))
-
-    hashes = [
-        *yield_hashes(g, hashable_nodes)
-    ]
-    if task:
-        task.update_state(
-            state='RETRIEVING',
-            meta={
-                'hashable_urls_checked': 0
-            }
-        )
-    for count, lit in enumerate(yield_hashable_urls(
-        g, hashable_nodes
-    ), start=1):
-        if (URIRef(lit.value), None, None) in g:
-            continue
-        url = merge_get_url(lit.value, raw="embed")
-        if not get_settings_func(
-            "SPIDER_URL_VALIDATOR",
-            "spkcspider.apps.spider.functions.validate_url_default"
-        )(url):
-            session.close()
-            dvfile.close()
-            os.unlink(dvfile.name)
-            raise exceptions.ValidationError(
-                _('Insecure url: %(url)s'),
-                params={"url": url},
-                code="insecure_url"
+        if isinstance(ob, tuple):
+            split = view_url.split("?", 1)
+            source = VerifySourceObject.objects.update_or_create(
+                url=split[0], defaults={"get_params": split[1]}
             )
 
-        params, can_inline = get_requests_params(url)
-        if can_inline:
-            resp = Client().get(url)
-            if resp.status_code != 200:
-                raise exceptions.ValidationError(
-                    _("Retrieval failed: %(reason)s"),
-                    params={"reason": resp.reason},
-                    code="code_{}".format(resp.status_code)
-                )
-            h = get_hashob()
-            h.update(XSD.base64Binary.encode("utf8"))
-            for chunk in resp.iter_content(BUFFER_SIZE):
-                h.update(chunk)
-            resp.close()
-            # do not use add as it could be corrupted by user
-            # (user can provide arbitary data)
-            g.set((
-                URIRef(lit.value),
-                spkcgraph["hash"],
-                Literal(h.finalize().hex())
-            ))
+        # retrieve further pages
+        for page in range(2, pages+1):
+            url = merge_get_url(
+                source.get_url(), raw="embed", page=str(page)
+            )
+            retrieve_object(url, [current_size], graph=g, session=session)
+
             if task:
                 task.update_state(
                     state='RETRIEVING',
                     meta={
-                        'hashable_urls_checked': count
+                        'page': page,
+                        'num_pages': pages
                     }
                 )
-        else:
-            try:
-                with session.get(
-                    url, stream=True, **params
-                ) as resp:
-                    if resp.status_code != 200:
+
+        # check and clean graph
+        data_type = get_settings_func(
+            "VERIFIER_CLEAN_GRAPH",
+            "spkcspider.apps.verifier.functions.clean_graph"
+        )(g, start, source, hostpart)
+        if not data_type:
+            raise exceptions.ValidationError(
+                _('Invalid graph (Verification failed)'),
+                code="graph_failed"
+            )
+        g.remove((None, spkcgraph["csrftoken"], None))
+
+        hashable_nodes = g.query(
+            """
+                SELECT DISTINCT ?base ?type ?name ?value
+                WHERE {
+                    ?base spkc:type ?type .
+                    ?base spkc:properties ?prop .
+                    ?prop spkc:hashable "true"^^xsd:boolean .
+                    ?prop spkc:name ?name .
+                    ?prop spkc:value ?value .
+                    OPTIONAL {
+                        ?value spkc:properties ?prop2 .
+                        ?prop2 spkc:name "info"^^xsd:boolean .
+                        ?prop2 spkc:value ?info .
+                    } .
+                }
+            """,
+            initNs={"spkc": spkcgraph}
+        )
+
+        if task:
+            task.update_state(
+                state='HASHING',
+                meta={
+                    'hashable_nodes_checked': 0
+                }
+            )
+        # make sure triples are linked to start
+        # (user can provide arbitary data)
+        g.remove((start, spkcgraph["hashed"], None))
+        # MAYBE: think about logic for incoperating hashes
+        g.remove((start, spkcgraph["hash"], None))
+        nodes = {}
+        resources_with_hash = {}
+        for count, val in enumerate(hashable_nodes, start=1):
+            if isinstance(val.value, URIRef):
+                assert(val.info)
+                h = get_hashob()
+                h.update(XSD.string.encode("utf8"))
+                h.update(str(val.value).encode("utf8"))
+                _hash = h.finalize()
+            elif val.value.datatype == spkcgraph["hashableURI"]:
+                _hash = resources_with_hash.get(val.value.value)
+                if not _hash:
+                    url = merge_get_url(val.value.value, raw="embed")
+                    if not get_settings_func(
+                        "SPIDER_URL_VALIDATOR",
+                        "spkcspider.apps.spider.functions.validate_url_default"
+                    )(url):
                         raise exceptions.ValidationError(
-                            _("Retrieval failed: %(reason)s"),
-                            params={"reason": resp.reason},
-                            code="code_{}".format(resp.status_code)
+                            _('Insecure url: %(url)s'),
+                            params={"url": url},
+                            code="insecure_url"
                         )
-                    h = get_hashob()
-                    h.update(XSD.base64Binary.encode("utf8"))
-                    for chunk in resp.iter_content(BUFFER_SIZE):
-                        h.update(chunk)
+                    _hash = retrieve_object(
+                        url, [current_size], session=session
+                    )
                     # do not use add as it could be corrupted by user
                     # (user can provide arbitary data)
+                    _uri = URIRef(val.value.value)
                     g.set((
-                        URIRef(lit.value),
+                        _uri,
                         spkcgraph["hash"],
-                        Literal(h.finalize().hex())
+                        Literal(_hash.hex())
                     ))
-                    if task:
-                        task.update_state(
-                            state='RETRIEVING',
-                            meta={
-                                'hashable_urls_checked': count
-                            }
-                        )
-            except requests.exceptions.Timeout:
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
-                raise exceptions.ValidationError(
-                    _('url timed out: %(url)s'),
-                    params={"url": url},
-                    code="timeout_url"
+            else:
+                h = get_hashob()
+                if val.value.datatype == XSD.base64Binary:
+                    h.update(val.value.datatype.encode("utf8"))
+                    h.update(val.value.toPython())
+                elif val.value.datatype:
+                    h.update(val.value.datatype.encode("utf8"))
+                    h.update(val.value.encode("utf8"))
+                else:
+                    h.update(XSD.string.encode("utf8"))
+                    h.update(val.value.encode("utf8"))
+                _hash = h.finalize()
+            h = get_hashob()
+            h.update(val.name.toPython().encode("utf8"))
+            h.update(_hash)
+            base = str(val.base)
+            nodes.setdefault(base, ([], val.type))
+            nodes[base][0].append(h.finalize())
+            if task:
+                task.update_state(
+                    state='HASHING',
+                    meta={
+                        'hashable_nodes_checked': count
+                    }
                 )
-            except requests.exceptions.ConnectionError:
-                session.close()
-                dvfile.close()
-                os.unlink(dvfile.name)
-                raise exceptions.ValidationError(
-                    _('Invalid url: %(url)s'),
-                    params={"url": url},
-                    code="innvalid_url"
-                )
-    # not required anymore
-    session.close()
     if task:
         task.update_state(
             state='HASHING',
+            meta={
+                'hashable_nodes_checked': "all"
+            }
         )
 
-    # make sure triples are linked to start
-    # (user can provide arbitary data)
-    g.remove((start, spkcgraph["hashed"], None))
-    for t in g.triples((None, spkcgraph["hash"], None)):
-        g.add((
-            start,
-            spkcgraph["hashed"],
-            t[0]
-        ))
-        hashes.append(binascii.unhexlify(t[2].value))
-
-    for i in g.subjects(spkcgraph["type"], Literal("Content")):
+    # first sort hashes per node and create hash over sorted hashes
+    # de-duplicate super-hashes (means: nodes are identical)
+    hashes = set()
+    for val, _type in nodes.values():
         h = get_hashob()
-        h.update(i.encode("utf8"))
-        hashes.append(h.finalize())
-    hashes.sort()
+        for _hob in sorted(val):
+            h.update(_hob)
+        h.update(_type.encode("utf8"))
+        hashes.add(h.finalize())
 
+    # then create hash over sorted de-duplicated node hashes
     h = get_hashob()
-    for i in hashes:
+    for i in sorted(hashes):
         h.update(i)
     # do not use add as it could be corrupted by user
     # (user can provide arbitary data)
@@ -539,23 +353,20 @@ def validate(ob, hostpart, task=None):
         Literal(digest)
     ))
 
-    dvfile.truncate(0)
-    dvfile.seek(0, 0)
-    # save in temporary file
-    g.serialize(
-        dvfile, format="turtle"
-    )
+    with tempfile.NamedTemporaryFile(delete=True) as dvfile:
+        # save in temporary file
+        g.serialize(
+            dvfile, format="turtle"
+        )
 
-    result, created = DataVerificationTag.objects.get_or_create(
-        defaults={
-            "dvfile": File(dvfile),
-            "source": source,
-            "data_type": data_type
-        },
-        hash=digest
-    )
-    dvfile.close()
-    os.unlink(dvfile.name)
+        result, created = DataVerificationTag.objects.get_or_create(
+            defaults={
+                "dvfile": File(dvfile),
+                "source": source,
+                "data_type": data_type
+            },
+            hash=digest
+        )
     update_fields = set()
     # and source, cannot remove source without replacement
     if not created and source and source != result.source:
@@ -595,7 +406,7 @@ def verify_tag(tag, hostpart=None, ffrom="sync_call", task=None):
         try:
             tag.callback(hostpart)
         except exceptions.ValidationError:
-            logging.exception("Error while calling back")
+            logger.exception("Error while calling back")
     if task:
         task.update_state(
             state='SUCCESS'

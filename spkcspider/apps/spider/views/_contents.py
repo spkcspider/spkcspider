@@ -326,6 +326,11 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             ))
             g.add((
                 session_dict["sourceref"],
+                spkcgraph["type"],
+                Literal("Component", datatype=XSD.string)
+            ))
+            g.add((
+                session_dict["sourceref"],
                 spkcgraph["strength"],
                 Literal(self.usercomponent.strength, datatype=XSD.integer)
             ))

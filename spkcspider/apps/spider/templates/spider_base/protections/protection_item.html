@@ -4,8 +4,7 @@
   <div class="w3-padding-small w3-card w3-white">
     <h1 class="w3-center" style="word-break:break-word">{{prot.1.auth_localize_name}}</h1>
     <span typeof="spkc:Protection">
-      <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{prot.1.code}}</data>
-      <data hidden="hidden" property="spkc:type" datatype="xsd:string">Protection</data>
+      <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{prot.1.code}}</data>
       <input type="hidden" name="protection_codes" value="{{prot.1.code}}" />
       {% render_protection prot %}
     </span>

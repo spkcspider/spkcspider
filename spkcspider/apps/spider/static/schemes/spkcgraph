@@ -19,13 +19,9 @@ spkc:Entity a rdfs:Class ;
 spkc:type a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "type" ;
-  rdfs:comment "The type of an Entity." ;
+  rdfs:comment "The type of an Entity (ctype, Protection.name or Component)." ;
   rdfs:domain spkc:Entity ;
-  rdfs:subClassOf rdfs:Container;
-  rdfs:range (
-    rdfs:Literal
-    rdf:nil
-  ) .
+  rdfs:range rdfs:Literal .
 
 spkc:strength a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
@@ -115,10 +111,8 @@ spkc:value a rdf:value ;
 spkc:name a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "name" ;
-  rdfs:comment "The name of a spkc:property, protection" ;
+  rdfs:comment "The name of a spkc:property" ;
   rdfs:domain spkc:Property ;
-  rdfs:domain spkc:Protection ;
-  rdfs:domain spkc:Entity ;
   rdfs:range xsd:string .
 
 spkc:fieldname a rdf:value ;

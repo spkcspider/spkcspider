@@ -442,11 +442,6 @@ class BaseContent(models.Model):
                 **context
             )
         )
-        graph.add((
-            ref_content,
-            spkcgraph["type"],
-            Literal(self.associated.getlist("type", 1)[0])
-        ))
         if "abilities" not in context:
             context["abilities"] = set(self.get_abilities(context))
 
@@ -570,7 +565,12 @@ class BaseContent(models.Model):
             uc = kwargs.get("source", self.associated.usercomponent)
             g.add((
                 session_dict["sourceref"], spkcgraph["strength"],
-                Literal(uc.strength)
+                Literal(uc.strength, datatype=XSD.integer)
+            ))
+            g.add((
+                session_dict["sourceref"],
+                spkcgraph["type"],
+                Literal(self.associated.ctype.name, datatype=XSD.string)
             ))
             token = getattr(session_dict["request"], "auth_token", None)
             if token:
@@ -619,13 +619,6 @@ class BaseContent(models.Model):
         )
         kwargs.setdefault("legend", escape(_("View")))
         # not required: done by access template
-        # kwargs.setdefault(
-        #    "add_spkc_types",
-        #    [
-        #        self.associated.getlist("type", 1)[0],
-        #        "Content"
-        #    ]
-        # )
         return (
             render_to_string(
                 self.get_template_name(kwargs["scope"]),

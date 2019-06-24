@@ -97,15 +97,18 @@ def domain_auth(source, hostpart):
     return ret
 
 
-def clean_graph(mtype, graph, start, source, hostpart):
+def clean_graph(graph, start, source, hostpart):
+    mtype = str(graph.value(
+        subject=start, predicate=spkcgraph["type"], any=not settings.DEBUG
+    ))
     if not mtype:
         return None
-    elif "UserComponent" in mtype:
+    elif "UserComponent" == mtype:
         return "list"
-    elif "SpiderTag" in mtype:
+    elif "SpiderTag" == mtype:
         if (
             URIRef(start),
-            spkcgraph["features"],
+            spkcgraph["abilities"],
             Literal("verify", datatype=XSD.string)
         ) in graph:
             return "layout_cb"
