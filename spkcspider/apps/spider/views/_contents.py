@@ -29,9 +29,9 @@ from next_prev import next_in_order, prev_in_order
 from rdflib import Graph, Literal, URIRef, XSD
 
 
-from ._core import (
-    UCTestMixin, EntityDeletionMixin, ReferrerMixin, UserTestMixin
-)
+from ._core import UCTestMixin, EntityDeletionMixin, UserTestMixin
+from ._referrer import ReferrerMixin
+
 from ..models import (
     AssignedContent, ContentVariant, UserComponent, TravelProtection
 )
