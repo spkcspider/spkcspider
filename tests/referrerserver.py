@@ -32,8 +32,8 @@ class ReferrerHandler(BaseHTTPRequestHandler):
         self.log_message("query: %s", str(self.query))
 
         renew = self.query.get(
-            b"renew", [b"false"]
-        )[0] == b"true"
+            b"action", [b"foo"]
+        )[0] != b"create"
 
         algo = self.query.get(
             b"hash_algorithm", [b"sha512"]

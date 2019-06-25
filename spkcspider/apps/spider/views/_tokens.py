@@ -8,13 +8,17 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.views.generic.edit import DeleteView
+from django.utils.translation import gettext
+
 from django.http import (
     Http404, HttpResponseServerError, JsonResponse, HttpResponseRedirect,
     HttpResponse
 )
 
+from django.utils.http import is_safe_url
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.contrib import messages
 from django.views import View
 from django.test import Client
 
@@ -22,6 +26,7 @@ from django.test import Client
 import requests
 
 from ._core import UCTestMixin
+from ._referrer import ReferrerMixin
 from ..models import AuthToken
 from ..helpers import get_settings_func, get_requests_params
 from ..constants import TokenCreationError
@@ -87,6 +92,10 @@ class AdminTokenManagement(UCTestMixin, View):
                 "name": token.token,
                 "id": token.id,
                 "same_session": True,
+                "needs_confirmation": (
+                    "request_intentions" in token.extra or
+                    "request_filter" in token.extra
+                ),
                 "created": self.created_token == token,
                 "admin_key": self.request.auth_token == token
             }
@@ -101,6 +110,10 @@ class AdminTokenManagement(UCTestMixin, View):
                 "name": token.token,
                 "id": token.id,
                 "same_session": True,
+                "needs_confirmation": (
+                    "request_intentions" in token.extra or
+                    "request_filter" in token.extra
+                ),
                 "created": self.created_token == token,
                 "admin_key": True
             }
@@ -114,6 +127,10 @@ class AdminTokenManagement(UCTestMixin, View):
                 "name": str(token),
                 "id": token.id,
                 "same_session": False,
+                "needs_confirmation": (
+                    "request_intentions" in token.extra or
+                    "request_filter" in token.extra
+                ),
                 "created": self.created_token == token,
                 "admin_key": False
             }
@@ -121,11 +138,15 @@ class AdminTokenManagement(UCTestMixin, View):
     def get(self, request, *args, **kwargs):
         if self.scope == "delete":
             response = {
-                "tokens": list(map(
+                "tokens": list(sorted(map(
                     self._token_dict,
                     AuthToken.objects.filter(
                         usercomponent=self.usercomponent
-                    )  # TODO: add order function which sorts admin_key higher
+                    )
+                ), key=lambda x: (
+                        0 if x["admin_key"] else 1,
+                        x["id"]
+                    )
                 )),
             }
         else:
@@ -257,7 +278,7 @@ class TokenRenewal(UCTestMixin, View):
             "oldtoken": self.oldtoken,
             "token": self.request.auth_token.token,
             "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
-            "renew": "true"
+            "action": "renew"
         }
         if "payload" in self.request.POST:
             d["payload"] = self.request.POST["payload"]
@@ -346,4 +367,108 @@ class TokenRenewal(UCTestMixin, View):
         # sl: safety (but anyway checked by referer check)
         ret["Access-Control-Allow-Origin"] = \
             self.request.auth_token.referrer.host
+        return ret
+
+
+class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
+    model = AuthToken
+    redirect_field_name = "next"
+
+    def get_redirect_url(self):
+        """Return the user-originating redirect URL if it's safe."""
+        redirect_to = self.request.POST.get(
+            self.redirect_field_name,
+            self.request.GET.get(self.redirect_field_name, '')
+        )
+        url_is_safe = is_safe_url(
+            url=redirect_to,
+            allowed_hosts={self.request.get_host()},
+            require_https=self.request.is_secure(),
+        )
+        return redirect_to if url_is_safe else ''
+
+    def test_func(self):
+        return self.has_special_access(
+            user_by_login=True, user_by_token=True
+        )
+
+    def dispatch_extra(self, request, *args, **kwargs):
+        _ = gettext
+        token = get_object_or_404(
+            AuthToken,
+            token=kwargs["token"],
+            referrer__isnull=False
+        )
+        context = self.get_context_data()
+        # fallback to intentions if no request_intentions
+        # remove "domain", "sl"
+        context["intentions"] = set(self.request.auth_token.extra.get(
+            "request_intentions", self.request.auth_token.extra.get(
+                "intentions", []
+            )
+        )).difference_update({"domain", "sl"})
+        context["referrer"] = self.request.auth_token.referrer.url
+        context["action"] = "update"
+        ret = self.handle_referrer_request(
+            context, token, dontact=True, no_oldtoken=True
+        )
+        if isinstance(ret, HttpResponseRedirect):
+            if context["post_success"]:
+                messages.success(request, _("Intention update successful"))
+            else:
+                messages.error(request, _("Intention update failed"))
+            return HttpResponseRedirect(self.get_redirect_url())
+        return ret
+
+
+class RequestTokenUpdate(UCTestMixin, View):
+
+    def test_func(self):
+        self.request.auth_token = get_object_or_404(
+            AuthToken,
+            token=self.request.POST("token", self.request.GET["token"]),
+            persist__gte=0,
+            referrer__isnull=False
+        )
+        return bool(self.request.auth_token)
+
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except Http404:
+            return get_settings_func(
+                "SPIDER_RATELIMIT_FUNC",
+                "spkcspider.apps.spider.functions.rate_limit_default"
+            )(self, request)
+
+    def get(self, request, *args, **kwargs):
+        ret_dict = {}
+        if "request_intentions" in request.auth_token.extra:
+            ret_dict["intentions"] = \
+                request.auth_token.extra["request_intentions"]
+        if "filter" in request.auth_token.extra:
+            ret_dict["filter"] = request.auth_token.extra["filter"]
+        return JsonResponse(ret_dict)
+
+    def post(self, request, *args, **kwargs):
+        ret_dict = {}
+        if "intentions" in request.POST:
+            # will be checked a second time
+            request.auth_token.extra["request_intentions"] = \
+                request.POST.getlist("intentions")
+            ret_dict["intentions"] = \
+                request.auth_token.extra["request_intentions"]
+        if "search" in request.POST:
+            # will be checked a second time
+            request.auth_token.extra["request_filter"] = \
+                request.POST.getlist("search")
+            ret_dict["filter"] = \
+                request.auth_token.extra["filter"]
+        request.auth_token.save(update_fields=["extra"])
+        return JsonResponse(ret_dict)
+
+    def options(self, request, *args, **kwargs):
+        ret = super().options()
+        ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return ret

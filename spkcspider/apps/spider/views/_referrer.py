@@ -109,9 +109,9 @@ class ReferrerMixin(object):
         d = {
             "token": token.token,
             "hash_algorithm": settings.SPIDER_HASH_ALGORITHM.name,
-            "renew": "false"
+            "action": context["action"],
         }
-        if context["payload"]:
+        if context["payload"] is not None:
             d["payload"] = context["payload"]
         params, can_inline = get_requests_params(context["referrer"])
         if can_inline:
@@ -292,9 +292,7 @@ class ReferrerMixin(object):
             if self.usercomponent.primary_anchor:
                 token.persist = self.usercomponent.primary_anchor.id
         else:
-            # check if token was reused if not persisted
-            if token.referrer:
-                return False
+            token.persist = -1
 
         if "initial_referrer_url" not in token.extra:
             token.extra["initial_referrer_url"] = "{}://{}{}".format(
@@ -307,6 +305,9 @@ class ReferrerMixin(object):
     def handle_domain_auth(self, context, token):
         assert token or self.request.is_special_user, \
             "special user and no token"
+
+        context.setdefault("payload", None)
+        context.setdefault("action", "create")
         if not self.allow_domain_mode:
             return HttpResponse(
                 status=400,
@@ -336,18 +337,24 @@ class ReferrerMixin(object):
         return ret
 
     def handle_referrer_request(
-        self, context, token, keep=False, redirect_url=None
+        self, context, token, keep=False, dontact=False, no_oldtoken=False
     ):
         """
-            redirect_url: redirect instead probing
+            no_oldtoken: don't use old token for calculating:
+                           old_ids, old_filter
+                         (performance and manual old_* possible)
+            dontact: dont act if probing results fails
         """
         _ = gettext
-        model = context.get("model", self.model)
-
+        context.setdefault("action", "create")
+        context.setdefault("model", self.model)
+        context.setdefault("payload", None)
         context["is_serverless"] = "sl" in context["intentions"]
         context.setdefault("ids", set())
         context.setdefault("filter", set())
-        if keep:
+        context.setdefault("old_ids", set())
+        context.setdefault("old_filter", set())
+        if keep is True:
             context["ids"].update(token.extra.get("ids", []))
             context["filter"].update(token.extra.get("filter", []))
 
@@ -403,8 +410,6 @@ class ReferrerMixin(object):
                 return HttpResponseServerError(
                     _("Token creation failed, try again")
                 )
-            if redirect_url:
-                return HttpResponseRedirect(redirect_url)
 
             if context["is_serverless"]:
                 context["post_success"] = True
@@ -412,6 +417,8 @@ class ReferrerMixin(object):
             else:
                 context["post_success"] = False
                 ret = self.refer_with_post(context, token)
+            if dontact:
+                return ret
             if not context["post_success"]:
                 if newtoken:
                     logger.warning(
@@ -422,21 +429,16 @@ class ReferrerMixin(object):
             return ret
 
         elif action == "cancel":
-            if redirect_url:
-                return HttpResponseRedirect(redirect_url)
-            else:
-                return HttpResponseRedirect(
-                    redirect_to=merge_get_url(
-                        context["referrer"],
-                        status="canceled",
-                        payload=context["payload"]
-                    )
+            return HttpResponseRedirect(
+                redirect_to=merge_get_url(
+                    context["referrer"],
+                    status="canceled",
+                    payload=context["payload"]
                 )
+            )
         else:
-            oldtoken = None
-            # don't re-add search parameters, only initialize
             if (
-                self.request.method != "POST" and
+                no_oldtoken and
                 "persist" in context["intentions"]
             ):
                 oldtoken = AuthToken.objects.filter(
@@ -444,16 +446,18 @@ class ReferrerMixin(object):
                     referrer__url=context["referrer"],
                 ).first()
 
-            if oldtoken:
-                context["old_ids"].update(oldtoken.extra.get("ids", []))
-                context["old_filter"] = oldtoken.extra.get("filter", [])
+                if oldtoken:
+                    context["old_ids"].update(oldtoken.extra.get("ids", []))
+                    context["old_filter"].update(oldtoken.extra.get(
+                        "filter", []
+                    ))
 
             if not self.clean_refer_intentions(context, token):
                 return HttpResponse(
                     status=400,
                     content=_('Error: intentions incorrect')
                 )
-            context["object_list"] = model.objects.filter(
+            context["object_list"] = context["model"].objects.filter(
                 id__in=context["ids"]
             )
             return self.response_class(
@@ -489,6 +493,7 @@ class ReferrerMixin(object):
         context["intentions"] = set(self.request.GET.getlist("intention"))
         context["referrer"] = merge_get_url(self.request.GET["referrer"])
         context["payload"] = self.request.GET.get("payload", None)
+        context["action"] = "create"
 
         if not get_settings_func(
             "SPIDER_URL_VALIDATOR",
