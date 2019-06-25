@@ -18,6 +18,7 @@ from spkcspider.apps.spider.models import (
 from .models import WebConfig
 
 _empty_set = frozenset()
+tmpconfig_max = 1024
 
 
 class WebConfigView(UCTestMixin, View):
@@ -108,6 +109,13 @@ class WebConfigView(UCTestMixin, View):
         return self.render_to_response(self.object.config)
 
     def post(self, request, *args, **kwargs):
+        if "persist" not in self.request.auth_token.extra.get(
+            "intentions", _empty_set
+        ) and len(self.request.body) > tmpconfig_max:
+            return HttpResponse(
+                "TmpConfig can only hold: %s bytes" % tmpconfig_max,
+                status_code=400
+            )
         self.object = self.get_object()
         old_size = self.object.get_size()
         oldconfig = self.object.config
@@ -116,6 +124,7 @@ class WebConfigView(UCTestMixin, View):
         )
         # a full_clean is here not required
         self.object.clean()
+
         try:
             self.object.update_used_space(old_size-self.object.get_size())
         except ValidationError as exc:
