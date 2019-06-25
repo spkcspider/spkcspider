@@ -19,6 +19,7 @@ from jsonfield import JSONField
 from ..constants import (
     MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError
 )
+from .base import BaseSubUserComponentModel
 from ..helpers import create_b64_id_token
 from ..validators import validator_token
 from ..protections import installed_protections, ProtectionList, PseudoPw
@@ -195,7 +196,7 @@ def get_limit_choices_assigned_protection():
     return models.Q(code__in=Protection.objects.valid()) & restriction
 
 
-class AssignedProtection(models.Model):
+class AssignedProtection(BaseSubUserComponentModel):
     id = models.BigAutoField(primary_key=True)
     # fix linter warning
     objects = models.Manager()
@@ -271,12 +272,8 @@ class AssignedProtection(models.Model):
             required_passes=required_passes, ptype=ptype
         )
 
-    @property
-    def user(self):
-        return self.usercomponent.user
 
-
-class AuthToken(models.Model):
+class AuthToken(BaseSubUserComponentModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     usercomponent = models.ForeignKey(
         "spider_base.UserComponent", on_delete=models.CASCADE,

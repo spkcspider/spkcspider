@@ -1,4 +1,7 @@
-__all__ = ["BaseInfoModel", "ReferrerObject", "info_and", "info_or"]
+__all__ = [
+    "BaseInfoModel", "BaseSubUserComponentModel", "ReferrerObject",
+    "info_and", "info_or"
+]
 
 import re
 
@@ -104,6 +107,20 @@ class ReferrerObject(models.Model):
     @cached_property
     def host(self):
         return extract_host(self.url)
+
+
+class BaseSubUserComponentModel(models.Model):
+
+    class Meta:
+        abstract = True
+
+    @property
+    def user(self):
+        return self.usercomponent.user
+
+    @property
+    def username(self):
+        return self.usercomponent.username
 
 
 class BaseInfoModel(models.Model):

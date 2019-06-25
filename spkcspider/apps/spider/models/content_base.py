@@ -29,7 +29,7 @@ from ..constants import (
 )
 from ..validators import content_name_validator, validator_token
 
-from .base import BaseInfoModel
+from .base import BaseInfoModel, BaseSubUserComponentModel
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +199,7 @@ class UserContentManager(models.Manager):
             )
 
 
-class AssignedContent(BaseInfoModel):
+class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     # fake_level = models.PositiveIntegerField(null=False, default=0)
     attached_to_token = models.ForeignKey(
