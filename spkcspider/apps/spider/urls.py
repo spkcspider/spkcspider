@@ -13,7 +13,8 @@ from .views import (
 )
 
 from .views import (
-    AdminTokenManagement, TokenDeletionRequest, TokenRenewal
+    AdminTokenManagement, TokenDeletionRequest, TokenRenewal,
+    ConfirmTokenUpdate, RequestTokenUpdate
 )
 
 app_name = "spider_base"
@@ -99,6 +100,16 @@ urlpatterns = [
         'token/<str:token>/share/',
         AdminTokenManagement.as_view(scope="share"),
         name='token-admin-share'
+    ),
+    path(
+        'token/confirm-update-request/',
+        ConfirmTokenUpdate.as_view(),
+        name='token-confirm-update-request'
+    ),
+    path(
+        'token/update-request/',
+        RequestTokenUpdate.as_view(),
+        name='token-update-request'
     ),
     path(
         'token/delete-request/',

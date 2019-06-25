@@ -1,5 +1,6 @@
 __all__ = (
-    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal"
+    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal",
+    "ConfirmTokenUpdate", "RequestTokenUpdate"
 )
 
 import logging
@@ -25,7 +26,7 @@ from django.test import Client
 
 import requests
 
-from ._core import UCTestMixin
+from ._core import UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 from ..models import AuthToken
 from ..helpers import get_settings_func, get_requests_params
@@ -394,11 +395,6 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
 
     def dispatch_extra(self, request, *args, **kwargs):
         _ = gettext
-        token = get_object_or_404(
-            AuthToken,
-            token=kwargs["token"],
-            referrer__isnull=False
-        )
         context = self.get_context_data()
         # fallback to intentions if no request_intentions
         # remove "domain", "sl"
@@ -410,7 +406,7 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
         context["referrer"] = self.request.auth_token.referrer.url
         context["action"] = "update"
         ret = self.handle_referrer_request(
-            context, token, dontact=True, no_oldtoken=True
+            context, self.object, dontact=True, no_oldtoken=True
         )
         if isinstance(ret, HttpResponseRedirect):
             if context["post_success"]:
@@ -420,14 +416,24 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
             return HttpResponseRedirect(self.get_redirect_url())
         return ret
 
+    def get_usercomponent(self):
+        token = self.request.POST.get("token", None)
+        if not token:
+            raise Http404()
+        self.object = get_object_or_404(
+            AuthToken,
+            token=token,
+            referrer__isnull=False
+        )
+        return self.object.usercomponent
 
-class RequestTokenUpdate(UCTestMixin, View):
+
+class RequestTokenUpdate(UserTestMixin, View):
 
     def test_func(self):
         self.request.auth_token = get_object_or_404(
             AuthToken,
-            token=self.request.POST("token", self.request.GET["token"]),
-            persist__gte=0,
+            token=self.request.POST("token"),
             referrer__isnull=False
         )
         return bool(self.request.auth_token)
