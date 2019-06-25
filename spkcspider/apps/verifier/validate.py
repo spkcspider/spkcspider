@@ -244,7 +244,7 @@ def validate(ob, hostpart, task=None):
                     ?prop spkc:value ?value .
                     OPTIONAL {
                         ?value spkc:properties ?prop2 .
-                        ?prop2 spkc:name "info"^^xsd:boolean .
+                        ?prop2 spkc:name "info"^^xsd:string .
                         ?prop2 spkc:value ?info .
                     } .
                 }
@@ -270,8 +270,10 @@ def validate(ob, hostpart, task=None):
             if isinstance(val.value, URIRef):
                 assert(val.info)
                 h = get_hashob()
+                # should always hash with xsd.string
                 h.update(XSD.string.encode("utf8"))
-                h.update(str(val.value).encode("utf8"))
+                # don't strip id, as some contents seperate only by id
+                h.update(str(val.info).encode("utf8"))
                 _hash = h.finalize()
             elif val.value.datatype == spkcgraph["hashableURI"]:
                 _hash = resources_with_hash.get(val.value.value)
