@@ -419,8 +419,6 @@ class ReferrerMixin(object):
                     )
                 else:
                     token.delete()
-            else:
-                newtoken.delete()
             return ret
 
         elif action == "cancel":
@@ -502,13 +500,22 @@ class ReferrerMixin(object):
                     "url": context["referrer"]
                 }
             )
+        token = self.request.auth_token
+        if not token:
+            token = AuthToken(
+                usercomponent=self.usercomponent,
+                extra={
+                    "strength": 10,
+                    "taint": False
+                }
+            )
         if "domain" in context["intentions"]:
-            return self.handle_domain_auth(context, self.request.auth_token)
+            return self.handle_domain_auth(context, token)
         else:
             context["ids"] = set(self.object_list.values_list("id", flat=True))
             context["filter"] = set(self.request.POST.getlist("search"))
             return self.handle_referrer_request(
-                context, self.request.auth_token
+                context, token
             )
 
     def get_referrer_template_names(self):
