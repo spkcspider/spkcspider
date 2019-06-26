@@ -8,6 +8,7 @@ import logging
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
+from django.views.generic.base import View, TemplateView
 from django.views.generic.edit import DeleteView
 from django.utils.translation import gettext
 
@@ -20,7 +21,6 @@ from django.utils.http import is_safe_url
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib import messages
-from django.views.generic.base import View, ContextMixin
 from django.test import Client
 
 
@@ -385,7 +385,7 @@ class TokenRenewal(UCTestMixin, View):
         return ret
 
 
-class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, ContextMixin, View):
+class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, TemplateView):
     model = AuthToken
     redirect_field_name = "next"
     preserved_GET_parameters = {"token", "page", "search", "id", "protection"}
@@ -424,29 +424,44 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, ContextMixin, View):
             "request_intentions", self.object.extra.get(
                 "intentions", []
             )
-        )).difference_update({"domain"})
-        rreferrer = self.object.extra.get("request_referrer", None)
+        ))
+        context["intentions"].difference_update({"domain"})
+        context["action"] = "update"
+        context["uc"] = self.object.usercomponent
+
+        rreferrer = request.POST.get("referrer", None)
         if rreferrer:
             context["referrer"] = merge_get_url(rreferrer)
             if not get_settings_func(
                 "SPIDER_URL_VALIDATOR",
                 "spkcspider.apps.spider.functions.validate_url_default"
             )(context["referrer"], self):
-                return HttpResponse(
-                    status=400,
-                    content=_('Insecure url: %(url)s') % {
-                        "url": context["referrer"]
-                    }
-                )
-        elif self.object.referrer:
-            context["referrer"] = self.object.url
+                context["action"] = "referrer_invalid"
+            # for donotact
+            if self.object.referrer and self.object.referrer.url == rreferrer:
+                rreferrer = None
         else:
-            raise Http404()
-        context["ids"] = self.object.usercomponent.contents.filter(
+            rreferrer = self.object.extra.get("request_referrer", None)
+            if rreferrer:
+                context["referrer"] = merge_get_url(rreferrer)
+                if not get_settings_func(
+                    "SPIDER_URL_VALIDATOR",
+                    "spkcspider.apps.spider.functions.validate_url_default"
+                )(context["referrer"], self):
+                    return HttpResponse(
+                        status=400,
+                        content=_('Insecure url: %(url)s') % {
+                            "url": context["referrer"]
+                        }
+                    )
+            elif self.object.referrer:
+                context["referrer"] = self.object.referrer.url
+            else:
+                context["referrer"] = ""
+        context["ids"] = self.object.usercomponent.contents.values_list(
             "id", flat=True
         )
         context["ids"] = set(context["ids"])
-        context["action"] = "update"
         # if requested referrer is available DO delete invalid and DO care
         ret = self.handle_referrer_request(
             context, self.object, dontact=not rreferrer, no_oldtoken=True

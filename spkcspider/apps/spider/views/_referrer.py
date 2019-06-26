@@ -349,16 +349,18 @@ class ReferrerMixin(object):
         context.setdefault("action", "create")
         context.setdefault("model", self.model)
         context.setdefault("payload", None)
-        context["is_serverless"] = "sl" in context["intentions"]
         context.setdefault("ids", set())
         context.setdefault("filter", set())
         context.setdefault("old_ids", set())
         context.setdefault("old_filter", set())
+        context["is_serverless"] = "sl" in context["intentions"]
         if keep is True:
             context["ids"].update(token.extra.get("ids", []))
             context["filter"].update(token.extra.get("filter", []))
 
         action = self.request.POST.get("action", None)
+        if context["action"].endswith("invalid"):
+            action = context["action"]
         if action == "confirm":
             newtoken = None
             # if persist try to find old token
@@ -492,21 +494,28 @@ class ReferrerMixin(object):
             )
 
         context = self.get_context_data()
-        context["intentions"] = set(self.request.GET.getlist("intention"))
-        context["referrer"] = merge_get_url(self.request.GET["referrer"])
-        context["payload"] = self.request.GET.get("payload", None)
         context["action"] = "create"
-
-        if not get_settings_func(
-            "SPIDER_URL_VALIDATOR",
-            "spkcspider.apps.spider.functions.validate_url_default"
-        )(context["referrer"], self):
-            return HttpResponse(
-                status=400,
-                content=_('Insecure url: %(url)s') % {
-                    "url": context["referrer"]
-                }
-            )
+        context["intentions"] = set(self.request.GET.getlist("intention"))
+        if "referrer" in self.request.POST:
+            context["referrer"] = merge_get_url(self.request.POST["referrer"])
+            if not get_settings_func(
+                "SPIDER_URL_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_url_default"
+            )(context["referrer"], self):
+                context["action"] = "referrer_invalid"
+        else:
+            context["referrer"] = merge_get_url(self.request.GET["referrer"])
+            if not get_settings_func(
+                "SPIDER_URL_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_url_default"
+            )(context["referrer"], self):
+                return HttpResponse(
+                    status=400,
+                    content=_('Insecure url: %(url)s') % {
+                        "url": context["referrer"]
+                    }
+                )
+        context["payload"] = self.request.GET.get("payload", None)
         token = self.request.auth_token
         if not token:
             token = AuthToken(

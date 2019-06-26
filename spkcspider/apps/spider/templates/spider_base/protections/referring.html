@@ -6,13 +6,13 @@
 
 {% block extrahead %}
 {{block.super}}
-<link rel="stylesheet" href="{% static 'node_modules/select2/dist/css/select2.min.css' %}">
+<link rel="stylesheet" href="{% static 'node_modules/selectize/dist/css/selectize.default.css' %}">
 {% if DEBUG %}
   <script src="{% static 'node_modules/jquery/dist/jquery.js' %}"></script>
-  <script src="{% static 'node_modules/select2/dist/js/select2.js' %}"></script>
+  <script src="{% static 'node_modules/selectize/dist/js/standalone/selectize.js' %}"></script>
 {% else %}
   <script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
-  <script src="{% static 'node_modules/select2/dist/js/select2.min.js' %}"></script>
+  <script src="{% static 'node_modules/selectize/dist/js/standalone/selectize.min.js' %}"></script>
 {% endif %}
 {% endblock %}
 
@@ -23,7 +23,9 @@
     <legend><h1>{% trans 'Allow' %}:</h1></legend>
     <table class="w3-table-all">
       <tr>
-        <td class="">{{referrer}}</td>
+        <td class="{% if action == 'referrer_invalid' %}w3-red{% endif %}">
+          <span>{% trans 'Referrer' %}:</span> <input style="width:100%" name="referrer" required="required" value="{{referrer}}"></input>
+        </td>
       </tr>
       {% if not referrer.isascii %}
         <tr class="w3-red w3-xlarge">
@@ -86,7 +88,8 @@
             </td>
           </tr>
         {% endfor %}
-        {% if scope == "list" %}
+        {# scope can not appear if called via confirm update token #}
+        {% if not scope or scope == "list" %}
           <tr>
             <td class="">{% trans 'Component' %}</td>
             <td typeof="spkc:Property">
@@ -97,7 +100,7 @@
             <tr>
               <td class="">{% trans 'Component' %}</td>
               <td typeof="spkc:Property">
-                <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>{% trans 'Name' %} (<em>{{uc}}</em>)
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>{% trans 'Name' %} (<em property="spkc:value" datatype="xsd:string">{{uc}}</em>)
               </td>
             </tr>
           {% endif %}
@@ -105,7 +108,10 @@
             <tr>
               <td class="">{% trans 'Content' %}</td>
               <td typeof="spkc:Content">
-                <data property="spkc:name" datatype="xsd:string">{{content}}</data>
+                <data property="spkc:type" datatype="xsd:string">{{content.ctype}}</data>
+                <data typeof="spkc:Property">
+                  <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data> (<em property="spkc:value" datatype="xsd:string">{{content}}</em>)
+                </data>
               </td>
             </tr>
           {% endfor %}
@@ -113,7 +119,10 @@
           <tr>
             <td class="">{% trans 'Content' %}</td>
             <td typeof="spkc:Content">
-              <data property="spkc:name" datatype="xsd:string">{{object}}</data>
+              <data property="spkc:type" datatype="xsd:string">{{object.ctype}}</data>
+              <data typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data> (<em property="spkc:value" datatype="xsd:string">{{object}}</em>)
+              </data>
             </td>
           </tr>
         {% endif %}
@@ -121,7 +130,7 @@
           <tr>
             <td class="">{% trans 'Feature' %}</td>
             <td typeof="spkc:Feature">
-              <data property="spkc:name" datatype="xsd:string" content="{{f.name}}">{{f}}</data>
+              <data property="spkc:type" datatype="xsd:string" content="{{f.name}}">{{f}}</data>
             </td>
           </tr>
         {% endfor %}
@@ -165,21 +174,15 @@
 
 {% block outercontent %}
 <script>
-jQuery.noConflict();
-var scope_filter_scripts_initialized = false;
-
-jQuery( document ).ready(function( $ ) {
-  if (scope_filter_scripts_initialized)
-    return;
-  scope_filter_scripts_initialized = true;
-  $("#scope_filter").select2({
-    tags: true,
-    width: '70%',
-    allowClear: true,
-    placeholder: '{% trans "Filter" %}'
+document.addEventListener("DOMContentLoaded", function(){
+  $("#scope_filter").selectize({
+    create: true,
+    placeholder: '{% trans "Filter" %}',
+    delimiter: null,
+    plugins: {
+      'remove_button': {}
+    }
   });
-})
-
+});
 </script>
-
 {% endblock %}
