@@ -21,7 +21,7 @@ from .models import TagLayout, SpiderTag
 
 from spkcspider.apps.spider.constants import loggedin_active_tprotections
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField, JsonField
-from spkcspider.apps.spider.widgets import ListWidget, OpenChoiceWidget
+from spkcspider.apps.spider.widgets import ListWidget
 from spkcspider.apps.spider.helpers import merge_get_url
 from spkcspider.apps.spider.models import (
     AssignedContent, ReferrerObject, TravelProtection
@@ -117,7 +117,7 @@ class SpiderTagForm(forms.ModelForm):
     updateable_by = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier")
+            format_type="url", item_label=_("Url")
         )
     )
     layout = forms.ModelChoiceField(
@@ -163,11 +163,8 @@ def generate_form(name, layout):
     ))
     _temp_field = MultipleOpenChoiceField(
         required=False, initial=False,
-        widget=OpenChoiceWidget(
-            allow_multiple_selected=True,
-            attrs={
-                "style": "min-width: 300px; width:100%"
-            }
+        widget=ListWidget(
+            format_type="url", item_label=_("Url")
         )
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)

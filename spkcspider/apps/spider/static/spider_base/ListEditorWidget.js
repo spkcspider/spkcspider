@@ -32,7 +32,6 @@ document.addEventListener("DOMContentLoaded", function(){
         "options": {
           "compact": true,
         },
-        "format": "table",
         "uniqueItems": true,
         "items": {
           "title": ilabel,
@@ -40,7 +39,8 @@ document.addEventListener("DOMContentLoaded", function(){
           "format": ftype,
           "options": {
             "inputAttributes": {
-              "form": "_dump_form"
+              "form": "_dump_form",
+              "style": "width:100%"
             }
           }
         }
