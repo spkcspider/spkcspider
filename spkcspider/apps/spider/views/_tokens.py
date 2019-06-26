@@ -374,10 +374,13 @@ class TokenRenewal(UCTestMixin, View):
 class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
     model = AuthToken
     redirect_field_name = "next"
+    preserved_GET_parameters = set(["token", "page"])
 
-    def get_redirect_url(self):
+    def get_redirect_url(self, sanitized_GET=None):
         """Return the user-originating redirect URL if it's safe."""
-        redirect_to = self.request.POST.get(
+        if not sanitized_GET:
+            sanitized_GET = self.sanitize_GET()
+        redirect_to = self.request.GET.get(
             self.redirect_field_name,
             self.request.GET.get(self.redirect_field_name, '')
         )
@@ -386,6 +389,11 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
             allowed_hosts={self.request.get_host()},
             require_https=self.request.is_secure(),
         )
+        redirect_to = "{}?{}".format(
+            url_is_safe.rstrip("?&"),
+            sanitized_GET
+        )
+
         return redirect_to if url_is_safe else ''
 
     def test_func(self):
@@ -402,7 +410,7 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
             "request_intentions", self.request.auth_token.extra.get(
                 "intentions", []
             )
-        )).difference_update({"domain", "sl"})
+        )).difference_update({"domain"})
         context["referrer"] = self.request.auth_token.referrer.url
         context["action"] = "update"
         ret = self.handle_referrer_request(
@@ -413,16 +421,18 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
                 messages.success(request, _("Intention update successful"))
             else:
                 messages.error(request, _("Intention update failed"))
-            return HttpResponseRedirect(self.get_redirect_url())
+            return HttpResponseRedirect(self.get_redirect_url(
+                context["sanitized_GET"]
+            ))
         return ret
 
     def get_usercomponent(self):
-        token = self.request.POST.get("token", None)
-        if not token:
+        tokenid = self.request.GET.get("id", None)
+        if not tokenid:
             raise Http404()
         self.object = get_object_or_404(
             AuthToken,
-            token=token,
+            id=tokenid,
             referrer__isnull=False
         )
         return self.object.usercomponent

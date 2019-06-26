@@ -159,7 +159,7 @@ class FileFilet(ContentWithLicense):
                         "token": self.associated.token,
                         "access": 'download'
                     }
-                ), kwargs["spider_GET"].urlencode()
+                ), kwargs["sanitized_GET"]
             )
         return (
             render_to_string(

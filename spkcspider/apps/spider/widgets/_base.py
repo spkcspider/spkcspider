@@ -45,9 +45,9 @@ class ListWidget(widgets.SelectMultiple):
             wrapper_attrs = {}
         attrs.setdefault("class", "")
         attrs["class"] += " SpiderListTarget"
-        attrs["format_type"] = format_type
+        attrs["data-format_type"] = format_type
         # don't access them as they are lazy evaluated
-        attrs["item_label"] = item_label
+        attrs["data-item_label"] = item_label
         self.wrapper_attrs = wrapper_attrs.copy()
         super().__init__(attrs=attrs, **kwargs)
 

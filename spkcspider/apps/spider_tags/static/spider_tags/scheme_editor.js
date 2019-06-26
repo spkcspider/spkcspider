@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function(){
     let element = collection[counter];
     let field_types = [];
     try{
-      field_types = JSON.parse(element.attributes.field_types.value);
+      field_types = JSON.parse(element.dataset.field_types);
     } catch(e){
       console.log(e);
     }

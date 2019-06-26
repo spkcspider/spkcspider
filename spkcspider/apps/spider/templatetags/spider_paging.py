@@ -18,24 +18,14 @@ def get_searchpath(context, page=None, pagename="page"):
         path = context["searchpath"]
     else:
         path = context["request"].path
-    san_get = ""
-    if "spider_GET" in context:
-        san_get = context["spider_GET"].urlencode()
+    search_get = ""
+    if "sanitized_GET" in context:
+        search_get = context["sanitized_GET"]
     if page:
-        if san_get:
-            "{}&{}={}".format(
-                san_get,
-                pagename,
-                page
-            )
-        else:
-            san_get = "{}={}".format(pagename, page)
-    if path[-1] == "?":
-        return "{}{}".format(
-            path,
-            san_get
+        search_get = "{}{}={}&".format(
+            search_get, pagename, page
         )
     return "{}?{}".format(
-        path,
-        san_get
+        path.rstrip("?&"),
+        search_get
     )

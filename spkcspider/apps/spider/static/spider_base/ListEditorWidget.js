@@ -5,12 +5,12 @@ document.addEventListener("DOMContentLoaded", function(){
     let ftype = "text";
     let ilabel = "Item";
     try{
-      ftype = element.attributes.format_type.value;
+      ftype = element.dataset.format_type;
     } catch(e){
       console.log(e);
     }
     try{
-      ilabel = element.attributes.item_label.value;
+      ilabel = element.dataset.item_label;
     } catch(e){
       console.log(e);
     }

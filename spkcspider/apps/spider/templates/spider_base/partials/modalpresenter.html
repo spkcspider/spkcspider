@@ -27,6 +27,9 @@
           <option value="" selected=""></option>
           {% if request.auth_token %}<option value="{{request.auth_token.token}}">{{request.auth_token.token}}</option>{% endif %}
         </select>
+        <a href="#" class="w3-button w3-grey w3-hide" id="update_request_button">
+          <i class="fas fa-reply" style="margin-right:10px" aria-hidden="true"></i>{% trans 'View Update Request' %}
+        </a>
         {% if request.is_special_user %}
         <div style="padding-top:10px">
           <button class="w3-button w3-grey" id="share_add_button" value="add">
@@ -47,6 +50,7 @@
 
 <script type="text/javascript">
 let remotelink = document.getElementById('share_remotelink');
+let update_request_button = document.getElementById('update_request_button');
 let qrcanvas = document.getElementById('share_qrcanvas');
 let presenter = document.getElementById('share_modal_presenter');
 let token_selector = document.getElementById('share_token_selector');
@@ -55,8 +59,16 @@ let share_copy_clipboard = document.getElementById('share_copy_clipboard');
 function update_qrmodal(){
   {# escapejs is a weaker escape, don't use it #}
   let _remotelink = "{{remotelink}}{{remotelink_extra}}";
+  let _confirmlink = "{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}%3Fpage%3D{{request.GET.page|default:'1'}}&{{sanitized_GET}}";
   if(token_selector.value != ""){
     _remotelink = `${_remotelink}token=${token_selector.options[token_selector.options.selectedIndex].text}&`;
+    if(token_selector.options[token_selector.options.selectedIndex].dataset.needs_confirmation == "true"){
+      _confirmlink = `${_confirmlink}id=${token_selector.options[token_selector.options.selectedIndex].value}&`;
+      update_request_button.href = _confirmlink;
+      update_request_button.classList.remove("w3-hide")
+    } else {
+      update_request_button.classList.add("w3-hide")
+    }
   }
   remotelink.href = _remotelink;
   remotelink.text = _remotelink;
@@ -111,11 +123,14 @@ async function update_share_tokens(event){
   data = await fetch_req;
   for(let count=0; count<data["tokens"].length; count++){
     let token = data["tokens"][count];
+    let option;
     if (token.created){
-      token_selector.options.add(new Option(token.name, token.id, true, true));
+       option = new Option(token.name, token.id, true, true);
     } else {
-      token_selector.options.add(new Option(token.name, token.id));
+      option = new Option(token.name, token.id);
     }
+    option.dataset["needs_confirmation"] = token.needs_confirmation;
+    token_selector.options.add(option);
   }
   token_selector.disabled=false;
   update_qrmodal();

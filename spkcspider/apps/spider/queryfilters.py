@@ -23,7 +23,7 @@ machine_variants_q = (
 
 
 listed_variants_q = (
-    _base_variants |
+    _base_variants &
     ~Q(ctype__contains=VariantType.unlisted.value)
 )
 

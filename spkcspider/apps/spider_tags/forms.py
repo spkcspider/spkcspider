@@ -2,8 +2,6 @@ __all__ = [
     "TagLayoutForm", "TagLayoutAdminForm", "SpiderTagForm", "generate_form",
 ]
 
-import json
-
 import posixpath
 from collections import OrderedDict
 # from django.utils.translation import gettext_lazy as _
@@ -43,11 +41,7 @@ _extra = '' if settings.DEBUG else '.min'
 
 class TagLayoutForm(forms.ModelForm):
     layout = JsonField(
-        widget=SchemeWidget(
-            attrs={
-                "field_types": json.dumps(list(installed_fields.keys()))
-            }
-        )
+        widget=SchemeWidget(installed_fields.keys())
     )
     default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(
@@ -89,11 +83,7 @@ class TagLayoutForm(forms.ModelForm):
 
 class TagLayoutAdminForm(forms.ModelForm):
     layout = JsonField(
-        widget=SchemeWidget(
-            attrs={
-                "field_types": json.dumps(list(installed_fields.keys()))
-            }
-        )
+        widget=SchemeWidget(installed_fields.keys())
     )
     default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(

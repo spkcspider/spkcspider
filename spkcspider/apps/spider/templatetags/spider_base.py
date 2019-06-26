@@ -66,11 +66,11 @@ def update_component(context, name):
 
 @register.simple_tag(takes_context=True)
 def reverse_get(context, name, **kwargs):
-    """ Works only if hostpart and spider_GET is available """
+    """ Works only if hostpart and sanitized_GET is available """
     return "{}{}?{}".format(
         context["hostpart"],
         reverse(name, kwargs=kwargs),
-        context["spider_GET"].urlencode()
+        context["sanitized_GET"]
     )
 
 

@@ -201,6 +201,8 @@ class ComponentPublicIndex(ComponentIndexBase):
     source_strength = 0
     preserved_GET_parameters = set(["protection"])
 
+    sanitize_GET = UserTestMixin.sanitize_GET
+
     def dispatch(self, request, *args, **kwargs):
         self.request.is_owner = False
         self.request.is_special_user = False
@@ -217,12 +219,13 @@ class ComponentPublicIndex(ComponentIndexBase):
             self.request.scheme, self.request.get_host()
         )
 
-        GET = self.request.GET.copy()
-        # parameters preserved in search
-        for key in list(GET.keys()):
-            if key not in self.preserved_GET_parameters:
-                GET.pop(key, None)
-        kwargs["spider_GET"] = GET
+        kwargs["sanitized_GET"] = self.sanitize_GET()
+        if kwargs["sanitized_GET"]:
+            kwargs["sanitized_GET"] = "{}&".format(
+                kwargs["sanitized_GET"].urlencode()
+            )
+        else:
+            kwargs["sanitized_GET"] = ""
         return super().get_context_data(**kwargs)
 
     def get_queryset_components(self):
@@ -269,7 +272,7 @@ class ComponentPublicIndex(ComponentIndexBase):
 class ComponentIndex(UCTestMixin, ComponentIndexBase):
     model = UserComponent
     source_strength = 10
-
+    preserved_GET_parameters = set(["protection"])
     user = None
 
     def dispatch(self, request, *args, **kwargs):
@@ -348,6 +351,13 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
 class ComponentCreate(UserTestMixin, CreateView):
     model = UserComponent
     form_class = UserComponentForm
+    preserved_GET_parameters = set()
+
+    def test_func(self):
+        return bool(self.has_special_access(
+            user_by_login=True, user_by_token=False,
+            staff=False, superuser=False
+        ))
 
     def dispatch(self, request, *args, **kwargs):
         # can leak elsewise usernames, who have no public components
@@ -388,6 +398,7 @@ class ComponentCreate(UserTestMixin, CreateView):
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
     form_class = UserComponentForm
+    preserved_GET_parameters = set()
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -411,9 +422,10 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             return self.form_invalid(form)
 
     def test_func(self):
-        return self.has_special_access(
-            user_by_login=True
-        )
+        return bool(self.has_special_access(
+            user_by_login=True, user_by_token=False,
+            staff=False, superuser=False
+        ))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

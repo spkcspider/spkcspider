@@ -218,7 +218,7 @@ def embed_file_default(name, value, content, context):
         url = content.associated.get_absolute_url("download")
         url = "{}{}?{}".format(
             context["hostpart"],
-            url, context["context"]["spider_GET"].urlencode()
+            url, context["context"]["sanitized_GET"]
         )
         return Literal(
             url,

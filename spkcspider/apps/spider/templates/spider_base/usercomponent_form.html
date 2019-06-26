@@ -102,12 +102,13 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           <table class="w3-table-all" id="token_container">
             <thead>
               <tr>
-                <th colspan="3" class="w3-center"><h3>{% trans 'Active Tokens' %}</h3></th>
+                <th colspan="4" class="w3-center"><h3>{% trans 'Active Tokens' %}</h3></th>
               </tr>
               <tr>
                 <th>{% trans 'Token' %}</th>
                 <th>{% trans 'Valid till / Referrer' %}</th>
-                <th>{% trans 'Delete' %}</th>
+                <th><i class="fas fa-reply w3-hide-medium" aria-hidden="true"></i><span class="w3-hide-medium w3-hide-small" style="width:10px"> </span><span class="w3-hide-small">{% trans 'View Update Request' %}</span></th>
+                <th><i class="fas fa-trash w3-hide-medium" aria-hidden="true"></i><span class="w3-hide-medium w3-hide-small" style="width:10px"> </span><span class="w3-hide-small">{% trans 'Delete' %}</span></th>
               </tr>
             </thead>
             <tbody>
@@ -125,6 +126,13 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
                     {% endif %}
                   </td>
                   <td>
+                    {% if "request_intentions" in token.extra or "request_filter" in token.extra %}
+                      <a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id={{token.id}}" class="w3-button w3-blue">
+                        <i class="fas fa-reply" style="margin-right:10px" aria-hidden="true"></i>
+                      </a>
+                    {% endif %}
+                  </td>
+                  <td>
                     <input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="{{token.id}}"/>
                   </td>
                 </tr>
@@ -132,7 +140,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             </tbody>
           <tbody>
             <tr class="w3-light-grey">
-              <td></td><td></td>
+              <td></td><td></td><td></td>
               <td>
                 {# onchange would be also triggered by reset, so use click instead #}
                 <input style="margin-left:10px" id="deleteAllSelector" type="checkbox" onclick='toggleAll(this);'/>
@@ -267,7 +275,11 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
             })}\n${data["tokens"][count].referrer}`
           }
           let cell3 = row.insertCell()
-          cell3.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
+          if (data["tokens"][count].request_intentions){
+            cell3.innerHTML = `<a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id=${data["tokens"][count].id}" class="w3-button w3-blue"><i class="fas fa-reply" aria-hidden="true"></i></a>`
+          }
+          let cell4 = row.insertCell()
+          cell4.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
         }
         allselector.checked = false;
       })

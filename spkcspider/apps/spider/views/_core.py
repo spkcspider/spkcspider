@@ -90,7 +90,13 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
         return self._travel_request
 
     def get_context_data(self, **kwargs):
-        kwargs["spider_GET"] = self.sanitize_GET()
+        kwargs["sanitized_GET"] = self.sanitize_GET()
+        if kwargs["sanitized_GET"]:
+            kwargs["sanitized_GET"] = "{}&".format(
+                kwargs["sanitized_GET"].urlencode()
+            )
+        else:
+            kwargs["sanitized_GET"] = ""
         return super().get_context_data(**kwargs)
 
     # by default only owner with login can access view
@@ -309,7 +315,7 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
         # should be never true here
         assert(p is not True)
         context = {
-            "spider_GET": self.sanitize_GET(),
+            "sanitized_GET": self.sanitize_GET(),
             "LOGIN_URL": self.get_login_url(),
             "scope": getattr(self, "scope", None),
             "uc": self.usercomponent,

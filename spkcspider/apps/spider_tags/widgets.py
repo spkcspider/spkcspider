@@ -25,12 +25,13 @@ class SchemeWidget(widgets.Textarea):
             'spider_tags/scheme_editor.js'
         ]
 
-    def __init__(self, *, attrs=None, wrapper_attrs=None, **kwargs):
+    def __init__(self, fields, *, attrs=None, wrapper_attrs=None, **kwargs):
         if not attrs:
             attrs = {"class": ""}
         if not wrapper_attrs:
             wrapper_attrs = {}
         attrs.setdefault("class", "")
+        attrs["data-field_types"] = json.dumps(list(fields))
         attrs["class"] += " SchemeEditorTarget"
         self.wrapper_attrs = wrapper_attrs.copy()
         super().__init__(attrs=attrs, **kwargs)
