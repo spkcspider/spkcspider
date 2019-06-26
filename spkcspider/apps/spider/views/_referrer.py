@@ -279,12 +279,12 @@ class ReferrerMixin(object):
             return True
 
         ####### with token ########  # noqa: 266E
+        # cannot add sl intention to existing intentions
+        if "sl" in context["intentions"].difference(
+            token.extra.get("intentions", ["sl"])
+        ):
+            return False
         if "persist" in context["intentions"]:
-            # cannot add sl intention to existing intentions
-            if "sl" in context["intentions"].difference(
-                token.extra.get("intentions", ["sl"])
-            ):
-                return False
             # set persist = true, (false=-1)
             token.persist = 0
             # if possible, pin to anchor
