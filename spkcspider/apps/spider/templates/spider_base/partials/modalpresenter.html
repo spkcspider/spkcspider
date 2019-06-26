@@ -28,7 +28,7 @@
           {% if request.auth_token %}<option value="{{request.auth_token.token}}">{{request.auth_token.token}}</option>{% endif %}
         </select>
         <a href="#" class="w3-button w3-grey w3-hide" id="update_request_button">
-          <i class="fas fa-reply" style="margin-right:10px" aria-hidden="true"></i>{% trans 'View Update Request' %}
+          <i class="fas fa-bell" style="margin-right:10px" aria-hidden="true"></i>{% trans 'View Update Request' %}
         </a>
         {% if request.is_special_user %}
         <div style="padding-top:10px">

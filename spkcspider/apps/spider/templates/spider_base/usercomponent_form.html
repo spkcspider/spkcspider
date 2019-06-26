@@ -107,7 +107,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
               <tr>
                 <th>{% trans 'Token' %}</th>
                 <th>{% trans 'Valid till / Referrer' %}</th>
-                <th><i class="fas fa-reply w3-hide-medium" aria-hidden="true"></i><span class="w3-hide-medium w3-hide-small" style="width:10px"> </span><span class="w3-hide-small">{% trans 'View Update Request' %}</span></th>
+                <th><i class="fas fa-bell w3-hide-medium" aria-hidden="true"></i><span class="w3-hide-medium w3-hide-small" style="width:10px"> </span><span class="w3-hide-small">{% trans 'View Update Request' %}</span></th>
                 <th><i class="fas fa-trash w3-hide-medium" aria-hidden="true"></i><span class="w3-hide-medium w3-hide-small" style="width:10px"> </span><span class="w3-hide-small">{% trans 'Delete' %}</span></th>
               </tr>
             </thead>
@@ -289,7 +289,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         }
         let cell3 = row.insertCell()
         if (data["tokens"][count].request_intentions){
-          cell3.innerHTML = `<a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id=${data["tokens"][count].id}" class="w3-button w3-blue"><i class="fas fa-reply" aria-hidden="true"></i></a>`
+          cell3.innerHTML = `<a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id=${data["tokens"][count].id}" class="w3-button w3-blue"><i class="fas fa-edit" aria-hidden="true"></i></a>`
         }
         let cell4 = row.insertCell()
         cell4.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
