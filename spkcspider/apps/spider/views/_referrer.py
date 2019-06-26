@@ -429,6 +429,8 @@ class ReferrerMixin(object):
             return ret
 
         elif action == "cancel":
+            if not dontact:
+                token.delete()
             return HttpResponseRedirect(
                 redirect_to=merge_get_url(
                     context["referrer"],
