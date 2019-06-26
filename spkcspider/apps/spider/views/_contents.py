@@ -147,6 +147,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     scope = "list"
     no_token_usercomponent = False
     rate_limit_group = "spider_static_token_error"
+    preserved_GET_parameters = {"token", "search"}
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.allow_domain_mode = ContentVariant.objects.filter(
@@ -387,6 +388,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 class ContentAdd(ContentBase, CreateView):
     scope = "add"
     model = ContentVariant
+    preserved_GET_parameters = {"token"}
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -511,6 +513,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
     form_class = UserContentForm
     model = AssignedContent
     rate_limit_group = "spider_static_token_error"
+    preserved_GET_parameters = {"token", "search"}
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -710,6 +713,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 class ContentDelete(EntityDeletionMixin, DeleteView):
     model = AssignedContent
     usercomponent = None
+    preserved_GET_parameters = {"token", "search"}
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
