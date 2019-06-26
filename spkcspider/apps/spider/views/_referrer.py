@@ -280,12 +280,11 @@ class ReferrerMixin(object):
 
         ####### with token ########  # noqa: 266E
         if "persist" in context["intentions"]:
-            # cannot add sl intention
-            if "intentions" in token.extra:
-                if "sl" in context["intentions"].difference(
-                    token.extra["intentions"]
-                ):
-                    return False
+            # cannot add sl intention to existing intentions
+            if "sl" in context["intentions"].difference(
+                token.extra.get("intentions", ["sl"])
+            ):
+                return False
             # set persist = true, (false=-1)
             token.persist = 0
             # if possible, pin to anchor
@@ -294,7 +293,7 @@ class ReferrerMixin(object):
         else:
             token.persist = -1
 
-        if "initial_referrer_url" not in token.extra:
+        if not token.extra.get("initial_referrer_url", None):
             token.extra["initial_referrer_url"] = "{}://{}{}".format(
                 self.request.scheme,
                 self.request.get_host(),
@@ -341,7 +340,7 @@ class ReferrerMixin(object):
     ):
         """
             no_oldtoken: don't use old token for calculating:
-                           old_ids, old_filter
+                           old_ids, old_search
                          (performance and manual old_* possible)
             dontact: dont act if probing results fails
         """
@@ -352,11 +351,11 @@ class ReferrerMixin(object):
         context.setdefault("ids", set())
         context.setdefault("filter", set())
         context.setdefault("old_ids", set())
-        context.setdefault("old_filter", set())
+        context.setdefault("old_search", set())
         context["is_serverless"] = "sl" in context["intentions"]
         if keep is True:
             context["ids"].update(token.extra.get("ids", []))
-            context["filter"].update(token.extra.get("filter", []))
+            context["search"].update(token.extra.get("filter", []))
 
         action = self.request.POST.get("action", None)
         if context["action"].endswith("invalid"):
@@ -382,6 +381,9 @@ class ReferrerMixin(object):
             token.extra["taint"] = False
             token.extra["prot_strength"] = 0
             token.extra["intentions"] = list(context["intentions"])
+            token.extra.pop("request_referrer", None)
+            token.extra.pop("request_intentions", None)
+            token.extra.pop("request_search", None)
 
             if not self.clean_refer_intentions(context, token):
                 return HttpResponseRedirect(
@@ -391,7 +393,7 @@ class ReferrerMixin(object):
                     )
                 )
 
-            token.extra["filter"] = list(context["filter"])
+            token.extra["search"] = list(context["search"])
             if "live" in context["intentions"]:
                 token.extra.pop("ids", None)
             else:
@@ -452,7 +454,7 @@ class ReferrerMixin(object):
 
                 if oldtoken:
                     context["old_ids"].update(oldtoken.extra.get("ids", []))
-                    context["old_filter"].update(oldtoken.extra.get(
+                    context["old_search"].update(oldtoken.extra.get(
                         "filter", []
                     ))
 
@@ -529,7 +531,7 @@ class ReferrerMixin(object):
             return self.handle_domain_auth(context, token)
         else:
             context["ids"] = set(self.object_list.values_list("id", flat=True))
-            context["filter"] = set(self.request.POST.getlist("search"))
+            context["search"] = set(self.request.POST.getlist("search"))
             return self.handle_referrer_request(
                 context, token
             )

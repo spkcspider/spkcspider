@@ -52,9 +52,7 @@ class WebConfigView(UCTestMixin, View):
 
     def get_object(self, queryset=None):
         variants = {"TmpConfig"}
-        if "persist" in self.request.auth_token.extra.get(
-            "intentions", _empty_set
-        ):
+        if self.request.auth_token.persist >= 0:
             variants.add("WebConfig")
         variants = self.usercomponent.features.filter(
             name__in=variants
@@ -109,9 +107,10 @@ class WebConfigView(UCTestMixin, View):
         return self.render_to_response(self.object.config)
 
     def post(self, request, *args, **kwargs):
-        if "persist" not in self.request.auth_token.extra.get(
-            "intentions", _empty_set
-        ) and len(self.request.body) > tmpconfig_max:
+        if (
+            self.request.auth_token.persist < 0 and
+            len(self.request.body) > tmpconfig_max
+        ):
             return HttpResponse(
                 "TmpConfig can only hold: %s bytes" % tmpconfig_max,
                 status_code=400

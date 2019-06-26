@@ -96,20 +96,26 @@ class ContentBase(UCTestMixin):
 
         if getattr(self.request, "auth_token", None):
             idlist = \
-                self.request.auth_token.extra.get("ids", [])
+                set(self.request.auth_token.extra.get("ids") or [])
             searchlist = \
-                self.request.auth_token.extra.get("filter", [])
+                self.request.auth_token.extra.get("filter") or []
         else:
-            idlist = []
+            idlist = set()
             searchlist = []
 
         if self.scope == "list":
             if "search" in self.request.POST or "id" in self.request.POST:
                 searchlist += self.request.POST.getlist("search")
-                idlist += self.request.POST.getlist("id")
+                if idlist:
+                    idlist.intersection(self.request.POST.getlist("id"))
+                else:
+                    idlist.update(self.request.POST.getlist("id"))
             else:
                 searchlist += self.request.GET.getlist("search")
-                idlist += self.request.GET.getlist("id")
+                if idlist:
+                    idlist.intersection(self.request.POST.getlist("id"))
+                else:
+                    idlist.update(self.request.POST.getlist("id"))
         elif self.scope not in ("add", "update", "raw_update"):
             searchlist += self.request.GET.getlist("search")
 

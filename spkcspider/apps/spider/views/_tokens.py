@@ -59,19 +59,13 @@ class AdminTokenManagement(UCTestMixin, View):
                 "strength": self.usercomponent.strength,
             }
             if self.request.POST.get("restrict"):
-                extra["ids"] = []
-                extra["request_intentions"] = []
-                if "search" in self.request.GET:
-                    extra["request_filter"] = list(set(
-                        self.request.GET.getlist("search")
-                    ))
-            else:
-                if "search" in self.request.GET:
-                    extra["filter"] = list(set(
-                        self.request.GET.getlist("search")
-                    ))
-                if "id" in self.request.GET:
-                    extra["ids"] = list(set(self.request.GET.getlist("id")))
+                extra["ids"] = [-1]
+            elif self.request.GET.get("id", "") != "":
+                extra["ids"] = list(set(self.request.GET.getlist("id")))
+            if self.request.GET.get("search", "") != "":
+                extra["search"] = list(set(
+                    self.request.GET.getlist("search")
+                ))
             self.created_token = self.create_token(
                 extra=extra
             )
@@ -109,9 +103,9 @@ class AdminTokenManagement(UCTestMixin, View):
                 "id": token.id,
                 "same_session": True,
                 "needs_confirmation": (
-                    "request_intentions" in token.extra or
-                    "request_filter" in token.extra or
-                    "request_referrer" in token.extra
+                    token.extra.get("request_intentions") is not None or
+                    token.extra.get("request_search") is not None or
+                    token.extra.get("request_referrer") is not None
                 ),
                 "created": self.created_token == token,
                 "admin_key": self.request.auth_token == token
@@ -128,9 +122,9 @@ class AdminTokenManagement(UCTestMixin, View):
                 "id": token.id,
                 "same_session": True,
                 "needs_confirmation": (
-                    "request_intentions" in token.extra or
-                    "request_filter" in token.extra or
-                    "request_referrer" in token.extra
+                    token.extra.get("request_intentions") is not None or
+                    token.extra.get("request_search") is not None or
+                    token.extra.get("request_referrer") is not None
                 ),
                 "created": self.created_token == token,
                 "admin_key": True
@@ -146,9 +140,9 @@ class AdminTokenManagement(UCTestMixin, View):
                 "id": token.id,
                 "same_session": False,
                 "needs_confirmation": (
-                    "request_intentions" in token.extra or
-                    "request_filter" in token.extra or
-                    "request_referrer" in token.extra
+                    token.extra.get("request_intentions") is not None or
+                    token.extra.get("request_search") is not None or
+                    token.extra.get("request_referrer") is not None
                 ),
                 "created": self.created_token == token,
                 "admin_key": False
@@ -346,7 +340,8 @@ class TokenRenewal(UCTestMixin, View):
         self.oldtoken = self.request.auth_token.token
         self.request.auth_token.initialize_token()
         success = True
-        if "sl" in self.request.auth_token.extra.get("intentions", []):
+        sl = "sl" in self.request.auth_token.extra.get("intentions", [])
+        if sl:
             # only the original referer can access this
             success = (
                 self.request.headers.get("Referer", "").startswith(
@@ -368,7 +363,7 @@ class TokenRenewal(UCTestMixin, View):
             return HttpResponseServerError(
                 "Token update failed, try again"
             )
-        if "sl" in self.request.auth_token.extra.get("intentions", []):
+        if sl:
             ret = HttpResponse(
                 self.request.auth_token.token.encode(
                     "ascii"
@@ -504,41 +499,40 @@ class RequestTokenUpdate(UserTestMixin, View):
             )(self, request)
 
     def get(self, request, *args, **kwargs):
-        ret_dict = {}
-        if "request_referrer" in request.auth_token.extra:
+        ret_dict = {
+            "intentions": request.auth_token.extra.get("intentions") or [],
+            "search": request.auth_token.extra.get("search") or [],
+            "referrer": None
+        }
+        if request.auth_token.referrer:
+            ret_dict["referrer"] = request.auth_token.referrer.url
+        if request.auth_token.extra.get("request_referrer") is not None:
             ret_dict["referrer"] = \
                 request.auth_token.extra["request_referrer"]
-        if "request_intentions" in request.auth_token.extra:
+        if request.auth_token.extra.get("request_intentions") is not None:
             ret_dict["intentions"] = \
                 request.auth_token.extra["request_intentions"]
-        if "filter" in request.auth_token.extra:
-            ret_dict["filter"] = request.auth_token.extra["filter"]
+        if request.auth_token.extra.get("request_search") is not None:
+            ret_dict["search"] = request.auth_token.extra["request_search"]
         return JsonResponse(ret_dict)
 
     def post(self, request, *args, **kwargs):
-        ret_dict = {}
         if "referrer" in request.POST:
             # will be checked a second time
             request.auth_token.extra["request_referrer"] = \
                 request.POST.get("referrer")
-            ret_dict["intentions"] = \
-                request.auth_token.extra["request_referrer"]
         elif not request.auth_token.referrer:
             return HttpResponse("no referrer", status=400)
-        if "intentions" in request.POST:
+        if request.POST.get("intentions", "") != "":
             # will be checked a second time
             request.auth_token.extra["request_intentions"] = \
                 request.POST.getlist("intentions")
-            ret_dict["intentions"] = \
-                request.auth_token.extra["request_intentions"]
-        if "search" in request.POST:
+        if request.POST.get("search", "") != "":
             # will be checked a second time
-            request.auth_token.extra["request_filter"] = \
+            request.auth_token.extra["request_search"] = \
                 request.POST.getlist("search")
-            ret_dict["filter"] = \
-                request.auth_token.extra["filter"]
         request.auth_token.save(update_fields=["extra"])
-        return JsonResponse(ret_dict)
+        return self.get(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
         ret = super().options()
