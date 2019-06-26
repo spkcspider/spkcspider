@@ -133,7 +133,7 @@ async function update_share_tokens(event){
         return 0;
       }
     });
-    return Promise.resolve(d);
+    return d;
   });
   while(token_selector.options.length != 1) {
     token_selector.options.remove(token_selector.options.length-1);
