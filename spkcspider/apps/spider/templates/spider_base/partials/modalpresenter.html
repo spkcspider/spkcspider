@@ -98,6 +98,7 @@ async function update_share_tokens(event){
   if(token_selector.disabled==true)
     return;
   token_selector.disabled=true;
+  let data;
   let body = new URLSearchParams();
   if(event){
     event.preventDefault();
@@ -116,7 +117,24 @@ async function update_share_tokens(event){
          "X-CSRFToken": "{{csrf_token}}",
       }
   });
-  let fetch_req = fetch(req).then(function(response) { return response.json(); })
+  let fetch_req = fetch(req).then(function(response) { return response.json(); }).then(function (d){
+    d["tokens"].sort(function(a, b){
+      if (a.needs_confirmation && !b.needs_confirmation){
+        return -1;
+      }
+      if (a.admin_key && !b.admin_key){
+        return -1;
+      }
+      if (a.id < b.id){
+        return -1;
+      } else if (a.id > b.id){
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+    return Promise.resolve(d);
+  });
   while(token_selector.options.length != 1) {
     token_selector.options.remove(token_selector.options.length-1);
   }
@@ -134,6 +152,7 @@ async function update_share_tokens(event){
   }
   token_selector.disabled=false;
   update_qrmodal();
+  document.dispatchEvent(new CustomEvent('spider_token_updated', { data: data }));
   return false;
 };
 

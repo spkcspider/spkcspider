@@ -112,31 +112,6 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
               </tr>
             </thead>
             <tbody>
-              {% for token in object.authtokens.all %}
-                {% token_expires object token as expire_date %}
-                <tr>
-                  <td style="word-break:break-all">
-                    {{token}}
-                  </td>
-                  <td>
-                    {% if token.persist >= 0 %}
-                      <span class="w3-center">&infin;</span><br/>{{token.referrer}}
-                    {% else %}
-                      {{expire_date|date:"D, d/m/Y"}}{% if token.referrer %}<br/>{{token.referrer}}{% endif %}
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if "request_intentions" in token.extra or "request_filter" in token.extra %}
-                      <a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id={{token.id}}" class="w3-button w3-blue">
-                        <i class="fas fa-reply" style="margin-right:10px" aria-hidden="true"></i>
-                      </a>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="{{token.id}}"/>
-                  </td>
-                </tr>
-              {% endfor %}
             </tbody>
           <tbody>
             <tr class="w3-light-grey">
@@ -223,68 +198,117 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       }
       allselector.checked = state;
     }
-    async function delete_token(event){
-      event.preventDefault()
-      let tokens = []
-      if (event.target.token.length){
-        for (let count=0; count < event.target.token.length; count++)
-        {
-            if (event.target.token[count].checked == true)
+    async function update_token(form, data=null){
+      let tokens = [];
+      let fetch_req;
+      if (data===null){
+        if (form.token){
+          if (form.token.length){
+            for (let count=0; count < form.token.length; count++)
             {
-                tokens.push(event.target.token[count].value)
+                if (form.token[count].checked == true)
+                {
+                    tokens.push(form.token[count].value)
+                }
             }
-        }
-      } else {
-          if (event.target.token.checked == true)
-          {
-              tokens.push(event.target.token.value)
-          }
-      }
-      let body = new URLSearchParams();
-      for(let count=0; count < tokens.length; count++){
-        body.append("delete_tokens", tokens[count]);
-      }
-      req = new Request('{% url "spider_base:token-admin-delete" token=object.token %}', {
-          method: 'POST',
-          body: body,
-          credentials: "same-origin",
-          headers: {
-             "X-CSRFToken": event.target.csrfmiddlewaretoken.value,
-          }
-      });
-      await fetch(req)
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-        let tbody = document.getElementById("token_container").tBodies[0];
-        while(tbody.rows.length != 0) {
-          tbody.deleteRow(0);
-        }
-        for(let count=0; count<data["tokens"].length; count++){
-          let row = tbody.insertRow();
-          let cell1 = row.insertCell()
-          cell1.style.wordBreak = "break-all";
-          cell1.innerText = data["tokens"][count].name
-          let cell2 = row.insertCell()
-          if (!data["tokens"][count].expires){
-            cell2.innerText = `\u221E\n${encodeURI(data["tokens"][count].referrer)}`
           } else {
-            let date = new Date(data["tokens"][count].expires);
-            // D d M Y
-            cell2.innerText = `${date.toLocaleDateString("en-GB", {
-              weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
-            })}\n${data["tokens"][count].referrer}`
+              if (form.token.checked == true)
+              {
+                  tokens.push(form.token.value)
+              }
           }
-          let cell3 = row.insertCell()
-          if (data["tokens"][count].request_intentions){
-            cell3.innerHTML = `<a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id=${data["tokens"][count].id}" class="w3-button w3-blue"><i class="fas fa-reply" aria-hidden="true"></i></a>`
-          }
-          let cell4 = row.insertCell()
-          cell4.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
         }
-        allselector.checked = false;
-      })
+        let body = new URLSearchParams();
+        for(let count=0; count < tokens.length; count++){
+          body.append("delete_tokens", tokens[count]);
+        }
+        req = new Request('{% url "spider_base:token-admin-delete" token=object.token %}', {
+            method: 'POST',
+            body: body,
+            credentials: "same-origin",
+            headers: {
+               "X-CSRFToken": form.csrfmiddlewaretoken.value,
+            }
+        });
+        fetch_req = fetch(req).then(function(response) { return response.json(); }).then(function (d){
+          d["tokens"].sort(function(a, b){
+            if (a.needs_confirmation && !b.needs_confirmation){
+              return -1;
+            }
+            if (a.admin_key && !b.admin_key){
+              return -1;
+            }
+            if (a.id < b.id){
+              return -1;
+            } else if (a.id > b.id){
+              return 1;
+            } else {
+              return 0;
+            }
+          });
+          return d;
+        });
+      } else {
+        fetch_req = Promise.resolve(data);
+      }
+
+      let tbody = document.getElementById("token_container").tBodies[0];
+      while(tbody.rows.length != 0) {
+        tbody.deleteRow(0);
+      }
+      data = await fetch_req;
+      data["tokens"].sort(function(a, b){
+        if (a.needs_confirmation && !b.needs_confirmation){
+          return -1;
+        }
+        if (a.admin_key && !b.admin_key){
+          return -1;
+        }
+        if (a.id < b.id){
+          return -1;
+        } else if (a.id > b.id){
+          return 1;
+        } else {
+          return 0;
+        }
+      });
+      for(let count=0; count<data["tokens"].length; count++){
+        let row = tbody.insertRow();
+        let cell1 = row.insertCell()
+        cell1.style.wordBreak = "break-all";
+        cell1.innerText = data["tokens"][count].name
+        let cell2 = row.insertCell()
+        if (!data["tokens"][count].expires){
+          cell2.innerText = `\u221E\n${encodeURI(data["tokens"][count].referrer)}`
+        } else {
+          let date = new Date(data["tokens"][count].expires);
+          // D d M Y
+          cell2.innerText = `${date.toLocaleDateString("en-GB", {
+            weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric'
+          })}\n${data["tokens"][count].referrer}`
+        }
+        let cell3 = row.insertCell()
+        if (data["tokens"][count].request_intentions){
+          cell3.innerHTML = `<a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id=${data["tokens"][count].id}" class="w3-button w3-blue"><i class="fas fa-reply" aria-hidden="true"></i></a>`
+        }
+        let cell4 = row.insertCell()
+        cell4.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
+      }
+      allselector.checked = false;
       return false;
     };
+
+    async function delete_token(event){
+      event.preventDefault()
+      return await update_token(event.target)
+    }
+
+    document.addEventListener("DOMContentLoaded", async function(){
+      await update_token(deleteform);
+    })
+    document.addEventListener("spider_token_updated", async function(event){
+      await update_token(deleteform, event.data);
+    });
   </script>
 {% endif %}
 {% endblock %}

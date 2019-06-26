@@ -139,14 +139,10 @@ class AdminTokenManagement(UCTestMixin, View):
     def get(self, request, *args, **kwargs):
         if self.scope == "delete":
             response = {
-                "tokens": list(sorted(map(
+                "tokens": list(map(
                     self._token_dict,
                     AuthToken.objects.filter(
                         usercomponent=self.usercomponent
-                    )
-                ), key=lambda x: (
-                        0 if x["admin_key"] else 1,
-                        x["id"]
                     )
                 )),
             }
