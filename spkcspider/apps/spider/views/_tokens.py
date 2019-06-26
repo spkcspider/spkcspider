@@ -20,7 +20,7 @@ from django.utils.http import is_safe_url
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib import messages
-from django.views import View
+from django.views.generic.base import View, ContextMixin
 from django.test import Client
 
 
@@ -29,7 +29,7 @@ import requests
 from ._core import UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 from ..models import AuthToken
-from ..helpers import get_settings_func, get_requests_params
+from ..helpers import get_settings_func, get_requests_params, merge_get_url
 from ..constants import TokenCreationError
 
 
@@ -55,10 +55,25 @@ class AdminTokenManagement(UCTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         if self.request.POST.get("add_token"):
+            extra = {
+                "strength": self.usercomponent.strength,
+            }
+            if self.request.POST.get("restrict"):
+                extra["ids"] = []
+                extra["request_intentions"] = []
+                if "search" in self.request.GET:
+                    extra["request_filter"] = list(set(
+                        self.request.GET.getlist("search")
+                    ))
+            else:
+                if "search" in self.request.GET:
+                    extra["filter"] = list(set(
+                        self.request.GET.getlist("search")
+                    ))
+                if "id" in self.request.GET:
+                    extra["ids"] = list(set(self.request.GET.getlist("id")))
             self.created_token = self.create_token(
-                extra={
-                    "strength": self.usercomponent.strength
-                }
+                extra=extra
             )
         delids = self.request.POST.getlist("delete_tokens")
         if delids:
@@ -95,7 +110,8 @@ class AdminTokenManagement(UCTestMixin, View):
                 "same_session": True,
                 "needs_confirmation": (
                     "request_intentions" in token.extra or
-                    "request_filter" in token.extra
+                    "request_filter" in token.extra or
+                    "request_referrer" in token.extra
                 ),
                 "created": self.created_token == token,
                 "admin_key": self.request.auth_token == token
@@ -113,7 +129,8 @@ class AdminTokenManagement(UCTestMixin, View):
                 "same_session": True,
                 "needs_confirmation": (
                     "request_intentions" in token.extra or
-                    "request_filter" in token.extra
+                    "request_filter" in token.extra or
+                    "request_referrer" in token.extra
                 ),
                 "created": self.created_token == token,
                 "admin_key": True
@@ -130,7 +147,8 @@ class AdminTokenManagement(UCTestMixin, View):
                 "same_session": False,
                 "needs_confirmation": (
                     "request_intentions" in token.extra or
-                    "request_filter" in token.extra
+                    "request_filter" in token.extra or
+                    "request_referrer" in token.extra
                 ),
                 "created": self.created_token == token,
                 "admin_key": False
@@ -367,10 +385,10 @@ class TokenRenewal(UCTestMixin, View):
         return ret
 
 
-class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
+class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, ContextMixin, View):
     model = AuthToken
     redirect_field_name = "next"
-    preserved_GET_parameters = set(["token", "page"])
+    preserved_GET_parameters = {"token", "page", "search", "id", "protection"}
 
     def get_redirect_url(self, sanitized_GET=None):
         """Return the user-originating redirect URL if it's safe."""
@@ -402,18 +420,39 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
         context = self.get_context_data()
         # fallback to intentions if no request_intentions
         # remove "domain", "sl"
-        context["intentions"] = set(self.request.auth_token.extra.get(
-            "request_intentions", self.request.auth_token.extra.get(
+        context["intentions"] = set(self.object.extra.get(
+            "request_intentions", self.object.extra.get(
                 "intentions", []
             )
         )).difference_update({"domain"})
-        context["referrer"] = self.request.auth_token.referrer.url
+        rreferrer = self.object.extra.get("request_referrer", None)
+        if rreferrer:
+            context["referrer"] = merge_get_url(rreferrer)
+            if not get_settings_func(
+                "SPIDER_URL_VALIDATOR",
+                "spkcspider.apps.spider.functions.validate_url_default"
+            )(context["referrer"], self):
+                return HttpResponse(
+                    status=400,
+                    content=_('Insecure url: %(url)s') % {
+                        "url": context["referrer"]
+                    }
+                )
+        elif self.object.referrer:
+            context["referrer"] = self.object.url
+        else:
+            raise Http404()
+        context["ids"] = self.object.usercomponent.contents.filter(
+            "id", flat=True
+        )
+        context["ids"] = set(context["ids"])
         context["action"] = "update"
+        # if requested referrer is available DO delete invalid and DO care
         ret = self.handle_referrer_request(
-            context, self.object, dontact=True, no_oldtoken=True
+            context, self.object, dontact=not rreferrer, no_oldtoken=True
         )
         if isinstance(ret, HttpResponseRedirect):
-            if context["post_success"]:
+            if context.get("post_success", False):
                 messages.success(request, _("Intention update successful"))
             else:
                 messages.error(request, _("Intention update failed"))
@@ -423,13 +462,9 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, View):
         return ret
 
     def get_usercomponent(self):
-        tokenid = self.request.GET.get("id", None)
-        if not tokenid:
-            raise Http404()
         self.object = get_object_or_404(
             AuthToken,
-            id=tokenid,
-            referrer__isnull=False
+            id=self.request.GET.get("refid", None),
         )
         return self.object.usercomponent
 
@@ -440,7 +475,6 @@ class RequestTokenUpdate(UserTestMixin, View):
         self.request.auth_token = get_object_or_404(
             AuthToken,
             token=self.request.POST("token"),
-            referrer__isnull=False
         )
         return bool(self.request.auth_token)
 
@@ -456,6 +490,9 @@ class RequestTokenUpdate(UserTestMixin, View):
 
     def get(self, request, *args, **kwargs):
         ret_dict = {}
+        if "request_referrer" in request.auth_token.extra:
+            ret_dict["referrer"] = \
+                request.auth_token.extra["request_referrer"]
         if "request_intentions" in request.auth_token.extra:
             ret_dict["intentions"] = \
                 request.auth_token.extra["request_intentions"]
@@ -465,6 +502,14 @@ class RequestTokenUpdate(UserTestMixin, View):
 
     def post(self, request, *args, **kwargs):
         ret_dict = {}
+        if "referrer" in request.POST:
+            # will be checked a second time
+            request.auth_token.extra["request_referrer"] = \
+                request.POST.get("referrer")
+            ret_dict["intentions"] = \
+                request.auth_token.extra["request_referrer"]
+        elif not request.auth_token.referrer:
+            return HttpResponse("no referrer", status=400)
         if "intentions" in request.POST:
             # will be checked a second time
             request.auth_token.extra["request_intentions"] = \

@@ -39,7 +39,7 @@ class DefinitionsMixin(object):
 
 
 class UserTestMixin(DefinitionsMixin, AccessMixin):
-    preserved_GET_parameters = {"token", "search", "protection"}
+    preserved_GET_parameters = {"token", "search", "id", "protection"}
     login_url = reverse_lazy(getattr(
         settings,
         "LOGIN_URL",

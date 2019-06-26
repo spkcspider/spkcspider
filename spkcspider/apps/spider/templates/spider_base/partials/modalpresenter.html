@@ -33,8 +33,13 @@
         {% if request.is_special_user %}
         <div style="padding-top:10px">
           <button class="w3-button w3-grey" id="share_add_button" value="add">
-            <i class="fas fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Add' %}
+            <i class="fas fa-share" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Add' %}
           </button>
+          {% if not uc.is_index %}
+            <button class="w3-button w3-orange" id="share_add_restricted_button" value="add_restricted">
+              <i class="fas fa-plus-circle" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Add Restricted' %}
+            </button>
+          {% endif %}
           <button class="w3-button w3-grey" id="share_refresh_button" value="refresh">
             <i class="fas fa-sync" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Refresh' %}
           </button>
@@ -63,11 +68,13 @@ function update_qrmodal(){
   if(token_selector.value != ""){
     _remotelink = `${_remotelink}token=${token_selector.options[token_selector.options.selectedIndex].text}&`;
     if(token_selector.options[token_selector.options.selectedIndex].dataset.needs_confirmation == "true"){
-      _confirmlink = `${_confirmlink}id=${token_selector.options[token_selector.options.selectedIndex].value}&`;
+      _confirmlink = `${_confirmlink}refid=${token_selector.options[token_selector.options.selectedIndex].value}&`;
       update_request_button.href = _confirmlink;
       update_request_button.classList.remove("w3-hide")
+      token_selector.classList.add("w3-orange")
     } else {
       update_request_button.classList.add("w3-hide")
+      token_selector.classList.remove("w3-orange")
     }
   }
   remotelink.href = _remotelink;
@@ -106,10 +113,13 @@ async function update_share_tokens(event){
       body.append("delete_tokens", token_selector.value);
     } else if(event.target.value == "add") {
       body.append("add_token", true);
+    } else if(event.target.value == "add_restricted") {
+      body.append("restrict", true);
+      body.append("add_token", true);
     }
 
   }
-  req = new Request('{% url "spider_base:token-admin-share" token=uc.token %}', {
+  req = new Request('{% url "spider_base:token-admin-share" token=uc.token %}?{{sanitized_GET}}', {
       method: 'POST',
       body: body,
       credentials: "same-origin",
@@ -158,6 +168,9 @@ async function update_share_tokens(event){
 
 document.getElementById('share_delete_button').addEventListener("click",update_share_tokens);
 document.getElementById('share_add_button').addEventListener("click",update_share_tokens);
+{% if not uc.is_index %}
+  document.getElementById('share_add_restricted_button').addEventListener("click",update_share_tokens);
+{% endif %}
 document.getElementById('share_refresh_button').addEventListener("click",update_share_tokens);
 
 token_selector.addEventListener("change",update_qrmodal);

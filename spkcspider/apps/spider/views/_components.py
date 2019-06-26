@@ -199,7 +199,7 @@ class ComponentPublicIndex(ComponentIndexBase):
     model = UserComponent
     is_home = False
     source_strength = 0
-    preserved_GET_parameters = {"search", "protection"}
+    preserved_GET_parameters = {"search", "id", "protection"}
 
     sanitize_GET = UserTestMixin.sanitize_GET
 
@@ -272,7 +272,7 @@ class ComponentPublicIndex(ComponentIndexBase):
 class ComponentIndex(UCTestMixin, ComponentIndexBase):
     model = UserComponent
     source_strength = 10
-    preserved_GET_parameters = {"search", "protection"}
+    preserved_GET_parameters = {"search", "id", "protection"}
     user = None
 
     def dispatch(self, request, *args, **kwargs):
@@ -399,7 +399,7 @@ class ComponentCreate(UserTestMixin, CreateView):
 class ComponentUpdate(UserTestMixin, UpdateView):
     model = UserComponent
     form_class = UserComponentForm
-    preserved_GET_parameters = {"search", "protection"}
+    preserved_GET_parameters = {"search", "id", "protection"}
 
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -508,7 +508,7 @@ class ComponentDelete(EntityDeletionMixin, DeleteView):
     model = UserComponent
     fields = []
     object = None
-    preserved_GET_parameters = {"search"}
+    preserved_GET_parameters = {"search", "id"}
 
     def form_valid(self, form):
         _ = gettext

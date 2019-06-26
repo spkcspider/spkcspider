@@ -222,7 +222,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         for(let count=0; count < tokens.length; count++){
           body.append("delete_tokens", tokens[count]);
         }
-        req = new Request('{% url "spider_base:token-admin-delete" token=object.token %}', {
+        req = new Request('{% url "spider_base:token-admin-delete" token=object.token %}?{{sanitized_GET}}', {
             method: 'POST',
             body: body,
             credentials: "same-origin",
@@ -289,7 +289,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         }
         let cell3 = row.insertCell()
         if (data["tokens"][count].request_intentions){
-          cell3.innerHTML = `<a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&id=${data["tokens"][count].id}" class="w3-button w3-blue"><i class="fas fa-edit" aria-hidden="true"></i></a>`
+          cell3.innerHTML = `<a href="{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}&{{sanitized_GET}}&refid=${data["tokens"][count].id}" class="w3-button w3-blue"><i class="fas fa-edit" aria-hidden="true"></i></a>`
         }
         let cell4 = row.insertCell()
         cell4.innerHTML = `<input form="deleteForm" type="checkbox" name="token" onclick='updateAllSelector(this)' value="${data["tokens"][count].id}"></input>`
