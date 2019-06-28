@@ -61,7 +61,12 @@ class AdminTokenManagement(UCTestMixin, View):
             if self.request.POST.get("restrict"):
                 extra["ids"] = [-1]
             elif self.request.GET.get("id", "") != "":
-                extra["ids"] = list(set(self.request.GET.getlist("id")))
+                try:
+                    extra["ids"] = list(set(map(
+                        int, self.request.GET.getlist("id")
+                    )))
+                except Exception:
+                    return HttpResponse(status=400)
             if self.request.GET.get("search", "") != "":
                 extra["search"] = list(set(
                     self.request.GET.getlist("search")
@@ -69,7 +74,11 @@ class AdminTokenManagement(UCTestMixin, View):
             self.created_token = self.create_token(
                 extra=extra
             )
-        delids = self.request.POST.getlist("delete_tokens")
+
+        try:
+            delids = set(map(int, self.request.POST.getlist("delete_tokens")))
+        except Exception:
+            return HttpResponse(status=400)
         if delids:
             delquery = AuthToken.objects.filter(
                 usercomponent=self.usercomponent,
@@ -91,62 +100,36 @@ class AdminTokenManagement(UCTestMixin, View):
         return self.get(request, *args, **kwargs)
 
     def _token_dict(self, token):
+        # sl or not initialized map to full
+        full = "sl" in token.extra.get("intentions", ["sl"])
+        ret = {
+            "admin_key": token.extra.get("prot_strength", 0) >= 4,
+            "created": self.created_token == token,
+            "restricted": token.extra.get("ids", []) == [-1],
+            "expires": None if token.persist >= 0 else (
+                token.created +
+                self.usercomponent.token_duration
+            ).strftime("%a, %d %b %Y %H:%M:%S %z"),
+            "referrer": token.referrer.url if token.referrer else "",
+            "token": token.token if full else None,
+            "name": str(token),
+            "id": token.id,
+            "needs_confirmation": (
+                token.extra.get("request_intentions") is not None or
+                token.extra.get("request_search") is not None or
+                token.extra.get("request_referrer") is not None
+            )
+        }
         if token.session_key == self.request.session.session_key:
             assert(not token.referrer)
-            return {
-                "expires": None if token.persist >= 0 else (
-                    token.created +
-                    self.usercomponent.token_duration
-                ).strftime("%a, %d %b %Y %H:%M:%S %z"),
-                "referrer": token.referrer if token.referrer else "",
-                "name": token.token,
-                "id": token.id,
-                "same_session": True,
-                "needs_confirmation": (
-                    token.extra.get("request_intentions") is not None or
-                    token.extra.get("request_search") is not None or
-                    token.extra.get("request_referrer") is not None
-                ),
-                "created": self.created_token == token,
-                "admin_key": self.request.auth_token == token
-            }
+            ret["same_session"] = True
         elif self.request.auth_token == token:
             assert(not token.referrer)
-            return {
-                "expires": None if token.persist >= 0 else (
-                    token.created +
-                    self.usercomponent.token_duration
-                ).strftime("%a, %d %b %Y %H:%M:%S %z"),
-                "referrer": token.referrer if token.referrer else "",
-                "name": token.token,
-                "id": token.id,
-                "same_session": True,
-                "needs_confirmation": (
-                    token.extra.get("request_intentions") is not None or
-                    token.extra.get("request_search") is not None or
-                    token.extra.get("request_referrer") is not None
-                ),
-                "created": self.created_token == token,
-                "admin_key": True
-            }
+            ret["same_session"] = True
         else:
-            return {
-                "expires": None if token.persist >= 0 else (
-                    token.created +
-                    self.usercomponent.token_duration
-                ).strftime("%a, %d %b %Y %H:%M:%S %z"),
-                "referrer": token.referrer if token.referrer else "",
-                "name": str(token),
-                "id": token.id,
-                "same_session": False,
-                "needs_confirmation": (
-                    token.extra.get("request_intentions") is not None or
-                    token.extra.get("request_search") is not None or
-                    token.extra.get("request_referrer") is not None
-                ),
-                "created": self.created_token == token,
-                "admin_key": False
-            }
+            ret["same_session"] = False
+
+        return ret
 
     def get(self, request, *args, **kwargs):
         if self.scope == "delete":
@@ -160,12 +143,14 @@ class AdminTokenManagement(UCTestMixin, View):
             }
         else:
             response = {
-                "tokens": list(map(
-                    self._token_dict,
-                    AuthToken.objects.filter(
-                        Q(session_key=request.session.session_key) |
-                        Q(token=request.auth_token),
-                        usercomponent=self.usercomponent,
+                "tokens": list(filter(
+                    lambda x: x["token"], map(
+                        self._token_dict,
+                        AuthToken.objects.filter(
+                            Q(session_key=request.session.session_key) |
+                            Q(token=request.auth_token),
+                            usercomponent=self.usercomponent,
+                        )
                     )
                 )),
             }
@@ -420,7 +405,9 @@ class ConfirmTokenUpdate(ReferrerMixin, UCTestMixin, TemplateView):
                 "intentions", []
             )
         ))
-        context["intentions"].difference_update({"domain"})
+        # sl or domain should NOT be allowed for token updates
+        # sl is only for clients, domain only initial and should be removed
+        context["intentions"].difference_update({"domain", "sl"})
         context["action"] = "update"
         context["uc"] = self.object.usercomponent
 
