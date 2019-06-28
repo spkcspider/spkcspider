@@ -132,6 +132,7 @@ class AdminTokenManagement(UCTestMixin, View):
         return ret
 
     def get(self, request, *args, **kwargs):
+        # don't filter here, as used twice
         if self.scope == "delete":
             response = {
                 "tokens": list(map(
@@ -143,14 +144,12 @@ class AdminTokenManagement(UCTestMixin, View):
             }
         else:
             response = {
-                "tokens": list(filter(
-                    lambda x: x["token"], map(
-                        self._token_dict,
-                        AuthToken.objects.filter(
-                            Q(session_key=request.session.session_key) |
-                            Q(token=request.auth_token),
-                            usercomponent=self.usercomponent,
-                        )
+                "tokens": list(map(
+                    self._token_dict,
+                    AuthToken.objects.filter(
+                        Q(session_key=request.session.session_key) |
+                        Q(token=request.auth_token),
+                        usercomponent=self.usercomponent,
                     )
                 )),
             }

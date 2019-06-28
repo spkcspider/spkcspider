@@ -147,6 +147,12 @@ async function update_share_tokens(event){
           if (a.needs_confirmation && !b.needs_confirmation){
             return -1;
           }
+          if (a.admin_key && a.token && !b.admin_key){
+            return -1;
+          }
+          if (a.token && !b.token){
+            return -1;
+          }
           if (a.admin_key && !b.admin_key){
             return -1;
           }
