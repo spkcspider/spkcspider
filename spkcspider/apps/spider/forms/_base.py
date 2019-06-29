@@ -212,8 +212,8 @@ class UserComponentForm(forms.ModelForm):
         if self.instance.id:
             # instant fail strength
             fail_strength = 0
+            amount = 0
             # regular protections strength
-            amount_regular = 0
             strengths = []
             for protection in self.protections:
                 if not protection.cleaned_data.get("active", False):
@@ -238,10 +238,10 @@ class UserComponentForm(forms.ModelForm):
                     if s[1] > max_prot_strength:
                         max_prot_strength = s[1]
                     strengths.append(s[0])
-                    amount_regular += 1
+                amount += 1
             strengths.sort()
             if self.cleaned_data["required_passes"] > 0:
-                if amount_regular == 0:
+                if amount == 0:
                     # login or token only
                     # not 10 because 10 is also used for uniqueness
                     strengths = 4
@@ -255,7 +255,6 @@ class UserComponentForm(forms.ModelForm):
             else:
                 strengths = 0
             prot_strength = max(strengths, fail_strength)
-
         return (prot_strength, max_prot_strength)
 
     def clean(self):
@@ -300,11 +299,10 @@ class UserComponentForm(forms.ModelForm):
             return ret
         if not self.cleaned_data["public"]:
             self.cleaned_data["strength"] += 5
-            self.cleaned_data["strength"] += prot_strength or 0
-        else:
-            # check on creation
-            if self.cleaned_data["required_passes"] > 0:
-                self.cleaned_data["strength"] += 4
+        # check on creation
+        if prot_strength is None and self.cleaned_data["required_passes"] > 0:
+            self.cleaned_data["strength"] += 4
+        self.cleaned_data["strength"] += prot_strength or 0
         self.cleaned_data["can_auth"] = max_prot_strength >= 4
 
         if self.instance.id:

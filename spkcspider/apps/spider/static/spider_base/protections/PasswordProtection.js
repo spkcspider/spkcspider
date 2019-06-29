@@ -156,6 +156,8 @@ document.addEventListener("DOMContentLoaded", async function(){
     }
   });
   await Promise.all(promises);
+  /* unlock after initialization complete */
+  block_submits = false;
   selectizers = $(".PWProtectionTarget").selectize({
     delimiter: null,
     plugins: {

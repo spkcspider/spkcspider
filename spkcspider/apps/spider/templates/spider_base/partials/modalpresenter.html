@@ -75,8 +75,10 @@ function update_qrmodal(){
       update_request_button.classList.add("w3-hide")
     }
   }
-  if (_token.dataset.token){
-    _remotelink = `${_remotelink}token=${_token.dataset.token}&`;
+  if ({% if not uc.is_index %}_token.value == "" || {% endif %}_token.dataset.token){
+    if(_token.dataset.token){
+      _remotelink = `${_remotelink}token=${_token.dataset.token}&`;
+    }
     remotelink.href = _remotelink;
     remotelink.text = _remotelink;
     QRCode.toCanvas(
