@@ -182,8 +182,11 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         travel = self.get_travel_for_request().filter(
             login_protection__in=loggedin_active_tprotections
         )
+        q = UserComponent.objects.all()
+        if self.request.GET.get("protection", "") == "false":
+            q = q.filter(required_passes=0)
         return get_object_or_404(
-            UserComponent.objects.select_related(
+            q.select_related(
                 "user", "user__spider_info",
             ).prefetch_related("protections"),
             ~models.Q(
@@ -472,8 +475,11 @@ class ContentAdd(ContentBase, CreateView):
         travel = self.get_travel_for_request().filter(
             login_protection__in=loggedin_active_tprotections
         )
+        q = UserComponent.objects.all()
+        if self.request.GET.get("protection", "") == "false":
+            q = q.filter(required_passes=0)
         return get_object_or_404(
-            UserComponent.objects.prefetch_related("protections"),
+            q.prefetch_related("protections"),
             ~models.Q(travel_protected__in=travel),
             token=self.kwargs["token"],
         )
@@ -649,8 +655,11 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         travel = self.get_travel_for_request().filter(
             login_protection__in=loggedin_active_tprotections
         )
+        q = UserComponent.objects.all()
+        if self.request.GET.get("protection", "") == "false":
+            q = q.filter(required_passes=0)
         return get_object_or_404(
-            UserComponent.objects.prefetch_related("protections"),
+            q.prefetch_related("protections"),
             ~models.Q(
                 travel_protected__in=travel
             ),
