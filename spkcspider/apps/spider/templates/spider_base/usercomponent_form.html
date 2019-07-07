@@ -13,7 +13,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block extrahead %}
 {{block.super}}
-<script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
+<script src="{% static 'node_modules/qrcode-generator/qrcode.js' %}"></script>
 {{form.media|safe}}
 {% endblock %}
 {# public_meta not required because it will never be used #}
@@ -163,7 +163,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block outercontent %}
 {% if object %}
-  {% include "spider_base/partials/modalpresenter.html" with uc=object %}
+  {% include "spider_base/partials/share_presenter.html" with uc=object %}
   <script>
     let allselector=document.getElementById("deleteAllSelector");
     let deleteform=document.getElementById("deleteForm");

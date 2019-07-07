@@ -19,7 +19,7 @@
 
 {% block extrahead %}
 {{block.super}}
-<script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
+<script src="{% static 'node_modules/qrcode-generator/qrcode.js' %}"></script>
 {% if form %}
   {{form.media|safe}}
 {% endif %}
@@ -32,7 +32,7 @@
 {% block main_attributes %}{{block.super}} {% if component_feature_type in object.ctype or content_feature_type in object.ctype %}typeof="spkc:Feature"{% else %}typeof="spkc:Content"{% endif %}{% endblock %}
 
 {% block content %}
-  <div class="w3-padding"  style="min-height:140px">
+  <div class="w3-padding" style="min-height:140px">
     <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
     {% for f in active_listed_features %}
       {% for action in f.feature_urls %}
@@ -183,6 +183,6 @@
 {% block outercontent %}
 {% if scope != "add" %}
   {# remotelink generated in view #}
-  {% include "spider_base/partials/modalpresenter.html" %}
+  {% include "spider_base/partials/share_presenter.html" %}
 {% endif %}
 {% endblock %}

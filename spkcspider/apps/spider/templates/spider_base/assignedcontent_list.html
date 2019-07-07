@@ -13,7 +13,7 @@
 
 {% block extrahead %}
 {{block.super}}
-<script src="{% static 'node_modules/qrcode/build/qrcode.min.js' %}"></script>
+<script src="{% static 'node_modules/qrcode-generator/qrcode.js' %}"></script>
 <link rel="stylesheet" href="{% static 'node_modules/selectize/dist/css/selectize.default.css' %}">
 {% if DEBUG %}
   <script src="{% static 'node_modules/jquery/dist/jquery.js' %}"></script>
@@ -29,7 +29,7 @@
 <div>
   <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
   <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
-  <div class="w3-padding">
+  <div class="w3-padding" style="min-height:140px">
     <span class="w3-left">
       {% if request.user == uc.user %}
         <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucomponent-list' %}">
@@ -253,5 +253,5 @@
 {% endblock %}
 
 {% block outercontent %}
-{% include "spider_base/partials/modalpresenter.html" %}
+{% include "spider_base/partials/share_presenter.html" %}
 {% endblock %}
