@@ -45,27 +45,25 @@
 
 {% block outercontent %}
 {{block.super}}
-{% include "spider_base/partials/rawupdate_presenter.html" %}
-{# FIXME: fix not availabe VariantType #}
 {% if scope == "update" and raw_update_type in object.ctype.ctype %}
-  {% url 'spider_base:ucontent-access' token=object.token access='raw_update' as raw_updatelink %}
-  <script type="text/javascript">
-  {% if scope == "update" and object.primary_anchor_for.exists %}
-
-    var component_select = document.getElementById('id_content_control-usercomponent');
-    var component_select_hider = document.getElementById('id_content_control-migrate_primary_anchor_wrapper');
-    if(component_select.value == "{{uc.id}}"){
-      component_select_hider.classList.add("w3-hide")
-    }
-    component_select.addEventListener("change", function(event){
-      if(event.target.value == "{{uc.id}}"){
-        component_select_hider.classList.add("w3-hide");
-      }else {
-        component_select_hider.classList.remove("w3-hide");
-      }
-    }, true)
-  {% endif %}
-
-  </script>
+  {% url 'spider_base:ucontent-access' token=object.token access='raw_update' as rawupdatelink %}
+  {% include "spider_base/partials/rawupdate_presenter.html" with rawupdatelink=rawupdatelink %}
 {% endif %}
+{% if scope == "update" and object.primary_anchor_for.exists %}
+<script type="text/javascript">
+  var component_select = document.getElementById('id_content_control-usercomponent');
+  var component_select_hider = document.getElementById('id_content_control-migrate_primary_anchor_wrapper');
+  if(component_select.value == "{{uc.id}}"){
+    component_select_hider.classList.add("w3-hide")
+  }
+  component_select.addEventListener("change", function(event){
+    if(event.target.value == "{{uc.id}}"){
+      component_select_hider.classList.add("w3-hide");
+    }else {
+      component_select_hider.classList.remove("w3-hide");
+    }
+  }, true)
+</script>
+{% endif %}
+
 {% endblock %}

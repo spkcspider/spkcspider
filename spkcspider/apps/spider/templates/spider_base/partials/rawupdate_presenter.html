@@ -31,9 +31,9 @@ let rawupdate_presenter = document.getElementById('rawupdate_modal_presenter');
 let rawupdate_copy_clipboard = document.getElementById('rawupdate_copy_clipboard');
 
 remotelink_link.href = "{{hostpart}}{{rawupdatelink}}";
-remotelink_link.text = rawupdatelink;
+remotelink_link.text = "{{hostpart}}{{rawupdatelink}}";
 let qr = qrcode(0, 'H');
-qr.addData(rawupdatelink);
+qr.addData("{{hostpart}}{{rawupdatelink}}");
 qr.make();
 rawupdate_placeholder.innerHTML = qr.createImgTag(4);
 
