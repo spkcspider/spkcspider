@@ -8,7 +8,7 @@
   <form class="" method="POST" action="{{searchpath}}">
     {% csrf_token %}
     <div style="white-space: nowrap;">
-      <span style="display:inline-block; width:80%">
+      <span style="display:inline-block; {% if cur_search %}width:70%{% else %}width:80%{% endif %}">
         <select name="search" id="search_field_list_footer" multiple="multiple">
           {% if request.is_special_user and "_unlisted" not in cur_search %}
             <option value="_unlisted">_unlisted</option>
