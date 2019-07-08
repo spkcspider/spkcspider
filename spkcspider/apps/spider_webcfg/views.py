@@ -118,9 +118,7 @@ class WebConfigView(UCTestMixin, View):
         self.object = self.get_object()
         old_size = self.object.get_size()
         oldconfig = self.object.config
-        self.object.config = self.request.body.decode(
-            "ascii", "backslashreplace"
-        )
+        self.object.config = self.request.body
         # a full_clean is here not required
         self.object.clean()
 
@@ -135,9 +133,7 @@ class WebConfigView(UCTestMixin, View):
 
     def render_to_response(self, config):
         ret = HttpResponse(
-            config.encode(
-                "ascii", "backslashreplace"
-            ), content_type="text/plain"
+            config, content_type="text/plain"
         )
         ret["X-SPIDER-URL"] = self.request.auth_token.referrer.url
         ret["X-SPIDER-MODIFIED"] = self.object.associated.modified

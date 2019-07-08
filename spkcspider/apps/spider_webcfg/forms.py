@@ -9,4 +9,12 @@ class WebConfigForm(forms.ModelForm):
 
     class Meta:
         model = WebConfig
-        fields = ['config', 'creation_url']
+        fields = ['config']
+        widgets = {
+            "config": forms.Textarea()
+        }
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.initial["creation_url"] = \
+            self.instance.associated.attached_to_token.referrer.url

@@ -34,7 +34,7 @@ class WebConfig(BaseContent):
         }
     ]
 
-    config = models.TextField(default="", blank=True)
+    config = models.BinaryField(default=b"", editable=True, blank=True)
 
     @classmethod
     def localize_name(cls, name):
@@ -54,7 +54,8 @@ class WebConfig(BaseContent):
         ]
 
     def get_size(self):
-        return super().get_size() + len(self.config)
+        # ensure space for at least 100 bytes (for free)
+        return super().get_size() + max(len(self.config), 100) - 100
 
     def get_priority(self):
         # low priority
