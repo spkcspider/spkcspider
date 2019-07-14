@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function(){
       theme: 'html',
       iconlib: 'fontawesome5',
       disable_collapse: true,
+      keep_oneof_values: false,
       startval: JSON.parse(element.value),
       form_name_root:"",
       schema: {

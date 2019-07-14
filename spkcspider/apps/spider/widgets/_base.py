@@ -163,6 +163,7 @@ class SelectizeWidget(widgets.Select):
         self.allow_multiple_selected = allow_multiple_selected
         if not attrs:
             attrs = {"class": ""}
+        attrs.setdefault("style", "width:100%")
         attrs.setdefault("class", "")
         attrs["class"] += " %s" % self.anchor_class
         super().__init__(attrs=attrs, **kwargs)
@@ -187,6 +188,7 @@ class OpenChoiceWidget(widgets.Select):
         self.allow_multiple_selected = allow_multiple_selected
         if not attrs:
             attrs = {"class": ""}
+        attrs.setdefault("style", "width:100%")
         attrs.setdefault("class", "")
         attrs["class"] += " %s" % self.anchor_class
         super().__init__(attrs=attrs, **kwargs)
