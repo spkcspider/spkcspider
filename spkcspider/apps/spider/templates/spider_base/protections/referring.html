@@ -140,7 +140,7 @@
   <div>
     <h4>{% trans 'Filter' %}</h4>
     <div style="white-space: nowrap;">
-      <select name="search" id="scope_filter" multiple="multiple">
+      <select name="search" id="scope_filter" multiple="multiple" style="width:100%">
         {% list_parameters "search" old_search as cur_search %}
         {% for elem in cur_search %}
           <option selected="selected" value="{{elem}}">{{elem}}</option>

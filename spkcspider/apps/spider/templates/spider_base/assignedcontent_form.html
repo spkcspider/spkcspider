@@ -5,15 +5,18 @@
 {% include "spider_base/partials/form_errors.html" with form=form %}
 <form class="w3-padding" id="main_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
   <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
+  {# horizontal scrolling here not neccessary #}
+  <h2>{% trans 'Content Settings' %}</h2>
   <fieldset style="width:100%">
-    <legend><h2>{% trans 'Content Settings' %}</h2></legend>
+    <legend></legend>
     {% include "spider_base/partials/base_form.html" with form=form %}
   </fieldset>
   {% if content %}
-    <fieldset style="width:100%">
-      <legend><h2>{% if scope == "add" %}{{object}}{% else %}{{object.ctype}}{% endif %}</h2></legend>
+    {# fieldsets don't allow horizontal scrolling #}
+    <h2>{% if scope == "add" %}{{object}}{% else %}{{object.ctype}}{% endif %}</h2>
+    <div class="w3-border w3-padding">
       {{content.0|safe}}
-    </fieldset>
+    </div>
   {% endif %}
   <div class="w3-padding">
     <button name="submit_button" class="w3-button w3-grey">

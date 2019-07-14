@@ -9,8 +9,8 @@ from django.conf import settings
 _extra = '' if settings.DEBUG else '.min'
 
 
-class SchemeWidget(widgets.Textarea):
-    template_name = 'spider_base/forms/widgets/wrapped_textarea.html'
+class SchemeWidget(widgets.TextInput):
+    template_name = 'spider_base/forms/widgets/wrapped_scroll_input.html'
 
     class Media:
         # css = {

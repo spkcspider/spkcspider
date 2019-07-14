@@ -1,7 +1,8 @@
 {% load spider_rdf %}
 <div class="w3-padding">
-  <fieldset style="width:100%">
-    <legend><h2>{{legend|safe}}</h2></legend>
+  {# fieldsets don't allow horizontal scrolling #}
+  <h2>{{legend|safe}}</h2>
+  <div class="w3-border w3-padding">
     {% include "spider_base/partials/base_view_form.html" with form=form %}
-  </fieldset>
+  </div>
 </div>

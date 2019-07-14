@@ -16,14 +16,16 @@
   <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
   <data hidden="hidden" property="spkc:protections.amount" datatype="xsd:nonNegativeInteger">{{protections|length}}</data>
   <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.untrusted_strength}}</data>
-  <fieldset rel="protections" style="overflow-y: auto; max-height:600px">
-    <legend><h1>{% trans 'Protections' %}</h1></legend>
+
+    {# fieldsets don't allow horizontal scrolling #}
+    <h1>{% trans 'Authenticate' %}</h1>
+    <div class="w3-padding w3-border" style="overflow-y: auto; max-height:600px">
     {% for prot in protections %}
       {% include "spider_base/protections/protection_item.html" with prot=prot %}
     {% empty %}
       <data hidden="hidden" resource="rdf:nil"/>
     {% endfor %}
-  </fieldset>
+  </div>
   <button class="w3-button w3-grey">
     {% trans 'Send' %}
   </button>

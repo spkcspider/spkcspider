@@ -77,11 +77,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     <data hidden="hidden" property="type" datatype="xsd:string">Component</data>
     {% if object %}
     <fieldset class="w3-padding">
-      <legend>
-        <h2>
-          {% trans 'Add new content' %}
-        </h2>
-      </legend>
+      <legend><h2>{% trans 'Add new content' %}</h2></legend>
       <div class="w3-white w3-border">
       {% include "spider_base/partials/content_variants_box.html" with open=True uc=object %}
       </div>
@@ -135,8 +131,9 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
       {% trans "Change" %}
     </button>
     {% endif %}
-    <fieldset style="overflow-y: auto; max-height:600px">
-      <legend style="bottom:100px;"><h2>{% trans 'Protections' %}</h2></legend>
+    {# fieldsets don't allow horizontal scrolling #}
+    <h2>{% trans 'Protections' %}</h2>
+    <div class="w3-padding w3-border" style="overflow-y: auto; max-height:600px">
       {% for prot in form.protections %}
         <div class="protection-wrapping">
           <div class="w3-padding-small w3-card w3-white">
@@ -149,7 +146,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           <div class="w3-padding-small w3-card w3-orange">{% trans 'No protections: create component first' %}</div>
         </div>
       {% endfor %}
-    </fieldset>
+    </div>
     <button class="w3-button w3-grey">
       {% if form.instance.id %}{% trans "Change" %}{% else %}{% trans "Create" %}{% endif %}
     </button>

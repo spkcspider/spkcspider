@@ -15,13 +15,14 @@
       {% include "spider_base/partials/base_form.html" with form=form %}
     </fieldset>
 
-    <fieldset style="overflow-y: auto; max-height:600px">
-      <legend><h1>{% trans 'Authenticate with' %}</h1></legend>
+    {# fieldsets don't allow horizontal scrolling #}
+    <h1>{% trans 'Authenticate with' %}</h1>
+    <div class="w3-padding w3-border" style="overflow-y: auto; max-height:600px">
       {% extract_protections "protections" as protections %}
       {% for prot in protections %}
         {% include "spider_base/protections/protection_item.html" with prot=prot %}
       {% endfor %}
-    </fieldset>
+    </div>
     <button class="w3-button w3-grey" type="submit">Login</button><br/>
     {% if SETTINGS.OPEN_FOR_REGISTRATION %}
       <a href="{% url 'auth:signup' %}">{% trans 'No account? Signup?' %}</a>
