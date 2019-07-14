@@ -58,11 +58,6 @@ VERIFIER_MAX_SIZE_DIRECT_ACCEPTED = 2000000
 
 SPIDER_ANCHOR_SCHEME = "http"
 
-# not required, SpiderTokenAuthBackend have to be tested, so here active
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'spkcspider.apps.spider.auth.SpiderTokenAuthBackend'
-]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

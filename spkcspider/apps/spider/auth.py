@@ -6,11 +6,10 @@ import time
 
 from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
-from django.utils import timezone
 
 import ratelimit
 
-from .models import UserComponent, Protection, TravelProtection, AuthToken
+from .models import UserComponent, Protection, TravelProtection
 from .constants import (
     ProtectionType, MIN_PROTECTION_STRENGTH_LOGIN,
 )
@@ -19,30 +18,6 @@ logger = logging.getLogger(__name__)
 
 # seed with real random
 _nonexhaustRandom = random.Random(os.urandom(30))
-
-
-class SpiderTokenAuthBackend(ModelBackend):
-
-    def authenticate(self, request, username=None,
-                     protection_codes=None, **kwargs):
-        """ Use protections for authentication"""
-        tokenstring = request.GET.get("token", None)
-        if not tokenstring:
-            return
-
-        now = timezone.now()
-
-        token = AuthToken.objects.filter(
-            usercomponent__name="index",
-            token=tokenstring
-        ).first()
-        if token:
-            uc = token.usercomponent
-            if token.persist == -1 and token.created < now - uc.token_duration:
-                token.delete()
-                return
-            if TravelProtection.objects.auth(request, uc, now):
-                return uc.user
 
 
 class SpiderAuthBackend(ModelBackend):

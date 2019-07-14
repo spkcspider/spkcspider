@@ -34,7 +34,7 @@
           <button class="w3-button w3-grey" id="share_add_button" value="add">
             {% list_parameters "search" as cur_search_params %}
             {% list_parameters "id" as cur_id_params %}
-            <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% if cur_search_params or cur_id_params %}{% trans 'Add (filtered)' %}{% else %}{% trans 'Add' %}{% endif %}
+            <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% if uc.is_index %}{% trans 'Login Token' %}{% else %}{% if cur_search_params or cur_id_params %}{% trans 'Add (filtered)' %}{% else %}{% trans 'Add' %}{% endif %}{% endif %}
           </button>
           {% if not uc.is_index %}
             <button class="w3-button w3-orange" id="share_add_restricted_button" value="add_restricted">
@@ -81,7 +81,11 @@ function update_qrmodal(){
       _remotelink = `${_remotelink}token=${_token.dataset.token}&`;
     }
     remotelink.href = _remotelink;
-    remotelink.text = _remotelink;
+    {% if not uc.is_index %}
+      remotelink.text = _remotelink;
+    {% else %}
+      remotelink.text = _token.dataset.token;
+    {% endif %}
     let qr = qrcode(0, 'H');
     qr.addData(_remotelink);
     qr.make();
@@ -99,7 +103,11 @@ function update_qrmodal(){
 
 
 async function link_to_clipboard(event){
-  await navigator.clipboard.writeText(remotelink.href);
+  {% if uc.is_index %}
+    await navigator.clipboard.writeText(remotelink.text);
+  {% else %}
+    await navigator.clipboard.writeText(remotelink.href);
+  {% endif %}
   share_copy_clipboard.firstElementChild.classList.replace("fa-clipboard", "fa-clipboard-check");
   share_copy_clipboard.classList.replace("w3-grey", "w3-green");
   await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -129,7 +137,7 @@ async function update_share_tokens(event){
     }
 
   }
-  req = new Request('{% url "spider_base:token-admin-share" token=uc.token %}?{{sanitized_GET}}', {
+  req = new Request('{% url "spider_base:token-admin-share" token=uc.token %}?{% if not uc.is_index %}{{sanitized_GET}}{% endif %}', {
       method: 'POST',
       body: body,
       credentials: "same-origin",
