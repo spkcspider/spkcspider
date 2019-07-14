@@ -320,15 +320,24 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         except Exception:
             pass
 
+        if hasattr(self.request, "token_expires"):
+            session_dict["expires"] = self.request.token_expires.strftime(
+                "%a, %d %b %Y %H:%M:%S %z"
+            )
+
         if page <= 1:
-            if hasattr(self.request, "token_expires"):
-                session_dict["expires"] = self.request.token_expires.strftime(
-                    "%a, %d %b %Y %H:%M:%S %z"
-                )
+            # "expires" (string) different from "token_expires" (datetime)
+            if session_dict.get("expires"):
                 add_property(
                     g, "token_expires", ob=session_dict["request"],
                     ref=session_dict["sourceref"]
                 )
+            for machinec in context.get("machine_variants", []):
+                g.add((
+                    session_dict["sourceref"],
+                    spkcgraph["create:name"],
+                    Literal(machinec, datatype=XSD.string)
+                ))
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["scope"],
@@ -447,6 +456,11 @@ class ContentAdd(ContentBase, CreateView):
         kwargs["active_listed_features"] = \
             kwargs["active_features"].exclude(
                 ctype__contains=VariantType.unlisted.value
+            )
+
+        kwargs["machine_variants"] = \
+            self.usercomponent.user.spider_info.allowed_content.filter(
+                machine_variants_q
             )
         return super().get_context_data(**kwargs)
 
@@ -579,6 +593,11 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             self.usercomponent.public and
             self.scope not in ("add", "update", "raw_update")
         )
+
+        kwargs["machine_variants"] = \
+            self.usercomponent.user.spider_info.allowed_content.filter(
+                machine_variants_q
+            )
         context = super().get_context_data(**kwargs)
 
         context["remotelink"] = "{}{}?".format(

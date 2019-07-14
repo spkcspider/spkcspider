@@ -549,13 +549,27 @@ class BaseContent(models.Model):
             session_dict["expires"] = kwargs["request"].token_expires.strftime(
                 "%a, %d %b %Y %H:%M:%S %z"
             )
-            if page <= 1:
+
+        if page <= 1:
+            source = kwargs.get("source", self)
+            # "expires" (string) different from "token_expires" (datetime)
+            if session_dict.get("expires"):
                 add_property(
                     g, "token_expires", ob=session_dict["request"],
                     ref=session_dict["sourceref"]
                 )
-
-        if page <= 1:
+            if kwargs.get("machine_variants"):
+                assert(kwargs["request"].is_owner)
+                ucref = URIRef(urljoin(
+                    kwargs["hostpart"],
+                    source.associated.usercomponent.get_absolute_url()
+                ))
+                for machinec in kwargs["machine_variants"]:
+                    g.add((
+                        ucref,
+                        spkcgraph["create:name"],
+                        Literal(machinec, datatype=XSD.string)
+                    ))
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["scope"],

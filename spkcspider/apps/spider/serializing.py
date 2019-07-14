@@ -132,7 +132,7 @@ def serialize_content(graph, content, context, embed=False):
         add_property(
             graph, "features", ref=ref_content,
             literal=content.features.exclude(
-                name="DomainMode"
+                Q(name="DomainMode") | Q(name="DefaultActions")
             ).values_list("name", flat=True),
             datatype=XSD.string, iterate=True
         )

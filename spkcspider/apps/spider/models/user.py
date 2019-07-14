@@ -353,9 +353,13 @@ class UserInfo(models.Model):
         )
         # Content types which are not "installed" should be removed/never used
         # unlisted can be removed as sideproduct if not specified with feature
+        # or machine
         for variant in ContentVariant.objects.exclude(
-            ~models.Q(ctype__contains=VariantType.content_feature.value) |
-            ~models.Q(ctype__contains=VariantType.component_feature.value),
+            ~(
+                models.Q(ctype__contains=VariantType.content_feature.value) |
+                models.Q(ctype__contains=VariantType.component_feature.value) |
+                models.Q(ctype__contains=VariantType.machine.value)
+            ),
             ctype__contains=VariantType.unlisted.value
         ).filter(
             code__in=installed_contents

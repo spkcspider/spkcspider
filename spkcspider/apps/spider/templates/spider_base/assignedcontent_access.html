@@ -34,6 +34,13 @@
 {% block content %}
   <div class="w3-padding" style="min-height:140px">
     <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
+    {% if machine_variants and request.is_owner %}
+      <data hidden="hidden" typeof="spkc:Component" resource="{{hostpart}}{% url 'spider_base:ucontent-list' token=uc.token %}">
+        {% for name in machine_variants %}
+          <data hidden="hidden" property="spkc:create:name" datatype="xsd:string">{{name}}</data>
+        {% endfor %}
+      </data>
+    {% endif %}
     {% for f in active_listed_features %}
       {% for action in f.feature_urls %}
         <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
