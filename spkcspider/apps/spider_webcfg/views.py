@@ -133,7 +133,7 @@ class WebConfigView(UCTestMixin, View):
 
     def render_to_response(self, config):
         ret = HttpResponse(
-            config, content_type="text/plain"
+            bytes(config), content_type="text/plain"
         )
         ret["X-SPIDER-URL"] = self.request.auth_token.referrer.url
         ret["X-SPIDER-MODIFIED"] = self.object.associated.modified
