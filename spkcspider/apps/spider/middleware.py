@@ -31,7 +31,7 @@ def get_cached_user(request):
     if not hasattr(request, "_cached_spidertoken_user"):
         request._cached_spidertoken_user = get_user(request)
     return request._cached_spidertoken_user
-    
+
 
 class TokenUserMiddleware(object):
     """ should come after AuthenticationMiddleware """
@@ -41,8 +41,9 @@ class TokenUserMiddleware(object):
 
     def __call__(self, request):
         if hasattr(request, "user"):
+            user = request.user
             request.user = SimpleLazyObject(
-                lambda: get_cached_user(request) or request.user
+                lambda: get_cached_user(request) or user
             )
         else:
             request.user = SimpleLazyObject(
