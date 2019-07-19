@@ -252,6 +252,7 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
             self.request.is_owner = True
             self.request.is_special_user = True
             return True
+        # can use auth token != X-TOKEN
         if user_by_token and self.test_token(4) is True:
             return True
 
