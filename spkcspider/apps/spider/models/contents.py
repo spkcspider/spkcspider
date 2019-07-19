@@ -18,8 +18,6 @@ from django.db import models
 from django.utils.html import escape
 from django.shortcuts import redirect
 from django.utils.translation import gettext
-from django.middleware.csrf import CsrfViewMiddleware
-from django.http.response import HttpResponseBase
 from django.utils import timezone
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -203,30 +201,13 @@ class LinkContent(BaseContent):
 
     def access(self, context):
         # context is updated and used outside!!
-        # so make sure that func gets only a copy (**)
-        context.setdefault("extra_outer_forms", [])
-        func = self.access_default
         if context["scope"] in link_abilities:
-            func = getattr(self, "access_{}".format(context["scope"]))
-
-            # check csrf tokens manually
-            csrferror = CsrfViewMiddleware().process_view(
-                context["request"], None, (), {}
-            )
-            if csrferror is not None:
-                # csrferror is HttpResponse
-                return csrferror
-            ret = func(**context)
-            if context["scope"] == "update":
-                # update function should never return HttpResponse
-                #  (except csrf error)
-                assert(not isinstance(ret, HttpResponseBase))
-            return ret
+            return super().access(context)
         else:
             context["source"] = self
             context["uc"] = self.content.usercomponent
             ret = self.access(context)
-            context["uc"] = self.usercomponent
+            ret["uc"] = self.usercomponent
             return ret
 
 

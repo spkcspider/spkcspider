@@ -396,13 +396,13 @@ class BaseContent(models.Model):
                 parent_form.add_error(
                     None, self.associated_errors
                 )
-        return (
-            render_to_string(
+        return {
+            "content": render_to_string(
                 self.get_template_name(scope),
                 request=kwargs["request"], context=kwargs
             ),
-            kwargs["form"].media
-        )
+            "media": kwargs["form"].media
+        }
 
     def get_absolute_url(self, scope="view"):
         return self.associated.get_absolute_url(scope)
@@ -633,14 +633,14 @@ class BaseContent(models.Model):
         )
         kwargs.setdefault("legend", escape(_("View")))
         # not required: done by access template
-        return (
-            render_to_string(
+        return {
+            "content": render_to_string(
                 self.get_template_name(kwargs["scope"]),
                 request=kwargs["request"],
                 context=kwargs
             ),
-            kwargs["form"].media
-        )
+            "media": kwargs["form"].media
+        }
 
     def access_add(self, **kwargs):
         _ = gettext
@@ -713,16 +713,25 @@ class BaseContent(models.Model):
             )
             if csrferror is not None:
                 # csrferror is HttpResponse
-                return csrferror
+                context["content"] = csrferror
+                return context
         ret = func(**context)
         # update function should never return HttpResponse for GET
-        assert (
-            context["scope"] != "update" or (
-                not isinstance(ret, HttpResponseBase) or
+        if isinstance(ret, HttpResponseBase):
+            assert (
+                context["scope"] != "update" or
                 context["request"].method != "GET"
             )
-        )
-        return ret
+            context["content"] = ret
+        elif isinstance(ret, str):
+            context["content"] = ret
+        elif isinstance(ret, dict):
+            oldmedia = context["media"]
+            context.update(ret)
+            context["media"] += oldmedia
+        else:
+            raise NotImplementedError()
+        return context
 
     def get_info(self, unique=None, unlisted=None):
         # unique=None, feature=None shortcuts for get_info overwrites

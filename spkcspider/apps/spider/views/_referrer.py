@@ -14,6 +14,7 @@ from django.conf import settings
 from django.utils.translation import gettext
 from django.test import Client
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.forms.widgets import Media
 
 import ratelimit
 
@@ -27,6 +28,7 @@ from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
 from ..models import AuthToken, ReferrerObject
 
 logger = logging.getLogger(__name__)
+_extra = '' if settings.DEBUG else '.min'
 
 
 class ReferrerMixin(object):
@@ -465,6 +467,18 @@ class ReferrerMixin(object):
                 )
             context["object_list"] = context["model"].objects.filter(
                 id__in=context["ids"]
+            )
+            # remove other media
+            context["media"] = Media(
+                css={
+                    "all": [
+                        'node_modules/selectize/dist/css/selectize.default.css'
+                    ]
+                },
+                js=[
+                    'node_modules/jquery/dist/jquery%s.js' % _extra,
+                    'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra  # noqa: E501
+                ]
             )
             return self.response_class(
                 request=self.request,

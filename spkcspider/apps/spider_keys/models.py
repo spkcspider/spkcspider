@@ -140,12 +140,9 @@ class PublicKey(BaseContent):
         )
         if k:
             kwargs["pubkeyhash"] = k[0]
-        return (
-            render_to_string(
-                "spider_keys/key.html", request=kwargs["request"],
-                context=kwargs
-            ),
-            ""
+        return render_to_string(
+            "spider_keys/key.html", request=kwargs["request"],
+            context=kwargs
         )
 
 # Anchors can ONLY be used for server content.

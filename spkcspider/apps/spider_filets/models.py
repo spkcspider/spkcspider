@@ -161,12 +161,9 @@ class FileFilet(ContentWithLicense):
                     }
                 ), kwargs["sanitized_GET"]
             )
-        return (
-            render_to_string(
-                "spider_filets/file.html", request=kwargs["request"],
-                context=kwargs
-            ),
-            ""
+        return render_to_string(
+            "spider_filets/file.html", request=kwargs["request"],
+            context=kwargs
         )
 
     def access_download(self, **kwargs):
@@ -294,13 +291,9 @@ class TextFilet(ContentWithLicense):
         return self.access_update(**kwargs)
 
     def access_view(self, **kwargs):
-
         kwargs["object"] = self
         kwargs["content"] = self.associated
-        return (
-            render_to_string(
-                "spider_filets/text.html", request=kwargs["request"],
-                context=kwargs
-            ),
-            ""
+        return render_to_string(
+            "spider_filets/text.html", request=kwargs["request"],
+            context=kwargs
         )

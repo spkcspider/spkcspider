@@ -14,10 +14,13 @@ from django.conf import settings
 from django.urls import reverse
 from django.contrib import messages
 from django.utils.translation import gettext
+from django.forms.widgets import Media
 
 from rdflib import Graph, Literal, URIRef, XSD
 
-from ._core import UserTestMixin, UCTestMixin, EntityDeletionMixin
+from ._core import (
+    UserTestMixin, UCTestMixin, EntityDeletionMixin, DefinitionsMixin
+)
 from ..constants import spkcgraph, loggedin_active_tprotections, VariantType
 from ..forms import UserComponentForm
 from ..queryfilters import (
@@ -30,11 +33,25 @@ from ..helpers import merge_get_url
 from ..serializing import paginate_stream, serialize_stream
 
 
-class ComponentIndexBase(ListView):
+_extra = '' if settings.DEBUG else '.min'
+
+
+class ComponentIndexBase(DefinitionsMixin, ListView):
     scope = "list"
 
     def get_context_data(self, **kwargs):
         kwargs["scope"] = self.scope
+        kwargs["media"] = Media(
+            css={
+                "all": [
+                    'node_modules/selectize/dist/css/selectize.default.css'
+                ]
+            },
+            js=[
+                'node_modules/jquery/dist/jquery%s.js' % _extra,
+                'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra  # noqa: E501
+            ]
+        )
         return super().get_context_data(**kwargs)
 
     def get_queryset_components(self, use_contents=True):
@@ -360,6 +377,11 @@ class ComponentCreate(UserTestMixin, CreateView):
             staff=False, superuser=False
         ))
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["media"] += context["form"].media
+        return context
+
     def dispatch(self, request, *args, **kwargs):
         # can leak elsewise usernames, who have no public components
         try:
@@ -429,30 +451,36 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         ))
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+
         travel = self.get_travel_for_request().filter(
             login_protection__in=loggedin_active_tprotections
         )
-        context["content_variants"] = \
+        kwargs["content_variants"] = \
             self.usercomponent.user_info.allowed_content.filter(
                 listed_variants_q
             )
-        context["machine_variants"] = \
+        kwargs["machine_variants"] = \
             self.usercomponent.user.spider_info.allowed_content.filter(
                 machine_variants_q
             )
-        context["content_variants_used"] = \
-            context["content_variants"].filter(
+        kwargs["content_variants_used"] = \
+            kwargs["content_variants"].filter(
                 ~models.Q(assignedcontent__travel_protected__in=travel),
                 assignedcontent__usercomponent=self.usercomponent
             )
-        context["remotelink"] = "{}{}?".format(
-            context["hostpart"],
+        kwargs["remotelink"] = "{}{}?".format(
+            kwargs["hostpart"],
             reverse("spider_base:ucontent-list", kwargs={
                 "token": self.usercomponent.token
             })
         )
-        return context
+        kwargs["media"] = kwargs["form"].media
+        kwargs["media"] += Media(
+            js=[
+                'node_modules/qrcode-generator/qrcode.js'
+            ]
+        )
+        return super().get_context_data(**kwargs)
 
     def get_object(self, queryset=None):
         if not queryset:

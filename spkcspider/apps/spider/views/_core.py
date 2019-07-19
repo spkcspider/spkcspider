@@ -15,6 +15,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse_lazy
 from django.utils.translation import gettext
+from django.forms.widgets import Media
 
 from ..helpers import merge_get_url
 from ..constants import (
@@ -27,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class DefinitionsMixin(object):
+
     def get_context_data(self, **kwargs):
         kwargs["raw_update_type"] = VariantType.raw_update.value
         kwargs["component_feature_type"] = VariantType.component_feature.value
@@ -35,6 +37,7 @@ class DefinitionsMixin(object):
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )
+        kwargs.setdefault("media", Media())
         return super().get_context_data(**kwargs)
 
 

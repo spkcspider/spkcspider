@@ -23,13 +23,14 @@
     {# CSS for all pages #}
     {% block base_styles %}
     <link rel="stylesheet" href="{% static 'node_modules/w3-css/w3.css' %}">
-    <link rel="stylesheet" href="{% static 'spidercss.css' %}">
     <link rel="stylesheet" href="{% static 'node_modules/@fortawesome/fontawesome-free/css/all.min.css' %}">
+    <link rel="stylesheet" href="{% static 'spidercss.css' %}">
+    {# later {% theme %} call #}
     {% endblock %}
     {# CSS for page #}
     {% block styles %}{% endblock %}
     {# form scripts and foo #}
-    {% block extrahead %}{% endblock %}
+    {% block extrahead %}{% themed_media %}{% endblock %}
   </head>
 
   <body>

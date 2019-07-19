@@ -26,10 +26,10 @@
           <option value="" selected="selected"></option>
           {% if request.auth_token %}<option value="{{request.auth_token.id}}" data-token="{{request.auth_token.token}}">{{request.auth_token}}</option>{% endif %}
         </select>
+        {% if request.is_special_user %}
         <a href="#" class="w3-button w3-grey w3-hide" id="update_request_button">
           <i class="fas fa-bell" style="margin-right:10px" aria-hidden="true"></i>{% trans 'View Update Request' %}
         </a>
-        {% if request.is_special_user %}
         <div style="padding-top:10px">
           <button class="w3-button w3-grey" id="share_add_button" value="add">
             {% list_parameters "search" as cur_search_params %}
@@ -67,6 +67,7 @@ function update_qrmodal(){
   let _remotelink = "{{remotelink}}{{remotelink_extra}}";
   let _confirmlink = "{% url 'spider_base:token-confirm-update-request' %}?next={{request.path|urlencode}}%3Fpage%3D{{request.GET.page|default:'1'}}&{{sanitized_GET}}";
   let _token = token_selector.options[token_selector.options.selectedIndex];
+  {% if request.is_special_user %}
   if(token_selector.value != ""){
     if(_token.dataset.needs_confirmation == "true"){
       _confirmlink = `${_confirmlink}refid=${_token.value}&`;
@@ -76,6 +77,7 @@ function update_qrmodal(){
       update_request_button.classList.add("w3-hide")
     }
   }
+  {% endif %}
   if ({% if not uc.is_index %}_token.value == "" || {% endif %}_token.dataset.token){
     if(_token.dataset.token){
       _remotelink = `${_remotelink}token=${_token.dataset.token}&`;
@@ -116,6 +118,7 @@ async function link_to_clipboard(event){
   return false;
 }
 share_copy_clipboard.addEventListener("click", link_to_clipboard);
+
 
 async function update_share_tokens(event){
   if(token_selector.disabled==true)
@@ -204,19 +207,23 @@ async function update_share_tokens(event){
   return false;
 };
 
+{% if request.is_special_user %}
 document.getElementById('share_delete_button').addEventListener("click",update_share_tokens);
 document.getElementById('share_add_button').addEventListener("click",update_share_tokens);
 {% if not uc.is_index %}
   document.getElementById('share_add_restricted_button').addEventListener("click",update_share_tokens);
 {% endif %}
 document.getElementById('share_refresh_button').addEventListener("click",update_share_tokens);
+{% endif %}
 
 token_selector.addEventListener("change",update_qrmodal);
 
 async function open_qrmodal(event){
   if(event)
     event.preventDefault();
+  {% if request.is_special_user %}
   await update_share_tokens(null);
+  {% endif %}
   update_qrmodal();
   presenter.style.display='block';
   return false;
@@ -228,4 +235,5 @@ function close_qrmodal(event){
     event.preventDefault()
   presenter.style.display='none';
 }
+
 </script>

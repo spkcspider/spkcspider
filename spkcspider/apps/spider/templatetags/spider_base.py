@@ -24,6 +24,14 @@ def shall_show_content(context, content, priority=0):
 
 
 @register.simple_tag(takes_context=True)
+def themed_media(context):
+    # TODO: implement, just stub
+    # uc = context.get("source", context["uc"])
+    # media = uc.theme.replace(context.get("media"))
+    return context.get("media")
+
+
+@register.simple_tag(takes_context=True)
 def current_url(context):
     try:
         return reverse(

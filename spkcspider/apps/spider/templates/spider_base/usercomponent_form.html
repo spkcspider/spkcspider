@@ -11,11 +11,6 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 {% endblocktrans %}{% endif %}{% endblock %}
 
 
-{% block extrahead %}
-{{block.super}}
-<script src="{% static 'node_modules/qrcode-generator/qrcode.js' %}"></script>
-{{form.media|safe}}
-{% endblock %}
 {# public_meta not required because it will never be used #}
 
 {% block main_classes %}{{block.super}} {% if not object %}w3-sand{% else %}w3-card-4 color-front-{{object.strength}}{% endif %} spkc-content{% endblock %}

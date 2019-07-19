@@ -2,8 +2,8 @@
 {% load spider_protections i18n spider_rdf %}
 
 {% block extrahead %}
+{# don't render super (contains "media" variable) #}
 {% extract_protections "protections" as protections %}
-{{block.super}}
 {{protections.media|safe}}
 {% endblock %}
 

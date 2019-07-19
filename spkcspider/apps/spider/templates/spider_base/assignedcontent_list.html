@@ -11,18 +11,6 @@
   <meta name="description" content="{{uc.description|escape}}" />
 {% endblock %}
 
-{% block extrahead %}
-{{block.super}}
-<script src="{% static 'node_modules/qrcode-generator/qrcode.js' %}"></script>
-<link rel="stylesheet" href="{% static 'node_modules/selectize/dist/css/selectize.default.css' %}">
-{% if DEBUG %}
-  <script src="{% static 'node_modules/jquery/dist/jquery.js' %}"></script>
-  <script src="{% static 'node_modules/selectize/dist/js/standalone/selectize.js' %}"></script>
-{% else %}
-  <script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
-  <script src="{% static 'node_modules/selectize/dist/js/standalone/selectize.min.js' %}"></script>
-{% endif %}
-{% endblock %}
 {% block main_attributes %}{{block.super}} typeof="spkc:Component"{% endblock %}
 
 {% block content %}

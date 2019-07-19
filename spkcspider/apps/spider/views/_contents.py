@@ -23,6 +23,7 @@ from django.utils.translation import gettext
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
+from django.forms.widgets import Media
 
 from next_prev import next_in_order, prev_in_order
 
@@ -46,6 +47,8 @@ from ..constants import (
 from ..serializing import paginate_stream, serialize_stream
 
 _forbidden_scopes = frozenset(["add", "list", "raw", "delete", "anchor"])
+
+_extra = '' if settings.DEBUG else '.min'
 
 
 class ContentBase(UCTestMixin):
@@ -85,6 +88,18 @@ class ContentBase(UCTestMixin):
         kwargs["request"] = self.request
         kwargs["scope"] = self.scope
         kwargs["uc"] = self.usercomponent
+        kwargs["media"] = Media(
+            css={
+                "all": [
+                    'node_modules/selectize/dist/css/selectize.default.css'
+                ]
+            },
+            js=[
+                'node_modules/qrcode-generator/qrcode.js',
+                'node_modules/jquery/dist/jquery%s.js' % _extra,
+                'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra  # noqa: E501
+            ]
+        )
         kwargs["enctype"] = "multipart/form-data"
         return super().get_context_data(**kwargs)
 
@@ -452,6 +467,7 @@ class ContentAdd(ContentBase, CreateView):
     def get_context_data(self, **kwargs):
         kwargs["content_type"] = self.object.installed_class
         kwargs["form"] = self.get_form()
+        kwargs["media"] = kwargs["form"].media
         kwargs["active_features"] = self.usercomponent.features.distinct()
         kwargs["active_listed_features"] = \
             kwargs["active_features"].exclude(
@@ -513,14 +529,11 @@ class ContentAdd(ContentBase, CreateView):
             ucontent = context["form"].save(commit=False)
         else:
             ucontent = context["form"].instance
-        rendered = ucontent.content.access(context)
+        ret = ucontent.content.access(context)
 
         # return response if content returned response
-        if isinstance(rendered, HttpResponseBase):
-            return rendered
-        # show framed output
-        assert(isinstance(rendered, (tuple, list)))
-        context["content"] = rendered
+        if isinstance(ret["content"], HttpResponseBase):
+            return ret["content"]
         # redirect if saving worked
         if getattr(ucontent, "id", None):
             assert(ucontent.token)
@@ -531,7 +544,7 @@ class ContentAdd(ContentBase, CreateView):
             )
         else:
             assert(not getattr(ucontent.content, "id", None))
-        return super().render_to_response(context)
+        return super().render_to_response(ret)
 
 
 class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
@@ -721,12 +734,12 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 
     def render_to_response(self, context):
         # context is updated and used outside!!
-        rendered = self.object.content.access(context)
+        ret = self.object.content.access(context)
 
         # allow contents to redirect from update
         #   (e.g. if user should not know static token)
-        if isinstance(rendered, HttpResponseBase):
-            return rendered
+        if isinstance(ret["content"], HttpResponseBase):
+            return ret["content"]
         if self.scope == "update":
             # token changed => path has changed
             if self.object.token != self.kwargs["token"]:
@@ -735,13 +748,12 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
                     token=self.object.token, access="update"
                 )
 
-            if context["form"].is_valid():
-                context["form"] = self.get_form_class()(
+            if ret["form"].is_valid():
+                ret["form"] = self.get_form_class()(
                     **self.get_form_success_kwargs()
                 )
 
-        context["content"] = rendered
-        return super().render_to_response(context)
+        return super().render_to_response(ret)
 
 
 class ContentDelete(EntityDeletionMixin, DeleteView):

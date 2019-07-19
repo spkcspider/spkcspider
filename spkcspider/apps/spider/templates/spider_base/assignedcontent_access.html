@@ -17,16 +17,6 @@
   {% endif %}
 {% endblock %}
 
-{% block extrahead %}
-{{block.super}}
-<script src="{% static 'node_modules/qrcode-generator/qrcode.js' %}"></script>
-{% if form %}
-  {{form.media|safe}}
-{% endif %}
-{% if content %}
-  {{content.1|safe}}
-{% endif %}
-{% endblock %}
 
 {% block main_classes %}{{block.super}}{% if scope == "add" %} w3-animate-bottom{% endif %}{% endblock %}
 {% block main_attributes %}{{block.super}} {% if component_feature_type in object.ctype or content_feature_type in object.ctype %}typeof="spkc:Feature"{% else %}typeof="spkc:Content"{% endif %}{% endblock %}
@@ -183,7 +173,7 @@
   </div>
   {% endif %}
 {% block render_content %}
-{{content.0|safe}}
+{{content|safe}}
 {% endblock %}
 {% endblock %}
 

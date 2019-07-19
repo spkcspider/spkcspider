@@ -15,7 +15,7 @@
     {# fieldsets don't allow horizontal scrolling #}
     <h2>{% if scope == "add" %}{{object}}{% else %}{{object.ctype}}{% endif %}</h2>
     <div class="w3-border w3-padding">
-      {{content.0|safe}}
+      {{content|safe}}
     </div>
   {% endif %}
   <div class="w3-padding">
