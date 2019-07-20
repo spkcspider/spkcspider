@@ -468,19 +468,20 @@ class ComponentUpdate(UserTestMixin, UpdateView):
                 ~models.Q(assignedcontent__travel_protected__in=travel),
                 assignedcontent__usercomponent=self.usercomponent
             )
-        kwargs["remotelink"] = "{}{}?".format(
-            kwargs["hostpart"],
+        context = super().get_context_data(**kwargs)
+        context["remotelink"] = "{}{}?".format(
+            context["hostpart"],
             reverse("spider_base:ucontent-list", kwargs={
                 "token": self.usercomponent.token
             })
         )
-        kwargs["media"] = kwargs["form"].media
-        kwargs["media"] += Media(
+        context["media"] += context["form"].media
+        context["media"] += Media(
             js=[
                 'node_modules/qrcode-generator/qrcode.js'
             ]
         )
-        return super().get_context_data(**kwargs)
+        return context
 
     def get_object(self, queryset=None):
         if not queryset:
