@@ -96,7 +96,7 @@ def filter_components(searchlist, filter_unlisted=True, use_contents=True):
 
 
 def filter_contents(
-    searchlist, idlist, filter_unlisted=True, feature_exception=True,
+    searchlist, idlist=None, filter_unlisted=True, feature_exception=True,
     use_components=False
 ):
     searchq = Q()

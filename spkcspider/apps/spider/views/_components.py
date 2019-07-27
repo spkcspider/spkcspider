@@ -90,7 +90,7 @@ class ComponentIndexBase(DefinitionsMixin, ListView):
                 self.request.is_special_user and "_unlisted" in searchlist
             ) and self.scope != "export"
         filter_q, counter = filter_contents(
-            searchlist, filter_unlisted
+            searchlist, filter_unlisted=filter_unlisted
         )
 
         if self.request.GET.get("protection", "") == "false":
@@ -103,7 +103,7 @@ class ComponentIndexBase(DefinitionsMixin, ListView):
 
         return AssignedContent.objects.select_related(
             "usercomponent"
-        ).filter(filter_q, strengt__lte=self.source_strength)
+        ).filter(filter_q, strength__lte=self.source_strength)
 
     def get_queryset(self):
         if self.request.GET.get("raw") == "embed":
@@ -245,8 +245,8 @@ class ComponentPublicIndex(ComponentIndexBase):
             kwargs["sanitized_GET"] = ""
         return super().get_context_data(**kwargs)
 
-    def get_queryset_components(self):
-        query = super().get_queryset_components()
+    def get_queryset_components(self, use_contents=True):
+        query = super().get_queryset_components(use_contents)
         q = models.Q(public=True)
         if self.is_home:
             q &= models.Q(featured=True)
@@ -325,8 +325,10 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
             return True
         return False
 
-    def get_queryset_components(self):
-        query = super().get_queryset_components().filter(user=self.user)
+    def get_queryset_components(self, use_contents=True):
+        query = super().get_queryset_components(use_contents).filter(
+            user=self.user
+        )
         # doesn't matter if it is same user, lazy
         travel = self.get_travel_for_request().filter(
             login_protection__in=loggedin_active_tprotections
