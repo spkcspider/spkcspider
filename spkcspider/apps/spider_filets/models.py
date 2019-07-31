@@ -119,7 +119,17 @@ class FileFilet(ContentWithLicense):
 
     def get_info(self):
         ret = super().get_info()
-        return "%sname=%s\x1e" % (ret, self.associated.name)
+        split = self.associated.name.rsplit(".", 1)
+        ftype = "binary"
+        if len(split) == 2:
+            extension = split[1].lower()
+            if extension in image_extensions:
+                ftype = "image"
+            elif extension in media_extensions:
+                ftype = "media"
+        return "%sname=%s\x1efile_type=%s\x1e" % (
+            ret, self.associated.name, ftype
+        )
 
     def get_form(self, scope):
         from .forms import FileForm
@@ -141,14 +151,11 @@ class FileFilet(ContentWithLicense):
     def access_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["associated"] = self.associated
-        kwargs["type"] = None
-        split = self.associated.name.rsplit(".", 1)
-        if len(split) == 2:
-            extension = split[1].lower()
-            if extension in image_extensions:
-                kwargs["type"] = "image"
-            elif extension in media_extensions:
-                kwargs["type"] = "media"
+        kwargs["type"] = self.associated.getlist("file_type", 1)
+        if kwargs["type"]:
+            kwargs["type"] = kwargs["type"][0]
+        else:
+            kwargs["type"] = None
         if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
             kwargs["download"] = self.file.url
         else:
@@ -253,7 +260,7 @@ class TextFilet(ContentWithLicense):
 
     def get_info(self):
         ret = super().get_info()
-        return "%sname=%s\x1e" % (
+        return "%sname=%s\x1efile_type=text\x1e" % (
             ret, self.associated.name
 
         )
