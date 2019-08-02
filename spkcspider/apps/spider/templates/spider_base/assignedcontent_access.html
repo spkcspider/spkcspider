@@ -1,5 +1,5 @@
 {% extends "spider_base/uc_base.html" %}
-{% load i18n static spider_base spider_rdf %}
+{% load i18n static spider_base spider_rdf spider_paging %}
 
 {% block title %}{% if scope == "add" %}{% blocktrans trimmed with name=object %}
   Create Content: {{name}}
@@ -145,18 +145,26 @@
   {% if scope == "view" %}
     {% if uc.public or request.is_special_user %}
       {% if object.previous_object or object.next_object %}
-        <div class="w3-padding" style="min-height: 40px">
+      {% list_parameters "search" as cur_search %}
+      <form method="{% if cur_search and request.method == "POST" %}POST{% else %}GET{% endif %}" class="w3-padding w3-block" style="min-height: 40px">
+          {% if cur_search and request.method == "POST" %}{% csrf_token %}
+          <select hidden="hidden" name="search" multiple="multiple">
+            {% for elem in cur_search %}
+              <option selected="selected" value="{{elem}}">{{elem}}</option>
+            {% endfor %}
+          </select>
+          {% endif %}
           {% if object.previous_object %}
-          <a class="" href="{% url 'spider_base:ucontent-access' token=object.previous_object.token access='view' %}?{{sanitized_GET}}">
+          <button class="" formaction="{% url 'spider_base:ucontent-access' token=object.previous_object.token access='view' %}?{{sanitized_GET}}">
             {% trans "previous" %}
-          </a>
+          </button>
           {% endif %}
           {% if object.next_object %}
-          <a class="w3-right" href="{% url 'spider_base:ucontent-access' token=object.next_object.token access='view' %}?{{sanitized_GET}}">
+          <button class="w3-right" formaction="{% url 'spider_base:ucontent-access' token=object.next_object.token access='view' %}?{{sanitized_GET}}">
             {% trans "Next" %}
-          </a>
+          </button>
           {% endif %}
-        </div>
+        </form>
       {% endif %}
     {% endif %}
   {% endif %}

@@ -1,78 +1,89 @@
-{% load i18n static spider_base spider_rdf %}
-<table class="w3-table w3-bordered" rel="spkc:components">
-  {% if table_heading %}
-  <thead>
-    <tr>
-      <th colspan="3">
-        {{table_heading}}
-      </th>
-    </tr>
-  </thead>
+{% load i18n static spider_base spider_rdf spider_paging %}
+
+{% list_parameters_filtered "search" as filtered_search %}
+<form method="{% if filtered_search and request.method == "POST" %}POST{% else %}GET{% endif %}">
+  {% if filtered_search and request.method == "POST" %}{% csrf_token %}
+  <select hidden="hidden" name="search" multiple="multiple">
+    {% for elem in filtered_search %}
+      <option selected="selected" value="{{elem}}">{{elem}}</option>
+    {% endfor %}
+  </select>
   {% endif %}
-  <tbody>
-  {% for uc in object_list %}
-    <tr class="color-front-{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}" resource="{% url 'spider_base:ucontent-list' token=uc.token %}" typeof="spkc:Component">
-      <td class="{% if uc.is_index %}w3-large{% endif %}" style="min-height:48px;display:inline-block;word-break: break-all;">
-        <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
-        <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}</data>
-        <data rel="spkc:properties">
-          <data typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
-            {% if uc.is_index and request.is_owner %}
-              <span property="spkc:value" datatype="xsd:string">{% trans 'Private Component' %}</span>
-            {% else %}
-              <span property="spkc:value" datatype="xsd:string">{{ uc.name }}</span>{% if not request.user == uc.user %} <em>({{uc.user}})</em>{% endif %}
-            {% endif %}
-          </data>
-          <data hidden="hidden" typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name" datatype="xsd:string">user</data>
-            <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.username}}</data>
-          </data>
-          <data hidden="hidden" typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
-            <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description|escape}}</data>
-          </data>
-          <data hidden="hidden" typeof="spkc:Property">
-            <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
-            <data hidden="hidden" property="spkc:value">
-              {% for f in uc.features.all %}
-                <data datatype="xsd:string">{{f.name}}</data>
-              {% endfor %}
+  <table class="w3-table w3-bordered" rel="spkc:components">
+    {% if table_heading %}
+    <thead>
+      <tr>
+        <th colspan="3">
+          {{table_heading}}
+        </th>
+      </tr>
+    </thead>
+    {% endif %}
+    <tbody>
+    {% for uc in object_list %}
+      <tr class="color-front-{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}" resource="{% url 'spider_base:ucontent-list' token=uc.token %}" typeof="spkc:Component">
+        <td class="{% if uc.is_index %}w3-large{% endif %}" style="min-height:48px;display:inline-block;word-break: break-all;">
+          <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
+          <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}</data>
+          <data rel="spkc:properties">
+            <data typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
+              {% if uc.is_index and request.is_owner %}
+                <span property="spkc:value" datatype="xsd:string">{% trans 'Private Component' %}</span>
+              {% else %}
+                <span property="spkc:value" datatype="xsd:string">{{ uc.name }}</span>{% if not request.user == uc.user %} <em>({{uc.user}})</em>{% endif %}
+              {% endif %}
+            </data>
+            <data hidden="hidden" typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">user</data>
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.username}}</data>
+            </data>
+            <data hidden="hidden" typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
+              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description|escape}}</data>
+            </data>
+            <data hidden="hidden" typeof="spkc:Property">
+              <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
+              <data hidden="hidden" property="spkc:value">
+                {% for f in uc.features.all %}
+                  <data datatype="xsd:string">{{f.name}}</data>
+                {% endfor %}
+              </data>
             </data>
           </data>
-        </data>
-      </td>
-      <td>
-        {% blocktrans trimmed with time=uc.modified|timesince %}
-        Modified: {{time}} ago
-        {% endblocktrans %}
-      </td>
-      <td style="display:inline-block">
-        <div class="w3-bar w3-round-large w3-tiny w3-blue">
-          <a style="{% if request.user == uc.user %}width:50%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-list' token=uc.token %}">
-            <div class="spkc-entity-button"><i class="fas fa-list-ul" alt="{% trans 'List' %}" aria-label="{% trans 'List' %}"></i></div>
-            <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "List" %}</div></div>
-          </a>
-          {% if request.user == uc.user %}
-            <a style="width:50%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucomponent-update' token=uc.token %}" property="spkc:action:update">
-              <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
-              <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
-            </a>
+        </td>
+        <td>
+          {% blocktrans trimmed with time=uc.modified|timesince %}
+          Modified: {{time}} ago
+          {% endblocktrans %}
+        </td>
+        <td style="display:inline-block">
+          <div class="w3-bar w3-round-large w3-tiny w3-blue">
+            <button style="{% if request.user == uc.user %}width:50%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" formaction="{% url 'spider_base:ucontent-list' token=uc.token %}" about="{% url 'spider_base:ucontent-list' token=uc.token %}">
+              <div class="spkc-entity-button"><i class="fas fa-list-ul" alt="{% trans 'List' %}" aria-label="{% trans 'List' %}"></i></div>
+              <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "List" %}</div></div>
+            </button>
+            {% if request.user == uc.user %}
+              <button style="width:50%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" formaction="{% url 'spider_base:ucomponent-update' token=uc.token %}" property="spkc:action:update" about="{% url 'spider_base:ucomponent-update' token=uc.token %}">
+                <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
+                <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
+              </button>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+      <tr><td colspan="3" style="padding:0; word-break: break-all;">
+        <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
+          {% if not uc.description|is_not_or_space %}
+            {{uc.description|escape|linebreaksbr}}
+          {% else %}
+            <span class="w3-text-gray">{% trans 'No description' %}</span>
           {% endif %}
         </div>
-      </td>
-    </tr>
-    <tr><td colspan="3" style="padding:0; word-break: break-all;">
-      <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
-        {% if not uc.description|is_not_or_space %}
-          {{uc.description|escape|linebreaksbr}}
-        {% else %}
-          <span class="w3-text-gray">{% trans 'No description' %}</span>
-        {% endif %}
-      </div>
-    </td></tr>
-  {% empty %}
-      <tr><td><data hidden="hidden" resource="rdf:nil"></data>{% trans 'No Components available.' %}</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+      </td></tr>
+    {% empty %}
+        <tr><td><data hidden="hidden" resource="rdf:nil"></data>{% trans 'No Components available.' %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</form>

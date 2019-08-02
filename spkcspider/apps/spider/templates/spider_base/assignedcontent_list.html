@@ -154,7 +154,14 @@
     </div>
   </div>
   {% endif %}
-  <div class="w3-margin">
+  <form method="{% if cur_search and request.method == "POST" %}POST{% else %}GET{% endif %}" class="w3-margin w3-block">
+    {% if cur_search and request.method == "POST" %}{% csrf_token %}
+    <select hidden="hidden" name="search" multiple="multiple">
+      {% for elem in cur_search %}
+        <option selected="selected" value="{{elem}}">{{elem}}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
     <table class="w3-table w3-bordered" rel="spkc:contents">
       <tbody>
       {% for content in object_list %}
@@ -189,19 +196,19 @@
           <td style="display:inline-block">
             <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{ content.ctype.name }}</data>
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a style="{% if request.is_special_user  %}width:34%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='view' %}?{{sanitized_GET}}">
+              <button style="{% if request.is_special_user  %}width:34%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" formaction="{% url 'spider_base:ucontent-access' token=content.token access='view' %}?{{sanitized_GET}}" property="spkc:action:view" about="{% url 'spider_base:ucontent-access' token=content.token access='view' %}?{{sanitized_GET}}">
                 <div class="spkc-entity-button"><i class="fas fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "View" %}</div></div>
-              </a>
+              </button>
               {% if request.is_special_user  %}
-              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='update' %}?{{sanitized_GET}}" property="spkc:action:update">
+              <button style="width:33%" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" formaction="{% url 'spider_base:ucontent-access' token=content.token access='update' %}?{{sanitized_GET}}" property="spkc:action:update" about="{% url 'spider_base:ucontent-access' token=content.token access='update' %}?{{sanitized_GET}}">
                 <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
-              </a>
-              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-delete' token=content.token %}" property="spkc:action:delete">
+              </button>
+              <button style="width:33%" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" formaction="{% url 'spider_base:ucontent-delete' token=content.token %}" property="spkc:action:delete" about="{% url 'spider_base:ucontent-delete' token=content.token %}?{{sanitized_GET}}">
                 <div class="spkc-entity-button"><i class="fas fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Del" %}</div></div>
-              </a>
+              </button>
               {% endif %}
             </div>
           </td>
@@ -227,7 +234,7 @@
       {% endfor %}
       </tbody>
     </table>
-  </div>
+  </form>
   <div class="page-manipulation w3-padding" style="margin-top:40px">
     {% list_parameters "search" as cur_search %}
     {% if request.is_special_user and has_unlisted and "_unlisted" not in cur_search %}

@@ -12,6 +12,17 @@ def list_parameters(context, name, *args):
     return ret
 
 
+def _info_filterer(x):
+    return x.startswith("_")
+
+
+@register.simple_tag(takes_context=True)
+def list_parameters_filtered(context, name):
+    ret = set(filter(_info_filterer, context["request"].GET.getlist(name)))
+    ret.update(filter(_info_filterer, context["request"].POST.getlist(name)))
+    return ret
+
+
 @register.simple_tag(takes_context=True)
 def get_searchpath(context, page=None, pagename="page"):
     if "searchpath" in context:

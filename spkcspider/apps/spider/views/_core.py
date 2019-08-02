@@ -93,7 +93,9 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
         return self._travel_request
 
     def get_context_data(self, **kwargs):
+        old = kwargs.pop("sanitized_GET", {})
         kwargs["sanitized_GET"] = self.sanitize_GET()
+        kwargs["sanitized_GET"].update(old)
         if kwargs["sanitized_GET"]:
             kwargs["sanitized_GET"] = "{}&".format(
                 kwargs["sanitized_GET"].urlencode()

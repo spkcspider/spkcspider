@@ -1,5 +1,5 @@
 {% extends "spider_base/protections/base.html" %}
-{% load spider_protections i18n spider_rdf %}
+{% load spider_protections i18n spider_rdf spider_paging %}
 
 {% block extrahead %}
 {# don't render super (contains "media" variable) #}
@@ -16,6 +16,14 @@
   <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
   <data hidden="hidden" property="spkc:protections.amount" datatype="xsd:nonNegativeInteger">{{protections|length}}</data>
   <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc.untrusted_strength}}</data>
+    {% list_parameters "search" as cur_search %}
+    {% if request.method == "POST" and cur_search %}
+    <select hidden="hidden" name="search" multiple="multiple">
+      {% for elem in cur_search %}
+        <option selected="selected" value="{{elem}}">{{elem}}</option>
+      {% endfor %}
+    </select>
+    {% endif %}
 
     {# fieldsets don't allow horizontal scrolling #}
     <h1>{% trans 'Authenticate' %}</h1>

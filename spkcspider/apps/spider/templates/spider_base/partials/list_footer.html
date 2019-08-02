@@ -38,8 +38,7 @@
       </small>
     </div>
   </form>
-  <form hidden="hidden" id="list_clear_form" method="POST" action="{{searchpath}}">
-    {% csrf_token %}
+  <form hidden="hidden" id="list_clear_form" method="GET" action="{{searchpath}}">
   </form>
 </div>
 {% if page_obj.paginator.num_pages > 1 %}
