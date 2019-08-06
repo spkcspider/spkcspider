@@ -290,20 +290,17 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 # TODO
 * examples
 * documentation
-* use sparql
 * test admin
+* helper stripping language prefix
 * Localisation
   * harmonize punctation
-* Token management:
-  * rework (or remove) token management in update
-  * allow changing intentions
-  * special handling of auth intention
 
 ## Later
+* maybe: move helpers and co to apps.utils
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * create client side script for import (pushing to server, index token for auth?)
   * use browerside javascript?
-* textfilet hot reloading
+* textfilet etherpad like synchronization
 * pw protection: add migration tool for changed SECRET_KEY
 * log changes
 * improve protections, add protections
