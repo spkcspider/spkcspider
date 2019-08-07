@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.conf.urls.i18n import i18n_patterns
 from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -46,8 +45,7 @@ admin.site.has_permission = lambda *args, **kwargs: get_settings_func(
     "spkcspider.apps.spider.functions.has_admin_permission"
 )(admin.site, *args, **kwargs)
 
-urlpatterns = []
-urlpatterns_i18n = [
+urlpatterns = [
     path('admin/', admin.site.urls),
     path(
         '',
@@ -56,6 +54,7 @@ urlpatterns_i18n = [
         ),
         name="home"
     ),
+    path('i18n/', include('django.conf.urls.i18n'))
 ]
 
 for app in apps.get_app_configs():
@@ -65,7 +64,7 @@ for app in apps.get_app_configs():
     )
     if not url_path:
         continue
-    urlpatterns_i18n.append(
+    urlpatterns.append(
         path(
             url_path,
             include("{}.urls".format(app.name))
@@ -74,7 +73,7 @@ for app in apps.get_app_configs():
 
 
 if getattr(settings, "SPIDER_LEGACY_REDIRECT", False):
-    urlpatterns_i18n.insert(
+    urlpatterns.insert(
         0,
         path(
             'spider/content/<int:token1>/<str:token2>/<slug:access>/',
@@ -84,7 +83,7 @@ if getattr(settings, "SPIDER_LEGACY_REDIRECT", False):
             )
         )
     )
-    urlpatterns_i18n.insert(
+    urlpatterns.insert(
         0,
         path(
             'spider/components/<int:token1>/<str:token2>/list/',
@@ -94,7 +93,7 @@ if getattr(settings, "SPIDER_LEGACY_REDIRECT", False):
             )
         )
     )
-    urlpatterns_i18n.insert(
+    urlpatterns.insert(
         0,
         path(
             'spider/content/access/<int:token1>/<str:token2>/<slug:access>/',
@@ -104,7 +103,7 @@ if getattr(settings, "SPIDER_LEGACY_REDIRECT", False):
             )
         )
     )
-    urlpatterns_i18n.insert(
+    urlpatterns.insert(
         0,
         path(
             'spider/ucs/list/<int:token1>/<str:token2>/',
@@ -120,7 +119,7 @@ if getattr(settings, "USE_CAPTCHAS", False):
     urlpatterns.append(path(r'captcha/', include('captcha.urls')))
 
 if 'django.contrib.flatpages' in settings.INSTALLED_APPS:
-    urlpatterns_i18n.append(
+    urlpatterns.append(
         path('pages/', include('django.contrib.flatpages.urls'))
     )
 
@@ -149,7 +148,7 @@ urlpatterns += [
         {'sitemaps': sitemaps},
         name='sitemaps'
     ),
-] + i18n_patterns(*urlpatterns_i18n, prefix_default_language=False)
+]
 
 
 if settings.DEBUG:

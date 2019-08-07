@@ -141,6 +141,13 @@ LogFormat "%h %l %u %t \"%m %U %H\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" c
 
 ~~~~
 
+### localization
+
+Don't use path based localization! This breaks the whole model.
+Pathes should be unique for validation. Localisation in curl requests
+can be archieved by headers.
+
+
 # External usage
 
 There are special GET parameters for controlling spkcspider:
