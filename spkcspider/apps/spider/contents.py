@@ -9,7 +9,7 @@ from functools import lru_cache
 from django.utils.html import escape
 from django.apps import apps as django_apps
 from django.db import models, transaction
-from django.utils.translation import gettext, pgettext
+from django.utils.translation import gettext, pgettext, override
 from django.template.loader import render_to_string
 from django.core.files.base import File
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
@@ -258,10 +258,11 @@ class BaseContent(models.Model):
     @classmethod
     @lru_cache(typed=True)
     def cached_feature_urls(cls, name):
-        return frozenset(map(
-            lambda x: ActionUrl(*map(str, x)),
-            cls.feature_urls(name)
-        ))
+        with override(None):
+            return frozenset(map(
+                lambda x: ActionUrl(*map(str, x)),
+                cls.feature_urls(name)
+            ))
 
     def get_content_name(self):
         return "{}_{}".format(
@@ -513,16 +514,19 @@ class BaseContent(models.Model):
         from .models import AssignedContent
         # ** creates copy of dict, so it is safe to overwrite kwargs here
 
-        session_dict = {
-            "request": kwargs["request"],
-            "context": kwargs,
-            "scope": kwargs["scope"],
-            "hostpart": kwargs["hostpart"],
-            "ac_namespace": spkcgraph["contents"],
-            "sourceref": URIRef(urljoin(
-                kwargs["hostpart"], kwargs["request"].path
-            ))
-        }
+        source = kwargs.get("source", self)
+
+        with override(None):
+            session_dict = {
+                "request": kwargs["request"],
+                "context": kwargs,
+                "scope": kwargs["scope"],
+                "hostpart": kwargs["hostpart"],
+                "ac_namespace": spkcgraph["contents"],
+                "sourceref": URIRef(urljoin(
+                    kwargs["hostpart"], source.get_absolute_url()
+                ))
+            }
 
         g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
@@ -551,7 +555,6 @@ class BaseContent(models.Model):
             )
 
         if page <= 1:
-            source = kwargs.get("source", self)
             # "expires" (string) different from "token_expires" (datetime)
             if session_dict.get("expires"):
                 add_property(

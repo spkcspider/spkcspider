@@ -19,7 +19,7 @@ from django.db import models
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.contrib import messages
-from django.utils.translation import gettext
+from django.utils.translation import gettext, override
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
@@ -295,14 +295,17 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         if context["scope"] != "export" and "raw" not in self.request.GET:
             return super().render_to_response(context)
 
-        session_dict = {
-            "request": self.request,
-            "context": context,
-            "scope": context["scope"],
-            "uc": self.usercomponent,
-            "hostpart": context["hostpart"],
-            "sourceref": URIRef(context["hostpart"] + self.request.path)
-        }
+        with override(None):
+            session_dict = {
+                "request": self.request,
+                "context": context,
+                "scope": context["scope"],
+                "uc": self.usercomponent,
+                "hostpart": context["hostpart"],
+                "sourceref": URIRef(
+                    context["hostpart"] + self.usercomponent.get_absolute_url()
+                )
+            }
         g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
 

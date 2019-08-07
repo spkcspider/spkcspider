@@ -8,6 +8,7 @@ from urllib.parse import urljoin
 
 from django.http import Http404
 from django.core.paginator import InvalidPage, Paginator
+from django.utils.translation import override
 from django.db.models import Q
 
 from rdflib import URIRef, Literal, XSD, RDF
@@ -69,16 +70,17 @@ def list_features(graph, entity, ref_entity, context):
 
 
 def serialize_content(graph, content, context, embed=False):
-    if VariantType.anchor.value in content.ctype.ctype:
-        url_content = urljoin(
-            get_anchor_domain(),
-            content.get_absolute_url()
-        )
-    else:
-        url_content = urljoin(
-            context["hostpart"],
-            content.get_absolute_url()
-        )
+    with override(None):
+        if VariantType.anchor.value in content.ctype.ctype:
+            url_content = urljoin(
+                get_anchor_domain(),
+                content.get_absolute_url()
+            )
+        else:
+            url_content = urljoin(
+                context["hostpart"],
+                content.get_absolute_url()
+            )
     ref_content = URIRef(url_content)
     # is already node in graph
     if (ref_content, spkcgraph["type"], None) in graph:
@@ -145,10 +147,11 @@ def serialize_content(graph, content, context, embed=False):
 
 def serialize_component(graph, component, context, visible=True):
     # visible: everything is visible elsewise only public
-    url_component = urljoin(
-        context["hostpart"],
-        component.get_absolute_url()
-    )
+    with override(None):
+        url_component = urljoin(
+            context["hostpart"],
+            component.get_absolute_url()
+        )
     ref_component = URIRef(url_component)
     if component.public:
         visible = True

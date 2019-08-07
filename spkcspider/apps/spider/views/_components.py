@@ -11,7 +11,7 @@ from django.db import models
 from django.http import HttpResponse, Http404
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
-from django.urls import reverse
+from django.urls import reverse, translate_url
 from django.contrib import messages
 from django.utils.translation import gettext
 from django.forms.widgets import Media
@@ -128,6 +128,7 @@ class ComponentIndexBase(DefinitionsMixin, ListView):
             self.scope == "export" or
             self.request.GET.get("raw", "") == "embed"
         )
+
         session_dict = {
             "request": self.request,
             "context": context,
@@ -135,7 +136,11 @@ class ComponentIndexBase(DefinitionsMixin, ListView):
             "expires": None,
             "hostpart": context["hostpart"],
             "uc_namespace": spkcgraph["components"],
-            "sourceref": URIRef(context["hostpart"] + self.request.path)
+            "sourceref": URIRef(
+                context["hostpart"] + translate_url(
+                    self.request.path, None
+                )
+            )
         }
 
         g = Graph()
