@@ -298,7 +298,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * examples
 * documentation
 * test admin
-* helper stripping language prefix
 * Localisation
   * harmonize punctation
 
