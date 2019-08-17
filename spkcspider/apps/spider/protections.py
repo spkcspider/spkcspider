@@ -116,11 +116,28 @@ class BaseProtection(forms.Form):
             template_name, render, form variable are used
     """
     use_required_attribute = False
-    active = forms.BooleanField(label=_("Active"), required=False)
+    active = forms.BooleanField(
+        label=_("Active"), required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "update-required_passes",
+                "data-required_passes_val": "1",
+                "data-disable_instant_fail": True
+            }
+        )
+    )
     instant_fail = forms.BooleanField(
         label=_("Instant fail"), required=False,
-        help_text=_("Fail instantly if not fullfilled. "
-                    "Don't count to required_passes.")
+        help_text=_(
+            "Fail instantly if not fullfilled. "
+            "Don't count to required_passes."
+        ),
+        widget=forms.CheckboxInput(
+            attrs={
+                # "class": "update-required_passes",
+                # "data-required_passes_val": "-1"
+            }
+        )
     )
     # unique code name max 10 slug chars
     # if imported by extract_app_dicts, name is automatically set to key name
@@ -163,7 +180,9 @@ class BaseProtection(forms.Form):
         initial = self.get_initial()
         # use instance informations
         initial["active"] = self.instance.active
-        initial["instant_fail"] = self.instance.instant_fail
+        initial["instant_fail"] = (
+            self.instance.instant_fail and self.instance.active
+        )
         # copy of initial is saved as self.initial, so safe to change it
         # after __init__ is called
         super().__init__(initial=initial, **kwargs)

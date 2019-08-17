@@ -1,7 +1,5 @@
 document.addEventListener("DOMContentLoaded", function(){
-  let collection = document.getElementsByClassName("SpiderListTarget");
-  for (let counter=0;counter<collection.length;counter++){
-    let element = collection[counter];
+  for (let element of document.getElementsByClassName("SpiderListTarget")){
     let ftype = "text";
     let ilabel = "Item";
     try{

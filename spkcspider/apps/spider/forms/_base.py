@@ -96,8 +96,12 @@ class UserComponentForm(forms.ModelForm):
             #        "style": "min-width: 150px; width:100%"
             #    }
             # ),
-
         }
+
+    class Media:
+        js = [
+            'spider_base/UserComponent.js'
+        ]
 
     def __init__(self, request, data=None, files=None, auto_id='id_%s',
                  prefix=None, *args, **kwargs):
@@ -186,7 +190,7 @@ class UserComponentForm(forms.ModelForm):
     @property
     def media(self):
         """Return all media required to render the widgets on this form."""
-        media = super().media
+        media = super().media + forms.Media(self.Media)
         for protection in self.protections:
             media = media + protection.media
         return media
