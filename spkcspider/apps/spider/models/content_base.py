@@ -22,9 +22,9 @@ from django.apps import apps
 
 from ..contents import installed_contents
 
-# from ..constants import VariantType
+# from spkcspider.constants import VariantType
 from ..helpers import create_b64_id_token
-from ..constants import (
+from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid, static_token_matcher
 )
 from ..validators import content_name_validator, validator_token

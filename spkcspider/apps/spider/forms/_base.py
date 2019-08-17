@@ -15,7 +15,7 @@ from ..models import (
 )
 
 from ..helpers import create_b64_id_token
-from ..constants import (
+from spkcspider.constants import (
     ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
 )
 from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE

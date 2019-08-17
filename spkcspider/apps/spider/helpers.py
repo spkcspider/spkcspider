@@ -32,7 +32,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from .constants import MAX_TOKEN_SIZE, spkcgraph, host_tld_matcher
+from spkcspider.constants import MAX_TOKEN_SIZE, spkcgraph, host_tld_matcher
 
 # for not spamming sets
 _empty_set = frozenset()

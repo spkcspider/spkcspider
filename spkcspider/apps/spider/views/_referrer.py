@@ -23,7 +23,7 @@ import requests
 from ..helpers import (
     merge_get_url, get_requests_params, get_settings_func, get_hashob
 )
-from ..constants import TokenCreationError
+from spkcspider.constants import TokenCreationError
 from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
 from ..models import AuthToken, ReferrerObject
 

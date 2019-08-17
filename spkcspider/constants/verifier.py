@@ -1,3 +1,6 @@
+# NOT IMPORTED BY DEFAULT
+# especially because of gettext_lazy import
+
 __all__ = [
     "VERIFICATION_CHOICES", "BUFFER_SIZE"
 ]

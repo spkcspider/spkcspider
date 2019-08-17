@@ -15,7 +15,7 @@ from django.contrib.auth import authenticate
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from ..constants import (
+from spkcspider.constants import (
     dangerous_login_choices, travel_scrypt_params, TravelLoginType,
     loggedin_active_tprotections, VariantType
 )

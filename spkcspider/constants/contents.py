@@ -1,45 +1,11 @@
-
-__all__ = (
-    "ProtectionType", "VariantType", "ProtectionResult",
-    "MIN_PROTECTION_STRENGTH_LOGIN",
-    "TravelLoginType", "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE",
-    "hex_size_of_bigid", "TokenCreationError", "protected_names", "spkcgraph",
-    "dangerous_login_choices", "ActionUrl", "static_token_matcher",
-    "host_tld_matcher", "travel_scrypt_params", "loggedin_active_tprotections",
+__all__ = [
+    "VariantType", "TravelLoginType",
+    "dangerous_login_choices", "loggedin_active_tprotections",
     "essential_contents"
-)
+]
+
 
 import enum
-from collections import namedtuple
-import re
-
-from rdflib.namespace import Namespace
-
-
-spkcgraph = Namespace("https://spkcspider.net/static/schemes/spkcgraph#")
-# Literal allows arbitary datatypes, use this and don't bind
-
-hex_size_of_bigid = 16
-
-MAX_TOKEN_SIZE = 90
-
-if MAX_TOKEN_SIZE % 3 != 0:
-    raise Exception("MAX_TOKEN_SIZE must be multiple of 3")
-
-MAX_TOKEN_B64_SIZE = MAX_TOKEN_SIZE*4//3
-
-
-MIN_PROTECTION_STRENGTH_LOGIN = 2
-
-
-# user can change static token but elsewise the token stays static
-static_token_matcher = re.compile(
-    r"(?:[^?]*/|^)(?P<static_token>[^/?]+)/(?P<access>[^/?]+)"
-)
-
-host_tld_matcher = re.compile(
-    r'^[^.]*?(?!\.)(?P<host>[^/?:]+?(?P<tld>\.[^/?:.]+)?)(?=[/?:]|$)(?!:/)'
-)
 
 
 essential_contents = {
@@ -47,43 +13,7 @@ essential_contents = {
 }
 
 
-class TokenCreationError(Exception):
-    pass
-
-
-ProtectionResult = namedtuple("ProtectionResult", ["result", "protection"])
-
-
-ActionUrl = namedtuple("ActionUrl", ["name", "url"])
-protected_names = {"index"}
-
-
-travel_scrypt_params = {
-    "length": 32,
-    "n": 2**14,
-    "r": 16,
-    "p": 2
-}
-
-
-class ProtectionType(str, enum.Enum):
-    # receives: request, scope
-    access_control = "a"
-    # receives: request, scope, password
-    authentication = "b"
-    # c: former reliable, no meaning
-    # protections which does not contribute to required_passes (404 only)
-    no_count = "d"
-    # protections which have side effects
-    side_effects = "e"
-    # show password dialog
-    password = "f"
-    # forget about recovery, every recovery method is authentication
-    # and will be misused this way
-    # The only real recovery is by staff and only if there is a secret
-
-
-class VariantType(str, enum.Enum):
+class VariantType(str, enum.Flag):
     # a not assigned
     # use persistent token
     #  can be used for some kind of federation

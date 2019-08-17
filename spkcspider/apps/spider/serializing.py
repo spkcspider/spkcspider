@@ -13,7 +13,7 @@ from django.db.models import Q
 from rdflib import URIRef, Literal, XSD, RDF
 
 
-from .constants import spkcgraph, VariantType
+from spkcspider.constants import spkcgraph, VariantType
 from .conf import get_anchor_domain
 from .helpers import add_property
 

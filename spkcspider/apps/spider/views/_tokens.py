@@ -30,7 +30,7 @@ from ._core import UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 from ..models import AuthToken
 from ..helpers import get_settings_func, get_requests_params, merge_get_url
-from ..constants import TokenCreationError
+from spkcspider.constants import TokenCreationError
 
 
 logger = logging.getLogger(__name__)

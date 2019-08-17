@@ -11,7 +11,7 @@ from django.conf import settings
 from django.db import transaction, models
 
 from django.apps import apps
-from .constants import VariantType
+from spkcspider.constants import VariantType, ProtectionStateType
 from .helpers import create_b64_id_token
 import logging
 
@@ -295,13 +295,17 @@ def InitUserCb(sender, instance, raw=False, **kwargs):
     login = Protection.objects.filter(code="login").first()
     if login:
         uc.protections.update_or_create(
-            defaults={"active": True}, protection=login
+            defaults={
+                "state": ProtectionStateType.active
+            }, protection=login
         )[0]
 
     if getattr(settings, "USE_CAPTCHAS", False):
         captcha = Protection.objects.filter(code="captcha").first()
         uc.protections.get_or_create(
-            defaults={"active": True}, protection=captcha
+            defaults={
+                "state": ProtectionStateType.active
+            }, protection=captcha
         )[0]
     uinfo = UserInfo.objects.get_or_create(
         user=instance

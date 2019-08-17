@@ -16,14 +16,14 @@ from django.views.decorators.debug import sensitive_variables
 
 from jsonfield import JSONField
 
-from ..constants import (
+from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError
 )
 from .base import BaseSubUserComponentModel
 from ..helpers import create_b64_id_token
 from ..validators import validator_token
 from ..protections import installed_protections, ProtectionList, PseudoPw
-from ..constants import ProtectionType, ProtectionResult
+from spkcspider.constants import ProtectionType, ProtectionResult, ProtectionStateType
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class Protection(models.Model):
     @sensitive_variables("kwargs")
     def auth(self, request, obj=None, **kwargs):
         # never ever allow authentication if not active
-        assert not obj or obj.active
+        assert not obj or obj.state != ProtectionStateType.off
         if self.code not in installed_protections:
             return False
         return self.installed_class.auth(
@@ -212,14 +212,12 @@ class AssignedProtection(BaseSubUserComponentModel):
     data = JSONField(default=dict, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
-    active = models.BooleanField(default=True)
-    instant_fail = models.BooleanField(
-        default=False,
-        help_text=_("Auth fails if test fails, stronger than required_passes\n"
-                    "Works even if required_passes=0\n"
-                    "Does not contribute to required_passes, "
-                    "ideal for side effects"
-                    )
+    state = models.CharField(
+        max_length=1, choices=ProtectionStateType.as_choices(),
+        default=ProtectionStateType.off.value,
+        help_text=_(
+            "State of the protection."
+        )
     )
 
     class Meta:
@@ -240,7 +238,10 @@ class AssignedProtection(BaseSubUserComponentModel):
                 ptype=ProtectionType.access_control.value,
                 protection_codes=None, **kwargs):
         query = cls.objects.filter(
-            protection__ptype__contains=ptype, active=True,
+            models.Q(state=ProtectionStateType.active) |
+            models.Q(state=ProtectionStateType.instant_fail),
+            protection__ptype__contains=ptype,
+            state=True,
             usercomponent=usercomponent
         )
         # before protection_codes, for not allowing users

@@ -5,7 +5,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import pgettext
 
-from spkcspider.apps.spider.constants import VariantType, ActionUrl
+from spkcspider.constants import VariantType, ActionUrl
 from spkcspider.apps.spider.contents import BaseContent, add_content
 # from spkcspider.apps.spider.models.base import BaseInfoModel
 

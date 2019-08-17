@@ -15,7 +15,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
 from spkcspider.apps.spider.widgets import ListWidget
 from spkcspider.apps.spider.models import TravelProtection, AssignedContent
-from spkcspider.apps.spider.constants import loggedin_active_tprotections
+from spkcspider.constants import loggedin_active_tprotections
 
 
 from .models import PublicKey, AnchorServer, AnchorKey

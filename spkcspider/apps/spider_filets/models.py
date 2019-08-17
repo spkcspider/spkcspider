@@ -15,7 +15,7 @@ from jsonfield import JSONField
 
 from ranged_response import RangedFileResponse
 
-from spkcspider.apps.spider.constants import VariantType
+from spkcspider.constants import VariantType
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.conf import (
     image_extensions, media_extensions, FILE_TOKEN_SIZE

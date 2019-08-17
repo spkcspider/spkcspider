@@ -18,7 +18,7 @@ from django.utils.translation import gettext
 from django.forms.widgets import Media
 
 from ..helpers import merge_get_url
-from ..constants import (
+from spkcspider.constants import (
     VariantType, TokenCreationError, ProtectionType,
     loggedin_active_tprotections
 )

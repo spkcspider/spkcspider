@@ -20,7 +20,7 @@ from rdflib import XSD, URIRef, Literal
 
 import requests
 
-from spkcspider.apps.spider.constants import spkcgraph, host_tld_matcher
+from spkcspider.constants import spkcgraph, host_tld_matcher
 from spkcspider.apps.spider.helpers import get_settings_func
 
 

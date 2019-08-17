@@ -34,7 +34,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from .helpers import add_by_field, create_b64_token, aesgcm_pbkdf2_cryptor
-from .constants import ProtectionType, ProtectionResult
+from spkcspider.constants import ProtectionType, ProtectionResult
 from .fields import MultipleOpenChoiceField
 from .widgets import OpenChoiceWidget, PWOpenChoiceWidget, ListWidget
 
@@ -116,7 +116,7 @@ class BaseProtection(forms.Form):
             template_name, render, form variable are used
     """
     use_required_attribute = False
-    active = forms.BooleanField(
+    state = forms.BooleanField(
         label=_("Active"), required=False,
         widget=forms.CheckboxInput(
             attrs={
@@ -179,14 +179,11 @@ class BaseProtection(forms.Form):
             )
         initial = self.get_initial()
         # use instance informations
-        initial["active"] = self.instance.active
-        initial["instant_fail"] = (
-            self.instance.instant_fail and self.instance.active
-        )
+        initial["state"] = self.instance.state
         # copy of initial is saved as self.initial, so safe to change it
         # after __init__ is called
         super().__init__(initial=initial, **kwargs)
-        self.fields["active"].help_text = self.description
+        self.fields["state"].help_text = self.description
 
     def get_initial(self):
         initial = self.initial.copy()

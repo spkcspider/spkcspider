@@ -21,7 +21,7 @@ from rdflib import Graph, Literal, URIRef, XSD
 from ._core import (
     UserTestMixin, UCTestMixin, EntityDeletionMixin, DefinitionsMixin
 )
-from ..constants import spkcgraph, loggedin_active_tprotections, VariantType
+from spkcspider.constants import spkcgraph, loggedin_active_tprotections, VariantType
 from ..forms import UserComponentForm
 from ..queryfilters import (
     filter_contents, filter_components, listed_variants_q, machine_variants_q

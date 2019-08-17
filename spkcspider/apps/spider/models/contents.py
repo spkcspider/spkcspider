@@ -28,7 +28,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
 from ..contents import BaseContent, add_content
-from ..constants import (
+from spkcspider.constants import (
     TravelLoginType, VariantType, ActionUrl, travel_scrypt_params,
     dangerous_login_choices
 )

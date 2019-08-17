@@ -6,7 +6,7 @@ __all__ = (
 from django.db.models import Q
 from django.conf import settings
 
-from .constants import VariantType
+from spkcspider.constants import VariantType
 
 _base_variants = ~(
     (

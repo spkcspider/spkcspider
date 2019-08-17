@@ -8,7 +8,7 @@ from rdflib import Literal
 from rdflib.namespace import XSD, URIRef
 from django.forms import BoundField
 
-from ..constants import spkcgraph
+from spkcspider.constants import spkcgraph
 from ..helpers import (
     merge_get_url,
     literalize as _literalize,

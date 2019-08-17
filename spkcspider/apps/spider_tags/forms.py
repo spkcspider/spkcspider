@@ -19,7 +19,7 @@ from rdflib import XSD
 from .fields import generate_fields
 from .models import TagLayout, SpiderTag
 
-from spkcspider.apps.spider.constants import loggedin_active_tprotections
+from spkcspider.constants import loggedin_active_tprotections
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField, JsonField
 from spkcspider.apps.spider.widgets import ListWidget
 from spkcspider.apps.spider.helpers import merge_get_url

@@ -24,7 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD, RDF
 
-from .constants import VariantType, spkcgraph, ActionUrl, essential_contents
+from spkcspider.constants import VariantType, spkcgraph, ActionUrl, essential_contents
 from .conf import get_anchor_domain
 from .serializing import paginate_stream, serialize_stream
 from .helpers import (

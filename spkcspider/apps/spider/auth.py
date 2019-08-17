@@ -9,10 +9,12 @@ from django.http import Http404
 
 import ratelimit
 
-from .models import UserComponent, Protection, TravelProtection
-from .constants import (
+
+from spkcspider.constants import (
     ProtectionType, MIN_PROTECTION_STRENGTH_LOGIN,
 )
+
+from .models import UserComponent, Protection, TravelProtection
 
 logger = logging.getLogger(__name__)
 

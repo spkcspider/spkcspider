@@ -19,10 +19,10 @@ import requests
 
 from spkcspider import celery_app
 
-from spkcspider.apps.spider.constants import spkcgraph
+from spkcspider.constants.rdf import spkcgraph
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
-from .constants import BUFFER_SIZE
+from spkcspider.constants.verifier import BUFFER_SIZE
 # uses specialized get_hashob from verifier (can be further customized)
 from .functions import get_hashob
 from .functions import get_requests_params, get_anchor_domain

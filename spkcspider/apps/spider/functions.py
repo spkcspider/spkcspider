@@ -32,7 +32,7 @@ from rdflib import Literal, XSD
 import ratelimit
 
 from .signals import failed_guess
-from .constants import spkcgraph
+from spkcspider.constants import spkcgraph
 from .conf import get_anchor_domain, get_anchor_scheme
 from .helpers import get_requests_params
 

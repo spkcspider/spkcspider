@@ -7,7 +7,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 
 from ..auth import SpiderAuthBackend
-from ..constants import ProtectionType
+from spkcspider.constants import ProtectionType
 
 from ..models import (
     Protection
