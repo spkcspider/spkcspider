@@ -17,13 +17,16 @@ from django.views.decorators.debug import sensitive_variables
 from jsonfield import JSONField
 
 from spkcspider.constants import (
-    MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError
+    MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError,
+    ProtectionType, ProtectionResult, ProtectionStateType
 )
-from .base import BaseSubUserComponentModel
+
 from ..helpers import create_b64_id_token
 from ..validators import validator_token
 from ..protections import installed_protections, ProtectionList, PseudoPw
-from spkcspider.constants import ProtectionType, ProtectionResult, ProtectionStateType
+from ..queryfilters import active_protections_q
+
+from .base import BaseSubUserComponentModel
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +78,7 @@ class Protection(models.Model):
     @sensitive_variables("kwargs")
     def auth(self, request, obj=None, **kwargs):
         # never ever allow authentication if not active
-        assert not obj or obj.state != ProtectionStateType.off
+        assert not obj or obj.state != ProtectionStateType.disabled
         if self.code not in installed_protections:
             return False
         return self.installed_class.auth(
@@ -93,7 +96,7 @@ class Protection(models.Model):
             _instant_fail = False
             if hasattr(item, "protection"):  # is AssignedProtection
                 item, obj = item.protection, item
-                _instant_fail = obj.instant_fail
+                _instant_fail = (obj.state == ProtectionStateType.instant_fail)
             # would be surprising if auth fails with required_passes == 0
             # achievable by required_passes = amount of protections
             if initial_required_passes == 0:
@@ -214,7 +217,7 @@ class AssignedProtection(BaseSubUserComponentModel):
     modified = models.DateTimeField(auto_now=True, editable=False)
     state = models.CharField(
         max_length=1, choices=ProtectionStateType.as_choices(),
-        default=ProtectionStateType.off.value,
+        default=ProtectionStateType.enabled.value,
         help_text=_(
             "State of the protection."
         )
@@ -238,10 +241,8 @@ class AssignedProtection(BaseSubUserComponentModel):
                 ptype=ProtectionType.access_control.value,
                 protection_codes=None, **kwargs):
         query = cls.objects.filter(
-            models.Q(state=ProtectionStateType.active) |
-            models.Q(state=ProtectionStateType.instant_fail),
+            active_protections_q,
             protection__ptype__contains=ptype,
-            state=True,
             usercomponent=usercomponent
         )
         # before protection_codes, for not allowing users
@@ -250,7 +251,9 @@ class AssignedProtection(BaseSubUserComponentModel):
             required_passes = max(
                 min(
                     usercomponent.required_passes,
-                    len(query.exclude(instant_fail=True))
+                    len(query.exclude(
+                        state=ProtectionStateType.instant_fail
+                    ))
                 ), 1
             )
         elif ptype == ProtectionType.authentication.value:

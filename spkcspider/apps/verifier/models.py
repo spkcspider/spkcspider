@@ -11,7 +11,7 @@ import requests
 
 from spider_domainauth.abstract_models import BaseReverseToken
 
-from spkcspider.constants import (
+from spkcspider.constants.verifier import (
     VERIFICATION_CHOICES
 )
 from .functions import get_requests_params, get_anchor_domain

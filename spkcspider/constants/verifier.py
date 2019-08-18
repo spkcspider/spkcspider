@@ -2,7 +2,7 @@
 # especially because of gettext_lazy import
 
 __all__ = [
-    "VERIFICATION_CHOICES", "BUFFER_SIZE"
+    "VERIFICATION_CHOICES"
 ]
 
 
@@ -15,6 +15,3 @@ VERIFICATION_CHOICES = [
     ("invalid", _("invalid")),
     ("rejected", _("rejected")),
 ]
-
-
-BUFFER_SIZE = 65536  # read in 64kb chunks

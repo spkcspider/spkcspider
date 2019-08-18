@@ -105,7 +105,7 @@ class AssignedProtectionInline(admin.TabularInline):
     # protection field is not possible (and shouldn't, can corrupt data)
     # data is too dangerous, admin should not have access to e.g. pws
     fields = [
-        'created', 'modified', 'active', 'instant_fail'
+        'created', 'modified', 'state'
     ]
     readonly_fields = ['created', 'modified']
     fk_name = 'usercomponent'

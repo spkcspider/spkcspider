@@ -5,32 +5,31 @@ document.addEventListener("DOMContentLoaded", function(){
   let checked_handler = function(event){
     let element = event.target;
     let val;
-    let val2;
-    if(element.checked){
-      val = element.dataset.required_passes_val;
+    let target_val;
+    if(element.value == "b" && element.checked){
+      val = 1;
     } else {
-      val = -element.dataset.required_passes_val;
+      val = -1;
     }
-    val = Number(val);
-    /**if (element.disable_instant_fail){
-    *  element.disable_instant_fail.checked = false;
-    * }
-    */
-    val2 = Number(required_passes_html.value);
-    if (val2 == Math.max(required_passes_counter, 0)){
-      required_passes_html.value = Math.max(val2 + val);
+    target_val = Number(required_passes_html.value);
+    if (target_val == Math.max(required_passes_counter, 0)){
+      required_passes_counter = required_passes_counter+val;
+      required_passes_html.value = required_passes_counter;
+    } else {
+      required_passes_counter = required_passes_counter+val;
     }
-    required_passes_counter = required_passes_counter+val;
-    return true;
+    // should not propagate
+    return false;
   }
 
   // update-required_passes classes consist of instant_fail and active
-  let collection = document.getElementsByClassName("update-required_passes");
-  for (let counter=0;counter<collection.length;counter++){
-    let element = collection[counter];
-    if(element.checked){
-      required_passes_counter+=Number(element.dataset.required_passes_val);
+  for (let element of document.getElementsByClassName("update-required_passes")){
+    if(element.type != "radio"){
+      // parent
+      element.addEventListener("change", checked_handler);
+    } else if(element.value == "b" && element.checked){
+      // radio child
+      required_passes_counter+=1;
     }
-    element.addEventListener("change", checked_handler);
   }
 })

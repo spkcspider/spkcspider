@@ -6,8 +6,9 @@ from django_webtest import TransactionWebTest
 from django.urls import reverse
 import requests
 
+from spkcspider.constants import VariantType
+
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants import VariantType
 from spkcspider.apps.spider.models import (
     ContentVariant, AuthToken
 )
@@ -66,7 +67,9 @@ class TokenTest(TransactionWebTest):
                 *self.refserver.socket.getsockname()
             )
             response = self.app.get(purl)
-            response = response.form.submit("action", value="confirm")
+            response = response.forms["SPKCReferringForm"].submit(
+                "action", value="confirm"
+            )
             query = parse_qs(urlsplit(response.location).query)
             self.assertEqual(query.get("status"), ["success"])
             self.assertIn("hash", query)
@@ -115,7 +118,9 @@ class TokenTest(TransactionWebTest):
                 *self.refserver.socket.getsockname()
             )
             response = self.app.get(purl)
-            response = response.form.submit("action", value="confirm")
+            response = response.forms["SPKCReferringForm"].submit(
+                "action", value="confirm"
+            )
             query = parse_qs(urlsplit(response.location).query)
             requests.get(response.location, headers={"Connection": "close"})
             token = AuthToken.objects.get(

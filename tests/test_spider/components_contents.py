@@ -10,8 +10,9 @@ from django.contrib.contenttypes.models import ContentType
 
 from rdflib import Graph
 
+from spkcspider.constants import spkcgraph
+
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.models import UserComponent, AssignedContent
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.spider.helpers import create_b64_id_token
@@ -277,7 +278,7 @@ class AdvancedComponentTest(TransactionWebTest):
                 "type": "AnchorServer"
             }
         )
-        form = self.app.get(createurl).forms[0]
+        form = self.app.get(createurl).forms["main_form"]
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(home.contents.count(), 1)
@@ -289,7 +290,7 @@ class AdvancedComponentTest(TransactionWebTest):
                 "type": "AnchorServer"
             }
         )
-        form = self.app.get(createurl).forms[0]
+        form = self.app.get(createurl).forms["main_form"]
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(public.contents.count(), 1)
@@ -312,7 +313,7 @@ class AdvancedComponentTest(TransactionWebTest):
             }
         )
         response = self.app.get(createurlindex)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form.action = createurlindex
         form['content_control-usercomponent'] = public.id
         form['content_control-name'] = "newfieldname"
@@ -327,13 +328,13 @@ class AdvancedComponentTest(TransactionWebTest):
             info__contains="\x1ename=newfieldname\x1e"
         ).get_absolute_url("update")
         self.assertEqual(location, url)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         self.assertEqual(form["text"].value, "foobar")
         form['content_control-new_static_token'] = "12"
         form['text'] = "foobart"
         form['content_control-name'] = "newfieldname2"
         response = form.submit().follow()
-        self.assertEqual(response.forms[0]["text"].value, "foobart")
+        self.assertEqual(response.forms["main_form"]["text"].value, "foobart")
         with self.assertRaises(AssignedContent.DoesNotExist):
             public.contents.get(
                 info__contains="\x1ename=newfieldname\x1e"

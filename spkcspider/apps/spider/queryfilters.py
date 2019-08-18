@@ -1,12 +1,12 @@
 __all__ = (
     "filter_components", "filter_contents", "listed_variants_q",
-    "machine_variants_q"
+    "machine_variants_q", "active_protections_q"
 )
 
 from django.db.models import Q
 from django.conf import settings
 
-from spkcspider.constants import VariantType
+from spkcspider.constants import VariantType, ProtectionStateType
 
 _base_variants = ~(
     (
@@ -19,6 +19,11 @@ _base_variants = ~(
 machine_variants_q = (
     Q(ctype__contains=VariantType.machine.value) &
     _base_variants  # such features cannot be created
+)
+
+active_protections_q = (
+    Q(state=ProtectionStateType.enabled) |
+    Q(state=ProtectionStateType.instant_fail)
 )
 
 

@@ -131,8 +131,7 @@
       "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
-      "active": true,
-      "instant_fail": false
+      "state": "b"
     }
   },
   {
@@ -144,8 +143,7 @@
       "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
-      "active": false,
-      "instant_fail": false
+      "state": "a"
     }
   },
   {
@@ -157,8 +155,7 @@
       "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
-      "active": true,
-      "instant_fail": false
+      "state": "b"
     }
   },
   {
@@ -170,8 +167,7 @@
       "data": {},
       "created": "2019-02-15T22:57:10.417Z",
       "modified": "2019-02-15T22:57:10.417Z",
-      "active": false,
-      "instant_fail": false
+      "state": "a"
     }
   }
 

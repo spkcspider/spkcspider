@@ -32,7 +32,7 @@ class TextFiletTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.set("content_control-name", "foo")
         form.set("text", "foooo")
         form["editable_from"].select_multiple([str(home.id)])
@@ -43,7 +43,7 @@ class TextFiletTest(TransactionWebTest):
         response = response.follow()
         self.assertEqual(response.status_code, 200)
         # check that parameters are saved (don't reuse form from request)
-        form = self.app.get(updateurl).form
+        form = self.app.get(updateurl).forms["main_form"]
         self.assertEqual(form["text"].value, "foooo")
         self.assertEqual(form["license_name"].value, "testval")
         # logout and clean session
@@ -71,11 +71,15 @@ class TextFiletTest(TransactionWebTest):
         ))
         self.assertEqual(response.status_code, 200)
         response = response.click(href=updateg_url)
-        form = response.form
+        # third form is special update form
+        form = response.forms[2]
         form.set("text", "nope")
         response = form.submit()
 
-        self.assertEqual(self.app.get(updateg_url).form["text"].value, "nope")
+        self.assertEqual(
+            self.app.get(updateg_url).forms[2]["text"].value,
+            "nope"
+        )
 
 
 class FileFiletTest(TransactionWebTest):
@@ -100,7 +104,7 @@ class FileFiletTest(TransactionWebTest):
             }
         )
         self.app.set_user(user="testuser1")
-        form = self.app.get(createurl).form
+        form = self.app.get(createurl).forms["main_form"]
         form["file"] = Upload("fooo", b"[]", "application/json")
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)

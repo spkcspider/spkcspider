@@ -1,7 +1,6 @@
 __all__ = ["UserComponentForm", "UserContentForm"]
 
 import logging
-from statistics import mean
 
 from django.conf import settings
 from django import forms
@@ -14,9 +13,10 @@ from ..models import (
     TravelProtection
 )
 
-from ..helpers import create_b64_id_token
+from ..helpers import create_b64_id_token, calculate_protection_strength
 from spkcspider.constants import (
     ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
+
 )
 from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
 # from ..widgets import SelectizeWidget
@@ -60,7 +60,12 @@ class UserComponentForm(forms.ModelForm):
 
     master_pw = forms.CharField(
         label=_("Master Password"),
-        widget=forms.PasswordInput(render_value=True), required=False,
+        widget=forms.PasswordInput(
+            render_value=True,
+            attrs={
+                "autocomplete": "off"
+            }
+        ), required=False,
         help_text=_(
             "If you don't set a password the unlocking may fail "
             "in future (change of server secrets)"
@@ -210,57 +215,6 @@ class UserComponentForm(forms.ModelForm):
             )
         return value
 
-    def calc_protection_strength(self):
-        prot_strength = None
-        max_prot_strength = 0
-        if self.instance.id:
-            # instant fail strength
-            fail_strength = 0
-            amount = 0
-            # regular protections strength
-            strengths = []
-            for protection in self.protections:
-                if not protection.cleaned_data.get("active", False):
-                    continue
-                if not protection.is_valid():
-                    continue
-
-                if len(str(protection.cleaned_data)) > 100000:
-                    raise forms.ValidationError(
-                        _("Protection >100 kb: %(name)s"),
-                        params={"name": protection}
-                    )
-                if protection.cleaned_data.get("instant_fail", False):
-                    s = protection.get_strength()
-                    if s[1] > max_prot_strength:
-                        max_prot_strength = s[1]
-                    fail_strength = max(
-                        fail_strength, s[0]
-                    )
-                else:
-                    s = protection.get_strength()
-                    if s[1] > max_prot_strength:
-                        max_prot_strength = s[1]
-                    strengths.append(s[0])
-                amount += 1
-            strengths.sort()
-            if self.cleaned_data["required_passes"] > 0:
-                if amount == 0:
-                    # login or token only
-                    # not 10 because 10 is also used for uniqueness
-                    strengths = 4
-                else:
-                    # avg strength but maximal 3,
-                    # (4 can appear because of component auth)
-                    # clamp
-                    strengths = min(round(mean(
-                        strengths[:self.cleaned_data["required_passes"]]
-                    )), 3)
-            else:
-                strengths = 0
-            prot_strength = max(strengths, fail_strength)
-        return (prot_strength, max_prot_strength)
-
     def clean(self):
         ret = super().clean()
         assert(self.instance.user)
@@ -289,7 +243,12 @@ class UserComponentForm(forms.ModelForm):
 
         for protection in self.protections:
             protection.full_clean()
-        prot_strength, max_prot_strength = self.calc_protection_strength()
+            assert protection.cleaned_data["state"], "no valid state"
+        prot_strength, max_prot_strength = \
+            calculate_protection_strength(
+                self.cleaned_data["required_passes"],
+                self.instance.id and self.protections
+            )
 
         self.cleaned_data["strength"] = 0
         if self.cleaned_data["name"] == "index":
@@ -298,6 +257,12 @@ class UserComponentForm(forms.ModelForm):
                     _("Login requires higher strength: %(strength)s"),
                     code="insufficient_strength_login",
                     params={"strength": MIN_PROTECTION_STRENGTH_LOGIN}
+                ))
+                self.add_error("required_passes", forms.ValidationError(
+                    _(
+                        "Login requires higher strength, consider increasing "
+                        "required_passes"
+                    )
                 ))
             self.cleaned_data["strength"] = 10
             return ret

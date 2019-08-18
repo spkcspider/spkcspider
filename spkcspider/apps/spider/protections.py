@@ -33,8 +33,11 @@ from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
+from spkcspider.constants import (
+    ProtectionType, ProtectionResult, ProtectionStateType
+)
+
 from .helpers import add_by_field, create_b64_token, aesgcm_pbkdf2_cryptor
-from spkcspider.constants import ProtectionType, ProtectionResult
 from .fields import MultipleOpenChoiceField
 from .widgets import OpenChoiceWidget, PWOpenChoiceWidget, ListWidget
 
@@ -79,13 +82,13 @@ def initialize_protection_models(apps=None):
     login = ProtectionModel.objects.filter(code="login").first()
     if login:
         for uc in UserComponent.objects.filter(name="index"):
-            asuc = AssignedProtection.objects.get_or_create(
-                defaults={"active": True},
+            assignedprotection = AssignedProtection.objects.get_or_create(
+                defaults={"state": ProtectionStateType.enabled},
                 usercomponent=uc, protection=login
             )[0]
-            if not asuc.active:
-                asuc.active = True
-                asuc.save()
+            if assignedprotection.state == ProtectionStateType.disabled:
+                assignedprotection.state = ProtectionStateType.enabled
+                assignedprotection.save()
 
     invalid_models = ProtectionModel.objects.exclude(
         code__in=installed_protections.keys()
@@ -93,6 +96,11 @@ def initialize_protection_models(apps=None):
     if invalid_models.exists():
         print("Invalid protections, please update or remove them:",
               [t.code for t in invalid_models])
+
+
+def exclude_disabled_state(inp):
+    # allow disabled and instant_fail
+    return inp[0] != ProtectionStateType.disabled
 
 
 @functools.lru_cache(maxsize=1)
@@ -116,29 +124,17 @@ class BaseProtection(forms.Form):
             template_name, render, form variable are used
     """
     use_required_attribute = False
-    state = forms.BooleanField(
-        label=_("Active"), required=False,
-        widget=forms.CheckboxInput(
+    state = forms.ChoiceField(
+        choices=ProtectionStateType.as_choices(),
+        initial=ProtectionStateType.disabled,
+        label=_("State"), required=False,
+        widget=forms.RadioSelect(
             attrs={
-                "class": "update-required_passes",
-                "data-required_passes_val": "1",
-                "data-disable_instant_fail": True
+                "class": "update-required_passes"
             }
         )
     )
-    instant_fail = forms.BooleanField(
-        label=_("Instant fail"), required=False,
-        help_text=_(
-            "Fail instantly if not fullfilled. "
-            "Don't count to required_passes."
-        ),
-        widget=forms.CheckboxInput(
-            attrs={
-                # "class": "update-required_passes",
-                # "data-required_passes_val": "-1"
-            }
-        )
-    )
+
     # unique code name max 10 slug chars
     # if imported by extract_app_dicts, name is automatically set to key name
     # name = foo
@@ -175,9 +171,12 @@ class BaseProtection(forms.Form):
         ).first()
         if not self.instance:
             self.instance = AssignedProtection(
-                usercomponent=uc, protection=protection, active=False
+                usercomponent=uc, protection=protection,
+                state=ProtectionStateType.disabled
             )
         initial = self.get_initial()
+        if not self.instance.state:
+            self.instance.state = ProtectionStateType.disabled
         # use instance informations
         initial["state"] = self.instance.state
         # copy of initial is saved as self.initial, so safe to change it
@@ -244,9 +243,14 @@ class BaseProtection(forms.Form):
     def __str__(self):
         return self.localize_name(self.name)
 
+    def clean_state(self):
+        s = self.cleaned_data.get("state", "")
+        if not s:
+            return ProtectionStateType.disabled
+        return s
+
     def save(self):
-        self.instance.active = self.cleaned_data.pop("active")
-        self.instance.instant_fail = self.cleaned_data.pop("instant_fail")
+        self.instance.state = self.cleaned_data.pop("state")
         self.instance.data = self.cleaned_data
         self.instance.save()
 
@@ -479,9 +483,11 @@ class LoginProtection(BaseProtection):
         super().__init__(**kwargs)
         self._request = kwargs.get("request")
         if ProtectionType.authentication.value in self.ptype:
-            self.fields["active"].initial = True
-            self.initial["active"] = True
-            self.fields["active"].disabled = True
+            self.fields["state"].initial = ProtectionStateType.enabled
+            self.fields["state"].choices = \
+                filter(
+                    exclude_disabled_state, self.fields["state"].choices
+                )
             del self.fields["allow_auth"]
 
     def clean(self):
@@ -819,16 +825,11 @@ if getattr(settings, "USE_CAPTCHAS", False):
         def __init__(self, **kwargs):
             super().__init__(**kwargs)
             if ProtectionType.authentication.value in self.ptype:
-                # login should not be possible with captcha alone
-                self.initial["instant_fail"] = True
-                self.fields["instant_fail"].initial = True
-                self.fields["instant_fail"].disabled = True
-                self.fields["instant_fail"].help_text = \
-                    _("instant_fail is for login required")
-
                 if getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False):
-                    self.initial["active"] = True
-                    self.fields["active"].disabled = True
+                    self.initial["state"] = ProtectionStateType.instant_fail
+                    self.fields["state"].initial = \
+                        ProtectionStateType.instant_fail
+                    self.fields["state"].disabled = True
                     self.fields["instant_fail"].help_text = \
                         _("captcha is for login required (admin setting)")
 

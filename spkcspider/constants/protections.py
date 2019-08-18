@@ -1,11 +1,9 @@
 __all__ = [
     "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE", "MIN_PROTECTION_STRENGTH_LOGIN",
-    "ProtectionType", "ProtectionStateType"
+    "ProtectionType", "ProtectionStateType", "travel_scrypt_params"
 ]
 
 import enum
-
-from functools import lru_cache
 
 
 MAX_TOKEN_SIZE = 90
@@ -17,6 +15,14 @@ MAX_TOKEN_B64_SIZE = MAX_TOKEN_SIZE*4//3
 
 
 MIN_PROTECTION_STRENGTH_LOGIN = 2
+
+
+travel_scrypt_params = {
+    "length": 32,
+    "n": 2**14,
+    "r": 16,
+    "p": 2
+}
 
 
 class ProtectionType(str, enum.Flag):
@@ -38,10 +44,9 @@ class ProtectionType(str, enum.Flag):
 
 class ProtectionStateType(str, enum.Enum):
     disabled = "a"
-    active = "b"
+    enabled = "b"
     instant_fail = "c"
 
-    @lru_cache
     @classmethod
     def as_choices(cls):
         from django.utils.translation import gettext_lazy as _
@@ -49,11 +54,3 @@ class ProtectionStateType(str, enum.Enum):
             (i[1].value, _(i[0]))
             for i in ProtectionStateType.__members__.items()
         )
-
-
-travel_scrypt_params = {
-    "length": 32,
-    "n": 2**14,
-    "r": 16,
-    "p": 2
-}

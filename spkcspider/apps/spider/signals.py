@@ -296,7 +296,7 @@ def InitUserCb(sender, instance, raw=False, **kwargs):
     if login:
         uc.protections.update_or_create(
             defaults={
-                "state": ProtectionStateType.active
+                "state": ProtectionStateType.enabled
             }, protection=login
         )[0]
 
@@ -304,7 +304,7 @@ def InitUserCb(sender, instance, raw=False, **kwargs):
         captcha = Protection.objects.filter(code="captcha").first()
         uc.protections.get_or_create(
             defaults={
-                "state": ProtectionStateType.active
+                "state": ProtectionStateType.enabled
             }, protection=captcha
         )[0]
     uinfo = UserInfo.objects.get_or_create(

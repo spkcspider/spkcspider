@@ -9,10 +9,12 @@ from django.urls import reverse
 
 from rdflib import Graph, Literal, URIRef, XSD
 
+from spkcspider.constants import (
+    spkcgraph, TravelLoginType, ProtectionStateType
+)
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.models import UserComponent
-from spkcspider.apps.spider.constants import spkcgraph, TravelLoginType
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.spider.helpers import aesgcm_pbkdf2_cryptor
 from spkcspider.apps.spider.protections import _pbkdf2_params
@@ -69,8 +71,7 @@ class ProtectionTest(TransactionWebTest):
             ),
             g
         )
-
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit()
@@ -80,6 +81,7 @@ class ProtectionTest(TransactionWebTest):
         )
         # self.assertNotIn("token=", response.location)
         response = response.follow()
+        self.assertNotIn("SPKCLoginForm", response.forms)
         self.assertNotIn("SPKCProtectionForm", response.forms)
 
         self.app.set_user(user="testuser1")
@@ -114,7 +116,7 @@ class ProtectionTest(TransactionWebTest):
             ),
             g
         )
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit()
@@ -141,7 +143,7 @@ class ProtectionTest(TransactionWebTest):
         response = self.app.get(updateurl)
         form = response.forms["componentForm"]
         form["required_passes"] = 1
-        form["protections_password-active"] = True
+        form["protections_password-state"] = ProtectionStateType.enabled
         salt = form["protections_password-salt"].value.encode("ascii")
         c = aesgcm_pbkdf2_cryptor(
             form["protections_password-default_master_pw"].value,
@@ -193,7 +195,7 @@ class ProtectionTest(TransactionWebTest):
             g
         )
 
-        form = response.form
+        form = response.forms["SPKCProtectionForm"]
         form["password"].force_value(weak_pw)
         response = form.submit()
         self.assertTrue(response.location.startswith(home.get_absolute_url()))
@@ -202,7 +204,7 @@ class ProtectionTest(TransactionWebTest):
             (home.get_absolute_url(), "intention=auth")
         )
         response = self.app.get(authurl)
-        form = response.form
+        form = response.forms["SPKCProtectionForm"]
         form["password"].force_value(strong_pw)
         response = form.submit()
         createurl = reverse(
@@ -212,7 +214,7 @@ class ProtectionTest(TransactionWebTest):
                 "type": "AnchorServer"
             }
         )
-        response = self.app.get(createurl).form.submit()
+        response = self.app.get(createurl).forms["main_form"].submit()
         # home.refresh_from_db()
         self.assertGreater(home.contents.count(), 0)
 
@@ -228,7 +230,7 @@ class TravelProtectionTest(TransactionWebTest):
 
     def test_simple_login_without_travelprotection(self):
         response = self.app.get(reverse("auth:login"))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit().follow()
@@ -264,7 +266,7 @@ class TravelProtectionTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
         form.set("protect_components", (home.id,))
         form.set("master_pw", "abc")
@@ -302,7 +304,7 @@ class TravelProtectionTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
         form.set("login_protection", TravelLoginType.trigger_hide.value)
         form.set("protect_components", (home.id,))
@@ -316,7 +318,7 @@ class TravelProtectionTest(TransactionWebTest):
         # resets session
         self.app.reset()
         response = self.app.get(reverse("auth:login"))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit().follow()
@@ -361,7 +363,7 @@ class TravelProtectionTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
         form.set("protect_components", (home.id,))
         form.set("master_pw", "abc")
@@ -374,7 +376,7 @@ class TravelProtectionTest(TransactionWebTest):
         # resets session
         self.app.reset()
         response = self.app.get(reverse("auth:login"))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit().follow()
@@ -412,7 +414,7 @@ class TravelProtectionTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
         form.set("protect_components", (home.id,))
         form.set("master_pw", "abc")
@@ -425,7 +427,7 @@ class TravelProtectionTest(TransactionWebTest):
         # resets session
         self.app.reset()
         response = self.app.get(reverse("auth:login"))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit().follow()
@@ -464,7 +466,7 @@ class TravelProtectionTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
         form.set("login_protection", TravelLoginType.wipe.value)
         form.set("protect_components", (home.id,))
@@ -481,7 +483,7 @@ class TravelProtectionTest(TransactionWebTest):
 
         # needs approval
         response = self.app.get(reverse("auth:login"))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit().follow()
@@ -501,7 +503,7 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.reset()
 
         response = self.app.get(reverse("auth:login"))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit().follow()
@@ -528,7 +530,7 @@ class TravelProtectionTest(TransactionWebTest):
         )
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
         form.set("login_protection", TravelLoginType.wipe_user.value)
         form.set("protect_components", (home.id,))
@@ -544,7 +546,7 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.reset()
 
         response = self.app.get(reverse("auth:login"))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit().follow()
@@ -562,7 +564,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(reverse(
             "auth:login"
         ))
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit()

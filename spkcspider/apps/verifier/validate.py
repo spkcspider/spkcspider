@@ -22,7 +22,6 @@ from spkcspider import celery_app
 from spkcspider.constants.rdf import spkcgraph
 from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
 
-from spkcspider.constants.verifier import BUFFER_SIZE
 # uses specialized get_hashob from verifier (can be further customized)
 from .functions import get_hashob
 from .functions import get_requests_params, get_anchor_domain
@@ -31,6 +30,9 @@ from .models import VerifySourceObject, DataVerificationTag
 logger = logging.getLogger(__name__)
 
 hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
+
+
+BUFFER_SIZE = 65536  # read in 64kb chunks
 
 valid_wait_states = {
     "RETRIEVING", "HASHING", "STARTED"

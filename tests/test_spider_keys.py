@@ -58,7 +58,7 @@ class KeyTest(TransactionWebTest):
         )
         with self.subTest(msg="block invalid keys"):
             response = self.app.get(createurl)
-            form = response.form
+            form = response.forms["main_form"]
             form["key"] = pempriv
             form["content_control-description"] = "invalid"
             response = form.submit()
@@ -68,7 +68,7 @@ class KeyTest(TransactionWebTest):
 
         with self.subTest(msg="allow valid keys"):
             response = self.app.get(createurl)
-            form = response.form
+            form = response.forms["main_form"]
             form["key"] = pempub
             form["content_control-description"] = "valid"
             response = form.submit().follow()
@@ -113,7 +113,7 @@ class KeyTest(TransactionWebTest):
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
         # no args
-        response = response.form.submit().follow()
+        response = response.forms["main_form"].submit().follow()
         self.assertEqual(response.status_code, 200)
         self.assertTrue(home.contents.first())
 
@@ -138,7 +138,7 @@ class KeyTest(TransactionWebTest):
             }
         )
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form["key"] = pempub
         form["content_control-description"] = "valid"
         response = form.submit().follow()
@@ -154,12 +154,12 @@ class KeyTest(TransactionWebTest):
             }
         )
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form.select("key", value=str(keyob.associated.id))
         response = form.submit()
         updateurl = response.location
         response = response.follow()
-        form = response.form
+        form = response.forms["main_form"]
         identifier = form["identifier"].value.encode("utf-8")
 
         chosen_hash = settings.SPIDER_HASH_ALGORITHM
@@ -174,20 +174,20 @@ class KeyTest(TransactionWebTest):
 
         with self.subTest(msg="block invalid signature"):
             response = self.app.get(updateurl)
-            form = response.form
+            form = response.forms["main_form"]
             form["signature"].value = signature
             response = form.submit()
             response = self.app.get(updateurl)
-            form = response.form
+            form = response.forms["main_form"]
             self.assertEqual(form["signature"].value, "<replaceme>")
 
         with self.subTest(msg="valid signature"):
             u = binascii.hexlify(signature).decode("ascii")
             response = self.app.get(updateurl)
-            form = response.form
+            form = response.forms["main_form"]
             form["signature"].value = u
             response = form.submit()
             response = self.app.get(updateurl)
-            form = response.form
+            form = response.forms["main_form"]
             self.assertEqual(response.status_code, 200)
             self.assertEqual(form["signature"].value, u)

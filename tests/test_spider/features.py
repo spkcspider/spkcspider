@@ -7,8 +7,10 @@ from django.urls import reverse
 import requests
 from rdflib import Graph, Literal, XSD, RDF
 
+from spkcspider.constants import VariantType, spkcgraph, ProtectionStateType
+from spkcspider.apps.spider.queryfilters import active_protections_q
+
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants import VariantType, spkcgraph
 from spkcspider.apps.spider.models import ContentVariant, AuthToken
 from spkcspider.apps.spider.signals import update_dynamic
 
@@ -102,11 +104,13 @@ class FeaturesTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         form = self.app.get(updateurl).forms["componentForm"]
         form.set("public", False)
-        form.set("protections_login-active", True)
+        form.set("protections_login-state", ProtectionStateType.enabled)
         form.set("protections_login-allow_auth", True)
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(home.protections.filter(active=True).count(), 1)
+        self.assertEqual(home.protections.filter(
+            active_protections_q
+        ).count(), 1)
         self.assertEqual(home.strength, 5)
         # logout and clean session
         self.app.set_user(user=None)
@@ -121,7 +125,7 @@ class FeaturesTest(TransactionWebTest):
             )
             response = self.app.get(purl)
             self.assertEqual(response.status_code, 200)
-            form = response.forms[0]
+            form = response.forms["SPKCProtectionForm"]
             form["password"].force_value("abc")
             response = form.submit()
             # response.showbrowser()
@@ -234,7 +238,9 @@ class FeaturesTest(TransactionWebTest):
                     string=re.compile("Cancel")
                 ))
 
-                response = response.form.submit("action", value="confirm")
+                response = response.forms["SPKCReferringForm"].submit(
+                    "action", value="confirm"
+                )
                 query = parse_qs(urlsplit(response.location).query)
                 self.assertEqual(query.get("status"), ["success"])
                 self.assertIn("hash", query)

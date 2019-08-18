@@ -4,7 +4,7 @@ __all__ = (
     "merge_get_url", "add_property", "is_decimal",
     "extract_host", "get_hashob", "aesgcm_scrypt_cryptor",
     "aesgcm_pbkdf2_cryptor", "get_requests_params",
-    "literalize", "field_to_python"
+    "literalize", "field_to_python", "calculate_protection_strength"
 )
 
 
@@ -13,6 +13,8 @@ import re
 import base64
 import logging
 import inspect
+from statistics import mean
+
 from hashlib import pbkdf2_hmac
 from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode, urljoin
 
@@ -32,7 +34,9 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from spkcspider.constants import MAX_TOKEN_SIZE, spkcgraph, host_tld_matcher
+from spkcspider.constants import (
+    MAX_TOKEN_SIZE, spkcgraph, host_tld_matcher, ProtectionStateType
+)
 
 # for not spamming sets
 _empty_set = frozenset()
@@ -101,6 +105,61 @@ def is_decimal(inp, precision=None, allow_sign=False):
     return (
         None in (precision, prec_start) or len(inp)-prec_start-1 <= precision
     )
+
+
+def calculate_protection_strength(required_passes, protections=None):
+    prot_strength = None
+    max_prot_strength = 0
+    if protections:
+        # instant fail strength
+        fail_strength = 0
+        amount = 0
+        # regular protections strength
+        strengths = []
+        for protection in protections:
+            state = protection.cleaned_data.get(
+                "state", ProtectionStateType.disabled
+            )
+            if state == ProtectionStateType.disabled:
+                continue
+            if not protection.is_valid():
+                continue
+
+            if len(str(protection.cleaned_data)) > 100000:
+                raise ValidationError(
+                    _("Protection >100 kb: %(name)s"),
+                    params={"name": protection}
+                )
+            if state == ProtectionStateType.instant_fail:
+                s = protection.get_strength()
+                if s[1] > max_prot_strength:
+                    max_prot_strength = s[1]
+                fail_strength = max(
+                    fail_strength, s[0]
+                )
+            else:
+                s = protection.get_strength()
+                if s[1] > max_prot_strength:
+                    max_prot_strength = s[1]
+                strengths.append(s[0])
+            amount += 1
+        strengths.sort()
+        if required_passes > 0:
+            if amount == 0:
+                # login or token only
+                # not 10 because 10 is also used for uniqueness
+                prot_strength = 4
+            else:
+                # avg strength but maximal 3,
+                # (4 can appear because of component auth)
+                # clamp
+                prot_strength = min(round(mean(
+                    strengths[:required_passes]
+                )), 3)
+        else:
+            prot_strength = 0
+        prot_strength = max(prot_strength, fail_strength)
+    return (prot_strength, max_prot_strength)
 
 
 def field_to_python(value):

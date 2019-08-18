@@ -13,9 +13,9 @@ from django.urls import reverse
 from rdflib import Graph, Literal, XSD
 
 from django_webtest import WebTestMixin
+from spkcspider.constants import spkcgraph
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants import spkcgraph
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.verifier.models import DataVerificationTag
 from spkcspider.apps.verifier.functions import get_anchor_domain
@@ -82,7 +82,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         ))
         # required for csrf cookie
         self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit()
@@ -90,12 +90,12 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         response = response.follow()
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         # url field is incorrectly assigned (but no effect)
         form["layout"].value = "address"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form["tag/name"] = "Alouis Alchemie AG"
         form["tag/place"] = "Holdenstreet"
         form["tag/street_number"] = "40C"
@@ -124,7 +124,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         response = None
         with override_settings(DEBUG=True):
             response = self.app.get(verifyurl)
-            form = response.form
+            form = response.forms[2]
             form["url"] = fullurl
             response = form.submit().follow()
             verification_location = response.location
@@ -236,7 +236,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         ))
         # required for csrf cookie
         self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
-        form = response.form
+        form = response.forms["SPKCLoginForm"]
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit()
@@ -244,11 +244,11 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         response = response.follow()
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
-        form = response.form
+        form = response.forms["main_form"]
         form["layout"].value = "address"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form["tag/name"] = "Alouis Alchemie AG2"
         form["tag/place"] = "Holdenstreet"
         form["tag/street_number"] = "40C"
@@ -259,11 +259,11 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         self.assertEqual(response.status_code, 200)
 
         with override_settings(DEBUG=True):
-            form = response.forms[1]
+            form = response.forms[3]
             # required until webtest support formaction, form attributes
             if "url" not in form.fields:
                 form.action = verifierurl
-                form.fields["url"] = response.forms[0].fields["url"]
+                form.fields["url"] = response.forms[2].fields["url"]
                 form.field_order.insert(
                     0,
                     ("url", form.fields["url"][0])

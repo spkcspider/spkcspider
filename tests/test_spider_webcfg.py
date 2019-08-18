@@ -7,8 +7,9 @@ from django_webtest import TransactionWebTest
 from django.urls import reverse
 import requests
 
+from spkcspider.constants import VariantType
+
 from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.constants import VariantType
 from spkcspider.apps.spider.models import (
     ContentVariant, AssignedContent, AuthToken
 )
@@ -89,7 +90,9 @@ class WebCfgTest(TransactionWebTest):
                 *self.refserver.socket.getsockname()
             )
             response = self.app.get(purl)
-            response = response.form.submit("action", value="confirm")
+            response = response.forms["SPKCReferringForm"].submit(
+                "action", value="confirm"
+            )
             query = parse_qs(urlsplit(response.location).query)
             self.assertEqual(query.get("status"), ["success"])
             self.assertIn("hash", query)

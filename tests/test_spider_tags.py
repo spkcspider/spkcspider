@@ -13,7 +13,7 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider_tags.models import (
     TagLayout, SpiderTag
 )
-from spkcspider.apps.spider.constants import VariantType, spkcgraph
+from spkcspider.constants import VariantType, spkcgraph
 from spkcspider.apps.spider.models import ContentVariant, AuthToken
 from spkcspider.apps.spider.signals import update_dynamic
 
@@ -55,11 +55,11 @@ class TagTest(TransactionWebTest):
             }
         )
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form["layout"].value = "address"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form["tag/name"] = "Alouis Alchemie AG"
         form["tag/place"] = "Holdenstreet"
         form["tag/street_number"] = "40C"
@@ -69,10 +69,10 @@ class TagTest(TransactionWebTest):
         response = form.submit()
         self.assertEqual(response.status_code, 200)
         # test updates
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form["tag/country_code"] = "dedsdlsdlsd"
         response = form.submit()
-        form = response.forms[0]
+        form = response.forms["main_form"]
         self.assertEqual(form["tag/country_code"].value, "dedsdlsdlsd")
         response = response.click(
             href=home.contents.first().get_absolute_url("view"), index=0
@@ -82,7 +82,7 @@ class TagTest(TransactionWebTest):
         response = response.click(
             href=home.contents.first().get_absolute_url("update")
         )
-        form = response.forms[0]
+        form = response.forms["main_form"]
         self.assertEqual(form["tag/country_code"].value, "de")
 
         response2 = response.goto("{}?raw=true".format(
@@ -107,7 +107,7 @@ class TagTest(TransactionWebTest):
             }
         )
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form["name"] = "foo"
         form["layout"] = """[
             {
@@ -132,7 +132,7 @@ class TagTest(TransactionWebTest):
         self.assertTrue(url)
         url = url.attrs["href"]
         response = self.app.get(url)
-        form = response.form
+        form = response.forms[2]
         self.assertIn("tag/name", form.fields)
         self.assertIn("tag/ab", form.fields)
 
@@ -165,21 +165,21 @@ class TagTest(TransactionWebTest):
         )
 
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form["layout"].value = "selfref"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form["tag/name"] = "f1"
         form.submit()
         stag = SpiderTag.objects.latest("associated_rel__created")
 
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form["layout"].value = "selfref"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form["tag/name"] = "f2"
         form["tag/ref"] = stag.id
         form.submit()
@@ -188,11 +188,11 @@ class TagTest(TransactionWebTest):
         self.assertNotEqual(stag.id, stag2.id)
 
         response = self.app.get(createurl)
-        form = response.form
+        form = response.forms["main_form"]
         form["layout"].value = "selfref"
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
-        form = response.forms[0]
+        form = response.forms["main_form"]
         form["tag/name"] = "f3"
         form["tag/ref"] = stag2.id
         form.submit()
@@ -318,7 +318,7 @@ class TagTest(TransactionWebTest):
         )
         response = response.follow()
         self.assertEqual(response.status_code, 200)
-        form = response.form
+        form = response.forms[2]
         form["tag/name"] = "Alouis Alchemie AG"
         form["tag/place"] = "Holdenstreet"
         form["tag/street_number"] = "40C"
@@ -327,7 +327,10 @@ class TagTest(TransactionWebTest):
         form["tag/country_code"] = "de"
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.form["tag/city"].value, "Liquid-City")
+        self.assertEqual(
+            response.forms[2]["tag/city"].value,
+            "Liquid-City"
+        )
         response = self.app.get(
             "{}?raw=true".format(
                 home.contents.first().get_absolute_url("view")
