@@ -14,7 +14,8 @@ from spider_domainauth.abstract_models import BaseReverseToken
 from spkcspider.constants.verifier import (
     VERIFICATION_CHOICES
 )
-from .functions import get_requests_params, get_anchor_domain
+from .functions import get_anchor_domain
+from .conf import get_requests_params
 
 
 def dv_path(instance, filename):

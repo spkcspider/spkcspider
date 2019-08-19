@@ -24,8 +24,8 @@ from spkcspider.utils.urls import merge_get_url
 from spkcspider.utils.settings import get_settings_func
 
 # uses specialized get_hashob from verifier (can be further customized)
-from .functions import get_hashob
-from .functions import get_requests_params, get_anchor_domain
+from .functions import get_hashob, get_anchor_domain
+from .conf import get_requests_params
 from .models import VerifySourceObject, DataVerificationTag
 
 logger = logging.getLogger(__name__)

@@ -20,11 +20,11 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.forms.widgets import Media
 
 from spkcspider.utils.security import get_hashob
-from spkcspider.utils.settings import get_settings_func, get_requests_params
+from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
 from spkcspider.constants import TokenCreationError
 
-from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
+from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS, get_requests_params
 from ..models import AuthToken, ReferrerObject
 
 logger = logging.getLogger(__name__)

@@ -7,12 +7,6 @@ import logging
 import functools
 from urllib.parse import parse_qs, urlencode
 
-from django.conf import settings
-from django.urls import reverse
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-from django.test import Client
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
@@ -20,8 +14,13 @@ from rdflib import XSD, URIRef, Literal
 
 import requests
 
-from spkcspider.constants import spkcgraph, host_tld_matcher
-from spkcspider.utils.settings import get_settings_func
+from django.conf import settings
+from django.urls import reverse
+from django.test import Client
+
+from spkcspider.constants import spkcgraph
+
+from .conf import get_requests_params
 
 
 @functools.lru_cache(1)
@@ -134,33 +133,4 @@ def get_hashob():
            settings.SPIDER_HASH_ALGORITHM
         ),
         backend=default_backend()
-    )
-
-
-def get_requests_params(url):
-    _url = host_tld_matcher.match(url)
-    if not _url:
-        raise ValidationError(
-            _("Invalid URL: \"%(url)s\""),
-            code="invalid_url",
-            params={"url": url}
-        )
-    _url = _url.groupdict()
-    mapper = getattr(
-        settings, "VERIFIER_REQUEST_KWARGS_MAP",
-        settings.SPIDER_REQUEST_KWARGS_MAP
-    )
-    return (
-        mapper.get(
-            _url["host"],
-            mapper.get(
-                _url["tld"],  # maybe None but then fall to retrieval 3
-                mapper[b"default"]
-            )
-        ),
-        get_settings_func(
-            "VERIFIER_INLINE", "SPIDER_INLINE",
-            "spkcspider.apps.spider.functions.clean_spider_inline",
-            exclude=frozenset({True})
-        )(_url["host"])
     )

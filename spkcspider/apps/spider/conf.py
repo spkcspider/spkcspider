@@ -3,14 +3,18 @@ __all__ = [
     "get_anchor_domain", "get_anchor_scheme",
     "INITIAL_STATIC_TOKEN_SIZE", "STATIC_TOKEN_CHOICES",
     "default_uctoken_duration", "TOKEN_SIZE", "FILE_TOKEN_SIZE",
-    "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS"
+    "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS",
+    "get_requests_params"
 ]
 import re
 import functools
 import datetime
 from django.conf import settings
-
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+
+from spkcspider.constants import host_tld_matcher
+from spkcspider.utils.settings import get_settings_func
 
 # webbrowser supported image formats
 image_extensions = set(getattr(
@@ -82,3 +86,29 @@ default_uctoken_duration = getattr(
     settings, "DEFAULT_UCTOKEN_DURATION",
     datetime.timedelta(days=7)
 )
+
+
+def get_requests_params(url):
+    _url = host_tld_matcher.match(url)
+    if not _url:
+        raise ValidationError(
+            _("Invalid URL: \"%(url)s\""),
+            code="invalid_url",
+            params={"url": url}
+        )
+    _url = _url.groupdict()
+    mapper = settings.SPIDER_REQUEST_KWARGS_MAP
+    return (
+        mapper.get(
+            _url["host"],
+            mapper.get(
+                _url["tld"],  # maybe None but then fall to retrieval 3
+                mapper[b"default"]
+            )
+        ),
+        get_settings_func(
+            "SPIDER_INLINE",
+            "spkcspider.apps.spider.functions.clean_spider_inline",
+            exclude=frozenset({True})
+        )(_url["host"])
+    )

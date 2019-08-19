@@ -26,13 +26,15 @@ from django.contrib import messages
 from django.test import Client
 
 
-from spkcspider.utils.settings import get_settings_func, get_requests_params
+from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
 from spkcspider.constants import TokenCreationError
+
 
 from ._core import UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 from ..models import AuthToken
+from ..conf import get_requests_params
 
 
 logger = logging.getLogger(__name__)
