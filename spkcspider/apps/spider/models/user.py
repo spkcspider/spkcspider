@@ -23,8 +23,9 @@ from spkcspider.constants import (
     ProtectionType, VariantType, MAX_TOKEN_B64_SIZE, TokenCreationError,
     hex_size_of_bigid, static_token_matcher
 )
+from spkcspider.utils.settings import get_settings_func
+from spkcspider.utils.security import create_b64_id_token
 
-from ..helpers import get_settings_func, create_b64_id_token
 from ..validators import validator_token
 from ..conf import default_uctoken_duration, force_captcha
 

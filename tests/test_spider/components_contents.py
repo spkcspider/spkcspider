@@ -11,11 +11,11 @@ from django.contrib.contenttypes.models import ContentType
 from rdflib import Graph
 
 from spkcspider.constants import spkcgraph
+from spkcspider.utils.security import create_b64_id_token
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.models import UserComponent, AssignedContent
 from spkcspider.apps.spider.signals import update_dynamic
-from spkcspider.apps.spider.helpers import create_b64_id_token
 # Create your tests here.
 
 

@@ -17,7 +17,7 @@ from jsonfield import JSONField
 from spkcspider.apps.spider.contents import (
     BaseContent, add_content, VariantType, ActionUrl
 )
-from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.utils.settings import get_settings_func
 
 logger = logging.getLogger(__name__)
 

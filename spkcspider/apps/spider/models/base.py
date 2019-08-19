@@ -11,7 +11,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
 from django.utils.functional import cached_property
 
-from ..helpers import extract_host
+from spkcspider.utils.urls import extract_host
 
 _info_replacer_templ = '\x1e{}.*\x1e'
 

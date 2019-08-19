@@ -270,7 +270,7 @@ description = "Helper for spkcspiders domain authentication"
 name = "spkcspider-domainauth"
 optional = false
 python-versions = ">=3.5"
-version = "0.3"
+version = "0.4"
 
 [package.dependencies]
 django = ">=2.0"
@@ -316,7 +316,7 @@ pgsql = []
 test = []
 
 [metadata]
-content-hash = "df80bad21d027a9db9d6756c2c1cbcb2e5c85688744026b5d6f2810789b379c4"
+content-hash = "b6c8320f95806973a9b3830287c70b531b24c170828d4351dcc202f80be7c30b"
 python-versions = ">=3.5"
 
 [metadata.hashes]
@@ -346,7 +346,7 @@ pytz = ["26c0b32e437e54a18161324a2fca3c4b9846b74a8dccddd843113109e1116b32", "c89
 rdflib = ["58d5994610105a457cff7fdfe3d683d87786c5028a45ae032982498a7e913d6f", "da1df14552555c5c7715d8ce71c08f404c988c58a1ecd38552d0da4fc261280d"]
 requests = ["11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4", "9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
-spkcspider-domainauth = ["627f9b6fe4d72f9113509db127d33bbd10d2269095a7f45c2707b14823be7e1b", "d7f7dcd054564c26cf42465645469d23e0ea2f1e716181ca45dfd7ed8e6d2f52"]
+spkcspider-domainauth = ["14f2356b4ab10dafed69c6fc8272e5bf9d819c6cf23e5c09341f6e52d6b6bf65", "9f696b4d612553ec5993618d5f9fa8b381aff9704f7ca50b91c68dead109707d"]
 sqlparse = ["40afe6b8d4b1117e7dff5504d7a8ce07d9a1b15aeeade8a2d10f130a834f8177", "7c3dca29c022744e95b547e867cee89f4fce4373f3549ccd8797d8eb52cdb873"]
 urllib3 = ["06330f386d6e4b195fbfc736b297f58c5a892e4440e54d294d7004e3a9bbea1b", "cc44da8e1145637334317feebd728bd869a35285b93cbb4cca2577da7e62db4f"]
 webencodings = ["a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78", "b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923"]

@@ -12,8 +12,10 @@ from django.db import transaction, models
 
 from django.apps import apps
 from spkcspider.constants import VariantType, ProtectionStateType
-from .helpers import create_b64_id_token
+from spkcspider.utils.security import create_b64_id_token
 import logging
+
+logger = logging.getLogger(__name__)
 
 update_dynamic = Signal(providing_args=[])
 # failed guess of token
@@ -27,10 +29,10 @@ def TriggerUpdate(sender, **_kwargs):
     results = update_dynamic.send_robust(sender)
     for (receiver, result) in results:
         if isinstance(result, Exception):
-            logging.error(
+            logger.error(
                 "%s failed", receiver, exc_info=result
             )
-    logging.info("Update of dynamic content completed")
+    logger.info("Update of dynamic content completed")
 
 
 def DeleteContentCb(sender, instance, **_kwargs):
@@ -67,7 +69,7 @@ def CleanupCb(sender, instance, **kwargs):
             except ObjectDoesNotExist:
                 pass
             except Exception as exc:
-                logging.exception(
+                logger.exception(
                     "update size failed, trigger expensive recalculation",
                     exc_inf=exc
                 )
@@ -92,7 +94,7 @@ def CleanupCb(sender, instance, **kwargs):
             except ObjectDoesNotExist:
                 pass
             except Exception as exc:
-                logging.error(
+                logger.error(
                     "update size failed, trigger expensive recalculation",
                     exc_info=exc
                 )

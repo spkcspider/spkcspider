@@ -5,6 +5,9 @@ import hashlib
 import logging
 from urllib.parse import quote_plus
 
+import ratelimit
+import requests
+
 from django.http import (
     HttpResponseRedirect, HttpResponseServerError, HttpResponse
 )
@@ -16,14 +19,11 @@ from django.test import Client
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.forms.widgets import Media
 
-import ratelimit
-
-import requests
-
-from ..helpers import (
-    merge_get_url, get_requests_params, get_settings_func, get_hashob
-)
+from spkcspider.utils.security import get_hashob
+from spkcspider.utils.settings import get_settings_func, get_requests_params
+from spkcspider.utils.urls import merge_get_url
 from spkcspider.constants import TokenCreationError
+
 from ..conf import VALID_INTENTIONS, VALID_SUB_INTENTIONS
 from ..models import AuthToken, ReferrerObject
 

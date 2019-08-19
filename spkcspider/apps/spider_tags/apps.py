@@ -2,7 +2,7 @@ __all__ = ["SpiderTagsConfig"]
 
 from django.apps import AppConfig, apps
 from .signals import UpdateDefaultLayouts
-from spkcspider.apps.spider.helpers import extract_app_dicts
+from spkcspider.utils.settings import extract_app_dicts
 from spkcspider.apps.spider.signals import update_dynamic
 
 

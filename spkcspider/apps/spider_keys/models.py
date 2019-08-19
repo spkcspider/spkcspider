@@ -19,9 +19,9 @@ from cryptography.hazmat.backends import default_backend
 
 from jsonfield import JSONField
 
-from spkcspider.apps.spider.helpers import get_hashob
-from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.constants import VariantType
+from spkcspider.utils.security import get_hashob
+from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.conf import get_anchor_domain, get_anchor_scheme
 
 logger = logging.getLogger(__name__)

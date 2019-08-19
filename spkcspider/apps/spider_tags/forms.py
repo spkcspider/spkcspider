@@ -22,7 +22,7 @@ from .models import TagLayout, SpiderTag
 from spkcspider.constants import loggedin_active_tprotections
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField, JsonField
 from spkcspider.apps.spider.widgets import ListWidget
-from spkcspider.apps.spider.helpers import merge_get_url
+from spkcspider.utils.urls import merge_get_url
 from spkcspider.apps.spider.models import (
     AssignedContent, ReferrerObject, TravelProtection
 )

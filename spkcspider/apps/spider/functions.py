@@ -31,10 +31,10 @@ from django.test import Client
 from rdflib import Literal, XSD
 import ratelimit
 
-from .signals import failed_guess
 from spkcspider.constants import spkcgraph
+from spkcspider.utils.settings import get_requests_params
+from .signals import failed_guess
 from .conf import get_anchor_domain, get_anchor_scheme
-from .helpers import get_requests_params
 
 
 # seed with real random

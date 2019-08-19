@@ -13,10 +13,11 @@ from spkcspider.constants import (
     spkcgraph, TravelLoginType, ProtectionStateType
 )
 
+from spkcspider.utils.security import aesgcm_pbkdf2_cryptor
+
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.models import UserComponent
 from spkcspider.apps.spider.signals import update_dynamic
-from spkcspider.apps.spider.helpers import aesgcm_pbkdf2_cryptor
 from spkcspider.apps.spider.protections import _pbkdf2_params
 
 

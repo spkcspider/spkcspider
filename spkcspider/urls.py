@@ -20,11 +20,12 @@ from django.contrib import admin
 from django.views.generic.base import RedirectView
 from django.conf import settings
 from django.apps import apps
-from spkcspider.apps.spider.views import ComponentPublicIndex
-from spkcspider.apps.spider.helpers import get_settings_func
-from spkcspider.apps.spider.functions import admin_login
 from django.contrib.sitemaps import views as sitemaps_views
 from django.views.decorators.cache import cache_page
+
+from spkcspider.utils.settings import get_settings_func
+from spkcspider.apps.spider.views import ComponentPublicIndex
+from spkcspider.apps.spider.functions import admin_login
 
 from spkcspider.apps.spider.sitemaps import sitemaps
 

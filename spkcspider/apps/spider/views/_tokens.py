@@ -5,6 +5,8 @@ __all__ = (
 
 import logging
 
+import requests
+
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
@@ -24,13 +26,13 @@ from django.contrib import messages
 from django.test import Client
 
 
-import requests
+from spkcspider.utils.settings import get_settings_func, get_requests_params
+from spkcspider.utils.urls import merge_get_url
+from spkcspider.constants import TokenCreationError
 
 from ._core import UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 from ..models import AuthToken
-from ..helpers import get_settings_func, get_requests_params, merge_get_url
-from spkcspider.constants import TokenCreationError
 
 
 logger = logging.getLogger(__name__)

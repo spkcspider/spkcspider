@@ -23,7 +23,7 @@ from django.apps import apps
 from ..contents import installed_contents
 
 # from spkcspider.constants import VariantType
-from ..helpers import create_b64_id_token
+from spkcspider.utils.security import create_b64_id_token
 from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid, static_token_matcher
 )

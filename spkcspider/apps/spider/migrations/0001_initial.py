@@ -5,7 +5,6 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import jsonfield.fields
-import spkcspider.apps.spider.helpers
 import spkcspider.apps.spider.models.content_base
 import spkcspider.apps.spider.models.base
 import spkcspider.apps.spider.models.protections

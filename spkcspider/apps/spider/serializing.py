@@ -14,8 +14,9 @@ from rdflib import URIRef, Literal, XSD, RDF
 
 
 from spkcspider.constants import spkcgraph, VariantType
+from spkcspider.utils.fields import add_property
+
 from .conf import get_anchor_domain
-from .helpers import add_property
 
 
 # TODO replace by proper tree search (connect by/recursive query)

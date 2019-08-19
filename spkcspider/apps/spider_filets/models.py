@@ -20,9 +20,8 @@ from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.conf import (
     image_extensions, media_extensions, FILE_TOKEN_SIZE
 )
-from spkcspider.apps.spider.helpers import (
-    create_b64_token, prepare_description
-)
+from spkcspider.utils.security import create_b64_token
+from spkcspider.utils.fields import prepare_description
 
 from .conf import (
     LICENSE_CHOICES

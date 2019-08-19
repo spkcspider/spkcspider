@@ -8,18 +8,19 @@ from django.db import models
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.utils.translation import gettext_lazy as _
 
+from spkcspider.utils.security import (
+    create_b64_id_token, calculate_protection_strength
+)
+from spkcspider.constants import (
+    ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
+)
+from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
+
 from ..models import (
     Protection, UserComponent, AssignedContent, ContentVariant, AuthToken,
     TravelProtection
 )
 
-from ..helpers import create_b64_id_token, calculate_protection_strength
-from spkcspider.constants import (
-    ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
-
-)
-from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
-# from ..widgets import SelectizeWidget
 
 logger = logging.getLogger(__name__)
 

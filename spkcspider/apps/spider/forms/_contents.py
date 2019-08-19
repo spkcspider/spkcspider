@@ -19,9 +19,10 @@ from spkcspider.constants import (
     dangerous_login_choices, travel_scrypt_params, TravelLoginType,
     loggedin_active_tprotections, VariantType
 )
+from spkcspider.utils.settings import get_settings_func
+
 from ..models import LinkContent, TravelProtection, AssignedContent
 from ..fields import MultipleOpenChoiceField, ContentMultipleChoiceField
-from ..helpers import get_settings_func
 from ..widgets import (
     OpenChoiceWidget, RomeDatetimePickerWidget, SelectizeWidget
 )

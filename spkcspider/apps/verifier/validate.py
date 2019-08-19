@@ -20,7 +20,8 @@ import requests
 from spkcspider import celery_app
 
 from spkcspider.constants.rdf import spkcgraph
-from spkcspider.apps.spider.helpers import merge_get_url, get_settings_func
+from spkcspider.utils.urls import merge_get_url
+from spkcspider.utils.settings import get_settings_func
 
 # uses specialized get_hashob from verifier (can be further customized)
 from .functions import get_hashob

@@ -10,8 +10,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views.generic.edit import FormView
 
+from spkcspider.utils.settings import get_settings_func
+
 from spkcspider.apps.spider.views import UCTestMixin
-from spkcspider.apps.spider.helpers import get_settings_func
 from spkcspider.apps.spider.models import (
     AuthToken
 )

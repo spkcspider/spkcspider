@@ -302,7 +302,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
   * harmonize punctation
 
 ## Later
-* maybe: move helpers and co to apps.utils
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * create client side script for import (pushing to server, index token for auth?)
   * use browerside javascript?

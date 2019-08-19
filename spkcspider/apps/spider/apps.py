@@ -6,7 +6,8 @@ from django.db.models.signals import (
 )
 from django.contrib.auth import get_user_model
 from django.conf import settings
-from .helpers import extract_app_dicts
+
+from spkcspider.utils.settings import extract_app_dicts
 from .signals import (
     UpdateSpiderCb, InitUserCb, UpdateAnchorComponentCb, UpdateContentCb,
     update_dynamic, TriggerUpdate, CleanupCb,

@@ -19,7 +19,7 @@ import ratelimit
 from celery.exceptions import TimeoutError
 from rdflib import Literal
 
-from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.utils.settings import get_settings_func
 from spkcspider.apps.spider.views import DefinitionsMixin
 from .models import DataVerificationTag, VerifySourceObject
 from .forms import CreateEntryForm

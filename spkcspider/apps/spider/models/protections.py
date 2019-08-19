@@ -20,8 +20,8 @@ from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError,
     ProtectionType, ProtectionResult, ProtectionStateType
 )
+from spkcspider.utils.security import create_b64_id_token
 
-from ..helpers import create_b64_id_token
 from ..validators import validator_token
 from ..protections import installed_protections, ProtectionList, PseudoPw
 from ..queryfilters import active_protections_q

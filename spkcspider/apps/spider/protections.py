@@ -37,7 +37,9 @@ from spkcspider.constants import (
     ProtectionType, ProtectionResult, ProtectionStateType
 )
 
-from .helpers import add_by_field, create_b64_token, aesgcm_pbkdf2_cryptor
+from spkcspider.utils.fields import add_by_field
+from spkcspider.utils.security import create_b64_token, aesgcm_pbkdf2_cryptor
+
 from .fields import MultipleOpenChoiceField
 from .widgets import OpenChoiceWidget, PWOpenChoiceWidget, ListWidget
 

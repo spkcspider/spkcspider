@@ -44,7 +44,7 @@ django-extensions = '*'
 Werkzeug = '*'
 pyOpenSSL = '*'
 django-simple-captcha = "*"
-spkcspider-domainauth = "*"
+spkcspider-domainauth = ">=0.4"
 
 [tool.poetry.extras]
 captcha = ["django-simple-captcha"]
@@ -52,7 +52,7 @@ fcgi = ["flipflop"]
 mysql = ["mysqlclient", "django-mysql"]
 pgsql = ["psycopg2"]
 celery = ["celery", "sqlalchemy"]
-test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery", "spkcspider-domainauth>=0.3"]
+test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery", "spkcspider-domainauth>=0.4"]
 
 [tool.tox]
 legacy_tox_ini = """
@@ -81,7 +81,7 @@ deps =
   django-webtest
   django-simple-captcha
   WSGIProxy2
-  spkcspider-domainauth>=0.3
+  spkcspider-domainauth>=0.4
   celery
   django22: Django>=2.2a1,<=2.2.99
   djangomaster: https://github.com/django/django/archive/master.zip

@@ -17,7 +17,7 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext
 from django.forms.widgets import Media
 
-from ..helpers import merge_get_url
+from spkcspider.utils.urls import merge_get_url
 from spkcspider.constants import (
     VariantType, TokenCreationError, ProtectionType,
     loggedin_active_tprotections

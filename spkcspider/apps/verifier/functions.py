@@ -21,7 +21,7 @@ from rdflib import XSD, URIRef, Literal
 import requests
 
 from spkcspider.constants import spkcgraph, host_tld_matcher
-from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.utils.settings import get_settings_func
 
 
 @functools.lru_cache(1)

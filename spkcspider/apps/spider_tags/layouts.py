@@ -1,7 +1,7 @@
 __all__ = ("default_layouts", "initialize_layouts")
 
 from django.utils.translation import gettext_noop as _
-from spkcspider.apps.spider.helpers import extract_app_dicts
+from spkcspider.utils.settings import extract_app_dicts
 
 default_layouts = {}
 default_layouts["address"] = {

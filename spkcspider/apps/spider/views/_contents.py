@@ -8,6 +8,9 @@ __all__ = (
 from datetime import timedelta
 from html import escape
 
+from next_prev import next_in_order, prev_in_order
+from rdflib import Graph, Literal, URIRef, XSD
+
 from django.db.models.deletion import ProtectedError
 from django.views.generic.edit import DeleteView, UpdateView, CreateView
 from django.views.generic.list import ListView
@@ -25,10 +28,9 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.forms.widgets import Media
 
-from next_prev import next_in_order, prev_in_order
-
-from rdflib import Graph, Literal, URIRef, XSD
-
+from spkcspider.utils.settings import get_settings_func
+from spkcspider.utils.fields import add_property
+from spkcspider.utils.urls import merge_get_url
 
 from ._core import UCTestMixin, EntityDeletionMixin, UserTestMixin
 from ._referrer import ReferrerMixin
@@ -37,7 +39,6 @@ from ..models import (
     AssignedContent, ContentVariant, UserComponent, TravelProtection
 )
 from ..forms import UserContentForm, TravelProtectionManagementForm
-from ..helpers import get_settings_func, add_property, merge_get_url
 from ..queryfilters import (
     filter_contents, listed_variants_q, machine_variants_q
 )

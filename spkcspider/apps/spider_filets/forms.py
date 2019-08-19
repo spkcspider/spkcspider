@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django import forms
 
-from spkcspider.apps.spider.helpers import get_settings_func
+from spkcspider.utils.settings import get_settings_func
 from spkcspider.apps.spider.fields import SanitizedHtmlField
 from .models import FileFilet, TextFilet
 from .conf import (

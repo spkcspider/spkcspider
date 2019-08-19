@@ -24,13 +24,15 @@ from django.views.decorators.csrf import csrf_exempt
 
 from rdflib import Literal, Graph, BNode, URIRef, XSD, RDF
 
-from spkcspider.constants import VariantType, spkcgraph, ActionUrl, essential_contents
+from spkcspider.constants import (
+    VariantType, spkcgraph, ActionUrl, essential_contents
+)
 from .conf import get_anchor_domain
 from .serializing import paginate_stream, serialize_stream
-from .helpers import (
-    get_settings_func, add_property, create_b64_id_token, merge_get_url
-)
-from .helpers import literalize
+from spkcspider.utils.settings import get_settings_func
+from spkcspider.utils.security import create_b64_id_token
+from spkcspider.utils.urls import merge_get_url
+from spkcspider.utils.fields import literalize, add_property
 
 logger = logging.getLogger(__name__)
 
