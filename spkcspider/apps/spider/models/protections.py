@@ -13,6 +13,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_variables
+from django.db.utils import IntegrityError
+from django.db import transaction
 
 from jsonfield import JSONField
 
@@ -277,6 +279,16 @@ class AssignedProtection(BaseSubUserComponentModel):
         )
 
 
+class AuthTokenManager(models.Manager):
+
+    def create(self, *, token=None, **kwargs):
+        if token:
+            logger.warning("Should never specify token")
+        ret = self.model(**kwargs)
+        ret.save()
+        return ret
+
+
 class AuthToken(BaseSubUserComponentModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     usercomponent = models.ForeignKey(
@@ -303,6 +315,8 @@ class AuthToken(BaseSubUserComponentModel):
     extra = JSONField(default=dict, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
 
+    objects = AuthTokenManager()
+
     def __str__(self):
         return "{}...".format(self.token[:-_striptoken])
 
@@ -312,13 +326,8 @@ class AuthToken(BaseSubUserComponentModel):
         )
 
     def save(self, *args, **kwargs):
-        start = not self.token
-        if not start:
-            try:
-                self.validate_unique()
-            except ValidationError:
-                start = True
-        if start:
+        start_token_creation = not self.token
+        if start_token_creation:
             for i in range(0, 1000):
                 if i >= 999:
                     raise TokenCreationError(
@@ -326,8 +335,10 @@ class AuthToken(BaseSubUserComponentModel):
                     )
                 self.initialize_token()
                 try:
-                    self.validate_unique()
+                    with transaction.atomic():
+                        super().save(*args, **kwargs)
                     break
-                except ValidationError:
+                except IntegrityError:
                     pass
-        super().save(*args, **kwargs)
+        else:
+            super().save(*args, **kwargs)
