@@ -12,7 +12,7 @@ def forward(apps, schema_editor):
         if i.active and i.instant_fail:
             i.state = ProtectionStateType.instant_fail.value
         elif i.active:
-            i.state = ProtectionStateType.active.value
+            i.state = ProtectionStateType.enabled.value
         else:
             i.state = ProtectionStateType.disabled.value
         i.save(update_fields=["state"])
@@ -25,7 +25,7 @@ def backward(apps, schema_editor):
         if i.state == ProtectionStateType.instant_fail.value:
             i.active = True
             i.instant_fail = True
-        elif i.state == ProtectionStateType.active.value:
+        elif i.state == ProtectionStateType.enabled.value:
             i.active = True
             i.instant_fail = False
         else:
