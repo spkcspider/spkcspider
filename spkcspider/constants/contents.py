@@ -13,7 +13,7 @@ essential_contents = {
 }
 
 
-class VariantType(str, enum.Flag):
+class VariantType(str, enum.Enum):
     # a not assigned
     # use persistent token
     #  can be used for some kind of federation

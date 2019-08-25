@@ -25,7 +25,7 @@ travel_scrypt_params = {
 }
 
 
-class ProtectionType(str, enum.Flag):
+class ProtectionType(str, enum.Enum):
     # receives: request, scope
     access_control = "a"
     # receives: request, scope, password
