@@ -136,7 +136,7 @@ def create_b64_token(size=None):
         from django.conf import settings
         size = getattr(settings, "TOKEN_SIZE", 30)
     if size > MAX_TOKEN_SIZE:
-        logging.warning("Nonce too big")
+        logger.warning("Nonce too big")
     return base64.urlsafe_b64encode(
         os.urandom(size)
     ).decode('ascii').rstrip("=")
