@@ -30,7 +30,7 @@ If you have problems with attackers (because they know the token),
 you can invalidate it with this option and/or add protections<br/>
 <table style="color:red;">
 <tr>
-<td>Warning:</td><td>this removes also access for all services you gave the link<td/>
+<td style="vertical-align: top">Warning:</td><td>this removes also access for all services you gave the link<td/>
 </tr>
 <tr>
 <td style="vertical-align: top">Warning:</td><td>public user components disclose static token, regenerate after removing

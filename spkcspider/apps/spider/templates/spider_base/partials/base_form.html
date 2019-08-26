@@ -14,52 +14,49 @@
       </li>
     {% else %}
       <li id="{{field.auto_id}}_wrapper" class="{% if field.errors %}w3-pale-red{% endif %}" typeof="spkc:Property">
-        <div>{# cell row #}
-          <div class="{% if field.help_text %}w3-cell w3-mobile{% endif %}">
-            <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.html_name}}</data>
-            <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
-            {% hashable_literalize field as hashable %}
-            <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
-            <div><label for="{{ field.auto_id }}">{{ field.label }}<sup class="w3-small {% if field.field.disabled %}w3-text-grey{% else %}w3-text-red{% endif %}">{% if field.field.required and form.use_required_attribute %}*{% endif %}</sup>:</label>
-            </div>
-            {% if field.field.widget.allow_multiple_selected %}
-              <data hidden="hidden" rel="spkc:value">
-              {% for q in field|field_to_python %}
-                {% literalize q field as LiteralData %}
-                {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
-                  {% if LiteralData|is_uriref %}
-                    <data hidden="hidden" resource="{{LiteralData}}"></data>
-                  {% else %}
-                    <data hidden="hidden"  datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
-                  {% endif %}
+        <div>
+          <data hidden="hidden" property="spkc:fieldname" datatype="xsd:string">{{field.html_name}}</data>
+          <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{field.name}}</data>
+          {% hashable_literalize field as hashable %}
+          <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
+          <label class="w3-block" for="{{ field.auto_id }}">
+            {{ field.label }}<sup class="w3-small {% if field.field.disabled %}w3-text-grey{% else %}w3-text-red{% endif %}">{% if field.field.required and form.use_required_attribute %}*{% endif %}</sup>:{% if field.help_text %}
+            <span class="w3-tooltip"><i class="fas fa-question-circle w3-white w3-text-blue" aria-label="{% trans 'info' %}"></i><small class="w3-text w3-grey w3-card w3-padding w3-round spkc-helptag">
+              {{ field.help_text|safe }}
+            </small></span>{% endif %}
+          </label>
+          {% if field.field.widget.allow_multiple_selected %}
+            <data hidden="hidden" rel="spkc:value">
+            {% for q in field|field_to_python %}
+              {% literalize q field as LiteralData %}
+              {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
+                {% if LiteralData|is_uriref %}
+                  <data hidden="hidden" resource="{{LiteralData}}"></data>
+                {% else %}
+                  <data hidden="hidden"  datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
                 {% endif %}
-              {% empty %}
-                <data hidden="hidden" resource="rdf:nil"></data>
-              {% endfor %}
-              </data>
-            {% else %}
-              {% literalize field as LiteralData %}
-              {% if LiteralData|is_uriref %}
-                <data hidden="hidden" resource="{{LiteralData}}"></data>
-              {% else %}
-                <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
               {% endif %}
-            {% endif %}
-            {% block form_widget %}
-            {% if field|widget_type == "checkboxselectmultiple" %}
-            {% render_field field class+="w3-ul" %}
-            {% elif field|widget_type == "HTMLWidget" %}
-            {% render_field field class+="w3-white" style="padding: 6px 8px;" %}
+            {% empty %}
+              <data hidden="hidden" resource="rdf:nil"></data>
+            {% endfor %}
+            </data>
+          {% else %}
+            {% literalize field as LiteralData %}
+            {% if LiteralData|is_uriref %}
+              <data hidden="hidden" resource="{{LiteralData}}"></data>
             {% else %}
-            {% render_field field %}
+              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
             {% endif %}
-            {% endblock form_widget %}
-          </div>
-          {% if field.help_text %}
-            <div class="w3-cell w3-padding w3-mobile">
-              <small class="w3-text-grey">{{ field.help_text|safe }}</small>
-            </div>
           {% endif %}
+          {% block form_widget %}
+          {% if field|widget_type == "checkboxselectmultiple" %}
+          {% render_field field class+="w3-ul" %}
+          {% elif field|widget_type == "HTMLWidget" %}
+          {% render_field field class+="w3-white" style="padding: 6px 8px;" %}
+          {% else %}
+          {% render_field field %}
+          {% endif %}
+          {% endblock form_widget %}
         </div>
         {% if field.errors %}
           <div class="w3-text-red">

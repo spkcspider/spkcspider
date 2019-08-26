@@ -112,9 +112,6 @@ class FileForm(forms.ModelForm):
 class TextForm(forms.ModelForm):
     text = SanitizedHtmlField(
         widget=TrumbowygWidget(
-            wrapper_attrs={
-                "style": "width:60vw"
-            }
         ),
         localize=True
     )

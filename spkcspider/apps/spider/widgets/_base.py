@@ -327,13 +327,18 @@ class TrumbowygWidget(widgets.Textarea):
     def __init__(self, *, attrs=None, wrapper_attrs=None, **kwargs):
         if not attrs:
             attrs = {"class": ""}
+        else:
+            attrs = attrs.copy()
         if not wrapper_attrs:
             wrapper_attrs = {"class": ""}
         attrs.setdefault("class", "")
         wrapper_attrs.setdefault("class", "")
+        wrapper_attrs.setdefault("style", "")
         attrs["class"] += " TrumbowygTarget"
-        wrapper_attrs["class"] += " TrumbowygTargetWrapper"
+
         self.wrapper_attrs = wrapper_attrs.copy()
+        self.wrapper_attrs["class"] += " TrumbowygTargetWrapper"
+        self.wrapper_attrs["style"] += ";background-color:#d7e0e2;"
         super().__init__(attrs=attrs, **kwargs)
 
     def __deepcopy__(self, memo):

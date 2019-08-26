@@ -1,3 +1,21 @@
+.spkc-helptag{
+  position:fixed;
+  left:1rem;
+  top:1rem;
+  z-index:100;
+  width:90%;
+}
+
+@media (min-width:601px){
+  .spkc-helptag{
+    position:absolute;
+    left:2rem;
+    top:-1rem;
+    width:40vw
+  }
+}
+
+
 .spkc-content{
   max-width:980px;
   margin-right:10px;
