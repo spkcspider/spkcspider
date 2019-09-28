@@ -172,7 +172,7 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
             return get_settings_func(
                 "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+            )(request, self)
 
     def test_func(self):
         # tokens which are not persistent can be easily deleted
@@ -236,7 +236,7 @@ class TokenRenewal(UCTestMixin, View):
             return get_settings_func(
                 "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+            )(request, self)
 
     def get_usercomponent(self):
         token = self.request.POST.get("token", None)
@@ -486,7 +486,7 @@ class RequestTokenUpdate(UserTestMixin, View):
             return get_settings_func(
                 "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+            )(request, self)
 
     def get(self, request, *args, **kwargs):
         ret_dict = {

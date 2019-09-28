@@ -40,7 +40,7 @@ from .conf import get_anchor_domain, get_anchor_scheme, get_requests_params
 _nonexhaustRandom = random.Random(os.urandom(30))
 
 
-def rate_limit_default(view, request):
+def rate_limit_default(request, view):
     group = getattr(view, "rate_limit_group", None)
     if group:
         ratelimit.get_ratelimit(
@@ -84,7 +84,7 @@ def clean_spider_inline(url):
     return validate_host(url, settings.ALLOWED_HOSTS)
 
 
-def clean_verifier(view, request):
+def clean_verifier(request, view):
     if not request.auth_token or not request.auth_token.referrer:
         return False
     url = request.auth_token.referrer.url

@@ -66,7 +66,7 @@ class ContentBase(UCTestMixin):
             return get_settings_func(
                 "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+            )(request, self)
 
     def get_template_names(self):
         if self.scope in ("add", "update"):
@@ -900,7 +900,7 @@ class TravelProtectionManagement(UserTestMixin, UpdateView):
             return get_settings_func(
                 "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+            )(request, self)
 
     def get_object(self, queryset=None):
         if queryset is None:

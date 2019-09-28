@@ -34,7 +34,7 @@ class PushTagView(UCTestMixin, FormView):
             return get_settings_func(
                 "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+            )(request, self)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

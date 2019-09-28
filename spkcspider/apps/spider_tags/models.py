@@ -288,7 +288,7 @@ class SpiderTag(BaseContent):
             if get_settings_func(
                 "SPIDER_TAG_VERIFIER_VALIDATOR",
                 "spkcspider.apps.spider.functions.clean_verifier"
-            )(self, context["request"]):
+            )(context["request"], self):
                 _abilities.add("verify")
             if self.updateable_by.filter(
                 id=context["request"].auth_token.referrer.id

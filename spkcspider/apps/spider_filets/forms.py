@@ -105,7 +105,7 @@ class FileForm(forms.ModelForm):
         get_settings_func(
             "SPIDER_UPLOAD_FILTER",
             "spkcspider.apps.spider.functions.allow_all_filter"
-        )(self, ret["file"])
+        )(self.request, ret["file"], self)
         return ret
 
 

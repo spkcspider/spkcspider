@@ -32,7 +32,7 @@ class WebConfigView(UCTestMixin, View):
             return get_settings_func(
                 "SPIDER_RATELIMIT_FUNC",
                 "spkcspider.apps.spider.functions.rate_limit_default"
-            )(self, request)
+            )(request, self)
 
     def get_usercomponent(self):
         token = self.request.GET.get("token", None)
