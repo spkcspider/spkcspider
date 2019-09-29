@@ -17,6 +17,9 @@
 <div>
   <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
   <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
+  {% if domainauth_url and request.user.is_authenticated %}
+    <data hidden="hidden" property="spkc:domainauth" datatype="xsd:anyURI">{{domainauth_url}}</data>
+  {% endif %}
   <div class="w3-padding" style="min-height:140px">
     <span class="w3-left">
       {% if request.user == uc.user %}

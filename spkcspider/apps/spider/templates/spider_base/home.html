@@ -78,6 +78,9 @@
   {% endif %}
   {% endblock featured_components %}
   <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">0</data>
+  {% if domainauth_url and request.user.is_authenticated %}
+    <data hidden="hidden" property="spkc:domainauth" datatype="xsd:anyURI">{{domainauth_url}}</data>
+  {% endif %}
   <div class="w3-margin w3-padding">
     <a href="{% url 'spider_base:ucomponent-listpublic' %}">
       <span class="w3-large w3-text-blue">

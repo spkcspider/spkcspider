@@ -7,7 +7,7 @@ from urllib.parse import quote_plus
 from datetime import timedelta
 
 from django.contrib.auth.mixins import AccessMixin
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, resolve_url
 from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.http.response import HttpResponseBase
@@ -37,6 +37,12 @@ class DefinitionsMixin(object):
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )
+        if getattr(settings, "DOMAINAUTH_URL", None):
+            kwargs["domainauth_url"] = self.request.build_absolute_uri(
+                resolve_url(settings.DOMAINAUTH_URL)
+            )
+        else:
+            kwargs["domainauth_url"] = None
         kwargs.setdefault("media", Media())
         return super().get_context_data(**kwargs)
 

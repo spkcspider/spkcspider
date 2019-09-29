@@ -24,6 +24,9 @@
 {% block content %}
   <div class="w3-padding" style="min-height:140px">
     <data hidden="hidden" property="spkc:action:view" datatype="xsd:anyURI">{% action_view %}</data>
+    {% if domainauth_url and request.user.is_authenticated %}
+      <data hidden="hidden" property="spkc:domainauth" datatype="xsd:anyURI">{{domainauth_url}}</data>
+    {% endif %}
     {% if machine_variants and request.is_owner %}
       <data hidden="hidden" typeof="spkc:Component" resource="{{hostpart}}{% url 'spider_base:ucontent-list' token=uc.token %}">
         {% for name in machine_variants %}

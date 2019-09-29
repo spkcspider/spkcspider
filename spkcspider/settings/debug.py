@@ -7,12 +7,15 @@ INSTALLED_APPS += [
     'spkcspider.apps.spider_keys',
     'spkcspider.apps.spider_tags',
     'spkcspider.apps.spider_webcfg',
+    'spider_domainauth',
     # ONLY for tests and REAL verifiers=companies verifing data
     'spkcspider.apps.verifier',
     'captcha'
 ]
 USE_CAPTCHAS = True
 
+
+DOMAINAUTH_URL = 'spider_domainauth:domainauth-db'
 
 # for tests
 SPIDER_REQUEST_KWARGS_MAP["localhost"] = {

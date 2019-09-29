@@ -14,14 +14,12 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 {# public_meta not required because it will never be used #}
 
 {% block main_classes %}{{block.super}} {% if not object %}w3-sand{% else %}w3-card-4 color-front-{{object.strength}}{% endif %} spkc-content{% endblock %}
+{% block main_attributes %}{{block.super}} prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema# rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#" resource="{{hostpart}}{{ request.path }}"{% endblock %}
 {% block body_class %}{{block.super}} {% if not object %}w3-light-grey{% else %}color-back-{{object.strength}}{% endif %}{% endblock %}
 
 
 {% block content %}
   <div class="w3-padding" style="min-height:120px">
-    {% for name in machine_variants %}
-      <data hidden="hidden" property="spkc:create:name" datatype="xsd:string">{{name}}</data>
-    {% endfor %}
     <span class="w3-left">
     {% if object %}
       <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-list' token=object.token %}">
@@ -69,6 +67,12 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
   {% include "spider_base/partials/form_errors.html" with form=form %}
   <form class="w3-padding" id="componentForm" action="{{ request.get_full_path }}" encdata="multipart/form-data" method="post">
     <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
+    {% for name in machine_variants %}
+      <data hidden="hidden" property="spkc:create:name" datatype="xsd:string">{{name}}</data>
+    {% endfor %}
+    {% if domainauth_url and request.user.is_authenticated %}
+      <data hidden="hidden" property="spkc:domainauth" datatype="xsd:anyURI">{{domainauth_url}}</data>
+    {% endif %}
     <data hidden="hidden" property="type" datatype="xsd:string">Component</data>
     {% if object %}
     <fieldset class="w3-padding">

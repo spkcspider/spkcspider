@@ -30,6 +30,12 @@ spkc:strength a rdf:value ;
   rdfs:domain rdfs:Resource ;
   rdfs:range xsd:integer .
 
+spkc:domainauth a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "domainauth url" ;
+  rdfs:comment "The url for initiating an external domainauth." ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range xsd:anyURI .
 
 spkc:Component a rdfs:Class ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;

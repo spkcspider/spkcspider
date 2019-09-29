@@ -12,6 +12,7 @@ import datetime
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.shortcuts import resolve_url
 
 from spkcspider.constants import host_tld_matcher
 from spkcspider.utils.settings import get_settings_func
@@ -37,7 +38,7 @@ def get_anchor_domain():
         settings, "SPIDER_ANCHOR_DOMAIN", None
     )
     if _anchor_domain:
-        return _anchor_domain
+        return resolve_url(_anchor_domain)
     from django.contrib.sites.models import Site
     return Site.objects.get(id=settings.SITE_ID).domain
 

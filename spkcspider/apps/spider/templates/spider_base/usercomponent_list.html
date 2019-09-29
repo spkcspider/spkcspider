@@ -29,6 +29,9 @@
           <i class="fas {% if request.user == uc.user or request.is_staff %}fa-angle-double-up{% else %}fa-home{% endif %}" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Home' %}
         </a>
     </span>
+    {% if domainauth_url and request.user.is_authenticated %}
+      <data hidden="hidden" property="spkc:domainauth" datatype="xsd:anyURI">{{domainauth_url}}</data>
+    {% endif %}
     {% if listpublic == request.path %}
     <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">0</data>
     {% else %}

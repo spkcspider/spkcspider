@@ -32,9 +32,6 @@ from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.fields import add_property
 from spkcspider.utils.urls import merge_get_url
 
-from ._core import UCTestMixin, EntityDeletionMixin, UserTestMixin
-from ._referrer import ReferrerMixin
-
 from ..models import (
     AssignedContent, ContentVariant, UserComponent, TravelProtection
 )
@@ -46,6 +43,9 @@ from spkcspider.constants import (
     spkcgraph, VariantType, static_token_matcher, loggedin_active_tprotections
 )
 from ..serializing import paginate_stream, serialize_stream
+
+from ._core import UCTestMixin, EntityDeletionMixin, UserTestMixin
+from ._referrer import ReferrerMixin
 
 _forbidden_scopes = frozenset(["add", "list", "raw", "delete", "anchor"])
 
@@ -302,6 +302,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             "scope": context["scope"],
             "uc": self.usercomponent,
             "hostpart": context["hostpart"],
+            "domainauth_url": context["domainauth_url"],
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
         g = Graph()
@@ -342,6 +343,17 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             )
 
         if page <= 1:
+            if (
+                session_dict["domainauth_url"] and
+                self.request.user.is_authenticated
+            ):
+                g.add((
+                    session_dict["sourceref"],
+                    spkcgraph["domainauth"],
+                    Literal(
+                        session_dict["domainauth_url"], datatype=XSD.anyURI
+                    )
+                ))
             # "expires" (string) different from "token_expires" (datetime)
             if session_dict.get("expires"):
                 add_property(

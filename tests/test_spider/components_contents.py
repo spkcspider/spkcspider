@@ -114,7 +114,7 @@ class BasicComponentTest(TransactionTestCase):
         # Check that the response is 200 OK.
         self.assertEqual(response.status_code, 200)
         g = Graph()
-        g.parse(data=str(response.content, "ascii"), format="turtle")
+        g.parse(data=str(response.content, "utf8"), format="turtle")
         self.assertEqual(sum(
             1 for _ in g.triples((None, spkcgraph["components"], None))
         ), 3)
@@ -125,7 +125,7 @@ class BasicComponentTest(TransactionTestCase):
         # Check that the response is 200 OK.
         self.assertEqual(response.status_code, 200)
         g = Graph()
-        g.parse(data=str(response.content, "ascii"), format="turtle")
+        g.parse(data=str(response.content, "utf8"), format="turtle")
         self.assertEqual(
             sum(
                 1 for _ in g.triples((None, spkcgraph["components"], None))
@@ -247,19 +247,84 @@ class AdvancedComponentTest(TransactionWebTest):
             }
         )
         self.app.set_user("testuser1")
-        form = self.app.get(updateurl).forms["deleteForm"]
-        response = form.submit()
+        delete_form = self.app.get(updateurl).forms["deleteForm"]
+        response = delete_form.submit()
         self.assertEqual(response.status_code, 200)
 
         self.app.set_user("testuser2")
         # disguised
         response = self.app.get(updateurl, status=404)
         self.assertEqual(response.status_code, 404)
-        # misuse of token
-        response = form.submit(status=403).maybe_follow()
+        # unauthorized access to update
+        response = delete_form.submit(status=403).maybe_follow()
         self.assertEqual(response.status_code, 403)
 
-        # TODO check deletion
+        # TODO: test token creation and deletion
+
+    def test_domainauth(self):
+        self.app.set_user("testuser1")
+        index = self.user.usercomponent_set.filter(name="index").first()
+        self.assertTrue(index)
+        home = self.user.usercomponent_set.filter(name="home").first()
+        self.assertTrue(home)
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": home.token,
+                "type": "AnchorServer"
+            }
+        )
+        response = self.app.get(createurl)
+        response.forms["main_form"].submit().follow()
+        content = home.contents.first()
+        for url, rdf in [
+            (reverse(
+                "spider_base:ucomponent-update",
+                kwargs={
+                    "token": home.token,
+                }
+            ), False),
+            (reverse(
+                "spider_base:ucontent-access",
+                kwargs={
+                    "token": content.token,
+                    "access": "update"
+                }
+            ), False),
+            (createurl, False),
+            (reverse(
+                "spider_base:ucontent-list",
+                kwargs={
+                    "token": home.token,
+                }
+            ), True),
+            (reverse(
+                "spider_base:ucontent-access",
+                kwargs={
+                    "token": content.token,
+                    "access": "view"
+                }
+            ), True)
+        ]:
+            with self.subTest(msg="url: \"%s\" html" % url):
+                response = self.app.get(url)
+                g = Graph()
+                g.parse(data=str(response.content, "utf8"), format="html")
+                self.assertEqual(sum(
+                    1 for _ in g.triples((None, spkcgraph["domainauth"], None))
+                ), 1)
+            if rdf:
+                with self.subTest(msg="url: \"%s\" turtle" % url):
+                    response = self.app.get(url+"?raw=true")
+                    g = Graph()
+                    g.parse(
+                        data=str(response.content, "utf8"), format="turtle"
+                    )
+                    self.assertEqual(sum(
+                        1 for _ in g.triples(
+                            (None, spkcgraph["domainauth"], None)
+                        )
+                    ), 1)
 
     def test_contents(self):
         index = self.user.usercomponent_set.filter(name="index").first()
