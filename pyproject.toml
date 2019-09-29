@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "spkcspider"
 description = "A secure, decentral platform for maintaining your online identity"
-version = "0.18"
+version = "0.18.1"
 license = "MIT"
 authors = ["Alexander Kaftan"]
 homepage = "https://spkcspider.net"
@@ -42,7 +42,6 @@ lru-dict = "*"
 [tool.poetry.dev-dependencies]
 django-extensions = '*'
 Werkzeug = '*'
-pyOpenSSL = '*'
 django-simple-captcha = "*"
 spkcspider-domainauth = ">=0.4"
 
