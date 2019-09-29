@@ -293,6 +293,7 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 # API Breaks
 * >0.5: settings rename\*\_ TLD_PARAMS_MAPPING to \*\_REQUEST_KWARGS_MAP with new syntax (hosts are allowed, tlds start with .)
   * Note: port arguments are stripped, localhost matches localhost:80, localhost:8000, ...
+* >=0.18: change order of filter parameters, nearly all filters start with request (for compatibility with (django) decorators)
 
 # TODO
 * examples
