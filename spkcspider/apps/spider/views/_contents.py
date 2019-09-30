@@ -47,7 +47,9 @@ from ..serializing import paginate_stream, serialize_stream
 from ._core import UCTestMixin, EntityDeletionMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 
-_forbidden_scopes = frozenset(["add", "list", "raw", "delete", "anchor"])
+_forbidden_scopes = frozenset({
+    "add", "list", "raw", "delete", "anchor", "auth"
+})
 
 _extra = '' if settings.DEBUG else '.min'
 
