@@ -172,10 +172,6 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
             # generate session key if it not exist and token is required
             self.request.session.cycle_key()
         if token and token.extra.get("prot_strength", 0) >= minstrength:
-            self.usercomponent.auth(
-                request=self.request, scope=self.scope,
-                ptype=ptype, side_effect=True
-            )
             self.request.token_expires = \
                 token.created+self.usercomponent.token_duration
             # case will never enter
@@ -188,6 +184,11 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
                 self.request.is_special_user = True
                 self.request.is_owner = True
             self.request.auth_token = token
+            # after, for having access to token
+            self.usercomponent.auth(
+                request=self.request, scope=self.scope,
+                ptype=ptype, side_effect=True
+            )
             return True
 
         # if result is impossible and token invalid try to login
