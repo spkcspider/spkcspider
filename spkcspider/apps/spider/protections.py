@@ -85,11 +85,11 @@ def initialize_protection_models(apps=None):
     if login:
         for uc in UserComponent.objects.filter(name="index"):
             assignedprotection = AssignedProtection.objects.get_or_create(
-                defaults={"state": ProtectionStateType.enabled},
+                defaults={"state": ProtectionStateType.enabled.value},
                 usercomponent=uc, protection=login
             )[0]
             if assignedprotection.state == ProtectionStateType.disabled:
-                assignedprotection.state = ProtectionStateType.enabled
+                assignedprotection.state = ProtectionStateType.enabled.value
                 assignedprotection.save()
 
     invalid_models = ProtectionModel.objects.exclude(
@@ -101,7 +101,7 @@ def initialize_protection_models(apps=None):
 
 
 def exclude_disabled_state(inp):
-    # allow disabled and instant_fail
+    # allow enabled and instant_fail
     return inp[0] != ProtectionStateType.disabled
 
 
@@ -128,7 +128,7 @@ class BaseProtection(forms.Form):
     use_required_attribute = False
     state = forms.ChoiceField(
         choices=ProtectionStateType.as_choices(),
-        initial=ProtectionStateType.disabled,
+        initial=ProtectionStateType.disabled.value,
         label=_("State"), required=False,
         widget=forms.RadioSelect(
             attrs={
@@ -171,14 +171,15 @@ class BaseProtection(forms.Form):
         self.instance = uc.protections.filter(
             protection=protection
         ).first()
+        # here .value is required
         if not self.instance:
             self.instance = AssignedProtection(
                 usercomponent=uc, protection=protection,
-                state=ProtectionStateType.disabled
+                state=ProtectionStateType.disabled.value
             )
         initial = self.get_initial()
         if not self.instance.state:
-            self.instance.state = ProtectionStateType.disabled
+            self.instance.state = ProtectionStateType.disabled.value
         # use instance informations
         initial["state"] = self.instance.state
         # copy of initial is saved as self.initial, so safe to change it
@@ -248,7 +249,7 @@ class BaseProtection(forms.Form):
     def clean_state(self):
         s = self.cleaned_data.get("state", "")
         if not s:
-            return ProtectionStateType.disabled
+            return ProtectionStateType.disabled.value
         return s
 
     def save(self):
@@ -485,7 +486,7 @@ class LoginProtection(BaseProtection):
         super().__init__(**kwargs)
         self._request = kwargs.get("request")
         if ProtectionType.authentication.value in self.ptype:
-            self.fields["state"].initial = ProtectionStateType.enabled
+            self.fields["state"].initial = ProtectionStateType.enabled.value
             self.fields["state"].choices = \
                 filter(
                     exclude_disabled_state, self.fields["state"].choices
@@ -828,9 +829,10 @@ if getattr(settings, "USE_CAPTCHAS", False):
             super().__init__(**kwargs)
             if ProtectionType.authentication.value in self.ptype:
                 if getattr(settings, "REQUIRE_LOGIN_CAPTCHA", False):
-                    self.initial["state"] = ProtectionStateType.instant_fail
+                    self.initial["state"] = \
+                        ProtectionStateType.instant_fail.value
                     self.fields["state"].initial = \
-                        ProtectionStateType.instant_fail
+                        ProtectionStateType.instant_fail.value
                     self.fields["state"].disabled = True
                     self.fields["instant_fail"].help_text = \
                         _("captcha is for login required (admin setting)")

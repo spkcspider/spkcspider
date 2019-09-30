@@ -29,7 +29,7 @@ class SpiderAuthForm(AuthenticationForm):
         return super().media + self.request.protections.media
 
     def reset_protections(self):
-        self.request.protections = Protection.authall(
+        self.request.protections = Protection.objects.valid().authall(
             self.request, scope="auth",
             ptype=ProtectionType.authentication.value,
         )

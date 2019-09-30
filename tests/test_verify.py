@@ -59,6 +59,19 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
             extra_environ=self.extra_environ
         )
 
+    def try_login(self):
+        response = self.app.get(reverse(
+            "auth:login"
+        ))
+        # required for csrf cookie
+        self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
+        form = response.forms["SPKCLoginForm"]
+        form.set("username", "testuser1")
+        form["password"].force_value("abc")
+        response = form.submit()
+        self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
+        return response.follow()
+
     # @unittest.expectedFailure
     @patch(
         "spkcspider.apps.verifier.views.async_validate",
@@ -76,18 +89,8 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
                 "type": "SpiderTag"
             }
         )
-        # login in live system first
-        response = self.app.get(reverse(
-            "auth:login"
-        ))
-        # required for csrf cookie
-        self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
-        form = response.forms["SPKCLoginForm"]
-        form.set("username", "testuser1")
-        form["password"].force_value("abc")
-        response = form.submit()
-        self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
-        response = response.follow()
+        # login in remote system first
+        response = self.try_login()
         self.assertEqual(response.status_code, 200)
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
@@ -231,18 +234,8 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
                 "type": "SpiderTag"
             }
         )
-        # login in live system first
-        response = self.app.get(reverse(
-            "auth:login"
-        ))
-        # required for csrf cookie
-        self.app.set_cookie('csrftoken', self.app.cookies['csrftoken'])
-        form = response.forms["SPKCLoginForm"]
-        form.set("username", "testuser1")
-        form["password"].force_value("abc")
-        response = form.submit()
-        self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
-        response = response.follow()
+        # login in remote system first
+        response = self.try_login()
         self.assertEqual(response.status_code, 200)
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)

@@ -22,10 +22,10 @@ def backward(apps, schema_editor):
     AssignedProtection = apps.get_model("spider_base", "AssignedProtection")
 
     for i in AssignedProtection.objects.all():
-        if i.state == ProtectionStateType.instant_fail.value:
+        if i.state == ProtectionStateType.instant_fail:
             i.active = True
             i.instant_fail = True
-        elif i.state == ProtectionStateType.enabled.value:
+        elif i.state == ProtectionStateType.enabled:
             i.active = True
             i.instant_fail = False
         else:

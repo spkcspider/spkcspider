@@ -34,7 +34,7 @@ class SpiderAuthBackend(ModelBackend):
             user__username=username, name="index"
         ).first()
         if not uc:
-            request.protections = Protection.authall(
+            request.protections = Protection.objects.valid().authall(
                 request, scope="auth",
                 ptype=ProtectionType.authentication.value,
                 protection_codes=protection_codes

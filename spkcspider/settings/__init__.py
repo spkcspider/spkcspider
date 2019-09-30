@@ -243,7 +243,7 @@ SPIDER_DEFAULT_COMPONENTS = {
 }
 
 ## Default description  # noqa: E266
-SPIDER_DESCRIPTION = "A spkcspider instance for my personal data."
+SPIDER_DESCRIPTION = "A spkcspider instance for your personal data."
 
 SPIDER_BLACKLISTED_MODULES = []
 

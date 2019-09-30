@@ -263,10 +263,22 @@ class UserComponent(models.Model):
             )
 
     def auth(self, request, ptype=ProtectionType.access_control.value,
-             protection_codes=None, **kwargs):
-        AssignedProtection = apps.get_model("spider_base.AssignedProtection")
-        return AssignedProtection.authall(
-            request, self, ptype=ptype, protection_codes=protection_codes,
+             protection_codes=None, side_effect=False, **kwargs):
+        # caching problems
+        from .protections import AssignedProtection
+        if side_effect:
+            return AssignedProtection.objects.filter(
+                usercomponent=self
+            ).valid().authall(
+                request, required_passes=0,
+                ptype=ptype, protection_codes=protection_codes,
+                **kwargs
+            )
+        return AssignedProtection.objects.filter(
+            usercomponent=self
+        ).valid().authall(
+            request=request, required_passes=self.required_passes,
+            ptype=ptype, protection_codes=protection_codes,
             **kwargs
         )
 
