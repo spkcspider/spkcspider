@@ -30,10 +30,10 @@ logger = logging.getLogger(__name__)
 class DefinitionsMixin(object):
 
     def get_context_data(self, **kwargs):
-        kwargs["raw_update_type"] = VariantType.raw_update.value
-        kwargs["component_feature_type"] = VariantType.component_feature.value
-        kwargs["content_feature_type"] = VariantType.content_feature.value
-        kwargs["no_export_type"] = VariantType.no_export.value
+        kwargs["raw_update_type"] = VariantType.raw_update
+        kwargs["component_feature_type"] = VariantType.component_feature
+        kwargs["content_feature_type"] = VariantType.content_feature
+        kwargs["no_export_type"] = VariantType.no_export
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )
@@ -147,10 +147,10 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
     def test_token(self, minstrength=0, force_token=False, taint=False):
         expire = timezone.now()-self.usercomponent.token_duration
         no_token = not force_token and self.usercomponent.required_passes == 0
-        ptype = ProtectionType.access_control.value
+        ptype = ProtectionType.access_control
         if minstrength >= 4:
             no_token = False
-            ptype = ProtectionType.authentication.value
+            ptype = ProtectionType.authentication
 
         # delete old token, so no confusion happen
         self.remove_old_tokens(expire)

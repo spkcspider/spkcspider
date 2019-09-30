@@ -119,7 +119,7 @@ def initialize_content_models(apps=None):
                     valid_for[attr_dict["name"]] = (variant, set("*"))
                 else:
                     valid_for[attr_dict["name"]] = (variant, set(_v_for))
-            elif VariantType.content_feature.value in variant.ctype:
+            elif VariantType.content_feature in variant.ctype:
                 logger.warning(
                     "%s defines content_feature but defines no "
                     "\"valid_feature_for\"", variant.name
@@ -338,7 +338,7 @@ class BaseContent(models.Model):
         if size_diff == 0:
             return
         f = "local"
-        if VariantType.component_feature.value in self.associated.ctype.ctype:
+        if VariantType.component_feature in self.associated.ctype.ctype:
             f = "remote"
         with transaction.atomic():
             self.associated.usercomponent.user_info.update_with_quota(
@@ -683,7 +683,7 @@ class BaseContent(models.Model):
 
     def access_export(self, **kwargs):
         kwargs["scope"] = "export"
-        if VariantType.no_export.value in self.associated.ctype.ctype:
+        if VariantType.no_export in self.associated.ctype.ctype:
             raise Http404()
         return self.render_serialize(**kwargs)
 
@@ -753,18 +753,18 @@ class BaseContent(models.Model):
         # passing down these parameters not neccessary
         if unique is None:
             unique = (
-                VariantType.unique.value in self.associated.ctype.ctype
+                VariantType.unique in self.associated.ctype.ctype
             )
         if unlisted is None:
             unlisted = (
-                VariantType.component_feature.value in
+                VariantType.component_feature in
                 self.associated.ctype.ctype or
-                VariantType.content_feature.value in
+                VariantType.content_feature in
                 self.associated.ctype.ctype
             )
 
         anchortag = ""
-        if VariantType.anchor.value in self.associated.ctype.ctype:
+        if VariantType.anchor in self.associated.ctype.ctype:
             anchortag = "anchor\x1e"
 
         idtag = "primary\x1e"

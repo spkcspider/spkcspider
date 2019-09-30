@@ -309,7 +309,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(createurl)
         form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
-        form.set("login_protection", TravelLoginType.trigger_hide.value)
+        form.set("login_protection", TravelLoginType.trigger_hide)
         form.set("protect_components", (home.id,))
         form.set("master_pw", "abc")
         form["trigger_pws"].force_value(("abc",))
@@ -471,7 +471,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(createurl)
         form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
-        form.set("login_protection", TravelLoginType.wipe.value)
+        form.set("login_protection", TravelLoginType.wipe)
         form.set("protect_components", (home.id,))
         form.set("master_pw", "abc")
         response = form.submit()
@@ -535,7 +535,7 @@ class TravelProtectionTest(TransactionWebTest):
         response = self.app.get(createurl)
         form = response.forms["main_form"]
         form.set("start", dt.utcnow()-td(days=1))
-        form.set("login_protection", TravelLoginType.wipe_user.value)
+        form.set("login_protection", TravelLoginType.wipe_user)
         form.set("protect_components", (home.id,))
         form.set("master_pw", "abc")
         response = form.submit()

@@ -117,7 +117,7 @@ class UserTagLayout(BaseContent):
     appearances = [
         {
             "name": "TagLayout",
-            "ctype": VariantType.unique.value,
+            "ctype": VariantType.unique,
             "strength": 10
         }
     ]

@@ -41,16 +41,24 @@ class ProtectionType(str, enum.Enum):
     # and will be misused this way
     # The only real recovery is by staff and only if there is a secret
 
+    def __str__(self):
+        # output value instead of member name
+        return self.value
+
 
 class ProtectionStateType(str, enum.Enum):
     disabled = "a"
     enabled = "b"
     instant_fail = "c"
 
+    def __str__(self):
+        # output value instead of member name
+        return self.value
+
     @classmethod
     def as_choices(cls):
         from django.utils.translation import gettext_lazy as _
         return (
-            (i[1].value, _(i[0]))
+            (i[1], _(i[0]))
             for i in ProtectionStateType.__members__.items()
         )

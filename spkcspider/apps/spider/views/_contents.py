@@ -155,7 +155,7 @@ class ContentBase(UCTestMixin):
         )
         if self.scope == "export":
             ret = ret.exclude(
-                ctype__ctype__contains=VariantType.no_export.value
+                ctype__ctype__contains=VariantType.no_export
             )
 
         order = self.get_ordering(counter > 0)
@@ -236,7 +236,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         context["active_features"] = self.usercomponent.features.distinct()
         context["active_listed_features"] = \
             context["active_features"].exclude(
-                ctype__contains=VariantType.unlisted.value
+                ctype__contains=VariantType.unlisted
             )
         context["is_public_view"] = self.usercomponent.public
         context["has_unlisted"] = self.usercomponent.contents.filter(
@@ -458,12 +458,12 @@ class ContentAdd(ContentBase, CreateView):
         if self.request.user.is_authenticated:
             return self.request.user.spider_info.allowed_content.filter(
                 listed_variants_q |
-                models.Q(ctype__contains=VariantType.machine.value)
+                models.Q(ctype__contains=VariantType.machine)
             )
         else:
             return self.usercomponent.user.spider_info.allowed_content.filter(
                 listed_variants_q |
-                models.Q(ctype__contains=VariantType.machine.value)
+                models.Q(ctype__contains=VariantType.machine)
             )
 
     def test_func(self):
@@ -486,7 +486,7 @@ class ContentAdd(ContentBase, CreateView):
         kwargs["active_features"] = self.usercomponent.features.distinct()
         kwargs["active_listed_features"] = \
             kwargs["active_features"].exclude(
-                ctype__contains=VariantType.unlisted.value
+                ctype__contains=VariantType.unlisted
             )
 
         kwargs["machine_variants"] = \
@@ -644,7 +644,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             ).distinct()
         context["active_listed_features"] = \
             context["active_features"].exclude(
-                ctype__contains=VariantType.unlisted.value
+                ctype__contains=VariantType.unlisted
             )
         return context
 

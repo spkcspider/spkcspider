@@ -10,11 +10,11 @@ def forward(apps, schema_editor):
 
     for i in AssignedProtection.objects.all():
         if i.active and i.instant_fail:
-            i.state = ProtectionStateType.instant_fail.value
+            i.state = ProtectionStateType.instant_fail
         elif i.active:
-            i.state = ProtectionStateType.enabled.value
+            i.state = ProtectionStateType.enabled
         else:
-            i.state = ProtectionStateType.disabled.value
+            i.state = ProtectionStateType.disabled
         i.save(update_fields=["state"])
 
 

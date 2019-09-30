@@ -197,7 +197,7 @@ class TravelProtectionForm(forms.ModelForm):
 
     @classmethod
     def _filter_selfprotection(cls, x):
-        if x[0] == TravelLoginType.disable.value:
+        if x[0] == TravelLoginType.disable:
             return False
         return True
 
@@ -232,9 +232,9 @@ class TravelProtectionForm(forms.ModelForm):
         selfid = getattr(self.instance, "id", -1)
         if self.initial["login_protection"] not in dangerous_login_choices:
             del self.fields["approved"]
-        if self.initial["login_protection"] == TravelLoginType.disable.value:
+        if self.initial["login_protection"] == TravelLoginType.disable:
             self.initial["login_protection"] = \
-                TravelLoginType.trigger_disable.value
+                TravelLoginType.trigger_disable
 
         q_component = models.Q(
             user=request.user
@@ -258,7 +258,7 @@ class TravelProtectionForm(forms.ModelForm):
                 models.Q(info__contains="\x1eprimary\x1e") |
                 # contents also appearing as features are easily detectable
                 models.Q(
-                    ctype__ctype__contains=VariantType.feature_connect.value
+                    ctype__ctype__contains=VariantType.feature_connect
                 )
             ) |
             (

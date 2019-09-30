@@ -43,7 +43,7 @@ class TokenTest(TransactionWebTest):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
         features = dict(ContentVariant.objects.filter(
-            ctype__contains=VariantType.component_feature.value
+            ctype__contains=VariantType.component_feature
         ).values_list("name", "id"))
         self.app.set_user("testuser1")
 
@@ -94,7 +94,7 @@ class TokenTest(TransactionWebTest):
         home = self.user.usercomponent_set.filter(name="home").first()
         self.assertTrue(home)
         features = dict(ContentVariant.objects.filter(
-            ctype__contains=VariantType.component_feature.value
+            ctype__contains=VariantType.component_feature
         ).values_list("name", "id"))
         self.app.set_user("testuser1")
 

@@ -180,14 +180,14 @@ class UserComponent(models.Model):
         "spider_base.ContentVariant",
         related_name="feature_for_components", blank=True,
         limit_choices_to=models.Q(
-            ctype__contains=VariantType.component_feature.value
+            ctype__contains=VariantType.component_feature
         )
     )
     default_content_features = models.ManyToManyField(
         "spider_base.ContentVariant",
         related_name="default_feature_for_contents", blank=True,
         limit_choices_to=models.Q(
-            ctype__contains=VariantType.content_feature.value
+            ctype__contains=VariantType.content_feature
         ),
         help_text=_(
             "Select features used by default for contents in this "
@@ -262,7 +262,7 @@ class UserComponent(models.Model):
                 params={'strength': obj.strength},
             )
 
-    def auth(self, request, ptype=ProtectionType.access_control.value,
+    def auth(self, request, ptype=ProtectionType.access_control,
              protection_codes=None, side_effect=False, **kwargs):
         # caching problems
         from .protections import AssignedProtection
@@ -286,7 +286,7 @@ class UserComponent(models.Model):
         _local_size = 0
         _remote_size = 0
         for elem in self.contents.all():
-            if VariantType.component_feature.value in elem.ctype.ctype:
+            if VariantType.component_feature in elem.ctype.ctype:
                 _remote_size += elem.get_size()
             else:
                 _local_size += elem.get_size()
@@ -370,11 +370,11 @@ class UserInfo(models.Model):
         # or machine
         for variant in ContentVariant.objects.exclude(
             ~(
-                models.Q(ctype__contains=VariantType.content_feature.value) |
-                models.Q(ctype__contains=VariantType.component_feature.value) |
-                models.Q(ctype__contains=VariantType.machine.value)
+                models.Q(ctype__contains=VariantType.content_feature) |
+                models.Q(ctype__contains=VariantType.component_feature) |
+                models.Q(ctype__contains=VariantType.machine)
             ),
-            ctype__contains=VariantType.unlisted.value
+            ctype__contains=VariantType.unlisted
         ).filter(
             code__in=installed_contents
         ):
@@ -394,7 +394,7 @@ class UserInfo(models.Model):
         for c in AssignedContent.objects.filter(
             usercomponent__user=self.user
         ):
-            if VariantType.component_feature.value in c.ctype.ctype:
+            if VariantType.component_feature in c.ctype.ctype:
                 self.used_space_remote += c.get_size()
             else:
                 self.used_space_local += c.get_size()

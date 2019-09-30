@@ -128,7 +128,7 @@ class UserComponentForm(forms.ModelForm):
 
         self.fields["features"].queryset = (
             self.fields["features"].queryset.exclude(
-                models.Q(ctype__contains=VariantType.feature_connect.value) |
+                models.Q(ctype__contains=VariantType.feature_connect) |
                 models.Q(name="DomainMode") |
                 models.Q(name="DefaultActions")
             ) &
@@ -176,10 +176,10 @@ class UserComponentForm(forms.ModelForm):
                     "How many protections must be passed to login?<br/>"
                     "Minimum is 1, no matter what selected"
                 )
-                ptype = ProtectionType.authentication.value
+                ptype = ProtectionType.authentication
             else:
 
-                ptype = ProtectionType.access_control.value
+                ptype = ProtectionType.access_control
             self.protections = Protection.get_forms(
                 data=data, files=files, prefix=prefix, uc=self.instance,
                 ptype=ptype, request=request, form=self
@@ -279,10 +279,10 @@ class UserComponentForm(forms.ModelForm):
             f = self.instance.features.filter(
                 (
                     models.Q(
-                        ctype__contains=VariantType.component_feature.value
+                        ctype__contains=VariantType.component_feature
                     ) &
                     models.Q(
-                        ctype__contains=VariantType.feature_connect.value
+                        ctype__contains=VariantType.feature_connect
                     )
                 ) |
                 models.Q(name="DomainMode") |
@@ -408,7 +408,7 @@ class UserContentForm(forms.ModelForm):
         ).exclude(travel_protected__in=travel)
         self.fields["usercomponent"].queryset = query
 
-        if VariantType.feature_connect.value in self.instance.ctype.ctype:
+        if VariantType.feature_connect in self.instance.ctype.ctype:
             self.fields["usercomponent"].disabled = True
             self.fields["usercomponent"].help_text = _(
                 "Features cannot move between components"
@@ -456,7 +456,7 @@ class UserContentForm(forms.ModelForm):
             ):
                 self.fields["features"].queryset = \
                     self.fields["features"].queryset.exclude(
-                        ctype__contains=VariantType.persist.value
+                        ctype__contains=VariantType.persist
                     )
             user = request.user
             if not user.is_authenticated:
@@ -505,7 +505,7 @@ class UserContentForm(forms.ModelForm):
                     code="insufficient_strength"
                 ))
             if self.cleaned_data["features"].filter(
-                ctype__contains=VariantType.domain_mode.value
+                ctype__contains=VariantType.domain_mode
             ).exists():
                 # fixes strange union bug
                 self.cleaned_data["features"] = ContentVariant.objects.filter(

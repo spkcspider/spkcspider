@@ -103,7 +103,7 @@ class ComponentIndexBase(DefinitionsMixin, ListView):
 
         if self.scope == "export":
             filter_q &= ~models.Q(
-                ctype__ctype__contains=VariantType.no_export.value
+                ctype__ctype__contains=VariantType.no_export
             )
 
         return AssignedContent.objects.select_related(

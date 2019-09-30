@@ -53,6 +53,10 @@ class VariantType(str, enum.Enum):
     # exclude from exports
     no_export = "l"
 
+    def __str__(self):
+        # output value instead of member name
+        return self.value
+
 
 class TravelLoginType(str, enum.Enum):
     # don't show protected contents and components
@@ -69,13 +73,17 @@ class TravelLoginType(str, enum.Enum):
     # wipe user, self destruct user on login, Note: maybe noticable
     wipe_user = "e"
 
+    def __str__(self):
+        # output value instead of member name
+        return self.value
+
 
 dangerous_login_choices = {
-    TravelLoginType.wipe.value,
-    TravelLoginType.wipe_user.value
+    TravelLoginType.wipe,
+    TravelLoginType.wipe_user
 }
 
 loggedin_active_tprotections = {
-    TravelLoginType.hide.value,
-    TravelLoginType.disable.value
+    TravelLoginType.hide,
+    TravelLoginType.disable
 }

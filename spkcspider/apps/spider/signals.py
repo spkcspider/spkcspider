@@ -80,7 +80,7 @@ def CleanupCb(sender, instance, **kwargs):
             f = "local"
             if (
                 instance.ctype and
-                VariantType.component_feature.value in instance.ctype.ctype
+                VariantType.component_feature in instance.ctype.ctype
             ):
                 f = "remote"
             try:
@@ -101,15 +101,15 @@ def CleanupCb(sender, instance, **kwargs):
                 stored_exc = exc
         if instance.content:
             instance.content.delete(False)
-        if VariantType.feature_connect.value in instance.ctype.ctype:
-            if VariantType.component_feature.value in instance.ctype.ctype:
+        if VariantType.feature_connect in instance.ctype.ctype:
+            if VariantType.component_feature in instance.ctype.ctype:
                 if not instance.usercomponent.contents.filter(
                     ctype=instance.ctype
                 ).exclude(id=instance.id):
                     instance.usercomponent.features.remove(instance.ctype)
 
         if not instance.usercomponent.contents.filter(
-            ctype__ctype__contains=VariantType.domain_mode.value
+            ctype__ctype__contains=VariantType.domain_mode
         ).exclude(id=instance.id):
             instance.usercomponent.features.remove(ContentVariant.objects.get(
                 name="DomainMode"
@@ -164,7 +164,7 @@ def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
         return
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
     if instance.features.filter(
-        ctype__contains=VariantType.domain_mode.value
+        ctype__contains=VariantType.domain_mode
     ):
         if not instance.features.filter(name="DomainMode"):
             instance.features.add(ContentVariant.objects.get(
@@ -176,7 +176,7 @@ def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
         ))
     # Persistence must not removed automatically
     if instance.features.filter(
-        ctype__contains=VariantType.persist.value
+        ctype__contains=VariantType.persist
     ) and not instance.features.filter(name="Persistence"):
         instance.features.add(ContentVariant.objects.get(name="Persistence"))
 
@@ -201,14 +201,14 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
         instance.features.add(ContentVariant.objects.get(
             name="DefaultActions"
         ))
-    if VariantType.domain_mode.value in instance.ctype.ctype:
+    if VariantType.domain_mode in instance.ctype.ctype:
         instance.features.add(ContentVariant.objects.get(
             name="DomainMode"
         ))
     # auto add self as feature
     if (
-        VariantType.component_feature.value in instance.ctype.ctype and
-        VariantType.feature_connect.value in instance.ctype.ctype
+        VariantType.component_feature in instance.ctype.ctype and
+        VariantType.feature_connect in instance.ctype.ctype
     ):
         instance.usercomponent.features.add(instance.ctype)
 
@@ -224,7 +224,7 @@ def UpdateContentFeaturesCb(sender, instance, action, **kwargs):
         ))
 
     if instance.features.filter(
-        ctype__contains=VariantType.domain_mode.value
+        ctype__contains=VariantType.domain_mode
     ) and not instance.features.filter(name="DomainMode"):
         instance.features.add(ContentVariant.objects.get(
             name="DomainMode"
@@ -266,8 +266,8 @@ def UpdateSpiderCb(**_kwargs):
             row.token = create_b64_id_token(row.id, "_")
             row.save(update_fields=["token"])
         extra_variants = ContentVariant.objects.filter(
-            models.Q(ctype__contains=VariantType.component_feature.value) &
-            models.Q(ctype__contains=VariantType.feature_connect.value),
+            models.Q(ctype__contains=VariantType.component_feature) &
+            models.Q(ctype__contains=VariantType.feature_connect),
             assignedcontent__usercomponent=row
         )
         row.features.add(*extra_variants)

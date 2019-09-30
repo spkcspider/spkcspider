@@ -301,8 +301,6 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * test admin
 * Localisation
   * harmonize punctation
-* fix caching problems
-* investigate problems with enums so .value is required
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)

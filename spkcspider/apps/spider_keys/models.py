@@ -51,7 +51,7 @@ class PublicKey(BaseContent):
     expose_name = False
     expose_description = True
     appearances = [
-        {"name": "PublicKey", "ctype": VariantType.unique.value}
+        {"name": "PublicKey", "ctype": VariantType.unique}
     ]
 
     key = models.TextField(
@@ -208,7 +208,7 @@ class AnchorServer(AnchorBase):
     appearances = [
         {
             "name": "AnchorServer",
-            "ctype": VariantType.anchor.value,
+            "ctype": VariantType.anchor,
             "strength": 0
         }
     ]

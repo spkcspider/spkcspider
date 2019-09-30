@@ -36,7 +36,7 @@ class SpiderAuthBackend(ModelBackend):
         if not uc:
             request.protections = Protection.objects.valid().authall(
                 request, scope="auth",
-                ptype=ProtectionType.authentication.value,
+                ptype=ProtectionType.authentication,
                 protection_codes=protection_codes
             )
             if type(request.protections) is int:  # should never happen
@@ -50,7 +50,7 @@ class SpiderAuthBackend(ModelBackend):
             try:
                 request.protections = uc.auth(
                     request, scope="auth",
-                    ptype=ProtectionType.authentication.value,
+                    ptype=ProtectionType.authentication,
                     protection_codes=protection_codes
                 )
             except Http404:

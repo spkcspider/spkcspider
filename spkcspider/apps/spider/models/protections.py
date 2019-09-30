@@ -57,7 +57,7 @@ class BaseQuerySet(models.QuerySet):
                 request=request, obj=obj, query=self,
                 required_passes=initial_required_passes, **kwargs
             )
-            if ProtectionType.password.value in item.ptype:
+            if ProtectionType.password in item.ptype:
                 ret.uses_password = True
             if _instant_fail:  # instant_fail does not reduce required_passes
                 if type(result) is not int:  # False or form
@@ -101,14 +101,14 @@ class ProtectionQuerySet(BaseQuerySet):
         if protection_codes is not None:
             return self.filter(
                 models.Q(code__in=protection_codes) |
-                models.Q(ptype__contains=ProtectionType.side_effects.value)
+                models.Q(ptype__contains=ProtectionType.side_effects)
             )
         else:
             return self
 
     @sensitive_variables("kwargs")
     def authall(self, request, required_passes=1,
-                ptype=ProtectionType.authentication.value,
+                ptype=ProtectionType.authentication,
                 protection_codes=None, **kwargs):
         """
             Usage: e.g. prerendering for login fields, because
@@ -141,7 +141,7 @@ class Protection(models.Model):
     code = models.SlugField(max_length=10, primary_key=True, db_index=False)
     # protection abilities/requirements
     ptype = models.CharField(
-        max_length=10, default=ProtectionType.authentication.value
+        max_length=10, default=ProtectionType.authentication
     )
 
     @property
@@ -197,10 +197,10 @@ def get_limit_choices_assigned_protection():
     # django cannot serialize static, classmethods
     index = models.Q(usercomponent__strength=10)
     restriction = models.Q(
-        ~index, ptype__contains=ProtectionType.access_control.value
+        ~index, ptype__contains=ProtectionType.access_control
     )
     restriction |= models.Q(
-        index, ptype__contains=ProtectionType.authentication.value
+        index, ptype__contains=ProtectionType.authentication
     )
     return models.Q(code__in=Protection.objects.valid()) & restriction
 
@@ -217,7 +217,7 @@ class AssignedProtectionQuerySet(BaseQuerySet):
             return self.filter(
                 models.Q(protection__code__in=protection_codes) |
                 models.Q(
-                    protection__ptype__contains=ProtectionType.side_effects.value  # noqa: E501
+                    protection__ptype__contains=ProtectionType.side_effects  # noqa: E501
                 )
             )
         else:
@@ -225,7 +225,7 @@ class AssignedProtectionQuerySet(BaseQuerySet):
 
     def authall(
         self, request, required_passes=1,
-        ptype=ProtectionType.access_control.value,
+        ptype=ProtectionType.access_control,
         protection_codes=None, **kwargs
     ):
         query = self.filter(
@@ -239,11 +239,11 @@ class AssignedProtectionQuerySet(BaseQuerySet):
                 min(
                     required_passes,
                     len(query.exclude(
-                        state=ProtectionStateType.instant_fail.value
+                        state=ProtectionStateType.instant_fail
                     ))
                 ), 1
             )
-        elif ptype == ProtectionType.authentication.value:
+        elif ptype == ProtectionType.authentication:
             # enforce a minimum of required_passes, if auth (e.g. index)
             required_passes = 1
         else:
@@ -278,7 +278,7 @@ class AssignedProtection(BaseSubUserComponentModel):
     modified = models.DateTimeField(auto_now=True, editable=False)
     state = models.CharField(
         max_length=1, choices=ProtectionStateType.as_choices(),
-        default=ProtectionStateType.enabled.value,
+        default=ProtectionStateType.enabled,
         help_text=_(
             "State of the protection."
         )

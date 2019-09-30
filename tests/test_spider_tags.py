@@ -238,7 +238,7 @@ class TagTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         form = self.app.get(updateurl).forms["componentForm"]
         features = dict(ContentVariant.objects.filter(
-            ctype__contains=VariantType.component_feature.value
+            ctype__contains=VariantType.component_feature
         ).values_list("name", "id"))
         # select checkbox
         for field in form.fields["features"]:

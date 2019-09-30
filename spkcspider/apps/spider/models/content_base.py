@@ -67,7 +67,7 @@ class ContentVariant(models.Model):
 
     @property
     def unique_for_component(self):
-        return VariantType.unique.value in self.ctype
+        return VariantType.unique in self.ctype
 
     def __str__(self):
         return self.localize_name()
@@ -243,7 +243,7 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
         "spider_base.ContentVariant",
         related_name="feature_for_contents", blank=True,
         limit_choices_to=models.Q(
-            ctype__contains=VariantType.content_feature.value
+            ctype__contains=VariantType.content_feature
         )
     )
     # ctype is here extended: VariantObject with abilities, name, model_name
@@ -349,7 +349,7 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
 
     def clean(self):
         _ = gettext
-        if VariantType.persist.value in self.ctype.ctype:
+        if VariantType.persist in self.ctype.ctype:
             if not self.attached_to_token:
                 raise ValidationError(
                     _('Persistent token required'),

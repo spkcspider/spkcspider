@@ -41,7 +41,7 @@ def list_features(graph, entity, ref_entity, context):
         )
     if context["scope"] != "export":
         active_features = active_features.exclude(
-            ctype__contains=VariantType.unlisted.value
+            ctype__contains=VariantType.unlisted
         )
     add_property(
         graph, "features", ref=ref_entity,
@@ -70,7 +70,7 @@ def list_features(graph, entity, ref_entity, context):
 
 
 def serialize_content(graph, content, context, embed=False):
-    if VariantType.anchor.value in content.ctype.ctype:
+    if VariantType.anchor in content.ctype.ctype:
         url_content = urljoin(
             get_anchor_domain(),
             content.get_absolute_url()
@@ -111,8 +111,8 @@ def serialize_content(graph, content, context, embed=False):
     )
 
     if (
-        VariantType.component_feature.value in content.ctype.ctype or
-        VariantType.content_feature.value in content.ctype.ctype
+        VariantType.component_feature in content.ctype.ctype or
+        VariantType.content_feature in content.ctype.ctype
     ):
         graph.add((
             ref_content,

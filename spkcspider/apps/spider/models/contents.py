@@ -44,7 +44,7 @@ class PersistenceFeature(BaseContent):
     appearances = [
         {
             "name": "Persistence",
-            "ctype": VariantType.component_feature.value,
+            "ctype": VariantType.component_feature,
             "strength": 0
         },
     ]
@@ -116,7 +116,7 @@ class DefaultActions(BaseContent):
 class LinkContent(BaseContent):
     appearances = [{
         "name": "Link",
-        "ctype": VariantType.raw_update.value
+        "ctype": VariantType.raw_update
     }]
     expose_name = False
     expose_description = False
@@ -212,12 +212,12 @@ class LinkContent(BaseContent):
 
 
 login_choices = [
-    (TravelLoginType.hide.value, _("Hide")),
-    (TravelLoginType.trigger_hide.value, _("Hide if triggered")),
-    (TravelLoginType.disable.value, _("Disable login")),
-    (TravelLoginType.trigger_disable.value, _("Disable login if triggered")),
-    (TravelLoginType.wipe.value, _("Wipe")),
-    (TravelLoginType.wipe_user.value, _("Wipe User")),
+    (TravelLoginType.hide, _("Hide")),
+    (TravelLoginType.trigger_hide, _("Hide if triggered")),
+    (TravelLoginType.disable, _("Disable login")),
+    (TravelLoginType.trigger_disable, _("Disable login if triggered")),
+    (TravelLoginType.wipe, _("Wipe")),
+    (TravelLoginType.wipe_user, _("Wipe User")),
 ]
 
 login_choices_dict = dict(login_choices)
@@ -281,10 +281,10 @@ class TravelProtectionManager(models.Manager):
             return True
 
         for i in active:
-            if TravelLoginType.disable.value == i.login_protection:
+            if TravelLoginType.disable == i.login_protection:
                 return False
-            elif TravelLoginType.trigger_hide.value == i.login_protection:
-                i.login_protection = TravelLoginType.hide.value
+            elif TravelLoginType.trigger_hide == i.login_protection:
+                i.login_protection = TravelLoginType.hide
                 # don't re-add trigger passwords here
                 if i.associated.getflag("anonymous_deactivation"):
                     i._encoded_form_info = \
@@ -299,8 +299,8 @@ class TravelProtectionManager(models.Manager):
                 i.clean()
                 # assignedcontent is fully updated
                 i.save(update_fields=["login_protection"])
-            elif TravelLoginType.trigger_disable.value == i.login_protection:
-                i.login_protection = TravelLoginType.disable.value
+            elif TravelLoginType.trigger_disable == i.login_protection:
+                i.login_protection = TravelLoginType.disable
                 # don't re-add trigger passwords here
                 if i.associated.getflag("anonymous_deactivation"):
                     i._encoded_form_info = \
@@ -315,10 +315,10 @@ class TravelProtectionManager(models.Manager):
                 i.clean()
                 # assignedcontent is fully updated
                 i.save(update_fields=["login_protection"])
-            elif TravelLoginType.wipe_user.value == i.login_protection:
+            elif TravelLoginType.wipe_user == i.login_protection:
                 uc.user.delete()
                 return False
-            elif TravelLoginType.wipe.value == i.login_protection:
+            elif TravelLoginType.wipe == i.login_protection:
                 # first components have to be deleted
                 i.protect_components.all().delete()
                 # as this deletes itself and therefor the information
@@ -352,7 +352,7 @@ class TravelProtection(BaseContent):
 
     login_protection = models.CharField(
         max_length=1, choices=login_choices,
-        default=TravelLoginType.hide.value
+        default=TravelLoginType.hide
     )
 
     protect_components = models.ManyToManyField(

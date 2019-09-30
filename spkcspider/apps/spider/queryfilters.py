@@ -10,14 +10,14 @@ from spkcspider.constants import VariantType, ProtectionStateType
 
 _base_variants = ~(
     (
-        ~Q(ctype__contains=VariantType.feature_connect.value) &
-        Q(ctype__contains=VariantType.component_feature.value)
+        ~Q(ctype__contains=VariantType.feature_connect) &
+        Q(ctype__contains=VariantType.component_feature)
     ) |
-    Q(ctype__contains=VariantType.content_feature.value)
+    Q(ctype__contains=VariantType.content_feature)
 )
 
 machine_variants_q = (
-    Q(ctype__contains=VariantType.machine.value) &
+    Q(ctype__contains=VariantType.machine) &
     _base_variants  # such features cannot be created
 )
 
@@ -29,7 +29,7 @@ active_protections_q = (
 
 listed_variants_q = (
     _base_variants &
-    ~Q(ctype__contains=VariantType.unlisted.value)
+    ~Q(ctype__contains=VariantType.unlisted)
 )
 
 
@@ -187,11 +187,11 @@ def filter_contents(
                 tmp &= ~(
                     Q(
                         ctype__ctype__contains=VariantType.feature_connect
-                        .value
+                        
                     ) &
                     ~Q(
                         ctype__ctype__contains=VariantType.unlisted
-                        .value
+                        
                     )
                 )
             searchq_exc |= tmp

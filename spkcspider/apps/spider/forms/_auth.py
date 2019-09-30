@@ -31,7 +31,7 @@ class SpiderAuthForm(AuthenticationForm):
     def reset_protections(self):
         self.request.protections = Protection.objects.valid().authall(
             self.request, scope="auth",
-            ptype=ProtectionType.authentication.value,
+            ptype=ProtectionType.authentication,
         )
         # here is not even a usercomponent available
         # if this works, something is wrong
