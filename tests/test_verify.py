@@ -88,6 +88,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         response = form.submit()
         self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
         response = response.follow()
+        self.assertEqual(response.status_code, 200)
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
         form = response.forms["main_form"]
@@ -242,6 +243,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         response = form.submit()
         self.app.set_cookie('sessionid', self.app.cookies['sessionid'])
         response = response.follow()
+        self.assertEqual(response.status_code, 200)
         response = self.app.get(createurl)
         self.assertEqual(response.status_code, 200)
         form = response.forms["main_form"]
