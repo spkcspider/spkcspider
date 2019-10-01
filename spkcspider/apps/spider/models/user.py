@@ -263,20 +263,25 @@ class UserComponent(models.Model):
             )
 
     def auth(self, request, ptype=ProtectionType.access_control,
-             protection_codes=None, side_effect=False, **kwargs):
+             protection_codes=None, side_effect=False,
+             order_by="protection__code", **kwargs):
         # caching problems
         from .protections import AssignedProtection
         if side_effect:
             return AssignedProtection.objects.filter(
                 usercomponent=self
-            ).valid().authall(
+            ).valid().order_by(
+                order_by
+            ).authall(
                 request, required_passes=0,
                 ptype=ptype, protection_codes=protection_codes,
                 **kwargs
             )
         return AssignedProtection.objects.filter(
             usercomponent=self
-        ).valid().authall(
+        ).valid().order_by(
+            order_by
+        ).authall(
             request=request, required_passes=self.required_passes,
             ptype=ptype, protection_codes=protection_codes,
             **kwargs
@@ -286,7 +291,7 @@ class UserComponent(models.Model):
         _local_size = 0
         _remote_size = 0
         for elem in self.contents.all():
-            if VariantType.component_feature in elem.ctype.ctype:
+            if elem.ctype.is_feature:
                 _remote_size += elem.get_size()
             else:
                 _local_size += elem.get_size()
@@ -394,7 +399,7 @@ class UserInfo(models.Model):
         for c in AssignedContent.objects.filter(
             usercomponent__user=self.user
         ):
-            if VariantType.component_feature in c.ctype.ctype:
+            if c.ctype.is_feature:
                 self.used_space_remote += c.get_size()
             else:
                 self.used_space_local += c.get_size()
@@ -407,6 +412,7 @@ class UserInfo(models.Model):
             "spkcspider.apps.spider.functions.get_quota"
         )(self.user, quota_type)
         # if over quota: reducing size is always good and should never fail
+        # be nice and also allow keeping the same amount of space
         if quota and size_diff > 0 and qval + size_diff > quota:
             raise ValidationError(
                 _("Exceeds quota by %(diff)s Bytes"),

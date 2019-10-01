@@ -34,11 +34,14 @@ class SpiderAuthBackend(ModelBackend):
             user__username=username, name="index"
         ).first()
         if not uc:
-            request.protections = Protection.objects.valid().authall(
-                request, scope="auth",
-                ptype=ProtectionType.authentication,
-                protection_codes=protection_codes
-            )
+            request.protections = \
+                Protection.objects.valid().order_by(
+                    "protection__code"
+                ).authall(
+                    request, scope="auth",
+                    ptype=ProtectionType.authentication,
+                    protection_codes=protection_codes
+                )
             if type(request.protections) is int:  # should never happen
                 logger.warning(
                     "Login try without username, should never "

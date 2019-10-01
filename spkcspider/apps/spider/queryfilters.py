@@ -187,11 +187,9 @@ def filter_contents(
                 tmp &= ~(
                     Q(
                         ctype__ctype__contains=VariantType.feature_connect
-                        
                     ) &
                     ~Q(
                         ctype__ctype__contains=VariantType.unlisted
-                        
                     )
                 )
             searchq_exc |= tmp

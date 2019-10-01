@@ -91,11 +91,12 @@ class BaseQuerySet(models.QuerySet):
 
 
 class ProtectionQuerySet(BaseQuerySet):
-    def invalid(self):
-        return self.exclude(code__in=installed_protections)
 
     def valid(self):
         return self.filter(code__in=installed_protections)
+
+    def invalid(self):
+        return self.exclude(code__in=installed_protections)
 
     def filter_protection_codes(self, protection_codes=None):
         if protection_codes is not None:
@@ -206,11 +207,17 @@ def get_limit_choices_assigned_protection():
 
 
 class AssignedProtectionQuerySet(BaseQuerySet):
-    def invalid(self):
-        return self.exclude(protection__code__in=installed_protections)
 
     def valid(self):
         return self.filter(protection__code__in=installed_protections)
+
+    def invalid(self):
+        return self.exclude(
+            protection__code__in=installed_protections
+        )
+
+    def active(self):
+        return self.filter(active_protections_q)
 
     def filter_protection_codes(self, protection_codes=None):
         if protection_codes is not None:
@@ -251,11 +258,9 @@ class AssignedProtectionQuerySet(BaseQuerySet):
             # only side_effects now
             protection_codes = []
 
-        query = query.filter_protection_codes(
+        return query.filter_protection_codes(
             protection_codes
-        ).order_by("protection__code")
-
-        return query.auth_query(
+        ).auth_query(
             request, required_passes=required_passes, ptype=ptype
         )
 

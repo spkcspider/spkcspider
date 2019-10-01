@@ -29,10 +29,13 @@ class SpiderAuthForm(AuthenticationForm):
         return super().media + self.request.protections.media
 
     def reset_protections(self):
-        self.request.protections = Protection.objects.valid().authall(
-            self.request, scope="auth",
-            ptype=ProtectionType.authentication,
-        )
+        self.request.protections = \
+            Protection.objects.valid().order_by(
+                "protection__code"
+            ).authall(
+                self.request, scope="auth",
+                ptype=ProtectionType.authentication,
+            )
         # here is not even a usercomponent available
         # if this works, something is wrong
         # protections should match username from POST with the ones of the

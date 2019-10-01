@@ -8,7 +8,6 @@ import requests
 from rdflib import Graph, Literal, XSD, RDF
 
 from spkcspider.constants import VariantType, spkcgraph, ProtectionStateType
-from spkcspider.apps.spider.queryfilters import active_protections_q
 
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.models import ContentVariant, AuthToken
@@ -108,9 +107,7 @@ class FeaturesTest(TransactionWebTest):
         form.set("protections_login-allow_auth", True)
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(home.protections.filter(
-            active_protections_q
-        ).count(), 1)
+        self.assertEqual(home.protections.active().count(), 1)
         self.assertEqual(home.strength, 5)
         # logout and clean session
         self.app.set_user(user=None)

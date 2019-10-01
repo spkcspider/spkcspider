@@ -59,6 +59,7 @@ def CleanupCb(sender, instance, **kwargs):
         # the user. Here if the user is gone counting doesn't matter anymore
         if instance.user:
             try:
+                # whole component is deleted
                 s = instance.get_accumulated_size()
                 # because of F expressions no atomic is required
                 instance.user.spider_info.update_with_quota(-s[0], "local")
@@ -79,8 +80,7 @@ def CleanupCb(sender, instance, **kwargs):
         if instance.usercomponent and instance.usercomponent.user:
             f = "local"
             if (
-                instance.ctype and
-                VariantType.component_feature in instance.ctype.ctype
+                instance.ctype and instance.ctype.is_feature
             ):
                 f = "remote"
             try:

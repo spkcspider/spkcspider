@@ -69,6 +69,13 @@ class ContentVariant(models.Model):
     def unique_for_component(self):
         return VariantType.unique in self.ctype
 
+    @property
+    def is_feature(self):
+        return (
+            VariantType.component_feature in self.ctype or
+            VariantType.content_feature in self.ctype
+        )
+
     def __str__(self):
         return self.localize_name()
 
