@@ -36,7 +36,7 @@ class SpiderAuthBackend(ModelBackend):
         if not uc:
             request.protections = \
                 Protection.objects.valid().order_by(
-                    "protection__code"
+                    "code"
                 ).authall(
                     request, scope="auth",
                     ptype=ProtectionType.authentication,

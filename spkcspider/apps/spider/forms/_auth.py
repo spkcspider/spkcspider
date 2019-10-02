@@ -31,7 +31,7 @@ class SpiderAuthForm(AuthenticationForm):
     def reset_protections(self):
         self.request.protections = \
             Protection.objects.valid().order_by(
-                "protection__code"
+                "code"
             ).authall(
                 self.request, scope="auth",
                 ptype=ProtectionType.authentication,
