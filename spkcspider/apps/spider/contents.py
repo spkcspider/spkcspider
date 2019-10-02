@@ -439,16 +439,22 @@ class BaseContent(models.Model):
         return literalize(data, field, domain_base=context["hostpart"])
 
     def serialize(self, graph, ref_content, context):
+        # context may not be updated here
         form = self.get_form(context["scope"])(
             **self.get_form_kwargs(
                 disable_data=True,
                 **context
             )
         )
-        if "abilities" not in context:
-            context["abilities"] = set(self.get_abilities(context))
 
-        for ability in context["abilities"]:
+        # context["abilities"] cache available if accessed via access
+        # cannot update without breaking serializing, embed
+        if "abilities" in context:
+            abilities = context["abilities"]
+        else:
+            abilities = set(self.get_abilities(context))
+
+        for ability in abilities:
             assert(ability not in default_abilities)
 
             graph.add((
