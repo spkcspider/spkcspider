@@ -73,6 +73,18 @@ def update_component(context, name):
 
 
 @register.simple_tag(takes_context=True)
+def view_component(context, name):
+    if context["request"].user.is_authenticated:
+        uc = context["request"].user.usercomponent_set.only("token").get(
+            name=name
+        )
+        return reverse("spider_base:ucontent-list", kwargs={
+            "token": uc.token
+        })
+    return ""
+
+
+@register.simple_tag(takes_context=True)
 def reverse_get(context, name, **kwargs):
     """ Works only if hostpart and sanitized_GET is available """
     return "{}{}?{}".format(
