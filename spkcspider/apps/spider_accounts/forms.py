@@ -75,6 +75,7 @@ class UserUpdateForm(UserChangeForm):
             self.fields['password'].help_text.format(
                 reverse('auth:password_change')
             )
+        # preload content_type
         f = self.fields.get('user_permissions')
         if f is not None:
             f.queryset = f.queryset.select_related('content_type')
