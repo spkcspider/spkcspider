@@ -362,6 +362,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
                     g, "token_expires", ob=session_dict["request"],
                     ref=session_dict["sourceref"]
                 )
+            assert not context.get("machine_variants") or self.request.is_owner
             for machinec in context.get("machine_variants", []):
                 g.add((
                     session_dict["sourceref"],
@@ -489,6 +490,8 @@ class ContentAdd(ContentBase, CreateView):
                 ctype__contains=VariantType.unlisted
             )
 
+        # is always owner
+        assert self.request.is_owner
         kwargs["machine_variants"] = \
             self.usercomponent.user.spider_info.allowed_content.filter(
                 machine_variants_q
@@ -622,10 +625,11 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             self.scope not in ("add", "update", "raw_update")
         )
 
-        kwargs["machine_variants"] = \
-            self.usercomponent.user.spider_info.allowed_content.filter(
-                machine_variants_q
-            )
+        if self.request.is_owner:
+            kwargs["machine_variants"] = \
+                self.usercomponent.user.spider_info.allowed_content.filter(
+                    machine_variants_q
+                )
         context = super().get_context_data(**kwargs)
 
         context["remotelink"] = "{}{}?".format(

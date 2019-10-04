@@ -580,7 +580,7 @@ class BaseContent(models.Model):
                     ref=session_dict["sourceref"]
                 )
             if kwargs.get("machine_variants"):
-                assert(kwargs["request"].is_owner)
+                assert kwargs["request"].is_owner
                 ucref = URIRef(urljoin(
                     kwargs["hostpart"],
                     source.associated.usercomponent.get_absolute_url()
