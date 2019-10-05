@@ -1,8 +1,11 @@
 {% extends "registration/base.html" %}
-{% load i18n static %}
+{% load i18n static spider_base %}
 
 {% block content %}
   {% trans 'Update User Profile' as legend %}
   {% trans 'Update' as confirm %}
   {% include "spider_base/edit_form.html" with form=form legend=legend confirm=confirm %}
+  <a class="" href="{% update_component 'index' %}">
+    {% trans 'Security Settings' %}
+  </a>
 {% endblock %}
