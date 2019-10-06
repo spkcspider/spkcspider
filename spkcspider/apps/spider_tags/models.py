@@ -14,9 +14,8 @@ from django.http import HttpResponse
 from rdflib import URIRef
 from jsonfield import JSONField
 
-from spkcspider.apps.spider.contents import (
-    BaseContent, add_content, VariantType, ActionUrl
-)
+from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.settings import get_settings_func
 
 logger = logging.getLogger(__name__)
