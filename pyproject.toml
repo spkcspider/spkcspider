@@ -44,6 +44,7 @@ django-extensions = '*'
 Werkzeug = '*'
 django-simple-captcha = "*"
 spkcspider-domainauth = ">=0.4"
+pylint = "*"
 
 [tool.poetry.extras]
 captcha = ["django-simple-captcha"]
