@@ -52,6 +52,8 @@ class ContentVariant(models.Model):
         "self", blank=True, related_name="valid_features", symmetrical=False
     )
 
+    objects = models.Manager()
+
     @property
     def installed_class(self):
         return installed_contents[self.code]

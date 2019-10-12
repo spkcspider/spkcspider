@@ -975,7 +975,7 @@ class TravelProtectionManagement(UserTestMixin, UpdateView):
         return redirect("home")
 
     def options(self, request, *args, **kwargs):
-        ret = super().options()
+        ret = super().options(request, *args, **kwargs)
         ret["Access-Control-Allow-Origin"] = "*"
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return ret

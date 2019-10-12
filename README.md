@@ -301,6 +301,11 @@ Note: the difference between a domain_mode and a persistent token is, that the d
 * test admin
 * Localisation
   * harmonize punctation
+* fix rdf:
+  * multiple types definitions
+* improve features:
+  * also add: is logged in, is special user, is owner as arguments (also for caching)
+  * use extended features for optionally providing domainauth information
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)

@@ -93,7 +93,7 @@ def initialize_content_models(apps=None):
         for attr_dict in appearances:
             require_save = False
             assert attr_dict["name"] not in forbidden_names, \
-                "Forbidden content name: %" % attr_dict["name"]
+                "Forbidden content name: %s" % attr_dict["name"]
             attr_dict = attr_dict.copy()
             _v_for = attr_dict.pop("valid_feature_for", None)
             try:
@@ -547,7 +547,7 @@ class BaseContent(models.Model):
         )
         page = 1
         try:
-            page = int(self.request.GET.get("page", "1"))
+            page = int(session_dict["request"].GET.get("page", "1"))
         except Exception:
             pass
         serialize_stream(

@@ -205,9 +205,9 @@ class LinkContent(BaseContent):
             return super().access(context)
         else:
             context["source"] = self
-            context["uc"] = self.content.usercomponent
+            context["uc"] = self.associated.attached_to_content.usercomponent
             ret = self.access(context)
-            ret["uc"] = self.usercomponent
+            ret["uc"] = self.associated.usercomponent
             return ret
 
 
@@ -402,7 +402,7 @@ class TravelProtection(BaseContent):
                 self.start.date(), self.stop.date()
             )
         elif self.start:
-            return "{}:{}–{}".format(
+            return "{}:{}–inf".format(
                 login_choices_dict[self.login_protection],
                 self.start.date()
             )
