@@ -93,6 +93,7 @@ def serialize_content(graph, content, context, embed=False):
             context["ac_namespace"],
             ref_content
         ))
+
     add_property(
         graph, "name", ref=ref_content, ob=content, datatype=XSD.string
     )
@@ -125,6 +126,13 @@ def serialize_content(graph, content, context, embed=False):
             RDF["type"],
             spkcgraph["spkc:Content"]
         ))
+
+    # always add type info to content (which content type)
+    graph.add((
+        ref_content,
+        spkcgraph["type"],
+        Literal(content.ctype.name, datatype=XSD.string)
+    ))
     if context["scope"] == "export":
         add_property(
             graph, "attached_to_content", ref=ref_content, ob=content

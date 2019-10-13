@@ -303,6 +303,8 @@ Note: the difference between a domain_mode and a persistent token is, that the d
   * harmonize punctation
 * fix rdf:
   * multiple types definitions
+* DeleteView: allow multiple deletions (dynamically load via json)
+  * merge deleteview of Components with the one of Contents
 * improve features:
   * also add: is logged in, is special user, is owner as arguments (also for caching)
   * use extended features for optionally providing domainauth information

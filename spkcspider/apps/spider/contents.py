@@ -602,11 +602,6 @@ class BaseContent(models.Model):
                 session_dict["sourceref"], spkcgraph["strength"],
                 Literal(uc.strength, datatype=XSD.integer)
             ))
-            g.add((
-                session_dict["sourceref"],
-                spkcgraph["type"],
-                Literal(self.associated.ctype.name, datatype=XSD.string)
-            ))
             token = getattr(session_dict["request"], "auth_token", None)
             if token:
                 token = token.token
