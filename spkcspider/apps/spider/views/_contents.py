@@ -208,7 +208,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         return get_object_or_404(
             q.select_related(
                 "user", "user__spider_info",
-            ).prefetch_related("protections"),
+            ),
             ~models.Q(
                 travel_protected__in=travel
             ),
@@ -529,7 +529,7 @@ class ContentAdd(ContentBase, CreateView):
         if self.request.GET.get("protection", "") == "false":
             q = q.filter(required_passes=0)
         return get_object_or_404(
-            q.prefetch_related("protections"),
+            q,
             ~models.Q(travel_protected__in=travel),
             token=self.kwargs["token"],
         )
@@ -712,7 +712,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         if self.request.GET.get("protection", "") == "false":
             q = q.filter(required_passes=0)
         return get_object_or_404(
-            q.prefetch_related("protections"),
+            q,
             ~models.Q(
                 travel_protected__in=travel
             ),

@@ -315,14 +315,11 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
         )
 
     def get_usercomponent(self):
-        query = {
-            "token": self.kwargs["token"]
-        }
         return get_object_or_404(
             UserComponent.objects.prefetch_related(
-                "authtokens", "protections"
+                "authtokens"
             ),
-            **query
+            token=self.kwargs["token"]
         )
 
     def handle_no_permission(self):

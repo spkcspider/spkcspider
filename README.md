@@ -285,9 +285,10 @@ Note: access tokens created by admin have strength 0
 
 ## get usercomponent/content from url/urlpart for features
 
-Use UserComponent.from_url_part(url) / AssignedContent.from_url_part(url, [matchers]) for that
+Use UserComponent.objects.from_url_part(url) / AssignedContent.from_url_part(url, [matchers]) for that
 or use a domain_mode or persistent token.
 Note: the difference between a domain_mode and a persistent token is, that the domain_mode token has a variable lifetime (user specific but defaults to 7 days)
+Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature/content, content which contains content/feature or None)
 
 
 # API Breaks

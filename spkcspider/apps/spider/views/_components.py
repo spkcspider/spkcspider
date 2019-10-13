@@ -94,7 +94,7 @@ class ComponentIndexBase(DefinitionsMixin, ListView):
         filter_unlisted = not (
                 self.request.is_special_user and "_unlisted" in searchlist
             ) and self.scope != "export"
-        filter_q, counter = filter_contents(
+        filter_q, _counter = filter_contents(
             searchlist, filter_unlisted=filter_unlisted
         )
 
@@ -509,9 +509,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             login_protection__in=loggedin_active_tprotections
         )
         return get_object_or_404(
-            queryset.prefetch_related(
-                "protections",
-            ),
+            queryset,
             ~models.Q(travel_protected__in=travel),
             token=self.kwargs["token"]
         )

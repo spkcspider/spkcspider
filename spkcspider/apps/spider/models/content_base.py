@@ -146,7 +146,7 @@ class UserContentManager(models.Manager):
             url: can be full url or token/accessmethod
             info: should be either string or iterable which will be matched
                   against info to retrieve an unique content
-            returns: (<matched content>, <current content>/None)
+            returns: (<matched content/feature>, <content>/None)
         """
         UserComponent = apps.get_model("spider_base", "UserComponent")
         res = static_token_matcher.match(url)
@@ -187,25 +187,24 @@ class UserContentManager(models.Manager):
                     )
                 )
             return (self.get(q, usercomponent=uc), None)
-        else:
+        elif check_feature:
             content = self.get(
                 token=res["static_token"]
             )
-            if check_feature:
-                q &= (
-                    models.Q(
-                        ctype__feature_for_contents=content
-                    ) |
-                    models.Q(
-                        ctype__feature_for_components=content.usercomponent
-                    )
+            q &= (
+                models.Q(
+                    ctype__feature_for_contents=content
+                ) |
+                models.Q(
+                    ctype__feature_for_components__contents=content
                 )
-            return (
-                self.get(
-                    q, usercomponent=content.usercomponent
-                ),
-                content
             )
+            return (self.get(q), content)
+        else:
+            content = self.get(
+                q, token=res["static_token"]
+            )
+            return (content, content)
 
 
 class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
