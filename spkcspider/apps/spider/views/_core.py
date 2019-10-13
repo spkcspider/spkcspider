@@ -391,7 +391,7 @@ class EntityDeletionMixin(UserTestMixin):
         return _time
 
     def options(self, request, *args, **kwargs):
-        ret = super().options()
+        ret = super().options(request, *args, **kwargs)
         ret["Access-Control-Allow-Origin"] = self.request.get_host()
         ret["Access-Control-Allow-Methods"] = "POST, GET, DELETE, OPTIONS"
         return ret

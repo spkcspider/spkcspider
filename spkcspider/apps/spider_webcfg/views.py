@@ -95,7 +95,7 @@ class WebConfigView(UCTestMixin, View):
         return ret
 
     def options(self, request, *args, **kwargs):
-        ret = super().options()
+        ret = super().options(request, *args, **kwargs)
         self.object = self.get_object()
         ret["Access-Control-Allow-Origin"] = self.object.token.referrer.host
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"

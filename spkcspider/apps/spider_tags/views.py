@@ -58,7 +58,7 @@ class PushTagView(UCTestMixin, FormView):
         return bool(self.variant)
 
     def options(self, request, *args, **kwargs):
-        ret = super().options()
+        ret = super().options(request, *args, **kwargs)
         ret["Access-Control-Allow-Origin"] = "*"
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return ret

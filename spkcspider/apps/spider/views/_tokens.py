@@ -46,6 +46,7 @@ class AdminTokenManagement(UCTestMixin, View):
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.remove_old_tokens()
+        return None
 
     def test_func(self):
         if self.scope == "delete":
@@ -218,7 +219,7 @@ class TokenDeletionRequest(UCTestMixin, DeleteView):
         return self.delete(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
-        ret = super().options()
+        ret = super().options(request, *args, **kwargs)
         ret["Access-Control-Allow-Origin"] = "*"
         ret["Access-Control-Allow-Methods"] = "GET, POST, DELETE, OPTIONS"
         return ret
@@ -259,7 +260,7 @@ class TokenRenewal(UCTestMixin, View):
         return True
 
     def options(self, request, *args, **kwargs):
-        ret = super().options()
+        ret = super().options(request, *args, **kwargs)
         ret["Access-Control-Allow-Origin"] = \
             self.request.auth_token.referrer.host
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
@@ -525,6 +526,6 @@ class RequestTokenUpdate(UserTestMixin, View):
         return self.get(request, *args, **kwargs)
 
     def options(self, request, *args, **kwargs):
-        ret = super().options()
+        ret = super().options(request, *args, **kwargs)
         ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return ret
