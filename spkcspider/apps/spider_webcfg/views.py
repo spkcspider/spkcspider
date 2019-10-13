@@ -63,7 +63,7 @@ class WebConfigView(UCTestMixin, View):
                 token=self.request.auth_token,
                 variant=["WebConfig", "TmpConfig"]
             ).content
-        except AssignedContent.DoesNotExist:
+        except AssignedContent.DoesNotExist:  # pylint: disable=no-member
             if (
                 variants.filter(name="TmpConfig") and
                 self.request.auth_token.persist < 0

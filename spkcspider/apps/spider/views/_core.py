@@ -80,7 +80,11 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
         elif not user_test_result:
             return self.handle_no_permission()
 
-        ret = self.dispatch_extra(request, *args, **kwargs)
+        ret = self.dispatch_extra(  # pylint: disable=W1111
+            request,
+            *args,
+            **kwargs
+        )
         if ret:
             return ret
         return super().dispatch(request, *args, **kwargs)

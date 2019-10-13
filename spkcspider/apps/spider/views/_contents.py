@@ -83,12 +83,12 @@ class ContentBase(UCTestMixin):
             # export: also serializer, other scopes: only one object, overhead
             return None
         # ordering will happen in serializer
-        if "raw" in self.request.GET:
+        if "raw" in self.request.GET:  # pylint: disable=no-member
             return None
         return ("-priority", "-modified")
 
     def get_context_data(self, **kwargs):
-        kwargs["request"] = self.request
+        kwargs["request"] = self.request  # pylint: disable=no-member
         kwargs["scope"] = self.scope
         kwargs["uc"] = self.usercomponent
         kwargs["media"] = Media(
@@ -112,7 +112,9 @@ class ContentBase(UCTestMixin):
         if self.scope in ("add", "update", "raw_update"):
             return ret
 
-        if getattr(self.request, "auth_token", None):
+        if getattr(
+            self.request, "auth_token", None
+        ):  # pylint: disable=no-member
             idlist = \
                 set(self.request.auth_token.extra.get("ids") or [])
             searchlist = \
@@ -841,7 +843,7 @@ class ContentDelete(EntityDeletionMixin, DeleteView):
         messages.success(
             self.request, _('Content deleted.')
         )
-        return super().form_valid(form)
+        return super().form_valid(form)  # pylint: disable=no-member
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent

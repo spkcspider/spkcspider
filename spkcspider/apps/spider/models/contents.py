@@ -395,11 +395,13 @@ class TravelProtection(BaseContent):
             if self.stop - self.start < timedelta(days=1):
                 return "{}:{}–{}".format(
                     login_choices_dict[self.login_protection],
-                    self.start.time(), self.stop.time()
+                    self.start.time(),
+                    self.stop.time()
                 )
             return "{}:{}–{}".format(
                 login_choices_dict[self.login_protection],
-                self.start.date(), self.stop.date()
+                self.start.date(),
+                self.stop.date()
             )
         elif self.start:
             return "{}:{}–inf".format(
@@ -414,7 +416,8 @@ class TravelProtection(BaseContent):
         stop = self.stop or "-"
         return "{}:{}–{}".format(
             login_choices_dict[self.login_protection],
-            self.start.date(), stop != "-" and stop.date()
+            self.start.date(),
+            stop != "-" and stop.date()
         )
 
     def get_strength_link(self):

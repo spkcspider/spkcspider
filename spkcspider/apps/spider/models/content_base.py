@@ -69,13 +69,13 @@ class ContentVariant(models.Model):
 
     @property
     def unique_for_component(self):
-        return VariantType.unique in self.ctype
+        return VariantType.unique.value in self.ctype
 
     @property
     def is_feature(self):
         return (
-            VariantType.component_feature in self.ctype or
-            VariantType.content_feature in self.ctype
+            VariantType.component_feature.value in self.ctype or
+            VariantType.content_feature.value in self.ctype
         )
 
     def __str__(self):
@@ -367,7 +367,7 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
 
         if not self.usercomponent.user_info.allowed_content.filter(
             name=self.ctype.name
-        ).exists():
+        ).exists():  # pylint: disable=no-member
             raise ValidationError(
                 message=_('Not an allowed ContentVariant for this user'),
                 code='disallowed_contentvariant'

@@ -104,6 +104,8 @@ class ReferrerObject(models.Model):
         db_index=True, unique=True, editable=False
     )
 
+    objects = models.Manager()
+
     @cached_property
     def host(self):
         return extract_host(self.url)
@@ -116,11 +118,11 @@ class BaseSubUserComponentModel(models.Model):
 
     @property
     def user(self):
-        return self.usercomponent.user
+        return self.usercomponent.user  # pylint: disable=no-member
 
     @property
     def username(self):
-        return self.usercomponent.username
+        return self.usercomponent.username  # pylint: disable=no-member
 
 
 class BaseInfoModel(models.Model):

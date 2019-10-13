@@ -167,7 +167,7 @@ class ReferrerMixin(object):
                         error="ssl"
                     )
                 )
-            except Exception as exc:
+            except (Exception, requests.exceptions.HTTPError) as exc:
                 apply_error_limit = False
                 if isinstance(
                     exc, (
