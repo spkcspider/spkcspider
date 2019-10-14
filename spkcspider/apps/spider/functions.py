@@ -80,8 +80,13 @@ def clean_verifier_url(url):
     return True
 
 
+_default_allowed_hosts = ['localhost', '127.0.0.1', '[::1]']
+
 def clean_spider_inline(url):
-    return validate_host(url, settings.ALLOWED_HOSTS)
+    allowed_hosts = settings.ALLOWED_HOSTS
+    if settings.DEBUG and not allowed_hosts:
+        allowed_hosts = _default_allowed_hosts
+    return validate_host(url, allowed_hosts)
 
 
 def clean_verifier(request, view):
