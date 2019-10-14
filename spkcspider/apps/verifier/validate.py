@@ -1,3 +1,6 @@
+"""
+Does require celery only for async methods
+"""
 __all__ = {
     "validate", "valid_wait_states", "verify_download_size",
     "async_validate", "verify_tag", "async_verify_tag"
@@ -29,8 +32,6 @@ from .conf import get_requests_params
 from .models import VerifySourceObject, DataVerificationTag
 
 logger = logging.getLogger(__name__)
-
-hashable_predicates = set([spkcgraph["name"], spkcgraph["value"]])
 
 
 BUFFER_SIZE = 65536  # read in 64kb chunks
@@ -64,9 +65,10 @@ def retrieve_object(obj, current_size, graph=None, session=None):
                 return h.finalize()
 
             return
-        params, can_inline = get_requests_params(obj)
-        if can_inline:
-            resp = Client().get(obj)
+        # obj is url
+        params, inline_domain = get_requests_params(obj)
+        if inline_domain:
+            resp = Client().get(obj, SERVER_NAME=inline_domain)
             if resp.status_code != 200:
                 raise exceptions.ValidationError(
                     _("Retrieval failed: %(reason)s"),
@@ -74,14 +76,18 @@ def retrieve_object(obj, current_size, graph=None, session=None):
                     code="error_code:{}".format(resp.status_code)
                 )
 
-            c_length = resp.get("content-length", None)
-            if not verify_download_size(c_length, current_size[0]):
+            c_length = resp.headers.get("content-length", None)
+            if (
+                c_length is None or
+                not verify_download_size(c_length, current_size[0])
+            ):
                 resp.close()
                 raise exceptions.ValidationError(
-                    _("Content too big: %(size)s"),
+                    _("Content too big or size unset: %(size)s"),
                     params={"size": c_length},
                     code="invalid_size"
                 )
+
             c_length = int(c_length)
             current_size[0] += c_length
             if graph is not None:
@@ -110,14 +116,17 @@ def retrieve_object(obj, current_size, graph=None, session=None):
                         )
 
                     c_length = resp.headers.get("content-length", None)
-                    if not verify_download_size(c_length, current_size[0]):
+                    if (
+                        c_length is None or
+                        not verify_download_size(c_length, current_size[0])
+                    ):
                         raise exceptions.ValidationError(
-                            _("Content too big: %(size)s"),
+                            _("Content too big or size unset: %(size)s"),
                             params={"size": c_length},
                             code="invalid_size"
                         )
                     c_length = int(c_length)
-                    current_size += c_length
+                    current_size[0] += c_length
                     if graph is not None:
                         graph.parse(resp.raw, format="turtle")
                     else:
@@ -171,10 +180,10 @@ def validate(ob, hostpart, task=None):
             """
                 SELECT ?base ?scope ?pages ?view
                 WHERE {
-                    ?base spkc:scope ?scope .
-                    ?base spkc:pages.num_pages ?pages .
-                    ?base spkc:pages.current_page ?current_page .
-                    ?base spkc:action:view ?view .
+                    ?base spkc:scope ?scope ;
+                          spkc:pages.num_pages ?pages ;
+                          spkc:pages.current_page ?current_page ;
+                          spkc:action:view ?view .
                 }
             """,
             initNs={"spkc": spkcgraph},
@@ -240,11 +249,11 @@ def validate(ob, hostpart, task=None):
             """
                 SELECT DISTINCT ?base ?type ?name ?value
                 WHERE {
-                    ?base spkc:type ?type .
-                    ?base spkc:properties ?prop .
-                    ?prop spkc:hashable "true"^^xsd:boolean .
-                    ?prop spkc:name ?name .
-                    ?prop spkc:value ?value .
+                    ?base spkc:type ?type ;
+                          spkc:properties ?prop .
+                    ?prop spkc:hashable "true"^^xsd:boolean ;
+                          spkc:name ?name ;
+                          spkc:value ?value .
                     OPTIONAL {
                         ?value spkc:properties ?prop2 .
                         ?prop2 spkc:name "info"^^xsd:string .
@@ -389,10 +398,14 @@ def validate(ob, hostpart, task=None):
     return result
 
 
-@celery_app.task(bind=True, name='async validation')
-def async_validate(self, ob, hostpart):
-    ret = validate(ob, hostpart, self)
-    return ret.get_absolute_url()
+if celery_app:
+    @celery_app.task(bind=True, name='async validation')
+    def async_validate(self, ob, hostpart):
+        ret = validate(ob, hostpart, self)
+        return ret.get_absolute_url()
+else:
+    def async_validate(self, ob, hostpart):
+        raise Exception("no celery installed")
 
 
 def verify_tag(tag, hostpart=None, ffrom="sync_call", task=None):
@@ -418,9 +431,13 @@ def verify_tag(tag, hostpart=None, ffrom="sync_call", task=None):
         )
 
 
-@celery_app.task(bind=True, name='async verification', ignore_results=True)
-def async_verify_tag(self, tagid, hostpart=None, ffrom="async_call"):
-    verify_tag(
-        tag=DataVerificationTag.objects.get(id=tagid),
-        hostpart=hostpart, task=self, ffrom=ffrom
-    )
+if celery_app:
+    @celery_app.task(bind=True, name='async verification', ignore_results=True)
+    def async_verify_tag(self, tagid, hostpart=None, ffrom="async_call"):
+        verify_tag(
+            tag=DataVerificationTag.objects.get(id=tagid),
+            hostpart=hostpart, task=self, ffrom=ffrom
+        )
+else:
+    def async_verify_tag(self, tagid, hostpart=None, ffrom="async_call"):
+        raise Exception("no celery installed")

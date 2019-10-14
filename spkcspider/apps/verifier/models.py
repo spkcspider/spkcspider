@@ -99,12 +99,12 @@ class DataVerificationTag(models.Model):
                     hostpart, self.get_absolute_url()
                 )
             }
-            params, can_inline = get_requests_params(vurl)
+            params, inline_domain = get_requests_params(vurl)
 
-            if can_inline:
+            if inline_domain:
                 resp = Client().post(
                     vurl, follow=True, secure=True, data=body,
-                    Connection="close"
+                    Connection="close", SERVER_NAME=inline_domain
                 )
                 if resp.status_code != 200:
                     raise exceptions.ValidationError(

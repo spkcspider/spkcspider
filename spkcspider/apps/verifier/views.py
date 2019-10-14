@@ -1,3 +1,8 @@
+"""
+
+Requires celery
+
+"""
 __all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
 
 from urllib.parse import parse_qs, urlencode

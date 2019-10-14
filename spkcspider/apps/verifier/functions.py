@@ -71,11 +71,12 @@ def domain_auth(source, hostpart):
         source.url, urlencode(GET, doseq=True)
     )
     ret = True
-    params, can_inline = get_requests_params(url)
+    params, inline_domain = get_requests_params(url)
 
-    if can_inline:
+    if inline_domain:
         response = Client().get(
-            url, follow=True, secure=True, Connection="close"
+            url, follow=True, secure=True, Connection="close",
+            SERVER_NAME=inline_domain
         )
         if response.status_code >= 400:
             ret = False

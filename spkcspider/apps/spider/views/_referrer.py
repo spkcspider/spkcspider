@@ -115,8 +115,8 @@ class ReferrerMixin(object):
         }
         if context["payload"] is not None:
             d["payload"] = context["payload"]
-        params, can_inline = get_requests_params(context["referrer"])
-        if can_inline:
+        params, inline_domain = get_requests_params(context["referrer"])
+        if inline_domain:
             response = Client().post(
                 context["referrer"],
                 data=d,
@@ -127,7 +127,8 @@ class ReferrerMixin(object):
                         self.request.path
                     )
                     # sending full url not required anymore, payload
-                )
+                ),
+                SERVER_NAME=inline_domain
             )
             if response.status_code != 200:
                 return HttpResponseRedirect(

@@ -281,10 +281,10 @@ class TokenRenewal(UCTestMixin, View):
         if "payload" in self.request.POST:
             d["payload"] = self.request.POST["payload"]
 
-        params, can_inline = get_requests_params(
+        params, inline_domain = get_requests_params(
             self.request.auth_token.referrer.url
         )
-        if can_inline:
+        if inline_domain:
             response = Client().post(
                 self.request.auth_token.referrer.url,
                 data=d,
@@ -292,7 +292,8 @@ class TokenRenewal(UCTestMixin, View):
                 Referer="%s://%s" % (
                     self.request.scheme,
                     self.request.path
-                )
+                ),
+                SERVER_NAME=inline_domain
             )
             if response.status_code >= 400:
                 return False

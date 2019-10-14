@@ -86,7 +86,9 @@ def clean_spider_inline(url):
     allowed_hosts = settings.ALLOWED_HOSTS
     if settings.DEBUG and not allowed_hosts:
         allowed_hosts = _default_allowed_hosts
-    return validate_host(url, allowed_hosts)
+    if validate_host(url, allowed_hosts):
+        return urlsplit(url).netloc
+    return None
 
 
 def clean_verifier(request, view):
@@ -102,10 +104,11 @@ def clean_verifier(request, view):
     if request.method == "GET":
         # don't spam verifier
         return True
-    params, can_inline = get_requests_params(url)
-    if can_inline:
+    params, inline_domain = get_requests_params(url)
+    if inline_domain:
         response = Client().get(
-            url, follow=True, secure=True, Connection="close"
+            url, follow=True, secure=True, Connection="close",
+            SERVER_NAME=inline_domain
         )
         if response.status_code >= 400:
             return False
