@@ -76,7 +76,7 @@ def retrieve_object(obj, current_size, graph=None, session=None):
                     code="error_code:{}".format(resp.status_code)
                 )
 
-            c_length = resp.headers.get("content-length", None)
+            c_length = resp.get("content-length", None)
             if (
                 c_length is None or
                 not verify_download_size(c_length, current_size[0])
