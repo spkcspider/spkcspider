@@ -90,6 +90,9 @@ default_uctoken_duration = getattr(
 
 
 def get_requests_params(url):
+    """
+        returns (request parameters, inline url or None)
+    """
     _url = host_tld_matcher.match(url)
     if not _url:
         raise ValidationError(
