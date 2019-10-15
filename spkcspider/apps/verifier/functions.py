@@ -74,7 +74,7 @@ def domain_auth(source, hostpart):
     params, inline_domain = get_requests_params(url)
 
     if inline_domain:
-        response = Client().get(
+        response = Client().head(
             url, follow=True, secure=True, Connection="close",
             SERVER_NAME=inline_domain
         )
@@ -82,7 +82,7 @@ def domain_auth(source, hostpart):
             ret = False
     else:
         try:
-            with requests.get(
+            with requests.head(
                 url, headers={"Connection": "close"},
                 **params
             ) as resp:

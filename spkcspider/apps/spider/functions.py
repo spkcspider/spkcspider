@@ -82,12 +82,14 @@ def clean_verifier_url(url):
 
 _default_allowed_hosts = ['localhost', '127.0.0.1', '[::1]']
 
+
 def clean_spider_inline(url):
     allowed_hosts = settings.ALLOWED_HOSTS
     if settings.DEBUG and not allowed_hosts:
         allowed_hosts = _default_allowed_hosts
     if validate_host(url, allowed_hosts):
-        return urlsplit(url).netloc
+        inline_domain = urlsplit(url)
+        return inline_domain.netloc or inline_domain.path.split("/", 1)[0]
     return None
 
 
@@ -106,7 +108,7 @@ def clean_verifier(request, view):
         return True
     params, inline_domain = get_requests_params(url)
     if inline_domain:
-        response = Client().get(
+        response = Client().head(
             url, follow=True, secure=True, Connection="close",
             SERVER_NAME=inline_domain
         )
@@ -114,7 +116,7 @@ def clean_verifier(request, view):
             return False
     else:
         try:
-            with requests.get(
+            with requests.head(
                 url, stream=True, **params,
                 headers={"Connection": "close"}
             ) as resp:
