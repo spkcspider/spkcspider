@@ -10,6 +10,7 @@ import re
 import functools
 import datetime
 from django.conf import settings
+from django.urls import NoReverseMatch
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.shortcuts import resolve_url
@@ -38,7 +39,10 @@ def get_anchor_domain():
         settings, "SPIDER_ANCHOR_DOMAIN", None
     )
     if _anchor_domain:
-        return resolve_url(_anchor_domain)
+        try:
+            return resolve_url(_anchor_domain)
+        except NoReverseMatch:
+            return _anchor_domain
     from django.contrib.sites.models import Site
     return Site.objects.get(id=settings.SITE_ID).domain
 

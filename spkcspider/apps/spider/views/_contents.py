@@ -241,9 +241,14 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
                 ctype__contains=VariantType.unlisted
             )
         context["is_public_view"] = self.usercomponent.public
-        context["has_unlisted"] = self.usercomponent.contents.filter(
-            info__contains="\x1eunlisted\x1e"
-        ).exclude(travel_protected__in=travel).exists()
+        # non-special users should not see the hint
+        context["has_unlisted"] = False
+        if self.request.is_special_user:
+            # check if unlisted contents exist
+            # priority higher than 0 is visible
+            context["has_unlisted"] = self.usercomponent.contents.filter(
+                info__contains="\x1eunlisted\x1e", priority__lte=0
+            ).exclude(travel_protected__in=travel).exists()
 
         context["remotelink"] = "{}{}?".format(
             context["hostpart"],
