@@ -1,6 +1,7 @@
 __all__ = (
     "filter_components", "filter_contents", "listed_variants_q",
-    "machine_variants_q", "active_protections_q"
+    "machine_variants_q", "active_protections_q",
+    "info_and", "info_or"
 )
 
 from django.db.models import Q
@@ -194,3 +195,55 @@ def filter_contents(
                 )
             searchq_exc |= tmp
     return (searchq & ~searchq_exc, counter)
+
+
+def info_and(*args, **kwargs):
+    q = Q()
+    for query in args:
+        if isinstance(query, Q):
+            q &= query
+        else:
+            q &= Q(
+                info__contains="\x1e{}\x1e".format(query)
+            )
+    for name, query in kwargs.items():
+        if query is None:
+            q &= Q(
+                info__contains="\x1e{}=".format(name)
+            )
+        elif isinstance(query, (tuple, list)):
+            for item in query:
+                q &= Q(
+                    info__contains="\x1e{}={}\x1e".format(name, item)
+                )
+        else:
+            q &= Q(
+                info__contains="\x1e{}={}\x1e".format(name, query)
+            )
+    return q
+
+
+def info_or(*args, **kwargs):
+    q = Q()
+    for query in args:
+        if isinstance(query, Q):
+            q |= query
+        else:
+            q |= Q(
+                info__contains="\x1e{}\x1e".format(query)
+            )
+    for name, query in kwargs.items():
+        if query is None:
+            q |= Q(
+                info__contains="\x1e{}=".format(name)
+            )
+        elif isinstance(query, (tuple, list)):
+            for item in query:
+                q |= Q(
+                    info__contains="\x1e{}={}\x1e".format(name, item)
+                )
+        else:
+            q |= Q(
+                info__contains="\x1e{}={}\x1e".format(name, query)
+            )
+    return q

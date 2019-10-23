@@ -1,6 +1,5 @@
 __all__ = [
-    "BaseInfoModel", "BaseSubUserComponentModel", "ReferrerObject",
-    "info_and", "info_or"
+    "BaseInfoModel", "BaseSubUserComponentModel", "ReferrerObject"
 ]
 
 import re
@@ -14,48 +13,6 @@ from django.utils.functional import cached_property
 from spkcspider.utils.urls import extract_host
 
 _info_replacer_templ = '\x1e{}.*\x1e'
-
-
-def info_and(*args, **kwargs):
-    q = models.Q()
-    for query in args:
-        if isinstance(query, models.Q):
-            q &= query
-        else:
-            q &= models.Q(
-                info__contains="\x1e{}\x1e".format(query)
-            )
-    for name, query in kwargs.items():
-        if query is None:
-            q &= models.Q(
-                info__contains="\x1e{}=".format(name)
-            )
-        else:
-            q &= models.Q(
-                info__contains="\x1e{}={}\x1e".format(name, query)
-            )
-    return q
-
-
-def info_or(*args, **kwargs):
-    q = models.Q()
-    for query in args:
-        if isinstance(query, models.Q):
-            q |= query
-        else:
-            q |= models.Q(
-                info__contains="\x1e{}\x1e".format(query)
-            )
-    for name, query in kwargs.items():
-        if query is None:
-            q |= models.Q(
-                info__contains="\x1e{}=".format(name)
-            )
-        else:
-            q |= models.Q(
-                info__contains="\x1e{}={}\x1e".format(name, query)
-            )
-    return q
 
 
 def info_field_validator(value):
@@ -211,9 +168,3 @@ class BaseInfoModel(models.Model):
                 self.info, "\x1e".join(rep_missing)
             )
         return rep_missing
-
-    def info_and(self, *args, **kwargs):
-        return info_and(*args, **kwargs)
-
-    def info_or(self, *args, **kwargs):
-        return info_or(*args, **kwargs)
