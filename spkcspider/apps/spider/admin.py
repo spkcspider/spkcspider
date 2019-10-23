@@ -1,9 +1,9 @@
-from django.contrib import admin
 from django.conf import settings
+from django.contrib import admin
 
 from .models import (
-    Protection, AssignedProtection, UserComponent, AssignedContent,
-    ContentVariant, UserInfo, TravelProtection
+    AssignedContent, AssignedProtection, ContentVariant, Protection,
+    TravelProtection, UserComponent, UserInfo
 )
 
 

@@ -1,8 +1,6 @@
 from django.urls import path
 
-
-from .views import CreateEntry, VerifyEntry, HashAlgoView
-
+from .views import CreateEntry, HashAlgoView, VerifyEntry
 
 app_name = "spider_verifier"
 

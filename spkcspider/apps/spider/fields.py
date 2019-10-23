@@ -5,10 +5,10 @@ __all__ = [
 
 import json
 
-from django.forms import fields, models
-
-from html5lib.filters.sanitizer import allowed_css_properties
 from bleach import sanitizer
+from html5lib.filters.sanitizer import allowed_css_properties
+
+from django.forms import fields, models
 
 from .widgets import OpenChoiceWidget, TrumbowygWidget
 

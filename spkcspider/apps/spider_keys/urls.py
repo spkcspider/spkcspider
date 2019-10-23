@@ -1,6 +1,5 @@
 from django.urls import path
 
-
 from .views import PermAnchorView
 
 app_name = "spider_keys"

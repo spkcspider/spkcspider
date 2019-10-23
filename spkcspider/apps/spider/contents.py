@@ -3,34 +3,33 @@ __all__ = (
     "add_content", "installed_contents", "BaseContent"
 )
 import logging
-from urllib.parse import urljoin
 from functools import lru_cache
+from urllib.parse import urljoin
 
-from django.utils.html import escape
+from rdflib import RDF, XSD, BNode, Graph, Literal, URIRef
+
 from django.apps import apps as django_apps
-from django.db import models, transaction
-from django.utils.translation import gettext, pgettext
-from django.template.loader import render_to_string
-from django.core.files.base import File
-from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
-from django.http import Http404
-from django.db.utils import IntegrityError
-from django.middleware.csrf import CsrfViewMiddleware
-from django.contrib.contenttypes.fields import GenericRelation
-from django.http.response import HttpResponseBase, HttpResponse
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.contenttypes.fields import GenericRelation
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.core.files.base import File
+from django.db import models, transaction
+from django.db.utils import IntegrityError
+from django.http import Http404
+from django.http.response import HttpResponse, HttpResponseBase
+from django.middleware.csrf import CsrfViewMiddleware
+from django.template.loader import render_to_string
+from django.utils.html import escape
+from django.utils.translation import gettext, pgettext
 from django.views.decorators.csrf import csrf_exempt
-
-from rdflib import Literal, Graph, BNode, URIRef, XSD, RDF
-
 from spkcspider.constants import (
-    VariantType, spkcgraph, ActionUrl, essential_contents
+    ActionUrl, VariantType, essential_contents, spkcgraph
 )
-from spkcspider.utils.settings import get_settings_func
+from spkcspider.utils.fields import add_property, literalize
 from spkcspider.utils.security import create_b64_id_token
+from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
-from spkcspider.utils.fields import literalize, add_property
 
 from .conf import get_anchor_domain
 from .serializing import paginate_stream, serialize_stream

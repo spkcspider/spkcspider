@@ -1,20 +1,15 @@
 
 import logging
-import random
 import os
+import random
 import time
 
+import ratelimit
 from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
+from spkcspider.constants import MIN_PROTECTION_STRENGTH_LOGIN, ProtectionType
 
-import ratelimit
-
-
-from spkcspider.constants import (
-    ProtectionType, MIN_PROTECTION_STRENGTH_LOGIN,
-)
-
-from .models import UserComponent, Protection, TravelProtection
+from .models import Protection, TravelProtection, UserComponent
 
 logger = logging.getLogger(__name__)
 

@@ -10,28 +10,27 @@ __all__ = [
 ]
 
 import logging
-from datetime import timedelta
 from base64 import b64encode
-
-from django.conf import settings
-from django.db import models
-from django.utils.html import escape
-from django.shortcuts import redirect
-from django.utils.translation import gettext
-from django.utils import timezone
-from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import pgettext
-
+from datetime import timedelta
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
-from ..contents import BaseContent, add_content
+from django.conf import settings
+from django.db import models
+from django.shortcuts import redirect
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.html import escape
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext
 from spkcspider.constants import (
-    TravelLoginType, VariantType, ActionUrl, travel_scrypt_params,
-    dangerous_login_choices
+    ActionUrl, TravelLoginType, VariantType, dangerous_login_choices,
+    travel_scrypt_params
 )
+
+from ..contents import BaseContent, add_content
 
 logger = logging.getLogger(__name__)
 

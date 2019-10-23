@@ -1,8 +1,8 @@
 #! /usr/bin/python3
 
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import threading
 import hashlib
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlsplit
 
 

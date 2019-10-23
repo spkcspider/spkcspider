@@ -6,30 +6,28 @@ __all__ = {
     "async_validate", "verify_tag", "async_verify_tag"
 }
 
+import io
 import logging
 import tempfile
-import io
 
-from django.utils.translation import gettext as _
-from django.core.files import File
+import requests
+from rdflib import Graph, Literal, URIRef
+from rdflib.namespace import XSD
+
 from django.conf import settings
 from django.core import exceptions
+from django.core.files import File
 from django.test import Client
-
-from rdflib import Graph, URIRef, Literal
-from rdflib.namespace import XSD
-import requests
-
+from django.utils.translation import gettext as _
 from spkcspider import celery_app
-
 from spkcspider.constants.rdf import spkcgraph
-from spkcspider.utils.urls import merge_get_url
 from spkcspider.utils.settings import get_settings_func
+from spkcspider.utils.urls import merge_get_url
 
-# uses specialized get_hashob from verifier (can be further customized)
-from .functions import get_hashob, get_anchor_domain
 from .conf import get_requests_params
-from .models import VerifySourceObject, DataVerificationTag
+# uses specialized get_hashob from verifier (can be further customized)
+from .functions import get_anchor_domain, get_hashob
+from .models import DataVerificationTag, VerifySourceObject
 
 logger = logging.getLogger(__name__)
 

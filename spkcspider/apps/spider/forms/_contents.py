@@ -2,31 +2,29 @@ __all__ = [
     "LinkForm", "TravelProtectionForm", "TravelProtectionManagementForm"
 ]
 
-from datetime import timedelta
 from base64 import b64encode
-
-from django import forms
-from django.conf import settings
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
-from django.contrib.auth import authenticate
+from datetime import timedelta
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
+from django import forms
+from django.conf import settings
+from django.contrib.auth import authenticate
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from spkcspider.constants import (
-    dangerous_login_choices, travel_scrypt_params, TravelLoginType,
-    loggedin_active_tprotections, VariantType
+    TravelLoginType, VariantType, dangerous_login_choices,
+    loggedin_active_tprotections, travel_scrypt_params
 )
 from spkcspider.utils.settings import get_settings_func
 
-from ..models import LinkContent, TravelProtection, AssignedContent
-from ..fields import MultipleOpenChoiceField, ContentMultipleChoiceField
+from ..fields import ContentMultipleChoiceField, MultipleOpenChoiceField
+from ..models import AssignedContent, LinkContent, TravelProtection
 from ..widgets import (
     OpenChoiceWidget, RomeDatetimePickerWidget, SelectizeWidget
 )
-
 
 _extra = '' if settings.DEBUG else '.min'
 

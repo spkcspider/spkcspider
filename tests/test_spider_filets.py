@@ -1,11 +1,10 @@
-from django.urls import reverse
 from django.test import override_settings
-
+from django.urls import reverse
 from django_webtest import TransactionWebTest
+from spkcspider.apps.spider.signals import update_dynamic
+from spkcspider.apps.spider_accounts.models import SpiderUser
 from webtest import Upload
 
-from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.signals import update_dynamic
 # Create your tests here.
 
 

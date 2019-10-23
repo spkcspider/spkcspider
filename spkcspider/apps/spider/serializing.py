@@ -6,14 +6,12 @@ __all__ = [
 
 from urllib.parse import urljoin
 
-from django.http import Http404
+from rdflib import RDF, XSD, Literal, URIRef
+
 from django.core.paginator import InvalidPage, Paginator
 from django.db.models import Q
-
-from rdflib import URIRef, Literal, XSD, RDF
-
-
-from spkcspider.constants import spkcgraph, VariantType
+from django.http import Http404
+from spkcspider.constants import VariantType, spkcgraph
 from spkcspider.utils.fields import add_property
 
 from .conf import get_anchor_domain

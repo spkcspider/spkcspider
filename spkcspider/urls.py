@@ -14,20 +14,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.urls import path, include
+from django.apps import apps
+from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.views.generic.base import RedirectView
-from django.conf import settings
-from django.apps import apps
 from django.contrib.sitemaps import views as sitemaps_views
+from django.urls import include, path
 from django.views.decorators.cache import cache_page
-
-from spkcspider.utils.settings import get_settings_func
-from spkcspider.apps.spider.views import ComponentPublicIndex
+from django.views.generic.base import RedirectView
 from spkcspider.apps.spider.functions import admin_login
-
 from spkcspider.apps.spider.sitemaps import sitemaps
+from spkcspider.apps.spider.views import ComponentPublicIndex
+from spkcspider.utils.settings import get_settings_func
 
 favicon_view = RedirectView.as_view(
     url='{}spider_base/favicon.svg'.format(settings.STATIC_URL), permanent=True

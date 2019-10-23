@@ -8,43 +8,41 @@ __all__ = (
 from datetime import timedelta
 from html import escape
 
-from next_prev import next_in_order, prev_in_order
-from rdflib import Graph, Literal, URIRef, XSD
+from rdflib import XSD, Graph, Literal, URIRef
 
+from django.conf import settings
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
+from django.db import models
 from django.db.models.deletion import ProtectedError
-from django.views.generic.edit import DeleteView, UpdateView, CreateView
-from django.views.generic.list import ListView
+from django.forms.widgets import Media
+from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponseBase
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
-from django.http.response import HttpResponseBase
-from django.http import Http404, HttpResponse, HttpResponseRedirect
-from django.db import models
-from django.conf import settings
-from django.core.exceptions import PermissionDenied
-from django.contrib import messages
-from django.utils.translation import gettext
-from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
-from django.forms.widgets import Media
-
-from spkcspider.utils.settings import get_settings_func
+from django.utils.translation import gettext
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.list import ListView
+from next_prev import next_in_order, prev_in_order
+from spkcspider.constants import (
+    VariantType, loggedin_active_tprotections, spkcgraph, static_token_matcher
+)
 from spkcspider.utils.fields import add_property
+from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
 
+from ..forms import TravelProtectionManagementForm, UserContentForm
 from ..models import (
-    AssignedContent, ContentVariant, UserComponent, TravelProtection
+    AssignedContent, ContentVariant, TravelProtection, UserComponent
 )
-from ..forms import UserContentForm, TravelProtectionManagementForm
 from ..queryfilters import (
     filter_contents, listed_variants_q, machine_variants_q
 )
-from spkcspider.constants import (
-    spkcgraph, VariantType, static_token_matcher, loggedin_active_tprotections
-)
 from ..serializing import paginate_stream, serialize_stream
-
-from ._core import UCTestMixin, EntityDeletionMixin, UserTestMixin
+from ._core import EntityDeletionMixin, UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 
 _forbidden_scopes = frozenset({

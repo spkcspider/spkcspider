@@ -1,24 +1,20 @@
 __all__ = ["FileForm", "TextForm", "RawTextForm"]
 
-from django.db import models
-from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 from django import forms
-
-from spkcspider.utils.settings import get_settings_func
-from spkcspider.apps.spider.fields import SanitizedHtmlField
-from .models import FileFilet, TextFilet
-from .conf import (
-    DEFAULT_LICENSE_FILE, DEFAULT_LICENSE_TEXT, LICENSE_CHOICES
-)
-from .widgets import LicenseChooserWidget
-
+from django.conf import settings
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 from spkcspider.apps.spider.fields import (
-    OpenChoiceField, MultipleOpenChoiceField
+    MultipleOpenChoiceField, OpenChoiceField, SanitizedHtmlField
 )
 from spkcspider.apps.spider.widgets import (
     ListWidget, SelectizeWidget, TrumbowygWidget
 )
+from spkcspider.utils.settings import get_settings_func
+
+from .conf import DEFAULT_LICENSE_FILE, DEFAULT_LICENSE_TEXT, LICENSE_CHOICES
+from .models import FileFilet, TextFilet
+from .widgets import LicenseChooserWidget
 
 _extra = '' if settings.DEBUG else '.min'
 

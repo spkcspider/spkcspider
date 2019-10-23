@@ -7,34 +7,32 @@ __all__ = [
     "clean_spider_inline"
 ]
 
-import time
 import base64
 import logging
 import math
-import random
 import os
+import random
+import time
 from urllib.parse import urlsplit
 
 import requests
+from rdflib import XSD, Literal
 
+import ratelimit
+from django.conf import settings
 from django.core.files.uploadhandler import (
-    TemporaryFileUploadHandler, StopUpload, StopFutureHandlers
+    StopFutureHandlers, StopUpload, TemporaryFileUploadHandler
 )
 from django.http import Http404
 from django.http.request import validate_host
 from django.shortcuts import redirect
-from django.views.decorators.cache import never_cache
-from django.urls import reverse
-from django.conf import settings
 from django.test import Client
-
-from rdflib import Literal, XSD
-import ratelimit
-
+from django.urls import reverse
+from django.views.decorators.cache import never_cache
 from spkcspider.constants import spkcgraph
-from .signals import failed_guess
-from .conf import get_anchor_domain, get_anchor_scheme, get_requests_params
 
+from .conf import get_anchor_domain, get_anchor_scheme, get_requests_params
+from .signals import failed_guess
 
 # seed with real random
 _nonexhaustRandom = random.Random(os.urandom(30))

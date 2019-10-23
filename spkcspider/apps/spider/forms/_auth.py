@@ -5,13 +5,10 @@ __all__ = [
 
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
-
-from ..auth import SpiderAuthBackend
 from spkcspider.constants import ProtectionType
 
-from ..models import (
-    Protection
-)
+from ..auth import SpiderAuthBackend
+from ..models import Protection
 
 
 class SpiderAuthForm(AuthenticationForm):

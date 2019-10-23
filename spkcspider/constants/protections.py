@@ -5,18 +5,13 @@ __all__ = [
 
 import enum
 
-
 MAX_TOKEN_SIZE = 90
 
 if MAX_TOKEN_SIZE % 3 != 0:
     raise Exception("MAX_TOKEN_SIZE must be multiple of 3")
 
 MAX_TOKEN_B64_SIZE = MAX_TOKEN_SIZE*4//3
-
-
 MIN_PROTECTION_STRENGTH_LOGIN = 2
-
-
 travel_scrypt_params = {
     "length": 32,
     "n": 2**14,

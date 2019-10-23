@@ -3,10 +3,9 @@ __all__ = ["PermAnchorView"]
 from urllib.parse import urljoin
 
 from django.http.response import (
-    HttpResponsePermanentRedirect, HttpResponseBase
+    HttpResponseBase, HttpResponsePermanentRedirect
 )
 from django.views.generic.detail import DetailView
-
 from spkcspider.apps.spider.conf import get_anchor_domain
 from spkcspider.apps.spider.models import AssignedContent
 from spkcspider.apps.spider.views import DefinitionsMixin

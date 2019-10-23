@@ -1,7 +1,8 @@
 # flake8: noqa
 
-from spkcspider.settings.debug import *  # noqa: F403, F401
 import os
+
+from spkcspider.settings.debug import *  # noqa: F403, F401
 
 SPIDER_INLINE = "SPIDER_NO_INLINE" in os.environ or None
 

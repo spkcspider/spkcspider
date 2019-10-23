@@ -1,17 +1,17 @@
 __all__ = ["SpiderBaseConfig"]
 
 from django.apps import AppConfig
-from django.db.models.signals import (
-    post_migrate, post_save, pre_save, post_delete, m2m_changed
-)
-from django.contrib.auth import get_user_model
 from django.conf import settings
-
+from django.contrib.auth import get_user_model
+from django.db.models.signals import (
+    m2m_changed, post_delete, post_migrate, post_save, pre_save
+)
 from spkcspider.utils.settings import extract_app_dicts
+
 from .signals import (
-    UpdateSpiderCb, InitUserCb, UpdateAnchorComponentCb, UpdateContentCb,
-    update_dynamic, TriggerUpdate, CleanupCb,
-    UpdateComponentFeaturesCb, UpdateContentFeaturesCb
+    CleanupCb, InitUserCb, TriggerUpdate, UpdateAnchorComponentCb,
+    UpdateComponentFeaturesCb, UpdateContentCb, UpdateContentFeaturesCb,
+    UpdateSpiderCb, update_dynamic
 )
 
 

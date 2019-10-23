@@ -1,16 +1,15 @@
 __all__ = ["CreateEntryForm"]
 
-import tempfile
 import shutil
+import tempfile
 
 from django import forms
+from django.conf import settings
 from django.forms import widgets
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
-
-
 from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
+
 from .models import VerifySourceObject
 
 _source_url_help = _(

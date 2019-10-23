@@ -1,11 +1,10 @@
 from django.contrib import admin
 
+from .forms import TagLayoutAdminForm
+from .models import TagLayout
+
 # Register your models here.
 
-from .models import (
-    TagLayout
-)
-from .forms import TagLayoutAdminForm
 
 
 @admin.register(TagLayout)

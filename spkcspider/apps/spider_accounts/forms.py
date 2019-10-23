@@ -1,11 +1,10 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+from django.urls import reverse
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
-from django.conf import settings
-
 
 if getattr(settings, "USE_CAPTCHAS", False):
     from captcha.fields import CaptchaField

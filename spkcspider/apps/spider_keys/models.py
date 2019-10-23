@@ -2,27 +2,25 @@
 import logging
 from urllib.parse import urljoin
 
-from django.db import models
-from django.conf import settings
-from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import gettext
-from django.core.exceptions import ValidationError
-from django.template.loader import render_to_string
-from django.utils.translation import pgettext
-from django.http import HttpResponsePermanentRedirect, JsonResponse
-
 from cryptography import exceptions
-from cryptography.x509 import load_pem_x509_certificate
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import load_pem_x509_certificate
 
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.http import HttpResponsePermanentRedirect, JsonResponse
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext
 from jsonfield import JSONField
-
+from spkcspider.apps.spider.conf import get_anchor_domain, get_anchor_scheme
+from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.constants import VariantType
 from spkcspider.utils.security import get_hashob
-from spkcspider.apps.spider.contents import BaseContent, add_content
-from spkcspider.apps.spider.conf import get_anchor_domain, get_anchor_scheme
 
 logger = logging.getLogger(__name__)
 

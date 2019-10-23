@@ -1,20 +1,11 @@
-from django.urls import path
 from django.contrib.auth.decorators import login_required
-
-
-from .views import (
-    ComponentIndex, ComponentPublicIndex, ComponentCreate,
-    ComponentUpdate, ComponentDelete
-)
+from django.urls import path
 
 from .views import (
-    ContentAdd, ContentIndex, ContentAccess, ContentDelete,
-    TravelProtectionManagement
-)
-
-from .views import (
-    AdminTokenManagement, TokenDeletionRequest, TokenRenewal,
-    ConfirmTokenUpdate, RequestTokenUpdate
+    AdminTokenManagement, ComponentCreate, ComponentDelete, ComponentIndex,
+    ComponentPublicIndex, ComponentUpdate, ConfirmTokenUpdate, ContentAccess,
+    ContentAdd, ContentDelete, ContentIndex, RequestTokenUpdate,
+    TokenDeletionRequest, TokenRenewal, TravelProtectionManagement
 )
 
 app_name = "spider_base"

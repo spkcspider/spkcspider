@@ -3,7 +3,6 @@ from django.contrib.auth import admin as user_admin
 from django.utils.translation import gettext_lazy as _
 
 from .models import SpiderUser
-# Register your models here.
 
 
 @admin.register(SpiderUser)

@@ -1,8 +1,8 @@
 # flake8: noqa
 
-from spkcspider.settings.debug import *  # noqa: F403, F401
-
 import os
+
+from spkcspider.settings.debug import *  # noqa: F403, F401
 
 CONF_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "my.cnf")
 

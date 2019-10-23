@@ -2,30 +2,27 @@
 import logging
 import posixpath
 
-from django.utils.html import escape
-from django.db import models
-from django.urls import reverse
 from django.conf import settings
-from django.template.loader import render_to_string
-from django.utils.translation import gettext, pgettext, gettext_lazy as _
-from django.http import HttpResponseRedirect
 from django.core.files.storage import default_storage
-
+from django.db import models
+from django.http import HttpResponseRedirect
+from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.html import escape
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext
 from jsonfield import JSONField
-
 from ranged_response import RangedFileResponse
-
-from spkcspider.constants import VariantType
-from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.apps.spider.conf import (
-    image_extensions, media_extensions, FILE_TOKEN_SIZE
+    FILE_TOKEN_SIZE, image_extensions, media_extensions
 )
-from spkcspider.utils.security import create_b64_token
+from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.constants import VariantType
 from spkcspider.utils.fields import prepare_description
+from spkcspider.utils.security import create_b64_token
 
-from .conf import (
-    LICENSE_CHOICES
-)
+from .conf import LICENSE_CHOICES
 
 logger = logging.getLogger(__name__)
 

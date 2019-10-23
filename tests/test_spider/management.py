@@ -1,9 +1,9 @@
-from django.core.management import call_command
-from django.test import TransactionTestCase
 from io import StringIO
 
+from django.core.management import call_command
+from django.test import TransactionTestCase
 from spkcspider.apps.spider.models import (
-    AuthToken, UserComponent, ReferrerObject
+    AuthToken, ReferrerObject, UserComponent
 )
 from spkcspider.apps.spider_accounts.models import SpiderUser
 

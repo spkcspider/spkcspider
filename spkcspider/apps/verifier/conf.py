@@ -4,7 +4,6 @@ __all__ = ["get_requests_params"]
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-
 from spkcspider.constants import host_tld_matcher
 from spkcspider.utils.settings import get_settings_func
 

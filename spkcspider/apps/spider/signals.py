@@ -4,16 +4,16 @@ __all__ = (
     "UpdateContentCb", "UpdateAnchorComponentCb",
     "UpdateComponentFeaturesCb", "UpdateContentFeaturesCb"
 )
-from django.dispatch import Signal
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
-from django.db import transaction, models
+import logging
 
 from django.apps import apps
-from spkcspider.constants import VariantType, ProtectionStateType
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models, transaction
+from django.dispatch import Signal
+from spkcspider.constants import ProtectionStateType, VariantType
 from spkcspider.utils.security import create_b64_id_token
-import logging
 
 logger = logging.getLogger(__name__)
 

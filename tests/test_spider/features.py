@@ -1,19 +1,18 @@
 import re
 from urllib.parse import parse_qs, urlsplit
 
-from django.test import override_settings
-from django_webtest import TransactionWebTest
-from django.urls import reverse
 import requests
-from rdflib import Graph, Literal, XSD, RDF
+from rdflib import RDF, XSD, Graph, Literal
 
-from spkcspider.constants import VariantType, spkcgraph, ProtectionStateType
-
-from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.models import ContentVariant, AuthToken
+from django.test import override_settings
+from django.urls import reverse
+from django_webtest import TransactionWebTest
+from spkcspider.apps.spider.models import AuthToken, ContentVariant
 from spkcspider.apps.spider.signals import update_dynamic
-
+from spkcspider.apps.spider_accounts.models import SpiderUser
+from spkcspider.constants import ProtectionStateType, VariantType, spkcgraph
 from tests.referrerserver import create_referrer_server
+
 # Create your tests here.
 
 

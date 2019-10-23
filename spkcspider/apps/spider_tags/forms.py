@@ -4,33 +4,29 @@ __all__ = [
 
 import posixpath
 from collections import OrderedDict
-# from django.utils.translation import gettext_lazy as _
-from django.conf import settings
-from django import forms
-
-# from django.apps import apps
-from django.db.models import Q, QuerySet
-from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import NON_FIELD_ERRORS
-from django.utils.translation import gettext_lazy as _
 
 from rdflib import XSD
 
-from .fields import generate_fields
-from .models import TagLayout, SpiderTag
-
-from spkcspider.constants import loggedin_active_tprotections
-from spkcspider.apps.spider.fields import MultipleOpenChoiceField, JsonField
-from spkcspider.apps.spider.widgets import ListWidget
-from spkcspider.utils.urls import merge_get_url
+from django import forms
+# from django.utils.translation import gettext_lazy as _
+from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import NON_FIELD_ERRORS
+# from django.apps import apps
+from django.db.models import Q, QuerySet
+from django.utils.translation import gettext_lazy as _
+from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider.fields import JsonField, MultipleOpenChoiceField
 from spkcspider.apps.spider.models import (
     AssignedContent, ReferrerObject, TravelProtection
 )
-from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider.widgets import ListWidget
+from spkcspider.constants import loggedin_active_tprotections
+from spkcspider.utils.urls import merge_get_url
 
-
+from .fields import generate_fields, installed_fields
+from .models import SpiderTag, TagLayout
 from .widgets import SchemeWidget
-from .fields import installed_fields
 
 # don't spam set objects
 _empty_set = frozenset()

@@ -1,8 +1,10 @@
 __all__ = ["FlatpageItemForm"]
 
 import copy
+
 from django.contrib.flatpages.forms import FlatpageForm
 from django.utils.translation import gettext_lazy as _
+
 from ..widgets import TrumbowygWidget
 
 _help_text = _(

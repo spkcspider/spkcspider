@@ -3,40 +3,34 @@ __all__ = (
     "ComponentIndex", "ComponentPublicIndex", "ComponentCreate",
     "ComponentUpdate", "ComponentDelete"
 )
-from django.db.models.deletion import ProtectedError
-from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.shortcuts import get_object_or_404, redirect
-from django.db import models
-from django.http import HttpResponse, Http404
-from django.core.exceptions import PermissionDenied
+from rdflib import XSD, Graph, Literal, URIRef
+
 from django.conf import settings
-from django.urls import reverse
 from django.contrib import messages
-from django.utils.translation import gettext
+from django.core.exceptions import PermissionDenied
+from django.db import models
+from django.db.models.deletion import ProtectedError
 from django.forms.widgets import Media
-
-from rdflib import Graph, Literal, URIRef, XSD
-
-
+from django.http import Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
+from django.utils.translation import gettext
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.list import ListView
 from spkcspider.constants import (
-    spkcgraph, loggedin_active_tprotections, VariantType
+    VariantType, loggedin_active_tprotections, spkcgraph
 )
 from spkcspider.utils.urls import merge_get_url
 
 from ..forms import UserComponentForm
+from ..models import AssignedContent, TravelProtection, UserComponent
 from ..queryfilters import (
-    filter_contents, filter_components, listed_variants_q, machine_variants_q
-)
-from ..models import (
-    UserComponent, TravelProtection, AssignedContent
+    filter_components, filter_contents, listed_variants_q, machine_variants_q
 )
 from ..serializing import paginate_stream, serialize_stream
-
 from ._core import (
-    UserTestMixin, UCTestMixin, EntityDeletionMixin, DefinitionsMixin
+    DefinitionsMixin, EntityDeletionMixin, UCTestMixin, UserTestMixin
 )
-
 
 _extra = '' if settings.DEBUG else '.min'
 

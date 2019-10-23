@@ -1,9 +1,7 @@
 __all__ = ["LiveDjangoTestApp", "MockAsyncValidate", "MockAsyncVerifyTag"]
 
 from celery import uuid
-
 from django_webtest import DjangoTestApp
-
 from spkcspider.apps.verifier.validate import validate, verify_tag
 
 

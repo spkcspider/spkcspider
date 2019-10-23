@@ -1,22 +1,18 @@
 import binascii
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from rdflib import XSD, Graph, Literal
+
+from django.conf import settings
 # import unittest
 from django.urls import reverse
-from django.conf import settings
-
 from django_webtest import TransactionWebTest
-
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
-
-from rdflib import Graph, XSD, Literal
-
-from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.signals import update_dynamic
-
+from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider_keys.models import PublicKey
+
 # Create your tests here.
 
 

@@ -2,27 +2,26 @@ __all__ = (
     "UserTestMixin", "UCTestMixin", "EntityDeletionMixin", "DefinitionsMixin"
 )
 import logging
+from datetime import timedelta
 from urllib.parse import quote_plus
 
-from datetime import timedelta
-
+from django.conf import settings
+from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.mixins import AccessMixin
-from django.shortcuts import get_object_or_404, resolve_url
-from django.contrib.auth import get_user_model, REDIRECT_FIELD_NAME
+from django.forms.widgets import Media
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.http.response import HttpResponseBase
-from django.utils import timezone
-from django.conf import settings
+from django.shortcuts import get_object_or_404, resolve_url
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext
-from django.forms.widgets import Media
-
-from spkcspider.utils.urls import merge_get_url
 from spkcspider.constants import (
-    VariantType, TokenCreationError, ProtectionType,
+    ProtectionType, TokenCreationError, VariantType,
     loggedin_active_tprotections
 )
-from ..models import UserComponent, AuthToken, TravelProtection
+from spkcspider.utils.urls import merge_get_url
+
+from ..models import AuthToken, TravelProtection, UserComponent
 
 logger = logging.getLogger(__name__)
 

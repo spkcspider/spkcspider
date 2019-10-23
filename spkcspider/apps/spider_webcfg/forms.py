@@ -1,6 +1,7 @@
 __all__ = ["WebConfigForm"]
 
 from django import forms
+
 from .models import WebConfig
 
 

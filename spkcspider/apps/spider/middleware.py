@@ -2,6 +2,7 @@ __all__ = ["TokenUserMiddleware"]
 
 from django.utils import timezone
 from django.utils.functional import SimpleLazyObject
+
 from .models import AuthToken
 
 

@@ -1,6 +1,5 @@
 from django.urls import path
 
-
 from .views import WebConfigView
 
 app_name = "spider_webcfg"

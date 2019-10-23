@@ -5,11 +5,10 @@ __all__ = [
 import re
 
 from django.conf import settings
-from django.db import models
 from django.core.exceptions import ValidationError
-from django.utils.translation import gettext
+from django.db import models
 from django.utils.functional import cached_property
-
+from django.utils.translation import gettext
 from spkcspider.utils.urls import extract_host
 
 _info_replacer_templ = '\x1e{}.*\x1e'

@@ -7,41 +7,43 @@ namespace: spider_base
 __all__ = ("installed_protections", "BaseProtection", "ProtectionResult",
            "initialize_protection_models")
 
-import logging
 import binascii
 import functools
-from random import SystemRandom
-from hashlib import sha256
-from base64 import b64encode, b64decode
 import ipaddress
+import logging
+from base64 import b64decode, b64encode
+from hashlib import sha256
+from random import SystemRandom
 
-from django.conf import settings
-from django import forms
-
-from django.apps import apps as django_apps
-from django.http import Http404
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import pgettext
-from django.contrib.auth import authenticate
-from django.utils.crypto import constant_time_compare
-from django.views.decorators.debug import sensitive_variables
-# from django.contrib.auth.hashers import make_password
-
-import ratelimit
-from ratelimit import parse_rate
 from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 
+import ratelimit
+from django import forms
+from django.apps import apps as django_apps
+from django.conf import settings
+from django.contrib.auth import authenticate
+from django.http import Http404
+from django.utils.crypto import constant_time_compare
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext
+from django.views.decorators.debug import sensitive_variables
+from ratelimit import parse_rate
 from spkcspider.constants import (
-    ProtectionType, ProtectionResult, ProtectionStateType
+    ProtectionResult, ProtectionStateType, ProtectionType
 )
-
 from spkcspider.utils.fields import add_by_field
-from spkcspider.utils.security import create_b64_token, aesgcm_pbkdf2_cryptor
+from spkcspider.utils.security import aesgcm_pbkdf2_cryptor, create_b64_token
 
 from .fields import MultipleOpenChoiceField
-from .widgets import OpenChoiceWidget, PWOpenChoiceWidget, ListWidget
+from .widgets import ListWidget, OpenChoiceWidget, PWOpenChoiceWidget
+
+# from django.contrib.auth.hashers import make_password
+
+
+
+
 
 logger = logging.getLogger(__name__)
 installed_protections = {}

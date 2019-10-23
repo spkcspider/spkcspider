@@ -1,9 +1,9 @@
 
 import logging
-from django.utils.timezone import now
 
 from django.contrib import admin
 from django.contrib.auth import get_permission_codename
+from django.utils.timezone import now
 
 from .models import DataVerificationTag
 from .validate import verify_tag

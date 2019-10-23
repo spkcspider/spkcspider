@@ -6,15 +6,15 @@ __all__ = [
     "force_captcha", "VALID_INTENTIONS", "VALID_SUB_INTENTIONS",
     "get_requests_params"
 ]
-import re
-import functools
 import datetime
-from django.conf import settings
-from django.urls import NoReverseMatch
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
-from django.shortcuts import resolve_url
+import functools
+import re
 
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.shortcuts import resolve_url
+from django.urls import NoReverseMatch
+from django.utils.translation import gettext_lazy as _
 from spkcspider.constants import host_tld_matcher
 from spkcspider.utils.settings import get_settings_func
 

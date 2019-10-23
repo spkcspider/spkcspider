@@ -2,18 +2,15 @@ __all__ = ["literalize", "uriref", "spkc_namespace"]
 
 import logging
 
-from django import template
-
 from rdflib import Literal
 from rdflib.namespace import XSD, URIRef
-from django.forms import BoundField
 
+from django import template
+from django.forms import BoundField
 from spkcspider.constants import spkcgraph
+from spkcspider.utils.fields import field_to_python as _field_to_python
+from spkcspider.utils.fields import literalize as _literalize
 from spkcspider.utils.urls import merge_get_url
-from spkcspider.utils.fields import (
-    literalize as _literalize,
-    field_to_python as _field_to_python
-)
 
 register = template.Library()
 

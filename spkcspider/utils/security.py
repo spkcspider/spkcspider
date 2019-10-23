@@ -3,27 +3,21 @@ __all__ = (
     "calculate_protection_strength", "create_b64_token", "create_b64_id_token"
 )
 
-import logging
 import base64
+import logging
 import os
-
-
-from spkcspider.constants import MAX_TOKEN_SIZE
-
 from hashlib import pbkdf2_hmac
 from statistics import mean
 
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from django.conf import settings
-from django.utils.encoding import force_bytes
 from django.core.exceptions import ValidationError
+from django.utils.encoding import force_bytes
 from django.utils.translation import gettext_lazy as _
-
+from spkcspider.constants import MAX_TOKEN_SIZE
 from spkcspider.constants.protections import ProtectionStateType
 
 logger = logging.getLogger(__name__)

@@ -10,25 +10,23 @@ __all__ = [
 
 import logging
 
-from django.db import models
-from django.conf import settings
 from django.apps import apps
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import gettext
-from django.urls import reverse
-from django.core.exceptions import ValidationError
+from django.conf import settings
 from django.core import validators
-
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 from spkcspider.constants import (
-    ProtectionType, VariantType, MAX_TOKEN_B64_SIZE, TokenCreationError,
+    MAX_TOKEN_B64_SIZE, ProtectionType, TokenCreationError, VariantType,
     hex_size_of_bigid, static_token_matcher
 )
-from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.security import create_b64_id_token
+from spkcspider.utils.settings import get_settings_func
 
-from ..validators import validator_token
 from ..conf import default_uctoken_duration, force_captcha
-
+from ..validators import validator_token
 
 logger = logging.getLogger(__name__)
 

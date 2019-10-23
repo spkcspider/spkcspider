@@ -10,25 +10,23 @@ __all__ = [
 
 import logging
 
-from django.db import models
+from django.apps import apps
 from django.conf import settings
-from django.utils.translation import gettext, gettext_lazy as _
-from django.urls import reverse
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ValidationError
 from django.core import validators
-from django.apps import apps
-
-from ..contents import installed_contents
-
-# from spkcspider.constants import VariantType
-from spkcspider.utils.security import create_b64_id_token
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.urls import reverse
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid, static_token_matcher
 )
-from ..validators import content_name_validator, validator_token
+from spkcspider.utils.security import create_b64_id_token
 
+from ..contents import installed_contents
+from ..validators import content_name_validator, validator_token
 from .base import BaseInfoModel, BaseSubUserComponentModel
 
 logger = logging.getLogger(__name__)

@@ -6,12 +6,9 @@ __all__ = (
 import re
 from urllib.parse import urljoin
 
-from rdflib import Literal, BNode, XSD, RDF, URIRef
-
 from django.conf import settings
 from django.forms import BoundField, Field
-
-
+from rdflib import RDF, XSD, BNode, Literal, URIRef
 from spkcspider.constants import spkcgraph
 
 # for not spamming sets

@@ -3,21 +3,18 @@ __all__ = [
     "verify_tag_default", "domain_auth", "get_anchor_domain"
 ]
 
-import logging
 import functools
+import logging
 from urllib.parse import parse_qs, urlencode
 
+import requests
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-
-from rdflib import XSD, URIRef, Literal
-
-import requests
+from rdflib import XSD, Literal, URIRef
 
 from django.conf import settings
-from django.urls import reverse
 from django.test import Client
-
+from django.urls import reverse
 from spkcspider.constants import spkcgraph
 
 from .conf import get_requests_params

@@ -1,21 +1,18 @@
 import datetime
 
-from django.conf import settings
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-from django.urls import reverse
-from django.core import exceptions
-from django.test import Client
-
 import requests
 
+from django.conf import settings
+from django.core import exceptions
+from django.db import models
+from django.test import Client
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 from spider_domainauth.abstract_models import BaseReverseToken
+from spkcspider.constants.verifier import VERIFICATION_CHOICES
 
-from spkcspider.constants.verifier import (
-    VERIFICATION_CHOICES
-)
-from .functions import get_anchor_domain
 from .conf import get_requests_params
+from .functions import get_anchor_domain
 
 
 def dv_path(instance, filename):

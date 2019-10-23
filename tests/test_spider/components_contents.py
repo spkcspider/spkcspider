@@ -1,21 +1,19 @@
 # import unittest
 
-from django.test import TransactionTestCase
-from django_webtest import TransactionWebTest
-from django.test import Client
-from django.db.utils import IntegrityError
-from django.urls import reverse
-from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
-
 from rdflib import Graph
 
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
+from django.db.utils import IntegrityError
+from django.test import Client, TransactionTestCase
+from django.urls import reverse
+from django_webtest import TransactionWebTest
+from spkcspider.apps.spider.models import AssignedContent, UserComponent
+from spkcspider.apps.spider.signals import update_dynamic
+from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.constants import spkcgraph
 from spkcspider.utils.security import create_b64_id_token
 
-from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.models import UserComponent, AssignedContent
-from spkcspider.apps.spider.signals import update_dynamic
 # Create your tests here.
 
 

@@ -1,24 +1,21 @@
 import os
 from base64 import b64encode
-from datetime import datetime as dt, timedelta as td
+from datetime import datetime as dt
+from datetime import timedelta as td
+
+from rdflib import XSD, Graph, Literal, URIRef
 
 from django.test import override_settings
-from django_webtest import TransactionWebTest
 from django.urls import reverse
-
-
-from rdflib import Graph, Literal, URIRef, XSD
-
-from spkcspider.constants import (
-    spkcgraph, TravelLoginType, ProtectionStateType
-)
-
-from spkcspider.utils.security import aesgcm_pbkdf2_cryptor
-
-from spkcspider.apps.spider_accounts.models import SpiderUser
+from django_webtest import TransactionWebTest
 from spkcspider.apps.spider.models import UserComponent
-from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.spider.protections import _pbkdf2_params
+from spkcspider.apps.spider.signals import update_dynamic
+from spkcspider.apps.spider_accounts.models import SpiderUser
+from spkcspider.constants import (
+    ProtectionStateType, TravelLoginType, spkcgraph
+)
+from spkcspider.utils.security import aesgcm_pbkdf2_cryptor
 
 
 class ProtectionTest(TransactionWebTest):

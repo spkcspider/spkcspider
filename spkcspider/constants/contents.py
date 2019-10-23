@@ -4,9 +4,7 @@ __all__ = [
     "essential_contents"
 ]
 
-
 import enum
-
 
 essential_contents = {
     "domainmode", "defaultactions"

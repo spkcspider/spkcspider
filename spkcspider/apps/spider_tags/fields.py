@@ -2,15 +2,14 @@ __all__ = ["installed_fields", "generate_fields"]
 
 import logging
 import posixpath
+
 from django import forms
 from django.apps import apps
 from django.utils.translation import gettext, gettext_lazy
-
-from spkcspider.utils.fields import add_by_field
-
 from spkcspider.apps.spider.widgets import (
     SubSectionStartWidget, SubSectionStopWidget
 )
+from spkcspider.utils.fields import add_by_field
 
 installed_fields = {}
 

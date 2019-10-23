@@ -1,19 +1,18 @@
 
 import logging
 
-from django.utils.html import escape
-from django.db import models
-from django.utils.translation import gettext, pgettext, gettext_lazy as _
-
-from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ValidationError
-from django.urls import reverse
-from django.http import HttpResponse
-
-
 from rdflib import URIRef
-from jsonfield import JSONField
 
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.http import HttpResponse
+from django.urls import reverse
+from django.utils.html import escape
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import pgettext
+from django.views.decorators.csrf import csrf_exempt
+from jsonfield import JSONField
 from spkcspider.apps.spider.contents import BaseContent, add_content
 from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.settings import get_settings_func

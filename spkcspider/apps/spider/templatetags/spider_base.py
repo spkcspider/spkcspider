@@ -1,7 +1,7 @@
 from django import template
 from django.urls import reverse
-from django.utils import timezone
 from django.urls.exceptions import NoReverseMatch
+from django.utils import timezone
 
 register = template.Library()
 

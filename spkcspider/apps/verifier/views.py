@@ -7,28 +7,27 @@ __all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
 
 from urllib.parse import parse_qs, urlencode
 
-from django.contrib import messages
-from django.shortcuts import redirect
-from django.core.exceptions import NON_FIELD_ERRORS
-from django.views.generic.edit import UpdateView
-from django.views.generic.detail import DetailView
-from django.views import View
-from django.http import HttpResponse, HttpResponseRedirect
-from django.utils.translation import gettext as _
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.conf import settings
-
-import ratelimit
-
-from celery.exceptions import TimeoutError
 from rdflib import Literal
 
-from spkcspider.utils.settings import get_settings_func
+import ratelimit
+from celery.exceptions import TimeoutError
+from django.conf import settings
+from django.contrib import messages
+from django.core.exceptions import NON_FIELD_ERRORS
+from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import redirect
+from django.utils.decorators import method_decorator
+from django.utils.translation import gettext as _
+from django.views import View
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView
 from spkcspider.apps.spider.views import DefinitionsMixin
-from .models import DataVerificationTag, VerifySourceObject
+from spkcspider.utils.settings import get_settings_func
+
 from .forms import CreateEntryForm
-from .validate import valid_wait_states, async_validate
+from .models import DataVerificationTag, VerifySourceObject
+from .validate import async_validate, valid_wait_states
 
 
 class CreateEntry(DefinitionsMixin, UpdateView):

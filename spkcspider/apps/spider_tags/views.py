@@ -1,23 +1,18 @@
 __all__ = ("PushTagView",)
 
 from django.conf import settings
-from django.urls import reverse
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponseRedirect
-
-from django.views.decorators.csrf import csrf_exempt
+from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import FormView
-
+from spkcspider.apps.spider.models import AuthToken
+from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.utils.settings import get_settings_func
 
-from spkcspider.apps.spider.views import UCTestMixin
-from spkcspider.apps.spider.models import (
-    AuthToken
-)
-from .models import SpiderTag
 from .forms import SpiderTagForm
+from .models import SpiderTag
 
 
 class PushTagView(UCTestMixin, FormView):

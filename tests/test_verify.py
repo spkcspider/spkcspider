@@ -3,28 +3,24 @@
 import re
 from unittest.mock import patch
 
+from rdflib import XSD, Graph, Literal
+
+from django.conf import settings
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.conf import settings
-from django.test import override_settings
 from django.contrib.staticfiles.testing import LiveServerTestCase
+from django.test import override_settings
 from django.urls import reverse
-
-from rdflib import Graph, Literal, XSD
-
 from django_webtest import WebTestMixin
-from spkcspider.constants import spkcgraph
-
-from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider.signals import update_dynamic
-from spkcspider.apps.verifier.models import DataVerificationTag
-from spkcspider.apps.verifier.functions import get_anchor_domain
+from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.apps.spider_tags.models import SpiderTag, TagLayout
-
+from spkcspider.apps.verifier.functions import get_anchor_domain
+from spkcspider.apps.verifier.models import DataVerificationTag
+from spkcspider.constants import spkcgraph
+from tests.helpers import LiveDjangoTestApp, MockAsyncValidate
 from tests.referrerserver import create_referrer_server
-from tests.helpers import (
-    LiveDjangoTestApp, MockAsyncValidate
-)
+
 # Create your tests here.
 
 

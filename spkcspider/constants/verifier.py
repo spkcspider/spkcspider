@@ -5,7 +5,6 @@ __all__ = [
     "VERIFICATION_CHOICES"
 ]
 
-
 from django.utils.translation import gettext_lazy as _
 
 

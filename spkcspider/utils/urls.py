@@ -3,11 +3,10 @@ __all__ = (
 )
 
 import re
-from urllib.parse import urlsplit, urlunsplit, parse_qs, urlencode
+from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
 
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-
 
 _check_scheme = re.compile(r'^[a-z]+://', re.I)
 

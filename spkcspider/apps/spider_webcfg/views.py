@@ -1,19 +1,17 @@
 __all__ = ("WebConfigView",)
 
 from django.conf import settings
-from django.http import Http404
 from django.core.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
+from django.http import Http404
 from django.http.response import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
-
-from spkcspider.utils.settings import get_settings_func
+from django.views.decorators.csrf import csrf_exempt
+from spkcspider.apps.spider.models import AssignedContent, AuthToken
 from spkcspider.apps.spider.views import UCTestMixin
-from spkcspider.apps.spider.models import (
-    AuthToken, AssignedContent
-)
+from spkcspider.utils.settings import get_settings_func
+
 from .models import WebConfig
 
 _empty_set = frozenset()

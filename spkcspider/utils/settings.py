@@ -3,12 +3,10 @@ __all__ = (
 )
 
 import inspect
-
 from functools import lru_cache
 from importlib import import_module
 
 from django.conf import settings
-
 
 # for not spamming sets
 _empty_set = frozenset()

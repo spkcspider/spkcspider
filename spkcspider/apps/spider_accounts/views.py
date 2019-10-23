@@ -3,26 +3,24 @@ __all__ = (
     "PasswordChangeView", "PasswordChangeDoneView", "SignupDoneView"
 )
 
-from django.http import HttpResponseRedirect
-from django.contrib.auth import login, authenticate
-from django.contrib.auth.views import (
-    LoginView as _LoginView,
-    LogoutView as _LogoutView,
-    PasswordChangeView as _PasswordChangeView,
-    PasswordChangeDoneView as _PasswordChangeDoneView
-)
-from django.views.generic.edit import FormView, UpdateView
-from django.views.generic.base import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.decorators.cache import never_cache
-from django.utils.decorators import method_decorator
-from django.urls import reverse_lazy
-from django.contrib.auth import get_user_model
 from django.conf import settings
-
-from .forms import SignupForm, UserUpdateForm
+from django.contrib.auth import authenticate, get_user_model, login
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView as _LoginView
+from django.contrib.auth.views import LogoutView as _LogoutView
+from django.contrib.auth.views import \
+    PasswordChangeDoneView as _PasswordChangeDoneView
+from django.contrib.auth.views import PasswordChangeView as _PasswordChangeView
+from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+from django.views.generic.base import TemplateView
+from django.views.generic.edit import FormView, UpdateView
 from spkcspider.apps.spider.forms import SpiderAuthForm
 from spkcspider.apps.spider.views import DefinitionsMixin
+
+from .forms import SignupForm, UserUpdateForm
 
 # Create your views here.
 

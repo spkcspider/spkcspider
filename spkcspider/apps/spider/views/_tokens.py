@@ -8,34 +8,28 @@ import logging
 import requests
 
 from django.conf import settings
-from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from django.views.generic.base import View, TemplateView
-from django.views.generic.edit import DeleteView
-from django.utils.translation import gettext
-
-from django.http import (
-    Http404, HttpResponseServerError, JsonResponse, HttpResponseRedirect,
-    HttpResponse
-)
-
-from django.utils.http import is_safe_url
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 from django.contrib import messages
+from django.db.models import Q
+from django.http import (
+    Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError,
+    JsonResponse
+)
+from django.shortcuts import get_object_or_404
 from django.test import Client
-
-
+from django.utils.decorators import method_decorator
+from django.utils.http import is_safe_url
+from django.utils.translation import gettext
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import TemplateView, View
+from django.views.generic.edit import DeleteView
+from spkcspider.constants import TokenCreationError
 from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
-from spkcspider.constants import TokenCreationError
 
-
+from ..conf import get_requests_params
+from ..models import AuthToken
 from ._core import UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
-from ..models import AuthToken
-from ..conf import get_requests_params
-
 
 logger = logging.getLogger(__name__)
 

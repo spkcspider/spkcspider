@@ -4,10 +4,9 @@ __all__ = (
     "info_and", "info_or"
 )
 
-from django.db.models import Q
 from django.conf import settings
-
-from spkcspider.constants import VariantType, ProtectionStateType
+from django.db.models import Q
+from spkcspider.constants import ProtectionStateType, VariantType
 
 _base_variants = ~(
     (

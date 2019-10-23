@@ -1,15 +1,12 @@
 
 from django.conf import settings
 from django.urls import path, reverse_lazy
-
-
 from django.views.generic.base import RedirectView
 
 from .views import (
-    SignupView, UpdateView, LoginView, LogoutView,
-    PasswordChangeView, PasswordChangeDoneView, SignupDoneView
+    LoginView, LogoutView, PasswordChangeDoneView, PasswordChangeView,
+    SignupDoneView, SignupView, UpdateView
 )
-
 
 app_name = "auth"
 

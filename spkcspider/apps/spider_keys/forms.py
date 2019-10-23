@@ -3,23 +3,20 @@ __all__ = ["KeyForm", "AnchorServerForm", "AnchorKeyForm"]
 
 import binascii
 
-from django.db import models
-from django import forms
-from django.conf import settings
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import gettext
-
 from cryptography import exceptions
 from cryptography.hazmat.primitives.asymmetric import padding
 
+from django import forms
+from django.conf import settings
+from django.db import models
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
+from spkcspider.apps.spider.models import AssignedContent, TravelProtection
 from spkcspider.apps.spider.widgets import ListWidget
-from spkcspider.apps.spider.models import TravelProtection, AssignedContent
 from spkcspider.constants import loggedin_active_tprotections
 
-
-from .models import PublicKey, AnchorServer, AnchorKey
-
+from .models import AnchorKey, AnchorServer, PublicKey
 
 _help_text_key = _(
     '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501

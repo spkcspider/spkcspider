@@ -8,25 +8,21 @@ __all__ = ["Protection", "AssignedProtection", "AuthToken"]
 
 import logging
 
-from django.db import models
 from django.conf import settings
+from django.db import models, transaction
+from django.db.utils import IntegrityError
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_variables
-from django.db.utils import IntegrityError
-from django.db import transaction
-
 from jsonfield import JSONField
-
 from spkcspider.constants import (
-    MAX_TOKEN_B64_SIZE, hex_size_of_bigid, TokenCreationError,
-    ProtectionType, ProtectionResult, ProtectionStateType
+    MAX_TOKEN_B64_SIZE, ProtectionResult, ProtectionStateType, ProtectionType,
+    TokenCreationError, hex_size_of_bigid
 )
 from spkcspider.utils.security import create_b64_id_token
 
-from ..validators import validator_token
-from ..protections import installed_protections, ProtectionList, PseudoPw
+from ..protections import ProtectionList, PseudoPw, installed_protections
 from ..queryfilters import active_protections_q
-
+from ..validators import validator_token
 from .base import BaseSubUserComponentModel
 
 logger = logging.getLogger(__name__)

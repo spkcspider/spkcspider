@@ -1,20 +1,17 @@
 
 from urllib.parse import parse_qs, urlsplit
 
-from django.test import override_settings
-from django_webtest import TransactionWebTest
-from django.urls import reverse
 import requests
 
-from spkcspider.constants import VariantType
-
-from spkcspider.apps.spider_accounts.models import SpiderUser
-from spkcspider.apps.spider.models import (
-    ContentVariant, AuthToken
-)
+from django.test import override_settings
+from django.urls import reverse
+from django_webtest import TransactionWebTest
+from spkcspider.apps.spider.models import AuthToken, ContentVariant
 from spkcspider.apps.spider.signals import update_dynamic
-
+from spkcspider.apps.spider_accounts.models import SpiderUser
+from spkcspider.constants import VariantType
 from tests.referrerserver import create_referrer_server
+
 # Create your tests here.
 
 

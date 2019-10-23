@@ -2,9 +2,8 @@ __all__ = ["SchemeWidget"]
 
 import json
 
-from django.forms import widgets
 from django.conf import settings
-
+from django.forms import widgets
 
 _extra = '' if settings.DEBUG else '.min'
 

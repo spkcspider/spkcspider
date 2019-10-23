@@ -2,25 +2,23 @@ __all__ = ["UserComponentForm", "UserContentForm"]
 
 import logging
 
-from django.conf import settings
 from django import forms
-from django.db import models
+from django.conf import settings
 from django.core.exceptions import NON_FIELD_ERRORS
+from django.db import models
 from django.utils.translation import gettext_lazy as _
-
-from spkcspider.utils.security import (
-    create_b64_id_token, calculate_protection_strength
-)
 from spkcspider.constants import (
-    ProtectionType, VariantType, protected_names, MIN_PROTECTION_STRENGTH_LOGIN
+    MIN_PROTECTION_STRENGTH_LOGIN, ProtectionType, VariantType, protected_names
 )
-from ..conf import STATIC_TOKEN_CHOICES, INITIAL_STATIC_TOKEN_SIZE
+from spkcspider.utils.security import (
+    calculate_protection_strength, create_b64_id_token
+)
 
+from ..conf import INITIAL_STATIC_TOKEN_SIZE, STATIC_TOKEN_CHOICES
 from ..models import (
-    Protection, UserComponent, AssignedContent, ContentVariant, AuthToken,
-    TravelProtection
+    AssignedContent, AuthToken, ContentVariant, Protection, TravelProtection,
+    UserComponent
 )
-
 
 logger = logging.getLogger(__name__)
 

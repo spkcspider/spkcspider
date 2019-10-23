@@ -1,8 +1,8 @@
 __all__ = ["sitemaps", "ComponentSitemap", "ContentSitemap", "HomeSitemap"]
 
+from django.conf import settings
 from django.contrib.sitemaps import GenericSitemap, Sitemap
 from django.urls import reverse
-from django.conf import settings
 
 
 class ComponentSitemap(GenericSitemap):
