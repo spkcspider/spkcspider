@@ -49,8 +49,8 @@ def info_field_validator(value):
 
 
 class ReferrerObject(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
-    url = models.URLField(
+    id: int = models.BigAutoField(primary_key=True, editable=False)
+    url: str = models.URLField(
         max_length=(
             600 if (
                 settings.DATABASES["default"]["ENGINE"] !=
@@ -91,7 +91,7 @@ class BaseInfoModel(models.Model):
     # every section must start and end with \n every keyword must be unique and
     # in this format: keyword=
     # no unneccessary spaces!
-    info = models.TextField(
+    info: str = models.TextField(
         null=False, editable=False,
         validators=[info_field_validator]
     )

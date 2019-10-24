@@ -313,7 +313,7 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
             **margs
         )
 
-    def get_usercomponent(self):
+    def get_usercomponent(self) -> UserComponent:
         return get_object_or_404(
             UserComponent.objects.prefetch_related(
                 "authtokens"
@@ -324,11 +324,13 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
     def handle_no_permission(self):
         # in case no protections are used (e.g. add content)
         p = getattr(self.request, "protections", False)
-        if not bool(p):
+        # should be never an integer exclusive False here
+        assert \
+            p is False or not isinstance(p, int), \
+            "handle_no_permission called despite test successful"
+        if not p:
             # return 403
             return super().handle_no_permission()
-        # should be never true here
-        assert(p is not True)
         context = {
             "sanitized_GET": self.sanitize_GET(),
             "LOGIN_URL": self.get_login_url(),
@@ -337,6 +339,7 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
             "object": getattr(self, "object", None),
             "is_public_view": self.usercomponent.public
         }
+        # check that p is list/tuple/... and not empty
         assert len(p) > 0
         return self.response_class(
             request=self.request,

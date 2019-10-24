@@ -120,7 +120,7 @@ class LinkContent(BaseContent):
     expose_name = False
     expose_description = False
 
-    push = models.BooleanField(
+    push: bool = models.BooleanField(
         blank=True, default=False,
         help_text=_("Improve ranking of this Link.")
     )
@@ -142,17 +142,17 @@ class LinkContent(BaseContent):
             get_content_description()
         )
 
-    def get_strength(self):
+    def get_strength(self) -> int:
         return self.associated.attached_to_content.content.get_strength()
 
-    def get_priority(self):
+    def get_priority(self) -> int:
         priority = self.associated.attached_to_content.content.get_priority()
         # pin to top
         if self.push and priority < 1:
             return 1
         return priority
 
-    def get_strength_link(self):
+    def get_strength_link(self) -> int:
         # don't allow links linking on links
         return 11
 

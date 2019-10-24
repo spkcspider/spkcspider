@@ -29,20 +29,21 @@ from ..contents import installed_contents
 from ..validators import content_name_validator, validator_token
 from .base import BaseInfoModel, BaseSubUserComponentModel
 
+
 logger = logging.getLogger(__name__)
 
 
 # ContentType is already occupied
 class ContentVariant(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     # usercontent abilities/requirements
-    ctype = models.CharField(
+    ctype: str = models.CharField(
         max_length=10, default="",
     )
-    code = models.CharField(max_length=255)
-    name = models.SlugField(max_length=50, unique=True, db_index=True)
+    code: str = models.CharField(max_length=255)
+    name: str = models.SlugField(max_length=50, unique=True, db_index=True)
     # required protection strength (selection)
-    strength = models.PositiveSmallIntegerField(
+    strength: int = models.PositiveSmallIntegerField(
         default=0, validators=[validators.MaxValueValidator(10)]
     )
     # for content features

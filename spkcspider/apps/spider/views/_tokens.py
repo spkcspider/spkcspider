@@ -38,7 +38,7 @@ class AdminTokenManagement(UCTestMixin, View):
     scope = None
     created_token = None
 
-    def dispatch_extra(self, request, *args, **kwargs):
+    def dispatch_extra(self, request, *args, **kwargs) -> None:
         self.remove_old_tokens()
         return None
 

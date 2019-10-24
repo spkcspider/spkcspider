@@ -262,10 +262,10 @@ class AssignedProtectionQuerySet(BaseQuerySet):
 
 
 class AssignedProtection(BaseSubUserComponentModel):
-    id = models.BigAutoField(primary_key=True)
+    id: int = models.BigAutoField(primary_key=True)
 
     objects = AssignedProtectionQuerySet.as_manager()
-    protection = models.ForeignKey(
+    protection: Protection = models.ForeignKey(
         Protection, on_delete=models.CASCADE, related_name="assigned",
         limit_choices_to=get_limit_choices_assigned_protection
     )
@@ -274,10 +274,10 @@ class AssignedProtection(BaseSubUserComponentModel):
         on_delete=models.CASCADE, editable=False
     )
     # data for protection
-    data = JSONField(default=dict, null=False)
+    data: dict = JSONField(default=dict, null=False)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
-    state = models.CharField(
+    state: str = models.CharField(
         max_length=1, choices=ProtectionStateType.as_choices(),
         default=ProtectionStateType.enabled,
         help_text=_(
@@ -310,17 +310,19 @@ class AuthTokenManager(models.Manager):
 
 
 class AuthToken(BaseSubUserComponentModel):
-    id = models.BigAutoField(primary_key=True, editable=False)
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     usercomponent = models.ForeignKey(
         "spider_base.UserComponent", on_delete=models.CASCADE,
         related_name="authtokens"
     )
     # -1=false,0=usercomponent,1-...=anchor
-    persist = models.BigIntegerField(blank=True, default=-1, db_index=True)
+    persist: int = models.BigIntegerField(
+        blank=True, default=-1, db_index=True
+    )
     # brute force protection
     #  16 = usercomponent.id in hexadecimal
     #  +2 for seperators
-    token = models.CharField(
+    token: str = models.CharField(
         max_length=MAX_TOKEN_B64_SIZE+hex_size_of_bigid+2,
         db_index=True, unique=True,
         validators=[
@@ -331,8 +333,8 @@ class AuthToken(BaseSubUserComponentModel):
         "spider_base.ReferrerObject", on_delete=models.CASCADE,
         related_name="tokens", blank=True, null=True
     )
-    session_key = models.CharField(max_length=40, null=True)
-    extra = JSONField(default=dict, blank=True)
+    session_key: str = models.CharField(max_length=40, null=True)
+    extra: dict = JSONField(default=dict, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
 
     objects = AuthTokenManager()

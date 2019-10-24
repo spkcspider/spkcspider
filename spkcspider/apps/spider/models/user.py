@@ -124,18 +124,18 @@ class UserComponentManager(models.Manager):
 
 
 class UserComponent(models.Model):
-    id = models.BigAutoField(primary_key=True, editable=False)
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     # brute force protection and identifier, replaces nonce
     #  16 = usercomponent.id in hexadecimal
     #  +1 for seperator
-    token = models.CharField(
+    token: str = models.CharField(
         max_length=(MAX_TOKEN_B64_SIZE)+hex_size_of_bigid+2,
         db_index=True, unique=True, null=True, blank=True,
         validators=[
             validator_token
         ]
     )
-    public = models.BooleanField(
+    public: bool = models.BooleanField(
         default=False,
         help_text=_(
             "Is public? Is listed and searchable?<br/>"
@@ -148,25 +148,25 @@ class UserComponent(models.Model):
     #    attached content is only visible for admin and user
     # db_index=True: "index" requests can speed up
     # regex disables controlcars and disable special spaces
-    name = models.CharField(
+    name: str = models.CharField(
         max_length=255,
         null=False,
         db_index=True,
         help_text=_name_help,
         validators=[validators.RegexValidator(r"^(\w[\w ]*\w|\w?)$")]
     )
-    description = models.TextField(
+    description: str = models.TextField(
         default="",
         help_text=_(
             "Description of user component."
         ), blank=True
     )
-    required_passes = models.PositiveIntegerField(
+    required_passes: int = models.PositiveIntegerField(
         default=0,
         help_text=_required_passes_help
     )
     # cached protection strength
-    strength = models.PositiveSmallIntegerField(
+    strength: int = models.PositiveSmallIntegerField(
         default=0,
         validators=[validators.MaxValueValidator(10)],
         editable=False
@@ -207,10 +207,12 @@ class UserComponent(models.Model):
     modified = models.DateTimeField(auto_now=True, editable=False)
 
     # only admin
-    featured = models.BooleanField(default=False, help_text=_feature_help)
+    featured: bool = models.BooleanField(
+        default=False, help_text=_feature_help
+    )
 
     # both should not be edited
-    can_auth = models.BooleanField(default=False, editable=False)
+    can_auth: bool = models.BooleanField(default=False, editable=False)
 
     token_duration = models.DurationField(
         default=default_uctoken_duration,
@@ -327,11 +329,11 @@ class UserComponent(models.Model):
         return UserComponent.objects.get(user=self.user, name="index")
 
     @property
-    def is_index(self):
+    def is_index(self) -> bool:
         return (self.name == "index")
 
     @property
-    def is_public_allowed(self):
+    def is_public_allowed(self) -> bool:
         """ Is the public attribute allowed """
         return not self.is_index and not self.contents.filter(
             strength__gte=5
@@ -346,7 +348,7 @@ class UserComponent(models.Model):
 
 class UserInfo(models.Model):
     """ Contains generated Informations about user """
-    id = models.BigAutoField(primary_key=True, editable=False)
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, editable=False,
         related_name="spider_info",
@@ -354,8 +356,8 @@ class UserInfo(models.Model):
     allowed_content = models.ManyToManyField(
         "spider_base.ContentVariant", related_name="+", editable=False
     )
-    used_space_local = models.BigIntegerField(default=0, editable=False)
-    used_space_remote = models.BigIntegerField(default=0, editable=False)
+    used_space_local: int = models.BigIntegerField(default=0, editable=False)
+    used_space_remote: int = models.BigIntegerField(default=0, editable=False)
 
     class Meta:
         default_permissions = ()
