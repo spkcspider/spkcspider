@@ -1,16 +1,10 @@
 __all__ = [
     "LicenseChooserWidget"
 ]
-
-
 import json
 
-# from django.forms import widgets
 from django.conf import settings
 from spkcspider.apps.spider.widgets import OpenChoiceWidget
-
-# from django.utils.translation import gettext_lazy as _
-
 
 
 _extra = '' if settings.DEBUG else '.min'

@@ -302,8 +302,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * test admin
 * Localisation
   * harmonize punctation
-* fix rdf:
-  * multiple types definitions
+* css theme instead inline style
 * DeleteView: allow multiple deletions (dynamically load via json)
   * merge deleteview of Components with the one of Contents
 * improve features:
