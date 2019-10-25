@@ -24,7 +24,7 @@ keywords = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.5"
+python = ">=3.6"
 django = '>=2.2'
 django-simple-jsonfield = '>=0.3'
 requests = '*'
@@ -59,7 +59,7 @@ legacy_tox_ini = """
 [tox]
 minversion = 3.4.0
 isolated_build = True
-envlist = py35-django22-{sqlite3,postgresql,mysql}, py{36,37}-django{22,master}-{sqlite3,postgresql,mysql}
+envlist = py{36,37,38}-django{22,master}-{sqlite3,postgresql,mysql}
 # extras = test
 
 [testenv]
