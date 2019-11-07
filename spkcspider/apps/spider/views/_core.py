@@ -271,6 +271,7 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
             return True
         # can use auth token != X-TOKEN
         if user_by_token and self.test_token(4) is True:
+            # is_owner, ... set by test_token
             return True
 
         # remove user special state if is_travel_protected

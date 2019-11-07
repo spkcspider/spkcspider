@@ -198,7 +198,7 @@ async function update_share_tokens(event){
       option = new Option(token.name, token.id);
     }
     option.dataset["needs_confirmation"] = token.needs_confirmation;
-    option.dataset["token"] = token.token;
+    option.dataset["token"] = token.token || '';
     token_selector.options.add(option);
   }
   token_selector.disabled=false;

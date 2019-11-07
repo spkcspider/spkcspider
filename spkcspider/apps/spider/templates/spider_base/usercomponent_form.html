@@ -33,7 +33,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     {% if object %}
       <span class="w3-right w3-left-align">
         <a rel="nofollow" class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){return open_qrmodal(event);}; return false;" href="#">
-          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Share' %}
+          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% if object.is_index %}{% trans 'Login Token' %}{% else %}{% trans 'Share' %}{% endif %}
         </a>
         {% if not object.is_index %}
           <div style="margin-bottom:5px">

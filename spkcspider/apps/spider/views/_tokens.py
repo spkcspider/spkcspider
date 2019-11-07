@@ -127,12 +127,14 @@ class AdminTokenManagement(UCTestMixin, View):
             ret["same_session"] = True
         else:
             ret["same_session"] = False
+            if self.usercomponent.is_index:
+                ret["token"] = None
 
         return ret
 
     def get(self, request, *args, **kwargs):
-        # don't filter here, as used twice
-        if self.scope == "delete":
+        # is logged in
+        if self.request.user == self.usercomponent.user:
             response = {
                 "tokens": list(map(
                     self._token_dict,
@@ -142,12 +144,18 @@ class AdminTokenManagement(UCTestMixin, View):
                 )),
             }
         else:
+            session_key = (
+                self.request.auth_token.session_key or
+                request.session.session_key
+            )
+            queryq = Q(token=request.auth_token)
+            if session_key:
+                queryq |= Q(session_key=session_key)
             response = {
                 "tokens": list(map(
                     self._token_dict,
                     AuthToken.objects.filter(
-                        Q(session_key=request.session.session_key) |
-                        Q(token=request.auth_token),
+                        queryq,
                         usercomponent=self.usercomponent,
                     )
                 )),
