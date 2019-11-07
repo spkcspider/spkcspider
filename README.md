@@ -300,6 +300,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * examples
 * documentation
 * test admin
+* cleanup travelprotection: either no trigger_passwords if no trigger action is selected, or depend for trigger on trigger_passwords
 * Localisation
   * harmonize punctation
 * css theme instead inline style
