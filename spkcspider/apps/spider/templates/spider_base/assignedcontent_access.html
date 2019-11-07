@@ -72,7 +72,7 @@
       {% endif %}
       {% if scope != "add" %}
         <a rel="nofollow" class="w3-block" style="margin-bottom:5px" onclick="if(document.readyState === 'complete'){return open_qrmodal(event);}; return false;" href="#">
-          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Share' %}
+          <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% if uc.is_index %}{% trans 'Login Token' %}{% else %}{% trans 'Share' %}{% endif %}
         </a>
       {% endif %}
       {% if scope != "add" and request.is_special_user and no_export_type not in object.ctype.ctype %}
