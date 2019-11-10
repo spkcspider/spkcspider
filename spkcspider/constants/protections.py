@@ -54,6 +54,6 @@ class ProtectionStateType(str, enum.Enum):
     def as_choices(cls):
         from django.utils.translation import gettext_lazy as _
         return (
-            (i[1], _(i[0]))
+            (i[1], _(i[0].replace('_', ' ')))
             for i in ProtectionStateType.__members__.items()
         )
