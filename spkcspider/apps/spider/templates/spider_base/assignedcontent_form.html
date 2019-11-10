@@ -50,7 +50,7 @@
 {{block.super}}
 {% if scope == "update" and raw_update_type in object.ctype.ctype %}
   {% url 'spider_base:ucontent-access' token=object.token access='raw_update' as rawupdatelink %}
-  {% include "spider_base/partials/rawupdate_presenter.html" with rawupdatelink=rawupdatelink %}
+  {% include "spider_base/partials/rawupdate_modal.html" with rawupdatelink=rawupdatelink %}
 {% endif %}
 {% if scope == "update" and object.primary_anchor_for.exists %}
 <script type="text/javascript">

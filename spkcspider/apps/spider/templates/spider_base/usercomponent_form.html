@@ -159,7 +159,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
 
 {% block outercontent %}
 {% if object %}
-  {% include "spider_base/partials/share_presenter.html" with uc=object %}
+  {% include "spider_base/partials/share_modal.html" with uc=object %}
   <script>
     let allselector=document.getElementById("deleteAllSelector");
     let deleteform=document.getElementById("deleteForm");
