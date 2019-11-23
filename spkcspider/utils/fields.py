@@ -5,6 +5,7 @@ __all__ = (
 
 import re
 from urllib.parse import urljoin
+from functools import reduce
 
 from django.conf import settings
 from django.forms import BoundField, Field
@@ -85,13 +86,17 @@ def add_property(
     return value_node
 
 
+def _field_helper(ob, attr):
+    return getattr(ob, attr)
+
+
 def add_by_field(dic, field="__name__"):
     def _func(klass):
         # should be able to block real object
         if "{}.{}".format(klass.__module__, klass.__qualname__) not in getattr(
             settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
         ):
-            dic[getattr(klass, field)] = klass
+            dic[reduce(_field_helper, [klass, *field.split(".")])] = klass
 
         return klass
     return _func

@@ -1,7 +1,8 @@
-__all__ = ("default_layouts", "initialize_layouts")
+__all__ = ("default_layouts",)
 
 from django.utils.translation import gettext_noop as _
-from spkcspider.utils.settings import extract_app_dicts
+
+from . import registry
 
 default_layouts = {}
 default_layouts["address"] = {
@@ -285,29 +286,4 @@ default_layouts["license"] = {
     ]
 }
 
-
-def initialize_layouts(apps=None):
-    if not apps:
-        from django.apps import apps
-    TagLayout = apps.get_model("spider_tags", "TagLayout")
-    layouts = default_layouts.copy()
-    # create union from all layouts
-    for app in apps.get_app_configs():
-        layouts.update(
-            extract_app_dicts(app, "spider_tag_layouts")
-        )
-    # iterate over unionized layouts
-    for name, layout_dic in layouts.items():
-        tag_layout = TagLayout.objects.get_or_create(
-            defaults=layout_dic, name=name
-        )[0]
-        has_changed = False
-        # check attributes of model
-        for layout_attr, value in layout_dic.items():
-            if getattr(tag_layout, layout_attr) != value:
-                # layout change detected, update and mark for saving
-                setattr(tag_layout, layout_attr, value)
-                has_changed = True
-
-        if has_changed:
-            tag_layout.save()
+registry.layouts.update(default_layouts)

@@ -6,7 +6,6 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import (
     m2m_changed, post_delete, post_migrate, post_save, pre_save
 )
-from spkcspider.utils.settings import extract_app_dicts
 
 from .signals import (
     CleanupCb, InitUserCb, TriggerUpdate, UpdateAnchorComponentCb,
@@ -19,19 +18,13 @@ class SpiderBaseConfig(AppConfig):
     name = 'spkcspider.apps.spider'
     label = 'spider_base'
     spider_url_path = 'spider/'
+    spider_protections_path = ".protections"
     verbose_name = 'spkcspider base'
 
     def ready(self):
         from .models import (
             AssignedContent, UserComponent
         )
-        from django.apps import apps
-        from .protections import installed_protections
-
-        for app in apps.get_app_configs():
-            installed_protections.update(
-                extract_app_dicts(app, "spider_protections", "name")
-            )
 
         pre_save.connect(
             UpdateAnchorComponentCb, sender=UserComponent,

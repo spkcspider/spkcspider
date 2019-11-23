@@ -17,9 +17,10 @@ from ranged_response import RangedFileResponse
 from spkcspider.apps.spider.conf import (
     FILE_TOKEN_SIZE, image_extensions, media_extensions
 )
-from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider import registry
 from spkcspider.constants import VariantType
-from spkcspider.utils.fields import prepare_description
+from spkcspider.utils.fields import prepare_description, add_by_field
 from spkcspider.utils.security import create_b64_token
 
 from .conf import LICENSE_CHOICES
@@ -49,7 +50,7 @@ def get_file_path(instance, filename):
     return ret_path
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class DisclaimerFeature(BaseContent):
     appearances = [
         {
@@ -93,7 +94,7 @@ class ContentWithLicense(BaseContent):
         return s
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class FileFilet(ContentWithLicense):
     expose_name = True
     expose_description = True
@@ -212,7 +213,7 @@ class FileFilet(ContentWithLicense):
         super().save(*args, **kw)
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class TextFilet(ContentWithLicense):
     expose_name = "force"
     expose_description = True

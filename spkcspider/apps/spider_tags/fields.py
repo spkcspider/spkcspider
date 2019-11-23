@@ -1,4 +1,3 @@
-__all__ = ["installed_fields", "generate_fields"]
 
 import logging
 import posixpath
@@ -11,7 +10,7 @@ from spkcspider.apps.spider.widgets import (
 )
 from spkcspider.utils.fields import add_by_field
 
-installed_fields = {}
+from . import registry
 
 safe_default_fields = [
     "BooleanField", "CharField", "ChoiceField", "MultipleChoiceField",
@@ -21,10 +20,10 @@ safe_default_fields = [
     "URLField"
 ]
 for i in safe_default_fields:
-    installed_fields[i] = getattr(forms, i)
+    registry.fields[i] = getattr(forms, i)
 
 
-@add_by_field(installed_fields, "__name__")
+@add_by_field(registry.fields, "__name__")
 class TextareaField(forms.CharField):
     widget = forms.Textarea
 
@@ -40,12 +39,12 @@ def localized_choices(obj):
     return func
 
 
-installed_fields["LocalizedChoiceField"] = localized_choices(forms.ChoiceField)
-installed_fields["MultipleLocalizedChoiceField"] = \
+registry.fields["LocalizedChoiceField"] = localized_choices(forms.ChoiceField)
+registry.fields["MultipleLocalizedChoiceField"] = \
     localized_choices(forms.MultipleChoiceField)
 
 
-@add_by_field(installed_fields, "__name__")
+@add_by_field(registry.fields, "__name__")
 class UserContentRefField(forms.ModelChoiceField):
     filter_strength_link = "associated_rel__usercomponent__strength__lte"
     exclude_travel = (
@@ -83,7 +82,7 @@ class UserContentRefField(forms.ModelChoiceField):
         return str(obj)
 
 
-@add_by_field(installed_fields, "__name__")
+@add_by_field(registry.fields, "__name__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
     filter_strength_link = "associated_rel__usercomponent__strength__lte"
     exclude_travel = (
@@ -123,7 +122,7 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
         return str(obj)
 
 
-@add_by_field(installed_fields, "__name__")
+@add_by_field(registry.fields, "__name__")
 class AnchorField(forms.ModelChoiceField):
     spkc_use_uriref = True
     use_default_anchor = None
@@ -233,7 +232,7 @@ def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
                 StopSub(**item)
             ))
         elif isinstance(field, str):
-            new_field = installed_fields.get(field, None)
+            new_field = registry.fields.get(field, None)
             if not new_field:
                 logging.warning("Invalid field specified: %s", field)
             else:

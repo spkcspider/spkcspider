@@ -27,6 +27,7 @@ from spkcspider.utils.settings import get_settings_func
 
 from ..conf import default_uctoken_duration, force_captcha
 from ..validators import validator_token
+from .. import registry
 
 logger = logging.getLogger(__name__)
 
@@ -265,7 +266,9 @@ class UserComponent(models.Model):
     def auth(self, request, ptype=ProtectionType.access_control,
              protection_codes=None, side_effect=False,
              order_by="protection__code", **kwargs):
-        # caching problems
+        # caching/import problems, will cause heisenbugs
+        # if QuerySet is accessed via reverse foreign key
+        # so use explicit import
         from .protections import AssignedProtection
         if side_effect:
             return AssignedProtection.objects.filter(
@@ -363,7 +366,6 @@ class UserInfo(models.Model):
         default_permissions = ()
 
     def calculate_allowed_content(self):
-        from ..contents import installed_contents
         ContentVariant = apps.get_model("spider_base.ContentVariant")
         allowed = []
         cfilterfunc = get_settings_func(
@@ -381,7 +383,7 @@ class UserInfo(models.Model):
             ),
             ctype__contains=VariantType.unlisted
         ).filter(
-            code__in=installed_contents
+            code__in=registry.contents.keys()
         ):
             # always include special variants
             # elsewise unnecessary recalculations are done and other bugs

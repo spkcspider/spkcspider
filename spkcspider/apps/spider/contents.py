@@ -1,6 +1,6 @@
 
 __all__ = (
-    "add_content", "installed_contents", "BaseContent"
+    "BaseContent"
 )
 import logging
 from functools import lru_cache
@@ -8,14 +8,12 @@ from urllib.parse import urljoin
 
 from rdflib import RDF, XSD, BNode, Graph, Literal, URIRef
 
-from django.apps import apps as django_apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.core.files.base import File
 from django.db import models, transaction
-from django.db.utils import IntegrityError
 from django.http import Http404
 from django.http.response import HttpResponse, HttpResponseBase
 from django.middleware.csrf import CsrfViewMiddleware
@@ -24,7 +22,7 @@ from django.utils.html import escape
 from django.utils.translation import gettext, pgettext
 from django.views.decorators.csrf import csrf_exempt
 from spkcspider.constants import (
-    ActionUrl, VariantType, essential_contents, spkcgraph
+    ActionUrl, VariantType, spkcgraph
 )
 from spkcspider.utils.fields import add_property, literalize
 from spkcspider.utils.security import create_b64_id_token
@@ -36,7 +34,6 @@ from .serializing import paginate_stream, serialize_stream
 
 logger = logging.getLogger(__name__)
 
-installed_contents = {}
 
 # don't spam set objects
 _empty_set = frozenset()
@@ -51,105 +48,6 @@ default_abilities = frozenset(
 
 # never use these names
 forbidden_names = {"Content", "UserComponent"}
-
-# updated attributes of ContentVariant
-_attribute_list = ["name", "ctype", "strength"]
-
-
-def add_content(klass):
-    code = klass._meta.model_name
-    if code in installed_contents:
-        raise Exception("Duplicate content")
-    klassname = "{}.{}".format(klass.__module__, klass.__qualname__)
-    if klassname not in _blacklisted:
-        installed_contents[code] = klass
-    return klass
-
-
-def initialize_content_models(apps=None):
-    if not apps:
-        apps = django_apps
-    ContentVariant = apps.get_model("spider_base", "ContentVariant")
-    all_content = models.Q()
-    valid_for = {}
-
-    diff = essential_contents.difference(
-        installed_contents.keys()
-    )
-    if diff:
-        logger.warning(
-            "Missing essential contents: %s" % diff
-        )
-
-    for code, val in installed_contents.items():
-        appearances = val.appearances
-        if callable(appearances):
-            appearances = appearances()
-
-        # update name if only one name exists
-        update = (len(appearances) == 1)
-
-        for attr_dict in appearances:
-            require_save = False
-            assert attr_dict["name"] not in forbidden_names, \
-                "Forbidden content name: %s" % attr_dict["name"]
-            attr_dict = attr_dict.copy()
-            _v_for = attr_dict.pop("valid_feature_for", None)
-            try:
-                with transaction.atomic():
-                    if update:
-                        variant = ContentVariant.objects.get_or_create(
-                            defaults=attr_dict, code=code
-                        )[0]
-                    else:
-                        variant = ContentVariant.objects.get_or_create(
-                            defaults=attr_dict, code=code,
-                            name=attr_dict["name"]
-                        )[0]
-
-            except IntegrityError:
-                # renamed model = code changed
-                variant = ContentVariant.objects.get(name=attr_dict["name"])
-                variant.code = code
-                require_save = True
-
-            if _v_for:
-                if _v_for == "*":
-                    valid_for[attr_dict["name"]] = (variant, set("*"))
-                else:
-                    valid_for[attr_dict["name"]] = (variant, set(_v_for))
-            elif VariantType.content_feature in variant.ctype:
-                logger.warning(
-                    "%s defines content_feature but defines no "
-                    "\"valid_feature_for\"", variant.name
-                )
-
-            for key in _attribute_list:
-                val = attr_dict.get(
-                    key, variant._meta.get_field(key).get_default()
-                )
-                if getattr(variant, key) != val:
-                    setattr(variant, key, val)
-                    require_save = True
-            if require_save:
-                variant.save()
-            all_content |= models.Q(name=attr_dict["name"], code=code)
-    for val in valid_for.values():
-        try:
-            # try first to exclude by stripping "*" and checking error
-            val[1].remove("*")
-            val[0].valid_feature_for.set(ContentVariant.objects.exclude(
-                name__in=val[1]
-            ))
-        except KeyError:
-            val[0].valid_feature_for.set(ContentVariant.objects.filter(
-                name__in=val[1]
-            ))
-
-    invalid_models = ContentVariant.objects.exclude(all_content)
-    if invalid_models.exists():
-        print("Invalid content, please update or remove them:",
-              ["\"{}\":{}".format(t.code, t.name) for t in invalid_models])
 
 
 class BaseContent(models.Model):
@@ -195,15 +93,26 @@ class BaseContent(models.Model):
 
     _content_is_cleaned = False
 
+    class Meta:
+        abstract = True
+        default_permissions = ()
+
+    def __str__(self):
+        if not self.id:
+            return self.localize_name(self.associated.ctype.name)
+        else:
+            return self.associated.name
+
+    def __repr__(self):
+        return "<Content: ({}: {})>".format(
+            self.associated.usercomponent.username, self.__str__()
+        )
+
     @property
     def associated(self):
         if self.associated_obj:
             return self.associated_obj
         return self.associated_rel.first()
-
-    class Meta:
-        abstract = True
-        default_permissions = ()
 
     @classmethod
     def static_create(
@@ -230,17 +139,6 @@ class BaseContent(models.Model):
     @classmethod
     def localize_name(cls, name):
         return pgettext("content name", name)
-
-    def __str__(self):
-        if not self.id:
-            return self.localize_name(self.associated.ctype.name)
-        else:
-            return self.associated.name
-
-    def __repr__(self):
-        return "<Content: ({}: {})>".format(
-            self.associated.usercomponent.username, self.__str__()
-        )
 
     def get_size(self):
         # 255 = length name no matter what encoding

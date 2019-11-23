@@ -38,6 +38,9 @@ def get_settings_func(*args, default=None, exclude=frozenset()):
 
 
 def extract_app_dicts(app, name, fieldname=None):
+    """
+
+    """
     ndic = {}
     for (key, value) in getattr(app, name, _empty_dict).items():
         if inspect.isclass(value):
@@ -55,7 +58,7 @@ def extract_app_dicts(app, name, fieldname=None):
                 settings, "SPIDER_BLACKLISTED_MODULES", _empty_set
             ):
                 module, name = value.rsplit(".", 1)
-                value = getattr(import_module(module), name)
+                value = getattr(import_module(module, app.name), name)
                 if fieldname:
                     setattr(value, fieldname, key)
                 ndic[key] = value

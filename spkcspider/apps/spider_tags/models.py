@@ -13,9 +13,11 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.views.decorators.csrf import csrf_exempt
 from jsonfield import JSONField
-from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider import registry
 from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.settings import get_settings_func
+from spkcspider.utils.fields import add_by_field
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +111,7 @@ class TagLayout(models.Model):
         return super().save(*args, **kwargs)
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class UserTagLayout(BaseContent):
     # 10 is required for preventing info leak gadgets via component auth
     appearances = [
@@ -193,7 +195,7 @@ class UserTagLayout(BaseContent):
         return super().access(context)
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class SpiderTag(BaseContent):
     _cached_references = None
     tmp_primary_anchor = None

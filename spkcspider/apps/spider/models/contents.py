@@ -25,12 +25,14 @@ from django.utils.html import escape
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
+from spkcspider.utils.fields import add_by_field
 from spkcspider.constants import (
     ActionUrl, TravelLoginType, VariantType, dangerous_login_choices,
     travel_scrypt_params
 )
 
-from ..contents import BaseContent, add_content
+from ..contents import BaseContent
+from .. import registry
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ logger = logging.getLogger(__name__)
 link_abilities = frozenset(["add", "update", "update_raw", "raw", "export"])
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class PersistenceFeature(BaseContent):
     appearances = [
         {
@@ -61,7 +63,7 @@ class PersistenceFeature(BaseContent):
         ]
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class DomainMode(BaseContent):
     appearances = [
         {
@@ -84,7 +86,7 @@ class DomainMode(BaseContent):
         return _("content name", "Domain Mode")
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class DefaultActions(BaseContent):
     appearances = [
         {
@@ -111,7 +113,7 @@ class DefaultActions(BaseContent):
         abstract = True
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class LinkContent(BaseContent):
     appearances = [{
         "name": "Link",
@@ -326,7 +328,7 @@ class TravelProtectionManager(models.Manager):
         return True
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class TravelProtection(BaseContent):
     # should not be a feature as it would be detectable this way
     appearances = [

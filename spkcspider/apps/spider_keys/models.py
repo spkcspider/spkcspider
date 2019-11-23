@@ -18,9 +18,11 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from jsonfield import JSONField
 from spkcspider.apps.spider.conf import get_anchor_domain, get_anchor_scheme
-from spkcspider.apps.spider.contents import BaseContent, add_content
+from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider import registry
 from spkcspider.constants import VariantType
 from spkcspider.utils.security import get_hashob
+from spkcspider.utils.fields import add_by_field
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ def valid_pkey_properties(key):
         raise ValidationError(_('Not a key'))
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class PublicKey(BaseContent):
     expose_name = False
     expose_description = True
@@ -200,7 +202,7 @@ class AnchorBase(BaseContent):
         return ret
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class AnchorServer(AnchorBase):
     """ identify by server """
     appearances = [
@@ -251,7 +253,7 @@ class AnchorServer(AnchorBase):
         return ret
 
 
-@add_content
+@add_by_field(registry.contents, "_meta.model_name")
 class AnchorKey(AnchorBase):
     """ domain name of pc, signed """
     expose_name = False
@@ -323,7 +325,7 @@ class AnchorKey(AnchorBase):
 
 
 # TODO: implement
-# @add_content
+#
 class AnchorLink(AnchorBase):
     """
         Anchor by Organisation, e.g. government,

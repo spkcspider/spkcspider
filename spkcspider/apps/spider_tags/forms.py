@@ -24,7 +24,8 @@ from spkcspider.apps.spider.widgets import ListWidget
 from spkcspider.constants import loggedin_active_tprotections
 from spkcspider.utils.urls import merge_get_url
 
-from .fields import generate_fields, installed_fields
+from .fields import generate_fields
+from . import registry
 from .models import SpiderTag, TagLayout
 from .widgets import SchemeWidget
 
@@ -37,7 +38,7 @@ _extra = '' if settings.DEBUG else '.min'
 
 class TagLayoutForm(forms.ModelForm):
     layout = JsonField(
-        widget=SchemeWidget(installed_fields.keys())
+        widget=SchemeWidget(registry.fields.keys())
     )
     default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(
@@ -79,7 +80,7 @@ class TagLayoutForm(forms.ModelForm):
 
 class TagLayoutAdminForm(forms.ModelForm):
     layout = JsonField(
-        widget=SchemeWidget(installed_fields.keys())
+        widget=SchemeWidget(registry.fields.keys())
     )
     default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(

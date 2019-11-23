@@ -25,8 +25,9 @@ from spkcspider.constants import (
 )
 from spkcspider.utils.security import create_b64_id_token
 
-from ..contents import installed_contents
+from .. import registry
 from ..validators import content_name_validator, validator_token
+
 from .base import BaseInfoModel, BaseSubUserComponentModel
 
 
@@ -55,14 +56,14 @@ class ContentVariant(models.Model):
 
     @property
     def installed_class(self):
-        return installed_contents[self.code]
+        return registry.contents[self.code]
 
     @property
     def feature_urls(self):
-        return installed_contents[self.code].cached_feature_urls(self.name)
+        return registry.contents[self.code].cached_feature_urls(self.name)
 
     def localize_name(self):
-        if self.code not in installed_contents:
+        if self.code not in registry.contents:
             return self.name
         return self.installed_class.localize_name(self.name)
 

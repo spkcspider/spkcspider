@@ -1,11 +1,9 @@
 """
-installed_protections, add_protection
 namespace: spider_base
 
 """
 
-__all__ = ("installed_protections", "BaseProtection", "ProtectionResult",
-           "initialize_protection_models")
+#  __all__ = ("BaseProtection", "ProtectionResult")
 
 import binascii
 import functools
@@ -30,23 +28,18 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.views.decorators.debug import sensitive_variables
 from ratelimit import parse_rate
-from spkcspider.constants import (
-    ProtectionResult, ProtectionStateType, ProtectionType
-)
+from spkcspider.constants import ProtectionStateType, ProtectionType
 from spkcspider.utils.fields import add_by_field
 from spkcspider.utils.security import aesgcm_pbkdf2_cryptor, create_b64_token
 
 from .fields import MultipleOpenChoiceField
 from .widgets import ListWidget, OpenChoiceWidget, PWOpenChoiceWidget
+from . import registry
 
 # from django.contrib.auth.hashers import make_password
 
 
-
-
-
 logger = logging.getLogger(__name__)
-installed_protections = {}
 _sysrand = SystemRandom()
 
 # don't spam set objects
@@ -67,39 +60,6 @@ _Scrypt_params = {
     "r": 16,
     "p": 2,
 }
-
-
-def initialize_protection_models(apps=None):
-    if not apps:
-        apps = django_apps
-    UserComponent = apps.get_model("spider_base", "UserComponent")
-    AssignedProtection = apps.get_model("spider_base", "AssignedProtection")
-    ProtectionModel = apps.get_model("spider_base", "Protection")
-    for code, val in installed_protections.items():
-        ret = ProtectionModel.objects.get_or_create(
-            defaults={"ptype": val.ptype}, code=code
-        )[0]
-        if ret.ptype != val.ptype:
-            ret.ptype = val.ptype
-            ret.save()
-
-    login = ProtectionModel.objects.filter(code="login").first()
-    if login:
-        for uc in UserComponent.objects.filter(name="index"):
-            assignedprotection = AssignedProtection.objects.get_or_create(
-                defaults={"state": ProtectionStateType.enabled},
-                usercomponent=uc, protection=login
-            )[0]
-            if assignedprotection.state == ProtectionStateType.disabled:
-                assignedprotection.state = ProtectionStateType.enabled
-                assignedprotection.save()
-
-    invalid_models = ProtectionModel.objects.exclude(
-        code__in=installed_protections.keys()
-    )
-    if invalid_models.exists():
-        print("Invalid protections, please update or remove them:",
-              [t.code for t in invalid_models])
 
 
 def exclude_disabled_state(inp):
@@ -295,8 +255,9 @@ class PseudoPw(forms.Form):
     def __str__(self):
         return self.localize_name(self.name)
 
+
 # only friends have access
-@add_by_field(installed_protections, "name")
+@add_by_field(registry.protections, "name")
 class FriendProtection(BaseProtection):
     name = "friends"
     ptype = ProtectionType.access_control
@@ -329,7 +290,7 @@ class FriendProtection(BaseProtection):
             return False
 
 
-@add_by_field(installed_protections, "name")
+@add_by_field(registry.protections, "name")
 class RandomFailProtection(BaseProtection):
     name = "randomfail"
     ptype = (
@@ -367,7 +328,7 @@ class RandomFailProtection(BaseProtection):
         return False
 
 
-@add_by_field(installed_protections, "name")
+@add_by_field(registry.protections, "name")
 class RateLimitProtection(BaseProtection):
     name = "ratelimit"
     ptype = (
@@ -469,7 +430,7 @@ class RateLimitProtection(BaseProtection):
         return 1
 
 
-@add_by_field(installed_protections, "name")
+@add_by_field(registry.protections, "name")
 class LoginProtection(BaseProtection):
     name = "login"
     ptype = (
@@ -535,7 +496,7 @@ class LoginProtection(BaseProtection):
         return cls.localize_name("Password")
 
 
-@add_by_field(installed_protections, "name")
+@add_by_field(registry.protections, "name")
 class PasswordProtection(BaseProtection):
     # has same name as pseudo pw field,
     # works because it uses the password form and renders no own auth form
@@ -811,7 +772,7 @@ class PasswordProtection(BaseProtection):
 if getattr(settings, "USE_CAPTCHAS", False):
     from captcha.fields import CaptchaField
 
-    @add_by_field(installed_protections, "name")
+    @add_by_field(registry.protections, "name")
     class CaptchaProtection(BaseProtection):
         name = "captcha"
         ptype = ProtectionType.access_control

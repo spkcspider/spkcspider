@@ -20,9 +20,10 @@ from spkcspider.constants import (
 )
 from spkcspider.utils.security import create_b64_id_token
 
-from ..protections import ProtectionList, PseudoPw, installed_protections
+from ..protections import ProtectionList, PseudoPw
 from ..queryfilters import active_protections_q
 from ..validators import validator_token
+from .. import registry
 from .base import BaseSubUserComponentModel
 
 logger = logging.getLogger(__name__)
@@ -89,10 +90,10 @@ class BaseQuerySet(models.QuerySet):
 class ProtectionQuerySet(BaseQuerySet):
 
     def valid(self):
-        return self.filter(code__in=installed_protections)
+        return self.filter(code__in=registry.protections.keys())
 
     def invalid(self):
-        return self.exclude(code__in=installed_protections)
+        return self.exclude(code__in=registry.protections.keys())
 
     def filter_protection_codes(self, protection_codes=None):
         if protection_codes is not None:
@@ -143,7 +144,7 @@ class Protection(models.Model):
 
     @property
     def installed_class(self):
-        return installed_protections[self.code]
+        return registry.protections[self.code]
 
     def __str__(self):
         return self.localize_name()
@@ -152,12 +153,12 @@ class Protection(models.Model):
         return "<Protection: %s>" % self.__str__()
 
     def localize_name(self):
-        if self.code not in installed_protections:
+        if self.code not in registry.protections:
             return self.code
         return self.installed_class.localize_name(self.code)
 
     def auth_localize_name(self):
-        if self.code not in installed_protections:
+        if self.code not in registry.protections:
             return self.code
         return self.installed_class.auth_localize_name(self.code)
 
@@ -165,7 +166,7 @@ class Protection(models.Model):
     def auth(self, request, obj=None, **kwargs):
         # never ever allow authentication if not active
         assert not obj or obj.state != ProtectionStateType.disabled
-        assert self.code in installed_protections, "invalid protection"
+        assert self.code in registry.protections, "invalid protection"
         return self.installed_class.auth(
             obj=obj, request=request, **kwargs.copy()
         )
@@ -205,12 +206,10 @@ def get_limit_choices_assigned_protection():
 class AssignedProtectionQuerySet(BaseQuerySet):
 
     def valid(self):
-        return self.filter(protection__code__in=installed_protections)
+        return self.filter(protection__code__in=registry.protections.keys())
 
     def invalid(self):
-        return self.exclude(
-            protection__code__in=installed_protections
-        )
+        return self.exclude(protection__code__in=registry.protections.keys())
 
     def active(self):
         return self.filter(active_protections_q)
@@ -220,7 +219,7 @@ class AssignedProtectionQuerySet(BaseQuerySet):
             return self.filter(
                 models.Q(protection__code__in=protection_codes) |
                 models.Q(
-                    protection__ptype__contains=ProtectionType.side_effects  # noqa: E501
+                    protection__ptype__contains=ProtectionType.side_effects
                 )
             )
         else:

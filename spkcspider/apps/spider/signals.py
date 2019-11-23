@@ -14,6 +14,7 @@ from django.db import models, transaction
 from django.dispatch import Signal
 from spkcspider.constants import ProtectionStateType, VariantType
 from spkcspider.utils.security import create_b64_id_token
+from . import registry
 
 logger = logging.getLogger(__name__)
 
@@ -233,11 +234,9 @@ def UpdateContentFeaturesCb(sender, instance, action, **kwargs):
 
 def UpdateSpiderCb(**_kwargs):
     # provided apps argument lacks model function support
-    # so use this
-    from .contents import initialize_content_models
-    from .protections import initialize_protection_models
-    initialize_content_models(apps)
-    initialize_protection_models(apps)
+    # so use default
+    registry.contents.initialize()
+    registry.protections.initialize()
 
     # regenerate info field
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
