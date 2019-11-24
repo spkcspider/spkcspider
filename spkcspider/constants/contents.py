@@ -61,7 +61,7 @@ class TravelLoginType(str, enum.Enum):
     hide = "a"
     # switches to hiding if trigger was activated
     trigger_hide = "b"
-    # disable login
+    # disable login (and hides contents for logged in users)
     disable = "c"
     # disable login if triggered
     trigger_disable = "C"

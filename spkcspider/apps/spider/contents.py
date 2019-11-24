@@ -3,6 +3,7 @@ __all__ = (
     "BaseContent"
 )
 import logging
+from datetime import timedelta
 from functools import lru_cache
 from urllib.parse import urljoin
 
@@ -71,7 +72,7 @@ class BaseContent(models.Model):
     id = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
     deletion_period = getattr(
-        settings, "SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD", None
+        settings, "SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD", timedelta(0)
     )
     # if created associated is None (will be set later)
     # use usercomponent in form instead

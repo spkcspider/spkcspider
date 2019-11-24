@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, resolve_url
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext
+
 from spkcspider.constants import (
     ProtectionType, TokenCreationError, VariantType,
     loggedin_active_tprotections
@@ -57,16 +58,19 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
     raise_exception = True
     _travel_request = None
 
-    def dispatch_extra(self, request, *args, **kwargs):
-        return None
-
-    def dispatch(self, request, *args, **kwargs):
-        _ = gettext
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
         self.request.is_owner = getattr(self.request, "is_owner", False)
         self.request.is_special_user = \
             getattr(self.request, "is_special_user", False)
         self.request.is_staff = getattr(self.request, "is_staff", False)
         self.request.auth_token = getattr(self.request, "auth_token", None)
+
+    def dispatch_extra(self, request, *args, **kwargs):
+        return None
+
+    def dispatch(self, request, *args, **kwargs):
+        _ = gettext
         try:
             user_test_result = self.test_func()
         except TokenCreationError:

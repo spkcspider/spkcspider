@@ -297,6 +297,8 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * >=0.18: change order of filter parameters, nearly all filters start with request (for compatibility with (django) decorators)
 
 # TODO
+* switch to flatpickr
+* switch from selectize
 * examples
 * documentation
 * test admin

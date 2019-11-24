@@ -4,6 +4,7 @@ __all__ = (
 )
 
 import logging
+import json
 
 import requests
 
@@ -53,35 +54,46 @@ class AdminTokenManagement(UCTestMixin, View):
             )
 
     def post(self, request, *args, **kwargs):
-        if self.request.POST.get("add_token"):
+        if request.content_type == "application/json":
+            json_data = json.loads(request.body)
+            add_token = json_data.get("add_token", False)
+            restrict = json_data.get("restrict", False)
+            delids = json_data.get("delete_tokens", [])
+        else:
+            add_token = "add_token" in self.request.POST
+            restrict = "restrict" in self.request.POST
+            delids = self.request.POST.getlist("delete_tokens")
+        try:
+            delids = set(map(
+                int, delids
+            ))
+        except Exception:
+            return HttpResponse(status=400)
+
+        if add_token:
             extra = {
                 "strength": self.usercomponent.strength,
             }
-            if self.request.POST.get("restrict"):
+            if restrict:
                 extra["ids"] = [-1]
             elif self.request.GET.get("id", "") != "":
                 try:
-                    extra["ids"] = list(set(map(
+                    extra["ids"] = set(map(
                         int, self.request.GET.getlist("id")
-                    )))
+                    ))
                 except Exception:
                     return HttpResponse(status=400)
             if self.request.GET.get("search", "") != "":
-                extra["search"] = list(set(
+                extra["search"] = set(
                     self.request.GET.getlist("search")
-                ))
+                )
             self.created_token = self.create_token(
                 extra=extra
             )
 
-        try:
-            delids = set(map(int, self.request.POST.getlist("delete_tokens")))
-        except Exception:
-            return HttpResponse(status=400)
         if delids:
             delquery = AuthToken.objects.filter(
-                usercomponent=self.usercomponent,
-                id__in=delids
+                usercomponent=self.usercomponent, id__in=list(delids)
             )
             if self.scope == "share":
                 delquery = delquery.filter(

@@ -18,6 +18,7 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from spkcspider.constants import (
@@ -396,3 +397,9 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
     @property
     def is_hidden(self):
         return self.getflag("unlisted")
+
+    @cached_property
+    def deletion_period(self):
+        return getattr(
+            settings, "SPIDER_CONTENTS_DELETION_PERIODS", {}
+        ).get(self.ctype.name, self.content.deletion_period)

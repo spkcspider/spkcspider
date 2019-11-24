@@ -33,7 +33,9 @@ listed_variants_q = (
 )
 
 
-def filter_components(searchlist, filter_unlisted=True, use_contents=True):
+def filter_components(
+    search_filters, filter_unlisted=True, use_contents=True
+):
     searchq = Q()
     searchq_exc = Q()
     notsearch = Q()
@@ -48,7 +50,7 @@ def filter_components(searchlist, filter_unlisted=True, use_contents=True):
     if filter_unlisted:
         notsearch = ~Q(contents__info__contains="\x1eunlisted\x1e")
 
-    for item in searchlist:
+    for item in search_filters:
         if filter_unlisted and item == "_unlisted":
             continue
         if counter > max_counter:
@@ -101,9 +103,24 @@ def filter_components(searchlist, filter_unlisted=True, use_contents=True):
 
 
 def filter_contents(
-    searchlist, idlist=None, filter_unlisted=True, feature_exception=True,
+    search_filters, ids=None, filter_unlisted=True, feature_exception=True,
     use_components=False
 ):
+    """
+    [summary]
+
+    Arguments:
+        search_filters {iterable} -- search filters
+
+    Keyword Arguments:
+        ids {[type]} -- [description] (default: {None})
+        filter_unlisted {bool} -- [description] (default: {True})
+        feature_exception {bool} -- [description] (default: {True})
+        use_components {bool} -- [description] (default: {False})
+
+    Returns:
+        [type] -- [description]
+    """
     searchq = Q()
     searchq_exc = Q()
 
@@ -112,7 +129,7 @@ def filter_contents(
     # against ddos
     max_counter = settings.SPIDER_MAX_SEARCH_PARAMETERS
 
-    for item in searchlist:
+    for item in search_filters:
         if filter_unlisted is True and item == "_unlisted":
             continue
         elif item == "_unlisted":
@@ -160,10 +177,10 @@ def filter_contents(
         else:
             searchq |= qob
 
-    if idlist:
-        # idlist contains int and str entries
+    if ids:
+        # id_collection contains int and str entries
         try:
-            ids = map(lambda x: int(x), idlist)
+            ids = map(lambda x: int(x), ids)
         except ValueError:
             # deny any access in case of an incorrect id
             ids = []
