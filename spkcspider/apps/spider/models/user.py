@@ -266,7 +266,7 @@ class UserComponent(models.Model):
     def auth(self, request, ptype=ProtectionType.access_control,
              protection_codes=None, side_effect=False,
              order_by="protection__code", **kwargs):
-        # caching/import problems, will cause heisenbugs
+        # caching problems, will cause heisenbugs
         # if QuerySet is accessed via reverse foreign key
         # so use explicit import
         from .protections import AssignedProtection
