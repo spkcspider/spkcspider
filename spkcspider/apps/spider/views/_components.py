@@ -43,12 +43,12 @@ class ComponentIndexBase(DefinitionsMixin, ListView):
         kwargs["media"] = Media(
             css={
                 "all": [
-                    'node_modules/selectize/dist/css/selectize.default.css'
+                    'node_modules/@devkral/selectize/dist/css/selectize.default.css'
                 ]
             },
             js=[
                 'node_modules/jquery/dist/jquery%s.js' % _extra,
-                'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra  # noqa: E501
+                'node_modules/@devkral/selectize/dist/js/standalone/selectize%s.js' % _extra  # noqa: E501
             ]
         )
         return super().get_context_data(**kwargs)

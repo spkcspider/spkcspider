@@ -298,7 +298,6 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 
 # TODO
 * switch to flatpickr
-* switch from selectize
 * examples
 * documentation
 * test admin
