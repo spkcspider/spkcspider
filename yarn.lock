@@ -2,16 +2,6 @@
 # yarn lockfile v1
 
 
-"@bevacqua/rome@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@bevacqua/rome/-/rome-3.0.3.tgz#09fb19f0ce0cdcf3f0cf8d321babbf04fd47e993"
-  integrity sha512-yLe/977fXzny8EZMBwS8eyK3OqJhYkU+uAGH5icc+1zoFfxI0gf7VfFGOlXczkVK3kmXqh7F2M79wq113HFozQ==
-  dependencies:
-    bullseye "1.4.6"
-    contra "1.9.1"
-    crossvent "1.5.0"
-    moment "^2.8.2"
-
 "@devkral/selectize@^0.13.0":
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/@devkral/selectize/-/selectize-0.13.0.tgz#1e17b3f0bfd25cb7b385cd3533ba1baaf6a3083f"
@@ -35,56 +25,15 @@
   resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-1.3.5.tgz#b8ec91b2ad53d65a031c90941e3c3bbd084bc321"
   integrity sha512-maU/05CzSvW5waIqWXhhiekLhDKwu8cOkGESIVyV2UrONedRzO/qk+WBFKkBbLmm5TeyRnkwVL6CkKNyaa2d4w==
 
-atoa@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/atoa/-/atoa-1.0.0.tgz#0cc0e91a480e738f923ebc103676471779b34a49"
-  integrity sha1-DMDpGkgOc4+SPrwQNnZHF3mzSkk=
-
 base64-js@^1.3.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.3.1.tgz#58ece8cb75dd07e71ed08c736abc5fac4dbf8df1"
   integrity sha512-mLQ4i2QO1ytvGWFWmcngKO//JXAQueZvwEKtjgQFM4jIK0kU+ytMfplL8j+n5mspOfjHwoAg+9yhb7BwAHm36g==
 
-bullseye@1.4.6:
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/bullseye/-/bullseye-1.4.6.tgz#b73f606f7b4273be80ac65acd75295d62606fe24"
-  integrity sha1-tz9gb3tCc76ArGWs11KV1iYG/iQ=
-  dependencies:
-    crossvent "^1.3.1"
-    seleccion "2.0.0"
-    sell "^1.0.0"
-
-contra@1.9.1:
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/contra/-/contra-1.9.1.tgz#60e498274b3d2d332896d60f82900aefa2ecac8c"
-  integrity sha1-YOSYJ0s9LTMoltYPgpAK76LsrIw=
-  dependencies:
-    atoa "1.0.0"
-    ticky "1.0.0"
-
-crossvent@1.5.0:
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/crossvent/-/crossvent-1.5.0.tgz#3779c1242699e19417f0414e61b144753a52fd6d"
-  integrity sha1-N3nBJCaZ4ZQX8EFOYbFEdTpS/W0=
-  dependencies:
-    custom-event "1.0.0"
-
-crossvent@^1.3.1:
-  version "1.5.5"
-  resolved "https://registry.yarnpkg.com/crossvent/-/crossvent-1.5.5.tgz#ad20878e4921e9be73d9d6976f8b2ecd0f71a0b1"
-  integrity sha1-rSCHjkkh6b5z2daXb4suzQ9xoLE=
-  dependencies:
-    custom-event "^1.0.0"
-
-custom-event@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/custom-event/-/custom-event-1.0.0.tgz#2e4628be19dc4b214b5c02630c5971e811618062"
-  integrity sha1-LkYovhncSyFLXAJjDFlx6BFhgGI=
-
-custom-event@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/custom-event/-/custom-event-1.0.1.tgz#5d02a46850adf1b4a317946a3928fccb5bfd0425"
-  integrity sha1-XQKkaFCt8bSjF5RqOSj8y1v9BCU=
+flatpickr@^4.6.3:
+  version "4.6.3"
+  resolved "https://registry.yarnpkg.com/flatpickr/-/flatpickr-4.6.3.tgz#15a8b76b6e34e3a072861250503a5995b9d3bc60"
+  integrity sha512-007VucCkqNOMMb9ggRLNuJowwaJcyOh4sKAFcdGfahfGc7JQbf94zSzjdBq/wVyHWUEs5o3+idhFZ0wbZMRmVQ==
 
 jquery@^3.4.1:
   version "3.4.1"
@@ -96,30 +45,10 @@ microplugin@0.0.3:
   resolved "https://registry.yarnpkg.com/microplugin/-/microplugin-0.0.3.tgz#1fc2e1bb7c9e19e82bd84bba9137bbe71250d8cd"
   integrity sha1-H8Lhu3yeGegr2Eu6kTe75xJQ2M0=
 
-moment@^2.8.2:
-  version "2.24.0"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.24.0.tgz#0d055d53f5052aa653c9f6eb68bb5d12bf5c2b5b"
-  integrity sha512-bV7f+6l2QigeBBZSM/6yTNq4P2fNpSWj/0e7jQcy87A8e7o2nAfP/34/2ky5Vw4B9S446EtIhodAzkFCcR4dQg==
-
 qrcode-generator@^1.4.4:
   version "1.4.4"
   resolved "https://registry.yarnpkg.com/qrcode-generator/-/qrcode-generator-1.4.4.tgz#63f771224854759329a99048806a53ed278740e7"
   integrity sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==
-
-seleccion@2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/seleccion/-/seleccion-2.0.0.tgz#0984ac1e8df513e38b41a608e65042e8381e0a73"
-  integrity sha1-CYSsHo31E+OLQaYI5lBC6DgeCnM=
-
-sell@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/sell/-/sell-1.0.0.tgz#3baca7e51f78ddee9e22eea1ac747a6368bd1630"
-  integrity sha1-O6yn5R943e6eIu6hrHR6Y2i9FjA=
-
-ticky@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/ticky/-/ticky-1.0.0.tgz#e87f38ee0491ea32f62e8f0567ba9638b29f049c"
-  integrity sha1-6H847gSR6jL2Lo8FZ7qWOLKfBJw=
 
 trumbowyg@^2.20.0:
   version "2.20.0"

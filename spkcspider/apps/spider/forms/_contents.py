@@ -23,7 +23,7 @@ from spkcspider.utils.settings import get_settings_func
 from ..fields import ContentMultipleChoiceField, MultipleOpenChoiceField
 from ..models import AssignedContent, LinkContent, TravelProtection
 from ..widgets import (
-    OpenChoiceWidget, RomeDatetimePickerWidget, SelectizeWidget
+    OpenChoiceWidget, DatetimePickerWidget, SelectizeWidget
 )
 
 _extra = '' if settings.DEBUG else '.min'
@@ -123,11 +123,11 @@ class TravelProtectionForm(forms.ModelForm):
     #     initial="None", choices=PROTECTION_CHOICES
     # )
     start = forms.DateTimeField(
-        required=True, widget=RomeDatetimePickerWidget(),
+        required=True, widget=DatetimePickerWidget(),
         help_text=_time_help_text
     )
     stop = forms.DateTimeField(
-        required=False, widget=RomeDatetimePickerWidget(),
+        required=False, widget=DatetimePickerWidget(),
         help_text=_time_help_text
     )
     trigger_pws = MultipleOpenChoiceField(

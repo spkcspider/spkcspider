@@ -1,7 +1,7 @@
 __all__ = [
     "SelectizeWidget", "OpenChoiceWidget", "StateButtonWidget",
     "TrumbowygWidget", "HTMLWidget", "SubSectionStartWidget",
-    "SubSectionStopWidget", "ListWidget", "RomeDatetimePickerWidget"
+    "SubSectionStopWidget", "ListWidget", "DatetimePickerWidget"
 ]
 
 
@@ -102,8 +102,8 @@ class HTMLWidget(widgets.Input):
         return None
 
 
-class RomeDatetimePickerWidget(widgets.DateTimeInput):
-    anchor_class = "RomeDatetimeTarget"
+class DatetimePickerWidget(widgets.DateTimeInput):
+    anchor_class = "DatetimeTarget"
 
     def __init__(self, *, attrs=None, **kwargs):
         if not attrs:
@@ -120,7 +120,7 @@ class RomeDatetimePickerWidget(widgets.DateTimeInput):
         }
         js = [
             'node_modules/@bevacqua/rome/dist/rome%s.js' % _extra,  # noqa:E501
-            'spider_base/RomePickerWidget.js'
+            'spider_base/DatetimePickerWidget.js'
         ]
 
 
@@ -150,7 +150,7 @@ class SelectizeWidget(widgets.Select):
     class Media:
         css = {
             'all': [
-                'node_modules/@devkral/selectize/dist/css/selectize.default.css'
+                'node_modules/@devkral/selectize/dist/css/selectize.default.css'  # noqa:E501
             ]
         }
         js = [
@@ -175,7 +175,7 @@ class OpenChoiceWidget(widgets.Select):
     class Media:
         css = {
             'all': [
-                'node_modules/@devkral/selectize/dist/css/selectize.default.css'
+                'node_modules/@devkral/selectize/dist/css/selectize.default.css'  # noqa:E501
             ]
         }
         js = [

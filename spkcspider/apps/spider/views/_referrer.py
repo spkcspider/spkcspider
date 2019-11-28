@@ -472,7 +472,7 @@ class ReferrerMixin(object):
             context["media"] = Media(
                 css={
                     "all": [
-                        'node_modules/@devkral/selectize/dist/css/selectize.default.css'
+                        'node_modules/@devkral/selectize/dist/css/selectize.default.css'  # noqa:E501
                     ]
                 },
                 js=[
