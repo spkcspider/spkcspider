@@ -2,15 +2,13 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from .views import (
-    AdminTokenManagement, ComponentCreate, ComponentDelete, ComponentIndex,
+    AdminTokenManagement, ComponentCreate, ComponentIndex,
     ComponentPublicIndex, ComponentUpdate, ConfirmTokenUpdate, ContentAccess,
-    ContentAdd, ContentDelete, ContentIndex, RequestTokenUpdate,
+    ContentAdd, ContentIndex, EntityMassDeletion, RequestTokenUpdate,
     TokenDeletionRequest, TokenRenewal, TravelProtectionManagement
 )
 
 app_name = "spider_base"
-
-# token: path: token can simulate path structures (legacy)
 
 # components plural: most components url retrieve multiple items
 #    one "component"-url for single retrievals is confusing
@@ -53,8 +51,8 @@ urlpatterns = [
     ),
     path(
         'components/<str:token>/delete/',
-        login_required(ComponentDelete.as_view()),
-        name='ucomponent-delete'
+        EntityMassDeletion.as_view(),
+        name='entity-delete'
     ),
 
     path(
@@ -71,11 +69,6 @@ urlpatterns = [
         'components/<str:token>/add/<slug:type>/',
         ContentAdd.as_view(),
         name='ucontent-add'
-    ),
-    path(
-        'content/<str:token>/delete/',
-        ContentDelete.as_view(),
-        name='ucontent-delete'
     ),
     path(
         'content/<str:token>/<slug:access>/',

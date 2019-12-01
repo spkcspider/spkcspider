@@ -1,8 +1,8 @@
 __all__ = (
-    "UserTestMixin", "UCTestMixin", "EntityDeletionMixin", "DefinitionsMixin"
+    "UserTestMixin", "UCTestMixin", "DefinitionsMixin"
 )
 import logging
-from datetime import timedelta
+from itertools import chain
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, resolve_url
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext
+from django.db import models
 
 from spkcspider.constants import (
     ProtectionType, TokenCreationError, VariantType,
@@ -22,7 +23,9 @@ from spkcspider.constants import (
 )
 from spkcspider.utils.urls import merge_get_url
 
-from ..models import AuthToken, TravelProtection, UserComponent
+from ..models import (
+    AssignedContent, AuthToken, TravelProtection, UserComponent
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,12 +57,14 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
         "LOGIN_URL",
         "auth:login"
     ))
+    user_model = None
     # don't allow AccessMixin to redirect, handle in test_token
     raise_exception = True
     _travel_request = None
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
+        self.user_model = get_user_model()
         self.request.is_owner = getattr(self.request, "is_owner", False)
         self.request.is_special_user = \
             getattr(self.request, "is_special_user", False)
@@ -310,11 +315,10 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
            ):
             return self.request.user
 
-        model = get_user_model()
-        margs = {model.USERNAME_FIELD: None}
-        margs[model.USERNAME_FIELD] = self.kwargs.get("user", None)
+        margs = {self.user_model.USERNAME_FIELD: None}
+        margs[self.user_model.USERNAME_FIELD] = self.kwargs.get("user", None)
         return get_object_or_404(
-            model.objects.select_related("spider_info"),
+            self.user_model.objects.select_related("spider_info"),
             **margs
         )
 
@@ -359,6 +363,98 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
     def get_noperm_template_names(self):
         return "spider_base/protections/protections.html"
 
+    def calculate_deletion_content(self, del_requested, content):
+        if content.deletion_requested:
+            return {
+                "ob": content,
+                "deletion_date":
+                    content.deletion_requested+content.deletion_period,
+                "deletion_in_progress": True
+            }
+        else:
+            return {
+                "ob": content,
+                "deletion_date": del_requested+content.deletion_period,
+                "deletion_in_progress": False
+            }
+
+    def calculate_deletion_component(
+        self, uc, now, ignoredids=frozenset(), log=None,
+        del_expired=False
+    ):
+        del_requested = uc.deletion_requested or now
+
+        def _helper(self, content):
+            ret = self.calculate_deletion_content(del_requested, content)
+            if (
+                del_expired and
+                ret["deletion_in_progress"] and
+                ret["deletion_date"] <= now
+            ):
+                content.delete()
+                return None
+            if content.id in ignoredids:
+                return None
+            if log:
+                log[content.id] = ret
+            return ret["deletion_date"]
+        q = models.Q(deletion_requested__isnull=False)
+        if del_expired != "only" or uc.deletion_requested:
+            q |= ~models.Q(id__in=ignoredids)
+        ret = max(
+            chain.from_iterable(
+                [del_requested + uc.deletion_period],
+                filter(
+                    None,
+                    map(_helper, uc.contents.filter(q))
+                )
+            )
+        )
+        if del_expired and ret <= now and not uc.is_index:
+            uc.delete()
+            return None
+        return ret
+
+    def remove_old_entities(self, ob=None, now=None):
+        if not now:
+            now = timezone.now()
+        if isinstance(ob, AssignedContent):
+            result = self.calculate_deletion_content(ob, now)
+            if (
+                result["deletion_in_progress"] and
+                result["deletion_date"] <= now
+            ):
+                ob.delete()
+                return True
+        elif isinstance(ob, UserComponent):
+            deletion_date = \
+                self.calculate_deletion_component(
+                    ob, now, del_expired="only"
+                )
+            # deletion_date is None: deleted
+            if deletion_date is None:
+                return True
+        elif isinstance(ob, self.user_model):
+            for uc in UserComponent.objects.filter(
+                models.Q(deletion_requested__isnull=False) |
+                models.Q(contents__deletion_requested__isnull=False),
+                user=ob
+            ):
+                self.calculate_deletion_component(
+                    uc, now, del_expired="only"
+                )
+        elif isinstance(ob, int):
+            for content in UserComponent.objects.filter(
+                models.Q(deletion_requested__isnull=False) |
+                models.Q(contents__deletion_requested__isnull=False)
+            ).order_by("deletion_requested")[:ob]:
+                self.calculate_deletion_component(
+                    ob, now, del_expired="only"
+                )
+        else:
+            raise NotImplementedError()
+        return False
+
 
 class UCTestMixin(UserTestMixin):
     usercomponent = None
@@ -370,63 +466,3 @@ class UCTestMixin(UserTestMixin):
     def post(self, request, *args, **kwargs):
         # for protections & contents
         return self.get(request, *args, **kwargs)
-
-    def put(self, request, *args, **kwargs):
-        # for protections & contents
-        return self.get(request, *args, **kwargs)
-
-
-class EntityDeletionMixin(UserTestMixin):
-    object = None
-    http_method_names = ['get', 'post', 'delete']
-
-    def get_context_data(self, **kwargs):
-        _time = self.get_required_timedelta()
-        if _time and self.object.deletion_requested:
-            now = timezone.now()
-            if self.object.deletion_requested + _time >= now:
-                kwargs["remaining"] = timedelta(seconds=0)
-            else:
-                kwargs["remaining"] = self.object.deletion_requested+_time-now
-        return super().get_context_data(**kwargs)
-
-    def get_required_timedelta(self):
-        _time = self.object.deletion_period
-        if _time:
-            _time = timedelta(seconds=_time)
-        else:
-            _time = timedelta(seconds=0)
-        return _time
-
-    def options(self, request, *args, **kwargs):
-        ret = super().options(request, *args, **kwargs)
-        ret["Access-Control-Allow-Origin"] = self.request.get_host()
-        ret["Access-Control-Allow-Methods"] = "POST, GET, DELETE, OPTIONS"
-        return ret
-
-    def delete(self, request, *args, **kwargs):
-        _time = self.get_required_timedelta()
-        if _time:
-            now = timezone.now()
-            if self.object.deletion_requested:
-                if self.object.deletion_requested+_time >= now:
-                    return self.get(request, *args, **kwargs)
-            else:
-                self.object.deletion_requested = now
-                self.object.save()
-                return self.get(request, *args, **kwargs)
-        self.object.delete()
-        return HttpResponseRedirect(self.get_success_url())
-
-    def post(self, request, *args, **kwargs):
-        # delete works if allowed in CORS
-        if request.POST.get("action") == "reset":
-            return self.reset(request, *args, **kwargs)
-        elif request.POST.get("action") == "delete":
-            return self.delete(request, *args, **kwargs)
-        return super().get(request, *args, **kwargs)
-
-    def reset(self, request, *args, **kwargs):
-        self.object.deletion_requested = None
-        self.object.save(update_fields=["deletion_requested"])
-        return HttpResponseRedirect(self.get_success_url())

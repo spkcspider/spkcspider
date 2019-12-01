@@ -192,16 +192,16 @@
           <td style="display:inline-block">
             <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{ content.ctype.name }}</data>
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a style="{% if request.is_special_user  %}width:34%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='view' %}?{{sanitized_GET}}">
+              <a style="{% if request.is_owner  %}width:34%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='view' %}?{{sanitized_GET}}">
                 <div class="spkc-entity-button"><i class="fas fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "View" %}</div></div>
               </a>
-              {% if request.is_special_user  %}
+              {% if request.is_owner  %}
               <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='update' %}?{{sanitized_GET}}" property="spkc:action:update">
                 <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
               </a>
-              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-delete' token=content.token %}" property="spkc:action:delete">
+              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:entity-delete' %}?cid=object.id" property="spkc:action:delete">
                 <div class="spkc-entity-button"><i class="fas fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Del" %}</div></div>
               </a>

@@ -1,70 +1,110 @@
 """ Deletion Views """
 
 __all__ = (
-    "MassDeletion"
+    "EntityMassDeletion"
 )
 
 import json
-from itertools import chain
 
-from django.utils import timezone
-from django.http import HttpResponse, JsonResponse
+from django.core.exceptions import PermissionDenied
 from django.db import models
+from django.http import Http404, HttpResponse, JsonResponse
+from django.shortcuts import redirect
+from django.utils import timezone
 from django.views.generic.base import TemplateView
+
 from spkcspider.constants import loggedin_active_tprotections
 
 from ..models import AssignedContent, UserComponent
+from ._core import UCTestMixin
 
-from ._core import UserTestMixin
 
+class EntityMassDeletion(UCTestMixin, TemplateView):
+    """
+        Delete Contents and Usercomponents
+    """
+    preserved_GET_parameters = {"token", "search", "id"}
+    own_marked_for_deletion = False
 
-class MassDeletion(UserTestMixin, TemplateView):
+    def get_context_data(self, **kwargs):
+        kwargs["uc"] = self.usercomponent
+        kwargs["selected_components"] = set(self.request.GET.getlist("ucid"))
+        kwargs["selected_contents"] = set(self.request.GET.getlist("cid"))
+        return super().get_context_data(**kwargs)
 
-    def options(self, request, *args, **kwargs):
-        ret = super().options(request, *args, **kwargs)
-        ret["Access-Control-Allow-Origin"] = self.request.get_host()
-        ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
-        return ret
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+        except PermissionDenied:
+            raise Http404()
 
-    def calculate_deletion_content(self, del_requested, content):
-        if content.deletion_requested:
-            return {
-                "ob": content,
-                "deletion_date":
-                    content.deletion_requested+content.deletion_period,
-                "deletion_in_progress": True
-            }
-        else:
-            return {
-                "ob": content,
-                "deletion_date": del_requested+content.deletion_period,
-                "deletion_in_progress": False
-            }
-
-    def calculate_deletion_component(self, uc, now, q, log=None):
-        del_requested = uc.deletion_requested or now
-
-        if log is not None:
-            def _helper(self, content):
-                ret = self.calculate_deletion_content(del_requested, content)
-                log[content.id] = ret
-                return ret["deletion_date"]
-        else:
-            def _helper(self, content):
-                return self.calculate_deletion_content(
-                    del_requested, content
-                )["deletion_date"]
-        return max(
-            chain.from_iterable(
-                [del_requested + uc.deletion_period],
-                map(
-                    _helper, uc.contents.filter(q)
-                )
-            )
+    def test_func(self):
+        return self.has_special_access(
+            user_by_login=True, user_by_token=True,
+            staff=False, superuser=False
         )
+
+    def get(self, request, *args, **kwargs):
+        now = timezone.now()
+        travel = self.get_travel_for_request().filter(
+            login_protection__in=loggedin_active_tprotections
+        )
+
+        travel_contents_q = (
+            models.Q(travel_protected__in=travel) |
+            models.Q(usercomponent__travel_protected__in=travel)
+        )
+
+        components = {}
+
+        if not self.usercomponent.is_index:
+            component_query = UserComponent.objects.filter(
+                id=self.usercomponent.id
+            )
+        else:
+            component_query = UserComponent.objects.filter(
+                user=self.usercomponent.user
+            )
+
+        ignored_content_ids = frozenset(
+            AssignedContent.objects.filter(
+                travel_contents_q,
+                usercomponent__in=component_query,
+            ).values_list("id", flat=True)
+        )
+        ignored_component_ids = component_query.filter(
+            travel_protected__in=travel
+        )
+
+        for uc in component_query:
+            item = {
+                "ob": uc,
+                "contents": {},
+                "deletion_in_progress": uc.deletion_requested is not None
+            }
+            item["deletion_date"] = \
+                self.calculate_deletion_component(
+                    uc,
+                    now,
+                    ignored_content_ids,
+                    log=item["contents"], del_expired=True
+                )
+
+            if item["deletion_date"] is None:
+                if uc == self.usercomponent:
+                    self.own_marked_for_deletion = True
+                continue
+            if uc.id not in ignored_component_ids:
+                components[uc.name] = item
+        return self.render_to_response(self.get_context_data(
+            hierarchy=components,
+            now=now,
+            ignored_component_ids=ignored_component_ids
+        ))
 
     def post(self, request, *args, **kwargs):
         now = timezone.now()
+        user = self.usercomponent.user
         if request.content_type == "application/json":
             json_data = json.loads(request.body)
             delete_components = json_data.get("delete_components", [])
@@ -100,41 +140,62 @@ class MassDeletion(UserTestMixin, TemplateView):
 
         components = {}
 
-        component_query = UserComponent.objects.exclude(
+        if not self.usercomponent.is_index:
+            component_query = UserComponent.objects.filter(
+                id=self.usercomponent.id
+            )
+        else:
+            component_query = UserComponent.objects.filter(
+                user=self.usercomponent.user
+            )
+
+        ignored_content_ids = frozenset(
+            AssignedContent.objects.filter(
+                travel_contents_q,
+                usercomponent__in=component_query,
+            ).values_list("id", flat=True)
+        )
+        ignored_component_ids = component_query.filter(
             travel_protected__in=travel
         )
-        if not self.usercomponent.is_index:
-            component_query.filter(id=self.usercomponent.id)
-        else:
-            component_query.filter(user=self.usercomponent.user)
+
+        delete_components.difference_update(ignored_component_ids)
+        reset_components.difference_update(ignored_component_ids)
+        delete_contents.difference_update(ignored_content_ids)
+        reset_contents.difference_update(ignored_content_ids)
 
         for uc in component_query:
             item = {
                 "ob": uc,
                 "contents": {},
                 "deletion_in_progress":
-                    uc.id in delete_components and not uc.is_index
+                    (
+                        uc.id in delete_components or
+                        uc.deletion_date
+                    ) and not uc.is_index
             }
 
             item["deletion_date"] = \
                 self.calculate_deletion_component(
-                    uc, now, ~travel_contents_q, item["contents"]
+                    uc, now, ignored_content_ids, item["contents"],
+                    del_expired=True
                 )
-            if item["deletion_in_progress"] and item["deletion_date"] <= now:
-                uc.delete()
+            if item["deletion_date"] is None:
+                if uc == self.usercomponent:
+                    self.own_marked_for_deletion = True
                 continue
 
-            for content in uc.contents.filter(
-                ~travel_contents_q,
-                id__in=delete_contents
-            ):
+            for content in uc.contents.filter(id__in=delete_contents):
+                # not marked for deletion yet and not needed anyway
                 if item["contents"][content.id]["deletion_date"] <= now:
                     content.delete()
                     del item["contents"][content.id]
                 else:
                     item["contents"][content.id]["deletion_in_progress"] = \
                         True
-            components[uc.name] = item
+
+            if uc.id not in ignored_component_ids:
+                components[uc.name] = item
 
         component_query.filter(id__in=delete_components).update(
             deletion_requested=now
@@ -142,9 +203,9 @@ class MassDeletion(UserTestMixin, TemplateView):
         component_query.filter(id__in=reset_components).update(
             deletion_requested=None
         )
-        content_query = AssignedContent.objects.filter(
-            ~travel_contents_q
-        ).exclude(usercomponent__in=component_query)
+        content_query = AssignedContent.objects.exclude(
+            usercomponent__id__in=delete_components
+        ).filter(usercomponent__user=user)
         content_query.filter(id__in=delete_contents).update(
             deletion_requested=now
         )
@@ -153,52 +214,41 @@ class MassDeletion(UserTestMixin, TemplateView):
         )
 
         return self.render_to_response(self.get_context_data(
-            hierarchy=components
+            hierarchy=components,
+            now=now,
+            ignored_component_ids=ignored_component_ids
         ))
 
-    def get(self, request, *args, **kwargs):
-        now = timezone.now()
-        travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
-        )
-
-        travel_contents_q = (
-            models.Q(travel_protected__in=travel) |
-            models.Q(usercomponent__travel_protected__in=travel)
-        )
-
-        components = {}
-
-        component_query = UserComponent.objects.exclude(
-            travel_protected__in=travel
-        )
-        if not self.usercomponent.is_index:
-            component_query.filter(id=self.usercomponent.id)
-        else:
-            component_query.filter(user=self.usercomponent.user)
-
-        for uc in component_query:
-            item = {
-                "ob": uc,
-                "contents": {},
-                "deletion_in_progress": uc.deletion_requested is not None
-            }
-            item["deletion_date"] = \
-                self.calculate_deletion_component(
-                    uc, now, ~travel_contents_q, item["contents"]
-                )
-        return self.render_to_response(self.get_context_data(
-            hierarchy=components
-        ))
+    def options(self, request, *args, **kwargs):
+        ret = super().options(request, *args, **kwargs)
+        ret["Access-Control-Allow-Origin"] = self.request.get_host()
+        ret["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+        return ret
 
     def render_to_response(self, context):
-        if self.request.GET.get("raw", "") == "json":
-            # last time it is used
-            for component_val in context["hierarchy"].values():
-                component_val.pop("ob")
-                for val in component_val["contents"].values():
-                    val.pop("ob")
-            return JsonResponse(
-                context["hierarchy"]
+        if not self.own_marked_for_deletion:
+            if self.request.GET.get("raw", "") == "json":
+                # last time it is used
+                for component_val in context["hierarchy"].values():
+                    component_val.pop("ob")
+                    for val in component_val["contents"].values():
+                        val.pop("ob")
+                response = JsonResponse(
+                    context["hierarchy"]
+                )
+            else:
+                response = super().render_to_response(context)
+        elif (
+            self.request.user.is_authenticated and
+            # don't blow cover
+            self.usercomponent.id not in context["ignored_component_ids"]
+        ):
+            response = redirect(
+                'spider_base:entity-delete', permanent=True,
+                token=self.object.token, access="update"
             )
-        return super().render_to_response(context)
+        else:
+            response = HttpResponse(404)
+        response["Access-Control-Allow-Origin"] = self.request.get_host()
+        response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+        return response

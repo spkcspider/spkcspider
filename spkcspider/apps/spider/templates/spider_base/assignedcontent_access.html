@@ -58,13 +58,15 @@
             <i class="fas fa-eye" style="margin-right:10px" aria-hidden="true"></i>{% trans "View" %}
           </a>
         {% endif %}
+      {% endif %}
+      {% if scope != "add" and request.is_owner %}
         {% if scope != "update" %}
           <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' token=object.token access='update' %}?{{sanitized_GET}}">
             <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans "Update" %}
           </a>
         {% endif %}
         <div style="margin-bottom:5px">
-          <a rel="nofollow" href="{% url 'spider_base:ucontent-delete' token=object.token %}">
+          <a rel="nofollow" href="{% url 'spider_base:entity-delete' %}?cid=object.id">
             <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
           </a>
         </div>

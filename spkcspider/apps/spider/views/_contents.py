@@ -1,12 +1,9 @@
 """ Content Views """
 
 __all__ = (
-    "ContentIndex", "ContentAdd", "ContentAccess", "ContentDelete",
-    "TravelProtectionManagement"
+    "ContentIndex", "ContentAdd", "ContentAccess", "TravelProtectionManagement"
 )
 
-from datetime import timedelta
-from html import escape
 
 from rdflib import XSD, Graph, Literal, URIRef
 
@@ -14,7 +11,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.db.models.deletion import ProtectedError
 from django.forms.widgets import Media
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.http.response import HttpResponseBase
@@ -24,7 +20,7 @@ from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
 from next_prev import next_in_order, prev_in_order
 from spkcspider.constants import (
@@ -42,7 +38,7 @@ from ..queryfilters import (
     filter_contents, listed_variants_q, machine_variants_q
 )
 from ..serializing import paginate_stream, serialize_stream
-from ._core import EntityDeletionMixin, UCTestMixin, UserTestMixin
+from ._core import UCTestMixin, UserTestMixin
 from ._referrer import ReferrerMixin
 
 _forbidden_scopes = frozenset({
@@ -174,6 +170,8 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     preserved_GET_parameters = {"token", "search", "id"}
 
     def dispatch_extra(self, request, *args, **kwargs):
+        if self.remove_old_entities(self.usercomponent):
+            raise Http404()
         self.allow_domain_mode = ContentVariant.objects.filter(
             feature_for_components=self.usercomponent,
             name="DomainMode"
@@ -438,6 +436,11 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
         ret["Access-Control-Allow-Origin"] = "*"
         return ret
 
+    def options(self, request, *args, **kwargs):
+        ret = super().options(request, *args, **kwargs)
+        ret["Access-Control-Allow-Origin"] = "*"
+        return ret
+
 
 class ContentAdd(ContentBase, CreateView):
     scope = "add"
@@ -579,6 +582,8 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 
     def dispatch_extra(self, request, *args, **kwargs):
         self.object = self.get_object()
+        if self.remove_old_entities(self.object):
+            raise Http404()
         self.allow_domain_mode = ContentVariant.objects.filter(
             models.Q(feature_for_components=self.usercomponent) |
             models.Q(feature_for_contents=self.object),
@@ -778,130 +783,6 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
                 )
 
         return super().render_to_response(ret)
-
-
-class ContentDelete(EntityDeletionMixin, DeleteView):
-    model = AssignedContent
-    usercomponent = None
-    preserved_GET_parameters = {"token", "search", "id"}
-
-    def dispatch(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.usercomponent = self.get_usercomponent()
-        try:
-            return super().dispatch(request, *args, **kwargs)
-        except PermissionDenied as exc:
-            if request.is_staff:
-                raise exc
-            # elsewise disguise
-            raise Http404()
-
-    def delete(self, request, *args, **kwargs):
-        _ = gettext
-        try:
-            return super().delete(request, *args, **kwargs)
-        except ProtectedError as exc:
-            # hide if travelprotected causes ProtectedError
-            travel = self.get_travel_for_request()
-            travel = travel.filter(
-                models.Q(
-                    protect_contents__id__in=exc.protected_objects.values_list(
-                        "associated_rel__id", flat=True
-                    )
-                ) |
-                models.Q(
-                    protect_components__id__in=exc.protected_objects.values_list(  # noqa: E501
-                        "associated_rel__usercomponent__id", flat=True
-                    )
-                ),
-                login_protection__in=loggedin_active_tprotections
-            )
-            obj = travel.order_by("-start").filter(stop__isnull=True).first()
-            if not obj:
-                try:
-                    obj = travel.latest("stop")
-                except travel.model.DoesNotExist:
-                    pass
-            if obj:
-                obj.protect_contents.add(self.object)
-                return HttpResponseRedirect(self.get_success_url())
-            else:
-                messages.error(
-                    self.request,
-                    mark_safe(
-                        _(
-                            'Could not delete content dependencies:<br/>{}.'
-                        ).format(
-                            ",<br/>".join(map(
-                                lambda x: escape(repr(x)),
-                                exc.protected_objects
-                            ))
-                        )
-                    )
-                )
-                return self.get(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        _ = gettext
-        messages.success(
-            self.request, _('Content deleted.')
-        )
-        return super().form_valid(form)  # pylint: disable=no-member
-
-    def get_context_data(self, **kwargs):
-        kwargs["uc"] = self.usercomponent
-        return super().get_context_data(**kwargs)
-
-    def get_success_url(self):
-        return reverse(
-            "spider_base:ucontent-list", kwargs={
-                "token": self.usercomponent.token,
-            }
-        )
-
-    def test_func(self):
-        # can do it over admin panel but for convenience and \
-        # allowing users to cancel (in case of timeouts)
-        staff_perm = not self.usercomponent.is_index
-        if staff_perm:
-            staff_perm = "spider_base.delete_assignedcontent"
-        ret = self.has_special_access(
-            user_by_login=True, user_by_token=True,
-            staff=staff_perm, superuser=True
-        )
-        if (
-            self.request.auth_token and
-            self.request.auth_token.extra.get("taint", False) and
-            "referrer" not in self.request.GET
-        ):
-            return False
-        return ret
-
-    def get_required_timedelta(self):
-        _time = self.object.content.deletion_period
-        if _time:
-            _time = timedelta(seconds=_time)
-        else:
-            _time = timedelta(seconds=0)
-        return _time
-
-    def get_usercomponent(self):
-        return self.object.usercomponent
-
-    def get_object(self, queryset=None):
-        if not queryset:
-            queryset = self.get_queryset()
-        travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
-        )
-        return get_object_or_404(
-            queryset,
-            ~(
-                models.Q(travel_protected__in=travel) |
-                models.Q(usercomponent__travel_protected__in=travel)
-            ),
-            token=self.kwargs["token"]
-        )
 
 
 class TravelProtectionManagement(UserTestMixin, UpdateView):

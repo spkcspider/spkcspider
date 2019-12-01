@@ -1,0 +1,82 @@
+{% extends "spider_base/uc_base.html" %}
+{% load i18n %}
+{% block title %}{% blocktrans trimmed %}
+  Delete User Components and Contents
+{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<div>
+  <div class="w3-padding">
+    {# index is redirected in view #}
+    <a class="w3-left" href="{% url 'spider_base:ucomponent-update' token=object.token %}">{% trans 'Back' %}</a>
+    <h1 class="w3-center">
+      {% blocktrans trimmed %}
+        Delete User Components and Contents:
+      {% endblocktrans %}
+    </h1>
+  </div>
+
+  <form class="w3-padding" id="delete_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
+    <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
+    <table class="w3-table-all">
+      <thead>
+        <tr>
+          <th class="">{% trans 'Delete:' %}</th>
+          <th class="">{% trans 'Reset:' %}</th>
+          <th class="">{% trans 'Name:' %}</th>
+          <th>{% trans 'State:' %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for uc_id, uc_item in hierarchy.items %}
+          <tr>
+            <td>
+              <input {% if uc_item.deletion_in_progress %}disabled="disabled" checked="checked"{% elif uc_id in selected_components %}checked="checked"{% endif %} type="checkbox" name="delete_components" value="{% uc_id %}"/>
+            </td>
+            <td>
+              <input {% if not uc_item.deletion_in_progress %}hidden="hidden"{% endif %} type="checkbox" name="reset_components" value="{% uc_id %}"/>
+            </td>
+            <td>
+              {{uc_item.ob}}
+            </td>
+            <td>
+              {% if uc_item.deletion_in_progress %}
+                {% blocktrans with deletion_date=uc_item.deletion_date %}Deletion at {{deletion_date}}{% endblocktrans %}
+              {% elif uc_item.deletion_date <= now %}
+                {% blocktrans  %}Delete now{% endblocktrans %}
+              {% else %}
+                {% blocktrans with deletion_date=uc_item.deletion_date %}Delete at {{deletion_date}}{% endblocktrans %}
+              {% endif %}
+            </td>
+          </tr>
+          {% for content_id, content_item in uc_item.contents.items %}
+            <tr style="margin-left:2rem;">
+              <td>
+                <input {% if content_item.deletion_in_progress %}disabled="disabled" checked="checked"{% elif content_id in selected_contents %}checked="checked"{% endif %} type="checkbox" name="delete_contents" value="{% content_id %}"/>
+              </td>
+              <td>
+                <input {% if not content_item.deletion_in_progress %}hidden="hidden"{% endif %} type="checkbox" name="reset_contents" value="{% content_id %}"/>
+              </td>
+              <td>
+                {{content_item.ob}}
+              </td>
+              <td>
+                {% if content_item.deletion_in_progress %}
+                  {% blocktrans with deletion_date=content_item.deletion_date %}Deletion executed at {{deletion_date}}{% endblocktrans %}
+                {% elif content_item.deletion_date <= now %}
+                  {% blocktrans  %}Instant deletion possible{% endblocktrans %}
+                {% else %}
+                  {% blocktrans with deletion_date=content_item.deletion_date %}Earliest deletion date {{deletion_date}}{% endblocktrans %}
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      </tbody>
+    </table>
+    <div style="height:50px">
+      <button class="w3-button w3-grey w3-right w3-hover-red"><i class="fas fa-trash" aria-hidden="true" style="margin-right:10px"></i>{% trans 'Delete' %}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

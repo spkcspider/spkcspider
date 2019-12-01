@@ -1,7 +1,7 @@
 
 __all__ = (
     "ComponentIndex", "ComponentPublicIndex", "ComponentCreate",
-    "ComponentUpdate", "ComponentDelete"
+    "ComponentUpdate"
 )
 from rdflib import XSD, Graph, Literal, URIRef
 
@@ -9,13 +9,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.db.models.deletion import ProtectedError
 from django.forms.widgets import Media
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import gettext
-from django.views.generic.edit import CreateView, DeleteView, UpdateView
+from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
 from spkcspider.constants import (
     VariantType, loggedin_active_tprotections, spkcgraph
@@ -29,7 +28,7 @@ from ..queryfilters import (
 )
 from ..serializing import paginate_stream, serialize_stream
 from ._core import (
-    DefinitionsMixin, EntityDeletionMixin, UCTestMixin, UserTestMixin
+    DefinitionsMixin, UCTestMixin, UserTestMixin
 )
 
 _extra = '' if settings.DEBUG else '.min'
@@ -236,6 +235,7 @@ class ComponentPublicIndex(ComponentIndexBase):
         self.request.is_special_user = False
         self.request.is_staff = False
         self.request.auth_token = None
+        self.remove_old_entities(5)
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -305,6 +305,7 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
 
     def dispatch(self, request, *args, **kwargs):
         self.user = self.get_user()
+        self.remove_old_entities(self.user)
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -440,6 +441,8 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         self.object = self.get_object()
         self.usercomponent = self.object
         try:
+            if self.remove_old_entities(self.usercomponent):
+                raise Http404()
             return super().dispatch(request, *args, **kwargs)
         except PermissionDenied as exc:
             if request.is_staff:
@@ -541,74 +544,4 @@ class ComponentUpdate(UserTestMixin, UpdateView):
             self.get_context_data(
                 form=self.get_form_class()(**self.get_form_success_kwargs())
             )
-        )
-
-
-class ComponentDelete(EntityDeletionMixin, DeleteView):
-    model = UserComponent
-    fields = []
-    object = None
-    preserved_GET_parameters = {"search", "id"}
-
-    def form_valid(self, form):
-        _ = gettext
-        messages.error(
-            self.request, _('Component deleted.')
-        )
-        return super().form_valid(form)
-
-    def dispatch(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.usercomponent = self.object
-        self.user = self.get_user()
-        try:
-            return super().dispatch(request, *args, **kwargs)
-        except PermissionDenied as exc:
-            if request.is_staff:
-                raise exc
-            # elsewise disguise
-            raise Http404()
-
-    def get_success_url(self):
-        username = getattr(self.user, self.user.USERNAME_FIELD)
-        return reverse(
-            "spider_base:ucomponent-list", kwargs={
-                "user": username
-            }
-        )
-
-    def get_context_data(self, **kwargs):
-        kwargs["uc"] = self.usercomponent
-        return super().get_context_data(**kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        _ = gettext
-        if self.object.is_index:
-            return self.handle_no_permission()
-        try:
-            return super().delete(request, *args, **kwargs)
-        except ProtectedError:
-            messages.error(
-                self.request,
-                _('Could not delete protected contents.')
-            )
-            return self.get(request, *args, **kwargs)
-
-    def get(self, request, *args, **kwargs):
-        if self.object.is_index:
-            return self.handle_no_permission()
-        return super().get(request, *args, **kwargs)
-
-    def get_usercomponent(self):
-        return self.object
-
-    def get_object(self, queryset=None):
-        if not queryset:
-            queryset = self.get_queryset()
-        travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
-        )
-        return get_object_or_404(
-            queryset, ~models.Q(travel_protected__in=travel),
-            token=self.kwargs["token"]
         )
