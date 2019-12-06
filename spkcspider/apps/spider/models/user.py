@@ -9,6 +9,7 @@ __all__ = [
 ]
 
 import logging
+import datetime
 
 from django.apps import apps
 from django.conf import settings
@@ -49,6 +50,8 @@ _required_passes_help = _(
 _feature_help = _(
     "Appears as featured on \"home\" page"
 )
+
+_0td = datetime.timedelta()
 
 
 class UserComponentManager(models.Manager):
@@ -347,7 +350,7 @@ class UserComponent(models.Model):
     def deletion_period(self):
         return getattr(
             settings, "SPIDER_COMPONENTS_DELETION_PERIODS", {}
-        ).get(self.__str__(), None)
+        ).get(self.__str__(), None) or _0td
 
 
 class UserInfo(models.Model):

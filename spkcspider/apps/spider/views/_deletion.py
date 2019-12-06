@@ -1,7 +1,7 @@
 """ Deletion Views """
 
 __all__ = (
-    "EntityMassDeletion"
+    "EntityMassDeletion",
 )
 
 import json
@@ -25,6 +25,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
     """
     preserved_GET_parameters = {"token", "search", "id"}
     own_marked_for_deletion = False
+    template_name = "spider_base/entity_mass_deletion.html"
 
     def get_context_data(self, **kwargs):
         kwargs["uc"] = self.usercomponent
@@ -120,11 +121,13 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             reset_components = set(map(int, reset_components))
             delete_components = set(map(
                 int, delete_components
-            )).difference_update(reset_components)
+            ))
+            delete_components.difference_update(reset_components)
             reset_contents = set(map(int, reset_contents))
             delete_contents = set(map(
                 int, delete_contents
-            )).difference_update(reset_contents)
+            ))
+            delete_contents.difference_update(reset_contents)
 
         except Exception:
             return HttpResponse(status=400)
@@ -164,6 +167,29 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         delete_contents.difference_update(ignored_content_ids)
         reset_contents.difference_update(ignored_content_ids)
 
+        content_query = AssignedContent.objects.filter(
+            usercomponent__user=user
+        )
+
+        component_query.filter(
+            id__in=delete_components,
+            deletion_requested__isnull=True
+        ).update(
+            deletion_requested=now
+        )
+        component_query.filter(id__in=reset_components).update(
+            deletion_requested=None
+        )
+        content_query.filter(
+            id__in=delete_contents,
+            deletion_requested__isnull=True
+        ).update(
+            deletion_requested=now
+        )
+        content_query.filter(id__in=reset_contents).update(
+            deletion_requested=None
+        )
+
         for uc in component_query:
             item = {
                 "ob": uc,
@@ -171,7 +197,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
                 "deletion_in_progress":
                     (
                         uc.id in delete_components or
-                        uc.deletion_date
+                        uc.deletion_requested
                     ) and not uc.is_index
             }
 
@@ -196,22 +222,6 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
 
             if uc.id not in ignored_component_ids:
                 components[uc.name] = item
-
-        component_query.filter(id__in=delete_components).update(
-            deletion_requested=now
-        )
-        component_query.filter(id__in=reset_components).update(
-            deletion_requested=None
-        )
-        content_query = AssignedContent.objects.exclude(
-            usercomponent__id__in=delete_components
-        ).filter(usercomponent__user=user)
-        content_query.filter(id__in=delete_contents).update(
-            deletion_requested=now
-        )
-        content_query.filter(id__in=reset_contents).update(
-            deletion_requested=None
-        )
 
         return self.render_to_response(self.get_context_data(
             hierarchy=components,

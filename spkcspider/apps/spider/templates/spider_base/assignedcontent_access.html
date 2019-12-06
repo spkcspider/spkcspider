@@ -28,7 +28,7 @@
       <data hidden="hidden" property="spkc:domainauth" datatype="xsd:anyURI">{{domainauth_url}}</data>
     {% endif %}
     {% if machine_variants and request.is_owner %}
-      <data hidden="hidden" typeof="spkc:Component" resource="{{hostpart}}{% url 'spider_base:ucontent-list' token=uc.token %}">
+      <data hidden="hidden" typeof="spkc:Component" resource="{% fullurl_with_params 'spider_base:ucontent-list' token=uc.token %}">
         {% for name in machine_variants %}
           <data hidden="hidden" property="spkc:create:name" datatype="xsd:string">{{name}}</data>
         {% endfor %}
@@ -46,7 +46,7 @@
     {% endfor %}
     {% if request.is_special_user or uc.public %}
       {# index is redirected in view #}
-      <a class="w3-left" href="{% url 'spider_base:ucontent-list' token=uc.token %}?{{request.GET.urlencode}}">
+      <a class="w3-left" href="{% fullurl_with_params 'spider_base:ucontent-list' request.GET token=uc.token %}">
         <i class="fas fa-arrow-up" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Index' %}
       </a>
     {% endif %}
@@ -66,7 +66,7 @@
           </a>
         {% endif %}
         <div style="margin-bottom:5px">
-          <a rel="nofollow" href="{% url 'spider_base:entity-delete' %}?cid=object.id">
+          <a rel="nofollow" href="{% url 'spider_base:entity-delete' token=uc.token %}?cid={{object.id}}">
             <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
           </a>
         </div>

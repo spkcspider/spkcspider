@@ -2,7 +2,6 @@ __all__ = (
     "UserTestMixin", "UCTestMixin", "DefinitionsMixin"
 )
 import logging
-from itertools import chain
 from urllib.parse import quote_plus
 
 from django.conf import settings
@@ -31,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class DefinitionsMixin(object):
+    user_model = None
 
     def get_context_data(self, **kwargs):
         kwargs["raw_update_type"] = VariantType.raw_update
@@ -49,22 +49,140 @@ class DefinitionsMixin(object):
         kwargs.setdefault("media", Media())
         return super().get_context_data(**kwargs)
 
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.user_model = get_user_model()
 
-class UserTestMixin(DefinitionsMixin, AccessMixin):
+
+class ExpiryMixin(DefinitionsMixin):
+    def calculate_deletion_content(self, del_requested, content):
+        if content.deletion_requested:
+            return {
+                "ob": content,
+                "deletion_date":
+                    content.deletion_requested+content.deletion_period,
+                "deletion_in_progress": True
+            }
+        else:
+            return {
+                "ob": content,
+                "deletion_date": del_requested+content.deletion_period,
+                "deletion_in_progress": False
+            }
+
+    def calculate_deletion_component(
+        self, uc, now, ignoredids=frozenset(), log=None,
+        del_expired=False
+    ):
+        """
+        Calculate earliest deletion date
+
+        Arguments:
+            uc {Usercomponent} -- Usercomponent which should be analysed
+            now {datetime} -- Current date
+
+        Keyword Arguments:
+            ignoredids {set} -- ignore for mimimum date calculation (default: {frozenset()})
+            log {dict} -- data spy for contents (default: {None})
+            del_expired {bool,"only"} -- False: don't change anything True: delete expired and calculate minimal deletion date, "only": delete only expired (default: {False})
+
+        Returns:
+            None -- deletion of component successful
+            False -- No deletion active (only with del_expired="only")
+            datetime -- Earliest deletion date
+        """  # noqa E501
+        del_requested = uc.deletion_requested or now
+
+        def _helper(self, content):
+            ret = self.calculate_deletion_content(del_requested, content)
+            if ret["deletion_in_progress"]:
+                if (
+                    del_expired and
+                    ret["deletion_date"] <= now
+                ):
+                    content.delete()
+                    return None
+            if content.id in ignoredids:
+                return None
+            if log:
+                log[content.id] = ret
+            return ret["deletion_date"]
+        q = models.Q(deletion_requested__isnull=False)
+        ret_list = []
+        if del_expired != "only" or uc.deletion_requested:
+            q |= ~models.Q(id__in=ignoredids)
+            ret_list.append(del_requested + uc.deletion_period)
+        ret_list.extend(filter(
+            None,
+            map(_helper, uc.contents.filter(q))
+        ))
+        if not ret_list:
+            return False
+        ret = max(ret_list)
+
+        if (
+            del_expired and
+            uc.deletion_requested and
+            ret <= now and
+            not uc.is_index
+        ):
+            uc.delete()
+            return None
+        return ret
+
+    def remove_old_entities(self, ob=None, now=None):
+        if not now:
+            now = timezone.now()
+        if isinstance(ob, AssignedContent):
+            result = self.calculate_deletion_content(now, ob)
+            if (
+                result["deletion_in_progress"] and
+                result["deletion_date"] <= now
+            ):
+                ob.delete()
+                return True
+        elif isinstance(ob, UserComponent):
+            deletion_date = \
+                self.calculate_deletion_component(
+                    ob, now, del_expired="only"
+                )
+            # deletion_date is None: deleted
+            if deletion_date is None:
+                return True
+        elif isinstance(ob, int):
+            for content in UserComponent.objects.filter(
+                models.Q(deletion_requested__isnull=False) |
+                models.Q(contents__deletion_requested__isnull=False)
+            ).order_by("deletion_requested")[:ob]:
+                self.calculate_deletion_component(
+                    ob, now, del_expired="only"
+                )
+        else:
+            assert isinstance(ob, get_user_model()), "Not a user model"
+            for uc in UserComponent.objects.filter(
+                models.Q(deletion_requested__isnull=False) |
+                models.Q(contents__deletion_requested__isnull=False),
+                user=ob
+            ):
+                self.calculate_deletion_component(
+                    uc, now, del_expired="only"
+                )
+        return False
+
+
+class UserTestMixin(ExpiryMixin, AccessMixin):
     preserved_GET_parameters = {"token", "search", "id", "protection"}
     login_url = reverse_lazy(getattr(
         settings,
         "LOGIN_URL",
         "auth:login"
     ))
-    user_model = None
     # don't allow AccessMixin to redirect, handle in test_token
     raise_exception = True
     _travel_request = None
 
     def setup(self, request, *args, **kwargs):
         super().setup(request, *args, **kwargs)
-        self.user_model = get_user_model()
         self.request.is_owner = getattr(self.request, "is_owner", False)
         self.request.is_special_user = \
             getattr(self.request, "is_special_user", False)
@@ -362,98 +480,6 @@ class UserTestMixin(DefinitionsMixin, AccessMixin):
 
     def get_noperm_template_names(self):
         return "spider_base/protections/protections.html"
-
-    def calculate_deletion_content(self, del_requested, content):
-        if content.deletion_requested:
-            return {
-                "ob": content,
-                "deletion_date":
-                    content.deletion_requested+content.deletion_period,
-                "deletion_in_progress": True
-            }
-        else:
-            return {
-                "ob": content,
-                "deletion_date": del_requested+content.deletion_period,
-                "deletion_in_progress": False
-            }
-
-    def calculate_deletion_component(
-        self, uc, now, ignoredids=frozenset(), log=None,
-        del_expired=False
-    ):
-        del_requested = uc.deletion_requested or now
-
-        def _helper(self, content):
-            ret = self.calculate_deletion_content(del_requested, content)
-            if (
-                del_expired and
-                ret["deletion_in_progress"] and
-                ret["deletion_date"] <= now
-            ):
-                content.delete()
-                return None
-            if content.id in ignoredids:
-                return None
-            if log:
-                log[content.id] = ret
-            return ret["deletion_date"]
-        q = models.Q(deletion_requested__isnull=False)
-        if del_expired != "only" or uc.deletion_requested:
-            q |= ~models.Q(id__in=ignoredids)
-        ret = max(
-            chain.from_iterable(
-                [del_requested + uc.deletion_period],
-                filter(
-                    None,
-                    map(_helper, uc.contents.filter(q))
-                )
-            )
-        )
-        if del_expired and ret <= now and not uc.is_index:
-            uc.delete()
-            return None
-        return ret
-
-    def remove_old_entities(self, ob=None, now=None):
-        if not now:
-            now = timezone.now()
-        if isinstance(ob, AssignedContent):
-            result = self.calculate_deletion_content(ob, now)
-            if (
-                result["deletion_in_progress"] and
-                result["deletion_date"] <= now
-            ):
-                ob.delete()
-                return True
-        elif isinstance(ob, UserComponent):
-            deletion_date = \
-                self.calculate_deletion_component(
-                    ob, now, del_expired="only"
-                )
-            # deletion_date is None: deleted
-            if deletion_date is None:
-                return True
-        elif isinstance(ob, self.user_model):
-            for uc in UserComponent.objects.filter(
-                models.Q(deletion_requested__isnull=False) |
-                models.Q(contents__deletion_requested__isnull=False),
-                user=ob
-            ):
-                self.calculate_deletion_component(
-                    uc, now, del_expired="only"
-                )
-        elif isinstance(ob, int):
-            for content in UserComponent.objects.filter(
-                models.Q(deletion_requested__isnull=False) |
-                models.Q(contents__deletion_requested__isnull=False)
-            ).order_by("deletion_requested")[:ob]:
-                self.calculate_deletion_component(
-                    ob, now, del_expired="only"
-                )
-        else:
-            raise NotImplementedError()
-        return False
 
 
 class UCTestMixin(UserTestMixin):

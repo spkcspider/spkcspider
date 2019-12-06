@@ -28,13 +28,13 @@ from ..queryfilters import (
 )
 from ..serializing import paginate_stream, serialize_stream
 from ._core import (
-    DefinitionsMixin, UCTestMixin, UserTestMixin
+    ExpiryMixin, UCTestMixin, UserTestMixin
 )
 
 _extra = '' if settings.DEBUG else '.min'
 
 
-class ComponentIndexBase(DefinitionsMixin, ListView):
+class ComponentIndexBase(ExpiryMixin, ListView):
     scope = "list"
 
     def get_context_data(self, **kwargs):

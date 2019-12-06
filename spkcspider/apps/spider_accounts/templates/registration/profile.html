@@ -4,8 +4,9 @@
 {% block content %}
   {% trans 'Update User Profile' as legend %}
   {% trans 'Update' as confirm %}
+  {% get_component_token 'index' as index_token %}
   {% include "spider_base/edit_form.html" with form=form legend=legend confirm=confirm %}
-  <a class="" href="{% update_component 'index' %}">
+  <a class="" href="{% url 'spider_base:ucomponent-update' token=index_token %}">
     {% trans 'Security Settings' %}
   </a>
 {% endblock %}

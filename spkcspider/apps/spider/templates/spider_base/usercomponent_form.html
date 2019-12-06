@@ -37,7 +37,8 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         </a>
         {% if not object.is_index %}
           <div style="margin-bottom:5px">
-            <a href="{% url 'spider_base:entity-delete' %}?ucid=object.id">
+            {% get_component_token 'index' object.user as index_token %}
+            <a href="{{hostpart}}{% url 'spider_base:entity-delete' token=index_token %}?ucid={{object.id}}">
               <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
             </a>
           </div>

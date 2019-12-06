@@ -2,6 +2,7 @@ from django import template
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils import timezone
+from django.utils.http import urlencode
 
 register = template.Library()
 
@@ -61,36 +62,25 @@ def list_own_content(context):
 
 
 @register.simple_tag(takes_context=True)
-def update_component(context, name):
-    if context["request"].user.is_authenticated:
-        uc = context["request"].user.usercomponent_set.only("token").get(
-            name=name
-        )
-        return reverse("spider_base:ucomponent-update", kwargs={
-            "token": uc.token
-        })
-    return ""
+def get_component_token(context, name, user=None):
+    user = user or context["request"].user
+    if not user.is_authenticated:
+        raise ValueError("no user found")
+    return user.usercomponent_set.only("token").get(
+        name=name
+    ).token
 
 
 @register.simple_tag(takes_context=True)
-def view_component(context, name):
-    if context["request"].user.is_authenticated:
-        uc = context["request"].user.usercomponent_set.only("token").get(
-            name=name
-        )
-        return reverse("spider_base:ucontent-list", kwargs={
-            "token": uc.token
-        })
-    return ""
-
-
-@register.simple_tag(takes_context=True)
-def reverse_get(context, name, **kwargs):
-    """ Works only if hostpart and sanitized_GET is available """
+def fullurl_with_params(context, name, params="", **kwargs):
+    if not isinstance(params, str):
+        params = urlencode(params, doseq=True)
+    if params and params[-1] != "&":
+        params += "&"
     return "{}{}?{}".format(
         context["hostpart"],
         reverse(name, kwargs=kwargs),
-        context["sanitized_GET"]
+        params
     )
 
 
