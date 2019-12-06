@@ -55,7 +55,7 @@ class DefinitionsMixin(object):
 
 
 class ExpiryMixin(DefinitionsMixin):
-    def calculate_deletion_content(self, del_requested, content):
+    def calculate_deletion_content(self, content, del_requested):
         if content.deletion_requested:
             return {
                 "ob": content,
@@ -94,7 +94,7 @@ class ExpiryMixin(DefinitionsMixin):
         del_requested = uc.deletion_requested or now
 
         def _helper(self, content):
-            ret = self.calculate_deletion_content(del_requested, content)
+            ret = self.calculate_deletion_content(content, del_requested)
             if ret["deletion_in_progress"]:
                 if (
                     del_expired and
@@ -134,7 +134,7 @@ class ExpiryMixin(DefinitionsMixin):
         if not now:
             now = timezone.now()
         if isinstance(ob, AssignedContent):
-            result = self.calculate_deletion_content(now, ob)
+            result = self.calculate_deletion_content(ob, now)
             if (
                 result["deletion_in_progress"] and
                 result["deletion_date"] <= now
