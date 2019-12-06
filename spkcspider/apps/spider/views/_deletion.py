@@ -62,11 +62,11 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         if not self.usercomponent.is_index:
             component_query = UserComponent.objects.filter(
                 id=self.usercomponent.id
-            ).prefetch_related("contents")
+            )
         else:
             component_query = UserComponent.objects.filter(
                 user=self.usercomponent.user
-            ).prefetch_related("contents")
+            )
 
         content_query = AssignedContent.objects.filter(
             usercomponent__user=user
@@ -151,11 +151,11 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         if not self.usercomponent.is_index:
             component_query = UserComponent.objects.filter(
                 id=self.usercomponent.id
-            ).prefetch_related("contents")
+            )
         else:
             component_query = UserComponent.objects.filter(
                 user=self.usercomponent.user
-            ).prefetch_related("contents")
+            )
 
         content_query = AssignedContent.objects.filter(
             usercomponent__user=user

@@ -153,7 +153,7 @@ class ExpiryMixin(DefinitionsMixin):
             for uc in UserComponent.objects.filter(
                 models.Q(deletion_requested__isnull=False) |
                 models.Q(contents__deletion_requested__isnull=False)
-            ).prefetch_related("contents").order_by("deletion_requested")[:ob]:
+            ).order_by("deletion_requested")[:ob]:
                 self.calculate_deletion_component(
                     uc, now, del_expired="only"
                 )
@@ -163,7 +163,7 @@ class ExpiryMixin(DefinitionsMixin):
                 models.Q(deletion_requested__isnull=False) |
                 models.Q(contents__deletion_requested__isnull=False),
                 user=ob
-            ).prefetch_related("contents"):
+            ):
                 self.calculate_deletion_component(
                     uc, now, del_expired="only"
                 )
