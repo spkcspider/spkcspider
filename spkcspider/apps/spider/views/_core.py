@@ -93,7 +93,7 @@ class ExpiryMixin(DefinitionsMixin):
         """  # noqa E501
         del_requested = uc.deletion_requested or now
 
-        def _helper(self, content):
+        def _helper(content):
             ret = self.calculate_deletion_content(content, del_requested)
             if ret["deletion_in_progress"]:
                 if (
@@ -150,12 +150,12 @@ class ExpiryMixin(DefinitionsMixin):
             if deletion_date is None:
                 return True
         elif isinstance(ob, int):
-            for content in UserComponent.objects.filter(
+            for uc in UserComponent.objects.filter(
                 models.Q(deletion_requested__isnull=False) |
                 models.Q(contents__deletion_requested__isnull=False)
-            ).order_by("deletion_requested")[:ob]:
+            ).prefetch_related("contents").order_by("deletion_requested")[:ob]:
                 self.calculate_deletion_component(
-                    ob, now, del_expired="only"
+                    uc, now, del_expired="only"
                 )
         else:
             assert isinstance(ob, get_user_model()), "Not a user model"
@@ -163,7 +163,7 @@ class ExpiryMixin(DefinitionsMixin):
                 models.Q(deletion_requested__isnull=False) |
                 models.Q(contents__deletion_requested__isnull=False),
                 user=ob
-            ):
+            ).prefetch_related("contents"):
                 self.calculate_deletion_component(
                     uc, now, del_expired="only"
                 )

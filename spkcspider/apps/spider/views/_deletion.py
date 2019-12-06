@@ -47,6 +47,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         now = timezone.now()
+        user = self.usercomponent.user
         travel = self.get_travel_for_request().filter(
             login_protection__in=loggedin_active_tprotections
         )
@@ -61,16 +62,19 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         if not self.usercomponent.is_index:
             component_query = UserComponent.objects.filter(
                 id=self.usercomponent.id
-            )
+            ).prefetch_related("contents")
         else:
             component_query = UserComponent.objects.filter(
                 user=self.usercomponent.user
-            )
+            ).prefetch_related("contents")
+
+        content_query = AssignedContent.objects.filter(
+            usercomponent__user=user
+        )
 
         ignored_content_ids = frozenset(
-            AssignedContent.objects.filter(
-                travel_contents_q,
-                usercomponent__in=component_query,
+            content_query.filter(
+                travel_contents_q
             ).values_list("id", flat=True)
         )
         ignored_component_ids = component_query.filter(
@@ -88,7 +92,8 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
                     uc,
                     now,
                     ignored_content_ids,
-                    log=item["contents"], del_expired=True
+                    log=item["contents"],
+                    del_expired=True
                 )
 
             if item["deletion_date"] is None:
@@ -146,16 +151,19 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         if not self.usercomponent.is_index:
             component_query = UserComponent.objects.filter(
                 id=self.usercomponent.id
-            )
+            ).prefetch_related("contents")
         else:
             component_query = UserComponent.objects.filter(
                 user=self.usercomponent.user
-            )
+            ).prefetch_related("contents")
+
+        content_query = AssignedContent.objects.filter(
+            usercomponent__user=user
+        )
 
         ignored_content_ids = frozenset(
-            AssignedContent.objects.filter(
-                travel_contents_q,
-                usercomponent__in=component_query,
+            content_query.filter(
+                travel_contents_q
             ).values_list("id", flat=True)
         )
         ignored_component_ids = component_query.filter(
@@ -167,26 +175,28 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         delete_contents.difference_update(ignored_content_ids)
         reset_contents.difference_update(ignored_content_ids)
 
-        content_query = AssignedContent.objects.filter(
-            usercomponent__user=user
-        )
-
-        component_query.filter(
+        component_query.exclude(id__in=ignored_component_ids).filter(
             id__in=delete_components,
             deletion_requested__isnull=True
         ).update(
             deletion_requested=now
         )
-        component_query.filter(id__in=reset_components).update(
+        component_query.exclude(id__in=ignored_component_ids).filter(
+            id__in=reset_components
+        ).update(
             deletion_requested=None
         )
-        content_query.filter(
+        content_query.exclude(
+            id__in=ignored_content_ids
+        ).filter(
             id__in=delete_contents,
             deletion_requested__isnull=True
         ).update(
             deletion_requested=now
         )
-        content_query.filter(id__in=reset_contents).update(
+        content_query.exclude(
+            id__in=ignored_content_ids
+        ).filter(id__in=reset_contents).update(
             deletion_requested=None
         )
 
@@ -210,15 +220,6 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
                 if uc == self.usercomponent:
                     self.own_marked_for_deletion = True
                 continue
-
-            for content in uc.contents.filter(id__in=delete_contents):
-                # not marked for deletion yet and not needed anyway
-                if item["contents"][content.id]["deletion_date"] <= now:
-                    content.delete()
-                    del item["contents"][content.id]
-                else:
-                    item["contents"][content.id]["deletion_in_progress"] = \
-                        True
 
             if uc.id not in ignored_component_ids:
                 components[uc.name] = item
