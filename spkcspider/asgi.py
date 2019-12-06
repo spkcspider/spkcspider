@@ -22,4 +22,3 @@ if not os.environ.get(
     print("USE SETTINGS:", os.environ["DJANGO_SETTINGS_MODULE"])
 
 application = get_asgi_application()
-
