@@ -59,7 +59,7 @@ class PublicKey(BaseContent):
     )
 
     @classmethod
-    def localize_name(cls, name):
+    def localize_type_name(cls, name):
         _ = pgettext
         return _("content name", "Public Key")
 

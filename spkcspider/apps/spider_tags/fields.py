@@ -1,13 +1,7 @@
 
-import logging
-import posixpath
-
 from django import forms
 from django.apps import apps
 from django.utils.translation import gettext, gettext_lazy
-from spkcspider.apps.spider.widgets import (
-    SubSectionStartWidget, SubSectionStopWidget
-)
 from spkcspider.utils.fields import add_by_field
 
 from . import registry
@@ -174,71 +168,3 @@ class AnchorField(forms.ModelChoiceField):
 
     def label_from_instance(self, obj):
         return str(obj.content)
-
-
-class StartSub(forms.Field):
-    widget = SubSectionStartWidget
-    hashable = False
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.widget.label = self.label
-
-
-class StopSub(forms.Field):
-    widget = SubSectionStopWidget
-    hashable = False
-
-
-def generate_fields(layout, prefix="", _base=None, _mainprefix=None):
-    if _base is None:
-        _base = []
-        _mainprefix = prefix
-    for i in layout:
-        item = i.copy()
-        item.setdefault("required", False)
-        try:
-            key, field = item.pop("key", None), item.pop("field", None)
-        except Exception:
-            logging.warning("Invalid item (no dict)", i)
-            continue
-        localize = item.pop("localize", False)
-        nonhashable = item.pop("nonhashable", False)
-        if not item.get("label"):
-            item["label"] = key.replace(_mainprefix, "", 1)
-
-        if localize:
-            item["label"] = gettext(item["label"])
-            if "help_text" in item:
-                item["help_text"] = gettext(item["help_text"])
-        if not key or "/" in key:
-            logging.warning("Invalid item (no key/contains /)", i)
-            continue
-        if isinstance(field, list):
-            new_prefix = posixpath.join(prefix, key)
-            item["required"] = False
-            item["initial"] = None
-            # by prefixing with _ invalidate prefix for tag recognition
-            _base.append((
-                "_{}_start".format(new_prefix),
-                StartSub(**item)
-            ))
-            generate_fields(
-                field, new_prefix, _base=_base, _mainprefix=_mainprefix
-            )
-            # by prefixing with _ invalidate prefix for tag recognition
-            _base.append((
-                "_{}_stop".format(new_prefix),
-                StopSub(**item)
-            ))
-        elif isinstance(field, str):
-            new_field = registry.fields.get(field, None)
-            if not new_field:
-                logging.warning("Invalid field specified: %s", field)
-            else:
-                new_field = new_field(**item)
-                setattr(new_field, "hashable", not nonhashable)
-                _base.append((posixpath.join(prefix, key), new_field))
-        else:
-            logging.warning("Invalid item", i)
-    return _base

@@ -1,10 +1,8 @@
 
-__all__ = (
-    "BaseContent"
-)
+__all__ = ("BaseContent",)
+
 import logging
 from datetime import timedelta
-from functools import lru_cache
 from urllib.parse import urljoin
 
 from rdflib import RDF, XSD, BNode, Graph, Literal, URIRef
@@ -22,9 +20,7 @@ from django.template.loader import render_to_string
 from django.utils.html import escape
 from django.utils.translation import gettext, pgettext
 from django.views.decorators.csrf import csrf_exempt
-from spkcspider.constants import (
-    ActionUrl, VariantType, spkcgraph
-)
+from spkcspider.constants import VariantType, spkcgraph
 from spkcspider.utils.fields import add_property, literalize
 from spkcspider.utils.security import create_b64_id_token
 from spkcspider.utils.settings import get_settings_func
@@ -139,6 +135,9 @@ class BaseContent(models.Model):
 
     @classmethod
     def localize_name(cls, name):
+        """
+            Localize type names
+        """
         return pgettext("content name", name)
 
     def get_size(self):
@@ -155,14 +154,6 @@ class BaseContent(models.Model):
     def feature_urls(cls, name):
         """ For implementing component features """
         return []
-
-    @classmethod
-    @lru_cache(typed=True)
-    def cached_feature_urls(cls, name):
-        return frozenset(map(
-            lambda x: ActionUrl(*map(str, x)),
-            cls.feature_urls(name)
-        ))
 
     def get_content_name(self):
         return "{}_{}".format(

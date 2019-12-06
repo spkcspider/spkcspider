@@ -6,9 +6,17 @@ from spkcspider.apps.spider.registry import Registry
 class FieldRegistry(Registry):
     attr_path = "spider_fields_path"
 
+    def __setitem__(self, key, value):
+        assert value, "invalid value type %s" % type(value)
+        super().__setitem__(key, value)
+
 
 class LayoutRegistry(Registry):
     attr_path = "spider_layouts_path"
+
+    def __setitem__(self, key, value):
+        assert value, "invalid value type %s" % type(value)
+        super().__setitem__(key, value)
 
     def initialize(self):
         from django.apps import apps

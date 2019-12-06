@@ -19,15 +19,9 @@ from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.fields import add_by_field
 
+from .generators import generate_form
+
 logger = logging.getLogger(__name__)
-
-try:
-    from lru import LRU
-    CACHE_FORMS = LRU(256)
-except Exception:
-    logger.warning("LRU dict failed, use dict instead", exc_info=True)
-    CACHE_FORMS = {}
-
 
 # Create your models here.
 
@@ -77,13 +71,7 @@ class TagLayout(models.Model):
             self.usertag.full_clean(exclude=["layout"])
 
     def get_form(self):
-        compkey = (self.name, self.usertag.pk if self.usertag else None)
-        form = CACHE_FORMS.get(compkey)
-        if not form:
-            from .forms import generate_form
-            form = generate_form("LayoutForm", self.layout)
-            CACHE_FORMS[compkey] = form
-        return form
+        return generate_form("LayoutForm", self.layout)
 
     def __repr__(self):
         if self.usertag:
@@ -98,17 +86,6 @@ class TagLayout(models.Model):
                 self.name, self.usertag.associated.usercomponent.username
             )
         return "TagLayout: %s" % self.name
-
-    def save(self, *args, **kwargs):
-        if self.pk:
-            # invalidate forms
-            old = TagLayout.objects.get(pk=self.pk)
-            _id = self.usertag.pk if self.usertag else None
-            try:
-                del CACHE_FORMS[old.name, _id]
-            except KeyError:
-                pass
-        return super().save(*args, **kwargs)
 
 
 @add_by_field(registry.contents, "_meta.model_name")

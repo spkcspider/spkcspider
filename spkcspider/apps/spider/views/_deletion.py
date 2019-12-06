@@ -27,10 +27,20 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
     own_marked_for_deletion = False
     template_name = "spider_base/entity_mass_deletion.html"
 
+    @staticmethod
+    def to_int(value):
+        try:
+            return int(value)
+        except ValueError:
+            return None
+
     def get_context_data(self, **kwargs):
-        kwargs["uc"] = self.usercomponent
-        kwargs["selected_components"] = set(self.request.GET.getlist("ucid"))
-        kwargs["selected_contents"] = set(self.request.GET.getlist("cid"))
+        kwargs["selected_components"] = set(map(
+            self.to_int, self.request.GET.getlist("ucid")
+        ))
+        kwargs["selected_contents"] = set(map(
+            self.to_int, self.request.GET.getlist("cid")
+        ))
         return super().get_context_data(**kwargs)
 
     def dispatch(self, request, *args, **kwargs):

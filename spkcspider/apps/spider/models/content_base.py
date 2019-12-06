@@ -18,7 +18,6 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from spkcspider.constants import (
@@ -57,16 +56,11 @@ class ContentVariant(models.Model):
 
     @property
     def installed_class(self):
-        return registry.contents[self.code]
+        return registry.contents[self]
 
     @property
     def feature_urls(self):
-        return registry.contents[self.code].cached_feature_urls(self.name)
-
-    def localize_name(self):
-        if self.code not in registry.contents:
-            return self.name
-        return self.installed_class.localize_name(self.name)
+        return registry.feature_urls[self]
 
     @property
     def unique_for_component(self):
@@ -78,6 +72,15 @@ class ContentVariant(models.Model):
             VariantType.component_feature.value in self.ctype or
             VariantType.content_feature.value in self.ctype
         )
+
+    @property
+    def deletion_period(self):
+        return registry.content_deletion_periods[self]
+
+    def localize_name(self):
+        if self not in registry.contents:
+            return self.name
+        return registry.contents[self].localize_name(self.name)
 
     def __str__(self):
         return self.localize_name()
@@ -351,7 +354,7 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
         return self.content.get_size()
 
     def localized_description(self):
-        """ """
+        """ localize description either with own version or the localized """
         if not self.content:
             return self.description
         return self.content.localized_description()
@@ -398,8 +401,6 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
     def is_hidden(self):
         return self.getflag("unlisted")
 
-    @cached_property
+    @property
     def deletion_period(self):
-        return getattr(
-            settings, "SPIDER_CONTENTS_DELETION_PERIODS", {}
-        ).get(self.ctype.name, self.content.deletion_period)
+        return self.ctype.deletion_period

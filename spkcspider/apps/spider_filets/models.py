@@ -67,8 +67,8 @@ class DisclaimerFeature(BaseContent):
 
     @classmethod
     def localize_name(cls, name):
-        name = "Disclaimer advertisment (EU)"
-        return pgettext("feature name", name)
+        _ = pgettext
+        return _("content name", name)
 
 
 class ContentWithLicense(BaseContent):

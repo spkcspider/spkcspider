@@ -8,27 +8,27 @@
 <div>
   <div class="w3-padding">
     {# index is redirected in view #}
-    <a class="w3-left" href="{% url 'spider_base:ucomponent-update' token=uc.token %}">{% trans 'Back' %}</a>
+    <a class="w3-left" href="{% url 'spider_base:ucontent-list' token=uc.token %}">{% trans 'Back' %}</a>
     <h1 class="w3-center">
       {% blocktrans trimmed %}
-        Delete User Components and Contents:
+        Delete Components and Contents:
       {% endblocktrans %}
     </h1>
   </div>
 
   <form class="w3-padding" id="delete_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
     <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
-    <table class="w3-table-all">
+    <table class="w3-table w3-border w3-bordered w3-white">
       <thead>
-        <tr>
-          <th class="">{% trans 'Name:' %}</th>
-          <th class="">{% trans 'Delete:' %}</th>
-          <th class="">{% trans 'Reset:' %}</th>
+        <tr class="w3-light-gray">
+          <th class="">{% trans 'Name' %}:</th>
+          <th class="">{% trans 'Delete' %}:</th>
+          <th class="">{% trans 'Reset' %}:</th>
         </tr>
       </thead>
       <tbody>
         {% for uc_id, uc_item in hierarchy.items %}
-          <tr>
+          <tr class="{% if uc_item.ob.is_index %}w3-gray w3-text-light-gray{% else %}w3-light-gray{% endif %}">
             <td>
               {{uc_item.ob}}
             </td>
@@ -38,7 +38,7 @@
                 {% if uc_item.ob.is_index %}
                   {% blocktrans  %}Protected{% endblocktrans %}
                 {% elif uc_item.deletion_in_progress %}
-                  {% blocktrans with deletion_date=uc_item.deletion_date %}Deletion at {{deletion_date}}{% endblocktrans %}
+                  {% blocktrans with deletion_date=uc_item.deletion_date %}Deletion at {{deletion_date}} complete{% endblocktrans %}
                 {% elif uc_item.deletion_date <= now %}
                   {% blocktrans  %}Delete now{% endblocktrans %}
                 {% else %}
@@ -50,28 +50,30 @@
               <input {% if not uc_item.deletion_in_progress %}hidden="hidden"{% endif %} type="checkbox" name="reset_components" value="{{ uc_id }}"/>
             </td>
           </tr>
-          {% for content_id, content_item in uc_item.contents.items %}
-            <tr style="margin-left:2rem;">
-              <td>
-                {{content_item.ob}}
+          <tr>
+            {% for content_id, content_item in uc_item.contents.items %}
+              <td style="padding-left:2rem;">
+                <span>{{ content_item.ob }}<span class="w3-small" style="margin-left: 5px">({{ content_item.ob.ctype }})</span></span>
               </td>
-              <td>
+              <td style="padding-left:2rem;">
                 <input {% if content_item.deletion_in_progress %}disabled="disabled" checked="checked"{% elif content_id in selected_contents %}checked="checked"{% endif %} type="checkbox" name="delete_contents" value="{{ content_id }}"/>
                 <span>
                   {% if content_item.deletion_in_progress %}
-                    {% blocktrans with deletion_date=content_item.deletion_date %}Deletion executed at {{deletion_date}}{% endblocktrans %}
+                    {% blocktrans with deletion_date=content_item.deletion_date %}Deletion at {{deletion_date}} complete{% endblocktrans %}
                   {% elif content_item.deletion_date <= now %}
-                    {% blocktrans  %}Instant deletion possible{% endblocktrans %}
+                    {% blocktrans  %}Delete now{% endblocktrans %}
                   {% else %}
-                    {% blocktrans with deletion_date=content_item.deletion_date %}Earliest deletion date {{deletion_date}}{% endblocktrans %}
+                    {% blocktrans with deletion_date=content_item.deletion_date %}Delete at {{deletion_date}}{% endblocktrans %}
                   {% endif %}
                 </span>
               </td>
-              <td>
+              <td style="padding-left:2rem;">
                 <input {% if not content_item.deletion_in_progress %}hidden="hidden"{% endif %} type="checkbox" name="reset_contents" value="{{ content_id }}"/>
               </td>
-            </tr>
-          {% endfor %}
+            {% empty %}
+              <td colspan="3" class="w3-center">–</td>
+            {% endfor %}
+          </tr>
         {% endfor %}
       </tbody>
     </table>

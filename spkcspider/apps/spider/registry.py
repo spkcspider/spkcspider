@@ -1,9 +1,11 @@
 __all__ = [
-    "Registry", "ProtectionRegistry", "ContentRegistry",
-    "protections", "contents"
+    "Registry", "ProtectionRegistry", "ContentRegistry", "FeatureUrlsRegistry",
+    "ContentDeletionPeriodRegistry",
+    "protections", "contents", "feature_urls", "content_deletion_periods"
 ]
 
 import logging
+from spkcspider.constants import ActionUrl
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +20,7 @@ class Registry(object):
     _populated = False
     _registry = None
 
-    gen_func = None
+    find_func = None
 
     def __init__(self):
         self._unchecked_apps = set()
@@ -27,12 +29,11 @@ class Registry(object):
     def __getitem__(self, ob):
         key = self.get_key(ob)
         if key not in self._registry:
-            gen_func = self.gen_func or self.generate_gen_func
-            self._registry[key] = gen_func(key)
+            find_func = self.find_func or self.generate_find_func
+            self._registry[key] = find_func(key)
         return self._registry[key]
 
     def __setitem__(self, key, value):
-        assert value, "invalid value type %s" % type(value)
         self._registry[key] = value
 
     def __contains__(self, ob):
@@ -44,12 +45,13 @@ class Registry(object):
     def get_key(self, ob):
         return self.key_type_registry[type(ob).__name__](ob)
 
-    def generate_gen_func(self, key):
+    def generate_find_func(self, key):
+        """ generate generator function """
         from django.apps import apps
         from importlib import import_module
         self._unchecked_apps.update(apps.get_app_configs())
 
-        def gen_func(key):
+        def find_func(key):
             if self._unchecked_apps:
                 checked = []
                 for app in self._unchecked_apps:
@@ -63,10 +65,11 @@ class Registry(object):
                         break
                 self._unchecked_apps.difference_update(checked)
             return self[key]
-        self.gen_func = gen_func
-        return self.gen_func(key)
+        self.find_func = find_func
+        return self.find_func(key)
 
     def populate(self):
+        """ Populate all possible content, required for iterations """
         from importlib import import_module
         from django.apps import apps
         for app in apps.get_app_configs():
@@ -108,6 +111,7 @@ class ProtectionRegistry(Registry):
     def __setitem__(self, key, value):
         if key in self:
             raise Exception("Already exists")
+        assert value, "invalid value type %s" % type(value)
         super().__setitem__(key, value)
 
     def initialize(self):
@@ -163,14 +167,15 @@ class ContentRegistry(Registry):
     def __setitem__(self, key, value):
         if key in self:
             raise Exception("Already exists")
+        assert value, "invalid value type %s" % type(value)
         super().__setitem__(key, value)
 
-    def generate_gen_func(self, key):
+    def generate_find_func(self, key):
         from django.apps import apps
         from importlib import import_module
         self._unchecked_apps.update(apps.get_app_configs())
 
-        def gen_func(key):
+        def find_func(key):
             if self._unchecked_apps:
                 checked = []
                 for app in self._unchecked_apps:
@@ -186,8 +191,8 @@ class ContentRegistry(Registry):
                         break
                 self._unchecked_apps.difference_update(checked)
             return self[key]
-        self.gen_func = gen_func
-        return self.gen_func(key)
+        self.find_func = find_func
+        return self.find_func(key)
 
     def populate(self):
         from django.apps import apps
@@ -289,5 +294,73 @@ class ContentRegistry(Registry):
             )
 
 
+class FeatureUrlsRegistry(Registry):
+    contentRegistry = None
+
+    def __init__(self, contentRegistry):
+        self.contentRegistry = contentRegistry
+        self.key_type_registry = {
+            "tuple": lambda x: x,
+            "ContentVariant": lambda x: (x.code, x.name),
+            "AssignedContent": lambda x: (x.ctype.code, x.ctype.name)
+        }
+        super().__init__()
+
+    def generate_find_func(self, key):
+        def find_func(key):
+            self[key] = frozenset(map(
+                lambda x: ActionUrl(*map(str, x)),
+                self.contentRegistry[key[0]].feature_urls(key[1])
+            ))
+            return self[key]
+        self.find_func = find_func
+        return self.find_func(key)
+
+    def populate(self):
+        for code, content in self.contentRegistry.items():
+            for appearance in content.appearances:
+                self[(code, appearance["name"])]
+        self._populated = True
+
+
+class ContentDeletionPeriodRegistry(Registry):
+    contentRegistry = None
+
+    def __init__(self, contentRegistry):
+        self.contentRegistry = contentRegistry
+        self.key_type_registry = {
+            "tuple": lambda x: x,
+            "ContentVariant": lambda x: (x.code, x.name),
+            "AssignedContent": lambda x: (x.ctype.code, x.ctype.name)
+        }
+        super().__init__()
+
+    def generate_find_func(self, key):
+        from django.conf import settings
+        self.update(
+            getattr(
+                settings, "SPIDER_CONTENTS_DELETION_PERIODS", {}
+            )
+        )
+
+        def find_func(key):
+            deletion_period = self.contentRegistry[key[0]].deletion_period
+            if callable(deletion_period):
+                self[key] = deletion_period(key[1])
+            else:
+                self[key] = deletion_period
+            return self[key]
+        self.find_func = find_func
+        return self.find_func(key)
+
+    def populate(self):
+        for code, content in self.contentRegistry.items():
+            for appearance in content.appearances:
+                self[(code, appearance["name"])]
+        self._populated = True
+
+
 protections = ProtectionRegistry()
 contents = ContentRegistry()
+feature_urls = FeatureUrlsRegistry(contents)
+content_deletion_periods = ContentDeletionPeriodRegistry(contents)

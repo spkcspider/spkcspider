@@ -84,7 +84,6 @@ class ContentBase(UCTestMixin):
     def get_context_data(self, **kwargs):
         kwargs["request"] = self.request  # pylint: disable=no-member
         kwargs["scope"] = self.scope
-        kwargs["uc"] = self.usercomponent
         kwargs["media"] = Media(
             css={
                 "all": [

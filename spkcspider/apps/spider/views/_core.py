@@ -104,17 +104,25 @@ class ExpiryMixin(DefinitionsMixin):
                     return None
             if content.id in ignoredids:
                 return None
-            if log:
+            if log is not None:
                 log[content.id] = ret
             return ret["deletion_date"]
-        q = models.Q(deletion_requested__isnull=False)
+
         ret_list = []
+        q = models.Q()
+        if del_expired == "only":
+            q = models.Q(deletion_requested__isnull=False)
         if del_expired != "only" or uc.deletion_requested:
             q |= ~models.Q(id__in=ignoredids)
             ret_list.append(del_requested + uc.deletion_period)
+        query = uc.contents.filter(q)
+        if log is None:
+            query = query.only(
+                "id", "deletion_requested"
+            )
         ret_list.extend(filter(
             None,
-            map(_helper, uc.contents.filter(q))
+            map(_helper, query)
         ))
         if not ret_list:
             return False
@@ -153,6 +161,8 @@ class ExpiryMixin(DefinitionsMixin):
             for uc in UserComponent.objects.filter(
                 models.Q(deletion_requested__isnull=False) |
                 models.Q(contents__deletion_requested__isnull=False)
+            ).only(
+                "id", "deletion_requested"
             ).order_by("deletion_requested")[:ob]:
                 self.calculate_deletion_component(
                     uc, now, del_expired="only"
@@ -163,6 +173,8 @@ class ExpiryMixin(DefinitionsMixin):
                 models.Q(deletion_requested__isnull=False) |
                 models.Q(contents__deletion_requested__isnull=False),
                 user=ob
+            ).only(
+                "id", "deletion_requested"
             ):
                 self.calculate_deletion_component(
                     uc, now, del_expired="only"
@@ -484,6 +496,10 @@ class UserTestMixin(ExpiryMixin, AccessMixin):
 
 class UCTestMixin(UserTestMixin):
     usercomponent = None
+
+    def get_context_data(self, **kwargs):
+        kwargs["uc"] = self.usercomponent
+        return super().get_context_data(**kwargs)
 
     def dispatch(self, request, *args, **kwargs):
         self.usercomponent = self.get_usercomponent()
