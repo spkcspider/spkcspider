@@ -24,6 +24,6 @@
 {% endif %}
 {% if "update_guest" in abilities %}
 <div class="w3-padding">
-  <a href="{% url 'spider_base:ucontent-access' token=object.associated.token access='update_guest' %}?{{sanitized_GET}}">{% trans "Update" %}</a>
+  <a href="{% fullurl_with_params 'spider_base:ucontent-access' sanitized_GET token=object.associated.token access='update_guest' %}">{% trans "Update" %}</a>
 </div>
 {% endif %}

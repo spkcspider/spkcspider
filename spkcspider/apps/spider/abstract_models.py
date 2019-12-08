@@ -1,15 +1,17 @@
+"""
+abstract base models for implementations
+
+"""
+
 __all__ = [
-    "BaseInfoModel", "BaseSubUserComponentModel", "ReferrerObject"
+    "BaseInfoModel", "BaseSubUserComponentModel"
 ]
 
 import re
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.functional import cached_property
 from django.utils.translation import gettext
-from spkcspider.utils.urls import extract_host
 
 _info_replacer_templ = '\x1e{}.*\x1e'
 
@@ -46,25 +48,6 @@ def info_field_validator(value):
                 _('flag not unique: %(element)s in %(value)s'),
                 params={'element': elem, 'value': value},
             )
-
-
-class ReferrerObject(models.Model):
-    id: int = models.BigAutoField(primary_key=True, editable=False)
-    url: str = models.URLField(
-        max_length=(
-            600 if (
-                settings.DATABASES["default"]["ENGINE"] !=
-                "django.db.backends.mysql"
-            ) else 255
-        ),
-        db_index=True, unique=True, editable=False
-    )
-
-    objects = models.Manager()
-
-    @cached_property
-    def host(self):
-        return extract_host(self.url)
 
 
 class BaseSubUserComponentModel(models.Model):

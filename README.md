@@ -155,7 +155,8 @@ There are special GET parameters for controlling spkcspider:
 * token=xy: token as GET parameter, if invalid: retrieve token as GET parameter
 * token=prefer: uses invalid mechanic, easier to see what it does
 * raw=true: optimize output for machines, use turtle format
-* raw=embed: embed content of components
+* raw=embed: embed content of components, use turtle format
+* format=json: render some forms as json (currently only deletion form, reduces informations)
 * id=id&id=id: limit content ids (Content lists only)
 * search=foo&search=!notfoo: search case insensitive a string
 * search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).

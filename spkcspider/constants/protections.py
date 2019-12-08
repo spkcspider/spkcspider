@@ -1,3 +1,8 @@
+"""
+    Constants for protections and tokens
+"""
+
+
 __all__ = [
     "MAX_TOKEN_SIZE", "MAX_TOKEN_B64_SIZE", "MIN_PROTECTION_STRENGTH_LOGIN",
     "ProtectionType", "ProtectionStateType", "travel_scrypt_params"

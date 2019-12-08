@@ -15,7 +15,6 @@ from datetime import timedelta
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-
 from django.conf import settings
 from django.db import models
 from django.shortcuts import redirect
@@ -25,14 +24,15 @@ from django.utils.html import escape
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
-from spkcspider.utils.fields import add_by_field
+
 from spkcspider.constants import (
     ActionUrl, TravelLoginType, VariantType, dangerous_login_choices,
     travel_scrypt_params
 )
+from spkcspider.utils.fields import add_by_field
 
-from ..contents import BaseContent
 from .. import registry
+from ..contents import BaseContent
 
 logger = logging.getLogger(__name__)
 

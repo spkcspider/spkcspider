@@ -1,5 +1,5 @@
 {% extends "spider_base/uc_base.html" %}
-{% load i18n %}
+{% load i18n spider_base spider_rdf %}
 {% block title %}{% blocktrans trimmed %}
   Delete User Components and Contents
 {% endblocktrans %}{% endblock %}
@@ -18,7 +18,7 @@
 
   <form class="w3-padding" id="delete_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
     <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
-    <table class="w3-table w3-border w3-bordered w3-white">
+    <table class="w3-table w3-border w3-bordered w3-white" rel="spkc:components">
       <thead>
         <tr class="w3-light-gray">
           <th class="">{% trans 'Name' %}:</th>
@@ -26,18 +26,34 @@
           <th class="">{% trans 'Reset' %}:</th>
         </tr>
       </thead>
-      <tbody>
-        {% for uc_id, uc_item in hierarchy.items %}
+      {% for uc_name, uc_item in hierarchy.items %}
+        <tbody typeof="spkc:Component" resource="{% fullurl_with_params 'spider_base:ucontent-list' token=uc_item.ob.token %}">
           <tr class="{% if uc_item.ob.is_index %}w3-gray w3-text-light-gray{% else %}w3-light-gray{% endif %}">
             <td>
+              <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
+              <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc_item.ob.strength}}</data>
+              <data rel="spkc:properties" hidden="hidden">
+                <data typeof="spkc:Property">
+                  <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
+                  <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{ uc_item.ob.name|escape }}</data>
+                </data>
+                <data hidden="hidden" typeof="spkc:Property">
+                  <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
+                  <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc_item.ob.description|escape}}</data>
+                </data>
+              </data>
               {{uc_item.ob}}
             </td>
             <td>
-              <input class="" {% if uc_item.ob.is_index %}hidden="hidden" disabled="disabled"{% elif uc_item.deletion_in_progress %}disabled="disabled" checked="checked"{% elif uc_id in selected_components %}checked="checked"{% endif %} type="checkbox" name="delete_components" value="{{ uc_id }}"/>
+              {% literalize uc_item.deletion_date as del_date %}
+              {% literalize uc_item.deletion_active as del_active %}
+              <data hidden="hidden" property="spkc:deletion:date" datatype="{{del_date.datatype}}">{{del_date}}</data>
+              <data hidden="hidden" property="spkc:deletion:active" datatype="{{del_active.datatype}}">{{del_active}}</data>
+              <input class="" {% if uc_item.ob.is_index %}hidden="hidden" disabled="disabled"{% elif uc_item.deletion_active %}disabled="disabled" checked="checked"{% elif uc_name in selected_components %}checked="checked"{% endif %} type="checkbox" name="delete_components" value="{{ uc_name }}"/>
               <span>
                 {% if uc_item.ob.is_index %}
                   {% blocktrans  %}Protected{% endblocktrans %}
-                {% elif uc_item.deletion_in_progress %}
+                {% elif uc_item.deletion_active %}
                   {% blocktrans with deletion_date=uc_item.deletion_date %}Deletion at {{deletion_date}} complete{% endblocktrans %}
                 {% elif uc_item.deletion_date <= now %}
                   {% blocktrans  %}Delete now{% endblocktrans %}
@@ -47,18 +63,38 @@
               </span>
             </td>
             <td>
-              <input {% if not uc_item.deletion_in_progress %}hidden="hidden"{% endif %} type="checkbox" name="reset_components" value="{{ uc_id }}"/>
+              <input {% if not uc_item.deletion_active %}hidden="hidden"{% endif %} type="checkbox" name="reset_components" value="{{ uc_name }}"/>
             </td>
           </tr>
-          <tr>
-            {% for content_id, content_item in uc_item.contents.items %}
-              <td style="padding-left:2rem;">
+          {% for content_id, content_item in uc_item.contents.items %}
+            <tr property="spkc:contents" resource="{% fullurl_with_params 'spider_base:ucontent-access' token=content_item.ob.token access='view' %}" typeof="spkc:Content">
+              <td style="padding-left:2rem;" rel="spkc:properties">
                 <span>{{ content_item.ob }}<span class="w3-small" style="margin-left: 5px">({{ content_item.ob.ctype }})</span></span>
+                <data hidden="hidden" typeof="spkc:Property">
+                  <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
+                  <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content_item.ob.info}}</data>
+                </data>
+                <data hidden="hidden" typeof="spkc:Property">
+                  <data hidden="hidden" property="spkc:name" datatype="xsd:string">id</data>
+                  <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{content_item.ob.id}}</data>
+                </data>
+                <data hidden="hidden" typeof="spkc:Property">
+                  <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
+                  <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content_item.ob.name|escape}}</data>
+                </data>
+                <data hidden="hidden" typeof="spkc:Property">
+                  <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
+                  <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content_item.ob.description|escape}}</data>
+                </data>
               </td>
               <td style="padding-left:2rem;">
-                <input {% if content_item.deletion_in_progress %}disabled="disabled" checked="checked"{% elif content_id in selected_contents %}checked="checked"{% endif %} type="checkbox" name="delete_contents" value="{{ content_id }}"/>
+                {% literalize content_item.deletion_date as del_date %}
+                {% literalize content_item.deletion_active as del_active %}
+                <data hidden="hidden" property="spkc:deletion:date" datatype="{{del_date.datatype}}">{{del_date}}</data>
+                <data hidden="hidden" property="spkc:deletion:active" datatype="{{del_active.datatype}}">{{del_active}}</data>
+                <input {% if content_item.deletion_active %}disabled="disabled" checked="checked"{% elif content_id in selected_contents %}checked="checked"{% endif %} type="checkbox" name="delete_contents" value="{{ content_id }}"/>
                 <span>
-                  {% if content_item.deletion_in_progress %}
+                  {% if content_item.deletion_active %}
                     {% blocktrans with deletion_date=content_item.deletion_date %}Deletion at {{deletion_date}} complete{% endblocktrans %}
                   {% elif content_item.deletion_date <= now %}
                     {% blocktrans  %}Delete now{% endblocktrans %}
@@ -68,14 +104,17 @@
                 </span>
               </td>
               <td style="padding-left:2rem;">
-                <input {% if not content_item.deletion_in_progress %}hidden="hidden"{% endif %} type="checkbox" name="reset_contents" value="{{ content_id }}"/>
+                <input {% if not content_item.deletion_active %}hidden="hidden"{% endif %} type="checkbox" name="reset_contents" value="{{ content_id }}"/>
               </td>
-            {% empty %}
-              <td colspan="3" class="w3-center">–</td>
-            {% endfor %}
           </tr>
-        {% endfor %}
-      </tbody>
+          {% empty %}
+            <tr><td colspan="3" class="w3-center"><data hidden="hidden" resource="rdf:nil" property="spkc:contents"></data>–</td></tr>
+          {% endfor %}
+        </tbody>
+      {% empty %}
+        {# should never happen, but prepare for anything #}
+        <tbody><tr><td colspan="3" class="w3-center"><data hidden="hidden" resource="rdf:nil"></data>–</td></tr></tbody>
+      {% endfor %}
     </table>
     <div style="height:50px">
       <button class="w3-button w3-grey w3-right w3-hover-red"><i class="fas fa-trash" aria-hidden="true" style="margin-right:10px"></i>{% trans 'Delete' %}</button>

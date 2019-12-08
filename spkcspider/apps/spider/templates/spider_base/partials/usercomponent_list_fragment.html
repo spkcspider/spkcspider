@@ -11,7 +11,7 @@
   {% endif %}
   <tbody>
   {% for uc in object_list %}
-    <tr class="color-front-{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}" resource="{% url 'spider_base:ucontent-list' token=uc.token %}" typeof="spkc:Component">
+    <tr class="color-front-{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}" resource="{% fullurl_with_params 'spider_base:ucontent-list' token=uc.token %}" typeof="spkc:Component">
       <td class="{% if uc.is_index %}w3-large{% endif %}" style="min-height:48px;display:inline-block;word-break: break-all;">
         <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
         <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}</data>
@@ -19,7 +19,7 @@
           <data typeof="spkc:Property">
             <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
             {% if uc.is_index and request.is_owner %}
-              <span property="spkc:value" datatype="xsd:string">{% trans 'Private Component' %}</span>
+              <span property="spkc:value" datatype="xsd:string" content="{{ uc.name }}">{% trans 'Private Component' %}</span>
             {% else %}
               <span property="spkc:value" datatype="xsd:string">{{ uc.name }}</span>{% if not request.user == uc.user %} <em>({{uc.user}})</em>{% endif %}
             {% endif %}

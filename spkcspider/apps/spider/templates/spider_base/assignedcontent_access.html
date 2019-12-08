@@ -54,14 +54,14 @@
       {% if scope != "add" and request.is_special_user %}
       <div class="actionbar_user w3-left-align" style="margin-bottom:5px">
         {% if scope != "view" %}
-          <a class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' token=object.token access='view' %}">
+          <a class="w3-block" style="margin-bottom:5px" href="{% fullurl_with_params 'spider_base:ucontent-access' token=object.token access='view' %}">
             <i class="fas fa-eye" style="margin-right:10px" aria-hidden="true"></i>{% trans "View" %}
           </a>
         {% endif %}
       {% endif %}
       {% if scope != "add" and request.is_owner %}
         {% if scope != "update" %}
-          <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% url 'spider_base:ucontent-access' token=object.token access='update' %}?{{sanitized_GET}}">
+          <a rel="nofollow" class="w3-block" style="margin-bottom:5px" href="{% fullurl_with_params 'spider_base:ucontent-access' sanitized_GET token=object.token access='update' %}">
             <i class="fas fa-edit" style="margin-right:10px" aria-hidden="true"></i>{% trans "Update" %}
           </a>
         {% endif %}
@@ -152,12 +152,12 @@
       {% if object.previous_object or object.next_object %}
         <div class="w3-padding" style="min-height: 40px">
           {% if object.previous_object %}
-          <a class="" href="{% url 'spider_base:ucontent-access' token=object.previous_object.token access='view' %}?{{sanitized_GET}}">
+          <a class="" href="{% fullurl_with_params 'spider_base:ucontent-access' sanitized_GET token=object.previous_object.token access='view' %}">
             {% trans "previous" %}
           </a>
           {% endif %}
           {% if object.next_object %}
-          <a class="w3-right" href="{% url 'spider_base:ucontent-access' token=object.next_object.token access='view' %}?{{sanitized_GET}}">
+          <a class="w3-right" href="{% fullurl_with_params 'spider_base:ucontent-access' sanitized_GET token=object.next_object.token access='view' %}">
             {% trans "Next" %}
           </a>
           {% endif %}

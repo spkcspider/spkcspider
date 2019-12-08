@@ -8,9 +8,14 @@ import json
 
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from django.http import Http404, HttpResponse, JsonResponse
-from django.shortcuts import redirect
+from django.http import (
+    Http404, HttpResponse, HttpResponseGone, HttpResponsePermanentRedirect,
+    JsonResponse
+)
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 
 from spkcspider.constants import loggedin_active_tprotections
@@ -23,7 +28,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
     """
         Delete Contents and Usercomponents
     """
-    preserved_GET_parameters = {"token", "search", "id"}
+    preserved_GET_parameters = {"token", "search", "id", "cid", "uc"}
     own_marked_for_deletion = False
     template_name = "spider_base/entity_mass_deletion.html"
 
@@ -35,14 +40,13 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             return None
 
     def get_context_data(self, **kwargs):
-        kwargs["selected_components"] = set(map(
-            self.to_int, self.request.GET.getlist("ucid")
-        ))
+        kwargs["selected_components"] = set(self.request.GET.getlist("uc"))
         kwargs["selected_contents"] = set(map(
             self.to_int, self.request.GET.getlist("cid")
         ))
         return super().get_context_data(**kwargs)
 
+    @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         try:
             return super().dispatch(request, *args, **kwargs)
@@ -95,7 +99,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             item = {
                 "ob": uc,
                 "contents": {},
-                "deletion_in_progress": uc.deletion_requested is not None
+                "deletion_active": uc.deletion_requested is not None
             }
             item["deletion_date"] = \
                 self.calculate_deletion_component(
@@ -133,10 +137,8 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             delete_contents = request.POST.getlist("delete_contents")
             reset_contents = request.POST.getlist("reset_contents")
         try:
-            reset_components = set(map(int, reset_components))
-            delete_components = set(map(
-                int, delete_components
-            ))
+            reset_components = set(reset_components)
+            delete_components = set(delete_components)
             delete_components.difference_update(reset_components)
             reset_contents = set(map(int, reset_contents))
             delete_contents = set(map(
@@ -186,13 +188,13 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         reset_contents.difference_update(ignored_content_ids)
 
         component_query.exclude(id__in=ignored_component_ids).filter(
-            id__in=delete_components,
+            name__in=delete_components,
             deletion_requested__isnull=True
         ).update(
             deletion_requested=now
         )
         component_query.exclude(id__in=ignored_component_ids).filter(
-            id__in=reset_components
+            name__in=reset_components
         ).update(
             deletion_requested=None
         )
@@ -214,9 +216,9 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             item = {
                 "ob": uc,
                 "contents": {},
-                "deletion_in_progress":
+                "deletion_active":
                     (
-                        uc.id in delete_components or
+                        uc.name in delete_components or
                         uc.deletion_requested
                     ) and not uc.is_index
             }
@@ -248,28 +250,34 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
 
     def render_to_response(self, context):
         if not self.own_marked_for_deletion:
-            if self.request.GET.get("raw", "") == "json":
+            if self.request.GET.get("format", "") == "json":
                 # last time it is used
                 for component_val in context["hierarchy"].values():
+                    component_val["name"] = component_val["ob"].name
+                    component_val["description"] = \
+                        component_val["ob"].description
                     component_val.pop("ob")
-                    for val in component_val["contents"].values():
-                        val.pop("ob")
-                response = JsonResponse(
-                    context["hierarchy"]
-                )
+                    for content_val in component_val["contents"].values():
+                        content_val["name"] = content_val["ob"].name
+                        content_val["description"] = \
+                            content_val["ob"].description
+                        content_val.pop("ob")
+                response = JsonResponse(context["hierarchy"])
             else:
                 response = super().render_to_response(context)
-        elif (
-            self.request.user.is_authenticated and
-            # don't blow cover
-            self.usercomponent.id not in context["ignored_component_ids"]
-        ):
-            response = redirect(
-                'spider_base:entity-delete', permanent=True,
-                token=self.object.token, access="update"
+        elif self.request.user.is_authenticated:
+            # last resort: redirect to index
+            index = self.request.user.usercomponent_set.get("index")
+            response = HttpResponsePermanentRedirect(
+                "{}?{}".format(
+                    reverse(
+                        'spider_base:entity-delete',
+                        kwargs={"token": index.token}
+                    ), context["sanitized_GET"]
+                )
             )
         else:
-            response = HttpResponse(404)
+            response = HttpResponseGone()
         response["Access-Control-Allow-Origin"] = self.request.get_host()
         response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
         return response

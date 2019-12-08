@@ -46,7 +46,7 @@ class Registry(object):
         return self.key_type_registry[type(ob).__name__](ob)
 
     def generate_find_func(self, key):
-        """ generate generator function """
+        """ generate generator based find function """
         from django.apps import apps
         from importlib import import_module
         self._unchecked_apps.update(apps.get_app_configs())
@@ -319,6 +319,7 @@ class FeatureUrlsRegistry(Registry):
     def populate(self):
         for code, content in self.contentRegistry.items():
             for appearance in content.appearances:
+                # calls generate_find_func if required
                 self[(code, appearance["name"])]
         self._populated = True
 
@@ -356,6 +357,7 @@ class ContentDeletionPeriodRegistry(Registry):
     def populate(self):
         for code, content in self.contentRegistry.items():
             for appearance in content.appearances:
+                # calls generate_find_func if required
                 self[(code, appearance["name"])]
         self._populated = True
 

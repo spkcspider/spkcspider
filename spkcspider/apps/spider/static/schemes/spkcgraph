@@ -215,6 +215,21 @@ spkc:pages.current_page a rdf:value ;
   rdfs:range xsd:positiveInteger .
 
 
+spkc:deletion:date a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Deletion date" ;
+  rdfs:comment "Earliest deletion date." ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range xsd:integer .
+
+spkc:deletion:active a rdf:value ;
+  rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Deletion in progress" ;
+  rdfs:comment "At the timepoint defined by deletion_date the deletion will be executed. The deletion is active." ;
+  rdfs:domain rdfs:Resource ;
+  rdfs:range xsd:boolean .
+
+
 spkc:verified a rdf:value ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
   rdfs:label "Verified" ;

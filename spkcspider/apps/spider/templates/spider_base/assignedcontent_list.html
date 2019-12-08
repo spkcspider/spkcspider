@@ -161,26 +161,28 @@
     <table class="w3-table w3-bordered" rel="spkc:contents">
       <tbody>
       {% for content in object_list %}
-        {% shall_show_content content 0 as shall_show %}
-        <tr class="w3-light-grey" {% if not shall_show %}hidden="hidden"{% endif %} resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
-          <td class="" style="min-height:48px;display:inline-block;word-break: break-all;" rel="spkc:properties">
-            <span>{{ content }}<span class="w3-small" style="margin-left: 5px">({{ content.ctype }})</span></span>
-            <data hidden="hidden" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
-              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.info}}</data>
-            </data>
-            <data hidden="hidden" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name" datatype="xsd:string">id</data>
-              <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{content.id}}</data>
-            </data>
-            <data hidden="hidden" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
-              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.name|escape}}</data>
-            </data>
-            <data hidden="hidden" typeof="spkc:Property">
-              <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
-              <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.description|escape}}</data>
-            </data>
+        <tr class="w3-light-grey" resource="{% url 'spider_base:ucontent-access' token=content.token access='view' %}" typeof="spkc:Content">
+          <td class="" style="min-height:48px;display:inline-block;word-break: break-all;">
+            <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{content.ctype.name}}</data>
+            <span rel="spkc:properties">
+              <span>{{ content }}<span class="w3-small" style="margin-left: 5px">({{ content.ctype }})</span></span>
+              <data hidden="hidden" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>
+                <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.info}}</data>
+              </data>
+              <data hidden="hidden" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">id</data>
+                <data hidden="hidden" property="spkc:value" datatype="xsd:integer">{{content.id}}</data>
+              </data>
+              <data hidden="hidden" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
+                <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.name|escape}}</data>
+              </data>
+              <data hidden="hidden" typeof="spkc:Property">
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
+                <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{content.description|escape}}</data>
+              </data>
+            </span>
           </td>
           <td>
             {% if uc.public or request.is_special_user %}
@@ -192,16 +194,16 @@
           <td style="display:inline-block">
             <data hidden="hidden" property="spkc:type" datatype="xsd:string">{{ content.ctype.name }}</data>
             <div class="w3-bar w3-round-large w3-tiny w3-blue">
-              <a style="{% if request.is_owner  %}width:34%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='view' %}?{{sanitized_GET}}">
+              <a style="{% if request.is_owner  %}width:34%{% else %}width:100%{% endif %}" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% fullurl_with_params 'spider_base:ucontent-access' sanitized_GET token=content.token access='view' %}">
                 <div class="spkc-entity-button"><i class="fas fa-eye" alt="{% trans 'View' %}" aria-label="{% trans 'View' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "View" %}</div></div>
               </a>
               {% if request.is_owner  %}
-              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:ucontent-access' token=content.token access='update' %}?{{sanitized_GET}}" property="spkc:action:update">
+              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% fullurl_with_params 'spider_base:ucontent-access' sanitized_GET token=content.token access='update' %}" property="spkc:action:update">
                 <div class="spkc-entity-button"><i class="fas fa-edit" alt="{% trans 'Edit' %}" aria-label="{% trans 'Edit' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Edit" %}</div></div>
               </a>
-              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% url 'spider_base:entity-delete' token=uc.token %}?cid={{content.id}}" property="spkc:action:delete">
+              <a style="width:33%" rel="nofollow" class="w3-hover-black w3-button w3-bar-item w3-tooltip w3-mobile" href="{% fullurl_with_params 'spider_base:entity-delete' sanitized_GET token=uc.token %}cid={{content.id}}&" property="spkc:action:delete">
                 <div class="spkc-entity-button"><i class="fas fa-trash" alt="{% trans 'Delete' %}" aria-label="{% trans 'Delete' %}"></i></div>
                 <div aria-hidden="true" class="w3-text w3-black spkc-entity-button-text"><div class="w3-animate-opacity">{% trans "Del" %}</div></div>
               </a>

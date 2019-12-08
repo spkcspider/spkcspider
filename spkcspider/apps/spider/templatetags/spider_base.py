@@ -15,16 +15,6 @@ def is_not_or_space(value):
 
 
 @register.simple_tag(takes_context=True)
-def shall_show_content(context, content, priority=0):
-    return (
-        not content.is_hidden or
-        (context["request"].is_owner and content.priority > priority) or
-        "_unlisted" in context["request"].GET.getlist("search") or
-        "_unlisted" in context["request"].POST.getlist("search")
-    )
-
-
-@register.simple_tag(takes_context=True)
 def themed_media(context):
     # TODO: implement, just stub
     # uc = context.get("source", context["uc"])

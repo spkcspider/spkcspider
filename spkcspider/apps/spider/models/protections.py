@@ -1,30 +1,33 @@
 """
-Protections
+Protection models, actual implementations are forms in protections
 namespace: spider_base
 
 """
 
-__all__ = ["Protection", "AssignedProtection", "AuthToken"]
+__all__ = ["Protection", "AssignedProtection", "AuthToken", "ReferrerObject"]
 
 import logging
 
 from django.conf import settings
 from django.db import models, transaction
 from django.db.utils import IntegrityError
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_variables
 from jsonfield import JSONField
+
 from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, ProtectionResult, ProtectionStateType, ProtectionType,
     TokenCreationError, hex_size_of_bigid
 )
 from spkcspider.utils.security import create_b64_id_token
+from spkcspider.utils.urls import extract_host
 
+from .. import registry
+from ..abstract_models import BaseSubUserComponentModel
 from ..protections import ProtectionList, PseudoPw
 from ..queryfilters import active_protections_q
 from ..validators import validator_token
-from .. import registry
-from .base import BaseSubUserComponentModel
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ _striptoken = getattr(settings, "TOKEN_SIZE", 30)*4//3
 _striptoken = _striptoken-_striptoken//3
 
 
-class BaseQuerySet(models.QuerySet):
+class BaseProtectionQuerySet(models.QuerySet):
     @sensitive_variables("kwargs")
     def auth_query(self, request, required_passes=1, **kwargs):
         initial_required_passes = required_passes
@@ -87,7 +90,7 @@ class BaseQuerySet(models.QuerySet):
         return ret
 
 
-class ProtectionQuerySet(BaseQuerySet):
+class ProtectionQuerySet(BaseProtectionQuerySet):
 
     def valid(self):
         return self.filter(code__in=registry.protections.keys())
@@ -129,6 +132,25 @@ class ProtectionQuerySet(BaseQuerySet):
             request, required_passes=required_passes,
             ptype=ptype
         )
+
+
+class ReferrerObject(models.Model):
+    id: int = models.BigAutoField(primary_key=True, editable=False)
+    url: str = models.URLField(
+        max_length=(
+            600 if (
+                settings.DATABASES["default"]["ENGINE"] !=
+                "django.db.backends.mysql"
+            ) else 255
+        ),
+        db_index=True, unique=True, editable=False
+    )
+
+    objects = models.Manager()
+
+    @cached_property
+    def host(self):
+        return extract_host(self.url)
 
 
 # don't confuse with Protection objects used with add_protection
@@ -203,7 +225,7 @@ def get_limit_choices_assigned_protection():
     return models.Q(code__in=Protection.objects.valid()) & restriction
 
 
-class AssignedProtectionQuerySet(BaseQuerySet):
+class AssignedProtectionQuerySet(BaseProtectionQuerySet):
 
     def valid(self):
         return self.filter(protection__code__in=registry.protections.keys())

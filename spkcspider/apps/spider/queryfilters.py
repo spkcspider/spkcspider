@@ -190,16 +190,20 @@ def filter_contents(
                 id__in=ids
             )
         )
+    # if cannot set _unlisted
     if not unlisted_active:
         tmp = None
         if filter_unlisted is True:
+            # if filter_unlisted is True generally exclude all
             tmp = Q(info__contains="\x1eunlisted\x1e")
         elif filter_unlisted is not False:
+            # if filter_unlisted is int exclude all equal and below
             tmp = Q(
                 info__contains="\x1eunlisted\x1e",
                 priority__lte=filter_unlisted
             )
         if tmp:
+            # except if features as they are shown always
             if feature_exception:
                 tmp &= ~(
                     Q(

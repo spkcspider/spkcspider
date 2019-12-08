@@ -253,9 +253,9 @@ def validate(ob, hostpart, task=None):
                           spkc:name ?name ;
                           spkc:value ?value .
                     OPTIONAL {
-                        ?value spkc:properties ?prop2 .
-                        ?prop2 spkc:name "info"^^xsd:string .
-                        ?prop2 spkc:value ?info .
+                        ?value spkc:properties ?prop2 ;
+                               spkc:name "info"^^xsd:string ;
+                               spkc:value ?info .
                     } .
                 }
             """,

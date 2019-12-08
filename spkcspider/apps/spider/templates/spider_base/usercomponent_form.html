@@ -38,7 +38,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         {% if not object.is_index %}
           <div style="margin-bottom:5px">
             {% get_component_token 'index' object.user as index_token %}
-            <a href="{{hostpart}}{% url 'spider_base:entity-delete' token=index_token %}?ucid={{object.id}}">
+            <a href="{{hostpart}}{% url 'spider_base:entity-delete' token=index_token %}?uc={{object.name}}">
               <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
             </a>
           </div>
@@ -219,7 +219,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         for(let count=0; count < tokens.length; count++){
           body.append("delete_tokens", tokens[count]);
         }
-        req = new Request('{% url "spider_base:token-admin-delete" token=object.token %}?{{sanitized_GET}}', {
+        req = new Request('{% fullurl_with_params "spider_base:token-admin-delete" sanitized_GET token=object.token %}', {
             method: 'POST',
             body: body,
             credentials: "same-origin",

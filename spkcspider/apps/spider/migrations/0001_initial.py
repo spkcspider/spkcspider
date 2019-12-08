@@ -4,7 +4,7 @@ import datetime
 
 import django.db.models.deletion
 import jsonfield.fields
-import spkcspider.apps.spider.models.base
+import spkcspider.apps.spider.abstract_models
 import spkcspider.apps.spider.models.content_base
 import spkcspider.apps.spider.models.protections
 from django.conf import settings
@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('deletion_requested', models.DateTimeField(blank=True, default=None, null=True)),
-                ('info', models.TextField(editable=False, validators=[spkcspider.apps.spider.models.base.info_field_validator])),
+                ('info', models.TextField(editable=False, validators=[spkcspider.apps.spider.abstract_models.info_field_validator])),
                 ('object_id', models.BigIntegerField(editable=False)),
                 ('content_type', models.ForeignKey(editable=False, on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
             ],

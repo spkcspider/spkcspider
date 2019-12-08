@@ -17,7 +17,6 @@ from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from spkcspider.constants import (
@@ -346,11 +345,11 @@ class UserComponent(models.Model):
             strength__gte=5
         ).exists()
 
-    @cached_property
+    @property
     def deletion_period(self):
         return getattr(
             settings, "SPIDER_COMPONENTS_DELETION_PERIODS", {}
-        ).get(self.__str__(), None) or _0td
+        ).get(self.name, None) or _0td
 
 
 class UserInfo(models.Model):

@@ -20,16 +20,15 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
+
 from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid, static_token_matcher
 )
 from spkcspider.utils.security import create_b64_id_token
 
 from .. import registry
+from ..abstract_models import BaseInfoModel, BaseSubUserComponentModel
 from ..validators import content_name_validator, validator_token
-
-from .base import BaseInfoModel, BaseSubUserComponentModel
-
 
 logger = logging.getLogger(__name__)
 
