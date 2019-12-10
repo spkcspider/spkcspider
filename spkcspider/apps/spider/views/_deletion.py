@@ -79,7 +79,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             )
         else:
             component_query = UserComponent.objects.filter(
-                user=self.usercomponent.user
+                user=user
             )
 
         content_query = AssignedContent.objects.filter(
@@ -91,8 +91,10 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
                 travel_contents_q
             ).values_list("id", flat=True)
         )
-        ignored_component_ids = component_query.filter(
-            travel_protected__in=travel
+        ignored_component_ids = frozenset(
+            component_query.filter(
+                travel_protected__in=travel
+            ).values_list("id", flat=True)
         )
 
         for uc in component_query:
@@ -166,7 +168,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             )
         else:
             component_query = UserComponent.objects.filter(
-                user=self.usercomponent.user
+                user=user
             )
 
         content_query = AssignedContent.objects.filter(
@@ -178,12 +180,12 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
                 travel_contents_q
             ).values_list("id", flat=True)
         )
-        ignored_component_ids = component_query.filter(
-            travel_protected__in=travel
+        ignored_component_ids = frozenset(
+            component_query.filter(
+                travel_protected__in=travel
+            ).values_list("id", flat=True)
         )
 
-        delete_components.difference_update(ignored_component_ids)
-        reset_components.difference_update(ignored_component_ids)
         delete_contents.difference_update(ignored_content_ids)
         reset_contents.difference_update(ignored_content_ids)
 

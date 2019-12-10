@@ -119,13 +119,12 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         self.assertTrue(home.contents.first().features.filter(
             name="DomainMode"
         ).exists())
-        fullurl = "{}{}".format(self.live_server_url, url)
         verifyurl = reverse("spider_verifier:create")
         response = None
         with override_settings(DEBUG=True):
             response = self.app.get(verifyurl)
             form = response.forms[2]
-            form["url"] = fullurl
+            form["url"] = url
             response = form.submit().follow()
             verification_location = response.location
             response = response.follow()
