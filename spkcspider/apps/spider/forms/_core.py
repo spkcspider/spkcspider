@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.exceptions import NON_FIELD_ERRORS
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 from spkcspider.constants import (
     MIN_PROTECTION_STRENGTH_LOGIN, ProtectionType, VariantType, protected_names
 )
@@ -19,41 +20,19 @@ from ..models import (
     AssignedContent, AuthToken, ContentVariant, Protection, TravelProtection,
     UserComponent
 )
+from ._messages import (
+    help_text_features_components, help_text_features_contents,
+    help_text_static_token
+)
 
 logger = logging.getLogger(__name__)
-
-_help_text_static_token = _("""Generate a new static token with variable strength<br/>
-Tokens protect against bruteforce and attackers<br/>
-If you have problems with attackers (because they know the token),
-you can invalidate it with this option and/or add protections<br/>
-<table style="color:red;">
-<tr>
-<td style="vertical-align: top">Warning:</td><td>this removes also access for all services you gave the link<td/>
-</tr>
-<tr>
-<td style="vertical-align: top">Warning:</td><td>public user components disclose static token, regenerate after removing
-public attribute from component for restoring protection</td>
-</tr>
-</table>
-""")  # noqa: E501
-
-
-_help_text_features_components = _("""
-Features which should be active on component and user content<br/>
-Note: persistent Features (=features which use a persistent token) require and enable "Persistence"
-""")  # noqa: E501
-
-_help_text_features_contents = _("""
-Features which should be active on user content<br/>
-Note: persistent Features (=features which use a persistent token) require the active "Persistence" Feature on usercomponent. They are elsewise excluded.
-""")  # noqa: E501
 
 
 class UserComponentForm(forms.ModelForm):
     protections = None
     request = None
     new_static_token = forms.ChoiceField(
-        label=_("New static token"), help_text=_help_text_static_token,
+        label=_("New static token"), help_text=help_text_static_token,
         required=False, initial="", choices=STATIC_TOKEN_CHOICES
     )
 
@@ -84,7 +63,7 @@ class UserComponentForm(forms.ModelForm):
             }
         }
         help_texts = {
-            'features': _help_text_features_components,
+            'features': help_text_features_components,
         }
         widgets = {
             'features': forms.CheckboxSelectMultiple(),
@@ -342,7 +321,7 @@ class UserComponentForm(forms.ModelForm):
 class UserContentForm(forms.ModelForm):
     prefix = "content_control"
     new_static_token = forms.ChoiceField(
-        label=_("New static token"), help_text=_help_text_static_token,
+        label=_("New static token"), help_text=help_text_static_token,
         required=False, initial="", choices=STATIC_TOKEN_CHOICES
     )
     migrate_primary_anchor = forms.BooleanField(
@@ -367,7 +346,7 @@ class UserContentForm(forms.ModelForm):
             }
         }
         help_texts = {
-            'features': _help_text_features_contents,
+            'features': help_text_features_contents,
         }
         widgets = {
             # 'usercomponent': SelectizeWidget(

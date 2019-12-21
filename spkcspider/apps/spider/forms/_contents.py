@@ -25,25 +25,9 @@ from ..models import AssignedContent, LinkContent, TravelProtection
 from ..widgets import (
     OpenChoiceWidget, DatetimePickerWidget, SelectizeWidget
 )
+from ._messages import time_help_text, login_protection
 
 _extra = '' if settings.DEBUG else '.min'
-
-
-_time_help_text = _(
-    "Time in \"{}\" timezone"
-)
-
-
-_login_protection = _(
-    "Hide: Hide protected contents and components<br/>"
-    "Hide if triggered: Hide protected contents and components if triggered<br/>"  # noqa: E501
-    "Disable: Disable Login (not available on Self-Protection (useless))<br/>"
-    "Disable if triggered: Hide protected contents and components and disable login if triggered<br/>"  # noqa: E501
-    "Wipe: Wipe protected content on login (maybe not available)<br/>"
-    "Wipe User: destroy user on login (maybe not available)<br/><br/>"
-    "Note: login protections work only on login. Except hide and disable protections, which works also for logged in users<br/>"  # noqa: E501
-    "Note: the hide and disable protections disable also admin access when active (elsewise easy circumventable)"  # noqa: E501
-)
 
 
 class LinkForm(forms.ModelForm):
@@ -124,11 +108,11 @@ class TravelProtectionForm(forms.ModelForm):
     # )
     start = forms.DateTimeField(
         required=True, widget=DatetimePickerWidget(),
-        help_text=_time_help_text
+        help_text=time_help_text
     )
     stop = forms.DateTimeField(
         required=False, widget=DatetimePickerWidget(),
-        help_text=_time_help_text
+        help_text=time_help_text
     )
     trigger_pws = MultipleOpenChoiceField(
         label=_("Trigger Passwords"), required=False,
@@ -184,7 +168,7 @@ class TravelProtectionForm(forms.ModelForm):
             )
         }
         help_texts = {
-            "login_protection": _login_protection,
+            "login_protection": login_protection,
             "master_pw": _(
                 "Enter Password used for the user account"
             )
