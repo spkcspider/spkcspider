@@ -76,7 +76,12 @@ class DeletionTest(TransactionWebTest):
                 "token": index.token
             }
         )
-        response = self.app.get(f"{deleteurl}?format=json")
+        response = self.app.get(
+            deleteurl,
+            headers={
+                "Accept": "application/json"
+            }
+        )
         self.assertEqual(
             len(response.json), self.user.usercomponent_set.count()
         )

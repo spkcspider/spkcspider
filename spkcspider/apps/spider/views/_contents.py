@@ -306,8 +306,9 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             "scope": context["scope"],
             "uc": self.usercomponent,
             "hostpart": context["hostpart"],
-            "domainauth_url": context["domainauth_url"],
-            "sourceref": URIRef(context["hostpart"] + self.request.path)
+            "sourceref": URIRef(
+                "%s%s" % (context["hostpart"], self.request.path)
+            )
         }
         g = Graph()
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
@@ -347,17 +348,6 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
             )
 
         if page <= 1:
-            if (
-                session_dict["domainauth_url"] and
-                self.request.user.is_authenticated
-            ):
-                g.add((
-                    session_dict["sourceref"],
-                    spkcgraph["domainauth"],
-                    Literal(
-                        session_dict["domainauth_url"], datatype=XSD.anyURI
-                    )
-                ))
             # "expires" (string) different from "token_expires" (datetime)
             if session_dict.get("expires"):
                 add_property(

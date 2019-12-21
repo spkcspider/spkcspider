@@ -7,7 +7,7 @@ __all__ = [
 import enum
 
 essential_contents = {
-    "domainmode", "defaultactions"
+    "domainmode",
 }
 
 

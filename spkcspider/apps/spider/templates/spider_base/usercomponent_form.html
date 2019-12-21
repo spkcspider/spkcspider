@@ -71,9 +71,6 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     {% for name in machine_variants %}
       <data hidden="hidden" property="spkc:create:name" datatype="xsd:string">{{name}}</data>
     {% endfor %}
-    {% if domainauth_url and request.user.is_authenticated %}
-      <data hidden="hidden" property="spkc:domainauth" datatype="xsd:anyURI">{{domainauth_url}}</data>
-    {% endif %}
     <data hidden="hidden" property="type" datatype="xsd:string">Component</data>
     {% if object %}
     <fieldset class="w3-padding">

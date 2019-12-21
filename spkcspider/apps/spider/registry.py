@@ -5,6 +5,9 @@ __all__ = [
 ]
 
 import logging
+
+from django.shortcuts import resolve_url
+
 from spkcspider.constants import ActionUrl
 
 logger = logging.getLogger(__name__)
@@ -309,7 +312,7 @@ class FeatureUrlsRegistry(Registry):
     def generate_find_func(self, key):
         def find_func(key):
             self[key] = frozenset(map(
-                lambda x: ActionUrl(*map(str, x)),
+                lambda x: ActionUrl(x[0], resolve_url(x[1])),
                 self.contentRegistry[key[0]].feature_urls(key[1])
             ))
             return self[key]

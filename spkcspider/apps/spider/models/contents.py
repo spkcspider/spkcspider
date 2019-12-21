@@ -100,14 +100,14 @@ class DefaultActions(BaseContent):
     ]
 
     actions = {
-        (
-            "delete-token", "spider_base:token-delete-request"
-        )
+        ("delete-token", "spider_base:token-delete-request"),
     }
+    if getattr(settings, "DOMAINAUTH_URL", None):
+        actions.add(("domainauth_url", settings.DOMAINAUTH_URL))
 
     @classmethod
     def feature_urls(cls, name):
-        return map(lambda x: ActionUrl(x.name, reverse(x.url)), cls.actions)
+        return cls.actions
 
     class Meta:
         abstract = True

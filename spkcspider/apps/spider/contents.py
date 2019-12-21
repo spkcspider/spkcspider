@@ -416,7 +416,6 @@ class BaseContent(models.Model):
             "context": kwargs,
             "scope": kwargs["scope"],
             "hostpart": kwargs["hostpart"],
-            "domainauth_url": kwargs["domainauth_url"],
             "ac_namespace": spkcgraph["contents"],
             "sourceref": URIRef(urljoin(
                 kwargs["hostpart"], kwargs["request"].path
@@ -451,17 +450,6 @@ class BaseContent(models.Model):
 
         if page <= 1:
             source = kwargs.get("source", self)
-            if (
-                session_dict["domainauth_url"] and
-                kwargs["request"].user.is_authenticated
-            ):
-                g.add((
-                    session_dict["sourceref"],
-                    spkcgraph["domainauth"],
-                    Literal(
-                        session_dict["domainauth_url"], datatype=XSD.anyURI
-                    )
-                ))
             # "expires" (string) different from "token_expires" (datetime)
             if session_dict.get("expires"):
                 add_property(

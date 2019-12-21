@@ -252,7 +252,9 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
 
     def render_to_response(self, context):
         if not self.own_marked_for_deletion:
-            if self.request.GET.get("format", "") == "json":
+            if "application/json" in (
+                self.request.headers.get("accept"), self.request.content_type
+            ):
                 # last time it is used
                 for component_val in context["hierarchy"].values():
                     component_val["name"] = component_val["ob"].name

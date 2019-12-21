@@ -242,9 +242,11 @@ class TagTest(TransactionWebTest):
                 break
         response = form.submit()
         self.assertEqual(response.status_code, 200)
-        urls = home.features.get(name="PushedTag").feature_urls
-        self.assertEqual(len(urls), 1)
-        pushed_url = next(iter(urls)).url
+        pushed_url = None
+        for i in home.features.get(name="PushedTag").feature_urls:
+            if i.name == "pushtag":
+                pushed_url = i.url
+        self.assertTrue(pushed_url)
         response = response.click(
             href=home.get_absolute_url(), index=0
         )

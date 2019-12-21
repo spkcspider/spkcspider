@@ -132,7 +132,6 @@ class ComponentIndexBase(ExpiryMixin, ListView):
             "scope": self.scope,
             "expires": None,
             "hostpart": context["hostpart"],
-            "domainauth_url": context["domainauth_url"],
             "uc_namespace": spkcgraph["components"],
             "sourceref": URIRef(context["hostpart"] + self.request.path)
         }
@@ -174,17 +173,6 @@ class ComponentIndexBase(ExpiryMixin, ListView):
         except Exception:
             pass
         if page <= 1:
-            if (
-                session_dict["domainauth_url"] and
-                self.request.user.is_authenticated
-            ):
-                g.add((
-                    session_dict["sourceref"],
-                    spkcgraph["domainauth"],
-                    Literal(
-                        session_dict["domainauth_url"], datatype=XSD.anyURI
-                    )
-                ))
             g.add((
                 session_dict["sourceref"],
                 spkcgraph["scope"],

@@ -1,6 +1,6 @@
 # import unittest
 
-from rdflib import Graph
+from rdflib import Graph, Literal, XSD
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -277,12 +277,6 @@ class AdvancedComponentTest(TransactionWebTest):
         content = home.contents.first()
         for url, rdf in [
             (reverse(
-                "spider_base:ucomponent-update",
-                kwargs={
-                    "token": home.token,
-                }
-            ), False),
-            (reverse(
                 "spider_base:ucontent-access",
                 kwargs={
                     "token": content.token,
@@ -306,10 +300,15 @@ class AdvancedComponentTest(TransactionWebTest):
         ]:
             with self.subTest(msg="url: \"%s\" html" % url):
                 response = self.app.get(url)
+                response.showbrowser()
                 g = Graph()
                 g.parse(data=str(response.content, "utf8"), format="html")
                 self.assertEqual(sum(
-                    1 for _ in g.triples((None, spkcgraph["domainauth"], None))
+                    1 for _ in g.triples((
+                        None,
+                        spkcgraph["feature:name"],
+                        Literal("domainauth-url", datatype=XSD.string)
+                    ))
                 ), 1)
             if rdf:
                 with self.subTest(msg="url: \"%s\" turtle" % url):
@@ -319,9 +318,11 @@ class AdvancedComponentTest(TransactionWebTest):
                         data=str(response.content, "utf8"), format="turtle"
                     )
                     self.assertEqual(sum(
-                        1 for _ in g.triples(
-                            (None, spkcgraph["domainauth"], None)
-                        )
+                        1 for _ in g.triples((
+                            None,
+                            spkcgraph["feature:name"],
+                            Literal("domainauth-url", datatype=XSD.string)
+                        ))
                     ), 1)
 
     def test_contents(self):

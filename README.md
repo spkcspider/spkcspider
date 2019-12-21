@@ -156,7 +156,6 @@ There are special GET parameters for controlling spkcspider:
 * token=prefer: uses invalid mechanic, easier to see what it does
 * raw=true: optimize output for machines, use turtle format
 * raw=embed: embed content of components, use turtle format
-* format=json: render some forms as json (currently only deletion form, reduces informations)
 * id=id&id=id: limit content ids (Content lists only)
 * search=foo&search=!notfoo: search case insensitive a string
 * search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).
@@ -170,6 +169,9 @@ There are special GET parameters for controlling spkcspider:
   * intention=login: referrer uses spkcspider for login (note: referrer should be the one where the user is logging in, check referrer field for that)
   * intention=persist: referrer can persist data on webserver
 * embed_big=true: only for staff and superuser: Overrides maximal size of files which are embedded in graphs (only for default helper)
+
+## special header
+* Content-Type/Accept=application/json: some forms are rendered as json (currently only deletion form)
 
 ## Referrer
 * normal referrer mode: send token to referrer, client verifies with hash that he sent the token.
@@ -298,7 +300,6 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * >=0.18: change order of filter parameters, nearly all filters start with request (for compatibility with (django) decorators)
 
 # TODO
-* switch to flatpickr
 * examples
 * documentation
 * test admin
@@ -306,11 +307,6 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * Localisation
   * harmonize punctation
 * css theme instead inline style
-* DeleteView: allow multiple deletions (dynamically load via json)
-  * merge deleteview of Components with the one of Contents
-* improve features:
-  * also add: is logged in, is special user, is owner as arguments (also for caching)
-  * use extended features for optionally providing domainauth information
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
