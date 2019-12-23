@@ -125,6 +125,9 @@ class DeletionTest(TransactionWebTest):
             deleteurl,
             {
                 "delete_components": ["comp1", "comp2"]
+            },
+            headers={
+                "X-CSRFToken": self.app.cookies['csrftoken']
             }
         )
         g = Graph()
@@ -192,6 +195,9 @@ class DeletionTest(TransactionWebTest):
             deleteurl,
             {
                 "delete_components": ["comp1", "comp2"]
+            },
+            headers={
+                "X-CSRFToken": self.app.cookies['csrftoken']
             }
         )
         g = Graph()
