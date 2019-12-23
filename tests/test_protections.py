@@ -25,7 +25,7 @@ class ProtectionTest(TransactionWebTest):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
-        update_dynamic.send_robust(self)
+        update_dynamic.send(self)
 
     @override_settings(DEBUG=True)
     def test_login_only(self):

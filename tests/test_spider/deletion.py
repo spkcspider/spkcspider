@@ -21,7 +21,7 @@ class DeletionTest(TransactionWebTest):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
-        update_dynamic.send_robust(self)
+        update_dynamic.send(self)
 
     def test_structure_rdfa(self):
         self.app.set_user(user="testuser1")

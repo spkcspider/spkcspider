@@ -36,7 +36,7 @@ class TagTest(TransactionWebTest):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
-        update_dynamic.send_robust(self)
+        update_dynamic.send(self)
 
     def test_user_tags(self):
         home = self.user.usercomponent_set.filter(name="home").first()

@@ -138,7 +138,7 @@ class AdvancedComponentTest(TransactionWebTest):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
-        update_dynamic.send_robust(self)
+        update_dynamic.send(self)
 
     def test_private(self):
         private = self.user.usercomponent_set.create(
@@ -275,7 +275,7 @@ class AdvancedComponentTest(TransactionWebTest):
         response = self.app.get(createurl)
         response.forms["main_form"].submit().follow()
         content = home.contents.first()
-        for url, rdf in [
+        for url, turtle in [
             (reverse(
                 "spider_base:ucontent-access",
                 kwargs={
@@ -300,7 +300,6 @@ class AdvancedComponentTest(TransactionWebTest):
         ]:
             with self.subTest(msg="url: \"%s\" html" % url):
                 response = self.app.get(url)
-                response.showbrowser()
                 g = Graph()
                 g.parse(data=str(response.content, "utf8"), format="html")
                 self.assertEqual(sum(
@@ -310,7 +309,7 @@ class AdvancedComponentTest(TransactionWebTest):
                         Literal("domainauth-url", datatype=XSD.string)
                     ))
                 ), 1)
-            if rdf:
+            if turtle:
                 with self.subTest(msg="url: \"%s\" turtle" % url):
                     response = self.app.get(url+"?raw=true")
                     g = Graph()

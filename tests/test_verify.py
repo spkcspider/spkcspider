@@ -47,7 +47,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         settings.SPIDER_ANCHOR_DOMAIN = self.live_server_url
         get_anchor_domain.cache_clear()
 
-        update_dynamic.send_robust(self)
+        update_dynamic.send(self)
 
     def renew_app(self):
         self.app = self.app_class(

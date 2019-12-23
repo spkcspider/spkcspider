@@ -37,10 +37,6 @@ def list_features(graph, entity, ref_entity, context):
             Q(feature_for_contents=entity) |
             Q(feature_for_components=entity.usercomponent)
         )
-    if context["scope"] != "export":
-        active_features = active_features.exclude(
-            ctype__contains=VariantType.unlisted
-        )
     add_property(
         graph, "features", ref=ref_entity,
         literal=active_features.values_list("name", flat=True),
@@ -50,11 +46,10 @@ def list_features(graph, entity, ref_entity, context):
     for feature in active_features:
         if context["scope"] != "export":
             for name, url_feature in feature.feature_urls:
-                url_feature = urljoin(
+                ref_feature = URIRef(urljoin(
                     context["hostpart"],
                     url_feature
-                )
-                ref_feature = URIRef(url_feature)
+                ))
                 graph.add((
                     ref_entity,
                     spkcgraph["action:feature"],
@@ -152,11 +147,9 @@ def serialize_content(graph, content, context, embed=False):
 
 def serialize_component(graph, component, context, visible=True):
     # visible: everything is visible elsewise only public
-    url_component = urljoin(
-        context["hostpart"],
-        component.get_absolute_url()
-    )
-    ref_component = URIRef(url_component)
+    ref_component = URIRef(urljoin(
+        context["hostpart"], component.get_absolute_url()
+    ))
     if component.public:
         visible = True
     if not visible and ref_component != context["sourceref"]:

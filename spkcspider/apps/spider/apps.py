@@ -9,8 +9,7 @@ from django.db.models.signals import (
 
 from .signals import (
     CleanupCb, InitUserCb, TriggerUpdate, UpdateAnchorComponentCb,
-    UpdateComponentFeaturesCb, UpdateContentCb, UpdateContentFeaturesCb,
-    UpdateSpiderCb, update_dynamic
+    FeaturesCb, UpdateContentCb, UpdateSpiderCb, update_dynamic
 )
 
 
@@ -32,14 +31,20 @@ class SpiderBaseConfig(AppConfig):
         post_save.connect(
             UpdateContentCb, sender=AssignedContent,
         )
-        m2m_changed.connect(
-            UpdateComponentFeaturesCb, sender=UserComponent.features.through
+        post_save.connect(
+            FeaturesCb, sender=UserComponent
+        )
+        post_save.connect(
+            FeaturesCb, sender=AssignedContent
         )
         m2m_changed.connect(
-            UpdateContentFeaturesCb, sender=AssignedContent.features.through,
+            FeaturesCb, sender=UserComponent.features.through
+        )
+        m2m_changed.connect(
+            FeaturesCb, sender=AssignedContent.features.through,
         )
 
-        # order important for next two
+        # order important for the next two events
         post_delete.connect(
             CleanupCb, sender=UserComponent,
         )

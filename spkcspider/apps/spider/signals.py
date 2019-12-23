@@ -2,7 +2,7 @@ __all__ = (
     "UpdateSpiderCb", "InitUserCb", "update_dynamic",
     "DeleteContentCb", "CleanupCb", "failed_guess",
     "UpdateContentCb", "UpdateAnchorComponentCb",
-    "UpdateComponentFeaturesCb", "UpdateContentFeaturesCb"
+    "FeaturesCb"
 )
 import logging
 
@@ -23,7 +23,13 @@ update_dynamic = Signal(providing_args=[])
 failed_guess = Signal(providing_args=["request"])
 
 _empty_set = frozenset()
-_feature_update_actions = frozenset({"post_add", "post_remove", "post_clear"})
+_feature_update_actions = frozenset({
+    "init", "post_add", "post_remove", "post_clear"
+})
+
+_ignored_features_for_update = frozenset({
+    "DefaultActions", "DomainMode"
+})
 
 
 def TriggerUpdate(sender, **_kwargs):
@@ -160,33 +166,10 @@ def UpdateAnchorComponentCb(sender, instance, raw=False, **kwargs):
             )
 
 
-def UpdateComponentFeaturesCb(sender, instance, action, **kwargs):
-    if action not in _feature_update_actions:
-        return
-    ContentVariant = apps.get_model("spider_base", "ContentVariant")
-    if instance.features.filter(
-        ctype__contains=VariantType.domain_mode
-    ):
-        if not instance.features.filter(name="DomainMode"):
-            instance.features.add(ContentVariant.objects.get(
-                name="DomainMode"
-            ))
-    elif instance.features.filter(name="DomainMode"):
-        instance.features.remove(ContentVariant.objects.get(
-            name="DomainMode"
-        ))
-    # Persistence must not removed automatically
-    if instance.features.filter(
-        ctype__contains=VariantType.persist
-    ) and not instance.features.filter(name="Persistence"):
-        instance.features.add(ContentVariant.objects.get(name="Persistence"))
-
-
 def UpdateContentCb(sender, instance, raw=False, **kwargs):
     if raw:
         return
     AuthToken = apps.get_model("spider_base", "AuthToken")
-    ContentVariant = apps.get_model("spider_base", "ContentVariant")
     if (
         instance.primary_anchor_for.exists() and
         "\x1eanchor\x1e" not in instance.info
@@ -198,14 +181,6 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
             persist=instance.id
         ).update(persist=0)
 
-    if not instance.features.filter(name="DefaultActions"):
-        instance.features.add(ContentVariant.objects.get(
-            name="DefaultActions"
-        ))
-    if VariantType.domain_mode in instance.ctype.ctype:
-        instance.features.add(ContentVariant.objects.get(
-            name="DomainMode"
-        ))
     # auto add self as feature
     if (
         VariantType.component_feature in instance.ctype.ctype and
@@ -214,22 +189,48 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
         instance.usercomponent.features.add(instance.ctype)
 
 
-def UpdateContentFeaturesCb(sender, instance, action, **kwargs):
-    if action not in _feature_update_actions:
+def FeaturesCb(
+    sender, instance, pk_set=(), model=None,
+    action="_init", raw=False, created=False, **kwargs
+):
+    """
+        used for:
+        Content & Component creation: action="_init", raw, created
+        Feature updates: pk_set, model, action
+    """
+    if action not in _feature_update_actions or raw:
         return
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
 
-    if not instance.features.filter(name="DefaultActions"):
+    if action == "_init" and created:
         instance.features.add(ContentVariant.objects.get(
             name="DefaultActions"
         ))
 
-    if instance.features.filter(
-        ctype__contains=VariantType.domain_mode
-    ) and not instance.features.filter(name="DomainMode"):
-        instance.features.add(ContentVariant.objects.get(
-            name="DomainMode"
-        ))
+    if isinstance(instance, ContentVariant):
+        # can be also the other side of the relation
+        if instance.name in _ignored_features_for_update:
+            return
+        instances = model.objects.filter(pk__in=pk_set)
+    else:
+        instances = (instance,)
+
+    for row in instances:
+        # check if one feature depends on domain_mode
+        if row.features.filter(
+            ctype__contains=VariantType.domain_mode
+        ):
+            if not row.features.filter(name="DomainMode"):
+                row.features.add(ContentVariant.objects.get(
+                    name="DomainMode"
+                ))
+        else:
+            row.features.filter(name="DomainMode").delete()
+        # Persistence must not be removed automatically
+        if row.features.filter(
+            ctype__contains=VariantType.persist
+        ) and not row.features.filter(name="Persistence"):
+            row.features.add(ContentVariant.objects.get(name="Persistence"))
 
 
 def UpdateSpiderCb(**_kwargs):
@@ -242,6 +243,7 @@ def UpdateSpiderCb(**_kwargs):
     AssignedContent = apps.get_model("spider_base", "AssignedContent")
     UserComponent = apps.get_model("spider_base", "UserComponent")
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
+    UserInfo = apps.get_model("spider_base", "UserInfo")
 
     UserComponent.objects.filter(name="index").update(strength=10)
     for row in AssignedContent.objects.all():
@@ -270,6 +272,22 @@ def UpdateSpiderCb(**_kwargs):
             assignedcontent__usercomponent=row
         )
         row.features.add(*extra_variants)
+
+    default_actions = ContentVariant.objects.get(name="DefaultActions")
+    default_actions.feature_for_components.add(
+        *UserComponent.objects.exclude(
+            features__name="DefaultActions"
+        )
+    )
+    default_actions.feature_for_contents.add(
+        *AssignedContent.objects.exclude(
+            features__name="DefaultActions"
+        )
+    )
+
+    for row in get_user_model().objects.filter(spider_info__isnull=True):
+        UserInfo.objects.create(user=row)
+        logger.warning("UserInfo had to be generated for %s", row)
 
     for row in get_user_model().objects.prefetch_related(
         "spider_info", "usercomponent_set", "usercomponent_set__contents"

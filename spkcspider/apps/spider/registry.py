@@ -299,9 +299,11 @@ class ContentRegistry(Registry):
 
 class FeatureUrlsRegistry(Registry):
     contentRegistry = None
+    default_actions = None
 
     def __init__(self, contentRegistry):
         self.contentRegistry = contentRegistry
+        self.default_actions = {}
         self.key_type_registry = {
             "tuple": lambda x: x,
             "ContentVariant": lambda x: (x.code, x.name),
@@ -310,6 +312,12 @@ class FeatureUrlsRegistry(Registry):
         super().__init__()
 
     def generate_find_func(self, key):
+        from django.conf import settings
+        self.default_actions["delete-token"] = \
+            "spider_base:token-delete-request"
+        if getattr(settings, "DOMAINAUTH_URL", None):
+            self.default_actions["domainauth-url"] = settings.DOMAINAUTH_URL
+
         def find_func(key):
             self[key] = frozenset(map(
                 lambda x: ActionUrl(x[0], resolve_url(x[1])),

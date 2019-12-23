@@ -75,7 +75,7 @@
     {% for name in machine_variants %}
       <data hidden="hidden" property="spkc:create:name" datatype="xsd:string">{{name}}</data>
     {% endfor %}
-    {% for f in active_listed_features %}
+    {% for f in active_features %}
       {% for action in f.feature_urls %}
         <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
           <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{action.name}}</data>
@@ -84,11 +84,19 @@
     {% endfor %}
     <data hidden="hidden" rel="spkc:properties">
       <data hidden="hidden" typeof="spkc:Property">
+        <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
+        <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
+        {% for f in active_features %}
+          <data hidden="hidden" datatype="xsd:string" property="spkc:value">{{f.name}}</data>
+        {% empty %}
+          <data hidden="hidden" rel="spkc:value" resource="rdf:nil"></data>
+        {% endfor %}
+      </data>
+      <data hidden="hidden" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">description</data>
         <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{uc.description}}</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
       </data>
-
       {% if uc.primary_anchor %}
       <data hidden="hidden" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">primary_anchor</data>
@@ -96,15 +104,6 @@
         <data hidden="hidden" property="spkc:value" datatype="xsd:anyURI">{{hostpart}}{{uc.primary_anchor.get_absolute_url}}</data>
       </data>
       {% endif %}
-      <data hidden="hidden" typeof="spkc:Property">
-        <data hidden="hidden" property="spkc:name" datatype="xsd:string">features</data>
-        <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        {% for f in active_listed_features %}
-          <data hidden="hidden" datatype="xsd:string" property="spkc:value">{{f.name}}</data>
-        {% empty %}
-          <data hidden="hidden" rel="spkc:value" resource="rdf:nil"></data>
-        {% endfor %}
-      </data>
       <data hidden="hidden" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">intentions</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
@@ -142,12 +141,12 @@
     </div>
   {% endif %}
 
-  {% if active_listed_features.exists %}
+  {% if visible_active_features.exists %}
   <div class="w3-padding">
     <div class="w3-white w3-padding">
       <h4>{% trans 'Active Features' %}:</h4>
       <div>
-        {% for f in active_listed_features %}
+        {% for f in visible_active_features %}
           <span class="" style="display:inline-block;white-space:nowrap;">{{f}}{% if not forloop.last %}, {% endif %}</span>
         {% endfor %}
       </div>

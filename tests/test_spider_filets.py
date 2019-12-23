@@ -16,7 +16,7 @@ class TextFiletTest(TransactionWebTest):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
-        update_dynamic.send_robust(self)
+        update_dynamic.send(self)
 
     def test_guest_and_normal(self):
         home = self.user.usercomponent_set.get(name="home")

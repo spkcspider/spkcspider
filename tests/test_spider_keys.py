@@ -24,7 +24,7 @@ class KeyTest(TransactionWebTest):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
-        update_dynamic.send_robust(self)
+        update_dynamic.send(self)
 
     # @unittest.expectedFailure
     def test_keys(self):
