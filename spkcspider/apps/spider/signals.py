@@ -170,6 +170,7 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
     if raw:
         return
     AuthToken = apps.get_model("spider_base", "AuthToken")
+    ContentVariant = apps.get_model("spider_base", "ContentVariant")
     if (
         instance.primary_anchor_for.exists() and
         "\x1eanchor\x1e" not in instance.info
@@ -181,6 +182,33 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
             persist=instance.id
         ).update(persist=0)
 
+    # check if self depends on DomainMode
+    if (
+        VariantType.domain_mode in instance.ctype.ctype or
+        instance.features.filter(
+            ctype__contains=VariantType.domain_mode
+        )
+    ):
+        if not instance.features.filter(name="DomainMode"):
+            instance.features.add(ContentVariant.objects.get(
+                name="DomainMode"
+            ))
+    elif instance.features.filter(name="DomainMode"):
+        instance.features.remove(ContentVariant.objects.get(
+            name="DomainMode"
+        ))
+    # check if self depends on persist
+    if (
+        VariantType.persist in instance.ctype.ctype or
+        instance.features.filter(
+            ctype__contains=VariantType.persist
+        )
+    ):
+        if not instance.usercomponent.features.filter(name="Persistence"):
+            instance.usercomponent.features.add(ContentVariant.objects.get(
+                name="Persistence"
+            ))
+
     # auto add self as feature
     if (
         VariantType.component_feature in instance.ctype.ctype and
@@ -191,18 +219,19 @@ def UpdateContentCb(sender, instance, raw=False, **kwargs):
 
 def FeaturesCb(
     sender, instance, pk_set=(), model=None,
-    action="_init", raw=False, created=False, **kwargs
+    action="_update", raw=False, created=False, **kwargs
 ):
     """
         used for:
-        Content & Component creation: action="_init", raw, created
+        Content & Component update: action="_update", raw, created
         Feature updates: pk_set, model, action
     """
     if action not in _feature_update_actions or raw:
         return
     ContentVariant = apps.get_model("spider_base", "ContentVariant")
+    AssignedContent = apps.get_model("spider_base", "AssignedContent")
 
-    if action == "_init" and created:
+    if action == "_update" and created:
         instance.features.add(ContentVariant.objects.get(
             name="DefaultActions"
         ))
@@ -215,22 +244,41 @@ def FeaturesCb(
     else:
         instances = (instance,)
 
-    for row in instances:
-        # check if one feature depends on domain_mode
-        if row.features.filter(
-            ctype__contains=VariantType.domain_mode
-        ):
-            if not row.features.filter(name="DomainMode"):
-                row.features.add(ContentVariant.objects.get(
+    if isinstance(instance, AssignedContent):
+        # handled already by UpdateContentCb
+        pass
+    elif isinstance(model, AssignedContent):
+        # fixup reverse relation by emulating UpdateContentCb
+        for row in instances:
+            # deduplicate
+            UpdateContentCb(AssignedContent, row)
+    else:
+        for row in instances:
+            # check if one feature depends on domain_mode
+            if row.features.filter(
+                ctype__contains=VariantType.domain_mode
+            ):
+                if not row.features.filter(name="DomainMode"):
+                    row.features.add(ContentVariant.objects.get(
+                        name="DomainMode"
+                    ))
+            elif row.features.filter(name="DomainMode"):
+                row.features.remove(ContentVariant.objects.get(
                     name="DomainMode"
                 ))
-        else:
-            row.features.filter(name="DomainMode").delete()
-        # Persistence must not be removed automatically
-        if row.features.filter(
-            ctype__contains=VariantType.persist
-        ) and not row.features.filter(name="Persistence"):
-            row.features.add(ContentVariant.objects.get(name="Persistence"))
+            # Persistence must not be removed automatically
+            # if contents or features are persist add Persistence
+            if (
+                row.features.filter(
+                    ctype__contains=VariantType.persist
+                ) or
+                row.contents.filter(
+                    ctype__contains=VariantType.persist
+                )
+            ) and not row.features.filter(name="Persistence"):
+                row.features.add(
+                    ContentVariant.objects.get(name="Persistence")
+                )
 
 
 def UpdateSpiderCb(**_kwargs):
@@ -260,6 +308,7 @@ def UpdateSpiderCb(**_kwargs):
             row.description = row.content.get_content_description()
         assert(row.description is not None)
         assert(row.name is not None)
+        # triggers UpdateContentCb and FeaturesCb
         row.save(update_fields=['name', 'description', 'info', "token"])
 
     for row in UserComponent.objects.all():
@@ -271,8 +320,10 @@ def UpdateSpiderCb(**_kwargs):
             models.Q(ctype__contains=VariantType.feature_connect),
             assignedcontent__usercomponent=row
         )
+        # triggers FeaturesCb so don't check features again
         row.features.add(*extra_variants)
 
+    # force add default actions, special ignored by FeaturesCb
     default_actions = ContentVariant.objects.get(name="DefaultActions")
     default_actions.feature_for_components.add(
         *UserComponent.objects.exclude(

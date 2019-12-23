@@ -76,12 +76,14 @@ class WebCfgTest(TransactionWebTest):
         response = form.submit()
         self.assertEqual(response.status_code, 200)
         self.assertTrue(home.features.filter(
+            name="DefaultActions"
+        ).exists())
+        self.assertTrue(home.features.filter(
             name="Persistence"
         ).exists())
         self.assertTrue(home.features.filter(
             name="DomainMode"
         ).exists())
-        self.assertEqual(len(home.features.all()), 4)
         token = None
         with override_settings(DEBUG=True):
             purl = "{}?intention=persist&referrer=http://{}:{}".format(
@@ -142,7 +144,7 @@ class WebCfgTest(TransactionWebTest):
         response = form.submit()
         self.assertEqual(response.status_code, 200)
         home.refresh_from_db()
-        self.assertEqual(len(home.features.all()), 2)
+        self.assertFalse(home.features.filter(name="Persistence"))
         self.assertTrue(home.features.filter(name="DomainMode"))
         token = None
         # logout and clean session

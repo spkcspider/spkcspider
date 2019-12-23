@@ -25,6 +25,23 @@ class SpiderBaseConfig(AppConfig):
             AssignedContent, UserComponent
         )
 
+        #######################
+        post_save.connect(
+            InitUserCb, sender=get_user_model(),
+        )
+
+        update_dynamic.connect(
+            UpdateSpiderCb,
+            dispatch_uid="update_spider_dynamic"
+        )
+
+        if getattr(settings, "UPDATE_DYNAMIC_AFTER_MIGRATION", True):
+            post_migrate.connect(
+                TriggerUpdate, sender=self,
+            )
+
+        #########################
+
         pre_save.connect(
             UpdateAnchorComponentCb, sender=UserComponent,
         )
@@ -52,19 +69,3 @@ class SpiderBaseConfig(AppConfig):
         post_delete.connect(
             CleanupCb, sender=AssignedContent,
         )
-
-        #####################
-
-        post_save.connect(
-            InitUserCb, sender=get_user_model(),
-        )
-
-        update_dynamic.connect(
-            UpdateSpiderCb,
-            dispatch_uid="update_spider_dynamic"
-        )
-
-        if getattr(settings, "UPDATE_DYNAMIC_AFTER_MIGRATION", True):
-            post_migrate.connect(
-                TriggerUpdate, sender=self,
-            )

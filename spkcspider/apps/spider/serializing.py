@@ -4,8 +4,6 @@ __all__ = [
 ]
 
 
-from urllib.parse import urljoin
-
 from rdflib import RDF, XSD, Literal, URIRef
 
 from django.core.paginator import InvalidPage, Paginator
@@ -46,7 +44,7 @@ def list_features(graph, entity, ref_entity, context):
     for feature in active_features:
         if context["scope"] != "export":
             for name, url_feature in feature.feature_urls:
-                ref_feature = URIRef(urljoin(
+                ref_feature = URIRef("{}{}".format(
                     context["hostpart"],
                     url_feature
                 ))
@@ -64,12 +62,12 @@ def list_features(graph, entity, ref_entity, context):
 
 def serialize_content(graph, content, context, embed=False):
     if VariantType.anchor in content.ctype.ctype:
-        url_content = urljoin(
+        url_content = "{}{}".format(
             get_anchor_domain(),
             content.get_absolute_url()
         )
     else:
-        url_content = urljoin(
+        url_content = "{}{}".format(
             context["hostpart"],
             content.get_absolute_url()
         )
@@ -147,7 +145,7 @@ def serialize_content(graph, content, context, embed=False):
 
 def serialize_component(graph, component, context, visible=True):
     # visible: everything is visible elsewise only public
-    ref_component = URIRef(urljoin(
+    ref_component = URIRef("{}{}".format(
         context["hostpart"], component.get_absolute_url()
     ))
     if component.public:
@@ -165,7 +163,7 @@ def serialize_component(graph, component, context, visible=True):
         spkcgraph["spkc:Component"]
     ))
     if component.primary_anchor:
-        url_content = urljoin(
+        url_content = "{}{}".format(
             context["hostpart"],
             component.primary_anchor.get_absolute_url()
         )
@@ -284,7 +282,7 @@ def serialize_stream(
             else:
                 _pos = ((page - 1) * paginator.per_page) - 1
                 usercomponent = paginator.object_list[_pos]
-                ref_component = URIRef(urljoin(
+                ref_component = URIRef("{}{}".format(
                     context["hostpart"],
                     usercomponent.get_absolute_url()
                 ))

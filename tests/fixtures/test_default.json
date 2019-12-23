@@ -32,6 +32,26 @@
     }
   },
   {
+    "model": "spider_base.userinfo",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "used_space_local": 0,
+      "used_space_remote": 0,
+      "allowed_content": []
+    }
+  },
+  {
+    "model": "spider_base.userinfo",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "used_space_local": 5,
+      "used_space_remote": 0,
+      "allowed_content": []
+    }
+  },
+  {
     "model": "spider_base.UserComponent",
     "pk": 2,
     "fields": {
@@ -170,6 +190,4 @@
       "state": "a"
     }
   }
-
-
 ]

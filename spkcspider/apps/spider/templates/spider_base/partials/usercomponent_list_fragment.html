@@ -15,7 +15,7 @@
       <td class="{% if uc.is_index %}w3-large{% endif %}" style="min-height:48px;display:inline-block;word-break: break-all;">
         <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
         <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}</data>
-        {% for f in uc.features %}
+        {% for f in uc.features.all %}
           {% for action in f.feature_urls %}
             <data hidden="hidden" typeof="spkc:action:feature" resource="{{hostpart}}{{action.url}}">
               <data hidden="hidden" property="spkc:feature:name" datatype="xsd:string">{{action.name}}</data>

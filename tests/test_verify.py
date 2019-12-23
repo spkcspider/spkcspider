@@ -110,13 +110,15 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
         )
         self.assertTrue(url)
         url = url.attrs["href"]
-        self.assertIn(home.contents.first().get_absolute_url(), url)
+        content = home.contents.first()
+        self.assertIn(content.get_absolute_url(), url)
         # execute after retrieving link
         response = response.click(
             href=url, index=0
         )
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(home.contents.first().features.filter(
+        content.refresh_from_db()
+        self.assertTrue(content.features.filter(
             name="DomainMode"
         ).exists())
         verifyurl = reverse("spider_verifier:create")

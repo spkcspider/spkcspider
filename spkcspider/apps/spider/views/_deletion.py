@@ -14,8 +14,6 @@ from django.http import (
 )
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.base import TemplateView
 
 from spkcspider.constants import loggedin_active_tprotections
@@ -46,7 +44,6 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         ))
         return super().get_context_data(**kwargs)
 
-    @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         try:
             return super().dispatch(request, *args, **kwargs)
