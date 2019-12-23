@@ -39,6 +39,8 @@ class FeaturesTest(TransactionWebTest):
 
     def test_nil(self):
         home = self.user.usercomponent_set.filter(name="home").first()
+        # NEVER do this outside tests, only for nil test
+        home.features.clear()
         url = home.get_absolute_url()
         response = self.app.get(url)
         g = Graph()
@@ -60,6 +62,8 @@ class FeaturesTest(TransactionWebTest):
 
     def test_nil_raw(self):
         home = self.user.usercomponent_set.filter(name="home").first()
+        # NEVER do this outside tests, only for nil test
+        home.features.clear()
         url = "{}?raw=true".format(
             home.get_absolute_url()
         )
@@ -192,7 +196,6 @@ class FeaturesTest(TransactionWebTest):
         self.assertTrue(home.features.filter(
             name="Persistence"
         ).exists())
-        self.assertEqual(len(home.features.all()), 2)
 
         token = None
         # now test persistence feature

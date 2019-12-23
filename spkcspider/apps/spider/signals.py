@@ -268,13 +268,10 @@ def FeaturesCb(
                 ))
             # Persistence must not be removed automatically
             # if contents or features are persist add Persistence
-            if (
-                row.features.filter(
-                    ctype__contains=VariantType.persist
-                ) or
-                row.contents.filter(
-                    ctype__contains=VariantType.persist
-                )
+            if ContentVariant.objects.filter(
+                models.Q(assignedcontent__usercomponent=row) |
+                models.Q(feature_for_components=row),
+                ctype__contains=VariantType.persist
             ) and not row.features.filter(name="Persistence"):
                 row.features.add(
                     ContentVariant.objects.get(name="Persistence")
