@@ -17,6 +17,7 @@ branches:
   - develop
 env:
   - DJANGO_DEP=django22
+  - DJANGO_DEP=django30
   - DJANGO_DEP=djangomaster
 matrix:
   exclude:
