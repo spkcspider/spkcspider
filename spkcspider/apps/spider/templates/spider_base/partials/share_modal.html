@@ -140,7 +140,7 @@ async function update_share_tokens(event){
     }
 
   }
-  req = new Request('{% url "spider_base:token-admin-share" token=uc.token %}?{% if not uc.is_index %}{{sanitized_GET}}{% endif %}', {
+  req = new Request('{% url "spider_base:token-owner-share" token=uc.token %}?{% if not uc.is_index %}{{sanitized_GET}}{% endif %}', {
       method: 'POST',
       body: body,
       credentials: "same-origin",

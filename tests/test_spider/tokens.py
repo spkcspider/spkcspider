@@ -1,6 +1,6 @@
 
 from urllib.parse import parse_qs, urlsplit
-
+import json
 import requests
 
 from django.test import override_settings
@@ -12,10 +12,8 @@ from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.constants import VariantType
 from tests.referrerserver import create_referrer_server
 
-# Create your tests here.
 
-
-class TokenTest(TransactionWebTest):
+class RemoteTokenTest(TransactionWebTest):
     fixtures = ['test_default.json']
 
     @classmethod
@@ -37,8 +35,7 @@ class TokenTest(TransactionWebTest):
         update_dynamic.send(self)
 
     def test_renew_post(self):
-        home = self.user.usercomponent_set.filter(name="home").first()
-        self.assertTrue(home)
+        home = self.user.usercomponent_set.get(name="home")
         features = dict(ContentVariant.objects.filter(
             ctype__contains=VariantType.component_feature
         ).values_list("name", "id"))
@@ -88,8 +85,7 @@ class TokenTest(TransactionWebTest):
         self.assertNotEqual(oldtoken, token.token)
 
     def test_renew_sl(self):
-        home = self.user.usercomponent_set.filter(name="home").first()
-        self.assertTrue(home)
+        home = self.user.usercomponent_set.get(name="home")
         features = dict(ContentVariant.objects.filter(
             ctype__contains=VariantType.component_feature
         ).values_list("name", "id"))
@@ -140,3 +136,152 @@ class TokenTest(TransactionWebTest):
         token.refresh_from_db()
         self.assertNotEqual(oldtoken, token.token)
         self.assertEqual(newtoken, token.token)
+
+
+class OwnerTokenManagementTest(TransactionWebTest):
+    fixtures = ['test_default.json']
+
+    def setUp(self):
+        super().setUp()
+        update_dynamic.send(self)
+        self.user = SpiderUser.objects.get(
+            username="testuser1"
+        )
+        self.app.set_user(user="testuser1")
+        self.home = self.user.usercomponent_set.get(name="home")
+        self.deleteurl = reverse(
+            "spider_base:token-owner-delete",
+            kwargs={
+                "token": self.home.token
+            }
+        )
+
+    def test_filtered_token(self):
+        token1 = self.home.authtokens.create(extra={"intentions": []})
+        self.app.get(self.deleteurl)
+        response = self.app.get(
+            self.deleteurl
+        )
+        jtoken = response.json["tokens"][0]
+        self.assertLess(len(jtoken["name"]), len(token1.token))
+        self.assertFalse(jtoken["restricted"])
+        self.assertFalse(jtoken["token"])
+        self.assertFalse(jtoken["created"])
+
+    def test_add(self):
+        token1 = self.home.authtokens.create()
+        self.app.get(self.deleteurl)
+        response = self.app.post(
+            self.deleteurl,
+            params={
+                "add_token": True
+            },
+            headers={
+                "X-CSRFToken": self.app.cookies['csrftoken']
+            }
+        )
+
+        jsonob = response.json
+        found_token1 = False
+        new_tokenid = None
+        for jtoken in jsonob["tokens"]:
+            if jtoken["id"] == token1.id:
+                found_token1 = True
+                self.assertLess(len(jtoken["name"]), len(token1.token))
+                self.assertFalse(jtoken["restricted"])
+                self.assertFalse(jtoken["created"])
+            else:
+                new_tokenid = jtoken["id"]
+                self.assertTrue(jtoken["token"])
+                self.assertTrue(jtoken["created"])
+                self.assertFalse(jtoken["restricted"])
+        self.assertTrue(found_token1)
+        self.assertTrue(self.home.authtokens.filter(id=new_tokenid))
+
+    def test_add_restricted(self):
+        token1 = self.home.authtokens.create()
+        self.app.get(self.deleteurl)
+        response = self.app.post(
+            self.deleteurl,
+            params={
+                "add_token": True,
+                "restrict": True
+            },
+            headers={
+                "X-CSRFToken": self.app.cookies['csrftoken']
+            }
+        )
+
+        jsonob = response.json
+        found_token1 = False
+        new_tokenid = None
+        for jtoken in jsonob["tokens"]:
+            if jtoken["id"] == token1.id:
+                found_token1 = True
+                self.assertLess(len(jtoken["name"]), len(token1.token))
+                self.assertFalse(jtoken["restricted"])
+                self.assertFalse(jtoken["created"])
+            else:
+                new_tokenid = jtoken["id"]
+                self.assertTrue(jtoken["token"])
+                self.assertTrue(jtoken["created"])
+                self.assertTrue(jtoken["restricted"])
+        self.assertTrue(found_token1)
+        self.assertTrue(self.home.authtokens.filter(id=new_tokenid))
+
+    def test_delete_post(self):
+        token1 = self.home.authtokens.create()
+        token2 = self.home.authtokens.create()
+        response = self.app.get(self.deleteurl)
+        jsonob = response.json
+        found_token1 = False
+        found_token2 = False
+        for jtoken in jsonob["tokens"]:
+            if jtoken["id"] == token1.id:
+                found_token1 = True
+            elif jtoken["id"] == token2.id:
+                found_token2 = True
+        self.assertTrue(found_token1)
+        self.assertTrue(found_token2)
+        response = self.app.post(
+            self.deleteurl,
+            params={
+                "delete_tokens": [token1.id]
+            },
+            headers={
+                "X-CSRFToken": self.app.cookies['csrftoken']
+            }
+        )
+        jsonob = response.json
+        self.assertFalse(self.home.authtokens.filter(id=token1.id))
+        self.assertEqual(len(jsonob["tokens"]), 1)
+        self.assertEqual(jsonob["tokens"][0]["id"], token2.id)
+
+    def test_delete_json(self):
+        token1 = self.home.authtokens.create()
+        token2 = self.home.authtokens.create()
+        response = self.app.get(self.deleteurl)
+        jsonob = response.json
+        found_token1 = False
+        found_token2 = False
+        for jtoken in jsonob["tokens"]:
+            if jtoken["id"] == token1.id:
+                found_token1 = True
+            elif jtoken["id"] == token2.id:
+                found_token2 = True
+        self.assertTrue(found_token1)
+        self.assertTrue(found_token2)
+        response = self.app.post(
+            self.deleteurl,
+            params=json.dumps({
+                "delete_tokens": [token1.id]
+            }),
+            headers={
+                "Content-Type": "application/json",
+                "X-CSRFToken": self.app.cookies['csrftoken']
+            }
+        )
+        jsonob = response.json
+        self.assertFalse(self.home.authtokens.filter(id=token1.id))
+        self.assertEqual(len(jsonob["tokens"]), 1)
+        self.assertEqual(jsonob["tokens"][0]["id"], token2.id)

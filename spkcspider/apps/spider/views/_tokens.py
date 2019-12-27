@@ -1,5 +1,5 @@
 __all__ = (
-    "AdminTokenManagement", "TokenDeletionRequest", "TokenRenewal",
+    "OwnerTokenManagement", "TokenDeletionRequest", "TokenRenewal",
     "ConfirmTokenUpdate", "RequestTokenUpdate"
 )
 
@@ -35,7 +35,10 @@ from ._referrer import ReferrerMixin
 logger = logging.getLogger(__name__)
 
 
-class AdminTokenManagement(UCTestMixin, View):
+class OwnerTokenManagement(UCTestMixin, View):
+    """
+        Owner Token Management
+    """
     scope = None
     created_token = None
 
@@ -111,7 +114,7 @@ class AdminTokenManagement(UCTestMixin, View):
         return self.get(request, *args, **kwargs)
 
     def _token_dict(self, token):
-        # sl or not initialized map to full
+        # "sl" or "not initialized" map to full
         full = "sl" in token.extra.get("intentions", ["sl"])
         ret = {
             "admin_key": token.extra.get("prot_strength", 0) >= 4,
@@ -121,7 +124,7 @@ class AdminTokenManagement(UCTestMixin, View):
                 token.created +
                 self.usercomponent.token_duration
             ).strftime("%a, %d %b %Y %H:%M:%S %z"),
-            "referrer": token.referrer.url if token.referrer else "",
+            "referrer": token.referrer.url if token.referrer else None,
             "token": token.token if full else None,
             "name": str(token),
             "id": token.id,

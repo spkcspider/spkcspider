@@ -61,7 +61,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
     </h1>
   </div>
   {% if object %}
-    <form hidden="hidden" id="deleteForm" onsubmit="return delete_token(event)" method="post" action='{% url "spider_base:token-admin-delete" token=object.token %}'>
+    <form hidden="hidden" id="deleteForm" onsubmit="return delete_token(event)" method="post" action='{% url "spider_base:token-owner-delete" token=object.token %}'>
       {% csrf_token %}
     </form>
   {% endif %}
@@ -216,7 +216,7 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
         for(let count=0; count < tokens.length; count++){
           body.append("delete_tokens", tokens[count]);
         }
-        req = new Request('{% fullurl_with_params "spider_base:token-admin-delete" sanitized_GET token=object.token %}', {
+        req = new Request('{% fullurl_with_params "spider_base:token-owner-delete" sanitized_GET token=object.token %}', {
             method: 'POST',
             body: body,
             credentials: "same-origin",

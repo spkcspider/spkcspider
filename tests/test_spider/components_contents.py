@@ -407,14 +407,14 @@ class AdvancedComponentTest(TransactionWebTest):
             url = public.contents.get(
                 info__contains="\x1ename=newfieldname2\x1e"
             ).get_absolute_url("fsooso")
-            self.assertEquals(
+            self.assertEqual(
                 public, UserComponent.objects.from_url_part(url)
             )
             url = public.get_absolute_url()
-            self.assertEquals(
+            self.assertEqual(
                 public, UserComponent.objects.from_url_part(url)
             )
-            self.assertEquals(
+            self.assertEqual(
                 public, UserComponent.objects.from_url_part(
                     "{}/list".format(public.token)
                 )
@@ -432,9 +432,9 @@ class AdvancedComponentTest(TransactionWebTest):
             cs = AssignedContent.objects.from_url_part(
                 url, info="name=newfieldname2"
             )
-            self.assertEquals(content, cs[0])
-            self.assertEquals(content, cs[1])
-            self.assertEquals(
+            self.assertEqual(content, cs[0])
+            self.assertEqual(content, cs[1])
+            self.assertEqual(
                 content, AssignedContent.objects.from_url_part(
                     url, info=["name=newfieldname2"]
                 )[0]
@@ -456,9 +456,9 @@ class AdvancedComponentTest(TransactionWebTest):
             cs = AssignedContent.objects.from_url_part(
                 url, info=["type=Text", "id={}".format(content.id)]
             )
-            self.assertEquals(content, cs[0])
-            self.assertEquals(None, cs[1])
-            self.assertEquals(
+            self.assertEqual(content, cs[0])
+            self.assertEqual(None, cs[1])
+            self.assertEqual(
                 content, AssignedContent.objects.from_url_part(
                     "{}/list".format(public.token),
                     info=["name=newfieldname2"],

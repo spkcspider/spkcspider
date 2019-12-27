@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import path
 
 from .views import (
-    AdminTokenManagement, ComponentCreate, ComponentIndex,
+    OwnerTokenManagement, ComponentCreate, ComponentIndex,
     ComponentPublicIndex, ComponentUpdate, ConfirmTokenUpdate, ContentAccess,
     ContentAdd, ContentIndex, EntityMassDeletion, RequestTokenUpdate,
     TokenDeletionRequest, TokenRenewal, TravelProtectionManagement
@@ -77,13 +77,13 @@ urlpatterns = [
     ),
     path(
         'token/<str:token>/delete/',
-        AdminTokenManagement.as_view(scope="delete"),
-        name='token-admin-delete'
+        OwnerTokenManagement.as_view(scope="delete"),
+        name='token-owner-delete'
     ),
     path(
         'token/<str:token>/share/',
-        AdminTokenManagement.as_view(scope="share"),
-        name='token-admin-share'
+        OwnerTokenManagement.as_view(scope="share"),
+        name='token-owner-share'
     ),
     path(
         'token/confirm-update-request/',

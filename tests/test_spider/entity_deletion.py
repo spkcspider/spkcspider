@@ -10,8 +10,6 @@ from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.constants.rdf import spkcgraph
 
-# Create your tests here.
-
 
 class DeletionTest(TransactionWebTest):
     fixtures = ['test_default.json']
