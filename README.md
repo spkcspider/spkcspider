@@ -298,6 +298,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * >0.5: settings rename\*\_ TLD_PARAMS_MAPPING to \*\_REQUEST_KWARGS_MAP with new syntax (hosts are allowed, tlds start with .)
   * Note: port arguments are stripped, localhost matches localhost:80, localhost:8000, ...
 * >=0.18: change order of filter parameters, nearly all filters start with request (for compatibility with (django) decorators)
+* >=0.21: huge change in python API, http API should be backward compatible
 
 # TODO
 * examples
