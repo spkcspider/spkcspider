@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", function(){
     let element = collection[counter];
     let rpicker = flatpickr(element, {
       enableTime: true,
+      time_24hr: true,
       dateFormat: "Y-m-d H:i"
     });
   }

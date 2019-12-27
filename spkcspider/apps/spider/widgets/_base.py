@@ -115,11 +115,11 @@ class DatetimePickerWidget(widgets.DateTimeInput):
     class Media:
         css = {
             "all": [
-                "node_modules/@bevacqua/rome/dist/rome%s.css" % _extra
+                "node_modules/flatpickr/dist/flatpickr%s.css" % _extra
             ]
         }
         js = [
-            'node_modules/@bevacqua/rome/dist/rome%s.js' % _extra,  # noqa:E501
+            'node_modules/flatpickr/dist/flatpickr%s.js' % _extra,
             'spider_base/DatetimePickerWidget.js'
         ]
 
