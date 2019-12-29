@@ -2,7 +2,7 @@ __all__ = (
     "UpdateSpiderCb", "InitUserCb", "update_dynamic",
     "DeleteContentCb", "CleanupCb", "failed_guess",
     "UpdateContentCb", "UpdateAnchorComponentCb",
-    "FeaturesCb"
+    "FeaturesCb", "DeleteFilesCb"
 )
 import logging
 
@@ -396,3 +396,8 @@ def InitUserCb(sender, instance, raw=False, **kwargs):
                     ).first()
                     if feature:
                         ob.features.add(feature)
+
+
+def DeleteFilesCb(sender, instance, **kwargs):
+    if instance.file:
+        instance.file.delete(False)

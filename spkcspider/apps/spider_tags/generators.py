@@ -12,7 +12,7 @@ from django.core.exceptions import NON_FIELD_ERRORS
 # from django.apps import apps
 from django.db.models import Q, QuerySet
 from django.utils.translation import gettext, gettext_lazy as _
-from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider.abstract_models import BaseContent
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
 from spkcspider.apps.spider.models import (
     AssignedContent, ReferrerObject, TravelProtection

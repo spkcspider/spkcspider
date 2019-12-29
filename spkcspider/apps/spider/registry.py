@@ -306,6 +306,7 @@ class FeatureUrlsRegistry(Registry):
         self.default_actions = {}
         self.key_type_registry = {
             "tuple": lambda x: x,
+            "list": tuple,
             "ContentVariant": lambda x: (x.code, x.name),
             "AssignedContent": lambda x: (x.ctype.code, x.ctype.name)
         }

@@ -4,7 +4,7 @@ abstract base models for implementations
 """
 
 __all__ = [
-    "BaseInfoModel", "BaseSubUserComponentModel"
+    "BaseInfoModel", "BaseSubUserComponentModel", "info_field_validator"
 ]
 
 import re

@@ -8,7 +8,10 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from spkcspider.apps.spider.models import AssignedContent, AuthToken
+
+from spkcspider.apps.spider.models import (
+    AssignedContent, AttachedBlob, AuthToken
+)
 from spkcspider.apps.spider.views import UCTestMixin
 from spkcspider.utils.settings import get_settings_func
 
@@ -101,7 +104,12 @@ class WebConfigView(UCTestMixin, View):
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        return self.render_to_response(self.object.config)
+        b = None
+        if self.object.id:
+            b = self.object.associated.blobs.filter(name="config").first()
+        if not b:
+            b = AttachedBlob(unique=True, name="config", blob=b"")
+        return self.render_to_response(b.blob)
 
     def post(self, request, *args, **kwargs):
         if (
@@ -113,19 +121,30 @@ class WebConfigView(UCTestMixin, View):
                 status_code=400
             )
         self.object = self.get_object()
+        b = None
+        if self.object.id:
+            b = self.object.associated.blobs.filter(name="config").first()
+        if not b:
+            b = AttachedBlob(unique=True, name="config", blob=b"")
         old_size = self.object.get_size()
-        oldconfig = self.object.config
-        self.object.config = self.request.body
+        oldconfig = b.blob
+        b.blob = self.request.body
+        self.object.prepared_objects = {
+            "blobs": b
+        }
+
         # a full_clean is here not required
         self.object.clean()
 
         try:
-            self.object.update_used_space(old_size-self.object.get_size())
+            self.object.update_used_space(
+                self.object.get_size(self.object.prepared_objects) - old_size
+            )
         except ValidationError as exc:
             return HttpResponse(
                 str(exc), status_code=400
             )
-        self.object.save(update_fields=["config"])
+        self.object.save()
         return self.render_to_response(oldconfig)
 
     def render_to_response(self, config):

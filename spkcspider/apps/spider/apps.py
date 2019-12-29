@@ -9,7 +9,8 @@ from django.db.models.signals import (
 
 from .signals import (
     CleanupCb, InitUserCb, TriggerUpdate, UpdateAnchorComponentCb,
-    FeaturesCb, UpdateContentCb, UpdateSpiderCb, update_dynamic
+    FeaturesCb, UpdateContentCb, UpdateSpiderCb, update_dynamic,
+    DeleteFilesCb
 )
 
 
@@ -22,7 +23,7 @@ class SpiderBaseConfig(AppConfig):
 
     def ready(self):
         from .models import (
-            AssignedContent, UserComponent
+            AssignedContent, UserComponent, AttachedFile
         )
 
         #######################
@@ -59,6 +60,10 @@ class SpiderBaseConfig(AppConfig):
         )
         m2m_changed.connect(
             FeaturesCb, sender=AssignedContent.features.through,
+        )
+
+        post_delete.connect(
+            DeleteFilesCb, sender=AttachedFile
         )
 
         # order important for the next two events

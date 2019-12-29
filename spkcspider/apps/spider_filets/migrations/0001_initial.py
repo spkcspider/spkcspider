@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('add', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('name', models.CharField(max_length=255)),
-                ('file', models.FileField(upload_to=spkcspider.apps.spider_filets.models.get_file_path)),
+                ('file', models.FileField(upload_to=spkcspider.apps.spider.models.content_extended.get_file_path)),
             ],
             options={
                 'abstract': False,

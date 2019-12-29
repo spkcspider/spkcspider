@@ -18,7 +18,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from jsonfield import JSONField
 from spkcspider.apps.spider.conf import get_anchor_domain, get_anchor_scheme
-from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider.abstract_models import BaseContent
 from spkcspider.apps.spider import registry
 from spkcspider.constants import VariantType
 from spkcspider.utils.security import get_hashob

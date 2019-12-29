@@ -26,8 +26,8 @@ from spkcspider.utils.security import create_b64_id_token
 from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
 
-from .conf import get_anchor_domain
-from .serializing import paginate_stream, serialize_stream
+from ..conf import get_anchor_domain
+from ..serializing import paginate_stream, serialize_stream
 
 logger = logging.getLogger(__name__)
 
@@ -77,6 +77,8 @@ class BaseContent(models.Model):
         content_type_field='content_type', object_id_field='object_id'
     )
     associated_obj = None
+    # None or dict (key=related_name)
+    prepared_objects = None
 
     # user can set name
     # if set to "force" name will be enforced
@@ -87,6 +89,9 @@ class BaseContent(models.Model):
     force_token_size = None
 
     associated_errors = None
+
+    # extra size which should be used in calc
+    extra_size = 0
 
     _content_is_cleaned = False
 
@@ -140,11 +145,19 @@ class BaseContent(models.Model):
         """
         return pgettext("content name", name)
 
-    def get_size(self):
+    def get_size(self, prepared_objects=None):
         # 255 = length name, ignore potential utf8 encoding differences
         s = 255
         if self.expose_description and self.associated:
             s += len(self.associated.description)
+        if prepared_objects is not None:
+            for ob in prepared_objects.values():
+                s += ob.get_size()
+        else:
+            for b in self.associated.blobs.all():
+                s += b.get_size()
+            for f in self.associated.files.all():
+                s += f.get_size()
         return s
 
     def get_priority(self):
@@ -257,7 +270,7 @@ class BaseContent(models.Model):
             instance = kwargs["form"].save(False)
             try:
                 self.update_used_space(
-                    instance.get_size() - old_size
+                    instance.get_size(self.prepared_objects) - old_size
                 )
             except ValidationError as exc:
                 kwargs["form"].add_error(None, exc)
@@ -709,6 +722,9 @@ class BaseContent(models.Model):
             created = True
         # update info and set content
         assignedcontent.save()
+        if self.prepared_objects:
+            for key, obs in self.prepared_objects.items():
+                getattr(self.associated, key).set(*obs)
         if created:
             to_save = set()
             # add id to info
@@ -763,3 +779,5 @@ class BaseContent(models.Model):
         self.associated_errors = None
         # require cleaning again
         self._content_is_cleaned = False
+        # reset to default
+        self.prepared_objects = self.__class__.prepared_objects

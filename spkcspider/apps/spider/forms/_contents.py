@@ -36,10 +36,15 @@ class LinkForm(forms.ModelForm):
             strength__lte=10
         )
     )
+    push = forms.BooleanField(
+        required=False,
+        initial=False,
+        help_text=_("Improve ranking of this Link.")
+    )
 
     class Meta:
         model = LinkContent
-        fields = ['push']
+        fields = []
 
     def __init__(self, uc, request, **kwargs):
         super().__init__(**kwargs)
@@ -72,6 +77,7 @@ class LinkForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.associated.attached_to_content = \
             self.cleaned_data["content"]
+        self.instance.free_data["push"] = self.cleaned_data.get("push", False)
         return super().save(commit)
 
 

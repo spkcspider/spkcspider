@@ -49,7 +49,7 @@ class UserContentRefField(forms.ModelChoiceField):
     # limit_to_uc: limit to usercomponent, if False to user
     # True is strongly recommended to prevent info leak gadgets
     def __init__(self, modelname, limit_to_uc=True, **kwargs):
-        from spkcspider.apps.spider.contents import BaseContent
+        from spkcspider.apps.spider.abstract_models import BaseContent
         if limit_to_uc:
             self.filters_usercomponent = (
                 "associated_rel__usercomponent",

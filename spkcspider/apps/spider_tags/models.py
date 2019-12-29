@@ -13,7 +13,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
 from django.views.decorators.csrf import csrf_exempt
 from jsonfield import JSONField
-from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider.abstract_models import BaseContent
 from spkcspider.apps.spider import registry
 from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.settings import get_settings_func

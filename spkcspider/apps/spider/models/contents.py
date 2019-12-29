@@ -32,7 +32,8 @@ from spkcspider.constants import (
 from spkcspider.utils.fields import add_by_field
 
 from .. import registry
-from ..contents import BaseContent
+from ..abstract_models import BaseContent
+from .content_extended import DataContent
 
 logger = logging.getLogger(__name__)
 
@@ -108,7 +109,7 @@ class DefaultActions(BaseContent):
 
 
 @add_by_field(registry.contents, "_meta.model_name")
-class LinkContent(BaseContent):
+class LinkContent(DataContent):
     appearances = [{
         "name": "Link",
         "ctype": VariantType.raw_update
@@ -116,10 +117,8 @@ class LinkContent(BaseContent):
     expose_name = False
     expose_description = False
 
-    push: bool = models.BooleanField(
-        blank=True, default=False,
-        help_text=_("Improve ranking of this Link.")
-    )
+    class Meta:
+        proxy = True
 
     def get_abilities(self, context):
         ret = set()
@@ -144,7 +143,7 @@ class LinkContent(BaseContent):
     def get_priority(self) -> int:
         priority = self.associated.attached_to_content.content.get_priority()
         # pin to top
-        if self.push and priority < 1:
+        if self.free_data.get("push") and priority < 1:
             return 1
         return priority
 

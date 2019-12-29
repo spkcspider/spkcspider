@@ -1,10 +1,8 @@
 __all__ = ["WebConfig"]
 
-
-from django.db import models
 from django.urls import reverse
 from django.utils.translation import pgettext
-from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider.models import DataContent
 from spkcspider.apps.spider import registry
 from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.fields import add_by_field
@@ -13,7 +11,7 @@ from spkcspider.utils.fields import add_by_field
 
 
 @add_by_field(registry.contents, "_meta.model_name")
-class WebConfig(BaseContent):
+class WebConfig(DataContent):
     expose_name = False
     appearances = [
         {
@@ -36,7 +34,8 @@ class WebConfig(BaseContent):
         }
     ]
 
-    config = models.BinaryField(default=b"", editable=True, blank=True)
+    class Meta:
+        proxy = True
 
     @classmethod
     def localize_name(cls, name):

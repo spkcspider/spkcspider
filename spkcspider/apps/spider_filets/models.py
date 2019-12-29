@@ -3,25 +3,20 @@ import logging
 import posixpath
 
 from django.conf import settings
-from django.core.files.storage import default_storage
-from django.db import models
-from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import escape
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
-from jsonfield import JSONField
-from ranged_response import RangedFileResponse
 from spkcspider.apps.spider.conf import (
-    FILE_TOKEN_SIZE, image_extensions, media_extensions
+    image_extensions, media_extensions
 )
-from spkcspider.apps.spider.contents import BaseContent
+from spkcspider.apps.spider.models import DataContent
+from spkcspider.apps.spider.abstract_models import BaseContent
 from spkcspider.apps.spider import registry
 from spkcspider.constants import VariantType
 from spkcspider.utils.fields import prepare_description, add_by_field
-from spkcspider.utils.security import create_b64_token
 
 from .conf import LICENSE_CHOICES
 
@@ -29,25 +24,6 @@ logger = logging.getLogger(__name__)
 
 
 # Create your models here.
-
-
-def get_file_path(instance, filename):
-    ret = getattr(settings, "FILE_FILET_DIR", "file_filet")
-    # try 100 times to find free filename
-    # but should not take more than 1 try
-    # IMPORTANT: strip . to prevent creation of htaccess files or similar
-    for _i in range(0, 100):
-        ret_path = default_storage.generate_filename(
-            posixpath.join(
-                ret, str(instance.associated.usercomponent.user.pk),
-                create_b64_token(FILE_TOKEN_SIZE), filename.lstrip(".")
-            )
-        )
-        if not default_storage.exists(ret_path):
-            break
-    else:
-        raise FileExistsError("Unlikely event: no free filename")
-    return ret_path
 
 
 @add_by_field(registry.contents, "_meta.model_name")
@@ -62,7 +38,7 @@ class DisclaimerFeature(BaseContent):
         }
     ]
 
-    class Meta:
+    class Meta(BaseContent.Meta):
         abstract = True
 
     @classmethod
@@ -71,36 +47,26 @@ class DisclaimerFeature(BaseContent):
         return _("content name", name)
 
 
-class ContentWithLicense(BaseContent):
-    license_name = models.CharField(
-        max_length=255, null=False, default="other"
-    )
-    license_url = models.URLField(max_length=400, blank=True, null=True)
-    sources = JSONField(default=list, blank=True)
+class LicenseMixin(object):
     license_name_translation_list = LICENSE_CHOICES
-
-    class Meta(BaseContent.Meta):
-        abstract = True
 
     @property
     def full_license_name(self):
+        license_name = self.free_data.get("license_name", "other")
         return self.license_name_translation_list.get(
-            self.license_name, {}
-        ).get("name", self.license_name)
-
-    def get_size(self):
-        s = super().get_size()
-        s += len(str(self.sources))
-        return s
+            license_name, {}
+        ).get("name", license_name)
 
 
 @add_by_field(registry.contents, "_meta.model_name")
-class FileFilet(ContentWithLicense):
+class FileFilet(LicenseMixin, DataContent):
     expose_name = True
     expose_description = True
 
     appearances = [{"name": "File"}]
-    file = models.FileField(upload_to=get_file_path, null=False, blank=False)
+
+    class Meta:
+        proxy = True
 
     def get_template_name(self, scope):
         if scope in ["add", "update"]:
@@ -112,7 +78,8 @@ class FileFilet(ContentWithLicense):
 
     def get_content_name(self):
         # in case no name is set
-        return posixpath.basename(self.file.name)
+        fob = self.associated.files.get(name="file")
+        return posixpath.basename(fob.file.name)
 
     def get_info(self):
         ret = super().get_info()
@@ -146,6 +113,7 @@ class FileFilet(ContentWithLicense):
         return super().render_form(**kwargs)
 
     def access_view(self, **kwargs):
+        f = self.associated.files.get(name="file")
         kwargs["object"] = self
         kwargs["associated"] = self.associated
         kwargs["type"] = self.associated.getlist("file_type", 1)
@@ -154,7 +122,7 @@ class FileFilet(ContentWithLicense):
         else:
             kwargs["type"] = None
         if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
-            kwargs["download"] = self.file.url
+            kwargs["download"] = f.file.url
         else:
             kwargs["download"] = "{}?{}".format(
                 reverse(
@@ -171,26 +139,14 @@ class FileFilet(ContentWithLicense):
         )
 
     def access_download(self, **kwargs):
+        f = self.associated.files.get(name="file")
         if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
-            response = HttpResponseRedirect(
-                redirect_to=self.file.url,
-            )
+            response = f.get_response()
         else:
-            response = RangedFileResponse(
-                kwargs["request"],
-                self.file.file,
-                content_type='application/octet-stream'
+            response = f.get_response(
+                name=self.associated.name, request=kwargs["request"],
+                add_extension=True
             )
-        name = self.associated.name
-        if "." not in name:  # use ending of saved file
-            ext = self.file.name.rsplit(".", 1)
-            if len(ext) > 1:
-                name = "%s.%s" % (name, ext[1])
-        # name is sanitized to not contain \n, and other ugly control chars
-        response['Content-Disposition'] = \
-            'attachment; filename="%s"' % posixpath.basename(name.replace(
-                r'"', r'\"'
-            ))
 
         response["Access-Control-Allow-Origin"] = "*"
         return response
@@ -205,36 +161,20 @@ class FileFilet(ContentWithLicense):
         kwargs["legend"] = escape(_("Update File"))
         return super().access_update(**kwargs)
 
-    def save(self, *args, **kw):
-        if self.pk is not None:
-            orig = FileFilet.objects.get(pk=self.pk)
-            if orig.file != self.file:
-                orig.file.delete(False)
-        super().save(*args, **kw)
-
 
 @add_by_field(registry.contents, "_meta.model_name")
-class TextFilet(ContentWithLicense):
+class TextFilet(LicenseMixin, DataContent):
     expose_name = "force"
     expose_description = True
 
     appearances = [{"name": "Text"}]
 
-    editable_from = models.ManyToManyField(
-        "spider_base.UserComponent", related_name="+",
-        help_text=_("Allow editing from selected components."),
-        blank=True
-    )
-    push = models.BooleanField(
-        blank=True, default=False,
-        help_text=_("Improve ranking of this content.")
-    )
-
-    text = models.TextField(default="", blank=True)
+    class Meta:
+        proxy = True
 
     def get_priority(self):
         # push to top
-        if self.push:
+        if self.free_data.get("push"):
             return 1
         return 0
 
@@ -282,9 +222,7 @@ class TextFilet(ContentWithLicense):
     def get_abilities(self, context):
         _abilities = set()
         source = context.get("source", self.associated.usercomponent)
-        if self.id and self.editable_from.filter(
-            pk=source.pk
-        ).exists():
+        if source.id in self.free_data["editable_from"]:
             _abilities.add("update_guest")
         return _abilities
 
