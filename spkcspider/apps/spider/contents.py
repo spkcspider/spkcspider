@@ -141,7 +141,7 @@ class BaseContent(models.Model):
         return pgettext("content name", name)
 
     def get_size(self):
-        # 255 = length name no matter what encoding
+        # 255 = length name, ignore potential utf8 encoding differences
         s = 255
         if self.expose_description and self.associated:
             s += len(self.associated.description)

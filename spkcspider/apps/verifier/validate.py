@@ -294,9 +294,9 @@ def validate(ob, hostpart, task=None):
                         "spkcspider.apps.spider.functions.validate_url_default"
                     )(url):
                         raise exceptions.ValidationError(
-                            _('Insecure url: %(url)s'),
+                            _('invalid url: %(url)s'),
                             params={"url": url},
-                            code="insecure_url"
+                            code="invalid_url"
                         )
                     _hash = retrieve_object(
                         url, [current_size], session=session

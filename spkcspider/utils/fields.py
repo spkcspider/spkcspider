@@ -47,6 +47,7 @@ def literalize(
         return RDF.nil
     if hasattr(ob, "get_absolute_url"):
         if not datatype:
+            # add raw=embed, download and hash downloaded object
             datatype = spkcgraph["hashableURI"]
         if use_uriref is None:
             use_uriref = True

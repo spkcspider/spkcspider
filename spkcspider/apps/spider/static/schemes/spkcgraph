@@ -98,6 +98,8 @@ spkc:accessTo a rdf:Property ;
 
 spkc:hashableURI a rdfs:Datatype ;
   rdfs:isDefinedBy <https://spkcspider.net/static/schemes/spkcgraph#> ;
+  rdfs:label "Hashable URI" ;
+  rdfs:comment "Should be resolved and content should be hashed" ;
   rdfs:subClassOf xsd:anyURI .
 
 spkc:value a rdf:value ;

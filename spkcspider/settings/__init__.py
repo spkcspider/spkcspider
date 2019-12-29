@@ -257,7 +257,8 @@ SPIDER_MAX_DESCRIPTION_LENGTH = 200
 SPIDER_OBJECTS_PER_PAGE = 25
 # how many raw/serialized results per page?
 SPIDER_SERIALIZED_PER_PAGE = 50
-# max depth of references
+# max depth of references used in embed
+#   should be >=5, allows 4 levels depth in contents+link to it
 SPIDER_MAX_EMBED_DEPTH = 5
 # how many search parameters are allowed
 SPIDER_MAX_SEARCH_PARAMETERS = 30

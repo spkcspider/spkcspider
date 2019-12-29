@@ -55,9 +55,9 @@ class CreateEntryForm(forms.Form):
             )(url):
                 self.add_error(
                     "url", forms.ValidationError(
-                        _('Insecure url: %(url)s'),
+                        _('invalid url: %(url)s'),
                         params={"url": url},
-                        code="insecure_url"
+                        code="invalid_url"
                     )
                 )
                 return ret
