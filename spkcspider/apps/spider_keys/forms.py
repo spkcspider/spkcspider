@@ -12,11 +12,12 @@ from django.db import models
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
-from spkcspider.apps.spider.models import AssignedContent, TravelProtection
+from spkcspider.apps.spider.forms.base import DataContentForm
+from spkcspider.apps.spider.models import (
+    AssignedContent, TravelProtection, AttachedBlob
+)
 from spkcspider.apps.spider.widgets import ListWidget
 from spkcspider.constants import loggedin_active_tprotections
-
-from .models import AnchorKey, AnchorServer, PublicKey
 
 _help_text_key = _(
     '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501
@@ -24,51 +25,67 @@ _help_text_key = _(
     "In contrast the encryption keys can be easily exchanged and should be available for encryption"  # noqa: E501
 )
 
+_help_text_sig = _("""Signature of Identifier (hexadecimal-encoded)""")
 
-class KeyForm(forms.ModelForm):
+
+def valid_pkey_properties(key):
+    _ = gettext
+    if "PRIVAT" in key.upper():
+        raise forms.ValidationError(_('Private Key'))
+    if key.strip() != key:
+        raise forms.ValidationError(_('Not trimmed'))
+    if len(key) < 100:
+        raise forms.ValidationError(_('Not a key'))
+
+
+class KeyForm(DataContentForm):
     hash_algorithm = forms.CharField(
         widget=forms.HiddenInput(), disabled=True
     )
     setattr(hash_algorithm, "hashable", False)
-
-    class Meta:
-        model = PublicKey
-        fields = ['key']
+    key = forms.CharField(
+        widget=forms.Textarea(), strip=True,
+        validators=[valid_pkey_properties]
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.initial["key"] = self.instance.quota_data.get("key")
         self.initial["hash_algorithm"] = settings.SPIDER_HASH_ALGORITHM.name
         setattr(self.fields['key'], "hashable", True)
 
-    def clean_key(self):
-        _ = gettext
-        data = self.cleaned_data['key'].strip()
-        if data == "":
-            raise forms.ValidationError(
-                _('Empty Key'),
-                code="empty"
-            )
-        if "PRIVATE" in data.upper():
-            raise forms.ValidationError(
-                _('Private Key')
-            )
-        return data
+    def get_prepared_attachements(self):
+        if self.instance.pk:
+            b = self.instance.associated.blobs.filter(name="key").first()
+        if not b:
+            b = AttachedBlob(unique=True, name="key")
+        b.blob = self.cleaned_data["key"]
+
+        return {
+            "attachedblob_set": [b]
+        }
 
 
-class AnchorServerForm(forms.ModelForm):
+class AnchorServerForm(DataContentForm):
     identifier = forms.CharField(disabled=True)
     anchor_type = forms.CharField(disabled=True, initial="url")
     setattr(identifier, "hashable", True)
     scope = ""
+    new_url = forms.URLField(
+        required=False,
+        help_text=_(
+            "Url to new anchor (in case this one is superseded)"
+        )
+    )
     old_urls = MultipleOpenChoiceField(
         widget=ListWidget(
             format_type="url", item_label=_("Url to superseded anchor")
-        ), required=False
+        ), required=False,
+        help_text=_(
+            "Superseded anchor urls"
+        )
     )
-
-    class Meta:
-        model = AnchorServer
-        fields = ["new_url", "old_urls"]
+    quota_fields = {"new_url": None, "old_urls": list}
 
     def __init__(self, scope, **kwargs):
         self.scope = scope
@@ -101,23 +118,21 @@ class AnchorServerForm(forms.ModelForm):
         return ret
 
 
-class AnchorKeyForm(forms.ModelForm):
+class AnchorKeyForm(DataContentForm):
     identifier = forms.CharField(disabled=True)
-    anchor_type = forms.CharField(disabled=True, initial="signature")
+    signature = forms.CharField(
+        help_text=_help_text_sig
+    )
     key = forms.ModelChoiceField(
         queryset=AssignedContent.objects.filter(
             ctype__name="PublicKey",
             info__contains="\x1epubkeyhash="
         )
     )
+    anchor_type = forms.CharField(disabled=True, initial="signature")
 
     scope = ""
-
-    class Meta:
-        model = AnchorKey
-        fields = ['key', 'signature']
-
-    field_order = ['identifier', 'signature', 'key']
+    quota_fields = {"signature": None}
 
     def __init__(self, scope, request, **kwargs):
         self.scope = scope

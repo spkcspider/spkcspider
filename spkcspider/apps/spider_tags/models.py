@@ -14,6 +14,7 @@ from django.utils.translation import pgettext
 from django.views.decorators.csrf import csrf_exempt
 from jsonfield import JSONField
 from spkcspider.apps.spider.abstract_models import BaseContent
+from spkcspider.apps.spider.models import DataContent
 from spkcspider.apps.spider import registry
 from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.settings import get_settings_func
@@ -36,8 +37,8 @@ class TagLayout(models.Model):
     )
     default_verifiers = JSONField(default=list, blank=True)
     usertag = models.OneToOneField(
-        "spider_tags.UserTagLayout", on_delete=models.CASCADE,
-        related_name="layout", null=True, blank=True
+        "spider_base.AssignedContent", on_delete=models.CASCADE,
+        related_name="+", null=True, blank=True
     )
     description = models.TextField(default="", blank=True)
 
@@ -89,7 +90,7 @@ class TagLayout(models.Model):
 
 
 @add_by_field(registry.contents, "_meta.model_name")
-class UserTagLayout(BaseContent):
+class UserTagLayout(DataContent):
     # 10 is required for preventing info leak gadgets via component auth
     appearances = [
         {
@@ -100,6 +101,9 @@ class UserTagLayout(BaseContent):
     ]
     expose_name = False
     expose_description = True
+
+    class Meta:
+        proxy = True
 
     @classmethod
     def localize_name(cls, name):
@@ -157,11 +161,6 @@ class UserTagLayout(BaseContent):
         kwargs.setdefault("inner_form", False)
         return super().access_view(**kwargs)
 
-    def access_add(self, **kwargs):
-        if not hasattr(self, "layout"):
-            self.layout = TagLayout(usertag=self)
-        return super().access_add(**kwargs)
-
     def get_form_kwargs(self, **kwargs):
         kwargs["instance"] = self.layout
         return super().get_form_kwargs(**kwargs)
@@ -170,6 +169,13 @@ class UserTagLayout(BaseContent):
         if context["scope"] == "view":
             context["extra_outer_forms"] = ["request_verification_form"]
         return super().access(context)
+
+    @property
+    def layout(self):
+        tlayout = TagLayout.objects.filter(usertag=self.associated).first()
+        if not tlayout:
+            tlayout = TagLayout(usertag=self.associated)
+        return tlayout
 
 
 @add_by_field(registry.contents, "_meta.model_name")
@@ -319,21 +325,20 @@ class SpiderTag(BaseContent):
     def get_references(self):
         if not getattr(self, "layout", None):
             return []
-        if self._cached_references is not None:
-            return self._cached_references
-        form = self.layout.get_form()(
-            initial=self.tagdata.copy(),
-            instance=self,
-            uc=self.associated.usercomponent
-        )
-        _cached_references, needs_update = form.calc_references(True)
-        if needs_update:
-            self.associated.save(
-                update_fields=[
-                    "attached_to_primary_anchor"
-                ]
+        if self._cached_references is None:
+            form = self.layout.get_form()(
+                initial=self.tagdata.copy(),
+                instance=self,
+                uc=self.associated.usercomponent
             )
-        self._cached_references = _cached_references
+            _cached_references, needs_update = form.calc_references(True)
+            if needs_update:
+                self.associated.save(
+                    update_fields=[
+                        "attached_to_primary_anchor"
+                    ]
+                )
+            self._cached_references = _cached_references
         return self._cached_references
 
     def get_form_kwargs(self, instance=None, **kwargs):

@@ -253,7 +253,7 @@ class ComponentPublicIndex(ComponentIndexBase):
         # doesn't matter if it is same user, lazy
         # only apply unconditional travelprotections here
         travel = TravelProtection.objects.get_active().exclude(
-            associated_rel__info__contains="\x1epwhash="
+            associated__info__contains="\x1epwhash="
         )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
@@ -269,7 +269,7 @@ class ComponentPublicIndex(ComponentIndexBase):
         # doesn't matter if it is same user, lazy
         # only apply unconditional travelprotections here
         travel = TravelProtection.objects.get_active().exclude(
-            associated_rel__info__contains="\x1epwhash="
+            associated__info__contains="\x1epwhash="
         )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
@@ -346,7 +346,7 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
 
         # doesn't matter if it is same user, lazy
         travel = self.get_travel_for_request()
-        t_ids = travel.values_list("associated_rel__id", flat=True)
+        t_ids = travel.values_list("associated__id", flat=True)
         travel = travel.filter(
             login_protection__in=loggedin_active_tprotections
         )

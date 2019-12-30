@@ -167,7 +167,7 @@ class TagTest(TransactionWebTest):
         form = response.forms["main_form"]
         form["tag/name"] = "f1"
         form.submit()
-        stag = SpiderTag.objects.latest("associated_rel__created")
+        stag = SpiderTag.objects.latest("associated__created")
 
         response = self.app.get(createurl)
         form = response.forms["main_form"]
@@ -179,7 +179,7 @@ class TagTest(TransactionWebTest):
         form["tag/ref"] = stag.id
         form.submit()
 
-        stag2 = SpiderTag.objects.latest("associated_rel__created")
+        stag2 = SpiderTag.objects.latest("associated__created")
         self.assertNotEqual(stag.id, stag2.id)
 
         response = self.app.get(createurl)
@@ -191,7 +191,7 @@ class TagTest(TransactionWebTest):
         form["tag/name"] = "f3"
         form["tag/ref"] = stag2.id
         form.submit()
-        stag3 = SpiderTag.objects.latest("associated_rel__created")
+        stag3 = SpiderTag.objects.latest("associated__created")
         self.assertNotEqual(stag3.id, stag2.id)
 
         viewurl = "{}?raw=embed".format(

@@ -234,13 +234,13 @@ class TravelProtectionManager(models.Manager):
         return self.filter(q)
 
     def get_active_for_session(self, session, user, now=None):
-        q = ~models.Q(associated_rel__info__contains="\x1epwhash=")
+        q = ~models.Q(associated__info__contains="\x1epwhash=")
         if user.is_authenticated:
             for pw in session.get("travel_hashed_pws", []):
                 q |= models.Q(
-                    associated_rel__info__contains="\x1epwhash=%s\x1e" % pw
+                    associated__info__contains="\x1epwhash=%s\x1e" % pw
                 )
-            q &= models.Q(associated_rel__usercomponent__user=user)
+            q &= models.Q(associated__usercomponent__user=user)
         return self.get_active(now).filter(q)
 
     def get_active_for_request(self, request, now=None):
@@ -248,7 +248,7 @@ class TravelProtectionManager(models.Manager):
 
     def auth(self, request, uc, now=None):
         active = self.get_active(now).filter(
-            associated_rel__usercomponent=uc
+            associated__usercomponent=uc
         )
 
         request.session["travel_hashed_pws"] = list(map(
@@ -260,10 +260,10 @@ class TravelProtectionManager(models.Manager):
             request.POST.getlist("password")[:4]
         ))
 
-        q = ~models.Q(associated_rel__info__contains="\x1epwhash=")
+        q = ~models.Q(associated__info__contains="\x1epwhash=")
         for pw in request.session["travel_hashed_pws"]:
             q |= models.Q(
-                associated_rel__info__contains="\x1epwhash=%s\x1e" % pw
+                associated__info__contains="\x1epwhash=%s\x1e" % pw
             )
 
         active = active.filter(q)

@@ -117,7 +117,7 @@ class SpiderTagForm(forms.ModelForm):
         index = user.usercomponent_set.get(name="index")
         self.fields["layout"].queryset = TagLayout.objects.filter(
             Q(usertag__isnull=True) |
-            Q(usertag__associated_rel__usercomponent=index)
+            Q(usertag__associated__usercomponent=index)
         ).order_by("name")
 
     def clean_updateable_by(self):

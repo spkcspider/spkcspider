@@ -45,9 +45,7 @@ class DataContent(BaseContent):
 
     def get_size(self):
         s = super().get_size()
-        memv = memoryview(self.quota_data)
-        s += memv.nbytes
-        memv.release()
+        s += len(str(self.quota_data))
         return s
 
 
@@ -56,16 +54,16 @@ class BaseAttached(models.Model):
     unique = models.BooleanField(default=False, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
+    content = models.ForeignKey(
+        "spider_base.AssignedContent",
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         abstract = True
 
 
 class AttachedTimeSpan(BaseAttached):
-    content = models.ForeignKey(
-        "spider_base.AssignedContent",
-        on_delete=models.CASCADE, related_name="timespans"
-    )
     start = models.DateTimeField()
     stop = models.DateTimeField(blank=True, null=True)
 
@@ -83,18 +81,20 @@ class AttachedTimeSpan(BaseAttached):
 
 
 class AttachedFile(BaseAttached):
+    file = models.FileField(upload_to=get_file_path, null=False, blank=False)
     content = models.ForeignKey(
         "spider_base.AssignedContent",
-        on_delete=models.CASCADE, related_name="files"
+        on_delete=models.CASCADE,
+        # for non bulk updates
+        null=True
     )
-    file = models.FileField(upload_to=get_file_path, null=False, blank=False)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 name="AttachedFile_unique",
                 fields=["name"],
-                condition=models.Q(unique=True)
+                condition=models.Q(unique=True, content__isnull=False)
             )
         ]
 
@@ -134,10 +134,6 @@ class AttachedFile(BaseAttached):
 
 
 class AttachedBlob(BaseAttached):
-    content = models.ForeignKey(
-        "spider_base.AssignedContent",
-        on_delete=models.CASCADE, related_name="blobs"
-    )
     blob = models.BinaryField(default=b"", editable=True, blank=True)
 
     class Meta:

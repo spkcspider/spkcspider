@@ -3,6 +3,7 @@
 import django.db.models.deletion
 import jsonfield.fields
 import spkcspider.apps.spider_keys.models
+import spkcspider.apps.spider_keys.forms
 from django.db import migrations, models
 
 
@@ -31,7 +32,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='publickey',
             name='key',
-            field=models.TextField(validators=[spkcspider.apps.spider_keys.models.valid_pkey_properties]),
+            field=models.TextField(
+                validators=[spkcspider.apps.spider_keys.forms.valid_pkey_properties]),
         ),
         migrations.RemoveField(
             model_name='publickey',

@@ -59,7 +59,7 @@ class KeyTest(TransactionWebTest):
             form["content_control-description"] = "invalid"
             response = form.submit()
             self.assertFalse(PublicKey.objects.filter(
-                associated_rel__description="invalid"
+                associated__description="invalid"
             ))
 
         with self.subTest(msg="allow valid keys"):
@@ -69,7 +69,7 @@ class KeyTest(TransactionWebTest):
             form["content_control-description"] = "valid"
             response = form.submit().follow()
             key = PublicKey.objects.filter(
-                associated_rel__description="valid"
+                associated__description="valid"
             ).first()
             self.assertTrue(key)
             response = self.app.get(key.get_absolute_url())
@@ -139,7 +139,7 @@ class KeyTest(TransactionWebTest):
         form["content_control-description"] = "valid"
         response = form.submit().follow()
         keyob = PublicKey.objects.filter(
-            associated_rel__description="valid"
+            associated__description="valid"
         ).first()
         self.assertTrue(keyob)
         createurl = reverse(

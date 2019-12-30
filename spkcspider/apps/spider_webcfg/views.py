@@ -129,7 +129,7 @@ class WebConfigView(UCTestMixin, View):
         old_size = self.object.get_size()
         oldconfig = b.blob
         b.blob = self.request.body
-        self.object.prepared_objects = {
+        self.object.prepared_attachements = {
             "blobs": b
         }
 
@@ -138,7 +138,8 @@ class WebConfigView(UCTestMixin, View):
 
         try:
             self.object.update_used_space(
-                self.object.get_size(self.object.prepared_objects) - old_size
+                self.object.get_size(self.object.prepared_attachements)
+                - old_size
             )
         except ValidationError as exc:
             return HttpResponse(

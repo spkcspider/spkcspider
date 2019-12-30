@@ -12,12 +12,11 @@ import logging
 
 from django.apps import apps
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
@@ -211,7 +210,7 @@ class UserContentManager(models.Manager):
 
 
 class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
-    id = models.BigAutoField(primary_key=True, editable=False)
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     # fake_level = models.PositiveIntegerField(null=False, default=0)
     attached_to_token = models.ForeignKey(
         "spider_base.AuthToken", blank=True, null=True,
@@ -230,20 +229,20 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
     # brute force protection and identifier, replaces nonce
     #  16 = usercomponent.id in hexadecimal
     #  +1 for seperator
-    token = models.CharField(
+    token: str = models.CharField(
         max_length=(MAX_TOKEN_B64_SIZE)+hex_size_of_bigid+2,
         db_index=True, unique=True, null=True, blank=True,
         validators=[validator_token]
     )
     # regex disables controlcars and disable special spaces
     # and allows some of special characters
-    name = models.CharField(
+    name: str = models.CharField(
         max_length=255, blank=True, default="",
         validators=[
             content_name_validator
         ]
     )
-    description = models.TextField(
+    description: str = models.TextField(
         default="", blank=True
     )
     usercomponent = models.ForeignKey(
@@ -262,7 +261,7 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
         ContentVariant, editable=False, null=True,
         on_delete=models.SET_NULL
     )
-    priority = models.SmallIntegerField(default=0, blank=True)
+    priority: int = models.SmallIntegerField(default=0, blank=True)
 
     # creator = models.ForeignKey(
     #    settings.AUTH_USER_MODEL, editable=False, null=True,
@@ -290,14 +289,6 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
             "Content references primary anchor"
         )
     )
-    content_type = models.ForeignKey(
-        ContentType, on_delete=models.CASCADE, editable=False,
-        related_name="+"
-    )
-    object_id = models.BigIntegerField(editable=False)
-    content = GenericForeignKey(
-        'content_type', 'object_id', for_concrete_model=False
-    )
     # for quick retrieval!! even maybe a duplicate
     # layouts referencing models are not appearing here, so do it here
     references = models.ManyToManyField(
@@ -310,9 +301,6 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
     objects = UserContentManager()
 
     class Meta:
-        unique_together = [
-            ('content_type', 'object_id'),
-        ]
         constraints = []
         if (
             settings.DATABASES["default"]["ENGINE"] !=
@@ -395,6 +383,10 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
                     code='unique_together',
                 )
         super().clean()
+
+    @cached_property
+    def content(self):
+        return self.ctype.installed_class.objects.get(associated=self)
 
     @property
     def is_hidden(self):

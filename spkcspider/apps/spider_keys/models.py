@@ -8,18 +8,14 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.x509 import load_pem_x509_certificate
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.db import models
 from django.http import HttpResponsePermanentRedirect, JsonResponse
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.translation import gettext
-from django.utils.translation import gettext_lazy as _
 from django.utils.translation import pgettext
-from jsonfield import JSONField
 from spkcspider.apps.spider.conf import get_anchor_domain, get_anchor_scheme
-from spkcspider.apps.spider.abstract_models import BaseContent
 from spkcspider.apps.spider import registry
+from spkcspider.apps.spider.models import DataContent
 from spkcspider.constants import VariantType
 from spkcspider.utils.security import get_hashob
 from spkcspider.utils.fields import add_by_field
@@ -29,34 +25,21 @@ logger = logging.getLogger(__name__)
 
 # Create your models here.
 
-_help_text_sig = _("""Signature of Identifier (hexadecimal-encoded)""")
-
 ID_VERIFIERS = {
 
 }
 
 
-def valid_pkey_properties(key):
-    _ = gettext
-    if "PRIVAT" in key.upper():
-        raise ValidationError(_('Private Key'))
-    if key.strip() != key:
-        raise ValidationError(_('Not trimmed'))
-    if len(key) < 100:
-        raise ValidationError(_('Not a key'))
-
-
 @add_by_field(registry.contents, "_meta.model_name")
-class PublicKey(BaseContent):
+class PublicKey(DataContent):
     expose_name = False
     expose_description = True
     appearances = [
         {"name": "PublicKey", "ctype": VariantType.unique}
     ]
 
-    key = models.TextField(
-        editable=True, validators=[valid_pkey_properties],
-    )
+    class Meta:
+        proxy = True
 
     @classmethod
     def localize_type_name(cls, name):
@@ -165,12 +148,9 @@ class PublicKey(BaseContent):
 # TODO: make hash algorithm configurable
 
 
-class AnchorBase(BaseContent):
+class AnchorMixing(object):
     expose_name = False
     expose_description = True
-
-    class Meta(BaseContent.Meta):
-        abstract = True
 
     def get_abilities(self, context):
         return {"anchor"}
@@ -203,7 +183,7 @@ class AnchorBase(BaseContent):
 
 
 @add_by_field(registry.contents, "_meta.model_name")
-class AnchorServer(AnchorBase):
+class AnchorServer(AnchorMixing, DataContent):
     """ identify by server """
     appearances = [
         {
@@ -213,18 +193,8 @@ class AnchorServer(AnchorBase):
         }
     ]
 
-    new_url = models.URLField(
-        max_length=400, blank=True, null=True,
-        help_text=_(
-            "Url to new anchor (in case this one is superseded)"
-        )
-    )
-    old_urls = JSONField(
-        default=list, blank=True,
-        help_text=_(
-           "Superseded anchor urls"
-        )
-    )
+    class Meta:
+        proxy = True
 
     @classmethod
     def localize_name(cls, name):
@@ -254,7 +224,7 @@ class AnchorServer(AnchorBase):
 
 
 @add_by_field(registry.contents, "_meta.model_name")
-class AnchorKey(AnchorBase):
+class AnchorKey(AnchorMixing, DataContent):
     """ domain name of pc, signed """
     expose_name = False
     expose_description = True
@@ -266,9 +236,8 @@ class AnchorKey(AnchorBase):
         }
     ]
 
-    signature = models.CharField(
-        max_length=1024, help_text=_help_text_sig, null=False
-    )
+    class Meta:
+        proxy = True
 
     @classmethod
     def localize_name(cls, name):
@@ -326,14 +295,11 @@ class AnchorKey(AnchorBase):
 
 # TODO: implement
 #
-class AnchorLink(AnchorBase):
+class AnchorLink(AnchorMixing):
     """
         Anchor by Organisation, e.g. government,
         verifier returns token pointing to url
     """
-
-    class Meta(AnchorBase.Meta):
-        abstract = True
 
     verified_by = models.URLField(max_length=400)
 

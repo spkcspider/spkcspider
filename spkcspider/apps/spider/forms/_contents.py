@@ -21,16 +21,17 @@ from spkcspider.constants import (
 from spkcspider.utils.settings import get_settings_func
 
 from ..fields import ContentMultipleChoiceField, MultipleOpenChoiceField
-from ..models import AssignedContent, LinkContent, TravelProtection
+from ..models import AssignedContent, TravelProtection
 from ..widgets import (
     OpenChoiceWidget, DatetimePickerWidget, SelectizeWidget
 )
 from ._messages import time_help_text, login_protection
+from .base import DataContentForm
 
 _extra = '' if settings.DEBUG else '.min'
 
 
-class LinkForm(forms.ModelForm):
+class LinkForm(DataContentForm):
     content = forms.ModelChoiceField(
         queryset=AssignedContent.objects.filter(
             strength__lte=10
@@ -42,9 +43,7 @@ class LinkForm(forms.ModelForm):
         help_text=_("Improve ranking of this Link.")
     )
 
-    class Meta:
-        model = LinkContent
-        fields = []
+    free_fields = {"push": False}
 
     def __init__(self, uc, request, **kwargs):
         super().__init__(**kwargs)
@@ -77,7 +76,6 @@ class LinkForm(forms.ModelForm):
     def save(self, commit=True):
         self.instance.associated.attached_to_content = \
             self.cleaned_data["content"]
-        self.instance.free_data["push"] = self.cleaned_data.get("push", False)
         return super().save(commit)
 
 

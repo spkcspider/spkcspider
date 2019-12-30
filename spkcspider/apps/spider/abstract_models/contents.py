@@ -9,7 +9,6 @@ from rdflib import RDF, XSD, BNode, Graph, Literal, URIRef
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.core.files.base import File
 from django.db import models, transaction
@@ -70,15 +69,13 @@ class BaseContent(models.Model):
     deletion_period = getattr(
         settings, "SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD", timedelta(0)
     )
-    # if created associated is None (will be set later)
     # use usercomponent in form instead
-    associated_rel = GenericRelation(
-        "spider_base.AssignedContent",
-        content_type_field='content_type', object_id_field='object_id'
+    associated = models.OneToOneField(
+        "spider_base.AssignedContent", related_name="+",
+        on_delete=models.CASCADE, null=True
     )
-    associated_obj = None
     # None or dict (key=related_name)
-    prepared_objects = None
+    prepared_attachements = None
 
     # user can set name
     # if set to "force" name will be enforced
@@ -110,12 +107,6 @@ class BaseContent(models.Model):
             self.associated.usercomponent.username, self.__str__()
         )
 
-    @property
-    def associated(self):
-        if self.associated_obj:
-            return self.associated_obj
-        return self.associated_rel.first()
-
     @classmethod
     def static_create(
         cls, *, associated=None, associated_kwargs=None, content_kwargs=None,
@@ -126,16 +117,16 @@ class BaseContent(models.Model):
         else:
             ob = cls()
         if associated:
-            ob.associated_obj = associated
+            ob.associated = associated
         else:
             from .models import AssignedContent
             ob = cls()
             if not associated_kwargs:
                 associated_kwargs = {}
             associated_kwargs["content"] = ob
-            ob.associated_obj = AssignedContent(**associated_kwargs)
+            ob.associated = AssignedContent(**associated_kwargs)
         if token_size is not None:
-            ob.associated_obj.token_generate_new_size = token_size
+            ob.associated.token_generate_new_size = token_size
         return ob
 
     @classmethod
@@ -145,13 +136,13 @@ class BaseContent(models.Model):
         """
         return pgettext("content name", name)
 
-    def get_size(self, prepared_objects=None):
+    def get_size(self, prepared_attachements=None):
         # 255 = length name, ignore potential utf8 encoding differences
         s = 255
-        if self.expose_description and self.associated:
+        if self.expose_description:
             s += len(self.associated.description)
-        if prepared_objects is not None:
-            for ob in prepared_objects.values():
+        if prepared_attachements is not None:
+            for ob in prepared_attachements.values():
                 s += ob.get_size()
         else:
             for b in self.associated.blobs.all():
@@ -270,7 +261,7 @@ class BaseContent(models.Model):
             instance = kwargs["form"].save(False)
             try:
                 self.update_used_space(
-                    instance.get_size(self.prepared_objects) - old_size
+                    instance.get_size(self.prepared_attachements) - old_size
                 )
             except ValidationError as exc:
                 kwargs["form"].add_error(None, exc)
@@ -676,7 +667,7 @@ class BaseContent(models.Model):
 
     def full_clean(self, **kwargs):
         # checked with clean
-        kwargs.setdefault("exclude", []).append("associated_rel")
+        kwargs.setdefault("exclude", []).append("associated")
         return super().full_clean(**kwargs)
 
     def clean(self):
@@ -709,69 +700,69 @@ class BaseContent(models.Model):
     def save(self, *args, **kwargs):
         if settings.DEBUG:
             assert self._content_is_cleaned, "try to save uncleaned content"
-        super().save(*args, **kwargs)
-        assignedcontent = self.associated
-        if not assignedcontent.content:
-            # add requires this, needs maybe no second save
-            assignedcontent.content = self
-            assignedcontent.info = self.get_info()
-            assignedcontent.strength = self.get_strength()
-            assignedcontent.strength_link = self.get_strength_link()
-        created = False
-        if not getattr(assignedcontent, "id", None):
+        if not getattr(self, "id", None):
             created = True
-        # update info and set content
-        assignedcontent.save()
-        if self.prepared_objects:
-            for key, obs in self.prepared_objects.items():
-                getattr(self.associated, key).set(*obs)
+        super().save(*args, **kwargs)
+        if not self.associated.content:
+            # add requires this, needs maybe no second save
+            self.associated.content = self
+            self.associated.info = self.get_info()
+            self.associated.strength = self.get_strength()
+            self.associated.strength_link = self.get_strength_link()
+        created = False
+        if self.prepared_attachements:
+            for key, obs in self.prepared_attachements.items():
+                if key == "attachedfile_set":
+                    getattr(self.associated, key).set(*obs, bulk=False)
+                else:
+                    getattr(self.associated, key).set(*obs, bulk=True)
         if created:
             to_save = set()
             # add id to info
-            if "\x1eprimary\x1e" not in assignedcontent.info:
-                assignedcontent.info = assignedcontent.info.replace(
+            if "\x1eprimary\x1e" not in self.associated.info:
+                self.associated.info = self.associated.info.replace(
                     "\x1eid=\x1e", "\x1eid={}\x1e".format(
-                        assignedcontent.id
+                        self.associated.id
                     ), 1
                 )
                 to_save.add("info")
             if (
-                assignedcontent.token_generate_new_size is None and
-                not assignedcontent.token
+                self.associated.token_generate_new_size is None and
+                not self.associated.token
             ):
                 if self.force_token_size:
-                    assignedcontent.token_generate_new_size = \
+                    self.associated.token_generate_new_size = \
                         self.force_token_size
                 else:
-                    assignedcontent.token_generate_new_size = \
+                    self.associated.token_generate_new_size = \
                         getattr(settings, "INITIAL_STATIC_TOKEN_SIZE", 30)
             # set token
-            if assignedcontent.token_generate_new_size is not None:
-                if assignedcontent.token:
+            if self.associated.token_generate_new_size is not None:
+                if self.associated.token:
                     print(
-                        "Old nonce for Content id:", assignedcontent.id,
-                        "is", assignedcontent.token
+                        "Old nonce for Content id:", self.associated.id,
+                        "is", self.associated.token
                     )
-                assignedcontent.token = create_b64_id_token(
-                    assignedcontent.id,
+                self.associated.token = create_b64_id_token(
+                    self.associated.id,
                     "_",
-                    assignedcontent.token_generate_new_size
+                    self.associated.token_generate_new_size
                 )
-                assignedcontent.token_generate_new_size = None
+                self.associated.token_generate_new_size = None
                 to_save.add("token")
-            if not self.expose_name or not assignedcontent.name:
-                assignedcontent.name = self.get_content_name()
+            if not self.expose_name or not self.associated.name:
+                self.associated.name = self.get_content_name()
                 to_save.add("name")
-            if not self.expose_description or not assignedcontent.description:
-                assignedcontent.description = self.get_content_description()
+            if not self.expose_description or not self.associated.description:
+                self.associated.description = self.get_content_description()
                 to_save.add("description")
             # second save required
             if to_save:
-                assignedcontent.save(update_fields=to_save)
+                self.associated.save(update_fields=to_save)
         # needs id first
-        s = set(assignedcontent.attached_contents.all())
+        s = set(self.associated.attached_contents.all())
         s.update(self.get_references())
-        assignedcontent.references.set(s)
+        self.associated.references.set(s)
         # message usercomponent about change
         if self.get_propagate_modified():
             self.associated.usercomponent.save(update_fields=["modified"])
@@ -780,4 +771,4 @@ class BaseContent(models.Model):
         # require cleaning again
         self._content_is_cleaned = False
         # reset to default
-        self.prepared_objects = self.__class__.prepared_objects
+        self.prepared_attachements = None

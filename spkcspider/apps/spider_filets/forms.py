@@ -5,6 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from spkcspider.apps.spider.forms.base import DataContentForm
 from spkcspider.apps.spider.fields import (
     MultipleOpenChoiceField, OpenChoiceField, SanitizedHtmlField
 )
@@ -17,7 +18,6 @@ from spkcspider.apps.spider.widgets import (
 from spkcspider.utils.settings import get_settings_func
 
 from .conf import DEFAULT_LICENSE_FILE, DEFAULT_LICENSE_TEXT, LICENSE_CHOICES
-from .models import FileFilet, TextFilet
 from .widgets import LicenseChooserWidget
 
 _extra = '' if settings.DEBUG else '.min'
@@ -32,7 +32,7 @@ def _extract_choice(item):
     return (item[0], item[1].get("name", item[0]))
 
 
-class LicenseForm(forms.ModelForm):
+class LicenseForm(DataContentForm):
     license_name = OpenChoiceField(
         label=_("License"), help_text=_("Select license"),
         choices=map(_extract_choice, LICENSE_CHOICES.items()),
@@ -54,27 +54,18 @@ class LicenseForm(forms.ModelForm):
             item_label=_("Source")
         )
     )
-
-    def save(self, commit=True):
-        self.instance.free_data["license_name"] = \
-            self.cleaned_data["license_name"]
-        self.instance.quota_data["license_url"] = \
-            self.cleaned_data["license_url"]
-        return super().save(commit)
-
-
-class FileForm(LicenseForm):
-    request = None
-    file = forms.FileField()
-
-    class Meta:
-        model = FileFilet
-        fields = []
+    free_fields = {"license_name": "other"}
+    quota_fields = {"license_url": "", "sources": list}
 
     class Media:
         js = [
             'spider_filets/licensechooser.js'
         ]
+
+
+class FileForm(LicenseForm):
+    request = None
+    file = forms.FileField()
 
     def __init__(self, request, uc=None, initial=None, **kwargs):
         if initial is None:
@@ -134,8 +125,8 @@ class FileForm(LicenseForm):
             f = AttachedFile(unique=True, name="file")
         f.file = ret["file"]
 
-        ret.prepared_objects = {
-            "files": [f]
+        ret.prepared_attachements = {
+            "attachedfile_set": [f]
         }
         return ret
 
@@ -145,17 +136,6 @@ class TextForm(LicenseForm):
         widget=TrumbowygWidget(
         ),
         localize=True
-    )
-    license_name = OpenChoiceField(
-        label=_("License"), help_text=_("Select license"),
-        choices=map(_extract_choice, LICENSE_CHOICES.items()),
-        widget=LicenseChooserWidget(licenses=LICENSE_CHOICES)
-    )
-    sources = MultipleOpenChoiceField(
-        required=False, initial=False,
-        widget=ListWidget(
-            item_label=_("Source")
-        )
     )
     editable_from = forms.ModelMultipleChoiceField(
         queryset=UserComponent.objects.all(),
@@ -173,13 +153,11 @@ class TextForm(LicenseForm):
         help_text=_("Improve ranking of this Text.")
     )
 
-    class Meta:
-        model = TextFilet
-        fields = []
+    free_fields = {"push": False}
+    free_fields.update(LicenseForm.free_fields)
 
     class Media:
         js = [
-            'spider_filets/licensechooser.js',
             'spider_filets/description_helper.js'
         ]
 
@@ -231,36 +209,28 @@ class TextForm(LicenseForm):
         # sources stay enabled
         self.fields["sources"].editable = allow_edit
 
+    def get_prepared_attachements(self):
+        if self.instance.pk:
+            b = self.instance.associated.blobs.filter(name="text").first()
+        if not b:
+            b = AttachedBlob(unique=True, name="text")
+        self.instance.blob = self.fields["text"].encode("utf-8")
+        return {
+            "attachedblob_set": [b]
+        }
+
     def save(self, commit=True):
-        ret = super().save(commit)
-        ret.free_data["push"] = self.cleaned_data.get("push", False)
         if "editable_from" in self.fields:
-            ret.free_data["editable_from"] = \
+            self.instance.free_data["editable_from"] = \
                 list(self.cleaned_data["editable_from"].values_list(
                     "id", flat=True
                 ))
-        if ret.pk:
-            b = ret.associated.blobs.filter(name="text").first()
-        if not b:
-            b = AttachedBlob(unique=True, name="text")
-        b.blob = self.fields["text"].encode("utf-8")
-        ret.prepared_objects = {
-            "blobs": [b]
-        }
-        return ret
+
+        return super().save(commit)
 
 
 class RawTextForm(LicenseForm):
     name = forms.CharField()
-    setattr(name, "hashable", True)
-    sources = MultipleOpenChoiceField(
-        required=False, initial=False
-    )
-    setattr(sources, "hashable", False)
-
-    class Meta:
-        model = TextFilet
-        fields = []
 
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
@@ -268,6 +238,7 @@ class RawTextForm(LicenseForm):
             self.instance.associated.blobs.filter(name="text").first()
         self.initial['name'] = self.instance.associated.name
         # sources should not be hashed as they don't affect result
+        setattr(self.fields['name'], "hashable", True)
         setattr(self.fields['sources'], "hashable", False)
         setattr(self.fields['license_name'], "hashable", True)
         setattr(self.fields['license_url'], "hashable", True)

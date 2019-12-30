@@ -126,6 +126,7 @@ class ProtectionRegistry(Registry):
             "AssignedProtection"
         )
         ProtectionModel = apps.get_model("spider_base", "Protection")
+        # auto initializes
         for code, val in self.items():
             ret = ProtectionModel.objects.get_or_create(
                 defaults={"ptype": val.ptype}, code=code
@@ -174,25 +175,10 @@ class ContentRegistry(Registry):
         super().__setitem__(key, value)
 
     def generate_find_func(self, key):
-        from django.apps import apps
-        from importlib import import_module
-        self._unchecked_apps.update(apps.get_app_configs())
+        if not self._populated:
+            self.populate()
 
         def find_func(key):
-            if self._unchecked_apps:
-                checked = []
-                for app in self._unchecked_apps:
-                    try:
-                        import_module(
-                            ".models",
-                            app.name
-                        )
-                    except (ImportError, ModuleNotFoundError):
-                        pass
-                    checked.append(app)
-                    if key in self:
-                        break
-                self._unchecked_apps.difference_update(checked)
             return self[key]
         self.find_func = find_func
         return self.find_func(key)

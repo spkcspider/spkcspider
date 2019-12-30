@@ -40,10 +40,10 @@ registry.fields["MultipleLocalizedChoiceField"] = \
 
 @add_by_field(registry.fields, "__name__")
 class UserContentRefField(forms.ModelChoiceField):
-    filter_strength_link = "associated_rel__usercomponent__strength__lte"
+    filter_strength_link = "associated__usercomponent__strength__lte"
     exclude_travel = (
-        "associated_rel__usercomponent__travel_protected__in",
-        "associated_rel__travel_protected__in",
+        "associated__usercomponent__travel_protected__in",
+        "associated__travel_protected__in",
     )
 
     # limit_to_uc: limit to usercomponent, if False to user
@@ -52,11 +52,11 @@ class UserContentRefField(forms.ModelChoiceField):
         from spkcspider.apps.spider.abstract_models import BaseContent
         if limit_to_uc:
             self.filters_usercomponent = (
-                "associated_rel__usercomponent",
-                "associated_rel__referenced_by__usercomponent"
+                "associated__usercomponent",
+                "associated__referenced_by__usercomponent"
             )
         else:
-            self.filters_user = ("associated_rel__usercomponent__user",)
+            self.filters_user = ("associated__usercomponent__user",)
 
         model = apps.get_model(modelname)
         if not issubclass(model, BaseContent):
@@ -78,10 +78,10 @@ class UserContentRefField(forms.ModelChoiceField):
 
 @add_by_field(registry.fields, "__name__")
 class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
-    filter_strength_link = "associated_rel__usercomponent__strength__lte"
+    filter_strength_link = "associated__usercomponent__strength__lte"
     exclude_travel = (
-        "associated_rel__usercomponent__travel_protected__in",
-        "associated_rel__travel_protected__in",
+        "associated__usercomponent__travel_protected__in",
+        "associated__travel_protected__in",
     )
 
     # limit_to_uc: limit to usercomponent, if False to user
@@ -90,11 +90,11 @@ class MultipleUserContentRefField(forms.ModelMultipleChoiceField):
         from spkcspider.apps.spider.contents import BaseContent
         if limit_to_uc:
             self.filters_usercomponent = (
-                "associated_rel__usercomponent",
-                "associated_rel__referenced_by__usercomponent"
+                "associated__usercomponent",
+                "associated__referenced_by__usercomponent"
             )
         else:
-            self.filters_user = ("associated_rel__usercomponent__user",)
+            self.filters_user = ("associated__usercomponent__user",)
 
         model = apps.get_model(
             modelname
@@ -122,8 +122,8 @@ class AnchorField(forms.ModelChoiceField):
     use_default_anchor = None
     filter_strength_link = "usercomponent__strength__lte"
     exclude_travel = (
-        "associated_rel__usercomponent__travel_protected__in",
-        "associated_rel__travel_protected__in",
+        "associated__usercomponent__travel_protected__in",
+        "associated__travel_protected__in",
     )
 
     # limit_to_uc: limit to usercomponent, if False to user

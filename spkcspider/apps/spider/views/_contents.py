@@ -182,7 +182,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 
     def get_queryset(self):
         travel = self.get_travel_for_request()
-        t_ids = travel.values_list("associated_rel__id", flat=True)
+        t_ids = travel.values_list("associated__id", flat=True)
         travel = travel.filter(
             login_protection__in=loggedin_active_tprotections
         )
@@ -807,7 +807,7 @@ class TravelProtectionManagement(UserTestMixin, UpdateView):
         url = url.groupdict()
         return get_object_or_404(
             queryset,
-            associated_rel__token=url["static_token"]
+            associated__token=url["static_token"]
         )
 
     def get(self, request, *args, **kwargs):
