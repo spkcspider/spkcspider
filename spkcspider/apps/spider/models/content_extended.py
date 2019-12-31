@@ -40,6 +40,11 @@ class DataContent(BaseContent):
     """
         inherit from it, it will maybe replace the generic relation
     """
+    # has as an exception a related name (e.g. for speeding up)
+    associated = models.OneToOneField(
+        "spider_base.AssignedContent",
+        on_delete=models.CASCADE, null=True
+    )
     quota_data = JSONField()
     free_data = JSONField()
 
@@ -61,20 +66,18 @@ class BaseAttached(models.Model):
 
     class Meta:
         abstract = True
+        constraints = [
+            models.UniqueConstraint(
+                name="%(class)s_unique",
+                fields=("content", "name"),
+                condition=models.Q(unique=True)
+            )
+        ]
 
 
 class AttachedTimeSpan(BaseAttached):
     start = models.DateTimeField()
     stop = models.DateTimeField(blank=True, null=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                name="AttachedTimeSpan_unique",
-                fields=["name"],
-                condition=models.Q(unique=True)
-            )
-        ]
 
     def get_size(self):
         return 0
@@ -88,15 +91,6 @@ class AttachedFile(BaseAttached):
         # for non bulk updates
         null=True
     )
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                name="AttachedFile_unique",
-                fields=["name"],
-                condition=models.Q(unique=True, content__isnull=False)
-            )
-        ]
 
     def get_response(self, request=None, name=None, add_extension=False):
         if not request:
@@ -135,15 +129,6 @@ class AttachedFile(BaseAttached):
 
 class AttachedBlob(BaseAttached):
     blob = models.BinaryField(default=b"", editable=True, blank=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                name="AttachedBlobSpan_unique",
-                fields=["name"],
-                condition=models.Q(unique=True)
-            )
-        ]
 
     def get_size(self):
         return len(self.blob)

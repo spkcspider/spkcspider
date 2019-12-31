@@ -10,25 +10,13 @@ __all__ = [
 ]
 
 import logging
-from base64 import b64encode
-from datetime import timedelta
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-from django.conf import settings
-from django.db import models
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.html import escape
-from django.utils.translation import gettext
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import pgettext
+from django.utils.translation import gettext, pgettext
 
-from spkcspider.constants import (
-    ActionUrl, TravelLoginType, VariantType, dangerous_login_choices,
-    travel_scrypt_params
-)
+from spkcspider.constants import ActionUrl, VariantType
 from spkcspider.utils.fields import add_by_field
 
 from .. import registry
@@ -205,124 +193,8 @@ class LinkContent(DataContent):
             return ret
 
 
-login_choices = [
-    (TravelLoginType.hide, _("Hide")),
-    (TravelLoginType.trigger_hide, _("Hide if triggered")),
-    (TravelLoginType.disable, _("Disable login")),
-    (TravelLoginType.trigger_disable, _("Disable login if triggered")),
-    (TravelLoginType.wipe, _("Wipe")),
-    (TravelLoginType.wipe_user, _("Wipe User")),
-]
-
-login_choices_dict = dict(login_choices)
-
-
-class TravelProtectionManager(models.Manager):
-    def get_active(self, now=None):
-        if not now:
-            now = timezone.now()
-        q = models.Q(active=True)
-        q &= (
-            models.Q(start__isnull=True) | models.Q(start__lte=now)
-        )
-        q &= (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
-
-        q &= (
-            models.Q(approved=True) |
-            ~models.Q(login_protection__in=dangerous_login_choices)
-        )
-        return self.filter(q)
-
-    def get_active_for_session(self, session, user, now=None):
-        q = ~models.Q(associated__info__contains="\x1epwhash=")
-        if user.is_authenticated:
-            for pw in session.get("travel_hashed_pws", []):
-                q |= models.Q(
-                    associated__info__contains="\x1epwhash=%s\x1e" % pw
-                )
-            q &= models.Q(associated__usercomponent__user=user)
-        return self.get_active(now).filter(q)
-
-    def get_active_for_request(self, request, now=None):
-        return self.get_active_for_session(request.session, request.user)
-
-    def auth(self, request, uc, now=None):
-        active = self.get_active(now).filter(
-            associated__usercomponent=uc
-        )
-
-        request.session["travel_hashed_pws"] = list(map(
-            lambda x: b64encode(Scrypt(
-                salt=settings.SECRET_KEY.encode("utf-8"),
-                backend=default_backend(),
-                **travel_scrypt_params
-            ).derive(x[:128].encode("utf-8"))).decode("ascii"),
-            request.POST.getlist("password")[:4]
-        ))
-
-        q = ~models.Q(associated__info__contains="\x1epwhash=")
-        for pw in request.session["travel_hashed_pws"]:
-            q |= models.Q(
-                associated__info__contains="\x1epwhash=%s\x1e" % pw
-            )
-
-        active = active.filter(q)
-
-        request.session["is_travel_protected"] = active.exists()
-
-        # use cached result instead querying
-        if not request.session["is_travel_protected"]:
-            return True
-
-        for i in active:
-            if TravelLoginType.disable == i.login_protection:
-                return False
-            elif TravelLoginType.trigger_hide == i.login_protection:
-                i.login_protection = TravelLoginType.hide
-                # don't re-add trigger passwords here
-                if i.associated.getflag("anonymous_deactivation"):
-                    i._encoded_form_info = \
-                        "{}anonymous_deactivation\x1e".format(
-                            i._encoded_form_info
-                        )
-                if i.associated.getflag("anonymous_trigger"):
-                    i._encoded_form_info = \
-                        "{}anonymous_trigger\x1e".format(
-                            i._encoded_form_info
-                        )
-                i.clean()
-                # assignedcontent is fully updated
-                i.save(update_fields=["login_protection"])
-            elif TravelLoginType.trigger_disable == i.login_protection:
-                i.login_protection = TravelLoginType.disable
-                # don't re-add trigger passwords here
-                if i.associated.getflag("anonymous_deactivation"):
-                    i._encoded_form_info = \
-                        "{}anonymous_deactivation\x1e".format(
-                            i._encoded_form_info
-                        )
-                if i.associated.getflag("anonymous_trigger"):
-                    i._encoded_form_info = \
-                        "{}anonymous_trigger\x1e".format(
-                            i._encoded_form_info
-                        )
-                i.clean()
-                # assignedcontent is fully updated
-                i.save(update_fields=["login_protection"])
-            elif TravelLoginType.wipe_user == i.login_protection:
-                uc.user.delete()
-                return False
-            elif TravelLoginType.wipe == i.login_protection:
-                # first components have to be deleted
-                i.protect_components.all().delete()
-                # as this deletes itself and therefor the information
-                # about affected components
-                i.protect_contents.all().delete()
-        return True
-
-
 @add_by_field(registry.contents, "_meta.model_name")
-class TravelProtection(BaseContent):
+class TravelProtection(DataContent):
     # should not be a feature as it would be detectable this way
     appearances = [
         {
@@ -335,31 +207,6 @@ class TravelProtection(BaseContent):
         }
     ]
 
-    objects = TravelProtectionManager()
-
-    active = models.BooleanField(default=False, blank=True)
-    # no start for always valid = self protection
-    start = models.DateTimeField(blank=True, null=True)
-    # no stop for no termination
-    stop = models.DateTimeField(blank=True, null=True)
-    approved = models.BooleanField(default=False, blank=True)
-
-    login_protection = models.CharField(
-        max_length=1, choices=login_choices,
-        default=TravelLoginType.hide
-    )
-
-    protect_components = models.ManyToManyField(
-        "spider_base.UserComponent", related_name="travel_protected",
-        blank=True, limit_choices_to={
-            "strength__lt": 10,
-        }
-    )
-    protect_contents = models.ManyToManyField(
-        "spider_base.AssignedContent", related_name="travel_protected",
-        blank=True
-    )
-
     force_token_size = 60
     expose_name = False
     expose_description = False
@@ -368,11 +215,11 @@ class TravelProtection(BaseContent):
     _encoded_form_info = ""
 
     class Meta:
-        default_permissions = ()
+        proxy = True
         permissions = [
             (
-                "approve_travelprotection",
-                "Can approve dangerous TravelProtections"
+                "use_dangerous_travelprotections",
+                "Can use dangerous TravelProtections"
             )
         ]
 
@@ -383,36 +230,6 @@ class TravelProtection(BaseContent):
             return _("content name", "Travel-Protection")
         else:
             return _("content name", "Self-Protection")
-
-    def get_content_name(self):
-        if self.start and self.stop:
-            if self.stop - self.start < timedelta(days=1):
-                return "{}:{}–{}".format(
-                    login_choices_dict[self.login_protection],
-                    self.start.time(),
-                    self.stop.time()
-                )
-            return "{}:{}–{}".format(
-                login_choices_dict[self.login_protection],
-                self.start.date(),
-                self.stop.date()
-            )
-        elif self.start:
-            return "{}:{}–inf".format(
-                login_choices_dict[self.login_protection],
-                self.start.date()
-            )
-        else:
-            return "{}: -".format(
-                login_choices_dict[self.login_protection]
-            )
-
-        stop = self.stop or "-"
-        return "{}:{}–{}".format(
-            login_choices_dict[self.login_protection],
-            self.start.date(),
-            stop != "-" and stop.date()
-        )
 
     def get_strength_link(self):
         return 11

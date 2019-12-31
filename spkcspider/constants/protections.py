@@ -8,6 +8,7 @@ __all__ = [
     "ProtectionType", "ProtectionStateType", "travel_scrypt_params"
 ]
 
+
 import enum
 
 MAX_TOKEN_SIZE = 90

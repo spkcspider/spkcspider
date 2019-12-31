@@ -1,7 +1,7 @@
 __all__ = (
     "filter_components", "filter_contents", "listed_variants_q",
     "machine_variants_q", "active_protections_q",
-    "info_and", "info_or"
+    "info_and", "info_or", "travelprotection_types_q"
 )
 
 from django.conf import settings
@@ -24,6 +24,12 @@ machine_variants_q = (
 active_protections_q = (
     Q(state=ProtectionStateType.enabled) |
     Q(state=ProtectionStateType.instant_fail)
+)
+
+
+travelprotection_types_q = (
+    Q(ctype__name="TravelProtection") |
+    Q(ctype__name="SelfProtection")
 )
 
 

@@ -3,8 +3,7 @@ __all__ = [
     "embed_file_default", "has_admin_permission",
     "LimitedTemporaryFileUploadHandler", "validate_url_default",
     "get_quota", "clean_verifier",
-    "clean_verifier_url", "approve_dangerous",
-    "clean_spider_inline"
+    "clean_verifier_url", "clean_spider_inline"
 ]
 
 import base64
@@ -60,12 +59,6 @@ def rate_limit_default(request, view):
 
 def allow_all_filter(*args, **kwargs):
     return True
-
-
-def approve_dangerous(form):
-    if form.request.is_staff:
-        return True
-    return None
 
 
 def get_quota(user, quota_type):

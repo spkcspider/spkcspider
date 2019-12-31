@@ -10,6 +10,17 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='travelprotection',
+            name='protect_components',
+        ),
+        migrations.RemoveField(
+            model_name='travelprotection',
+            name='protect_contents',
+        ),
+        migrations.DeleteModel(
+            name='TravelProtection',
+        ),
         migrations.DeleteModel(
             name='LinkContent',
         ),
@@ -27,5 +38,20 @@ class Migration(migrations.Migration):
                 'constraints': [],
             },
             bases=('spider_base.datacontent',),
+        ),
+        migrations.CreateModel(
+            name='TravelProtection',
+            fields=[
+            ],
+            options={
+                'proxy': True,
+                'indexes': [],
+                'constraints': [],
+            },
+            bases=('spider_base.datacontent',),
+        ),
+        migrations.AlterModelOptions(
+            name='travelprotection',
+            options={'permissions': [('use_dangerous_travelprotections', 'Can use dangerous TravelProtections')]},
         ),
     ]

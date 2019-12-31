@@ -17,11 +17,13 @@ def move_to_datacontent(apps, schema_editor):
         d.free_data["push"] = content.push
         d.save()
 
+    raise NotImplementedError
+
     for a in AssignedContent.objects.filter(
         ctype__code=TravelProtection._meta.model_name
     ):
+        d = DataContent(associated=a)
         content = TravelProtection.objects.get(id=a.object_id)
-        content.associated = a
         d.save()
 
 

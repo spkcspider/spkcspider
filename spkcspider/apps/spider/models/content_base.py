@@ -9,27 +9,36 @@ __all__ = [
 ]
 
 import logging
+from base64 import b64encode
 
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from django.apps import apps
 from django.conf import settings
 from django.core import validators
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
 from spkcspider.constants import (
-    MAX_TOKEN_B64_SIZE, VariantType, hex_size_of_bigid, static_token_matcher
+    MAX_TOKEN_B64_SIZE, TravelLoginType, VariantType,
+    hex_size_of_bigid, static_token_matcher, travel_scrypt_params
 )
 from spkcspider.utils.security import create_b64_id_token
 
 from .. import registry
 from ..abstract_models import BaseInfoModel, BaseSubUserComponentModel
+from ..queryfilters import travelprotection_types_q
 from ..validators import content_name_validator, validator_token
 
 logger = logging.getLogger(__name__)
+
+
+login_choices_dict = dict(TravelLoginType.as_choices())
 
 
 # ContentType is already occupied
@@ -85,6 +94,117 @@ class ContentVariant(models.Model):
 
     def __repr__(self):
         return "<ContentVariant: %s>" % self.__str__()
+
+
+class TravelProtectionManager(models.Manager):
+    def get_active(self, now=None):
+        if not now:
+            now = timezone.now()
+        q = models.Q(info__contains="\x1eactive\x1e")
+        q &= travelprotection_types_q
+        q &= (
+            models.Q(start__isnull=True) | models.Q(start__lte=now)
+        )
+        q &= (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
+
+        return self.filter(q)
+
+    def get_active_for_session(self, session, user, now=None):
+        q = ~models.Q(info__contains="\x1epwhash=")
+        if user.is_authenticated:
+            for pw in session.get("travel_hashed_pws", []):
+                q |= models.Q(
+                    info__contains="\x1epwhash=%s\x1e" % pw
+                )
+            q &= models.Q(usercomponent__user=user)
+        return self.get_active(now).filter(q)
+
+    def get_active_for_request(self, request, now=None):
+        return self.get_active_for_session(request.session, request.user)
+
+    def auth(self, request, uc, now=None):
+        active = self.get_active(now).filter(
+            usercomponent=uc
+        )
+
+        request.session["travel_hashed_pws"] = list(map(
+            lambda x: b64encode(Scrypt(
+                salt=settings.SECRET_KEY.encode("utf-8"),
+                backend=default_backend(),
+                **travel_scrypt_params
+            ).derive(x[:128].encode("utf-8"))).decode("ascii"),
+            request.POST.getlist("password")[:4]
+        ))
+
+        q = ~models.Q(info__contains="\x1epwhash=")
+        for pw in request.session["travel_hashed_pws"]:
+            q |= models.Q(
+                info__contains="\x1epwhash=%s\x1e" % pw
+            )
+
+        active = active.filter(q)
+
+        request.session["is_travel_protected"] = active.exists()
+
+        # use cached result instead querying
+        if not request.session["is_travel_protected"]:
+            return True
+
+        for i in active:
+            login_protection = \
+                i.associated.getlist("login_protection", amount=1)[0]
+            if TravelLoginType.disable == login_protection:
+                return False
+            elif TravelLoginType.trigger_hide == login_protection:
+                i._encoded_form_info = \
+                    "{}login_protection={}\x1e".format(
+                        i._encoded_form_info,
+                        TravelLoginType.hide
+                    )
+                # don't re-add trigger passwords here
+                if i.associated.getflag("anonymous_deactivation"):
+                    i._encoded_form_info = \
+                        "{}anonymous_deactivation\x1e".format(
+                            i._encoded_form_info
+                        )
+                if i.associated.getflag("anonymous_trigger"):
+                    i._encoded_form_info = \
+                        "{}anonymous_trigger\x1e".format(
+                            i._encoded_form_info
+                        )
+                i.clean()
+                # assignedcontent is fully updated
+                i.save(update_fields=["login_protection"])
+            elif TravelLoginType.trigger_disable == login_protection:
+                i._encoded_form_info = \
+                    "{}login_protection={}\x1e".format(
+                        i._encoded_form_info,
+                        TravelLoginType.disable
+                    )
+                # don't re-add trigger passwords here
+                if i.associated.getflag("anonymous_deactivation"):
+                    i._encoded_form_info = \
+                        "{}anonymous_deactivation\x1e".format(
+                            i._encoded_form_info
+                        )
+                if i.associated.getflag("anonymous_trigger"):
+                    i._encoded_form_info = \
+                        "{}anonymous_trigger\x1e".format(
+                            i._encoded_form_info
+                        )
+                i.clean()
+                # assignedcontent is fully updated
+                i.save(update_fields=["login_protection"])
+            elif TravelLoginType.wipe_user == login_protection:
+                uc.user.delete()
+                return False
+            elif TravelLoginType.wipe == login_protection:
+                # first components have to be deleted
+                i.protect_components.all().delete()
+                # as this deletes itself and therefor the information
+                # about affected components
+                i.protect_contents.all().delete()
+        return True
 
 
 class UserContentManager(models.Manager):
@@ -209,6 +329,30 @@ class UserContentManager(models.Manager):
             return (content, content)
 
 
+class M2MTravelProtContent(models.Model):
+    source = models.ForeignKey(
+        "spider_base.AssignedContent", related_name="+",
+        on_delete=models.CASCADE, limit_choices_to=travelprotection_types_q
+    )
+    target = models.ForeignKey(
+        "spider_base.AssignedContent", related_name="+",
+        on_delete=models.CASCADE
+    )
+
+
+class M2MTravelProtComponent(models.Model):
+    source = models.ForeignKey(
+        "spider_base.AssignedContent", related_name="+",
+        on_delete=models.CASCADE, limit_choices_to=travelprotection_types_q
+    )
+    target = models.ForeignKey(
+        "spider_base.UserComponent", related_name="+",
+        on_delete=models.CASCADE, limit_choices_to={
+            "strength__lt": 10,
+        }
+    )
+
+
 class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
     id: int = models.BigAutoField(primary_key=True, editable=False)
     # fake_level = models.PositiveIntegerField(null=False, default=0)
@@ -295,10 +439,26 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
         "self", related_name="referenced_by", editable=False,
         symmetrical=False
     )
+
+    protect_components = models.ManyToManyField(
+        "spider_base.UserComponent",
+        through=M2MTravelProtComponent, through_fields=("source", "target"),
+        related_name="travel_protected",
+        blank=True
+    )
+    protect_contents = models.ManyToManyField(
+        "self", symmetrical=False,
+        through=M2MTravelProtContent, through_fields=("source", "target"),
+        related_name="travel_protected",
+        blank=True
+    )
+
     # info extra flags:
     #  primary: primary content of type for usercomponent
     #  unlisted: not listed
+    #  anchor:
     objects = UserContentManager()
+    travelprotections = TravelProtectionManager()
 
     class Meta:
         constraints = []

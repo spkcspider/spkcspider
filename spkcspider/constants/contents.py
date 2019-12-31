@@ -75,6 +75,18 @@ class TravelLoginType(str, enum.Enum):
         # output value instead of member name
         return self.value
 
+    @classmethod
+    def as_choices(cls):
+        from django.utils.translation import gettext_lazy as _
+        return (
+            (cls.hide, _("Hide")),
+            (cls.trigger_hide, _("Hide if triggered")),
+            (cls.disable, _("Disable login")),
+            (cls.trigger_disable, _("Disable login if triggered")),
+            (cls.wipe, _("Wipe")),
+            (cls.wipe_user, _("Wipe User")),
+        )
+
 
 dangerous_login_choices = {
     TravelLoginType.wipe,

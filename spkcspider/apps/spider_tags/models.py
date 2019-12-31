@@ -180,6 +180,7 @@ class UserTagLayout(DataContent):
 
 @add_by_field(registry.contents, "_meta.model_name")
 class SpiderTag(BaseContent):
+    # cannot optimize into a DataContent, too many ForeignKeys
     _cached_references = None
     tmp_primary_anchor = None
     appearances = [

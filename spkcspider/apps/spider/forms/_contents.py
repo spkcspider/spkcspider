@@ -7,28 +7,32 @@ from datetime import timedelta
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
-
 from django import forms
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+
 from spkcspider.constants import (
     TravelLoginType, VariantType, dangerous_login_choices,
     loggedin_active_tprotections, travel_scrypt_params
 )
-from spkcspider.utils.settings import get_settings_func
 
 from ..fields import ContentMultipleChoiceField, MultipleOpenChoiceField
-from ..models import AssignedContent, TravelProtection
-from ..widgets import (
-    OpenChoiceWidget, DatetimePickerWidget, SelectizeWidget
-)
-from ._messages import time_help_text, login_protection
+from ..models import AssignedContent, UserComponent
+from ..widgets import DatetimePickerWidget, OpenChoiceWidget, SelectizeWidget
+from ._messages import login_protection as _login_protection
+from ._messages import time_help_text
 from .base import DataContentForm
 
 _extra = '' if settings.DEBUG else '.min'
+
+loggedin_active_tprotections_q = models.Q()
+for i in loggedin_active_tprotections:
+    loggedin_active_tprotections_q |= models.Q(
+        associated__info__contains="\x1elogin_protection={}\x1e".format(i)
+    )
 
 
 class LinkForm(DataContentForm):
@@ -54,10 +58,9 @@ class LinkForm(DataContentForm):
             self.initial["content"] = \
                 self.instance.associated.attached_to_content
         q = self.fields["content"].queryset
-        travel = TravelProtection.objects.get_active_for_request(request)
-        travel = travel.filter(
-            login_protection__in=loggedin_active_tprotections
-        )
+        travel = \
+            AssignedContent.travelprotections.get_active_for_request(request)
+        travel = travel.filter(loggedin_active_tprotections_q)
         self.fields["content"].queryset = q.filter(
             strength__lte=uc.strength
         ).exclude(
@@ -79,10 +82,7 @@ class LinkForm(DataContentForm):
         return super().save(commit)
 
 
-class TravelProtectionManagementForm(forms.ModelForm):
-    class Meta:
-        model = TravelProtection
-        fields = []
+class TravelProtectionManagementForm(DataContentForm):
 
     def clean(self):
         super().clean()
@@ -104,12 +104,14 @@ class TravelProtectionManagementForm(forms.ModelForm):
         return self.cleaned_data
 
 
-class TravelProtectionForm(forms.ModelForm):
+class TravelProtectionForm(DataContentForm):
     uc = None
     # self_protection = forms.ChoiceField(
     #    label=_("Self-protection"), help_text=_(_self_protection),
     #     initial="None", choices=PROTECTION_CHOICES
     # )
+
+    active = forms.BooleanField(initial=False, required=False)
     start = forms.DateTimeField(
         required=True, widget=DatetimePickerWidget(),
         help_text=time_help_text
@@ -127,7 +129,6 @@ class TravelProtectionForm(forms.ModelForm):
             }
         )
     )
-    approved = forms.BooleanField(disabled=True)
     overwrite_pws = forms.BooleanField(
         required=False, initial=False,
         help_text=_(
@@ -151,45 +152,60 @@ class TravelProtectionForm(forms.ModelForm):
             }
         )
     )
+    protect_components = forms.ModelMultipleChoiceField(
+        queryset=UserComponent.objects.all(), required=False,
+        to_field_name="name",
+        widget=SelectizeWidget(
+            allow_multiple_selected=True,
+            attrs={
+                "style": "min-width: 250px; width:100%"
+            }
+        )
+    )
+
+    login_protection = forms.ChoiceField(
+        choices=TravelLoginType.as_choices(),
+        initial=TravelLoginType.hide,
+        help_text=_login_protection
+    )
 
     master_pw = forms.CharField(
         label=_("Master Login Password"),
-        widget=forms.PasswordInput(render_value=True), required=True
+        widget=forms.PasswordInput(render_value=True), required=True,
+        help_text=_(
+            "Enter Password used for the user account"
+        )
     )
 
-    class Meta:
-        model = TravelProtection
-        fields = [
-            "active", "start", "stop", "login_protection",
-            "protect_components", "protect_contents", "trigger_pws"
-        ]
-        widgets = {
-            "protect_components": SelectizeWidget(
-                 allow_multiple_selected=True,
-                 attrs={
-                     "style": "min-width: 250px; width:100%"
-                 }
-            )
-        }
-        help_texts = {
-            "login_protection": login_protection,
-            "master_pw": _(
-                "Enter Password used for the user account"
-            )
-        }
+    quota_fields = {"trigger_pws": list}
 
     class Media:
         js = []
 
-    @classmethod
-    def _filter_selfprotection(cls, x):
+    @staticmethod
+    def _filter_selfprotection(x):
         if x[0] == TravelLoginType.disable:
             return False
         return True
 
-    def __init__(self, request, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    @staticmethod
+    def _filter_dangerousprotection(x):
+        if x[0] in dangerous_login_choices:
+            return False
+        return True
+
+    def __init__(self, request, **kwargs):
+        super().__init__(**kwargs)
         self.request = request
+        self.initial["active"] = self.associated.getflag("active")
+        if not self.request.user.has_perm(
+            "spider_base.use_dangerous_travelprotections"
+        ):
+            self.fields["login_protection"].choices = \
+                filter(
+                    self._filter_dangerousprotection,
+                    self.fields["login_protection"].choices
+                )
         if self.instance.associated.ctype.name == "TravelProtection":
             self.fields["start"].help_text = str(
                 self.fields["start"].help_text
@@ -212,12 +228,10 @@ class TravelProtectionForm(forms.ModelForm):
         if not getattr(self.instance, "id") and not self.data:
             self.initial["active"] = True
 
-        travel = TravelProtection.objects.get_active_for_request(
+        travel = AssignedContent.travelprotections.get_active_for_request(
             request
-        ).filter(login_protection__in=loggedin_active_tprotections)
+        ).filter(loggedin_active_tprotections_q)
         selfid = getattr(self.instance, "id", -1)
-        if self.initial["login_protection"] not in dangerous_login_choices:
-            del self.fields["approved"]
         if self.initial["login_protection"] == TravelLoginType.disable:
             self.initial["login_protection"] = \
                 TravelLoginType.trigger_disable
@@ -310,9 +324,10 @@ class TravelProtectionForm(forms.ModelForm):
                 self.cleaned_data.get("overwrite_pws") and
                 len(pwset) == 0
             ):
+                # = passwords are completely empty
                 self.add_error("trigger_pws", forms.ValidationError(
                     _(
-                        "Clearing trigger passwords not allowed "
+                        "Empty trigger passwords not allowed "
                         "(for Self-Protection)"
                     )
                 ))
@@ -340,17 +355,6 @@ class TravelProtectionForm(forms.ModelForm):
                 "{}anonymous_trigger\x1e".format(
                     self.instance._encoded_form_info
                 )
-        if self.cleaned_data["login_protection"] in dangerous_login_choices:
-            self.cleaned_data["approved"] = get_settings_func(
-                "SPIDER_DANGEROUS_APPROVE",
-                "spkcspider.apps.spider.functions.approve_dangerous"
-            )(self)
-            if self.cleaned_data["approved"] is False:
-                self.add_error("login_protection", forms.ValidationError(
-                    _("This login protection is not allowed")
-                ))
-        else:
-            self.cleaned_data["approved"] = True
         try:
             self.cleaned_data["protect_contents"] = \
                 self.cleaned_data["protect_contents"].exclude(
@@ -366,9 +370,13 @@ class TravelProtectionForm(forms.ModelForm):
             return False
         return isvalid
 
-    def _save_m2m(self):
-        super()._save_m2m()
-        self.instance.protect_contents.add(self.instance.associated)
+    def get_prepared_attachements(self):
+        return {
+            "protect_contents":
+                list(self.cleaned_data["protect_contents"])
+                + [self.instance.associated],
+            "protect_components": self.cleaned_data["protect_components"]
+        }
 
     def save(self, commit=True):
         self.instance.approved = bool(self.cleaned_data["approved"])
