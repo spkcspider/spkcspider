@@ -46,11 +46,6 @@ class PublicKey(DataContent):
         _ = pgettext
         return _("content name", "Public Key")
 
-    def get_size(self):
-        s = super().get_size()
-        s += len(self.key)
-        return s
-
     def get_info(self):
         ret = super().get_info()
         h = get_hashob()
@@ -201,12 +196,6 @@ class AnchorServer(AnchorMixing, DataContent):
         _ = pgettext
         return _("content name", "Server-based Anchor")
 
-    def get_size(self):
-        s = super().get_size()
-        s += 400
-        s += len(str(self.old_urls))
-        return s
-
     def get_form(self, scope):
         from .forms import AnchorServerForm
         return AnchorServerForm
@@ -243,11 +232,6 @@ class AnchorKey(AnchorMixing, DataContent):
     def localize_name(cls, name):
         _ = pgettext
         return _("content name", "Key-based Anchor")
-
-    def get_size(self):
-        s = super().get_size()
-        s += 1024
-        return s
 
     def get_content_name(self):
         name = self.associated.attached_to_content.content.get_key_name()[1]

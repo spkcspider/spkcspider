@@ -119,12 +119,12 @@ class BaseContent(models.Model):
         if associated:
             ob.associated = associated
         else:
-            from .models import AssignedContent
-            ob = cls()
+            from ..models import AssignedContent
             if not associated_kwargs:
                 associated_kwargs = {}
-            associated_kwargs["content"] = ob
-            ob.associated = AssignedContent(**associated_kwargs)
+            ob = cls(associated=AssignedContent(**associated_kwargs))
+            # abuse cached_property mechanic
+            ob.associated.__dict__["content"] = ob
         if token_size is not None:
             ob.associated.token_generate_new_size = token_size
         return ob
@@ -142,8 +142,11 @@ class BaseContent(models.Model):
         if self.expose_description:
             s += len(self.associated.description)
         if prepared_attachements is not None:
-            for ob in prepared_attachements.values():
-                s += ob.get_size()
+            for val in prepared_attachements.values():
+                if not hasattr(val, "__iter__"):
+                    val = [val]
+                for ob in val:
+                    s += ob.get_size()
         else:
             for b in self.associated.blobs.all():
                 s += b.get_size()
@@ -670,26 +673,24 @@ class BaseContent(models.Model):
         kwargs.setdefault("exclude", []).append("associated")
         return super().full_clean(**kwargs)
 
+    def update_associated(self):
+        if getattr(self, "id", None):
+            self.associated.info = self.get_info()
+            if not self.expose_name or not self.associated.name:
+                self.associated.name = self.get_content_name()
+            if not self.expose_description or not self.associated.description:
+                self.associated.description = self.get_content_description()
+        self.associated.priority = self.get_priority()
+        self.associated.strength = self.get_strength()
+        self.associated.strength_link = self.get_strength_link()
+
     def clean(self):
         _ = gettext
-        if self.associated_obj:
-            self.associated_obj.content = self
-        assignedcontent = self.associated
-        if getattr(self, "id", None):
-            assignedcontent.info = self.get_info()
-            if not self.expose_name or not assignedcontent.name:
-                assignedcontent.name = self.get_content_name()
-            if not self.expose_description or not assignedcontent.description:
-                assignedcontent.description = self.get_content_description()
-        assignedcontent.priority = self.get_priority()
-        assignedcontent.strength = self.get_strength()
-        assignedcontent.strength_link = self.get_strength_link()
+        self.update_associated()
         try:
-            assignedcontent.full_clean(exclude=["content"])
+            self.associated.full_clean(exclude=["datacontent"])
         except ValidationError as exc:
             self.associated_errors = exc
-        # persist AssignedContent for saving
-        self.associated_obj = assignedcontent
         if self.associated_errors:
             raise ValidationError(
                 _('AssignedContent validation failed'),
@@ -700,65 +701,58 @@ class BaseContent(models.Model):
     def save(self, *args, **kwargs):
         if settings.DEBUG:
             assert self._content_is_cleaned, "try to save uncleaned content"
+        created = False
         if not getattr(self, "id", None):
             created = True
+            self.associated.save()
         super().save(*args, **kwargs)
-        if not self.associated.content:
-            # add requires this, needs maybe no second save
-            self.associated.content = self
-            self.associated.info = self.get_info()
-            self.associated.strength = self.get_strength()
-            self.associated.strength_link = self.get_strength_link()
-        created = False
-        if self.prepared_attachements:
-            for key, obs in self.prepared_attachements.items():
-                if key == "attachedfile_set":
-                    getattr(self.associated, key).set(*obs, bulk=False)
-                else:
-                    getattr(self.associated, key).set(*obs, bulk=True)
+        to_save = set()
         if created:
-            to_save = set()
-            # add id to info
-            if "\x1eprimary\x1e" not in self.associated.info:
-                self.associated.info = self.associated.info.replace(
-                    "\x1eid=\x1e", "\x1eid={}\x1e".format(
-                        self.associated.id
-                    ), 1
+            # add requires this
+            self.update_associated()
+            to_save.add("info")
+            to_save.add("strength")
+            to_save.add("strength_link")
+            to_save.add("name")
+            to_save.add("description")
+        if not self.associated.token:
+            if self.force_token_size:
+                self.associated.token_generate_new_size = \
+                    self.force_token_size
+            else:
+                self.associated.token_generate_new_size = \
+                    getattr(settings, "INITIAL_STATIC_TOKEN_SIZE", 30)
+        # set token
+        if self.associated.token_generate_new_size is not None:
+            if self.associated.token:
+                print(
+                    "Old nonce for Content id:", self.associated.id,
+                    "is", self.associated.token
                 )
-                to_save.add("info")
-            if (
-                self.associated.token_generate_new_size is None and
-                not self.associated.token
-            ):
-                if self.force_token_size:
-                    self.associated.token_generate_new_size = \
-                        self.force_token_size
+            self.associated.token = create_b64_id_token(
+                self.associated.id,
+                "_",
+                self.associated.token_generate_new_size
+            )
+            self.associated.token_generate_new_size = None
+            to_save.add("token")
+        # second save if required
+        if to_save:
+            self.associated.save(update_fields=to_save)
+
+        if self.prepared_attachements:
+            for key, val in self.prepared_attachements.items():
+                if not hasattr(val, "__iter__"):
+                    val = [val]
+                for i in val:
+                    if not getattr(i, "id", None):
+                        i.content = self.associated
+                        i.save()
+                # update and remove rest
+                if key == "attachedfile_set":
+                    getattr(self.associated, key).set(val, bulk=False)
                 else:
-                    self.associated.token_generate_new_size = \
-                        getattr(settings, "INITIAL_STATIC_TOKEN_SIZE", 30)
-            # set token
-            if self.associated.token_generate_new_size is not None:
-                if self.associated.token:
-                    print(
-                        "Old nonce for Content id:", self.associated.id,
-                        "is", self.associated.token
-                    )
-                self.associated.token = create_b64_id_token(
-                    self.associated.id,
-                    "_",
-                    self.associated.token_generate_new_size
-                )
-                self.associated.token_generate_new_size = None
-                to_save.add("token")
-            if not self.expose_name or not self.associated.name:
-                self.associated.name = self.get_content_name()
-                to_save.add("name")
-            if not self.expose_description or not self.associated.description:
-                self.associated.description = self.get_content_description()
-                to_save.add("description")
-            # second save required
-            if to_save:
-                self.associated.save(update_fields=to_save)
+                    getattr(self.associated, key).set(val, bulk=True)
         # needs id first
         s = set(self.associated.attached_contents.all())
         s.update(self.get_references())

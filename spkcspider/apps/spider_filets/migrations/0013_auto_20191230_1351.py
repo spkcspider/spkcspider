@@ -34,7 +34,7 @@ def move_to_datacontent(apps, schema_editor):
         d.quota_data["license_url"] = content.license_url
         d.quota_data["sources"] = content.sources
         d.save()
-        a.attachedfile_set.create(unique=True, name="text", file=content.file)
+        a.attachedfiles.create(unique=True, name="text", file=content.file)
 
 
 class Migration(migrations.Migration):

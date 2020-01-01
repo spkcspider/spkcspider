@@ -16,7 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic.base import TemplateView
 
-from spkcspider.constants import loggedin_active_tprotections
+from spkcspider.apps.spider.queryfilters import loggedin_active_tprotections_q
 
 from ..models import AssignedContent, UserComponent
 from ._core import UCTestMixin
@@ -60,7 +60,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         now = timezone.now()
         user = self.usercomponent.user
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
 
         travel_contents_q = (
@@ -149,7 +149,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
             return HttpResponse(status=400)
 
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
 
         travel_contents_q = (

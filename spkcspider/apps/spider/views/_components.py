@@ -3,8 +3,6 @@ __all__ = (
     "ComponentIndex", "ComponentPublicIndex", "ComponentCreate",
     "ComponentUpdate"
 )
-from rdflib import XSD, Graph, Literal, URIRef
-
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -16,20 +14,19 @@ from django.urls import reverse
 from django.utils.translation import gettext
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
-from spkcspider.constants import (
-    VariantType, loggedin_active_tprotections, spkcgraph
-)
+from rdflib import XSD, Graph, Literal, URIRef
+
+from spkcspider.constants import VariantType, spkcgraph
 from spkcspider.utils.urls import merge_get_url
 
 from ..forms import UserComponentForm
 from ..models import AssignedContent, TravelProtection, UserComponent
 from ..queryfilters import (
-    filter_components, filter_contents, listed_variants_q, machine_variants_q
+    filter_components, filter_contents, listed_variants_q,
+    loggedin_active_tprotections_q, machine_variants_q
 )
 from ..serializing import paginate_stream, serialize_stream
-from ._core import (
-    ExpiryMixin, UCTestMixin, UserTestMixin
-)
+from ._core import ExpiryMixin, UCTestMixin, UserTestMixin
 
 _extra = '' if settings.DEBUG else '.min'
 
@@ -252,8 +249,8 @@ class ComponentPublicIndex(ComponentIndexBase):
 
         # doesn't matter if it is same user, lazy
         # only apply unconditional travelprotections here
-        travel = TravelProtection.objects.get_active().exclude(
-            associated__info__contains="\x1epwhash="
+        travel = AssignedContent.travelprotections.get_active().exclude(
+            info__contains="\x1epwhash="
         )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
@@ -269,7 +266,7 @@ class ComponentPublicIndex(ComponentIndexBase):
         # doesn't matter if it is same user, lazy
         # only apply unconditional travelprotections here
         travel = TravelProtection.objects.get_active().exclude(
-            associated__info__contains="\x1epwhash="
+            info__contains="\x1epwhash="
         )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
@@ -331,7 +328,7 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         )
         # doesn't matter if it is same user, lazy
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
@@ -348,7 +345,7 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         travel = self.get_travel_for_request()
         t_ids = travel.values_list("associated__id", flat=True)
         travel = travel.filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         # remove all travel protected components if not admin or
         # if is is_travel_protected
@@ -457,7 +454,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
     def get_context_data(self, **kwargs):
 
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         kwargs["content_variants"] = \
             self.usercomponent.user_info.allowed_content.filter(
@@ -491,7 +488,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         if not queryset:
             queryset = self.get_queryset()
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         return get_object_or_404(
             queryset,

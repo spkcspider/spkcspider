@@ -1,22 +1,26 @@
 document.addEventListener("DOMContentLoaded", function(){
   for (let element of document.getElementsByClassName("SpiderListTarget")){
-    let ftype = "text";
-    let ilabel = "Item";
-    try{
-      ftype = element.dataset.format_type;
-    } catch(e){
+
+    let items;
+    try {
+      items = JSON.parse(element.dataset.items);
+    } catch (e) {
       console.log(e);
-    }
-    try{
-      ilabel = element.dataset.item_label;
-    } catch(e){
-      console.log(e);
+      continue
     }
     let orig_val = [];
-    for (let count=0; count < element.options.length; count++)
-    {
-      if (element.options[count].hasAttribute("selected")){
-        orig_val.push(element.options[count].value)
+    if (items["type"] !== "object"){
+      for (let count=0; count < element.options.length; count++)
+      {
+        if (element.options[count].hasAttribute("selected")){
+          orig_val.push(element.options[count].value)
+        }
+      }
+    } else {
+      for (let count = 0; count < element.options.length; count++) {
+        if (element.options[count].hasAttribute("selected")) {
+          orig_val.push(JSON.parse(element.options[count].value))
+        }
       }
     }
     let editor = new JSONEditor(document.getElementById(`${element.id}_inner_wrapper`), {
@@ -31,17 +35,7 @@ document.addEventListener("DOMContentLoaded", function(){
           "compact": true,
         },
         "uniqueItems": true,
-        "items": {
-          "title": ilabel,
-          "type": "string",
-          "format": ftype,
-          "options": {
-            "inputAttributes": {
-              "form": "_dump_form",
-              "style": "width:100%"
-            }
-          }
-        }
+        "items": items
       }
     });
     element.style.display = "none";

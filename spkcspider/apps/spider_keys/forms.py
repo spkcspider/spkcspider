@@ -17,7 +17,7 @@ from spkcspider.apps.spider.models import (
     AssignedContent, TravelProtection, AttachedBlob
 )
 from spkcspider.apps.spider.widgets import ListWidget
-from spkcspider.constants import loggedin_active_tprotections
+from spkcspider.apps.spider.queryfilters import loggedin_active_tprotections_q
 
 _help_text_key = _(
     '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501
@@ -79,7 +79,9 @@ class AnchorServerForm(DataContentForm):
     )
     old_urls = MultipleOpenChoiceField(
         widget=ListWidget(
-            format_type="url", item_label=_("Url to superseded anchor")
+            items={
+                "format_type": "url"
+            }, item_label=_("Url to superseded anchor")
         ), required=False,
         help_text=_(
             "Superseded anchor urls"
@@ -150,7 +152,7 @@ class AnchorKeyForm(DataContentForm):
         if self.scope in ("add", "update"):
             travel = TravelProtection.objects.get_active_for_request(request)
             travel = travel.filter(
-                login_protection__in=loggedin_active_tprotections
+                loggedin_active_tprotections_q
             )
             self.fields["key"].queryset = \
                 self.fields["key"].queryset.exclude(

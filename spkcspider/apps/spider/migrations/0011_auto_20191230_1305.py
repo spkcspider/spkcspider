@@ -17,13 +17,23 @@ def move_to_datacontent(apps, schema_editor):
         d.free_data["push"] = content.push
         d.save()
 
-    raise NotImplementedError
-
     for a in AssignedContent.objects.filter(
         ctype__code=TravelProtection._meta.model_name
     ):
         d = DataContent(associated=a)
         content = TravelProtection.objects.get(id=a.object_id)
+        if content.active:
+            a.info += "active\x1e"
+        a.attachedtimespans.create(
+            unique=False,
+            name="active",
+            start=content.start,
+            stop=content.stop
+        )
+        a.protect_contents.set(content.protect_contents, bulk=True)
+        a.protect_components.set(content.protect_components, bulk=True)
+        a.save(update_fields=["info"])
+
         d.save()
 
 

@@ -231,7 +231,9 @@ class PseudoPw(forms.Form):
 
     password = MultipleOpenChoiceField(
         widget=ListWidget(
-            format_type="password",
+            items={
+                "format_type": "password"
+            },
             item_label=_("Password")
         ), required=False, initial=[""]
     )

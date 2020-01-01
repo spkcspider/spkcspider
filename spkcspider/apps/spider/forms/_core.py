@@ -17,8 +17,7 @@ from spkcspider.utils.security import (
 
 from ..conf import INITIAL_STATIC_TOKEN_SIZE, STATIC_TOKEN_CHOICES
 from ..models import (
-    AssignedContent, AuthToken, ContentVariant, Protection, TravelProtection,
-    UserComponent
+    AssignedContent, AuthToken, ContentVariant, Protection, UserComponent
 )
 from ._messages import (
     help_text_features_components, help_text_features_contents,
@@ -379,7 +378,9 @@ class UserContentForm(forms.ModelForm):
         )
         user = self.instance.usercomponent.user
 
-        travel = TravelProtection.objects.get_active_for_request(request)
+        travel = AssignedContent.travelprotections.get_active_for_request(
+            request
+        )
         query = UserComponent.objects.filter(
             user=user, strength__gte=self.instance.ctype.strength
         ).exclude(travel_protected__in=travel)

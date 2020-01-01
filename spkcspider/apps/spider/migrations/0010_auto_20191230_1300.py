@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='M2MTravelProtContent',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(editable=False,
+                                           primary_key=True, serialize=False)),
                 ('source', models.ForeignKey(limit_choices_to=models.Q(('ctype__name', 'TravelProtection'), ('ctype__name', 'SelfProtection'),
                                                                        _connector='OR'), on_delete=django.db.models.deletion.CASCADE, related_name='+', to='spider_base.AssignedContent')),
                 ('target', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
@@ -28,8 +28,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='M2MTravelProtComponent',
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(editable=False,
+                                           primary_key=True, serialize=False)),
                 ('source', models.ForeignKey(limit_choices_to=models.Q(('ctype__name', 'TravelProtection'), ('ctype__name', 'SelfProtection'),
                                                                        _connector='OR'), on_delete=django.db.models.deletion.CASCADE, related_name='+', to='spider_base.AssignedContent')),
                 ('target', models.ForeignKey(limit_choices_to={
@@ -39,7 +39,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='AttachedBlob',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(editable=False,
+                                           primary_key=True, serialize=False)),
                 ('name', models.CharField(blank=True, default='', max_length=50)),
                 ('unique', models.BooleanField(blank=True, default=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
@@ -48,9 +49,25 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='AttachedCounter',
+            fields=[
+                ('id', models.BigAutoField(editable=False,
+                                           primary_key=True, serialize=False)),
+                ('name', models.CharField(blank=True, default='', max_length=50)),
+                ('unique', models.BooleanField(blank=True, default=False)),
+                ('created', models.DateTimeField(auto_now_add=True)),
+                ('modified', models.DateTimeField(auto_now=True)),
+                ('counter', models.BigIntegerField()),
+            ],
+            options={
+                'abstract': False,
+            },
+        ),
+        migrations.CreateModel(
             name='AttachedFile',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(editable=False,
+                                           primary_key=True, serialize=False)),
                 ('name', models.CharField(blank=True, default='', max_length=50)),
                 ('unique', models.BooleanField(blank=True, default=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
@@ -61,7 +78,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='AttachedTimeSpan',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(editable=False,
+                                           primary_key=True, serialize=False)),
                 ('name', models.CharField(blank=True, default='', max_length=50)),
                 ('unique', models.BooleanField(blank=True, default=False)),
                 ('created', models.DateTimeField(auto_now_add=True)),
@@ -74,8 +92,8 @@ class Migration(migrations.Migration):
             name='DataContent',
             fields=[
                 ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False)),
-                ('quota_data', jsonfield.fields.JSONField()),
-                ('free_data', jsonfield.fields.JSONField()),
+                ('quota_data', jsonfield.fields.JSONField(default=dict, blank=True)),
+                ('free_data', jsonfield.fields.JSONField(default=dict, blank=True)),
             ],
             options={
                 'abstract': False,
@@ -111,17 +129,26 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='attachedtimespan',
             name='content',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='spider_base.AssignedContent'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='attachedtimespan_set', to='spider_base.AssignedContent'),
         ),
         migrations.AddField(
             model_name='attachedfile',
             name='content',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='spider_base.AssignedContent'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='attachedfile_set', to='spider_base.AssignedContent'),
+        ),
+        migrations.AddField(
+            model_name='attachedcounter',
+            name='content',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='attachedcounter_set', to='spider_base.AssignedContent'),
         ),
         migrations.AddField(
             model_name='attachedblob',
             name='content',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='spider_base.AssignedContent'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                    related_name='attachedblob_set', to='spider_base.AssignedContent'),
         ),
         migrations.RemoveField(
             model_name='assignedcontent',
@@ -133,6 +160,11 @@ class Migration(migrations.Migration):
                 unique=True), fields=('content', 'name'), name='attachedblob_unique'),
         ),
         migrations.AddConstraint(
+            model_name='attachedcounter',
+            constraint=models.UniqueConstraint(condition=models.Q(unique=True), fields=(
+                'content', 'name'), name='attachedcounter_unique'),
+        ),
+        migrations.AddConstraint(
             model_name='attachedfile',
             constraint=models.UniqueConstraint(condition=models.Q(
                 unique=True), fields=('content', 'name'), name='attachedfile_unique'),
@@ -141,5 +173,13 @@ class Migration(migrations.Migration):
             model_name='attachedtimespan',
             constraint=models.UniqueConstraint(condition=models.Q(unique=True), fields=(
                 'content', 'name'), name='attachedtimespan_unique'),
+        ),
+        migrations.AddConstraint(
+            model_name='attachedtimespan',
+            constraint=models.CheckConstraint(check=models.Q(('start__lte', django.db.models.expressions.F('stop')), ('start__isnull', True), ('stop__isnull', True), _connector='OR'), name='attachedtimespan_order'),
+        ),
+        migrations.AddConstraint(
+            model_name='attachedtimespan',
+            constraint=models.CheckConstraint(check=models.Q(('start__isnull', False), ('stop__isnull', False), _connector='OR'), name='attachedtimespan_exist'),
         ),
     ]

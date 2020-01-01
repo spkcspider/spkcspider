@@ -106,8 +106,6 @@ def CleanupCb(sender, instance, **kwargs):
                     exc_info=exc
                 )
                 stored_exc = exc
-        if instance.content:
-            instance.content.delete(False)
         if VariantType.feature_connect in instance.ctype.ctype:
             if VariantType.component_feature in instance.ctype.ctype:
                 if not instance.usercomponent.contents.filter(

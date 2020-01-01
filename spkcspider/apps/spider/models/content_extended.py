@@ -1,5 +1,5 @@
 __all__ = [
-    "DataContent", "AttachedFile", "AttachedTimeSpan", "AttachedBlob"
+    "DataContent", "AttachedFile", "AttachedTimespan", "AttachedBlob"
 ]
 
 import posixpath
@@ -7,6 +7,8 @@ import posixpath
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.db import models
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext
 from django.http import HttpResponseRedirect
 from jsonfield import JSONField
 from ranged_response import RangedFileResponse
@@ -45,23 +47,25 @@ class DataContent(BaseContent):
         "spider_base.AssignedContent",
         on_delete=models.CASCADE, null=True
     )
-    quota_data = JSONField()
-    free_data = JSONField()
+    quota_data = JSONField(default=dict, blank=True)
+    free_data = JSONField(default=dict, blank=True)
 
-    def get_size(self):
-        s = super().get_size()
+    def get_size(self, prepared_attachements=None):
+        s = super().get_size(prepared_attachements)
         s += len(str(self.quota_data))
         return s
 
 
 class BaseAttached(models.Model):
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     name = models.CharField(max_length=50, default="", blank=True)
     unique = models.BooleanField(default=False, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     content = models.ForeignKey(
         "spider_base.AssignedContent",
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name="%(class)s_set"
     )
 
     class Meta:
@@ -75,12 +79,58 @@ class BaseAttached(models.Model):
         ]
 
 
-class AttachedTimeSpan(BaseAttached):
+class AttachedTimespan(BaseAttached):
     start = models.DateTimeField()
     stop = models.DateTimeField(blank=True, null=True)
 
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(
+                    start__lte=models.F("stop")
+                ) |
+                models.Q(start__isnull=True) |
+                models.Q(stop__isnull=True),
+                name="%(class)s_order"
+            ),
+            models.CheckConstraint(
+                check=models.Q(
+                    start__isnull=False
+                ) |
+                models.Q(
+                    stop__isnull=False
+                ),
+                name="%(class)s_exist"
+            )
+        ] + BaseAttached.Meta.constraints
+
+    def clean(self):
+        _ = gettext
+        if self.start and self.stop:
+            if self.start < self.stop:
+                raise ValidationError(
+                    _("Stop (%(stop)s) < Start (%(start)s)"),
+                    params={
+                        "start": self.start,
+                        "stop": self.stop
+                    }
+                )
+        elif not self.start and not self.stop:
+            raise ValidationError(
+                _("Timespan empty"),
+            )
+
     def get_size(self):
-        return 0
+        # free can be abused
+        return 8
+
+
+class AttachedCounter(BaseAttached):
+    counter = models.BigIntegerField()
+
+    def get_size(self):
+        # free can be abused
+        return 4
 
 
 class AttachedFile(BaseAttached):
@@ -89,7 +139,8 @@ class AttachedFile(BaseAttached):
         "spider_base.AssignedContent",
         on_delete=models.CASCADE,
         # for non bulk updates
-        null=True
+        null=True,
+        related_name="%(class)s_set"
     )
 
     def get_response(self, request=None, name=None, add_extension=False):

@@ -4,6 +4,7 @@ __all__ = [
     "SubSectionStopWidget", "ListWidget", "DatetimePickerWidget"
 ]
 
+import json
 
 from django.conf import settings
 from django.forms import widgets
@@ -37,17 +38,23 @@ class ListWidget(widgets.SelectMultiple):
 
     def __init__(
         self, *, attrs=None, wrapper_attrs=None,
-        format_type="text", item_label=_("Item"), **kwargs
+        items=None, item_label=_("Item"), **kwargs
     ):
-        if not attrs:
+        if attrs is None:
             attrs = {"class": ""}
-        if not wrapper_attrs:
+        if wrapper_attrs is None:
             wrapper_attrs = {}
+        if items is None:
+            items = {
+                "format_type": "text",
+                "json_type": "string"
+            }
         attrs.setdefault("class", "")
         attrs["class"] += " SpiderListTarget"
-        attrs["data-format_type"] = format_type
-        # don't access them as they are lazy evaluated
-        attrs["data-item_label"] = item_label
+        # don't eval items here as they are lazy evaluated for localization
+        self.items = items
+        # don't eval item_label as it is lazy evaluated for localization
+        self.item_label = item_label
         self.wrapper_attrs = wrapper_attrs.copy()
         super().__init__(attrs=attrs, **kwargs)
 
@@ -62,6 +69,55 @@ class ListWidget(widgets.SelectMultiple):
         context['widget']['wrapper_attrs']["id"] = "{}_inner_wrapper".format(
             context['widget']['attrs']["id"]
         )
+
+        if isinstance(self.items, dict):
+            context['widget']['attrs']["data-items"] = json.dumps(
+                {
+                    "title": str(self.item_label),
+                    "type": self.items.get("json_type", "string"),
+                    "format": self.items["format_type"],
+                    "options": {
+                        "inputAttributes": {
+                            "form": "_dump_form",
+                            "style": "width:100%"
+                        },
+                        **self.items.get("options", {})
+                    }
+                }
+            )
+        elif isinstance(self.items, list):
+            context['widget']['attrs']["data-items"] = json.dumps(
+                {
+                    "title": str(self.item_label),
+                    "type": "object",
+                    "required": [
+                        *map(
+                            lambda x: x["name"],
+                            filter(
+                                lambda x: x.get("required"),
+                                self.items
+                            )
+                        )
+                    ],
+                    "properties": {
+                        (
+                            x["name"],
+                            {
+                                "title": str(x["label"]),
+                                "type": x.get("json_type", "string"),
+                                "format": x["format_type"],
+                                "options": {
+                                    "inputAttributes": {
+                                        "form": "_dump_form",
+                                        "style": "width:100%"
+                                    },
+                                    **x.get("options", {})
+                                }
+                            }
+                        ) for x in self.items
+                    }
+                }
+            )
         return context
 
     def optgroups(self, name, value, attrs=None):

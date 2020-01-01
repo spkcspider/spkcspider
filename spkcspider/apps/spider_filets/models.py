@@ -73,9 +73,6 @@ class FileFilet(LicenseMixin, DataContent):
             return 'spider_filets/file_form.html'
         return 'spider_base/view_form.html'
 
-    def get_size(self):
-        return self.file.size + super().get_size()
-
     def get_content_name(self):
         # in case no name is set
         fob = self.associated.files.get(name="file")
@@ -202,9 +199,6 @@ class TextFilet(LicenseMixin, DataContent):
 
         )
 
-    def get_size(self):
-        return len(self.text.encode("utf8")) + super().get_size()
-
     def get_form(self, scope):
         if scope in ("raw", "export", "list"):
             from .forms import RawTextForm as f
@@ -222,7 +216,7 @@ class TextFilet(LicenseMixin, DataContent):
     def get_abilities(self, context):
         _abilities = set()
         source = context.get("source", self.associated.usercomponent)
-        if source.id in self.free_data["editable_from"]:
+        if source.id in self.free_data.get("editable_from", []):
             _abilities.add("update_guest")
         return _abilities
 

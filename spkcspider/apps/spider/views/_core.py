@@ -7,6 +7,7 @@ from urllib.parse import quote_plus
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.mixins import AccessMixin
+from django.db import models
 from django.forms.widgets import Media
 from django.http import HttpResponseRedirect, HttpResponseServerError
 from django.http.response import HttpResponseBase
@@ -14,17 +15,15 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext
-from django.db import models
 
 from spkcspider.constants import (
     ProtectionType, TokenCreationError, VariantType,
-    loggedin_active_tprotections
 )
+
 from spkcspider.utils.urls import merge_get_url
 
-from ..models import (
-    AssignedContent, AuthToken, TravelProtection, UserComponent
-)
+from ..models import AssignedContent, AuthToken, UserComponent
+from ..queryfilters import loggedin_active_tprotections_q
 
 logger = logging.getLogger(__name__)
 
@@ -231,7 +230,9 @@ class UserTestMixin(ExpiryMixin, AccessMixin):
     def get_travel_for_request(self):
         if self._travel_request is None:
             self._travel_request = \
-                TravelProtection.objects.get_active_for_request(self.request)
+                AssignedContent.travelprotections.get_active_for_request(
+                    self.request
+                )
         return self._travel_request
 
     def get_context_data(self, **kwargs):
@@ -391,7 +392,7 @@ class UserTestMixin(ExpiryMixin, AccessMixin):
     ) -> bool:
         if self.request.user.is_authenticated:
             t = self.get_travel_for_request().filter(
-                login_protection__in=loggedin_active_tprotections
+                loggedin_active_tprotections_q
             ).exists()
             # auto activate but not deactivate
             if t:

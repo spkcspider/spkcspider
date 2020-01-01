@@ -21,7 +21,7 @@ from spkcspider.apps.spider.widgets import (
     SubSectionStartWidget, SubSectionStopWidget
 )
 from spkcspider.apps.spider.widgets import ListWidget
-from spkcspider.constants import loggedin_active_tprotections
+from spkcspider.apps.spider.queryfilters import loggedin_active_tprotections_q
 from spkcspider.utils.urls import merge_get_url
 
 from . import registry
@@ -111,7 +111,9 @@ def generate_form(name, layout):
     _temp_field = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url", item_label=_("Url")
+            items={
+                "format_type": "url"
+            }, item_label=_("Url")
         )
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)
@@ -120,7 +122,9 @@ def generate_form(name, layout):
     _temp_field = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier")
+            items={
+                "format_type": "url"
+            }, item_label=_("Url to Verifier")
         )
     )
     setattr(_temp_field, "spkc_datatype", XSD.anyURI)
@@ -157,7 +161,7 @@ def generate_form(name, layout):
             if request:
                 travel = TravelProtection.objects.get_active_for_request(
                     request
-                ).filter(login_protection__in=loggedin_active_tprotections)
+                ).filter(loggedin_active_tprotections_q)
             else:
                 # read only, no updates, so disable protections
                 travel = TravelProtection.objects.none()

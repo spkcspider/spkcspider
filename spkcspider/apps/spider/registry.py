@@ -193,7 +193,7 @@ class ContentRegistry(Registry):
         from django.db import models, transaction
         from django.db.utils import IntegrityError
         from django.apps import apps
-        from .contents import forbidden_names
+        from .abstract_models.contents import forbidden_names
         ContentVariant = apps.get_model("spider_base", "ContentVariant")
 
         all_content = models.Q()

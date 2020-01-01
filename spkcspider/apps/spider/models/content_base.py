@@ -103,9 +103,19 @@ class TravelProtectionManager(models.Manager):
         q = models.Q(info__contains="\x1eactive\x1e")
         q &= travelprotection_types_q
         q &= (
-            models.Q(start__isnull=True) | models.Q(start__lte=now)
+            models.Q(
+                attachedtimespan_set__start__isnull=True,
+                attachedtimespan_set__stop__gte=now
+            ) |
+            models.Q(
+                attachedtimespan_set__start__lte=now,
+                attachedtimespan_set__stop__isnull=True
+            ) |
+            models.Q(
+                attachedtimespan_set__start__lte=now,
+                attachedtimespan_set__stop__gte=now
+            )
         )
-        q &= (models.Q(stop__isnull=True) | models.Q(stop__gte=now))
 
         return self.filter(q)
 
@@ -330,6 +340,7 @@ class UserContentManager(models.Manager):
 
 
 class M2MTravelProtContent(models.Model):
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     source = models.ForeignKey(
         "spider_base.AssignedContent", related_name="+",
         on_delete=models.CASCADE, limit_choices_to=travelprotection_types_q
@@ -341,6 +352,7 @@ class M2MTravelProtContent(models.Model):
 
 
 class M2MTravelProtComponent(models.Model):
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     source = models.ForeignKey(
         "spider_base.AssignedContent", related_name="+",
         on_delete=models.CASCADE, limit_choices_to=travelprotection_types_q
@@ -496,8 +508,6 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
     # for preventing disclosure of elements
 
     def get_size(self):
-        if not self.content:
-            return 0
         return self.content.get_size()
 
     def localized_description(self):
@@ -543,6 +553,52 @@ class AssignedContent(BaseInfoModel, BaseSubUserComponentModel):
                     code='unique_together',
                 )
         super().clean()
+
+    def extended_save(self, **kwargs):
+        ret = self.save(**kwargs)
+        to_save = set()
+        # add id to info
+        if "\x1eprimary\x1e" not in self.info:
+            self.info = self.info.replace(
+                "\x1eid=\x1e", "\x1eid={}\x1e".format(
+                    self.id
+                ), 1
+            )
+            to_save.add("info")
+        if (
+            self.token_generate_new_size is None and
+            not self.token
+        ):
+            if self.content.force_token_size:
+                self.token_generate_new_size = \
+                    self.content.force_token_size
+            else:
+                self.token_generate_new_size = \
+                    getattr(settings, "INITIAL_STATIC_TOKEN_SIZE", 30)
+        # set token
+        if self.token_generate_new_size is not None:
+            if self.token:
+                print(
+                    "Old nonce for Content with id:", self.id,
+                    "is", self.token
+                )
+            self.token = create_b64_id_token(
+                self.id,
+                "_",
+                self.token_generate_new_size
+            )
+            self.token_generate_new_size = None
+            to_save.add("token")
+        if not self.content.expose_name or not self.name:
+            self.name = self.content.get_content_name()
+            to_save.add("name")
+        if not self.content.expose_description or not self.description:
+            self.description = self.content.get_content_description()
+            to_save.add("description")
+        # second save required
+        if to_save:
+            self.save(update_fields=to_save)
+        return ret
 
     @cached_property
     def content(self):

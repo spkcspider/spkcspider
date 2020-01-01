@@ -54,9 +54,12 @@ class WebConfig(DataContent):
             ActionUrl("webcfg", reverse("spider_webcfg:webconfig-view"))
         ]
 
-    def get_size(self):
+    def get_size(self, prepared_attachements=None):
         # ensure space for at least 100 bytes (for free)
-        return super().get_size() + max(len(self.config), 100) - 100
+        ret = super().get_size(prepared_attachements)
+        # hacky, use default values, TODO: improve
+        ret = max(255, ret - 255 + 100)
+        return ret
 
     def get_priority(self):
         # low priority

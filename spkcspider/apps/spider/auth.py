@@ -9,7 +9,7 @@ from django.contrib.auth.backends import ModelBackend
 from django.http import Http404
 from spkcspider.constants import MIN_PROTECTION_STRENGTH_LOGIN, ProtectionType
 
-from .models import Protection, TravelProtection, UserComponent
+from .models import Protection, AssignedContent, UserComponent
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class SpiderAuthBackend(ModelBackend):
                 pass
 
             if type(request.protections) is int:
-                if TravelProtection.objects.auth(request, uc):
+                if AssignedContent.travelprotections.auth(request, uc):
                     if request.protections < MIN_PROTECTION_STRENGTH_LOGIN:
                         logger.warning(
                             "Low login protection strength: %s, %s",

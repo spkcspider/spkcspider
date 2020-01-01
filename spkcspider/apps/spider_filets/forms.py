@@ -117,18 +117,18 @@ class FileForm(LicenseForm):
         )(self.request, ret["file"], self)
         return ret
 
-    def save(self, commit=True):
-        ret = super().save(commit)
-        if ret.pk:
-            f = ret.associated.files.filter(name="file").first()
+    def get_prepared_attachements(self):
+        f = None
+        if self.instance.pk:
+            f = self.instance.associated.attachedfile_set.filter(
+                name="file"
+            ).first()
         if not f:
             f = AttachedFile(unique=True, name="file")
-        f.file = ret["file"]
-
-        ret.prepared_attachements = {
+        f.file = self.cleaned_data["file"]
+        return {
             "attachedfile_set": [f]
         }
-        return ret
 
 
 class TextForm(LicenseForm):
@@ -139,7 +139,7 @@ class TextForm(LicenseForm):
     )
     editable_from = forms.ModelMultipleChoiceField(
         queryset=UserComponent.objects.all(),
-        required=False, initial=False,
+        required=False, initial=[],
         widget=SelectizeWidget(
             allow_multiple_selected=True,
             attrs={
@@ -175,9 +175,11 @@ class TextForm(LicenseForm):
         super().__init__(initial=initial2, **kwargs)
         if self.instance.pk:
             self.initial["text"] = \
-                self.instance.associated.blobs.filter(name="text").first()
+                self.instance.associated.attachedblob_set.filter(
+                    name="text"
+                ).first()
             if self.initial["text"] is not None:
-                self.initial["text"] = self.initial["text"].decode("utf8")
+                self.initial["text"] = self.initial["text"].blob.decode("utf8")
         if scope in ("add", "update"):
             self.fields["editable_from"].help_text = \
                 _(
@@ -210,11 +212,14 @@ class TextForm(LicenseForm):
         self.fields["sources"].editable = allow_edit
 
     def get_prepared_attachements(self):
+        b = None
         if self.instance.pk:
-            b = self.instance.associated.blobs.filter(name="text").first()
+            b = self.instance.associated.attachedblob_set.filter(
+                name="text"
+            ).first()
         if not b:
             b = AttachedBlob(unique=True, name="text")
-        self.instance.blob = self.fields["text"].encode("utf-8")
+        self.instance.blob = self.cleaned_data["text"].encode("utf-8")
         return {
             "attachedblob_set": [b]
         }
@@ -235,7 +240,9 @@ class RawTextForm(LicenseForm):
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
         self.initial["text"] = \
-            self.instance.associated.blobs.filter(name="text").first()
+            self.instance.associated.attachedblob_set.filter(
+                name="text"
+            ).first()
         self.initial['name'] = self.instance.associated.name
         # sources should not be hashed as they don't affect result
         setattr(self.fields['name'], "hashable", True)

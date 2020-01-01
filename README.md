@@ -334,7 +334,6 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
   * annotation of other pages
 
 
-
 # Thanks
 
 * Default theme uses Font Awesome by Dave Gandy - http://fontawesome.io

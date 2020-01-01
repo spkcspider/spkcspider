@@ -28,7 +28,9 @@ class TagLayoutForm(forms.ModelForm):
     )
     default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier")
+            items={
+                "format_type": "url"
+            }, item_label=_("Url to Verifier")
         ), required=False
     )
 
@@ -70,7 +72,9 @@ class TagLayoutAdminForm(forms.ModelForm):
     )
     default_verifiers = MultipleOpenChoiceField(
         widget=ListWidget(
-            format_type="url", item_label=_("Url to Verifier")
+            items={
+                "format_type": "url"
+            }, item_label=_("Url to Verifier")
         ), required=False
     )
 
@@ -100,7 +104,9 @@ class SpiderTagForm(forms.ModelForm):
     updateable_by = MultipleOpenChoiceField(
         required=False, initial=False,
         widget=ListWidget(
-            format_type="url", item_label=_("Url")
+            items={
+                "format_type": "url"
+            }, item_label=_("Url")
         )
     )
     layout = forms.ModelChoiceField(

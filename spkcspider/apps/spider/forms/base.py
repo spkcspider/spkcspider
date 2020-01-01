@@ -5,20 +5,31 @@ from django import forms
 
 
 class DataContentForm(forms.Form):
-
+    instance = None
+    # TODO: document
     free_fields = {}
+    # TODO: document
     quota_fields = {}
 
     def __init__(self, instance, initial=None, **kwargs):
         if initial is None:
             initial = {}
         super().__init__(**kwargs)
+        self.instance = instance
         self.initial.update(instance.free_data)
         self.initial.update(instance.quota_data)
         self.initial.update(initial)
 
     def get_prepared_attachements(self):
         return {}
+
+    def clean(self):
+        self.instance.full_clean()
+        return super().clean()
+
+    def save_m2m(self):
+        # stub
+        pass
 
     def save(self, commit=True):
         ret = self.instance

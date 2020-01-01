@@ -5,8 +5,6 @@ __all__ = (
 )
 
 
-from rdflib import XSD, Graph, Literal, URIRef
-
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
@@ -23,9 +21,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic.edit import CreateView, UpdateView
 from django.views.generic.list import ListView
 from next_prev import next_in_order, prev_in_order
-from spkcspider.constants import (
-    VariantType, loggedin_active_tprotections, spkcgraph, static_token_matcher
-)
+from rdflib import XSD, Graph, Literal, URIRef
+
+from spkcspider.constants import VariantType, spkcgraph, static_token_matcher
 from spkcspider.utils.fields import add_property
 from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
@@ -35,7 +33,8 @@ from ..models import (
     AssignedContent, ContentVariant, TravelProtection, UserComponent
 )
 from ..queryfilters import (
-    filter_contents, listed_variants_q, machine_variants_q
+    filter_contents, listed_variants_q, loggedin_active_tprotections_q,
+    machine_variants_q
 )
 from ..serializing import paginate_stream, serialize_stream
 from ._core import UCTestMixin, UserTestMixin
@@ -182,10 +181,8 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 
     def get_queryset(self):
         travel = self.get_travel_for_request()
-        t_ids = travel.values_list("associated__id", flat=True)
-        travel = travel.filter(
-            login_protection__in=loggedin_active_tprotections
-        )
+        t_ids = travel.values_list("id", flat=True)
+        travel = travel.filter(loggedin_active_tprotections_q)
         return super().get_queryset().filter(
             usercomponent=self.usercomponent
         ).exclude(
@@ -195,7 +192,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
 
     def get_usercomponent(self):
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         q = UserComponent.objects.all()
         if self.request.GET.get("protection", "") == "false":
@@ -213,7 +210,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         if self.request.is_owner:
             # request.user is maybe anonymous
@@ -518,7 +515,7 @@ class ContentAdd(ContentBase, CreateView):
 
     def get_usercomponent(self):
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         q = UserComponent.objects.all()
         if self.request.GET.get("protection", "") == "false":
@@ -544,15 +541,17 @@ class ContentAdd(ContentBase, CreateView):
             ucontent = context["form"].save(commit=False)
         else:
             ucontent = context["form"].instance
+        assert ucontent is ucontent.content.associated
         ret = ucontent.content.access(context)
+        assert ucontent is ucontent.content.associated
 
         # return response if content returned response
         if isinstance(ret["content"], HttpResponseBase):
             return ret["content"]
         # redirect if saving worked
         if getattr(ucontent, "id", None):
-            assert(ucontent.token)
-            assert(ucontent.usercomponent)
+            assert ucontent.token
+            assert ucontent.usercomponent
             return redirect(
                 'spider_base:ucontent-access', permanent=True,
                 token=ucontent.token, access="update"
@@ -703,7 +702,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
 
     def get_usercomponent(self):
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
         q = UserComponent.objects.all()
         if self.request.GET.get("protection", "") == "false":
@@ -722,7 +721,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
             queryset = self.get_queryset()
         # doesn't matter if it is same user, lazy
         travel = self.get_travel_for_request().filter(
-            login_protection__in=loggedin_active_tprotections
+            loggedin_active_tprotections_q
         )
 
         # required for next/previous token
