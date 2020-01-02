@@ -5,6 +5,7 @@
 {% block main_attributes %}{{block.super}} prefix="spkc: {% spkc_namespace %} xsd: http://www.w3.org/2001/XMLSchema#" resource="{{hostpart}}{{ request.path }}"{% endblock %}
 
 {% block content %}
+  {% extract_protections "protections" as protections %}
   <h2>Login</h2>
   <form action="{{ request.get_full_path }}" name="SPKCLoginForm" id="SPKCLoginForm" method="post">
     <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
@@ -18,7 +19,6 @@
     {# fieldsets don't allow horizontal scrolling #}
     <h1>{% trans 'Authenticate with' %}</h1>
     <div class="w3-padding w3-border" style="overflow-y: auto; max-height:600px">
-      {% extract_protections "protections" as protections %}
       {% for prot in protections %}
         {% include "spider_base/protections/protection_item.html" with prot=prot %}
       {% endfor %}

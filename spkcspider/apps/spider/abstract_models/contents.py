@@ -64,7 +64,10 @@ class BaseContent(models.Model):
     # use case: model with different abilities
     appearances = None
 
-    id = models.BigAutoField(primary_key=True, editable=False)
+    # autofilled
+    attached_names = set()
+
+    id: int = models.BigAutoField(primary_key=True, editable=False)
     # every content can specify its own deletion period
     deletion_period = getattr(
         settings, "SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD", timedelta(0)
@@ -148,10 +151,9 @@ class BaseContent(models.Model):
                 for ob in val:
                     s += ob.get_size()
         else:
-            for b in self.associated.blobs.all():
-                s += b.get_size()
-            for f in self.associated.files.all():
-                s += f.get_size()
+            for attached in self.attached_names:
+                for ob in getattr(self.associated, attached).all():
+                    s += ob.get_size()
         return s
 
     def get_priority(self):
@@ -702,10 +704,14 @@ class BaseContent(models.Model):
         if settings.DEBUG:
             assert self._content_is_cleaned, "try to save uncleaned content"
         created = False
+        assignedcontent = self.associated
         if not getattr(self, "id", None):
             created = True
-            self.associated.save()
+            assignedcontent.save()
+        # this changes the associated model for no reason
         super().save(*args, **kwargs)
+        # restore it here
+        self.associated = assignedcontent
         to_save = set()
         if created:
             # add requires this

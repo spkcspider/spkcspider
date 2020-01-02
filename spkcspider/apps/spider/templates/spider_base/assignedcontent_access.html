@@ -99,7 +99,7 @@
         <b>{{object}}</b> <small {% if uc.public or uc.user == request.user %}title="{% trans 'User Component:' %} {{uc}}"{% endif %}><em>({{object.ctype}})</em></small>
       {% endif %}
     </h1>
-    {% if object %}
+    {% if scope != "add" %}
       <data hidden="hidden" rel="spkc:properties">
         <data hidden="hidden" typeof="spkc:Property">
           <data hidden="hidden" property="spkc:name" datatype="xsd:string">info</data>

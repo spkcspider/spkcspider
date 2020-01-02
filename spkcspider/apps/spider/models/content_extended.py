@@ -68,6 +68,13 @@ class BaseAttached(models.Model):
         related_name="%(class)s_set"
     )
 
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if not getattr(cls._meta, "abstract", False):
+            BaseContent.attached_names.add(
+                "{}_set".format(cls._meta.model_name)
+            )
+
     class Meta:
         abstract = True
         constraints = [
