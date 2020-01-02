@@ -219,7 +219,7 @@ class TextForm(LicenseForm):
             ).first()
         if not b:
             b = AttachedBlob(unique=True, name="text")
-        self.instance.blob = self.cleaned_data["text"].encode("utf-8")
+        b.blob = self.cleaned_data["text"].encode("utf-8")
         return {
             "attachedblob_set": [b]
         }

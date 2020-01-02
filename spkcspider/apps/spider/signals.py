@@ -46,16 +46,8 @@ def DeleteContentCb(sender, instance, **_kwargs):
     """
         Connect if content can be deleted without AssignedContent
         beeing deleted.
-        Alternative (if AssignedContent is only target):
-            attached_to_content attribute
     """
-    ContentType = apps.get_model("contenttypes", "ContentType")
-    AssignedContent = apps.get_model("spider_base", "AssignedContent")
-
-    AssignedContent.objects.filter(
-        object_id=instance.id,
-        content_type=ContentType.objects.get_for_model(sender)
-    ).delete()
+    instance.associated.delete()
 
 
 def CleanupCb(sender, instance, **kwargs):

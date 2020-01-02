@@ -233,15 +233,18 @@ class TravelProtectionForm(DataContentForm):
     def __init__(self, request, **kwargs):
         super().__init__(**kwargs)
         self.request = request
-        self.initial["active"] = self.associated.getflag("active")
+        associated = self.instance.associated
+        self.initial["active"] = associated.getflag("active")
+        self.initial["login_protection"] = \
+            associated.getlist("login_protection", 1)[0]
         self.initial["anonymous_deactivation"] = \
-            self.associated.getflag("anonymous_deactivation")
+            associated.getflag("anonymous_deactivation")
         self.initial["timeplans"] = \
             [
                 json.dumps({
                     "start": x.start,
                     "stop": x.stop
-                }) for x in self.self.associated.attachedtimespan_set.filter(
+                }) for x in associated.attachedtimespan_set.filter(
                     name="active"
                 )
             ]
@@ -254,7 +257,7 @@ class TravelProtectionForm(DataContentForm):
                     self._filter_dangerousprotection,
                     self.fields["login_protection"].choices
                 )
-        if self.instance.associated.ctype.name == "TravelProtection":
+        if associated.ctype.name == "TravelProtection":
             # self.fields["start"].help_text = str(
             #     self.fields["start"].help_text
             # ).format(timezone.get_current_timezone_name())
@@ -316,10 +319,10 @@ class TravelProtectionForm(DataContentForm):
         )
         if getattr(self.instance, "id", None):
             # exlude own content
-            q_content &= ~models.Q(pk=self.instance.associated.pk)
+            q_content &= ~models.Q(pk=associated.pk)
             self.initial["anonymous_deactivation"] = \
-                self.instance.associated.getflag("anonymous_deactivation")
-            if self.instance.associated.getlist("pwhash", 1):
+                associated.getflag("anonymous_deactivation")
+            if associated.getlist("pwhash", 1):
                 self.fields["trigger_pws"].help_text = _(
                     "<span style='color:red'>Trigger passwords already set."
                     "</span>"
@@ -330,8 +333,8 @@ class TravelProtectionForm(DataContentForm):
                 )
                 del self.fields["overwrite_pws"]
         if (
-            not self.instance.associated.getlist("pwhash", 1) and
-            self.instance.associated.ctype.name == "SelfProtection"
+            not associated.getlist("pwhash", 1) and
+            associated.ctype.name == "SelfProtection"
         ):
             self.fields["trigger_pws"].required = True
         # use q for filtering (including own)

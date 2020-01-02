@@ -10,14 +10,14 @@
     <div class="">
       <hr/>
       <div class="w3-padding">
-        <b>{{object.full_license_name}}:</b> {% if object.license_url %}<a href="{{object.license_url}}">{{object.license_url}}</a>{% else %}–{% endif %}
+        <b>{{object.full_license_name}}:</b> {% if object.quota_data.license_url %}<a href="{{object.quota_data.license_url}}">{{object.quota_data.license_url}}</a>{% else %}–{% endif %}
       </div>
-      {% if object.sources %}
+      {% if object.quota_data.sources %}
         <hr/>
         <div class="w3-padding">
           <h4>{% trans 'Sources' %}</h4>
           <ul class="w3-white">
-            {% for val in object.sources %}
+            {% for val in object.quota_data.sources %}
               <li property="spkc:value" datatype="xsd:string">{{val}}</li>
             {% empty %}
               <li property="spkc:value" hidden="hidden" resource="rdf:nil"></li>

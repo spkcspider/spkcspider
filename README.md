@@ -301,6 +301,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * >=0.21: huge change in python API, http API should be backward compatible
 
 # TODO
+* fix RDF export and view of spider_tags
 * examples
 * documentation
 * test admin

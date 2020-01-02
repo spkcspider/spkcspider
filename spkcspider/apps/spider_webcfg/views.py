@@ -106,7 +106,9 @@ class WebConfigView(UCTestMixin, View):
         self.object = self.get_object()
         b = None
         if self.object.id:
-            b = self.object.associated.blobs.filter(name="config").first()
+            b = self.object.associated.attachedblob_set.filter(
+                name="config"
+            ).first()
         if not b:
             b = AttachedBlob(unique=True, name="config", blob=b"")
         return self.render_to_response(b.blob)
@@ -123,14 +125,16 @@ class WebConfigView(UCTestMixin, View):
         self.object = self.get_object()
         b = None
         if self.object.id:
-            b = self.object.associated.blobs.filter(name="config").first()
+            b = self.object.associated.attachedblob_set.filter(
+                name="config"
+            ).first()
         if not b:
             b = AttachedBlob(unique=True, name="config", blob=b"")
         old_size = self.object.get_size()
         oldconfig = b.blob
         b.blob = self.request.body
         self.object.prepared_attachements = {
-            "blobs": b
+            "attachedblob_set": b
         }
 
         # a full_clean is here not required

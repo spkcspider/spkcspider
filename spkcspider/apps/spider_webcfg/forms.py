@@ -18,7 +18,9 @@ class WebConfigForm(forms.ModelForm):
         super().__init__(**kwargs)
         b = None
         if self.object.id:
-            b = self.object.associated.blobs.filter(name="config").first()
+            b = self.object.associated.attachedblob_set.filter(
+                name="config"
+            ).first()
         if b:
             self.initial["config"] = b.blob
         self.initial["creation_url"] = \

@@ -49,7 +49,8 @@ class PublicKey(DataContent):
     def get_info(self):
         ret = super().get_info()
         h = get_hashob()
-        h.update(self.key.encode("ascii", "ignore"))
+        key = self.associated.attachedblob_set.get(name="key")
+        h.update(key.blob)
         pubkeyhash = ""
         k = self.get_key_ob()
         if k:
@@ -68,14 +69,15 @@ class PublicKey(DataContent):
         )
 
     def get_key_ob(self):
+        key = self.associated.attachedblob_set.get(name="key").blob
         try:
-            if "-----BEGIN CERTIFICATE-----" in self.key:
+            if b"-----BEGIN CERTIFICATE-----" in key:
                 pubkey = load_pem_x509_certificate(
-                    self.key.encode("utf-8"), default_backend()
+                    key, default_backend()
                 ).public_key()
             else:
                 pubkey = serialization.load_pem_public_key(
-                    self.key.encode("utf-8"), default_backend()
+                    key, default_backend()
                 )
             return pubkey
         except exceptions.UnsupportedAlgorithm:
@@ -84,12 +86,14 @@ class PublicKey(DataContent):
             pass
 
     def get_key_name(self):
+        key = self.associated.attachedblob_set.get(name="key").blob
+        key = key.decode("ascii")
         # ssh key
-        split = self.key.rsplit(" ", 1)
+        split = key.rsplit(" ", 1)
         if len(split) == 2 and "@" in split[1]:
             return split
         # other key, e.g PEM
-        return (self.key, None)
+        return (key, None)
 
     def get_content_name(self):
         name = self.get_key_name()[1]

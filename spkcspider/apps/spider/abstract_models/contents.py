@@ -417,7 +417,7 @@ class BaseContent(models.Model):
                 ))
 
     def render_serialize(self, **kwargs):
-        from .models import AssignedContent
+        from ..models import AssignedContent
         # ** creates copy of dict, so it is safe to overwrite kwargs here
 
         session_dict = {
@@ -751,9 +751,8 @@ class BaseContent(models.Model):
                 if not hasattr(val, "__iter__"):
                     val = [val]
                 for i in val:
-                    if not getattr(i, "id", None):
-                        i.content = self.associated
-                        i.save()
+                    i.content = self.associated
+                    i.save()
                 # update and remove rest
                 if key == "attachedfile_set":
                     getattr(self.associated, key).set(val, bulk=False)

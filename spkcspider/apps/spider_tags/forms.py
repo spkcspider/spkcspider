@@ -38,10 +38,16 @@ class TagLayoutForm(forms.ModelForm):
         model = TagLayout
         fields = ["name", "unique", "layout", "default_verifiers"]
 
-    usertag = None
+    usertaglayout = None
+
+    def __init__(self, usertaglayout, **kwargs):
+        self.usertaglayout = usertaglayout
+        super().__init__(**kwargs)
 
     def _save_m2m(self):
-        self.instance.usertag = self.usertag
+        self.instance.usertag = self.usertaglayout.associated
+        self.instance.name = self.usertaglayout.associated.name
+        self.instance.description = self.usertaglayout.associated.description
         self.instance.save()
         self.instance.usertag.refresh_from_db()
         return super()._save_m2m()
@@ -56,14 +62,17 @@ class TagLayoutForm(forms.ModelForm):
         values = list(map(merge_get_url, values))
         return values
 
+    def clean(self):
+        self.usertaglayout.full_clean()
+        return super().clean()
+
     def save(self, commit=True):
-        self.usertag = self.instance.usertag
         if commit:
-            self.usertag.save()
+            self.usertaglayout.save()
             self._save_m2m()
         else:
             self.save_m2m = self._save_m2m
-        return self.usertag
+        return self.usertaglayout
 
 
 class TagLayoutAdminForm(forms.ModelForm):
@@ -123,7 +132,7 @@ class SpiderTagForm(forms.ModelForm):
         index = user.usercomponent_set.get(name="index")
         self.fields["layout"].queryset = TagLayout.objects.filter(
             Q(usertag__isnull=True) |
-            Q(usertag__associated__usercomponent=index)
+            Q(usertag__usercomponent=index)
         ).order_by("name")
 
     def clean_updateable_by(self):

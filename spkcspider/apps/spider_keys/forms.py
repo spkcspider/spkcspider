@@ -55,11 +55,17 @@ class KeyForm(DataContentForm):
         setattr(self.fields['key'], "hashable", True)
 
     def get_prepared_attachements(self):
+        b = None
         if self.instance.pk:
-            b = self.instance.associated.blobs.filter(name="key").first()
+            b = self.instance.associated.attachedblob_set.filter(
+                name="key"
+            ).first()
         if not b:
             b = AttachedBlob(unique=True, name="key")
-        b.blob = self.cleaned_data["key"]
+        if isinstance(self.cleaned_data["key"], str):
+            b.blob = self.cleaned_data["key"].encode("utf8")
+        else:
+            b.blob = self.cleaned_data["key"]
 
         return {
             "attachedblob_set": [b]

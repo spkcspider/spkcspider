@@ -4,24 +4,22 @@ import logging
 import posixpath
 from collections import OrderedDict
 
-from rdflib import XSD
-
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import NON_FIELD_ERRORS
 # from django.apps import apps
 from django.db.models import Q, QuerySet
-from django.utils.translation import gettext, gettext_lazy as _
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+from rdflib import XSD
+
 from spkcspider.apps.spider.abstract_models import BaseContent
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
-from spkcspider.apps.spider.models import (
-    AssignedContent, ReferrerObject, TravelProtection
-)
-from spkcspider.apps.spider.widgets import (
-    SubSectionStartWidget, SubSectionStopWidget
-)
-from spkcspider.apps.spider.widgets import ListWidget
+from spkcspider.apps.spider.models import AssignedContent, ReferrerObject
 from spkcspider.apps.spider.queryfilters import loggedin_active_tprotections_q
+from spkcspider.apps.spider.widgets import (
+    ListWidget, SubSectionStartWidget, SubSectionStopWidget
+)
 from spkcspider.utils.urls import merge_get_url
 
 from . import registry
@@ -159,12 +157,13 @@ def generate_form(name, layout):
                 initial=_initial, **kwargs
             )
             if request:
-                travel = TravelProtection.objects.get_active_for_request(
-                    request
-                ).filter(loggedin_active_tprotections_q)
+                travel = \
+                    AssignedContent.travelprotections.get_active_for_request(
+                        request
+                    ).filter(loggedin_active_tprotections_q)
             else:
                 # read only, no updates, so disable protections
-                travel = TravelProtection.objects.none()
+                travel = AssignedContent.travelprotections.none()
                 assert(not self.data and not self.files)
 
             for field in self.fields.values():

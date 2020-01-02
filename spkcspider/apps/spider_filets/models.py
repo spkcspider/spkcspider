@@ -110,16 +110,15 @@ class FileFilet(LicenseMixin, DataContent):
         return super().render_form(**kwargs)
 
     def access_view(self, **kwargs):
-        f = self.associated.files.get(name="file")
         kwargs["object"] = self
-        kwargs["associated"] = self.associated
+        kwargs["file"] = self.associated.attachedfile_set.get(name="file").file
         kwargs["type"] = self.associated.getlist("file_type", 1)
         if kwargs["type"]:
             kwargs["type"] = kwargs["type"][0]
         else:
             kwargs["type"] = None
         if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
-            kwargs["download"] = f.file.url
+            kwargs["download"] = kwargs["file"].url
         else:
             kwargs["download"] = "{}?{}".format(
                 reverse(
@@ -228,7 +227,10 @@ class TextFilet(LicenseMixin, DataContent):
 
     def access_view(self, **kwargs):
         kwargs["object"] = self
-        kwargs["content"] = self.associated
+        kwargs["text"] = \
+            self.associated.attachedblob_set.get(name="text").blob.decode(
+                "utf8"
+            )
         return render_to_string(
             "spider_filets/text.html", request=kwargs["request"],
             context=kwargs

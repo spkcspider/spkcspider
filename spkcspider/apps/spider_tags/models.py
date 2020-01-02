@@ -53,8 +53,6 @@ class TagLayout(models.Model):
         return _("content name", "Tag Layout")
 
     def get_description(self):
-        if self.usertag:
-            return self.usertag.associated.description
         return self.description
 
     def full_clean(self, **kwargs):
@@ -84,7 +82,8 @@ class TagLayout(models.Model):
     def __str__(self):
         if self.usertag:
             return "TagLayout: %s:%s" % (
-                self.name, self.usertag.associated.usercomponent.username
+                self.name,
+                self.usertag.associated.usercomponent.username
             )
         return "TagLayout: %s" % self.name
 
@@ -120,8 +119,8 @@ class UserTagLayout(DataContent):
         """ localize and perform other transforms before rendering to user """
         return gettext(self.associated.description)
 
-    def get_size(self):
-        s = super().get_size()
+    def get_size(self, prepared_attachements=None):
+        s = super().get_size(prepared_attachements)
         s += len(str(self.layout.default_verifiers))
         s += len(str(self.layout.layout))
         return s
@@ -143,7 +142,7 @@ class UserTagLayout(DataContent):
         )
 
     def get_form(self, scope):
-        if scope in {"add", "update"}:
+        if scope in {"add", "update", "export"}:
             from .forms import TagLayoutForm
             return TagLayoutForm
         else:
@@ -163,7 +162,10 @@ class UserTagLayout(DataContent):
 
     def get_form_kwargs(self, **kwargs):
         kwargs["instance"] = self.layout
-        return super().get_form_kwargs(**kwargs)
+        ret = super().get_form_kwargs(**kwargs)
+        if kwargs["scope"] in {"add", "update", "export"}:
+            ret["usertaglayout"] = self
+        return ret
 
     def access(self, context):
         if context["scope"] == "view":
@@ -172,7 +174,9 @@ class UserTagLayout(DataContent):
 
     @property
     def layout(self):
-        tlayout = TagLayout.objects.filter(usertag=self.associated).first()
+        tlayout = None
+        if getattr(self.associated, "pk", None):
+            tlayout = TagLayout.objects.filter(usertag=self.associated).first()
         if not tlayout:
             tlayout = TagLayout(usertag=self.associated)
         return tlayout
@@ -197,7 +201,6 @@ class SpiderTag(BaseContent):
     ]
     layout = models.ForeignKey(
         TagLayout, related_name="tags", on_delete=models.PROTECT,
-
     )
     tagdata = JSONField(default=dict, blank=True)
     verified_by = JSONField(default=list, blank=True)
@@ -220,7 +223,7 @@ class SpiderTag(BaseContent):
             )
         return "%s: <%s: %s>: %s" % (
             self.localize_name("SpiderTag"),
-            self.layout.usertag.associated.usercomponent.username,
+            self.layout.usertag.usercomponent.username,
             self.layout.name,
             self.associated.id
         )
@@ -254,8 +257,8 @@ class SpiderTag(BaseContent):
             return 'spider_base/edit_form.html'
         return super().get_template_name(scope)
 
-    def get_size(self):
-        s = super().get_size()
+    def get_size(self, prepared_attachements=None):
+        s = super().get_size(prepared_attachements)
         s += len(str(self.verified_by))
         s += len(str(self.tagdata))
         return s

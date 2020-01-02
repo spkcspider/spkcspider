@@ -48,6 +48,12 @@ class DefinitionsMixin(object):
 
 
 class ExpiryMixin(DefinitionsMixin):
+    protected_objects = None
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        self.protected_objects = set()
+
     def calculate_deletion_content(self, content, del_requested):
         if content.deletion_requested:
             return {
@@ -93,8 +99,11 @@ class ExpiryMixin(DefinitionsMixin):
                     del_expired and
                     ret["deletion_date"] <= now
                 ):
-                    content.delete()
-                    return None
+                    try:
+                        content.delete()
+                        return None
+                    except models.ProtectedError:
+                        self.protected_objects.add(content)
             if content.id in ignoredids:
                 return None
             if log is not None:
@@ -140,7 +149,11 @@ class ExpiryMixin(DefinitionsMixin):
                 result["deletion_active"] and
                 result["deletion_date"] <= now
             ):
-                ob.delete()
+                try:
+                    ob.delete()
+                except models.ProtectedError:
+                    self.protected_objects.add(ob)
+                    return False
                 return True
         elif isinstance(ob, UserComponent):
             deletion_date = \
