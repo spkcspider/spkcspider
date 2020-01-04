@@ -115,8 +115,7 @@ class WebConfigView(UCTestMixin, View):
                 unique=True, name="config", blob=b"",
                 content=self.object.associated
             )
-        # django 2.2 doesn't work with memoryview
-        return self.render_to_response(b.as_bytes)
+        return self.render_to_response(b.blob)
 
     def post(self, request, *args, **kwargs):
         if (
@@ -139,8 +138,7 @@ class WebConfigView(UCTestMixin, View):
                 content=self.object.associated
             )
         old_size = self.object.get_size()
-        # django 2.2 doesn't work with memoryview
-        oldconfig = b.as_bytes
+        oldconfig = b.blob
         b.blob = self.request.body
         self.object.prepared_attachements = {
             "attachedblobs": b

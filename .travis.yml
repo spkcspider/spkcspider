@@ -16,13 +16,9 @@ branches:
   - master
   - develop
 env:
-  - DJANGO_DEP=django22
   - DJANGO_DEP=django30
   - DJANGO_DEP=djangomaster
 matrix:
-  exclude:
-    - python: "3.5"
-      env: DJANGO_DEP=djangomaster
   allow_failures:
     - env: DJANGO_DEP=djangomaster
 install:
