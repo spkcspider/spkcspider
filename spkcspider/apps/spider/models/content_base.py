@@ -549,52 +549,6 @@ class AssignedContent(BaseInfoModel, BaseSubUserModel):
                 )
         super().clean()
 
-    def extended_save(self, **kwargs):
-        ret = self.save(**kwargs)
-        to_save = set()
-        # add id to info
-        if "\x1eprimary\x1e" not in self.info:
-            self.info = self.info.replace(
-                "\x1eid=\x1e", "\x1eid={}\x1e".format(
-                    self.id
-                ), 1
-            )
-            to_save.add("info")
-        if (
-            self.token_generate_new_size is None and
-            not self.token
-        ):
-            if self.content.force_token_size:
-                self.token_generate_new_size = \
-                    self.content.force_token_size
-            else:
-                self.token_generate_new_size = \
-                    getattr(settings, "INITIAL_STATIC_TOKEN_SIZE", 30)
-        # set token
-        if self.token_generate_new_size is not None:
-            if self.token:
-                print(
-                    "Old nonce for Content with id:", self.id,
-                    "is", self.token
-                )
-            self.token = create_b64_id_token(
-                self.id,
-                "_",
-                self.token_generate_new_size
-            )
-            self.token_generate_new_size = None
-            to_save.add("token")
-        if not self.content.expose_name or not self.name:
-            self.name = self.content.get_content_name()
-            to_save.add("name")
-        if not self.content.expose_description or not self.description:
-            self.description = self.content.get_content_description()
-            to_save.add("description")
-        # second save required
-        if to_save:
-            self.save(update_fields=to_save)
-        return ret
-
     @cached_property
     def content(self):
         return self.ctype.installed_class.objects.get(associated=self)

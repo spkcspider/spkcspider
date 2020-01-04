@@ -746,8 +746,6 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
         )
         ob.previous_object = prev_in_order(ob, queryset2)
         ob.next_object = next_in_order(ob, queryset2)
-        # for receiving updates without refresh_from_db
-        ob.content.associated_obj = ob
         return ob
 
     def render_to_response(self, context):
