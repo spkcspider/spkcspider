@@ -219,13 +219,13 @@ class SpiderTag(BaseContent):
             return "%s: <%s>: %s" % (
                 self.localize_name("SpiderTag"),
                 self.layout.name,
-                self.associated.id
+                self.associated_id
             )
         return "%s: <%s: %s>: %s" % (
             self.localize_name("SpiderTag"),
             self.layout.usertag.usercomponent.username,
             self.layout.name,
-            self.associated.id
+            self.associated_id
         )
 
     @classmethod
@@ -278,7 +278,7 @@ class SpiderTag(BaseContent):
             )(context["request"], self):
                 _abilities.add("verify")
             if self.updateable_by.filter(
-                id=context["request"].auth_token.referrer.id
+                id=context["request"].auth_token.referrer_id
             ).exists():
                 _abilities.add("push_update")
 

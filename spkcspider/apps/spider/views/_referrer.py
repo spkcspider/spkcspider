@@ -291,7 +291,7 @@ class ReferrerMixin(object):
             token.persist = 0
             # if possible, pin to anchor
             if self.usercomponent.primary_anchor:
-                token.persist = self.usercomponent.primary_anchor.id
+                token.persist = self.usercomponent.primary_anchor_id
         else:
             token.persist = -1
 

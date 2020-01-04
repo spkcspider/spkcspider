@@ -177,14 +177,14 @@ class AnchorMixing(object):
         """ returns id of content, server """
         # security: id can only be faked by own server
         # this should never happen, except with admin access to server
-        if not self.associated.id:
+        if not self.associated_id:
             return None
         ret = urljoin(
             "{}://{}".format(
                 get_anchor_scheme(), get_anchor_domain()
             ), reverse(
                 "spider_keys:anchor-permanent",
-                kwargs={"pk": self.associated.id}
+                kwargs={"pk": self.associated_id}
             )
         )
         return ret
@@ -214,7 +214,7 @@ class AnchorServer(AnchorMixing, DataContent):
         return AnchorServerForm
 
     def get_content_name(self):
-        return "Anchor: {}".format(self.associated.id)
+        return "Anchor: {}".format(self.associated_id)
 
     def access_anchor(self, **kwargs):
         if self.new_url:

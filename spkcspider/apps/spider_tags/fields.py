@@ -163,7 +163,7 @@ class AnchorField(forms.ModelChoiceField):
 
     def tagdata_from_value(self, obj):
         if obj:
-            return obj.associated.id
+            return obj.associated_id
         return None
 
     def label_from_instance(self, obj):

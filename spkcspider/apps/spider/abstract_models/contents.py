@@ -169,7 +169,7 @@ class BaseContent(models.Model):
     def get_content_name(self):
         return "{}_{}".format(
             self.localize_name(self.associated.ctype.name),
-            self.associated.id
+            self.associated_id
         )
 
     def get_content_description(self):
@@ -434,7 +434,7 @@ class BaseContent(models.Model):
         g.namespace_manager.bind("spkc", spkcgraph, replace=True)
 
         p = paginate_stream(
-            AssignedContent.objects.filter(id=self.associated.id),
+            AssignedContent.objects.filter(id=self.associated_id),
             getattr(
                 settings, "SPIDER_SERIALIZED_PER_PAGE",
                 settings.SPIDER_OBJECTS_PER_PAGE
@@ -658,7 +658,7 @@ class BaseContent(models.Model):
         if not unique:
             idtag = "id=\x1e"  # placeholder
             if getattr(self.associated, "id", None):
-                idtag = "id={}\x1e".format(self.associated.id)
+                idtag = "id={}\x1e".format(self.associated_id)
         unlistedtag = ""
         if unlisted:
             unlistedtag = "unlisted\x1e"
@@ -726,11 +726,11 @@ class BaseContent(models.Model):
         if self.associated.token_generate_new_size is not None:
             if self.associated.token:
                 print(
-                    "Old nonce for Content id:", self.associated.id,
+                    "Old nonce for Content id:", self.associated_id,
                     "is", self.associated.token
                 )
             self.associated.token = create_b64_id_token(
-                self.associated.id,
+                self.associated_id,
                 "_",
                 self.associated.token_generate_new_size
             )

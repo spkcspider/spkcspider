@@ -134,10 +134,10 @@ def UpdateAnchorComponentCb(sender, instance, raw=False, **kwargs):
         if instance.primary_anchor:
             persist = 0
             if old.primary_anchor:
-                persist = old.primary_anchor.id
+                persist = old.primary_anchor_id
             AuthToken.objects.filter(
                 persist=persist
-            ).update(persist=instance.primary_anchor.id)
+            ).update(persist=instance.primary_anchor_id)
             instance.primary_anchor.referenced_by.add(
                 AssignedContent.objects.filter(
                     usercomponent=instance,
@@ -146,7 +146,7 @@ def UpdateAnchorComponentCb(sender, instance, raw=False, **kwargs):
             )
         elif old.primary_anchor:
             AuthToken.objects.filter(
-                persist=old.primary_anchor.id
+                persist=old.primary_anchor_id
             ).update(persist=0)
 
             old.primary_anchor.referenced_by.clear(

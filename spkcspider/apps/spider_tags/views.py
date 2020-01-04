@@ -94,8 +94,8 @@ class PushTagView(UCTestMixin, FormView):
         self.object.save()
         form.save_m2m()
         self.object.updateable_by.add(self.request.auth_token.referrer)
-        assert(self.object.associated.id)
-        assert(self.object.associated.token)
+        assert self.object.associated_id
+        assert self.object.associated.token
         ret = HttpResponseRedirect(
             redirect_to="{}?token={}".format(
                 reverse(
