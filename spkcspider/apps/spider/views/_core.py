@@ -32,10 +32,7 @@ class DefinitionsMixin(object):
     user_model = None
 
     def get_context_data(self, **kwargs):
-        kwargs["raw_update_type"] = VariantType.raw_update
-        kwargs["component_feature_type"] = VariantType.component_feature
-        kwargs["content_feature_type"] = VariantType.content_feature
-        kwargs["no_export_type"] = VariantType.no_export
+        kwargs["VariantType"] = VariantType
         kwargs["hostpart"] = "{}://{}".format(
             self.request.scheme, self.request.get_host()
         )

@@ -70,10 +70,6 @@ class ContentVariant(models.Model):
         return registry.feature_urls[self]
 
     @property
-    def unique_for_component(self):
-        return VariantType.unique.value in self.ctype
-
-    @property
     def is_feature(self):
         return (
             VariantType.component_feature.value in self.ctype or

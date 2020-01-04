@@ -9,7 +9,7 @@
       {% endblocktrans %}</span></div></div>
     </span>
     {% else %}
-    <a rel="nofollow" style="margin:2px;" class="w3-button {% if variant in content_variants_used %}{% if variant.unique_for_component %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' token=uc.token type=variant.name %}?{{sanitized_GET}}" >
+    <a rel="nofollow" style="margin:2px;" class="w3-button {% if variant in content_variants_used %}{% if VariantType.unique.value in variant.ctype %}color-used-and-unique-contentvariant{% else %}color-used-contentvariant{% endif %}{% else %}color-fresh-contentvariant{% endif %}" href="{% url 'spider_base:ucontent-add' token=uc.token type=variant.name %}?{{sanitized_GET}}" >
       <b style="margin-right:5px" aria-hidden="true">+</b>{{variant}}
     </a>
     {% endif %}

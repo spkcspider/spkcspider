@@ -26,7 +26,7 @@
         {% trans 'Update' %}
       {% endif %}
     </button>
-    {% if scope == "update" and raw_update_type in object.ctype.ctype %}
+    {% if scope == "update" and VariantType.raw_update in object.ctype.ctype %}
       <a class="w3-button w3-grey" onclick="if(document.readyState === 'complete'){open_rawupdate_qrmodal();}; return false;" href="#">
         <i class="fas fa-settings" aria-hidden="true"></i>
         {% trans 'Update Raw Content' %}
@@ -48,7 +48,7 @@
 
 {% block outercontent %}
 {{block.super}}
-{% if scope == "update" and raw_update_type in object.ctype.ctype %}
+{% if scope == "update" and VariantType.raw_update in object.ctype.ctype %}
   {% url 'spider_base:ucontent-access' token=object.token access='raw_update' as rawupdatelink %}
   {% include "spider_base/partials/rawupdate_modal.html" with rawupdatelink=rawupdatelink %}
 {% endif %}
