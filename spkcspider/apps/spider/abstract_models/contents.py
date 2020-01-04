@@ -140,6 +140,7 @@ class BaseContent(models.Model):
         return pgettext("content name", name)
 
     def get_size(self, prepared_attachements=None):
+        from ..models.content_extended import BaseAttached
         # 255 = length name, ignore potential utf8 encoding differences
         s = 255
         if self.expose_description:
@@ -149,7 +150,8 @@ class BaseContent(models.Model):
                 if not hasattr(val, "__iter__"):
                     val = [val]
                 for ob in val:
-                    s += ob.get_size()
+                    if isinstance(ob, BaseAttached):
+                        s += ob.get_size()
         else:
             for attached in self.attached_names:
                 for ob in getattr(self.associated, attached).all():
@@ -194,18 +196,15 @@ class BaseContent(models.Model):
     def get_propagate_modified(self):
         return "\x1eunlisted\x1e" not in self.associated.info
 
-    def get_instance_form(self, context):
-        return self
-
     def get_form_kwargs(
         self, request, instance=None, disable_data=False, **kwargs
     ):
         """Return the keyword arguments for instantiating the form."""
         fkwargs = {}
-        if instance is None:
-            fkwargs["instance"] = self.get_instance_form(kwargs)
-        elif instance:
+        if instance:
             fkwargs["instance"] = instance
+        else:
+            fkwargs["instance"] = self
 
         if not disable_data and request.method in ('POST', 'PUT'):
             fkwargs.update({
@@ -707,20 +706,15 @@ class BaseContent(models.Model):
         assignedcontent = self.associated
         if not getattr(self, "id", None):
             created = True
+            # create the model for saving BaseContent
             assignedcontent.save()
         # this changes the associated model for no reason
         super().save(*args, **kwargs)
         # restore it here
         self.associated = assignedcontent
-        to_save = set()
         if created:
             # add requires this
             self.update_associated()
-            to_save.add("info")
-            to_save.add("strength")
-            to_save.add("strength_link")
-            to_save.add("name")
-            to_save.add("description")
         if not self.associated.token:
             if self.force_token_size:
                 self.associated.token_generate_new_size = \
@@ -741,23 +735,24 @@ class BaseContent(models.Model):
                 self.associated.token_generate_new_size
             )
             self.associated.token_generate_new_size = None
-            to_save.add("token")
-        # second save if required
-        if to_save:
-            self.associated.save(update_fields=to_save)
+        # save associated
+        self.associated.save()
 
         if self.prepared_attachements:
             for key, val in self.prepared_attachements.items():
                 if not hasattr(val, "__iter__"):
                     val = [val]
+                pks = set()
                 for i in val:
-                    i.content = self.associated
                     i.save()
-                # update and remove rest
-                if key == "attachedfile_set":
-                    getattr(self.associated, key).set(val, bulk=False)
-                else:
-                    getattr(self.associated, key).set(val, bulk=True)
+                    pks.add(i.pk)
+                # remove rest (if foreignkey)
+                fieldmanager = getattr(self.associated, key)
+                field = self.associated._meta.get_field(key)
+                if field.many_to_many:
+                    fieldmanager.set(val)
+                elif field.one_to_many:
+                    fieldmanager.exclude(pk__in=pks).delete()
         # needs id first
         s = set(self.associated.attached_contents.all())
         s.update(self.get_references())

@@ -232,8 +232,8 @@ def has_admin_permission(self, request):
         return False
     # user is authenticate now
     assert(request.user.is_authenticated)
-    from .models import TravelProtection as TravelProtectionContent
-    t = TravelProtectionContent.objects.get_active_for_request(
+    from .models import AssignedContent
+    t = AssignedContent.travel.get_active_for_request(
         request
     ).exists()
     # auto activate but not deactivate

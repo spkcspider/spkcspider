@@ -56,7 +56,7 @@ class SpiderAuthBackend(ModelBackend):
                 pass
 
             if type(request.protections) is int:
-                if AssignedContent.travelprotections.auth(request, uc):
+                if AssignedContent.travel.auth(request, uc):
                     if request.protections < MIN_PROTECTION_STRENGTH_LOGIN:
                         logger.warning(
                             "Low login protection strength: %s, %s",

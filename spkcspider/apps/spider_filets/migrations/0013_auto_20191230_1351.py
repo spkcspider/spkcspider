@@ -22,7 +22,7 @@ def move_to_datacontent(apps, schema_editor):
         d.quota_data["license_url"] = content.license_url
         d.quota_data["sources"] = content.sources
         d.save()
-        a.attachedblob_set.create(
+        a.attachedblobs.create(
             unique=True, name="text", blob=content.text.encode("utf8")
         )
     for a in AssignedContent.objects.filter(

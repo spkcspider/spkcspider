@@ -81,7 +81,11 @@ class FileForm(LicenseForm):
         super().__init__(initial=initial2, **kwargs)
         if self.instance.pk:
             self.initial["file"] = \
-                self.instance.associated.files.filter(name="file").first()
+                self.instance.associated.attachedfiles.filter(
+                    name="file"
+                ).first()
+            if self.initial["file"]:
+                self.initial["file"] = self.initial["file"].file
         setattr(self.fields['file'], "hashable", True)
         # sources should not be hashed as they don't affect result
         setattr(self.fields['sources'], "hashable", False)
@@ -118,16 +122,20 @@ class FileForm(LicenseForm):
         return ret
 
     def get_prepared_attachements(self):
+        if "file" not in self.changed_data:
+            return {}
         f = None
         if self.instance.pk:
-            f = self.instance.associated.attachedfile_set.filter(
+            f = self.instance.associated.attachedfiles.filter(
                 name="file"
             ).first()
         if not f:
-            f = AttachedFile(unique=True, name="file")
+            f = AttachedFile(
+                unique=True, name="file", content=self.instance.associated
+            )
         f.file = self.cleaned_data["file"]
         return {
-            "attachedfile_set": [f]
+            "attachedfiles": [f]
         }
 
 
@@ -175,7 +183,7 @@ class TextForm(LicenseForm):
         super().__init__(initial=initial2, **kwargs)
         if self.instance.pk:
             self.initial["text"] = \
-                self.instance.associated.attachedblob_set.filter(
+                self.instance.associated.attachedblobs.filter(
                     name="text"
                 ).first()
             if self.initial["text"] is not None:
@@ -212,16 +220,20 @@ class TextForm(LicenseForm):
         self.fields["sources"].editable = allow_edit
 
     def get_prepared_attachements(self):
+        if "text" not in self.changed_data:
+            return {}
         b = None
         if self.instance.pk:
-            b = self.instance.associated.attachedblob_set.filter(
+            b = self.instance.associated.attachedblobs.filter(
                 name="text"
             ).first()
         if not b:
-            b = AttachedBlob(unique=True, name="text")
+            b = AttachedBlob(
+                unique=True, name="text", content=self.instance.associated
+            )
         b.blob = self.cleaned_data["text"].encode("utf-8")
         return {
-            "attachedblob_set": [b]
+            "attachedblobs": [b]
         }
 
     def save(self, commit=True):
@@ -240,7 +252,7 @@ class RawTextForm(LicenseForm):
     def __init__(self, request, source=None, scope=None, **kwargs):
         super().__init__(**kwargs)
         self.initial["text"] = \
-            self.instance.associated.attachedblob_set.filter(
+            self.instance.associated.attachedblobs.filter(
                 name="text"
             ).first()
         self.initial['name'] = self.instance.associated.name

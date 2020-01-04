@@ -158,12 +158,12 @@ def generate_form(name, layout):
             )
             if request:
                 travel = \
-                    AssignedContent.travelprotections.get_active_for_request(
+                    AssignedContent.travel.get_active_for_request(
                         request
                     ).filter(loggedin_active_tprotections_q)
             else:
                 # read only, no updates, so disable protections
-                travel = AssignedContent.travelprotections.none()
+                travel = AssignedContent.travel.none()
                 assert(not self.data and not self.files)
 
             for field in self.fields.values():

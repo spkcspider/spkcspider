@@ -378,7 +378,7 @@ class UserContentForm(forms.ModelForm):
         )
         user = self.instance.usercomponent.user
 
-        travel = AssignedContent.travelprotections.get_active_for_request(
+        travel = AssignedContent.travel.get_active_for_request(
             request
         )
         query = UserComponent.objects.filter(

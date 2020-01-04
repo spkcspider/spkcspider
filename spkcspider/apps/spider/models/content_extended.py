@@ -1,5 +1,6 @@
 __all__ = [
-    "DataContent", "AttachedFile", "AttachedTimespan", "AttachedBlob"
+    "DataContent", "BaseAttached", "AttachedFile", "AttachedTimespan",
+    "AttachedBlob"
 ]
 
 import posixpath
@@ -27,7 +28,7 @@ def get_file_path(instance, filename):
     for _i in range(0, 100):
         ret_path = default_storage.generate_filename(
             posixpath.join(
-                ret, str(instance.associated.usercomponent.user.pk),
+                ret, str(instance.content.usercomponent.user.pk),
                 create_b64_token(FILE_TOKEN_SIZE), filename.lstrip(".")
             )
         )
@@ -65,7 +66,7 @@ class BaseAttached(models.Model):
     content = models.ForeignKey(
         "spider_base.AssignedContent",
         on_delete=models.CASCADE,
-        related_name="%(class)s_set"
+        related_name="%(class)ss"
     )
 
     def __init_subclass__(cls, **kwargs):
@@ -114,7 +115,7 @@ class AttachedTimespan(BaseAttached):
     def clean(self):
         _ = gettext
         if self.start and self.stop:
-            if self.start < self.stop:
+            if self.stop < self.start:
                 raise ValidationError(
                     _("Stop (%(stop)s) < Start (%(start)s)"),
                     params={
@@ -142,13 +143,6 @@ class AttachedCounter(BaseAttached):
 
 class AttachedFile(BaseAttached):
     file = models.FileField(upload_to=get_file_path, null=False, blank=False)
-    content = models.ForeignKey(
-        "spider_base.AssignedContent",
-        on_delete=models.CASCADE,
-        # for non bulk updates
-        null=True,
-        related_name="%(class)s_set"
-    )
 
     def get_response(self, request=None, name=None, add_extension=False):
         if not request:

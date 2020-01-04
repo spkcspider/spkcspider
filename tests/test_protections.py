@@ -1,19 +1,21 @@
 import os
+import json
 from base64 import b64encode
-from datetime import datetime as dt
 from datetime import timedelta as td
 
 from rdflib import XSD, Graph, Literal, URIRef
 
 from django.test import override_settings
+from django.contrib.auth.models import Permission
 from django.urls import reverse
+from django.utils import timezone
 from django_webtest import TransactionWebTest
 from spkcspider.apps.spider.models import UserComponent
 from spkcspider.apps.spider.protections import _pbkdf2_params
 from spkcspider.apps.spider.signals import update_dynamic
 from spkcspider.apps.spider_accounts.models import SpiderUser
 from spkcspider.constants import (
-    ProtectionStateType, TravelLoginType, spkcgraph
+    ProtectionStateType, TravelProtectionType, spkcgraph
 )
 from spkcspider.utils.security import aesgcm_pbkdf2_cryptor
 
@@ -224,6 +226,10 @@ class TravelProtectionTest(TransactionWebTest):
         self.user = SpiderUser.objects.get(
             username="testuser1"
         )
+        permission = Permission.objects.get(
+            codename='use_dangerous_travelprotections'
+        )
+        self.user.user_permissions.add(permission)
         update_dynamic.send_robust(self)
 
     def test_simple_login_without_travelprotection(self):
@@ -266,8 +272,12 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
         form = response.forms["main_form"]
-        form.set("start", dt.utcnow()-td(days=1))
-        form.set("protect_components", (home.id,))
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("protect_components", (home.name,))
         form.set("master_pw", "abc")
         response = form.submit().follow()
         self.assertEqual(response.status_code, 200)
@@ -305,9 +315,13 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
         form = response.forms["main_form"]
-        form.set("start", dt.utcnow()-td(days=1))
-        form.set("login_protection", TravelLoginType.trigger_hide)
-        form.set("protect_components", (home.id,))
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("travel_protection_type", TravelProtectionType.trigger_hide)
+        form.set("protect_components", (home.name,))
         form.set("master_pw", "abc")
         form["trigger_pws"].force_value(("abc",))
         response = form.submit()
@@ -364,8 +378,12 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
         form = response.forms["main_form"]
-        form.set("start", dt.utcnow()-td(days=1))
-        form.set("protect_components", (home.id,))
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("protect_components", (home.name,))
         form.set("master_pw", "abc")
         form["trigger_pws"].force_value(("abc",))
         response = form.submit()
@@ -402,7 +420,7 @@ class TravelProtectionTest(TransactionWebTest):
             g
         )
 
-    def test_hide_with_failing_trigger(self):
+    def test_hide_with_wrong_pw(self):
         index = self.user.usercomponent_set.filter(name="index").first()
         home = self.user.usercomponent_set.filter(name="home").first()
         createurl = reverse(
@@ -415,8 +433,13 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
         form = response.forms["main_form"]
-        form.set("start", dt.utcnow()-td(days=1))
-        form.set("protect_components", (home.id,))
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("travel_protection_type", TravelProtectionType.hide)
+        form.set("protect_components", (home.name,))
         form.set("master_pw", "abc")
         form["trigger_pws"].force_value(("nope",))
         response = form.submit()
@@ -467,9 +490,13 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
         form = response.forms["main_form"]
-        form.set("start", dt.utcnow()-td(days=1))
-        form.set("login_protection", TravelLoginType.wipe)
-        form.set("protect_components", (home.id,))
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("travel_protection_type", TravelProtectionType.wipe)
+        form.set("protect_components", (home.name,))
         form.set("master_pw", "abc")
         response = form.submit()
 
@@ -481,22 +508,24 @@ class TravelProtectionTest(TransactionWebTest):
         # resets session
         self.app.reset()
 
-        # needs approval
-        response = self.app.get(reverse("auth:login"))
-        form = response.forms["SPKCLoginForm"]
-        form.set("username", "testuser1")
-        form["password"].force_value("abc")
-        response = form.submit().follow()
-        self.assertTrue(
-            UserComponent.objects.filter(user=self.user, name="home").exists()
-        )
-        self.assertTrue(
-            self.user.usercomponent_set.filter(name="home").exists()
-        )
-        g = index.contents.get(ctype__name="TravelProtection")
-        g.content.approved = True
-        g.content.clean()
-        g.content.save()
+        # # needs approval (not implemented anymore)
+        # response = self.app.get(reverse("auth:login"))
+        # form = response.forms["SPKCLoginForm"]
+        # form.set("username", "testuser1")
+        # form["password"].force_value("abc")
+        # response = form.submit().follow()
+        # self.assertTrue(
+        #     UserComponent.objects.filter(
+        #         user=self.user, name="home"
+        #     ).exists()
+        # )
+        # self.assertTrue(
+        #     self.user.usercomponent_set.filter(name="home").exists()
+        # )
+        # g = index.contents.get(ctype__name="TravelProtection")
+        # g.content.approved = True
+        # g.content.clean()
+        # g.content.save()
 
         self.app.set_user(user=None)
         # resets session
@@ -531,9 +560,13 @@ class TravelProtectionTest(TransactionWebTest):
         self.app.set_user(user="testuser1")
         response = self.app.get(createurl)
         form = response.forms["main_form"]
-        form.set("start", dt.utcnow()-td(days=1))
-        form.set("login_protection", TravelLoginType.wipe_user)
-        form.set("protect_components", (home.id,))
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("travel_protection_type", TravelProtectionType.wipe_user)
+        form.set("protect_components", (home.name,))
         form.set("master_pw", "abc")
         response = form.submit()
 
@@ -545,21 +578,22 @@ class TravelProtectionTest(TransactionWebTest):
         # resets session
         self.app.reset()
 
-        response = self.app.get(reverse("auth:login"))
-        form = response.forms["SPKCLoginForm"]
-        form.set("username", "testuser1")
-        form["password"].force_value("abc")
-        response = form.submit().follow()
+        # # needs approval (not implemented anymore)
+        # response = self.app.get(reverse("auth:login"))
+        # form = response.forms["SPKCLoginForm"]
+        # form.set("username", "testuser1")
+        # form["password"].force_value("abc")
+        # response = form.submit().follow()
 
         # approve
-        g = index.contents.get(ctype__name="TravelProtection")
-        g.content.approved = True
-        g.content.clean()
-        g.content.save()
+        # g = index.contents.get(ctype__name="TravelProtection")
+        # g.content.approved = True
+        # g.content.clean()
+        # g.content.save()
 
-        self.app.set_user(user=None)
+        # self.app.set_user(user=None)
         # resets session
-        self.app.reset()
+        # self.app.reset()
 
         response = self.app.get(reverse(
             "auth:login"

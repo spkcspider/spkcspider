@@ -1,27 +1,23 @@
 __all__ = ["WebConfigForm"]
 
 from django import forms
+from spkcspider.apps.spider.forms.base import DataContentForm
 
-from .models import WebConfig
 
-
-class WebConfigForm(forms.ModelForm):
+class WebConfigForm(DataContentForm):
     creation_url = forms.URLField(disabled=True, required=False)
     config = forms.CharField(
         widget=forms.Textarea()
     )
 
-    class Meta:
-        model = WebConfig
+    free_fields = {"creation_url": None}
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         b = None
         if self.object.id:
-            b = self.object.associated.attachedblob_set.filter(
+            b = self.object.associated.attachedblobs.filter(
                 name="config"
             ).first()
         if b:
             self.initial["config"] = b.blob
-        self.initial["creation_url"] = \
-            self.instance.associated.attached_to_token.referrer.url

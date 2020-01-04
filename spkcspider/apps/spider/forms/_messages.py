@@ -5,7 +5,7 @@ Form messages
 
 __all__ = [
     "help_text_static_token", "help_text_features_components",
-    "help_text_features_contents", "time_help_text", "login_protection"
+    "help_text_features_contents", "time_help_text", "travel_protection"
 ]
 
 from django.utils.translation import gettext_lazy as _
@@ -40,11 +40,11 @@ Note: persistent Features (=features which use a persistent token) require the a
 
 
 time_help_text = _(
-    "Time in \"{}\" timezone"
+    "Time in \"{timezone}\" timezone"
 )
 
 
-login_protection = _(
+travel_protection = _(
     "Hide: Hide protected contents and components<br/>"
     "Hide if triggered: Hide protected contents and components if triggered<br/>"  # noqa: E501
     "Disable: Disable Login (not available on Self-Protection (useless))<br/>"

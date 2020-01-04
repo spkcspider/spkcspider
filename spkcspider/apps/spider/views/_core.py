@@ -243,7 +243,7 @@ class UserTestMixin(ExpiryMixin, AccessMixin):
     def get_travel_for_request(self):
         if self._travel_request is None:
             self._travel_request = \
-                AssignedContent.travelprotections.get_active_for_request(
+                AssignedContent.travel.get_active_for_request(
                     self.request
                 )
         return self._travel_request

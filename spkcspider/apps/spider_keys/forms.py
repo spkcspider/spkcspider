@@ -5,19 +5,17 @@ import binascii
 
 from cryptography import exceptions
 from cryptography.hazmat.primitives.asymmetric import padding
-
 from django import forms
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
+
 from spkcspider.apps.spider.fields import MultipleOpenChoiceField
 from spkcspider.apps.spider.forms.base import DataContentForm
-from spkcspider.apps.spider.models import (
-    AssignedContent, TravelProtection, AttachedBlob
-)
-from spkcspider.apps.spider.widgets import ListWidget
+from spkcspider.apps.spider.models import AssignedContent, AttachedBlob
 from spkcspider.apps.spider.queryfilters import loggedin_active_tprotections_q
+from spkcspider.apps.spider.widgets import ListWidget
 
 _help_text_key = _(
     '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501
@@ -57,18 +55,20 @@ class KeyForm(DataContentForm):
     def get_prepared_attachements(self):
         b = None
         if self.instance.pk:
-            b = self.instance.associated.attachedblob_set.filter(
+            b = self.instance.associated.attachedblobs.filter(
                 name="key"
             ).first()
         if not b:
-            b = AttachedBlob(unique=True, name="key")
+            b = AttachedBlob(
+                unique=True, name="key", content=self.instance.associated
+            )
         if isinstance(self.cleaned_data["key"], str):
             b.blob = self.cleaned_data["key"].encode("utf8")
         else:
             b.blob = self.cleaned_data["key"]
 
         return {
-            "attachedblob_set": [b]
+            "attachedblobs": [b]
         }
 
 
@@ -156,7 +156,10 @@ class AnchorKeyForm(DataContentForm):
             # self.fields["signature"].required = False
 
         if self.scope in ("add", "update"):
-            travel = TravelProtection.objects.get_active_for_request(request)
+            travel = \
+                AssignedContent.travel.get_active_for_request(
+                    request
+                )
             travel = travel.filter(
                 loggedin_active_tprotections_q
             )

@@ -20,7 +20,7 @@ from spkcspider.constants import VariantType, spkcgraph
 from spkcspider.utils.urls import merge_get_url
 
 from ..forms import UserComponentForm
-from ..models import AssignedContent, TravelProtection, UserComponent
+from ..models import AssignedContent, UserComponent
 from ..queryfilters import (
     filter_components, filter_contents, listed_variants_q,
     loggedin_active_tprotections_q, machine_variants_q
@@ -249,7 +249,7 @@ class ComponentPublicIndex(ComponentIndexBase):
 
         # doesn't matter if it is same user, lazy
         # only apply unconditional travelprotections here
-        travel = AssignedContent.travelprotections.get_active().exclude(
+        travel = AssignedContent.travel.get_active().exclude(
             info__contains="\x1epwhash="
         )
         # remove all travel protected components if not admin or
@@ -265,7 +265,7 @@ class ComponentPublicIndex(ComponentIndexBase):
             q &= models.Q(usercomponent__featured=True)
         # doesn't matter if it is same user, lazy
         # only apply unconditional travelprotections here
-        travel = TravelProtection.objects.get_active().exclude(
+        travel = AssignedContent.travel.get_active().exclude(
             info__contains="\x1epwhash="
         )
         # remove all travel protected components if not admin or
@@ -330,8 +330,8 @@ class ComponentIndex(UCTestMixin, ComponentIndexBase):
         travel = self.get_travel_for_request().filter(
             loggedin_active_tprotections_q
         )
-        # remove all travel protected components if not admin or
-        # if is is_travel_protected
+        # exclude all travel protected components if not admin
+        #  (admin privileges are removed with any active travelprotection)
         if not self.request.is_staff:
             query = query.exclude(travel_protected__in=travel)
         return query

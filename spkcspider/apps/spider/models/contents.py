@@ -212,7 +212,7 @@ class TravelProtection(DataContent):
     expose_description = False
 
     _anonymous_deactivation = False
-    _encoded_form_info = ""
+    _prepared_info = ""
 
     class Meta:
         proxy = True
@@ -284,5 +284,5 @@ class TravelProtection(DataContent):
     def get_info(self):
         return "{}{}".format(
             super().get_info(unlisted=True),
-            self._encoded_form_info
+            self._prepared_info
         )

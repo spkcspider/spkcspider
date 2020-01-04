@@ -379,7 +379,7 @@ class AdvancedComponentTest(TransactionWebTest):
         form = response.forms["main_form"]
         form.action = createurlindex
         form['content_control-usercomponent'] = public.id
-        form['content_control-name'] = "newfieldname"
+        form['content_control-name'] = "newcontentname"
         form['text'] = "foobar"
         response = form.submit()
         location = response.location
@@ -388,24 +388,24 @@ class AdvancedComponentTest(TransactionWebTest):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(public.contents.count(), 2)
         url = public.contents.get(
-            info__contains="\x1ename=newfieldname\x1e"
+            info__contains="\x1ename=newcontentname\x1e"
         ).get_absolute_url("update")
         self.assertEqual(location, url)
         form = response.forms["main_form"]
         self.assertEqual(form["text"].value, "foobar")
         form['content_control-new_static_token'] = "12"
         form['text'] = "foobart"
-        form['content_control-name'] = "newfieldname2"
+        form['content_control-name'] = "newcontentname2"
         response = form.submit().follow()
         self.assertEqual(response.forms["main_form"]["text"].value, "foobart")
         with self.assertRaises(AssignedContent.DoesNotExist):
             public.contents.get(
-                info__contains="\x1ename=newfieldname\x1e"
+                info__contains="\x1ename=newcontentname\x1e"
             )
 
         with self.subTest(msg="match uc with from_url_part"):
             url = public.contents.get(
-                info__contains="\x1ename=newfieldname2\x1e"
+                info__contains="\x1ename=newcontentname2\x1e"
             ).get_absolute_url("fsooso")
             self.assertEqual(
                 public, UserComponent.objects.from_url_part(url)
@@ -426,17 +426,17 @@ class AdvancedComponentTest(TransactionWebTest):
 
         with self.subTest(msg="match content with from_url_part"):
             content = public.contents.get(
-                info__contains="\x1ename=newfieldname2\x1e"
+                info__contains="\x1ename=newcontentname2\x1e"
             )
             url = content.get_absolute_url("slksdkl")
             cs = AssignedContent.objects.from_url_part(
-                url, info="name=newfieldname2"
+                url, info="name=newcontentname2"
             )
             self.assertEqual(content, cs[0])
             self.assertEqual(content, cs[1])
             self.assertEqual(
                 content, AssignedContent.objects.from_url_part(
-                    url, info=["name=newfieldname2"]
+                    url, info=["name=newcontentname2"]
                 )[0]
             )
             with self.assertRaises(content.DoesNotExist):
@@ -446,11 +446,11 @@ class AdvancedComponentTest(TransactionWebTest):
             with self.assertRaises(content.DoesNotExist):
                 # is no feature so it should fail
                 AssignedContent.objects.from_url_part(
-                    url, info=["name=newfieldname2"], check_feature=True
+                    url, info=["name=newcontentname2"], check_feature=True
                 )
             with self.assertRaises(content.DoesNotExist):
                 AssignedContent.objects.from_url_part(
-                    url, info=["name=newfieldname2"], variant="sklskls"
+                    url, info=["name=newcontentname2"], variant="sklskls"
                 )
             url = public.get_absolute_url()
             cs = AssignedContent.objects.from_url_part(
@@ -461,7 +461,7 @@ class AdvancedComponentTest(TransactionWebTest):
             self.assertEqual(
                 content, AssignedContent.objects.from_url_part(
                     "{}/list".format(public.token),
-                    info=["name=newfieldname2"],
+                    info=["name=newcontentname2"],
                     variant="Text"
                 )[0]
             )
@@ -471,11 +471,11 @@ class AdvancedComponentTest(TransactionWebTest):
                 AssignedContent.objects.from_url_part("7_8383/list", info=[])
             with self.assertRaises(content.DoesNotExist):
                 AssignedContent.objects.from_url_part(
-                    "7_8383/view", info=["name=newfieldname2"]
+                    "7_8383/view", info=["name=newcontentname2"]
                 )
             with self.assertRaises(content.DoesNotExist):
                 AssignedContent.objects.from_url_part(
-                    "7_8383/list", info=["name=newfieldname2"]
+                    "7_8383/list", info=["name=newcontentname2"]
                 )
             with self.assertRaises(content.DoesNotExist):
                 AssignedContent.objects.from_url_part("7_8383", info=[])

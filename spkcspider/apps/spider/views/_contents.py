@@ -543,6 +543,7 @@ class ContentAdd(ContentBase, CreateView):
             ucontent = context["form"].instance
         assert ucontent is ucontent.content.associated
         ret = ucontent.content.access(context)
+        assert not isinstance(ucontent.content, AssignedContent)
         assert ucontent is ucontent.content.associated
 
         # return response if content returned response

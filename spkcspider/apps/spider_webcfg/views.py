@@ -90,6 +90,7 @@ class WebConfigView(UCTestMixin, View):
                 "attached_to_token": self.request.auth_token
             }
         )
+        ret.free_data["creation_url"] = self.request.auth_token.referrer.url
         ret.clean()
         ret.save()
         assert(ret.associated.token)
@@ -106,11 +107,14 @@ class WebConfigView(UCTestMixin, View):
         self.object = self.get_object()
         b = None
         if self.object.id:
-            b = self.object.associated.attachedblob_set.filter(
+            b = self.object.associated.attachedblobs.filter(
                 name="config"
             ).first()
         if not b:
-            b = AttachedBlob(unique=True, name="config", blob=b"")
+            b = AttachedBlob(
+                unique=True, name="config", blob=b"",
+                content=self.object.associated
+            )
         return self.render_to_response(b.blob)
 
     def post(self, request, *args, **kwargs):
@@ -125,16 +129,19 @@ class WebConfigView(UCTestMixin, View):
         self.object = self.get_object()
         b = None
         if self.object.id:
-            b = self.object.associated.attachedblob_set.filter(
+            b = self.object.associated.attachedblobs.filter(
                 name="config"
             ).first()
         if not b:
-            b = AttachedBlob(unique=True, name="config", blob=b"")
+            b = AttachedBlob(
+                unique=True, name="config", blob=b"",
+                content=self.object.associated
+            )
         old_size = self.object.get_size()
         oldconfig = b.blob
         b.blob = self.request.body
         self.object.prepared_attachements = {
-            "attachedblob_set": b
+            "attachedblobs": b
         }
 
         # a full_clean is here not required

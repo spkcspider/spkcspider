@@ -33,7 +33,7 @@ active_protections_q = (
 loggedin_active_tprotections_q = Q()
 for i in loggedin_active_tprotections:
     loggedin_active_tprotections_q |= Q(
-        info__contains="\x1elogin_protection={}\x1e".format(i)
+        info__contains="\x1etravel_protection_type={}\x1e".format(i)
     )
 
 travelprotection_types_q = (

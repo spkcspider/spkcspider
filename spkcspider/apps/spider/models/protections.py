@@ -24,7 +24,7 @@ from spkcspider.utils.security import create_b64_id_token
 from spkcspider.utils.urls import extract_host
 
 from .. import registry
-from ..abstract_models import BaseSubUserComponentModel
+from ..abstract_models import BaseSubUserModel
 from ..protections import ProtectionList, PseudoPw
 from ..queryfilters import active_protections_q
 from ..validators import validator_token
@@ -282,7 +282,7 @@ class AssignedProtectionQuerySet(BaseProtectionQuerySet):
         )
 
 
-class AssignedProtection(BaseSubUserComponentModel):
+class AssignedProtection(BaseSubUserModel):
     id: int = models.BigAutoField(primary_key=True)
 
     objects = AssignedProtectionQuerySet.as_manager()
@@ -330,7 +330,7 @@ class AuthTokenManager(models.Manager):
         return ret
 
 
-class AuthToken(BaseSubUserComponentModel):
+class AuthToken(BaseSubUserModel):
     id: int = models.BigAutoField(primary_key=True, editable=False)
     usercomponent = models.ForeignKey(
         "spider_base.UserComponent", on_delete=models.CASCADE,

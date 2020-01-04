@@ -1,5 +1,5 @@
 __all__ = [
-    "VariantType", "TravelLoginType",
+    "VariantType", "TravelProtectionType",
     "dangerous_login_choices", "loggedin_active_tprotections",
     "essential_contents"
 ]
@@ -56,7 +56,7 @@ class VariantType(str, enum.Enum):
         return self.value
 
 
-class TravelLoginType(str, enum.Enum):
+class TravelProtectionType(str, enum.Enum):
     # don't show protected contents and components
     hide = "a"
     # switches to hiding if trigger was activated
@@ -89,11 +89,11 @@ class TravelLoginType(str, enum.Enum):
 
 
 dangerous_login_choices = {
-    TravelLoginType.wipe,
-    TravelLoginType.wipe_user
+    TravelProtectionType.wipe,
+    TravelProtectionType.wipe_user
 }
 
 loggedin_active_tprotections = {
-    TravelLoginType.hide,
-    TravelLoginType.disable
+    TravelProtectionType.hide,
+    TravelProtectionType.disable
 }

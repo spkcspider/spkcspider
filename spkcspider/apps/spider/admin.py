@@ -10,13 +10,13 @@ from .models import (
 @admin.register(TravelProtection)
 class TravelProtectionAdmin(admin.ModelAdmin):
     fields = []
-    # fields = ['active', 'approved', 'start', 'stop', 'login_protection']
+    # fields = ['active', 'approved', 'start', 'stop', 'travel_protection']
     # readonly_fields = [
-    #     'start', 'stop', 'login_protection'
+    #     'start', 'stop', 'travel_protection'
     # ]
     list_display = (
         "__str__",
-        # 'login_protection', 'active', 'approved'
+        # 'travel_protection', 'active', 'approved'
     )
 
     def has_module_permission(self, request):

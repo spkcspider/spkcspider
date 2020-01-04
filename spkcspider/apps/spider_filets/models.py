@@ -75,7 +75,11 @@ class FileFilet(LicenseMixin, DataContent):
 
     def get_content_name(self):
         # in case no name is set
-        fob = self.associated.files.get(name="file")
+
+        if self.prepared_attachements:
+            fob = self.prepared_attachements["attachedfiles"][0].file
+        else:
+            fob = self.associated.attachedfiles.get(name="file").file
         return posixpath.basename(fob.file.name)
 
     def get_info(self):
@@ -111,7 +115,7 @@ class FileFilet(LicenseMixin, DataContent):
 
     def access_view(self, **kwargs):
         kwargs["object"] = self
-        kwargs["file"] = self.associated.attachedfile_set.get(name="file").file
+        kwargs["file"] = self.associated.attachedfiles.get(name="file").file
         kwargs["type"] = self.associated.getlist("file_type", 1)
         if kwargs["type"]:
             kwargs["type"] = kwargs["type"][0]
@@ -135,7 +139,7 @@ class FileFilet(LicenseMixin, DataContent):
         )
 
     def access_download(self, **kwargs):
-        f = self.associated.files.get(name="file")
+        f = self.associated.attachedfiles.get(name="file")
         if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
             response = f.get_response()
         else:
@@ -184,10 +188,13 @@ class TextFilet(LicenseMixin, DataContent):
 
     def get_content_description(self):
         # use javascript instead
-        # currently dead code
+        if self.prepared_attachements:
+            t = self.prepared_attachements["attachedblobs"][0]
+        else:
+            t = self.associated.attachedblobs.filter(name="text").first()
         return " ".join(
             prepare_description(
-                self.text, 51
+                t.blob.decode("utf8") if t else "", 51
             )[:50]
         )
 
@@ -228,7 +235,7 @@ class TextFilet(LicenseMixin, DataContent):
     def access_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["text"] = \
-            self.associated.attachedblob_set.get(name="text").blob.decode(
+            self.associated.attachedblobs.get(name="text").blob.decode(
                 "utf8"
             )
         return render_to_string(

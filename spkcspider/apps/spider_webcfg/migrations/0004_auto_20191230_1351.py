@@ -14,7 +14,7 @@ def move_to_datacontent(apps, schema_editor):
         d = DataContent(associated=a)
         content = WebConfig.objects.get(id=a.object_id)
         d.save()
-        a.attachedblob_set.create(
+        a.attachedblobs.create(
             unique=True, name="config", blob=content.config
         )
 

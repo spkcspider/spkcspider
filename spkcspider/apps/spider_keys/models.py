@@ -49,10 +49,13 @@ class PublicKey(DataContent):
     def get_info(self):
         ret = super().get_info()
         h = get_hashob()
-        key = self.associated.attachedblob_set.get(name="key")
+        if self.prepared_attachements:
+            key = self.prepared_attachements["attachedblobs"][0]
+        else:
+            key = self.associated.attachedblobs.get(name="key")
         h.update(key.blob)
         pubkeyhash = ""
-        k = self.get_key_ob()
+        k = self.get_key_ob(key.blob)
         if k:
             pem = k.public_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -68,8 +71,9 @@ class PublicKey(DataContent):
             pubkeyhash
         )
 
-    def get_key_ob(self):
-        key = self.associated.attachedblob_set.get(name="key").blob
+    def get_key_ob(self, key=None):
+        if not key:
+            key = self.associated.attachedblobs.get(name="key").blob
         try:
             if b"-----BEGIN CERTIFICATE-----" in key:
                 pubkey = load_pem_x509_certificate(
@@ -86,7 +90,10 @@ class PublicKey(DataContent):
             pass
 
     def get_key_name(self):
-        key = self.associated.attachedblob_set.get(name="key").blob
+        if self.prepared_attachements:
+            key = self.prepared_attachements["attachedblobs"][0].blob
+        else:
+            key = self.associated.attachedblobs.get(name="key").blob
         key = key.decode("ascii")
         # ssh key
         split = key.rsplit(" ", 1)

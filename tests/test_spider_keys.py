@@ -175,7 +175,7 @@ class KeyTest(TransactionWebTest):
             response = form.submit()
             response = self.app.get(updateurl)
             form = response.forms["main_form"]
-            self.assertEqual(form["signature"].value, "<replaceme>")
+            self.assertEqual(form["signature"].value, "")
 
         with self.subTest(msg="valid signature"):
             u = binascii.hexlify(signature).decode("ascii")

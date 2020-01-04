@@ -99,7 +99,7 @@ class ListWidget(widgets.SelectMultiple):
                             )
                         )
                     ],
-                    "properties": {
+                    "properties": dict(
                         (
                             x["name"],
                             {
@@ -115,7 +115,7 @@ class ListWidget(widgets.SelectMultiple):
                                 }
                             }
                         ) for x in self.items
-                    }
+                    )
                 }
             )
         return context

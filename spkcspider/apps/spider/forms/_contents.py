@@ -4,7 +4,7 @@ __all__ = [
 
 import json
 from base64 import b64encode
-from datetime import timedelta
+from datetime import timedelta as td
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
@@ -13,19 +13,21 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db import models
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.utils.translation import gettext_lazy as _
 
 from spkcspider.constants import (
-    TravelLoginType, VariantType, dangerous_login_choices, travel_scrypt_params
+    TravelProtectionType, VariantType, dangerous_login_choices,
+    travel_scrypt_params
 )
 
 from ..fields import ContentMultipleChoiceField, MultipleOpenChoiceField
 from ..models import AssignedContent, AttachedTimespan, UserComponent
 from ..queryfilters import loggedin_active_tprotections_q
 from ..widgets import (
-    DatetimePickerWidget, ListWidget, OpenChoiceWidget, SelectizeWidget
+    ListWidget, OpenChoiceWidget, SelectizeWidget
 )
-from ._messages import login_protection as _login_protection
+from ._messages import travel_protection as _travel_protection
 from ._messages import time_help_text
 from .base import DataContentForm
 
@@ -55,8 +57,7 @@ class LinkForm(DataContentForm):
             self.initial["content"] = \
                 self.instance.associated.attached_to_content
         q = self.fields["content"].queryset
-        travel = \
-            AssignedContent.travelprotections.get_active_for_request(request)
+        travel = AssignedContent.travel.get_active_for_request(request)
         travel = travel.filter(loggedin_active_tprotections_q)
         self.fields["content"].queryset = q.filter(
             strength__lte=uc.strength
@@ -84,39 +85,32 @@ class TravelProtectionManagementForm(DataContentForm):
     def clean(self):
         super().clean()
         pwset = set(self.instance.associated.getlist("pwhash", 20))
-        self.instance._encoded_form_info = "".join(
+        self.instance._prepared_info = "".join(
             map(lambda x: "pwhash={}\x1e".format(x), pwset)
         )
         if self.instance.associated.getflag("anonymous_deactivation"):
-            self.instance._encoded_form_info = \
+            self.instance._prepared_info = \
                 "{}anonymous_deactivation\x1e".format(
-                    self.instance._encoded_form_info
+                    self.instance._prepared_info
                 )
         if self.instance.associated.getflag("anonymous_trigger"):
-            self.instance._encoded_form_info = \
+            self.instance._prepared_info = \
                 "{}anonymous_trigger\x1e".format(
-                    self.instance._encoded_form_info
+                    self.instance._prepared_info
                 )
 
         return self.cleaned_data
 
 
 class TravelProtectionForm(DataContentForm):
-    uc = None
+    request = None
+    pwset = None
     # self_protection = forms.ChoiceField(
     #    label=_("Self-protection"), help_text=_(_self_protection),
     #     initial="None", choices=PROTECTION_CHOICES
     # )
 
-    active = forms.BooleanField(initial=False, required=False)
-    start = forms.DateTimeField(
-        required=True, widget=DatetimePickerWidget(),
-        help_text=time_help_text
-    )
-    stop = forms.DateTimeField(
-        required=False, widget=DatetimePickerWidget(),
-        help_text=time_help_text
-    )
+    active = forms.BooleanField(initial=True, required=False)
     timeplans = MultipleOpenChoiceField(
         widget=ListWidget(
             items=[
@@ -127,7 +121,8 @@ class TravelProtectionForm(DataContentForm):
                     "options": {
                         "flatpickr": {
                             "inline": True,
-                            "time_24hr": True
+                            "time_24hr": True,
+                            "": "Z"
                         }
                     }
                 },
@@ -138,15 +133,14 @@ class TravelProtectionForm(DataContentForm):
                     "options": {
                         "flatpickr": {
                             "inline": True,
-                            "time_24hr": True
+                            "time_24hr": True,
+                            "": "Z"
                         }
                     }
                 }
             ], item_label=_("Timeplan")
         ), required=False,
-        help_text=_(
-            "Timeplans for activation"
-        )
+        help_text=time_help_text
     )
     trigger_pws = MultipleOpenChoiceField(
         label=_("Trigger Passwords"), required=False,
@@ -192,10 +186,10 @@ class TravelProtectionForm(DataContentForm):
         )
     )
 
-    login_protection = forms.ChoiceField(
-        choices=TravelLoginType.as_choices(),
-        initial=TravelLoginType.hide,
-        help_text=_login_protection
+    travel_protection_type = forms.ChoiceField(
+        choices=TravelProtectionType.as_choices(),
+        initial=TravelProtectionType.hide,
+        help_text=_travel_protection
     )
 
     master_pw = forms.CharField(
@@ -220,7 +214,7 @@ class TravelProtectionForm(DataContentForm):
 
     @staticmethod
     def _filter_selfprotection(x):
-        if x[0] == TravelLoginType.disable:
+        if x[0] == TravelProtectionType.disable:
             return False
         return True
 
@@ -233,59 +227,66 @@ class TravelProtectionForm(DataContentForm):
     def __init__(self, request, **kwargs):
         super().__init__(**kwargs)
         self.request = request
+        self.pwset = set()
         associated = self.instance.associated
         self.initial["active"] = associated.getflag("active")
-        self.initial["login_protection"] = \
-            associated.getlist("login_protection", 1)[0]
         self.initial["anonymous_deactivation"] = \
             associated.getflag("anonymous_deactivation")
-        self.initial["timeplans"] = \
-            [
-                json.dumps({
-                    "start": x.start,
-                    "stop": x.stop
-                }) for x in associated.attachedtimespan_set.filter(
-                    name="active"
-                )
-            ]
+
+        self.fields["timeplans"].help_text = str(
+            self.fields["timeplans"].help_text
+        ).format(timezone=timezone.get_current_timezone_name())
+        if not getattr(self.instance, "id"):
+            now = timezone.now()
+            self.initial["travel_protection_type"] = TravelProtectionType.hide
+            self.initial["timeplans"] = \
+                [
+                    json.dumps({
+                        "start": (now + td(hours=3)).isoformat(),
+                        "stop": (now + td(days=7)).isoformat()
+                    })
+                ]
+        else:
+            self.initial["travel_protection_type"] = \
+                associated.getlist("travel_protection_type", 1)[0]
+            self.initial["timeplans"] = \
+                [
+                    json.dumps({
+                        "start": x.start.isoformat() if x.start else None,
+                        "stop": x.stop.isoformat() if x.stop else None
+                    }) for x in associated.attachedtimespans.filter(
+                        name="active"
+                    )
+                ]
 
         if not self.request.user.has_perm(
             "spider_base.use_dangerous_travelprotections"
         ):
-            self.fields["login_protection"].choices = \
+            self.fields["travel_protection_type"].choices = \
                 filter(
                     self._filter_dangerousprotection,
-                    self.fields["login_protection"].choices
+                    self.fields["travel_protection_type"].choices
                 )
-        if associated.ctype.name == "TravelProtection":
-            # self.fields["start"].help_text = str(
-            #     self.fields["start"].help_text
-            # ).format(timezone.get_current_timezone_name())
-            # self.fields["stop"].help_text = str(
-            #     self.fields["stop"].help_text
-            # ).format(timezone.get_current_timezone_name())
-            if not getattr(self.instance, "id"):
-                now = timezone.now()
-                self.initial["start"] = now + timedelta(hours=3)
-                self.initial["stop"] = now + timedelta(days=7)
-        else:
-            self.fields["login_protection"].choices = \
+        if associated.ctype.name == "SelfProtection":
+            self.fields["travel_protection_type"].choices = \
                 filter(
                     self._filter_selfprotection,
-                    self.fields["login_protection"].choices
+                    self.fields["travel_protection_type"].choices
                 )
-            del self.fields["start"]
-            del self.fields["stop"]
+            del self.fields["timeplans"]
         if not getattr(self.instance, "id") and not self.data:
             self.initial["active"] = True
 
-        travel = AssignedContent.travelprotections.get_active_for_request(
+        travel = AssignedContent.travel.get_active_for_request(
             request
         ).filter(loggedin_active_tprotections_q)
         selfid = getattr(self.instance, "id", -1)
-        if self.initial["login_protection"] == TravelLoginType.disable:
-            self.initial["login_protection"] = \
-                TravelLoginType.trigger_disable
+        if (
+            self.initial["travel_protection_type"]
+            == TravelProtectionType.disable
+        ):
+            self.initial["travel_protection_type"] = \
+                TravelProtectionType.trigger_disable
 
         q_component = models.Q(
             user=request.user
@@ -345,17 +346,25 @@ class TravelProtectionForm(DataContentForm):
                 "name"
             )
 
+    def _clean_timeplan(self, ob):
+        if isinstance(ob, str):
+            ob = json.loads(ob)
+        start = ob.get("start", None)
+        if isinstance(start, str):
+            start = parse_datetime(start)
+        stop = ob.get("stop", None)
+        if isinstance(stop, str):
+            stop = parse_datetime(stop)
+        return AttachedTimespan(
+            unique=False,
+            name="active",
+            start=start,
+            stop=stop,
+            content=self.instance.associated
+        )
+
     def clean_timeplans(self):
-        return list(map(
-            lambda x:
-                AttachedTimespan(
-                    unique=False,
-                    name="active",
-                    start=x["start"],
-                    stop=x["stop"]
-                ),
-            self.cleaned_data["timeplans"]
-        ))
+        return list(map(self._clean_timeplan, self.cleaned_data["timeplans"]))
 
     def clean(self):
         super().clean()
@@ -398,21 +407,9 @@ class TravelProtectionForm(DataContentForm):
                 pwset.update(self.instance.associated.getlist(
                     "pwhash", 20-len(pwset)
                 ))
+            self.pwset = pwset
         else:
-            pwset = set(self.instance.associated.getlist("pwhash", 20))
-        self.instance._encoded_form_info = "".join(
-            map(lambda x: "pwhash={}\x1e".format(x), pwset)
-        )
-        if self.cleaned_data.get("anonymous_deactivation"):
-            self.instance._encoded_form_info = \
-                "{}anonymous_deactivation\x1e".format(
-                    self.instance._encoded_form_info
-                )
-        if self.cleaned_data.get("anonymous_trigger"):
-            self.instance._encoded_form_info = \
-                "{}anonymous_trigger\x1e".format(
-                    self.instance._encoded_form_info
-                )
+            self.pwset = set(self.instance.associated.getlist("pwhash", 20))
         for i in self.cleaned_data["timeplans"]:
             try:
                 i.clean()
@@ -425,6 +422,7 @@ class TravelProtectionForm(DataContentForm):
                 )
         except KeyError:
             pass
+
         return self.cleaned_data
 
     def is_valid(self):
@@ -435,13 +433,35 @@ class TravelProtectionForm(DataContentForm):
 
     def get_prepared_attachements(self):
         return {
-            "attachedtimespan_set": self.cleaned_data["timeplans"],
+            "attachedtimespans": self.cleaned_data["timeplans"],
             "protect_contents":
                 list(self.cleaned_data["protect_contents"])
                 + [self.instance.associated],
             "protect_components": self.cleaned_data["protect_components"]
         }
 
-    def save(self, commit=True):
-        self.instance.approved = bool(self.cleaned_data["approved"])
+    def save(self, commit=False):
+        if self.cleaned_data.get("active"):
+            self.instance._prepared_info = \
+                "{}active\x1e".format(
+                    self.instance._prepared_info
+                )
+        self.instance._prepared_info = \
+            "{}travel_protection_type={}\x1e".format(
+                self.instance._prepared_info,
+                self.cleaned_data["travel_protection_type"]
+            )
+        if self.cleaned_data.get("anonymous_deactivation"):
+            self.instance._prepared_info = \
+                "{}anonymous_deactivation\x1e".format(
+                    self.instance._prepared_info
+                )
+        if self.cleaned_data.get("anonymous_trigger"):
+            self.instance._prepared_info = \
+                "{}anonymous_trigger\x1e".format(
+                    self.instance._prepared_info
+                )
+        self.instance._prepared_info += "".join(
+            map(lambda x: "pwhash={}\x1e".format(x), self.pwset)
+        )
         return super().save(commit)

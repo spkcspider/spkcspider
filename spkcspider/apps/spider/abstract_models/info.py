@@ -4,7 +4,7 @@ abstract base models for implementations
 """
 
 __all__ = [
-    "BaseInfoModel", "BaseSubUserComponentModel", "info_field_validator"
+    "BaseInfoModel", "info_field_validator"
 ]
 
 import re
@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext
 
-_info_replacer_templ = '\x1e{}.*\x1e'
+_info_replacer_templ = '\x1e{}.*?\x1e'
 
 
 def info_field_validator(value):
@@ -48,20 +48,6 @@ def info_field_validator(value):
                 _('flag not unique: %(element)s in %(value)s'),
                 params={'element': elem, 'value': value},
             )
-
-
-class BaseSubUserComponentModel(models.Model):
-
-    class Meta:
-        abstract = True
-
-    @property
-    def user(self):
-        return self.usercomponent.user  # pylint: disable=no-member
-
-    @property
-    def username(self):
-        return self.usercomponent.username  # pylint: disable=no-member
 
 
 class BaseInfoModel(models.Model):
@@ -108,6 +94,7 @@ class BaseInfoModel(models.Model):
     def replace_info(self, **kwargs):
         """
             Warning! Order dependend (especially for unique tests)
+            returns appended keys
         """
         rep_replace = []
         rep_missing = []
@@ -116,7 +103,7 @@ class BaseInfoModel(models.Model):
             pattern = re.compile(
                 _info_replacer_templ.format(re.escape(name)), re.M
             )
-            if not val:
+            if val is False or val is None:
                 # remove name
                 self.info = pattern.sub(
                     "\x1e", self.info, 0
