@@ -187,7 +187,8 @@ class TextForm(LicenseForm):
                     name="text"
                 ).first()
             if self.initial["text"] is not None:
-                self.initial["text"] = self.initial["text"].blob.decode("utf8")
+                self.initial["text"] = \
+                    self.initial["text"].as_bytes.decode("utf8")
         if scope in ("add", "update"):
             self.fields["editable_from"].help_text = \
                 _(

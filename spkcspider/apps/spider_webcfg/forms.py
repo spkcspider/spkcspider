@@ -20,4 +20,4 @@ class WebConfigForm(DataContentForm):
                 name="config"
             ).first()
         if b:
-            self.initial["config"] = b.blob
+            self.initial["config"] = b.blob.as_bytes.decode("ascii")

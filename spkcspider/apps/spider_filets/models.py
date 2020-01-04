@@ -194,7 +194,7 @@ class TextFilet(LicenseMixin, DataContent):
             t = self.associated.attachedblobs.filter(name="text").first()
         return " ".join(
             prepare_description(
-                t.blob.decode("utf8") if t else "", 51
+                t.as_bytes.decode("utf8") if t else "", 51
             )[:50]
         )
 
@@ -235,7 +235,7 @@ class TextFilet(LicenseMixin, DataContent):
     def access_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["text"] = \
-            self.associated.attachedblobs.get(name="text").blob.decode(
+            self.associated.attachedblobs.get(name="text").as_bytes.decode(
                 "utf8"
             )
         return render_to_string(

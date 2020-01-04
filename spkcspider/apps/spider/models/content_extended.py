@@ -184,3 +184,7 @@ class AttachedBlob(BaseAttached):
 
     def get_size(self):
         return len(self.blob)
+
+    @property
+    def as_bytes(self):
+        return bytes(self.blob)

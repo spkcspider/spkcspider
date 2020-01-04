@@ -91,9 +91,9 @@ class PublicKey(DataContent):
 
     def get_key_name(self):
         if self.prepared_attachements:
-            key = self.prepared_attachements["attachedblobs"][0].blob
+            key = self.prepared_attachements["attachedblobs"][0].as_bytes
         else:
-            key = self.associated.attachedblobs.get(name="key").blob
+            key = self.associated.attachedblobs.get(name="key").as_bytes
         key = key.decode("ascii")
         # ssh key
         split = key.rsplit(" ", 1)
@@ -121,7 +121,9 @@ class PublicKey(DataContent):
     def access_view(self, **kwargs):
         kwargs["object"] = self
         kwargs["key"] = \
-            self.associated.attachedblobs.get(name="key").blob.decode("ascii")
+            self.associated.attachedblobs.get(
+                name="key"
+            ).as_bytes.decode("ascii")
         kwargs["hash_algo"] = settings.SPIDER_HASH_ALGORITHM.name
         kwargs["hash"] = self.associated.getlist(
             "hash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1

@@ -53,7 +53,7 @@ class KeyForm(DataContentForm):
             key = self.instance.associated.attachedblobs.filter(
                 name="key"
             ).first()
-        key = key.blob.decode("ascii") if key else ""
+        key = key.as_bytes.decode("ascii") if key else ""
         self.initial["key"] = key
         self.initial["hash_algorithm"] = settings.SPIDER_HASH_ALGORITHM.name
         setattr(self.fields['key'], "hashable", True)
@@ -180,7 +180,7 @@ class AnchorKeyForm(DataContentForm):
             blob = self.initial["key"].attachedblobs.get(
                 name="key"
             )
-            self.initial["key"] = blob.blob.decode("ascii")
+            self.initial["key"] = blob.as_bytes.decode("ascii")
             self.fields["key"] = forms.CharField(
                 widget=forms.Textarea()
             )
