@@ -282,7 +282,12 @@ def UpdateSpiderCb(**_kwargs):
 
     UserComponent.objects.filter(name="index").update(strength=10)
     for row in AssignedContent.objects.all():
-        if not row.content:
+        try:
+            row.content
+        except ObjectDoesNotExist:
+            logging.warning(
+                "AssignedContent \"%s\" lacks content, remove.", row
+            )
             row.delete()
             continue
         # works only with django.apps.apps

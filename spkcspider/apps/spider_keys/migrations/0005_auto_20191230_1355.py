@@ -41,8 +41,11 @@ def move_to_datacontent(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('spider_base', '0012_auto_20191230_1305'),
+        ('spider_base', '0011_auto_20191230_1305'),
         ('spider_keys', '0004_remove_anchorkey_key'),
+    ]
+    run_before = [
+        ('spider_base', '0012_auto_20191230_1305'),
     ]
 
     operations = [

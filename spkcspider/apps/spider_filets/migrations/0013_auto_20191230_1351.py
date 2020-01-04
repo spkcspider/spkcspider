@@ -34,14 +34,17 @@ def move_to_datacontent(apps, schema_editor):
         d.quota_data["license_url"] = content.license_url
         d.quota_data["sources"] = content.sources
         d.save()
-        a.attachedfiles.create(unique=True, name="text", file=content.file)
+        a.attachedfiles.create(unique=True, name="file", file=content.file)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('spider_base', '0012_auto_20191230_1305'),
+        ('spider_base', '0011_auto_20191230_1305'),
         ('spider_filets', '0012_auto_20190419_0800'),
+    ]
+    run_before = [
+        ('spider_base', '0012_auto_20191230_1305'),
     ]
 
     operations = [

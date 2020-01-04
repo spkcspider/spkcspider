@@ -48,7 +48,13 @@ class KeyForm(DataContentForm):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.initial["key"] = self.instance.quota_data.get("key")
+        key = None
+        if self.instance.pk:
+            key = self.instance.associated.attachedblobs.filter(
+                name="key"
+            ).first()
+        key = key.blob.decode("ascii") if key else ""
+        self.initial["key"] = key
         self.initial["hash_algorithm"] = settings.SPIDER_HASH_ALGORITHM.name
         setattr(self.fields['key'], "hashable", True)
 
@@ -63,7 +69,7 @@ class KeyForm(DataContentForm):
                 unique=True, name="key", content=self.instance.associated
             )
         if isinstance(self.cleaned_data["key"], str):
-            b.blob = self.cleaned_data["key"].encode("utf8")
+            b.blob = self.cleaned_data["key"].encode("ascii")
         else:
             b.blob = self.cleaned_data["key"]
 
@@ -171,9 +177,12 @@ class AnchorKeyForm(DataContentForm):
                     usercomponent=self.instance.associated.usercomponent
                 )
         elif self.scope in ("raw", "list", "view"):
+            blob = self.initial["key"].attachedblobs.get(
+                name="key"
+            )
+            self.initial["key"] = blob.blob.decode("ascii")
             self.fields["key"] = forms.CharField(
-                initial=self.instance.key.key,
-                widget=forms.TextArea
+                widget=forms.Textarea()
             )
             setattr(self.fields['key'], "hashable", True)
 
@@ -197,7 +206,7 @@ class AnchorKeyForm(DataContentForm):
         try:
             pubkey.verify(
                 binascii.unhexlify(ret["signature"]),
-                ret["identifier"].encode("utf-8"),
+                ret["identifier"].encode("ascii"),
                 padding.PSS(
                     mgf=padding.MGF1(chosen_hash),
                     salt_length=padding.PSS.MAX_LENGTH

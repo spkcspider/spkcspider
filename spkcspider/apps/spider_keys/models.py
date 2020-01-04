@@ -120,6 +120,8 @@ class PublicKey(DataContent):
 
     def access_view(self, **kwargs):
         kwargs["object"] = self
+        kwargs["key"] = \
+            self.associated.attachedblobs.get(name="key").blob.decode("ascii")
         kwargs["hash_algo"] = settings.SPIDER_HASH_ALGORITHM.name
         kwargs["hash"] = self.associated.getlist(
             "hash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1

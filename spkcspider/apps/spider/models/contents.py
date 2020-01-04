@@ -212,7 +212,7 @@ class TravelProtection(DataContent):
     expose_description = False
 
     _anonymous_deactivation = False
-    _prepared_info = ""
+    _prepared_info = None
 
     class Meta:
         proxy = True
@@ -282,7 +282,17 @@ class TravelProtection(DataContent):
         return ret
 
     def get_info(self):
+        # TODO: cleanup this hack
+        # information are directly saved in info, protect field against
+        # rewrites
+        if self._prepared_info is None:
+            return self.associated.info
         return "{}{}".format(
             super().get_info(unlisted=True),
             self._prepared_info
         )
+
+    def save(self, *args, **kwargs):
+        ret = super().save(*args, **kwargs)
+        self._prepared_info = None
+        return ret

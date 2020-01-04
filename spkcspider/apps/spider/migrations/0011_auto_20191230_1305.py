@@ -17,24 +17,26 @@ def move_to_datacontent(apps, schema_editor):
         d.free_data["push"] = content.push
         d.save()
 
-    for a in AssignedContent.objects.filter(
+    for assigned in AssignedContent.objects.filter(
         ctype__code=TravelProtection._meta.model_name
     ):
-        d = DataContent(associated=a)
-        content = TravelProtection.objects.get(id=a.object_id)
+        DataContent.objects.create(associated=assigned)
+        content = TravelProtection.objects.get(id=assigned.object_id)
         if content.active:
-            a.info += "active\x1e"
-        a.attachedtimespans.create(
-            unique=False,
-            name="active",
-            start=content.start,
-            stop=content.stop
-        )
-        a.protect_contents.set(content.protect_contents, bulk=True)
-        a.protect_components.set(content.protect_components, bulk=True)
-        a.save(update_fields=["info"])
+            assigned.info += "active\x1e"
 
-        d.save()
+        assigned.info += \
+            "travel_protection_type={}\x1e".format(content.login_protection)
+        if content.start or content.stop:
+            assigned.attachedtimespans.create(
+                unique=False,
+                name="active",
+                start=content.start,
+                stop=content.stop
+            )
+        assigned.protect_contents.set(content.protect_contents.all())
+        assigned.protect_components.set(content.protect_components.all())
+        assigned.save()
 
 
 class Migration(migrations.Migration):

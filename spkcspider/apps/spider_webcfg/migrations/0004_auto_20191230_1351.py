@@ -8,13 +8,13 @@ def move_to_datacontent(apps, schema_editor):
     WebConfig = apps.get_model("spider_webcfg", "WebConfig")
     DataContent = apps.get_model("spider_base", "DataContent")
 
-    for a in AssignedContent.objects.filter(
+    for assigned in AssignedContent.objects.filter(
         ctype__code=WebConfig._meta.model_name
     ):
-        d = DataContent(associated=a)
-        content = WebConfig.objects.get(id=a.object_id)
+        d = DataContent(associated=assigned)
+        content = WebConfig.objects.get(id=assigned.object_id)
         d.save()
-        a.attachedblobs.create(
+        assigned.attachedblobs.create(
             unique=True, name="config", blob=content.config
         )
 
@@ -23,6 +23,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('spider_webcfg', '0003_auto_20190708_1341'),
+        ('spider_base', '0011_auto_20191230_1305'),
+    ]
+    run_before = [
+        ('spider_base', '0012_auto_20191230_1305'),
     ]
 
     operations = [

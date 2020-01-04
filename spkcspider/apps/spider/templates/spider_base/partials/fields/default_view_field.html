@@ -39,7 +39,7 @@
       </span>
     {% else %}
       {% literalize field as LiteralData %}
-      <span class="w3-white" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{field|field_to_python|default_if_none:""}}</span>
+      <pre class="w3-white" style="white-space: pre-wrap;" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{field|field_to_python|default_if_none:""}}</pre>
     {% endif %}
   {% endif %}
 </li>

@@ -248,7 +248,7 @@ class SpiderTag(BaseContent):
     def get_content_name(self):
         if not self.layout.usertag:
             return self.layout.name
-        return self.layout.usertag.get_content_name()
+        return self.layout.usertag.content.get_content_name()
 
     def get_template_name(self, scope):
         if scope == "update":

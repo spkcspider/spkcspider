@@ -441,6 +441,8 @@ class TravelProtectionForm(DataContentForm):
         }
 
     def save(self, commit=False):
+        # activates _prepared_info
+        self.instance._prepared_info = ""
         if self.cleaned_data.get("active"):
             self.instance._prepared_info = \
                 "{}active\x1e".format(
