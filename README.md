@@ -310,6 +310,9 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * Localisation
   * harmonize punctation
 * css theme instead inline style
+* delayed deletion of user (disable and strength 9 everywhere)
+  * maybe for travelprotections
+* check _real_ permission and not has_perm for dangerous Travelprotection
 
 ## Later
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
