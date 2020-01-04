@@ -100,21 +100,28 @@ class TravelProtectionManager(models.Manager):
     def get_active(self, now=None):
         if not now:
             now = timezone.now()
+        AttachedTimespan = apps.get_model("spider_base", "AttachedTimespan")
+        timespans = AttachedTimespan.objects.filter(
+            models.Q(
+                name="active",
+                start__isnull=True,
+                stop__gte=now
+            ) |
+            models.Q(
+                name="active",
+                start__lte=now,
+                stop__isnull=True
+            ) |
+            models.Q(
+                name="active",
+                start__lte=now,
+                stop__gte=now
+            )
+        )
         q = models.Q(info__contains="\x1eactive\x1e")
         q &= travelprotection_types_q
         q &= (
-            models.Q(
-                attachedtimespans__start__isnull=True,
-                attachedtimespans__stop__gte=now
-            ) |
-            models.Q(
-                attachedtimespans__start__lte=now,
-                attachedtimespans__stop__isnull=True
-            ) |
-            models.Q(
-                attachedtimespans__start__lte=now,
-                attachedtimespans__stop__gte=now
-            ) |
+            models.Q(attachedtimespans__in=timespans) |
             models.Q(
                 ctype__name="SelfProtection"
             )
