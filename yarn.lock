@@ -51,9 +51,9 @@ qrcode-generator@^1.4.4:
   integrity sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==
 
 trumbowyg@^2.20.0:
-  version "2.20.0"
-  resolved "https://registry.yarnpkg.com/trumbowyg/-/trumbowyg-2.20.0.tgz#4418fc42d628d4763553e9bc97e4efd880113daf"
-  integrity sha512-XdGZtc2eVF7LsMjb/Ilcgqj4ClkPlXz79mxbaQGvBttGodj36JF+HggHGgqtTAcqVXHx0viz9lYPf14zz1rRaA==
+  version "2.21.0"
+  resolved "https://registry.yarnpkg.com/trumbowyg/-/trumbowyg-2.21.0.tgz#ca133bb960d3302d362ca73358e268d3830c74cc"
+  integrity sha512-TUatXrv2PgaYjgIZdh4G0UgZsFd9cmkw4ZGrQBWrXNDtf2cn+1TEgLGd/jVj0MWGxEYfbrZXmURf9UQlEMLGFg==
 
 w3-css@^4.1.0:
   version "4.1.0"
