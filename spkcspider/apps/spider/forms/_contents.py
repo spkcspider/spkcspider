@@ -432,7 +432,10 @@ class TravelProtectionForm(DataContentForm):
         ret = {
             "attachedtimespans": self.cleaned_data["timeplans"]
         }
-        if self.cleaned_data["travel_protection_type"] != TravelProtectionType.wipe_user:  # noqa: E501
+        if self.cleaned_data["travel_protection_type"] not in {
+            TravelProtectionType.wipe_user.value,
+            TravelProtectionType.trigger_disable_user.value
+        }:
             ret["protect_contents"] = \
                 [
                     self.instance.associated,

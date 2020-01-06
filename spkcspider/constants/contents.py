@@ -70,6 +70,8 @@ class TravelProtectionType(str, enum.Enum):
     wipe = "d"
     # wipe user, self destruct user on login, Note: maybe noticable
     wipe_user = "e"
+    # trigger disable plus disable all components
+    trigger_disable_user = "E"
 
     def __str__(self):
         # output value instead of member name
@@ -85,6 +87,10 @@ class TravelProtectionType(str, enum.Enum):
             (cls.trigger_disable, _("Disable login if triggered")),
             (cls.wipe, _("Wipe")),
             (cls.wipe_user, _("Wipe User")),
+            (
+                cls.trigger_disable_user,
+                _("Disable login and contents if triggered")
+            ),
         )
 
 

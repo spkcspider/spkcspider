@@ -165,32 +165,41 @@ class TravelProtectionManager(models.Manager):
         travelprotection.protect_contents.all().delete()
         return True
 
+    def handle_trigger_disable_user(self, travelprotection, request, now):
+        AssignedProtection = \
+            apps.get_model("spider_base", "AssignedProtection")
+        UserComponent = \
+            apps.get_model("spider_base", "UserComponent")
+        travel = self.model.travel.get_active(now)
+        q = models.Q(name="index")
+        if travelprotection.content.free_data.get(
+            "is_travel_protected", False
+        ):
+            q |= models.Q(travel_protected__in=travel)
+        ucs = UserComponent.objects.select_for_update().exclude(q)
+        ps = AssignedProtection.objects.select_for_update().filter(
+            usercomponent__in=ucs
+        )
+        with transaction.atomic():
+            ucs.update(
+                strength=9, public=False
+            )
+            ucs.filter(required_passes=0).update(required_passes=1)
+            ps.update(state=ProtectionStateType.disabled)
+        travelprotection.replace_info(
+            travel_protection_type=TravelProtectionType.disable,
+            pwhash=False
+        )
+        travelprotection.save(update_fields=["info"])
+        return False
+
     def handle_wipe_user(self, travelprotection, request, now):
         if travelprotection.content.free_data.get(
             "is_travel_protected", False
         ):
-            AssignedProtection = \
-                apps.get_model("spider_base", "AssignedProtection")
-            UserComponent = \
-                apps.get_model("spider_base", "UserComponent")
-            travel = self.model.travel.get_active(now)
-            ucs = UserComponent.objects.select_for_update().exclude(
-                models.Q(travel_protected__in=travel) | models.Q(name="index")
+            return self.handle_trigger_disable_user(
+                travelprotection, request, now
             )
-            ps = AssignedProtection.objects.select_for_update().filter(
-                usercomponent__in=ucs
-            )
-            with transaction.atomic():
-                ucs.update(
-                    strength=9, public=False
-                )
-                ucs.filter(required_passes=0).update(required_passes=1)
-                ps.update(state=ProtectionStateType.disabled)
-            travelprotection.replace_info(
-                travel_protection_type=TravelProtectionType.disable,
-                pwhash=False
-            )
-            travelprotection.save(update_fields=["info"])
         else:
             travelprotection.usercomponent.user.delete()
         return False
