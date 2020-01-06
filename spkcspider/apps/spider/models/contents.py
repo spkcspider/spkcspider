@@ -142,7 +142,7 @@ class LinkContent(DataContent):
     def get_info(self):
         ret = self.associated.attached_to_content.content.get_info()
         return "%ssource=%s\x1elink\x1e" % (
-            ret, self.associated.pk
+            ret, self.associated_id
         )
 
     def get_form(self, scope):

@@ -365,7 +365,7 @@ class AuthToken(BaseSubUserModel):
 
     def initialize_token(self):
         self.token = create_b64_id_token(
-            self.usercomponent.id, "_", getattr(settings, "TOKEN_SIZE", 30)
+            self.usercomponent_id, "_", getattr(settings, "TOKEN_SIZE", 30)
         )
 
     def save(self, *args, **kwargs):

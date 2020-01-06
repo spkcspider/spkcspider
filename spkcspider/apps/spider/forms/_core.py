@@ -118,6 +118,33 @@ class UserComponentForm(forms.ModelForm):
             request.user.spider_info.allowed_content.all()
         ).order_by("name")
 
+        if self.instance.is_index:
+            assert self.instance.id
+            ptype = ProtectionType.authentication
+            self.fields["master_pw"].required = True
+            self.fields["master_pw"].label = _(
+                "Master Login Password"
+            )
+            self.fields["master_pw"].help_text = _(
+                "Enter Password used for user account<br/>"
+                "Note: to migrate data, first enter old password then the "
+                "new one"
+            )
+            self.fields.pop("features", None)
+            self.fields.pop("featured", None)
+            self.fields["required_passes"].help_text = _(
+                "How many protections must be passed to login?<br/>"
+                "Minimum is 1, no matter what selected"
+            )
+        else:
+            ptype = ProtectionType.access_control
+
+        self.protections = Protection.get_forms(
+            data=data, files=files, prefix=prefix, uc=self.instance,
+            ptype=ptype, request=request, form=self
+        )
+        self.protections = list(self.protections)
+
         if self.instance.id:
             # data and files field maybe not filled (to load from component)
             # remove pw if index because it is used for legitimating changes
@@ -136,37 +163,11 @@ class UserComponentForm(forms.ModelForm):
                 self.fields["primary_anchor"].queryset.filter(
                     usercomponent=self.instance
                 )
-            if self.instance.is_index:
-                self.fields["master_pw"].required = True
-                self.fields["master_pw"].label = _(
-                    "Master Login Password"
-                )
-                self.fields["master_pw"].help_text = _(
-                    "Enter Password used for user account<br/>"
-                    "Note: to migrate data, first enter old password then the "
-                    "new one"
-                )
-                self.fields.pop("features", None)
-                self.fields.pop("featured", None)
-                self.fields["required_passes"].help_text = _(
-                    "How many protections must be passed to login?<br/>"
-                    "Minimum is 1, no matter what selected"
-                )
-                ptype = ProtectionType.authentication
-            else:
-
-                ptype = ProtectionType.access_control
-            self.protections = Protection.get_forms(
-                data=data, files=files, prefix=prefix, uc=self.instance,
-                ptype=ptype, request=request, form=self
-            )
-            self.protections = list(self.protections)
         else:
             self.fields.pop("primary_anchor", None)
-            self.fields["new_static_token"].initial = INITIAL_STATIC_TOKEN_SIZE
             self.fields["new_static_token"].choices = \
                 self.fields["new_static_token"].choices[1:]
-            self.protections = []
+            self.fields["new_static_token"].initial = INITIAL_STATIC_TOKEN_SIZE
             self.fields["required_passes"].initial = 1
 
     @property
@@ -291,6 +292,7 @@ class UserComponentForm(forms.ModelForm):
 
     def _save_protections(self):
         for protection in self.protections:
+            # executes clean
             if not protection.is_valid():
                 continue
             protection.save()

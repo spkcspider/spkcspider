@@ -28,7 +28,7 @@ def get_file_path(instance, filename):
     for _i in range(0, 100):
         ret_path = default_storage.generate_filename(
             posixpath.join(
-                ret, str(instance.content.usercomponent.user.pk),
+                ret, str(instance.content.usercomponent.user_id),
                 create_b64_token(FILE_TOKEN_SIZE), filename.lstrip(".")
             )
         )

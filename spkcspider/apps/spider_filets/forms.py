@@ -196,7 +196,7 @@ class TextForm(LicenseForm):
                     "Requires protection strength >=%s."
                 ) % settings.SPIDER_MIN_STRENGTH_EVELATION
 
-            query = models.Q(pk=self.instance.associated.usercomponent.pk)
+            query = models.Q(pk=self.instance.associated.usercomponent_id)
             if scope == "update":
                 query |= models.Q(
                     contents__references=self.instance.associated

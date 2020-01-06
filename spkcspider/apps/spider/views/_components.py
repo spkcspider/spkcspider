@@ -515,7 +515,7 @@ class ComponentUpdate(UserTestMixin, UpdateView):
         self.object = form.save()
         persist = 0
         if self.object.primary_anchor:
-            persist = self.object.primary_anchor.id
+            persist = self.object.primary_anchor_id
         self.object.authtokens.filter(persist__gte=0).update(
             persist=persist
         )

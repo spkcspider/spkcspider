@@ -118,7 +118,6 @@ class BaseProtection(forms.Form):
     # auto populated, instance
     protection = None
     instance = None
-    usercomponent = None
     parent_form = None
 
     # initial values
@@ -135,6 +134,10 @@ class BaseProtection(forms.Form):
         ).first()
         # here .value is required
         if not self.instance:
+            # usercomponent can be partly initialized,
+            #   don't rely on name or id in form __init__
+            #   cleaning will be done after all usercomponent data is updated
+            #   so there it is safe
             self.instance = AssignedProtection(
                 usercomponent=uc, protection=protection,
                 state=ProtectionStateType.disabled
@@ -394,7 +397,7 @@ class RateLimitProtection(BaseProtection):
     @classmethod
     def count_access(cls, request, obj):
         return b"%b:%b" % (
-            str(obj.usercomponent.pk).encode("ascii"), ipaddress.ip_network(
+            str(obj.usercomponent_id).encode("ascii"), ipaddress.ip_network(
                 request.META['REMOTE_ADDR'], strict=False
             ).compressed.encode("ascii")
         )
