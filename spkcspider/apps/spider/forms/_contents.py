@@ -212,15 +212,19 @@ class TravelProtectionForm(DataContentForm):
             'node_modules/flatpickr/dist/flatpickr%s.js' % _extra
         ]
 
-    @staticmethod
-    def _filter_selfprotection(x):
-        if x[0] == TravelProtectionType.disable:
+    def _filter_dangerousprotection(self, x):
+        # if it is already selected, still allow selection
+        #   elsewise confusing logic and errors
+        if (
+            x[0] in dangerous_login_choices and
+            x[0] != self.initial["travel_protection_type"]
+        ):
             return False
         return True
 
     @staticmethod
-    def _filter_dangerousprotection(x):
-        if x[0] in dangerous_login_choices:
+    def _filter_selfprotection(x):
+        if x[0] == TravelProtectionType.disable:
             return False
         return True
 
@@ -258,7 +262,6 @@ class TravelProtectionForm(DataContentForm):
                         name="active"
                     )
                 ]
-
         if not self.request.user.has_perm(
             "spider_base.use_dangerous_travelprotections"
         ):
@@ -280,26 +283,13 @@ class TravelProtectionForm(DataContentForm):
         travel = AssignedContent.travel.get_active_for_request(
             request
         ).filter(loggedin_active_tprotections_q)
-        selfid = getattr(self.instance, "id", -1)
-        if (
-            self.initial["travel_protection_type"]
-            == TravelProtectionType.disable
-        ):
-            self.initial["travel_protection_type"] = \
-                TravelProtectionType.trigger_disable
-
+        selfid = self.instance.id or -1
         q_component = models.Q(
             user=request.user
         ) & (
             ~models.Q(travel_protected__in=travel) |
             models.Q(travel_protected__id=selfid)
         )
-        self.fields["protect_components"].queryset = \
-            self.fields["protect_components"].queryset.filter(
-                q_component
-            ).distinct().order_by(
-                "name"
-            )
 
         q_content = models.Q(usercomponent__user=request.user) & (
             ~(
@@ -342,6 +332,13 @@ class TravelProtectionForm(DataContentForm):
         self.fields["protect_contents"].queryset = \
             self.fields["protect_contents"].queryset.filter(
                 q_content
+            ).distinct().order_by(
+                "name"
+            )
+
+        self.fields["protect_components"].queryset = \
+            self.fields["protect_components"].queryset.filter(
+                q_component
             ).distinct().order_by(
                 "name"
             )
@@ -432,15 +429,22 @@ class TravelProtectionForm(DataContentForm):
         return isvalid
 
     def get_prepared_attachements(self):
-        return {
-            "attachedtimespans": self.cleaned_data["timeplans"],
-            "protect_contents":
-                list(self.cleaned_data["protect_contents"])
-                + [self.instance.associated],
-            "protect_components": self.cleaned_data["protect_components"]
+        ret = {
+            "attachedtimespans": self.cleaned_data["timeplans"]
         }
+        if self.cleaned_data["travel_protection_type"] != TravelProtectionType.wipe_user:  # noqa: E501
+            ret["protect_contents"] = \
+                [
+                    self.instance.associated,
+                    *self.cleaned_data["protect_contents"]
+                ]
+            ret["protect_components"] = \
+                list(self.cleaned_data["protect_components"])
+        return ret
 
     def save(self, commit=False):
+        self.instance.free_data["is_travel_protected"] = \
+            self.request.session.get("is_travel_protected", False)
         # activates _prepared_info
         self.instance._prepared_info = ""
         if self.cleaned_data.get("active"):

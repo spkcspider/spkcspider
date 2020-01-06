@@ -602,8 +602,89 @@ class TravelProtectionTest(TransactionWebTest):
         form.set("username", "testuser1")
         form["password"].force_value("abc")
         response = form.submit()
+        self.assertEqual(response.status_code, 200)
         self.assertFalse(
             SpiderUser.objects.filter(
                 username="testuser1"
             ).first()
+        )
+
+    def test_fake_wipe_user(self):
+        index = self.user.usercomponent_set.filter(name="index").first()
+        index_count = index.contents.count()
+        testu = self.user.usercomponent_set.create(name="test")
+        createurl = reverse(
+            "spider_base:ucontent-add",
+            kwargs={
+                "token": index.token,
+                "type": "TravelProtection"
+            }
+        )
+        self.app.set_user(user="testuser1")
+        response = self.app.get(createurl)
+        form = response.forms["main_form"]
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("protect_components", (testu.name,))
+        form.set("master_pw", "abc")
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
+
+        # resets session
+        self.app.reset()
+        self.app.set_user(user="testuser1")
+
+        response = self.app.get(createurl)
+        form = response.forms["main_form"]
+        form["timeplans"].force_value([
+            json.dumps({
+                "start": (timezone.now()-td(days=1)).isoformat()
+            })
+        ])
+        form.set("travel_protection_type", TravelProtectionType.wipe_user)
+        form.set("master_pw", "abc")
+        response = form.submit().follow()
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            index.contents.count(), index_count+2
+        )
+
+        self.app.set_user(user=None)
+        # resets session
+        self.app.reset()
+
+        response = self.app.get(reverse(
+            "auth:login"
+        ))
+        form = response.forms["SPKCLoginForm"]
+        form.set("username", "testuser1")
+        form["password"].force_value("abc")
+        response = form.submit()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            SpiderUser.objects.filter(
+                username="testuser1"
+            ).first()
+        )
+        self.assertFalse(
+            UserComponent.objects.filter(
+                user__username="testuser1"
+            ).exclude(strength__gte=9).exclude(name=testu.name)
+        )
+        self.assertTrue(
+            self.user.usercomponent_set.filter(
+                name="home",
+                required_passes=1,
+                strength=9
+            )
+        )
+        self.assertTrue(
+            self.user.usercomponent_set.filter(
+                name=testu.name,
+                travel_protected__isnull=False
+            )
         )

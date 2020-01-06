@@ -226,19 +226,20 @@ def embed_file_default(name, value, content, context):
         )
 
 
-def has_admin_permission(self, request):
+def has_admin_permission(obj, request):
     # allow only non travel protected user with superuser and staff permissions
     if not request.user.is_active or not request.user.is_staff:
         return False
     # user is authenticate now
-    assert(request.user.is_authenticated)
-    from .models import AssignedContent
-    t = AssignedContent.travel.get_active_for_request(
-        request
-    ).exists()
-    # auto activate but not deactivate
-    if t:
-        request.session["is_travel_protected"] = t
+    assert request.user.is_authenticated
+    if not request.session["is_travel_protected"]:
+        from .models import AssignedContent
+        t = AssignedContent.travel.get_active_for_request(
+            request
+        ).exists()
+        # auto activates on trying to access admin but not deactivate
+        if t:
+            request.session["is_travel_protected"] = t
     if request.session["is_travel_protected"]:
         return False
     return True

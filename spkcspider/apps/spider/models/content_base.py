@@ -17,7 +17,7 @@ from django.apps import apps
 from django.conf import settings
 from django.core import validators
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -26,7 +26,8 @@ from django.utils.translation import gettext_lazy as _
 
 from spkcspider.constants import (
     MAX_TOKEN_B64_SIZE, TravelProtectionType, VariantType,
-    hex_size_of_bigid, static_token_matcher, travel_scrypt_params
+    hex_size_of_bigid, static_token_matcher, travel_scrypt_params,
+    ProtectionStateType
 )
 from spkcspider.utils.security import create_b64_id_token
 
@@ -137,10 +138,10 @@ class TravelProtectionManager(models.Manager):
     def get_active_for_request(self, request, now=None):
         return self.get_active_for_session(request.session, request.user)
 
-    def handle_disable(self, travelprotection):
+    def handle_disable(self, travelprotection, request, now):
         return False
 
-    def handle_trigger_hide(self, travelprotection):
+    def handle_trigger_hide(self, travelprotection, request, now):
         travelprotection.replace_info(
             travel_protection_type=TravelProtectionType.hide,
             pwhash=False
@@ -148,15 +149,15 @@ class TravelProtectionManager(models.Manager):
         travelprotection.save(update_fields=["info"])
         return True
 
-    def handle_trigger_disable(self, travelprotection):
+    def handle_trigger_disable(self, travelprotection, request, now):
         travelprotection.replace_info(
             travel_protection_type=TravelProtectionType.disable,
             pwhash=False
         )
         travelprotection.save(update_fields=["info"])
-        return True
+        return False
 
-    def handle_wipe(self, travelprotection):
+    def handle_wipe(self, travelprotection, request, now):
         # first components have to be deleted
         travelprotection.protect_components.all().delete()
         # as this deletes itself and therefor the information
@@ -164,8 +165,34 @@ class TravelProtectionManager(models.Manager):
         travelprotection.protect_contents.all().delete()
         return True
 
-    def handle_wipe_user(self, travelprotection):
-        travelprotection.usercomponent.user.delete()
+    def handle_wipe_user(self, travelprotection, request, now):
+        if travelprotection.content.free_data.get(
+            "is_travel_protected", False
+        ):
+            AssignedProtection = \
+                apps.get_model("spider_base", "AssignedProtection")
+            UserComponent = \
+                apps.get_model("spider_base", "UserComponent")
+            travel = self.model.travel.get_active(now)
+            ucs = UserComponent.objects.select_for_update().exclude(
+                models.Q(travel_protected__in=travel) | models.Q(name="index")
+            )
+            ps = AssignedProtection.objects.select_for_update().filter(
+                usercomponent__in=ucs
+            )
+            with transaction.atomic():
+                ucs.update(
+                    strength=9, public=False
+                )
+                ucs.filter(required_passes=0).update(required_passes=1)
+                ps.update(state=ProtectionStateType.disabled)
+            travelprotection.replace_info(
+                travel_protection_type=TravelProtectionType.disable,
+                pwhash=False
+            )
+            travelprotection.save(update_fields=["info"])
+        else:
+            travelprotection.usercomponent.user.delete()
         return False
 
     _action_map = {
@@ -174,6 +201,8 @@ class TravelProtectionManager(models.Manager):
     }
 
     def auth(self, request, uc, now=None):
+        if not now:
+            now = timezone.now()
         active = self.get_active(now).filter(
             usercomponent=uc
         )
@@ -201,15 +230,19 @@ class TravelProtectionManager(models.Manager):
         if not request.session["is_travel_protected"]:
             return True
 
-        for i in active:
-            travel_protection = \
-                i.getlist("travel_protection_type", amount=1)[0]
-            return getattr(
+        can_continue = True
+
+        for travelprotection in active:
+            travel_protection_type = \
+                travelprotection.getlist("travel_protection_type", amount=1)[0]
+            ret = getattr(
                 self,
-                self._action_map[travel_protection],
-                lambda x: True
-            )(i)
-        return True
+                self._action_map[travel_protection_type],
+                lambda _1, _2, _3: True
+            )(travelprotection, request, now)
+            if not ret:
+                can_continue = False
+        return can_continue
 
 
 class UserContentManager(models.Manager):
