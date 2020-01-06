@@ -267,14 +267,16 @@ def serialize_stream(
             Literal(page_view.number, datatype=XSD.positiveInteger)
         ))
         if paginator.object_list.model == UserComponent:
+            # for mysql
+            object_list = list(page_view.object_list)
             if embed:
                 prefetch_related_objects(
-                    page_view.object_list,
+                    object_list,
                     "contents",
                     "contents__ctype",
                     "contents__datacontent"
                 )
-            for component in page_view.object_list:
+            for component in object_list:
                 ref_component = serialize_component(
                     graph, component, context
                 )
@@ -294,10 +296,12 @@ def serialize_stream(
                     usercomponent.get_absolute_url()
                 ))
 
+            # for mysql
+            object_list = list(page_view.object_list)
             prefetch_related_objects(
-                page_view.object_list, "ctype", "datacontent"
+                object_list, "ctype", "datacontent"
             )
-            for content in page_view.object_list:
+            for content in object_list:
                 if usercomponent != content.usercomponent:
                     usercomponent = content.usercomponent
                     ref_component = serialize_component(
