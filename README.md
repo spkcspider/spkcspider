@@ -307,14 +307,13 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * documentation
 * test admin
 * cleanup travelprotection: either no trigger_passwords if no trigger action is selected, or depend for trigger on trigger_passwords
+  * partly done, missing in frontend
 * Localisation
   * harmonize punctation
 * css theme instead inline style
-* delayed deletion of user (disable and strength 9 everywhere)
-  * maybe for travelprotections
-* check _real_ permission and not has_perm for dangerous Travelprotection
 
 ## Later
+* delayed deletion of user (disable and strength 9 everywhere)
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * create client side script for import (pushing to server, index token for auth?)
   * use browerside javascript?
