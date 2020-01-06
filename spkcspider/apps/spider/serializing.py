@@ -7,7 +7,7 @@ __all__ = [
 from rdflib import RDF, XSD, Literal, URIRef
 
 from django.core.paginator import InvalidPage, Paginator
-from django.db.models import Q
+from django.db.models import Q, prefetch_related_objects
 from django.http import Http404
 from spkcspider.constants import VariantType, spkcgraph
 from spkcspider.utils.fields import add_property
@@ -267,6 +267,13 @@ def serialize_stream(
             Literal(page_view.number, datatype=XSD.positiveInteger)
         ))
         if paginator.object_list.model == UserComponent:
+            if embed:
+                prefetch_related_objects(
+                    page_view.object_list,
+                    "contents",
+                    "contents__ctype",
+                    "contents__datacontent"
+                )
             for component in page_view.object_list:
                 ref_component = serialize_component(
                     graph, component, context
@@ -286,6 +293,10 @@ def serialize_stream(
                     context["hostpart"],
                     usercomponent.get_absolute_url()
                 ))
+
+            prefetch_related_objects(
+                page_view.object_list, "ctype", "datacontent"
+            )
             for content in page_view.object_list:
                 if usercomponent != content.usercomponent:
                     usercomponent = content.usercomponent

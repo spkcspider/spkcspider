@@ -333,6 +333,7 @@ class ContentIndex(ReferrerMixin, ContentBase, ListView):
                 1,
                 1
             )
+        context["object_list"]
         page = 1
         try:
             page = int(self.request.GET.get("page", "1"))
@@ -621,7 +622,7 @@ class ContentAccess(ReferrerMixin, ContentBase, UpdateView):
     def get_context_data(self, **kwargs):
         kwargs["is_public_view"] = (
             self.usercomponent.public and
-            self.scope not in ("add", "update", "raw_update")
+            self.scope not in {"add", "update", "raw_update"}
         )
 
         if self.request.is_owner:
