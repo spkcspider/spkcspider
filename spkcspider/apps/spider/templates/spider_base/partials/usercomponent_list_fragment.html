@@ -72,7 +72,7 @@
     <tr><td colspan="3" style="padding:0; word-break: break-all;">
       <div class="w3-white w3-padding w3-border-bottom" style="{% if not forloop.last %}margin-bottom:20px{% endif %}">
         {% if not uc.description|is_not_or_space %}
-          {{uc.description|escape|linebreaksbr}}
+          <pre style="margin:0">{{uc.description|escape}}</pre>
         {% else %}
           <span class="w3-text-gray">{% trans 'No description' %}</span>
         {% endif %}
