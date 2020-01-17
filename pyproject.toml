@@ -38,20 +38,31 @@ django-widget-tweaks = "*"
 django-next-prev = "*"
 django-fast-ratelimit = "*"
 
+django-simple-captcha = {version="*", optional = true}
+flipflop = {version="*", optional = true}
+mysqlclient = {version="*", optional = true}
+django-mysql = {version="*", optional = true}
+psycopg2 = {version="*", optional = true}
+celery = {version="*", optional = true}
+sqlalchemy = {version="*", optional = true}
+spkcspider-domainauth = {version=">=0.4", optional = true}
+django-webtest = {version="*", optional = true}
+WSGIProxy2 = {version="*", optional = true}
+
+
 [tool.poetry.dev-dependencies]
 django-extensions = '*'
 Werkzeug = '*'
-django-simple-captcha = "*"
-spkcspider-domainauth = ">=0.4"
 pylint = "*"
+django-simple-captcha = {version="*"}
+
 
 [tool.poetry.extras]
-captcha = ["django-simple-captcha"]
-fcgi = ["flipflop"]
+fastcgi = ["flipflop"]
+postgresql = ["psycopg2"]
 mysql = ["mysqlclient", "django-mysql"]
-pgsql = ["psycopg2"]
-celery = ["celery", "sqlalchemy"]
-test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery", "spkcspider-domainauth>=0.4"]
+tasks = ["celery", "sqlalchemy"]
+test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery", "sqlalchemy", "spkcspider-domainauth"]
 
 [tool.tox]
 legacy_tox_ini = """
@@ -59,7 +70,6 @@ legacy_tox_ini = """
 minversion = 3.4.0
 isolated_build = True
 envlist = py{36,37,38}-django{30,master}-{sqlite3,postgresql,mysql}
-# extras = test
 
 [testenv]
 whitelist_externals =
@@ -77,17 +87,15 @@ setenv =
     mysql: DJANGO_SETTINGS_MODULE=testsettings.test_mysql
 
 deps =
-  django-webtest
   django-simple-captcha
-  WSGIProxy2
-  spkcspider-domainauth>=0.4
   celery
+  spkcspider-domainauth>=0.4
+  django-webtest
+  WSGIProxy2
   django30: Django>=3.0,<3.1
   djangomaster: https://github.com/django/django/archive/master.zip
   postgresql: psycopg2-binary
-  mysql: mysqlclient>=1.3.13
-  mysql: django-mysql
-
+  mysql: mysqlclient django-mysql
 
 """
 
