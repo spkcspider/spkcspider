@@ -82,7 +82,7 @@ deps =
   WSGIProxy2
   spkcspider-domainauth>=0.4
   celery
-  django30: Django>=3.0a1,<=3.0.99
+  django30: Django>=3.0,<3.1
   djangomaster: https://github.com/django/django/archive/master.zip
   postgresql: psycopg2-binary
   mysql: mysqlclient>=1.3.13
@@ -92,5 +92,5 @@ deps =
 """
 
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry>=1.0"]
 build-backend = "poetry.masonry.api"
