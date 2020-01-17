@@ -51,6 +51,32 @@ class BaseContent(models.Model):
     # this way content could be protected to be only visible to admin, user
     # and legitimated users (if not index)
 
+    id: int = models.BigAutoField(primary_key=True, editable=False)
+    # every content can specify its own deletion period
+    deletion_period = getattr(
+        settings, "SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD", timedelta(0)
+    )
+    # use usercomponent in form instead
+    associated = models.OneToOneField(
+        "spider_base.AssignedContent", related_name="+",
+        on_delete=models.CASCADE, null=True
+    )
+
+    # internal check if clean was executed
+    _content_is_cleaned = False
+
+    # autofilled set with attachement object names
+    attached_attributenames = set()
+
+    # transfer attribute for errors of associated
+    associated_errors = None
+
+    class Meta:
+        abstract = True
+        default_permissions = ()
+
+    #################################################################
+
     # iterable or callable returning iterable containing dicts
     # required keys: name
     # optional: strength (default=0), ctype (default="")
@@ -63,23 +89,8 @@ class BaseContent(models.Model):
     # use case: addons for usercontent, e.g. dependencies on external libraries
     # use case: model with different abilities
     appearances = None
-
-    # autofilled
-    attached_names = set()
-
-    id: int = models.BigAutoField(primary_key=True, editable=False)
-    # every content can specify its own deletion period
-    deletion_period = getattr(
-        settings, "SPIDER_CONTENTS_DEFAULT_DELETION_PERIOD", timedelta(0)
-    )
-    # use usercomponent in form instead
-    associated = models.OneToOneField(
-        "spider_base.AssignedContent", related_name="+",
-        on_delete=models.CASCADE, null=True
-    )
     # None or dict (key=related_name)
     prepared_attachements = None
-
     # user can set name
     # if set to "force" name will be enforced
     expose_name = True
@@ -87,17 +98,8 @@ class BaseContent(models.Model):
     expose_description = False
     # use if you want to force a token size
     force_token_size = None
-
-    associated_errors = None
-
     # extra size which should be used in calc
     extra_size = 0
-
-    _content_is_cleaned = False
-
-    class Meta:
-        abstract = True
-        default_permissions = ()
 
     def __str__(self):
         if not self.id:
@@ -153,7 +155,7 @@ class BaseContent(models.Model):
                     if isinstance(ob, BaseAttached):
                         s += ob.get_size()
         else:
-            for attached in self.attached_names:
+            for attached in self.attached_attributenames:
                 for ob in getattr(self.associated, attached).all():
                     s += ob.get_size()
         return s

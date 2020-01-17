@@ -254,7 +254,12 @@ class TravelProtectionManager(models.Manager):
         return can_continue
 
 
-class UserContentManager(models.Manager):
+class AssignedContentManager(models.Manager):
+    """
+        Manager for AssignedContent.
+        Contains some base functionality for easing usage
+        is not available in migrations
+    """
 
     def create(self, **kwargs):
         ret = self.get_queryset().create(**kwargs)
@@ -506,7 +511,7 @@ class AssignedContent(BaseInfoModel, BaseSubUserModel):
     #  primary: primary content of type for usercomponent
     #  unlisted: not listed
     #  anchor:
-    objects = UserContentManager()
+    objects = AssignedContentManager()
     travel = TravelProtectionManager()
 
     class Meta:

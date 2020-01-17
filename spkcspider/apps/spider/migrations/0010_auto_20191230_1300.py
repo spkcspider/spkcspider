@@ -99,6 +99,9 @@ class Migration(migrations.Migration):
                 'abstract': False,
                 'default_permissions': (),
             },
+            managers=[
+                ('objects', spkcspider.apps.spider.models.content_extended.DataContentManager()),
+            ],
         ),
         migrations.AlterField(
             model_name='assignedprotection',

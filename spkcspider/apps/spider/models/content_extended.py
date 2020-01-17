@@ -39,17 +39,32 @@ def get_file_path(instance, filename):
     return ret_path
 
 
+class DataContentManager(models.Manager):
+    use_in_migrations = True
+
+    def get_queryset(self):
+        if self.model._meta.model_name == "datacontent":
+            return super().get_queryset()
+        return super().get_queryset().filter(
+            associated__ctype__code=self.model._meta.model_name
+        )
+
+
 class DataContent(BaseContent):
     """
-        inherit from it, it will maybe replace the generic relation
+        inherit from it with proxy objects when possible
+        speedier than BaseContent by beeing prefetched
     """
     # has as an exception a related name (e.g. for speeding up)
+    # name is "datacontent"
     associated = models.OneToOneField(
         "spider_base.AssignedContent",
         on_delete=models.CASCADE, null=True
     )
     quota_data = JSONField(default=dict, blank=True)
     free_data = JSONField(default=dict, blank=True)
+
+    objects = DataContentManager()
 
     def get_size(self, prepared_attachements=None):
         s = super().get_size(prepared_attachements)
@@ -72,8 +87,8 @@ class BaseAttached(models.Model):
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         if not getattr(cls._meta, "abstract", False):
-            BaseContent.attached_names.add(
-                "{}_set".format(cls._meta.model_name)
+            BaseContent.attached_attributenames.add(
+                "{}s".format(cls._meta.model_name)
             )
 
     class Meta:
