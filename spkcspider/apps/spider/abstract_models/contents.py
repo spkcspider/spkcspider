@@ -179,7 +179,7 @@ class BaseContent(models.Model):
 
     def localized_description(self):
         """ localize and perform other transforms before rendering to user """
-        if not self.expose_description:
+        if self.expose_description:
             return self.associated.description
         return gettext(self.associated.description)
 
