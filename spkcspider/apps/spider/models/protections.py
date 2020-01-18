@@ -336,6 +336,10 @@ class AuthToken(BaseSubUserModel):
         "spider_base.UserComponent", on_delete=models.CASCADE,
         related_name="authtokens"
     )
+    attached_to_content = models.ForeignKey(
+        "spider_base.AssignedContent", on_delete=models.CASCADE,
+        related_name="attachedtokens", null=True, blank=True
+    )
     # -1=false,0=usercomponent,1-...=anchor
     persist: int = models.BigIntegerField(
         blank=True, default=-1, db_index=True
