@@ -1,6 +1,6 @@
 __all__ = [
     "DataContent", "BaseAttached", "AttachedFile", "AttachedTimespan",
-    "AttachedBlob"
+    "AttachedBlob", "SmartTag"
 ]
 
 import posixpath
