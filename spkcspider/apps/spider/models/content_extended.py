@@ -20,7 +20,7 @@ from ..abstract_models import BaseContent
 from ..conf import FILE_TOKEN_SIZE
 
 
-def get_file_path(instance, filename):
+def get_file_path(instance, filename) -> str:
     ret = getattr(settings, "SPIDER_FILE_DIR", "spider_files")
     # try 100 times to find free filename
     # but should not take more than 1 try
@@ -66,7 +66,7 @@ class DataContent(BaseContent):
 
     objects = DataContentManager()
 
-    def get_size(self, prepared_attachements=None):
+    def get_size(self, prepared_attachements=None) -> int:
         s = super().get_size(prepared_attachements)
         s += len(str(self.quota_data))
         return s
@@ -74,8 +74,8 @@ class DataContent(BaseContent):
 
 class BaseAttached(models.Model):
     id: int = models.BigAutoField(primary_key=True, editable=False)
-    name = models.CharField(max_length=50, default="", blank=True)
-    unique = models.BooleanField(default=False, blank=True)
+    name: str = models.CharField(max_length=50, default="", blank=True)
+    unique: bool = models.BooleanField(default=False, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
     modified = models.DateTimeField(auto_now=True, editable=False)
     content = models.ForeignKey(
@@ -145,15 +145,15 @@ class AttachedTimespan(BaseAttached):
                 _("Timespan empty"),
             )
 
-    def get_size(self):
+    def get_size(self) -> int:
         # free can be abused
         return 8
 
 
 class AttachedCounter(BaseAttached):
-    counter = models.BigIntegerField()
+    counter: int = models.BigIntegerField()
 
-    def get_size(self):
+    def get_size(self) -> int:
         # free can be abused
         return 4
 
@@ -199,11 +199,11 @@ class AttachedFile(BaseAttached):
 class AttachedBlob(BaseAttached):
     blob = models.BinaryField(default=b"", editable=True, blank=True)
 
-    def get_size(self):
+    def get_size(self) -> int:
         return len(self.blob)
 
     @property
-    def as_bytes(self):
+    def as_bytes(self) -> bytes:
         return bytes(self.blob)
 
 
@@ -216,7 +216,7 @@ class SmartTag(BaseAttached):
         is in contradiction to attached_to a forward reference
         this means: smarttag.target is added to references
     """
-    data = JSONField(default=dict, blank=True)
+    data: dict = JSONField(default=dict, blank=True)
     free: bool = models.BooleanField(default=False, editable=False)
 
     target = models.ForeignKey(
@@ -244,7 +244,7 @@ class SmartTag(BaseAttached):
             )
         ]
 
-    def get_size(self):
+    def get_size(self) -> int:
         # sometimes it is useful to have a free reference with data
         # so make here an exception
         return 0 if self.free else len(str(self.data)) + 4
