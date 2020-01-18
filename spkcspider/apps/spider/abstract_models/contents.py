@@ -327,7 +327,16 @@ class BaseContent(models.Model):
         )
 
     def get_references(self):
-        return []
+        """
+            For specifing references to other contents.
+            Defaults to smarttag targets so that the behaviour:
+            adding smarttags targets can be overwritten/filtered
+            filtering works from perspective of a SmartTag
+            not an AssignedContent
+        """
+        return self.associated.smarttags.filter(
+            target__isnull=False
+        ).values_list("target", flat=True)
 
     def map_data(self, name, field, data, graph, context):
         if isinstance(data, File):

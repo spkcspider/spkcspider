@@ -205,3 +205,46 @@ class AttachedBlob(BaseAttached):
     @property
     def as_bytes(self):
         return bytes(self.blob)
+
+
+class SmartTag(BaseAttached):
+    """
+        This avoids lockups in DataContent.
+        And can be used as a per client tag if many changes are expected.
+        For ease of use allow target be null
+
+        is in contradiction to attached_to a forward reference
+        this means: smarttag.target is added to references
+    """
+    data = JSONField(default=dict, blank=True)
+    free: bool = models.BooleanField(default=False, editable=False)
+
+    target = models.ForeignKey(
+        "spider_base.AssignedContent",
+        on_delete=models.CASCADE, null=True,
+        related_name="%(class)s_sources"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                name="%(class)s_target_unique",
+                fields=("content", "target", "name"),
+                condition=models.Q(unique=True)
+            ),
+            models.UniqueConstraint(
+                name="%(class)s_notarget_unique",
+                fields=("content", "name"),
+                condition=models.Q(unique=True, target__isnull=True)
+            ),
+            # prevents circular dependencies
+            models.CheckConstraint(
+                name="%(class)s_content_not_target",
+                check=~models.Q(content=models.F("target"))
+            )
+        ]
+
+    def get_size(self):
+        # sometimes it is useful to have a free reference with data
+        # so make here an exception
+        return 0 if self.free else len(str(self.data)) + 4

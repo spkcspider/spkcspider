@@ -490,7 +490,7 @@ class AssignedContent(BaseInfoModel, BaseSubUserModel):
     # - for a quick retrieval of related contents !!
     # - includes attached_contents
     # - is used by embed to find and output relations
-    # - with get_references can additional contents be added in embed
+    # - with get_forward_references can additional contents be added in embed
     references = models.ManyToManyField(
         "self", related_name="referenced_by", editable=False,
         symmetrical=False

@@ -1,5 +1,6 @@
 
 import logging
+from itertools import chain
 
 from rdflib import URIRef
 
@@ -328,7 +329,7 @@ class SpiderTag(BaseContent):
 
     def get_references(self):
         if not getattr(self, "layout", None):
-            return []
+            return super().get_references()
         if self._cached_references is None:
             form = self.layout.get_form()(
                 initial=self.tagdata.copy(),
@@ -343,7 +344,10 @@ class SpiderTag(BaseContent):
                     ]
                 )
             self._cached_references = _cached_references
-        return self._cached_references
+        return chain(
+            self._cached_references,
+            super().get_references()
+        )
 
     def get_form_kwargs(self, instance=None, **kwargs):
         if kwargs["scope"] == "add":
