@@ -86,9 +86,11 @@ class BaseAttached(models.Model):
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
-        if not getattr(cls._meta, "abstract", False):
+        if not getattr(cls.Meta, "abstract", False):
             BaseContent.attached_attributenames.add(
-                "{}s".format(cls._meta.model_name)
+                cls.content.field.related_query_name() % {
+                    "class": cls.__name__.lower()
+                }
             )
 
     class Meta:
