@@ -363,6 +363,7 @@ class AuthToken(BaseSubUserModel):
     session_key: str = models.CharField(max_length=40, null=True)
     extra: dict = JSONField(default=dict, blank=True)
     created = models.DateTimeField(auto_now_add=True, editable=False)
+    default_update_fields = None
 
     objects = AuthTokenManager()
 
@@ -377,12 +378,23 @@ class AuthToken(BaseSubUserModel):
         )
 
     def save(self, **kwargs):
+        # maybe a little overengineered for that a clash can only happen
+        # if an old generated token has the same token as a new one
+        # the used id switched from the one of a usercomponent to the one
+        # of the token
         start_token_creation = not self.token
         created = not self.id
         if start_token_creation:
+            if not created:
+                update_fields = set(kwargs.pop(
+                    "update_fields", self.default_update_fields
+                ))
+                update_fields.discard("token")
+                kwargs["update_fields"] = update_fields
             super().save(**kwargs)
             for i in range(0, 1000):
                 if i >= 999:
+                    # in reality this path will be very unlikely
                     if created:
                         self.delete()
                         self.token = None
@@ -401,3 +413,14 @@ class AuthToken(BaseSubUserModel):
                     pass
         else:
             super().save(**kwargs)
+
+
+AuthToken.default_update_fields = frozenset(
+    map(
+        lambda field: field.attname,
+        filter(
+            lambda x: not x.primary_key and not hasattr(x, 'through'),
+            AuthToken._meta.concrete_fields
+        )
+    )
+)
