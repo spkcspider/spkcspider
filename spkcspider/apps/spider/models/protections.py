@@ -345,11 +345,13 @@ class AuthToken(BaseSubUserModel):
         blank=True, default=-1, db_index=True
     )
     # brute force protection
-    #  16 = usercomponent.id in hexadecimal
+    #  16 = id in hexadecimal
     #  +2 for seperators
+    # when swapping tokens the id in the token can missmatch
+    #  so don't rely on it
     token: str = models.CharField(
         max_length=MAX_TOKEN_B64_SIZE+hex_size_of_bigid+2,
-        db_index=True, unique=True,
+        db_index=True, unique=True, null=True,
         validators=[
             validator_token
         ]
@@ -369,23 +371,33 @@ class AuthToken(BaseSubUserModel):
 
     def initialize_token(self):
         self.token = create_b64_id_token(
-            self.usercomponent_id, "_", getattr(settings, "TOKEN_SIZE", 30)
+            self.id,
+            "_",
+            getattr(settings, "TOKEN_SIZE", 30)
         )
 
-    def save(self, *args, **kwargs):
+    def save(self, **kwargs):
         start_token_creation = not self.token
+        created = not self.id
         if start_token_creation:
+            super().save(**kwargs)
             for i in range(0, 1000):
                 if i >= 999:
+                    if created:
+                        self.delete()
+                        self.token = None
                     raise TokenCreationError(
                         'A possible infinite loop was detected'
                     )
                 self.initialize_token()
                 try:
                     with transaction.atomic():
-                        super().save(*args, **kwargs)
+                        super().save(
+                            update_fields=["token"],
+                            using=kwargs.get("using")
+                        )
                     break
                 except IntegrityError:
                     pass
         else:
-            super().save(*args, **kwargs)
+            super().save(**kwargs)
