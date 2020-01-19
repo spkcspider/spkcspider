@@ -475,6 +475,19 @@ class UserContentForm(forms.ModelForm):
         super().clean()
         if not self.cleaned_data.get("usercomponent"):
             self.cleaned_data["usercomponent"] = self.initial["usercomponent"]
+
+        # check here if the user is allowed to create the instance
+        #   updates are always possible
+        if (
+            not self.instance.id and
+            not self.cleaned_data["usercomponent"].user_info.allowed_content.filter(  # noqa: E501
+                name=self.instance.ctype.name
+            ).exists()
+        ):
+            raise forms.ValidationError(
+                message=_('Not an allowed ContentVariant for this user'),
+                code='disallowed_contentvariant'
+            )
         if "features" in self.cleaned_data:
             min_strength = self.cleaned_data["features"].filter(
                 strength__gt=self.instance.usercomponent.strength

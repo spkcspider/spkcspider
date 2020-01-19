@@ -569,13 +569,6 @@ class AssignedContent(BaseInfoModel, BaseSubUserModel):
                     code="persist",
                 )
 
-        if not self.usercomponent.user_info.allowed_content.filter(
-            name=self.ctype.name
-        ).exists():  # pylint: disable=no-member
-            raise ValidationError(
-                message=_('Not an allowed ContentVariant for this user'),
-                code='disallowed_contentvariant'
-            )
         if self.strength > self.usercomponent.strength:
             raise ValidationError(
                 _('Protection strength too low, required: %(strength)s'),
