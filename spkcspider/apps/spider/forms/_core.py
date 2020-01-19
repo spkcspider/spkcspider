@@ -367,6 +367,9 @@ class UserContentForm(forms.ModelForm):
 
     def __init__(self, request, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.initial["usercomponent"] = self.instance.usercomponent
+        self.fields["usercomponent"].required = False
+        setattr(self.fields["usercomponent"], "spkc_use_uriref", False)
         if not self.instance.content.expose_name:
             self.fields["name"].widget = forms.HiddenInput()
         elif self.instance.content.expose_name == "force":
@@ -470,6 +473,8 @@ class UserContentForm(forms.ModelForm):
 
     def clean(self):
         super().clean()
+        if not self.cleaned_data.get("usercomponent"):
+            self.cleaned_data["usercomponent"] = self.initial["usercomponent"]
         if "features" in self.cleaned_data:
             min_strength = self.cleaned_data["features"].filter(
                 strength__gt=self.instance.usercomponent.strength
