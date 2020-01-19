@@ -232,53 +232,55 @@ def filter_contents(
     return (searchq & ~searchq_exc, counter)
 
 
-def info_and(*args, **kwargs):
+def info_and(*args, info_fieldname="info", **kwargs):
     q = Q()
+    fname = "%s__contains" % info_fieldname
     for query in args:
         if isinstance(query, Q):
             q &= query
         else:
             q &= Q(
-                info__contains="\x1e{}\x1e".format(query)
+                **{fname: "\x1e%s\x1e" % query}
             )
     for name, query in kwargs.items():
         if query is None:
             q &= Q(
-                info__contains="\x1e{}=".format(name)
+                **{fname: "\x1e%s=" % name}
             )
-        elif isinstance(query, (tuple, list)):
+        elif isinstance(query, (tuple, list, set)):
             for item in query:
                 q &= Q(
-                    info__contains="\x1e{}={}\x1e".format(name, item)
+                    **{fname: "\x1e%s=%s\x1e" % (name, item)}
                 )
         else:
             q &= Q(
-                info__contains="\x1e{}={}\x1e".format(name, query)
+                **{fname: "\x1e%s=%s\x1e" % (name, query)}
             )
     return q
 
 
-def info_or(*args, **kwargs):
+def info_or(*args, info_fieldname="info", **kwargs):
     q = Q()
+    fname = "%s__contains" % info_fieldname
     for query in args:
         if isinstance(query, Q):
             q |= query
         else:
             q |= Q(
-                info__contains="\x1e{}\x1e".format(query)
+                **{fname: "\x1e%s\x1e" % query}
             )
     for name, query in kwargs.items():
         if query is None:
             q |= Q(
-                info__contains="\x1e{}=".format(name)
+                **{fname: "\x1e%s=" % name}
             )
-        elif isinstance(query, (tuple, list)):
+        elif isinstance(query, (tuple, list, set)):
             for item in query:
                 q |= Q(
-                    info__contains="\x1e{}={}\x1e".format(name, item)
+                    **{fname: "\x1e%s=%s\x1e" % (name, item)}
                 )
         else:
             q |= Q(
-                info__contains="\x1e{}={}\x1e".format(name, query)
+                **{fname: "\x1e%s=%s\x1e" % (name, query)}
             )
     return q
