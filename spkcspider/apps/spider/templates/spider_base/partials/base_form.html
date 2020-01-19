@@ -33,7 +33,8 @@
                 {% if LiteralData|is_uriref %}
                   <data hidden="hidden" resource="{{LiteralData}}"></data>
                 {% else %}
-                  <data hidden="hidden"  datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
+                  {# does not work with rel, so hack around #}
+                  <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
                 {% endif %}
               {% endif %}
             {% empty %}
