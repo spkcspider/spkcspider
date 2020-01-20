@@ -8,7 +8,7 @@
 <div>
   <div class="w3-padding">
     {# index is redirected in view #}
-    <a class="w3-left" href="{% url 'spider_base:ucontent-list' token=uc.token %}">{% trans 'Back' %}</a>
+    <a class="w3-left" rel="nofollow" href="{% fullurl_with_params 'spider_base:ucontent-list' sanitized_GET token=uc.token %}">{% trans 'Back' %}</a>
     <h1 class="w3-center">
       {% blocktrans trimmed %}
         Delete Components and Contents:
@@ -16,7 +16,7 @@
     </h1>
   </div>
 
-  <form class="w3-padding" id="delete_form" action="{{ request.get_full_path }}" enctype="{{enctype}}" method="post">
+  <form class="w3-padding" id="delete_form" action="{% fullurl_with_params 'spider_base:entity-delete' sanitized_GET token=uc.token %}" enctype="{{enctype}}" method="post">
     <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
     <table class="w3-table w3-border w3-bordered w3-white" rel="spkc:components">
       <thead>

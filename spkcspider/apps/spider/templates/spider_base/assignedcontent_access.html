@@ -63,7 +63,7 @@
           </a>
         {% endif %}
         <div style="margin-bottom:5px">
-          <a rel="nofollow" href="{% url 'spider_base:entity-delete' token=uc.token %}?cid={{object.id}}">
+          <a rel="nofollow" href="{% fullurl_with_params 'spider_base:entity-delete' sanitized_GET token=uc.token %}cid={{object.id}}&">
             <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
           </a>
         </div>

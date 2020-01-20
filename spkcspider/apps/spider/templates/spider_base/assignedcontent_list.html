@@ -47,6 +47,13 @@
         <i class="fas fa-cloud-download-alt" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Export' %}
       </a>
       {% endif %}
+      {% if request.is_owner and not uc.is_index %}
+      <div style="margin-bottom:5px">
+        <a rel="nofollow" href="{% fullurl_with_params 'spider_base:entity-delete' sanitized_GET token=uc.token %}uc={{uc.name}}&">
+          <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
+        </a>
+      </div>
+      {% endif %}
       <div>
         <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength:" %} <data property="spkc:strength" datatype="xsd:integer">{% if request.is_special_user %}{{uc.strength}}{% else %}{{uc.untrusted_strength}}{% endif %}</data>
       </div>

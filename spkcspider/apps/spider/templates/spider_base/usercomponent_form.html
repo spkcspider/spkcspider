@@ -36,12 +36,12 @@ Change Login Protection{% endblocktrans %}{% else %}{% blocktrans trimmed %}
           <i class="fas fa-file-export" style="margin-right:10px" aria-hidden="true"></i>{% if object.is_index %}{% trans 'Login Token' %}{% else %}{% trans 'Share' %}{% endif %}
         </a>
         {% if not object.is_index %}
-          <div style="margin-bottom:5px">
-            {% get_component_token 'index' object.user as index_token %}
-            <a href="{{hostpart}}{% url 'spider_base:entity-delete' token=index_token %}?uc={{object.name}}">
-              <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
-            </a>
-          </div>
+        <div style="margin-bottom:5px">
+          {% get_component_token 'index' object.user as index_token %}
+          <a rel="nofollow" href="{% fullurl_with_params 'spider_base:entity-delete' token=index_token %}uc={{object.name}}&">
+            <i class="fas fa-trash" style="margin-right:10px" aria-hidden="true"></i>{% trans 'Delete' %}
+          </a>
+        </div>
         {% endif %}
         <div>
           <i class="fas fa-lock" style="margin-right:10px" aria-hidden="true"></i>{% trans "Strength" %}: <data property="spkc:strength" datatype="xsd:integer">{{object.strength}}</data>

@@ -26,7 +26,7 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
     """
         Delete Contents and Usercomponents
     """
-    preserved_GET_parameters = {"token", "search", "id", "cid", "uc"}
+    preserved_GET_parameters = {"token", "search", "id"}
     own_marked_for_deletion = False
     template_name = "spider_base/entity_mass_deletion.html"
 
