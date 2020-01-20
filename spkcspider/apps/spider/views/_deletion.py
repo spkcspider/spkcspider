@@ -186,17 +186,18 @@ class EntityMassDeletion(UCTestMixin, TemplateView):
         delete_contents.difference_update(ignored_content_ids)
         reset_contents.difference_update(ignored_content_ids)
 
-        component_query.exclude(id__in=ignored_component_ids).filter(
-            name__in=delete_components,
-            deletion_requested__isnull=True
-        ).update(
-            deletion_requested=now
-        )
-        component_query.exclude(id__in=ignored_component_ids).filter(
-            name__in=reset_components
-        ).update(
-            deletion_requested=None
-        )
+        if self.request.user == self.usercomponent.user:
+            component_query.exclude(id__in=ignored_component_ids).filter(
+                name__in=delete_components,
+                deletion_requested__isnull=True
+            ).update(
+                deletion_requested=now
+            )
+            component_query.exclude(id__in=ignored_component_ids).filter(
+                name__in=reset_components
+            ).update(
+                deletion_requested=None
+            )
         content_query.exclude(
             id__in=ignored_content_ids
         ).filter(

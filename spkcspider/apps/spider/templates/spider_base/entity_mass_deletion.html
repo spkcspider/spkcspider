@@ -28,7 +28,7 @@
       </thead>
       {% for uc_name, uc_item in hierarchy.items %}
         <tbody typeof="spkc:Component" resource="{% fullurl_with_params 'spider_base:ucontent-list' token=uc_item.ob.token %}">
-          <tr class="{% if uc_item.ob.is_index %}w3-gray w3-text-light-gray{% else %}w3-light-gray{% endif %}">
+          <tr class="{% if uc_item.ob.is_index or request.user != uc_item.ob.user %}w3-gray w3-text-light-gray{% else %}w3-light-gray{% endif %}">
             <td>
               <data hidden="hidden" property="spkc:type" datatype="xsd:string">Component</data>
               <data hidden="hidden" property="spkc:strength" datatype="xsd:integer">{{uc_item.ob.strength}}</data>
@@ -49,9 +49,9 @@
               {% literalize uc_item.deletion_active as del_active %}
               <data hidden="hidden" property="spkc:deletion:date" datatype="{{del_date.datatype}}">{{del_date}}</data>
               <data hidden="hidden" property="spkc:deletion:active" datatype="{{del_active.datatype}}">{{del_active}}</data>
-              <input class="" {% if uc_item.ob.is_index %}hidden="hidden" disabled="disabled"{% elif uc_item.deletion_active %}disabled="disabled" checked="checked"{% elif uc_name in selected_components %}checked="checked"{% endif %} type="checkbox" name="delete_components" value="{{ uc_name }}"/>
+              <input class="" {% if uc_item.ob.is_index or request.user != uc_item.ob.user %}hidden="hidden" disabled="disabled"{% elif uc_item.deletion_active %}disabled="disabled" checked="checked"{% elif uc_name in selected_components %}checked="checked"{% endif %} type="checkbox" name="delete_components" value="{{ uc_name }}"/>
               <span>
-                {% if uc_item.ob.is_index %}
+                {% if uc_item.ob.is_index or request.user != uc_item.ob.user %}
                   {% blocktrans  %}Protected{% endblocktrans %}
                 {% elif uc_item.deletion_active %}
                   {% blocktrans with deletion_date=uc_item.deletion_date %}Deletion at {{deletion_date}} complete{% endblocktrans %}
