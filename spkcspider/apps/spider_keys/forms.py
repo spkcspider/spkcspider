@@ -15,7 +15,7 @@ from spkcspider.apps.spider.fields import MultipleOpenChoiceField
 from spkcspider.apps.spider.forms.base import DataContentForm
 from spkcspider.apps.spider.models import AssignedContent, AttachedBlob
 from spkcspider.apps.spider.queryfilters import loggedin_active_tprotections_q
-from spkcspider.apps.spider.widgets import ListWidget
+from spkcspider.apps.spider.widgets import ListWidget, UploadTextareaWidget
 
 _help_text_key = _(
     '"Public Key"-Content for signing identifier. It is recommended to use different keys for signing and encryption. '  # noqa: E501
@@ -40,9 +40,8 @@ class KeyForm(DataContentForm):
     hash_algorithm = forms.CharField(
         widget=forms.HiddenInput(), disabled=True
     )
-    setattr(hash_algorithm, "hashable", False)
     key = forms.CharField(
-        widget=forms.Textarea(), strip=True,
+        widget=UploadTextareaWidget(), strip=True, required=False,
         validators=[valid_pkey_properties]
     )
 
@@ -56,6 +55,7 @@ class KeyForm(DataContentForm):
         key = key.as_bytes.decode("ascii") if key else ""
         self.initial["key"] = key
         self.initial["hash_algorithm"] = settings.SPIDER_HASH_ALGORITHM.name
+        setattr(self.fields['hash_algorithm'], "hashable", False)
         setattr(self.fields['key'], "hashable", True)
 
     def get_prepared_attachements(self):

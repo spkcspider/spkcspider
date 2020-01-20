@@ -302,6 +302,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * >=0.22: switch to datacontent (except in rare special cases like in SpiderTag), 3party modules will break if they used BaseContent
 
 # TODO
+* implement UploadTextareaWidget
 * fix RDF export and view of spider_tags
 * examples
 * documentation

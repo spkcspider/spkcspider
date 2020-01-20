@@ -1,7 +1,8 @@
 __all__ = [
     "SelectizeWidget", "OpenChoiceWidget", "StateButtonWidget",
     "TrumbowygWidget", "HTMLWidget", "SubSectionStartWidget",
-    "SubSectionStopWidget", "ListWidget", "DatetimePickerWidget"
+    "SubSectionStopWidget", "ListWidget", "DatetimePickerWidget",
+    "UploadTextareaWidget"
 ]
 
 import json
@@ -24,6 +25,10 @@ class StateButtonWidget(widgets.CheckboxInput):
                 'spider_base/statebutton.css'
             ]
         }
+
+
+class UploadTextareaWidget(widgets.Textarea):
+    template_name = 'spider_base/forms/widgets/uploadtextarea.html'
 
 
 class ListWidget(widgets.SelectMultiple):
