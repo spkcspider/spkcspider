@@ -12,13 +12,12 @@ class DataContentForm(forms.Form):
     quota_fields = {}
 
     def __init__(self, instance, initial=None, **kwargs):
-        if initial is None:
-            initial = {}
         super().__init__(**kwargs)
         self.instance = instance
         self.initial.update(instance.free_data)
         self.initial.update(instance.quota_data)
-        self.initial.update(initial)
+        if initial is not None:
+            self.initial.update(initial)
 
     def get_prepared_attachements(self):
         return {}
