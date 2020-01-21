@@ -19,6 +19,35 @@ class DataContentForm(forms.Form):
         if initial is not None:
             self.initial.update(initial)
 
+    def prepare_instance(self):
+        instance = self.instance
+        instance.prepared_attachements = self.get_prepared_attachements()
+        for key, default in self.free_fields.items():
+            field = self.fields.get(key, None)
+            if field:
+                if key in self.cleaned_data:
+                    instance.free_data[key] = self.cleaned_data[key]
+                elif key in self.initial:
+                    instance.free_data[key] = \
+                        field.to_python(self.initial[key])
+                else:
+                    instance.free_data[key] = default
+                if callable(instance.free_data[key]):
+                    instance.free_data[key] = instance.free_data[key]()
+        for key, default in self.quota_fields.items():
+            field = self.fields.get(key, None)
+            if field:
+                if key in self.cleaned_data:
+                    instance.quota_data[key] = self.cleaned_data[key]
+                elif key in self.initial:
+                    instance.quota_data[key] = \
+                        field.to_python(self.initial[key])
+                else:
+                    instance.quota_data[key] = default
+                if callable(instance.quota_data[key]):
+                    instance.quota_data[key] = instance.quota_data[key]()
+        return instance
+
     def get_prepared_attachements(self):
         return {}
 
@@ -31,18 +60,7 @@ class DataContentForm(forms.Form):
         pass
 
     def save(self, commit=True):
-        ret = self.instance
-        ret.prepared_attachements = self.get_prepared_attachements()
-        for key, default in self.free_fields.items():
-            if key in self.fields:
-                ret.free_data[key] = self.cleaned_data.get(key, default)
-                if callable(ret.free_data[key]):
-                    ret.free_data[key] = ret.free_data[key]()
-        for key, default in self.quota_fields.items():
-            if key in self.fields:
-                ret.quota_data[key] = self.cleaned_data.get(key, default)
-                if callable(ret.quota_data[key]):
-                    ret.quota_data[key] = ret.quota_data[key]()
+        ret = self.prepare_instance()
         if commit:
             ret.save()
         return ret
