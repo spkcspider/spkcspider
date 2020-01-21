@@ -22,28 +22,17 @@ class DataContentForm(forms.Form):
     def prepare_instance(self):
         instance = self.instance
         instance.prepared_attachements = self.get_prepared_attachements()
+        # don't read from initial, for allowing non-saved initial values
         for key, default in self.free_fields.items():
             field = self.fields.get(key, None)
             if field:
-                if key in self.cleaned_data:
-                    instance.free_data[key] = self.cleaned_data[key]
-                elif key in self.initial:
-                    instance.free_data[key] = \
-                        field.to_python(self.initial[key])
-                else:
-                    instance.free_data[key] = default
+                instance.free_data[key] = self.cleaned_data.get(key, default)
                 if callable(instance.free_data[key]):
                     instance.free_data[key] = instance.free_data[key]()
         for key, default in self.quota_fields.items():
             field = self.fields.get(key, None)
             if field:
-                if key in self.cleaned_data:
-                    instance.quota_data[key] = self.cleaned_data[key]
-                elif key in self.initial:
-                    instance.quota_data[key] = \
-                        field.to_python(self.initial[key])
-                else:
-                    instance.quota_data[key] = default
+                instance.quota_data[key] = self.cleaned_data.get(key, default)
                 if callable(instance.quota_data[key]):
                     instance.quota_data[key] = instance.quota_data[key]()
         return instance

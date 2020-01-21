@@ -12,13 +12,13 @@
         {% literalize val field as LiteralData %}
         {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
           {% if LiteralData|is_uriref %}
-            <li property="spkc:value">
-              <a href="{{LiteralData}}">{{val|default_if_none:""}}</a>
-            </li>
-          {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref %}
             <li>
-              <data property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
-              <a href="{{LiteralData}}">{{val|default_if_none:""}}</a>
+              <a href="{{LiteralData}}" property="spkc:value">{{val|default_if_none:""}}</a>
+            </li>
+          {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref or LiteralData.datatype == 'https://spkcspider.net/static/schemes/spkcgraph#hashableURI'|uriref %}
+            <li>
+              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
+              <a href="{{LiteralData}}" resource="">{{val|default_if_none:""}}</a>
             </li>
           {% else %}
             <li property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{val|default_if_none:""}}</li>
@@ -32,7 +32,7 @@
     {% literalize field as LiteralData %}
     {% if LiteralData|is_uriref %}
       <a class="w3-white" property="spkc:value" href="{{LiteralData}}">{{field|field_to_python|default_if_none:""}}</a>
-    {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref %}
+    {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref or LiteralData.datatype == 'https://spkcspider.net/static/schemes/spkcgraph#hashableURI'|uriref %}
       <span>
         <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
         <a class="w3-white" href="{{LiteralData}}" resource="">{{field|field_to_python|default_if_none:""}}</a>

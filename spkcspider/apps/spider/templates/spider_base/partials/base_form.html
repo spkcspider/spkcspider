@@ -26,21 +26,18 @@
             </small></span>{% endif %}
           </label>
           {% if field.field.widget.allow_multiple_selected %}
-            <data hidden="hidden" rel="spkc:value">
             {% for q in field|field_to_python %}
               {% literalize q field as LiteralData %}
               {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
                 {% if LiteralData|is_uriref %}
-                  <data hidden="hidden" resource="{{LiteralData}}"></data>
+                  <data hidden="hidden" property="spkc:value" about="{{LiteralData}}"></data>
                 {% else %}
-                  {# does not work with rel, so hack around #}
                   <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
                 {% endif %}
               {% endif %}
             {% empty %}
-              <data hidden="hidden" resource="rdf:nil"></data>
+              <data hidden="hidden" property="spkc:value" about="rdf:nil"></data>
             {% endfor %}
-            </data>
           {% else %}
             {% literalize field as LiteralData %}
             {% if LiteralData|is_uriref %}
