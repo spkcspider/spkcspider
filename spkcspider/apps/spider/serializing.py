@@ -220,7 +220,7 @@ def paginate_stream(query, page_size, limit_depth=None):
         query = AssignedContent.objects.filter(
             references_q(
                 query.values_list("id", flat=True),
-                limit_depth or 30
+                limit_depth or 10
             )
         )
         query = query.order_by("usercomponent__id", "id")
