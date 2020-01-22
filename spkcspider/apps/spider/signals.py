@@ -298,10 +298,14 @@ def UpdateSpiderCb(**_kwargs):
             row.name = row.content.get_content_name()
         if not row.content.expose_description:
             row.description = row.content.get_content_description()
-        assert(row.description is not None)
-        assert(row.name is not None)
+        assert row.description is not None
+        assert row.name is not None
         # triggers UpdateContentCb and FeaturesCb
         row.save(update_fields=['name', 'description', 'info', "token"])
+        # regenerate references
+        row.references.set(
+            row.content.get_references()
+        )
 
     for row in UserComponent.objects.all():
         if not row.token:

@@ -333,8 +333,8 @@ class BaseContent(models.Model):
         """
         from ..models import AssignedContent
         return AssignedContent.objects.filter(
-            Q(smarttag_sources__content=self.associated) |
-            Q(attached_contents__contains=self.associated)
+            models.Q(smarttag_sources__content=self.associated) |
+            models.Q(attached_contents__contains=self.associated)
         )
 
     def map_data(self, name, field, data, graph, context):
