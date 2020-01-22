@@ -101,7 +101,7 @@ class FileFilet(LicenseMixin, DataContent):
         return FileForm
 
     def get_abilities(self, context):
-        return set(("download",))
+        return {"download"}
 
     def get_form_kwargs(self, **kwargs):
         ret = super().get_form_kwargs(**kwargs)

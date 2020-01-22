@@ -329,14 +329,13 @@ class BaseContent(models.Model):
     def get_references(self):
         """
             For specifing references to other contents.
-            Defaults to smarttag targets so that the behaviour:
-            adding smarttags targets can be overwritten/filtered
-            filtering works from perspective of a SmartTag
-            not an AssignedContent
+            Defaults to smarttag targets + attached_to_content
         """
-        return self.associated.smarttags.filter(
-            target__isnull=False
-        ).values_list("target", flat=True)
+        from ..models import AssignedContent
+        return AssignedContent.objects.filter(
+            Q(smarttag_sources__content=self.associated) |
+            Q(attached_contents__contains=self.associated)
+        )
 
     def map_data(self, name, field, data, graph, context):
         if isinstance(data, File):
@@ -765,9 +764,7 @@ class BaseContent(models.Model):
                 elif field.one_to_many:
                     fieldmanager.exclude(pk__in=pks).delete()
         # needs id first
-        s = set(self.associated.attached_contents.all())
-        s.update(self.get_references())
-        self.associated.references.set(s)
+        self.associated.references.set(self.get_references())
         # message usercomponent about change
         if self.get_propagate_modified():
             self.associated.usercomponent.save(update_fields=["modified"])
