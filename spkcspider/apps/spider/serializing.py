@@ -223,11 +223,11 @@ def paginate_stream(query, page_size, limit_depth):
                 limit_depth
             )
         )
-        query = query.order_by("usercomponent__id", "id")
+        query = query.distinct().order_by("usercomponent__id", "id")
     else:
         query = query.order_by("id")
     return Paginator(
-        query, page_size, orphans=0, allow_empty_first_page=True
+        query, page_size, orphans=0, allow_empty_first_page=False
     )
 
 
@@ -257,6 +257,11 @@ def serialize_stream(
     for paginator in paginators:
         try:
             page_view = paginator.get_page(page)
+            # for mysql
+            object_list = list(page_view.object_list)
+            # error if page is out of bound
+            if page > paginator.num_pages:
+                raise InvalidPage()
         except InvalidPage:
             invalid_pages += 1
             continue
@@ -267,8 +272,6 @@ def serialize_stream(
             Literal(page_view.number, datatype=XSD.positiveInteger)
         ))
         if paginator.object_list.model == UserComponent:
-            # for mysql
-            object_list = list(page_view.object_list)
             if embed:
                 prefetch_related_objects(
                     object_list,
@@ -289,15 +292,13 @@ def serialize_stream(
                 usercomponent = None
                 ref_component = None
             else:
-                _pos = ((page - 1) * paginator.per_page) - 1
+                _pos = page_view.start_index() - 1
                 usercomponent = paginator.object_list[_pos]
                 ref_component = URIRef("{}{}".format(
                     context["hostpart"],
                     usercomponent.get_absolute_url()
                 ))
 
-            # for mysql
-            object_list = list(page_view.object_list)
             prefetch_related_objects(
                 object_list, "ctype", "datacontent"
             )
