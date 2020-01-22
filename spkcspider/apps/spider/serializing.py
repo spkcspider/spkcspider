@@ -210,7 +210,7 @@ def serialize_component(graph, component, context, visible=True):
     return ref_component
 
 
-def paginate_stream(query, page_size, limit_depth=None):
+def paginate_stream(query, page_size, limit_depth):
     # WARNING: if AssignedContent queryset is empty
     #   no usercomponent can be retrieved
     # so don't use AssignedContent queryset if serializing an
@@ -220,7 +220,7 @@ def paginate_stream(query, page_size, limit_depth=None):
         query = AssignedContent.objects.filter(
             references_q(
                 query.values_list("id", flat=True),
-                limit_depth or 10
+                limit_depth
             )
         )
         query = query.order_by("usercomponent__id", "id")
