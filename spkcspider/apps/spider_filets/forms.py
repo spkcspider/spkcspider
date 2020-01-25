@@ -115,6 +115,22 @@ class FileForm(LicenseForm):
         # for SPIDER_UPLOAD_FILTER
         self.request = request
 
+    def clean_key_list(self):
+        ret = self.cleaned_data["key_list"]
+        if not ret:
+            return None
+        if not isinstance(ret, dict):
+            raise forms.ValidationError(
+                _("key_list is not a dictionary")
+            )
+        for val in ret.values():
+            # 256 bits = current maximum of AESGCM
+            if len(val) > 32:
+                raise forms.ValidationError(
+                    _("key has invalid length")
+                )
+        return ret
+
     def clean(self):
         ret = super().clean()
         if "file" not in ret:
@@ -237,6 +253,22 @@ class TextForm(LicenseForm):
             del self.fields["key_list"]
         # sources stay enabled
         self.fields["sources"].editable = allow_edit
+
+    def clean_key_list(self):
+        ret = self.cleaned_data["key_list"]
+        if not ret:
+            return None
+        if not isinstance(ret, dict):
+            raise forms.ValidationError(
+                _("key_list is not a dictionary")
+            )
+        for val in ret.values():
+            # 256 bits = current maximum of AESGCM
+            if len(val) > 32:
+                raise forms.ValidationError(
+                    _("key has invalid length")
+                )
+        return ret
 
     def clean(self):
         ret = super().clean()
