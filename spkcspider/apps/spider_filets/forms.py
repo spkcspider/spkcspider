@@ -227,13 +227,29 @@ class TextForm(LicenseForm):
 
         allow_edit = scope == "update_guest"
 
-        self.fields["text"].editable = allow_edit
+        if self.instance.quota_data.get("key_list"):
+            self.fields["file"].editable = allow_edit
+            self.fields["key_list"].editable = allow_edit
+            del self.fields["text"]
+        else:
+            self.fields["text"].editable = allow_edit
+            del self.fields["file"]
+            del self.fields["key_list"]
         # sources stay enabled
         self.fields["sources"].editable = allow_edit
 
     def clean(self):
         ret = super().clean()
-        if not ret.get("key_list") and "file" in ret:
+        if (
+            self.instance.pk and
+            self.instance.quota_data.get("key_list")
+        ):
+            if not ret.get("key_list") or not ret.get("file"):
+                raise forms.ValidationError(
+                    _("Cannot switch to unencrypted")
+                )
+
+        if not ret.get("key_list") and ret.get("file"):
             raise forms.ValidationError(
                 _("Can only use file in connection with key_list")
             )
@@ -258,7 +274,7 @@ class TextForm(LicenseForm):
             b = AttachedBlob(
                 unique=True, name="text", content=self.instance.associated
             )
-        if "file" in self.cleaned_data:
+        if self.cleaned_data.get("file"):
             b.blob = self.cleaned_data["file"].read()
         else:
             b.blob = self.cleaned_data["text"].encode("utf-8")
