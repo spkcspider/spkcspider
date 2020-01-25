@@ -122,8 +122,8 @@ class AnchorField(forms.ModelChoiceField):
     use_default_anchor = None
     filter_strength_link = "usercomponent__strength__lte"
     exclude_travel = (
-        "associated__usercomponent__travel_protected__in",
-        "associated__travel_protected__in",
+        "usercomponent__travel_protected__in",
+        "travel_protected__in",
     )
 
     # limit_to_uc: limit to usercomponent, if False to user
