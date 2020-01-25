@@ -44,8 +44,11 @@ class DataContentForm(forms.Form):
         # full_clean bails out if some stuff didn't happen so overwritting
         # is not wise
         if not self._errors:
-            self.instance = self.prepare_instance()
-            self.instance.full_clean()
+            try:
+                self.instance = self.prepare_instance()
+                self.instance.full_clean()
+            except forms.ValidationError as exc:
+                self.add_error(None, exc)
 
     def save_m2m(self):
         # stub
