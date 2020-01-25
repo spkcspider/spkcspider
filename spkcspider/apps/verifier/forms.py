@@ -43,7 +43,6 @@ class CreateEntryForm(forms.Form):
                 _('Require either url or dvfile'),
                 code="missing_parameter"
             )
-            return ret
         if ret.get("url", None):
             self.cleaned_data["url"] = merge_get_url(
                 self.cleaned_data["url"], raw="embed"

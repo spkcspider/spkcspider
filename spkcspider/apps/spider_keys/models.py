@@ -251,6 +251,7 @@ class AnchorKey(AnchorMixing, DataContent):
     def get_content_name(self):
         name = self.associated.attached_to_content.content.get_key_name()[1]
         if not name:
+            # don't recalculate
             name = "{}...".format(
                 self.associated.attached_to_content.getlist(
                     "hash", amount=1
@@ -258,6 +259,7 @@ class AnchorKey(AnchorMixing, DataContent):
                     "=", 1
                 )[-1][:20]
             )
+        # if description was provided
         if len(self.associated.description) > 0:
             name = "{}: {}".format(name, self.associated.description[:20])
         return "AnchorKey: {}".format(name)

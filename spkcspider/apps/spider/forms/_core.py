@@ -200,7 +200,7 @@ class UserComponentForm(forms.ModelForm):
         self.initial["master_pw"] = self.cleaned_data.pop("master_pw", None)
         if 'name' not in self.cleaned_data:
             # ValidationError so return, calculations won't work here
-            return
+            return ret
 
         if not self.instance.id:
             quota = self.instance.get_component_quota()

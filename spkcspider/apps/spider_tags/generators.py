@@ -208,10 +208,10 @@ def generate_form(name, layout):
             )
 
         def clean(self):
-            super().clean()
+            ret = super().clean()
             self.instance._cached_references = self.calc_references()[0]
             self.instance.full_clean()
-            return self.cleaned_data
+            return ret
 
         def calc_references(self, use_fields=False):
             _cached_references = []

@@ -84,7 +84,10 @@ class FileFilet(LicenseMixin, DataContent):
 
     def get_info(self):
         ret = super().get_info()
-        split = self.associated.name.rsplit(".", 1)
+        name = self.associated.name
+        if not name:
+            name = self.get_content_name()
+        split = name.rsplit(".", 1)
         ftype = "binary"
         if len(split) == 2:
             extension = split[1].lower()
@@ -93,7 +96,7 @@ class FileFilet(LicenseMixin, DataContent):
             elif extension in media_extensions:
                 ftype = "media"
         return "%sname=%s\x1efile_type=%s\x1e" % (
-            ret, self.associated.name, ftype
+            ret, name, ftype
         )
 
     def get_form(self, scope):

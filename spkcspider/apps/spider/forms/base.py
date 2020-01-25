@@ -40,16 +40,18 @@ class DataContentForm(forms.Form):
     def get_prepared_attachements(self):
         return {}
 
-    def clean(self):
-        self.instance.full_clean()
-        return super().clean()
+    def _post_clean(self):
+        # full_clean bails out if some stuff didn't happen so overwritting
+        # is not wise
+        if not self._errors:
+            self.instance = self.prepare_instance()
+            self.instance.full_clean()
 
     def save_m2m(self):
         # stub
         pass
 
     def save(self, commit=True):
-        ret = self.prepare_instance()
         if commit:
-            ret.save()
-        return ret
+            self.instance.save()
+        return self.instance

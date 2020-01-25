@@ -48,10 +48,11 @@ class SignupForm(UserCreationForm):
 
     def clean(self):
         # clean up email hack
-        super(SignupForm, self).clean()
+        ret = super().clean()
         self.cleaned_data["email"] = self.cleaned_data["liame"]
         del self.cleaned_data["liame"]
         del self.cleaned_data["name"]
+        return ret
 
 
 if CaptchaField:

@@ -11,7 +11,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.core.files.base import File
-from django.db import models, transaction
+from django.db import models, transaction, IntegrityError
 from django.http import Http404
 from django.http.response import HttpResponse, HttpResponseBase
 from django.middleware.csrf import CsrfViewMiddleware
@@ -102,7 +102,7 @@ class BaseContent(models.Model):
     extra_size = 0
 
     def __str__(self):
-        if not self.id:
+        if not self.pk:
             return self.localize_name(self.associated.ctype.name)
         else:
             return self.associated.name
@@ -666,8 +666,9 @@ class BaseContent(models.Model):
         idtag = "primary\x1e"
         # simulates beeing not unique, by adding id
         if not unique:
-            idtag = "id=\x1e"  # placeholder
-            if getattr(self.associated, "id", None):
+            # placeholder
+            idtag = "id=\x1e"
+            if self.associated_id:
                 idtag = "id={}\x1e".format(self.associated_id)
         unlistedtag = ""
         if unlisted:
@@ -685,8 +686,10 @@ class BaseContent(models.Model):
         return super().full_clean(**kwargs)
 
     def update_associated(self):
-        if getattr(self, "id", None):
-            self.associated.info = self.get_info()
+        # must be executed twice
+        self.associated.info = self.get_info()
+        # it is valid to use info, associated information here
+        if self.associated_id:
             if not self.expose_name or not self.associated.name:
                 self.associated.name = self.get_content_name()
             if not self.expose_description or not self.associated.description:
@@ -712,17 +715,15 @@ class BaseContent(models.Model):
     def save(self, *args, **kwargs):
         if settings.DEBUG:
             assert self._content_is_cleaned, "try to save uncleaned content"
-        created = False
-        assignedcontent = self.associated
-        if not getattr(self, "id", None):
-            created = True
-            # create the model for saving BaseContent
-            assignedcontent.save()
-        # this changes the associated model for no reason
-        super().save(*args, **kwargs)
-        # restore it here
-        self.associated = assignedcontent
+        created = not self.pk
         if created:
+            # create the model for saving BaseContent
+            assignedcontent = self.associated
+            assignedcontent.save()
+            # this changes the associated model for no reason
+            super().save(*args, **kwargs)
+            # restore it here
+            self.associated = assignedcontent
             # add requires this
             self.update_associated()
         if not self.associated.token:
@@ -746,7 +747,16 @@ class BaseContent(models.Model):
             )
             self.associated.token_generate_new_size = None
         # save associated
-        self.associated.save()
+        try:
+            self.associated.save()
+        except IntegrityError as exc:
+            # delete if unique constraint was violated while creating object
+            if created:
+                self.associated.delete()
+            raise exc
+        # after checking uniqueness, update
+        if not created:
+            super().save(*args, **kwargs)
 
         if self.prepared_attachements:
             for key, val in self.prepared_attachements.items():

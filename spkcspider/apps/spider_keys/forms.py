@@ -189,19 +189,22 @@ class AnchorKeyForm(DataContentForm):
     def clean(self):
         _ = gettext
         ret = super().clean()
-        pubkey = self.cleaned_data.get("key")
-        if pubkey:
-            pubkey = pubkey.content.get_key_ob()
+        pubkeycontent = self.cleaned_data.get("key")
+        if pubkeycontent:
+            pubkey = pubkeycontent.content.get_key_ob()
             if not pubkey:
                 self.add_error("key", forms.ValidationError(
                     _("key not usable for signing"),
                     code="unusable_key"
                 ))
+            else:
+                self.instance.associated.attached_to_content = pubkeycontent
+
         if self.scope == "add":
             ret["signature"] = "<replaceme>"
             return ret
         if not pubkey:
-            return
+            return ret
         chosen_hash = settings.SPIDER_HASH_ALGORITHM
         try:
             pubkey.verify(
@@ -224,12 +227,6 @@ class AnchorKeyForm(DataContentForm):
                 code="malformed_signature"
             ))
         return ret
-
-    def save(self, commit=True):
-        self.instance.associated.attached_to_content = \
-            self.cleaned_data["key"]
-        return super().save(commit)
-
 
 # class AnchorGovForm(forms.ModelForm):
 #    identifier = forms.CharField(disabled=True, widget=forms.HiddenInput())
