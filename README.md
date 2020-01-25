@@ -303,6 +303,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 
 # TODO
 * implement UploadTextareaWidget
+* maybe: status codes if forms fail should represent it
 * fix RDF export and view of spider_tags
 * examples
 * documentation
