@@ -124,18 +124,15 @@ class FileFilet(LicenseMixin, DataContent):
             kwargs["type"] = kwargs["type"][0]
         else:
             kwargs["type"] = None
-        if getattr(settings, "FILE_DIRECT_DOWNLOAD", False):
-            kwargs["download"] = kwargs["file"].url
-        else:
-            kwargs["download"] = "{}?{}".format(
-                reverse(
-                    'spider_base:ucontent-access',
-                    kwargs={
-                        "token": self.associated.token,
-                        "access": 'download'
-                    }
-                ), kwargs["sanitized_GET"]
-            )
+        kwargs["download"] = "{}?{}".format(
+            reverse(
+                'spider_base:ucontent-access',
+                kwargs={
+                    "token": self.associated.token,
+                    "access": 'download'
+                }
+            ), kwargs["sanitized_GET"]
+        )
         return render_to_string(
             "spider_filets/file.html", request=kwargs["request"],
             context=kwargs
@@ -205,7 +202,6 @@ class TextFilet(LicenseMixin, DataContent):
         ret = super().get_info()
         return "%sname=%s\x1efile_type=text\x1e" % (
             ret, self.associated.name
-
         )
 
     def get_form(self, scope):
@@ -223,7 +219,7 @@ class TextFilet(LicenseMixin, DataContent):
         return ret
 
     def get_abilities(self, context):
-        _abilities = set()
+        _abilities = {"download"}
         source = context.get("source", self.associated.usercomponent)
         if source.id in self.free_data.get("editable_from", []):
             _abilities.add("update_guest")
@@ -241,7 +237,22 @@ class TextFilet(LicenseMixin, DataContent):
             self.associated.attachedblobs.get(name="text").as_bytes.decode(
                 "utf8"
             )
+        kwargs["download"] = "{}?{}".format(
+            reverse(
+                'spider_base:ucontent-access',
+                kwargs={
+                    "token": self.associated.token,
+                    "access": 'download'
+                }
+            ), kwargs["sanitized_GET"]
+        )
         return render_to_string(
             "spider_filets/text.html", request=kwargs["request"],
             context=kwargs
         )
+
+    def access_download(self, **kwargs):
+        t = self.associated.attachedblobs.get(name="text")
+        response = t.get_response()
+        response["Access-Control-Allow-Origin"] = "*"
+        return response

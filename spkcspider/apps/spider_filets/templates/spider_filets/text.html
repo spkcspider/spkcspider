@@ -6,6 +6,7 @@
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
   </data>
 </data>
+{% if not object.quota_data.key_list %}
 <div class="w3-padding">
   <div class="w3-white w3-padding" typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name" datatype="xsd:string">text</data>
@@ -13,6 +14,21 @@
     <data property="spkc:value" datatype="xsd:string">{{text|safe}}</data>
   </div>
 </div>
+{% else %}
+<data hidden="hidden" typeof="spkc:Property">
+  <data hidden="hidden" property="spkc:name" datatype="xsd:string">file</data>
+  <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
+  <data hidden="hidden" property="spkc:value" datatype="spkc:hashableURI">{{download}}</data>
+</data>
+<data hidden="hidden" typeof="spkc:Property">
+  <data hidden="hidden" property="spkc:name" datatype="xsd:string">key_list</data>
+  <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
+  <data hidden="hidden" property="spkc:value">{{object.quota_data.key_list}}</data>
+</data>
+<div>{% blocktrans trimmed %}
+  You need the messaging app to decrypt/reencrypt this content
+{% endblocktrans %}</div>
+{% endif %}
 {% include "spider_filets/license_info.html" %}
 {% active_feature_names as fnames %}
 {% if "EUDisclaimer" in fnames %}

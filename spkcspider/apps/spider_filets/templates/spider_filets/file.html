@@ -1,31 +1,45 @@
 {% load i18n %}
 <div class="w3-padding">
-  {% if type == "image" %}
-    <a href="{{download}}">
-      <img src="{{download}}" alt="{{object.name}}" style="width:100%"/>
-    </a>
-  {% elif type == "media" %}
-    <video controls>
-      <source src="{{download}}" style="width:100%">
-      {% trans 'Format not supported' %}
-    </video>
-  {% else %}
-    <div style="width:100%" class="w3-padding w3-center">
-      <a class="w3-margin" href="{{download}}">
-        <i class="fas fa-file-download" style="font-size:300px;color: red;" aria-hidden="true"></i>
+  {% if object.quota_data.key_list %}
+    {% if type == "image" %}
+      <a href="{{download}}">
+        <img src="{{download}}" alt="{{object.associated.name}}" style="width:100%"/>
       </a>
-    </div>
+    {% elif type == "media" %}
+      <video controls>
+        <source src="{{download}}" style="width:100%">
+        {% trans 'Format not supported' %}
+      </video>
+    {% else %}
+      <div style="width:100%" class="w3-padding w3-center">
+        <a class="w3-margin" href="{{download}}">
+          <i class="fas fa-file-download" style="font-size:300px;color: red;" aria-hidden="true"></i>
+        </a>
+      </div>
+    {% endif %}
   {% endif %}
   <data hidden="hidden" typeof="spkc:Property">
     <data hidden="hidden" property="spkc:name" datatype="xsd:string">name</data>
     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-    <data hidden="hidden" property="spkc:value">{{object.name}}</data>
+    <data hidden="hidden" property="spkc:value">{{object.associated.name}}</data>
   </data>
   {% include "spider_filets/license_info.html" %}
-  <div typeof="spkc:Property">
-    <data hidden="hidden" property="spkc:name" datatype="xsd:string">file</data>
-    <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
-    <data hidden="hidden" property="spkc:value" datatype="spkc:hashableURI">{{download}}</data>
-    <a class="w3-xlarge" href="{{download}}">{% trans "Download" %}</a>
+  <div>
+    <span typeof="spkc:Property">
+      <data hidden="hidden" property="spkc:name" datatype="xsd:string">file</data>
+      <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{% if object.quota_data.key_list %}false{% else %}true{% endif %}</data>
+      <data hidden="hidden" property="spkc:value" datatype="spkc:hashableURI">{{download}}</data>
+      <a {% if object.quota_data.key_list %}hidden="hidden"{% endif %} class="w3-xlarge" href="{{download}}">{% trans "Download" %}</a>
+    </span>
+    {% if object.quota_data.key_list %}
+      <data hidden="hidden" typeof="spkc:Property">
+        <data hidden="hidden" property="spkc:name" datatype="xsd:string">key_list</data>
+        <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">true</data>
+        <data hidden="hidden" property="spkc:value">{{object.quota_data.key_list}}</data>
+      </data>
+      <div>{% blocktrans trimmed %}
+        You need the messaging app to decrypt this content
+      {% endblocktrans %}</div>
+    {% endif %}
   </div>
 </div>

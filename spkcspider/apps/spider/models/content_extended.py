@@ -10,7 +10,7 @@ from django.core.files.storage import default_storage
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from jsonfield import JSONField
 from ranged_response import RangedFileResponse
 
@@ -205,6 +205,12 @@ class AttachedBlob(BaseAttached):
     @property
     def as_bytes(self) -> bytes:
         return bytes(self.blob)
+
+    def get_response(self):
+        return HttpResponse(
+            self.blob,
+            content_type='application/octet-stream'
+        )
 
 
 class SmartTag(BaseAttached):

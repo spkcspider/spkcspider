@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from spkcspider.apps.spider.forms.base import DataContentForm
 from spkcspider.apps.spider.fields import (
-    MultipleOpenChoiceField, OpenChoiceField, SanitizedHtmlField
+    MultipleOpenChoiceField, OpenChoiceField, SanitizedHtmlField, JsonField
 )
 from spkcspider.apps.spider.models import (
     AttachedBlob, AttachedFile, UserComponent
@@ -66,6 +66,11 @@ class LicenseForm(DataContentForm):
 class FileForm(LicenseForm):
     request = None
     file = forms.FileField()
+    key_list = JsonField(
+        widget=forms.HiddenInput(), initial=None, required=False
+    )
+    quota_fields = {"key_list": None}
+    quota_fields.update(LicenseForm.quota_fields)
 
     def __init__(self, request, uc=None, initial=None, **kwargs):
         if initial is None:
@@ -160,9 +165,15 @@ class TextForm(LicenseForm):
         initial=False,
         help_text=_("Improve ranking of this Text.")
     )
+    key_list = JsonField(
+        widget=forms.HiddenInput(), initial=None, required=False
+    )
+    file = forms.FileField(required=False, initial=None)
 
     free_fields = {"push": False}
     free_fields.update(LicenseForm.free_fields)
+    quota_fields = {"key_list": None}
+    quota_fields.update(LicenseForm.quota_fields)
 
     class Media:
         js = [
@@ -181,7 +192,7 @@ class TextForm(LicenseForm):
             initial2.update(kwargs["instance"].free_data)
         initial2.update(initial)
         super().__init__(initial=initial2, **kwargs)
-        if self.instance.pk:
+        if self.instance.pk and not self.instance.quota_data.get("key_list"):
             self.initial["text"] = \
                 self.instance.associated.attachedblobs.filter(
                     name="text"
@@ -220,8 +231,23 @@ class TextForm(LicenseForm):
         # sources stay enabled
         self.fields["sources"].editable = allow_edit
 
+    def clean(self):
+        ret = super().clean()
+        if not ret.get("key_list") and "file" in ret:
+            raise forms.ValidationError(
+                _("Can only use file in connection with key_list")
+            )
+
+        if "editable_from" in self.fields:
+            self.instance.free_data["editable_from"] = \
+                list(self.cleaned_data["editable_from"].values_list(
+                    "id", flat=True
+                ))
+        return ret
+
     def get_prepared_attachements(self):
-        if "text" not in self.changed_data:
+        changed_data = self.changed_data
+        if "text" not in changed_data and "file" not in changed_data:
             return {}
         b = None
         if self.instance.pk:
@@ -232,19 +258,13 @@ class TextForm(LicenseForm):
             b = AttachedBlob(
                 unique=True, name="text", content=self.instance.associated
             )
-        b.blob = self.cleaned_data["text"].encode("utf-8")
+        if "file" in self.cleaned_data:
+            b.blob = self.cleaned_data["file"].read()
+        else:
+            b.blob = self.cleaned_data["text"].encode("utf-8")
         return {
             "attachedblobs": [b]
         }
-
-    def save(self, commit=True):
-        if "editable_from" in self.fields:
-            self.instance.free_data["editable_from"] = \
-                list(self.cleaned_data["editable_from"].values_list(
-                    "id", flat=True
-                ))
-
-        return super().save(commit)
 
 
 class RawTextForm(LicenseForm):

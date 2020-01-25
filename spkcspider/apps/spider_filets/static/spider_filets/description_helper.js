@@ -6,6 +6,9 @@ let clean_description_text = function(inp){
 document.addEventListener("DOMContentLoaded", function(){
   let source_element = $("#id_text");
   let dest_element = document.getElementById("id_content_control-description");
+  if (source_element.hidden){
+    return
+  }
   let modify_dest = false;
   /* last char will be replaced by …*/
   let max_length = dest_element.attributes.maxlength.value;

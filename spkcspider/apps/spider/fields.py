@@ -17,10 +17,17 @@ class ContentMultipleChoiceField(models.ModelMultipleChoiceField):
     def label_from_instance(self, obj):
         return "{}: {} ({})".format(obj.usercomponent, obj, obj.ctype)
 
+    def to_python(self, value):
+        if not value:
+            return []
+        return list(self._check_values(self.prepare_value(value)))
+
 
 class JsonField(fields.Field):
     def to_python(self, value):
-        if isinstance(value, str):
+        if value == "":
+            return None
+        elif isinstance(value, str):
             value = json.loads(value)
         return value
 
