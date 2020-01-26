@@ -89,7 +89,7 @@
         {% for f in active_features %}
           <data hidden="hidden" datatype="xsd:string" property="spkc:value">{{f.name}}</data>
         {% empty %}
-          <data hidden="hidden" rel="spkc:value" resource="rdf:nil"></data>
+          <data hidden="hidden" rel="spkc:value" about="rdf:nil"></data>
         {% endfor %}
       </data>
       <data hidden="hidden" typeof="spkc:Property">
@@ -110,7 +110,7 @@
         {% for i in intentions %}
           <data hidden="hidden" property="spkc:value" datatype="xsd:string">{{i}}</data>
         {% empty %}
-          <data hidden="hidden" rel="spkc:value" resource="rdf:nil"></data>
+          <data hidden="hidden" rel="spkc:value" about="rdf:nil"></data>
         {% endfor %}
       </data>
     </data>
