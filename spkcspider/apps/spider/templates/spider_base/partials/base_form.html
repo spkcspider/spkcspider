@@ -29,7 +29,7 @@
             {% for val in field|field_to_python %}
               {% include "spider_base/partials/rdfvalue.html" with value=val field=field %}
             {% empty %}
-              <data hidden="hidden" property="spkc:value" about="rdf:nil"></data>
+              <data hidden="hidden" property="spkc:value" resource="rdf:nil"></data>
             {% endfor %}
           {% else %}
               {% include "spider_base/partials/rdfvalue.html" with value=field field=None %}
