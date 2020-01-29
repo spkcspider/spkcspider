@@ -32,7 +32,7 @@
               <data hidden="hidden" property="spkc:value" about="rdf:nil"></data>
             {% endfor %}
           {% else %}
-              {% include "spider_base/partials/rdfvalue.html" with value=field %}
+              {% include "spider_base/partials/rdfvalue.html" with value=field field=None %}
           {% endif %}
           {% block form_widget %}
           {% if field|widget_type == "checkboxselectmultiple" %}

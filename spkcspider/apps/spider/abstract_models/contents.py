@@ -20,7 +20,7 @@ from django.utils.html import escape
 from django.utils.translation import gettext, pgettext
 from django.views.decorators.csrf import csrf_exempt
 from spkcspider.constants import VariantType, spkcgraph
-from spkcspider.utils.fields import add_property, literalize
+from spkcspider.utils.fields import add_property, literalize, is_hashable
 from spkcspider.utils.security import create_b64_id_token
 from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
@@ -386,7 +386,6 @@ class BaseContent(models.Model):
                 )
                 continue
             value_node = BNode()
-            hashable = getattr(field, "hashable", False)
 
             graph.add((
                 ref_content,
@@ -396,7 +395,7 @@ class BaseContent(models.Model):
             graph.add((
                 value_node,
                 spkcgraph["hashable"],
-                Literal(hashable)
+                Literal(is_hashable(field))
             ))
             graph.add((
                 value_node,

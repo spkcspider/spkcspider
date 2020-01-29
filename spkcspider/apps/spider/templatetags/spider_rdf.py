@@ -1,4 +1,5 @@
 __all__ = ["literalize", "uriref", "spkc_namespace"]
+# TODO: update all
 
 import logging
 
@@ -6,10 +7,9 @@ from rdflib import Literal, URIRef
 from rdflib.namespace import XSD
 
 from django import template
-from django.forms import BoundField
 from spkcspider.constants import spkcgraph
 from spkcspider.utils.fields import field_to_python as _field_to_python
-from spkcspider.utils.fields import literalize as _literalize
+from spkcspider.utils.fields import is_hashable, literalize as _literalize
 from spkcspider.utils.urls import merge_get_url
 
 register = template.Library()
@@ -67,11 +67,8 @@ def literalize(
 
 
 @register.simple_tag()
-def hashable_literalize(field):
-    if isinstance(field, BoundField):
-        return _literalize(getattr(field.field, "hashable", False))
-    else:
-        return _literalize(getattr(field, "hashable", False))
+def hashable_literalize(field, subname=None):
+    return _literalize(is_hashable(field, subname))
 
 
 @register.simple_tag()

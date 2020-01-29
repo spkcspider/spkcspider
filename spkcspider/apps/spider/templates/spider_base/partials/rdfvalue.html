@@ -2,14 +2,21 @@
 {% literalize value field as valueData %}
 {% if valueData|is_dict %}
 <data hidden="hidden" rel="spkc:value">
-    <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %}>
-    {% for subval in valueData.items %}
-        {% if subval|is_uriref %}
-        <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
-        {% else %}
-        <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
-        {% endif %}
-    {% endfor %}
+    <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %} rel="spkc:properties">
+        {% for key, subval in valueData.items.items %}
+            <data typeof="spkc:Property">
+                {% hashable_literalize field|default:value key as hashable %}
+                <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{key}}</data>
+                {% if subval|is_uriref %}
+                <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+                {% else %}
+                <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
+                {% endif %}
+            </data>
+        {% empty %}
+            <data hidden="hidden" resource="rdf:nil"></data>
+        {% endfor %}
     </data>
 </data>
 {% else %}

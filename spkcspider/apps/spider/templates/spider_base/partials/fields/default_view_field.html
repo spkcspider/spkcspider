@@ -13,14 +13,21 @@
         {% if valueData|is_dict %}
           <li>
             <data hidden="hidden" rel="spkc:value">
-              <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %}>
-              {% for subval in valueData.items %}
-                  {% if subval|is_uriref %}
-                  <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
-                  {% else %}
-                  <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
-                  {% endif %}
-              {% endfor %}
+              <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %} rel="spkc:properties">
+                {% for key, subval in valueData.items.items %}
+                  <data typeof="spkc:Property">
+                    {% hashable_literalize field|default:value key as hashable %}
+                    <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
+                    <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{key}}</data>
+                    {% if subval|is_uriref %}
+                    <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+                    {% else %}
+                    <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
+                    {% endif %}
+                  </data>
+                {% empty %}
+                  <data hidden="hidden" resource="rdf:nil"></data>
+                {% endfor %}
               </data>
             </data>
             <pre class="w3-white" style="overflow-x: auto;">{{val}}</pre>
@@ -46,14 +53,21 @@
     {% if valueData|is_dict %}
       <li>
         <data hidden="hidden" rel="spkc:value">
-          <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %}>
-          {% for subval in valueData.items %}
-              {% if subval|is_uriref %}
-              <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
-              {% else %}
-              <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
-              {% endif %}
-          {% endfor %}
+          <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %} rel="spkc:properties">
+            {% for key, subval in valueData.items.items %}
+              <data typeof="spkc:Property">
+                {% hashable_literalize field|default:value key as hashable %}
+                <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
+                <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{key}}</data>
+                {% if subval|is_uriref %}
+                <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+                {% else %}
+                <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
+                {% endif %}
+              </data>
+            {% empty %}
+              <data hidden="hidden" resource="rdf:nil"></data>
+            {% endfor %}
           </data>
         </data>
         <pre class="w3-white" style="overflow-x: auto;">{{field|field_to_python}}</pre>
@@ -66,8 +80,7 @@
         <a class="w3-white" href="{{valueData}}" resource="">{{field|field_to_python|default_if_none:""}}</a>
       </span>
     {% else %}
-      {% literalize field as valueData %}
-      <pre class="w3-white" style="overflow-x: auto;" property="spkc:value" datatype="{{valueData.datatype}}" content="{{valueData}}">{{field|field_to_python|default_if_none:""}}</pre>
+      <pre class="w3-white" style="overflow-x: auto;">{{field|field_to_python|default_if_none:""}}</pre>
     {% endif %}
   {% endif %}
 </li>

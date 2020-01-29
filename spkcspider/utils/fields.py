@@ -1,6 +1,6 @@
 __all__ = (
     "literalize", "field_to_python", "add_property", "add_by_field",
-    "prepare_description"
+    "prepare_description", "is_hashable"
 )
 
 import re
@@ -51,8 +51,8 @@ def literalize(
         if isinstance(ob, dict):
             return {
                 "type": datatype.get(None),
-                "items": [
-                    literalize(
+                "items": {
+                    key: literalize(
                         ob.get(key),
                         dtype,
                         use_uriref,
@@ -62,13 +62,16 @@ def literalize(
                         lambda x: x[0] is not None,
                         datatype.items()
                     )
-                ]
+                }
             }
-        elif _datacontent_set.issubset(ob.__dict__.keys()):
+        elif (
+            hasattr(ob, "__dict__") and
+            _datacontent_set.issubset(ob.__dict__.keys())
+        ):
             return {
                 "type": datatype.get(None),
-                "items": [
-                    literalize(
+                "items": {
+                    key: literalize(
                         ob.free_data.get(key, ob.quota_data.get(key)),
                         dtype,
                         use_uriref,
@@ -78,7 +81,7 @@ def literalize(
                         lambda x: x[0] is not None,
                         datatype.items()
                     )
-                ]
+                }
             }
     if hasattr(ob, "get_absolute_url"):
         if not datatype:
@@ -91,7 +94,18 @@ def literalize(
         datatype = XSD.string
     if use_uriref:
         return URIRef(urljoin(domain_base, ob.lstrip("/")))
+    assert datatype is None or datatype.startswith("http")
     return Literal(ob, datatype=datatype)
+
+
+def is_hashable(field, subname=None):
+    if isinstance(field, BoundField):
+        ret = getattr(field.field, "hashable", False)
+    else:
+        ret = getattr(field, "hashable", False)
+    if isinstance(ret, dict):
+        ret = ret.get(subname)
+    return ret
 
 
 def add_property(
