@@ -2,8 +2,8 @@ __all__ = ["literalize", "uriref", "spkc_namespace"]
 
 import logging
 
-from rdflib import Literal
-from rdflib.namespace import XSD, URIRef
+from rdflib import Literal, URIRef
+from rdflib.namespace import XSD
 
 from django import template
 from django.forms import BoundField
@@ -23,6 +23,11 @@ def uriref(path):
 @register.filter()
 def is_uriref(value):
     return isinstance(value, URIRef)
+
+
+@register.filter()
+def is_dict(value):
+    return isinstance(value, dict)
 
 
 @register.filter()

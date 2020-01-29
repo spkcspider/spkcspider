@@ -26,25 +26,13 @@
             </small></span>{% endif %}
           </label>
           {% if field.field.widget.allow_multiple_selected %}
-            {% for q in field|field_to_python %}
-              {% literalize q field as LiteralData %}
-              {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
-                {% if LiteralData|is_uriref %}
-                  <data hidden="hidden" property="spkc:value" about="{{LiteralData}}"></data>
-                {% else %}
-                  <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
-                {% endif %}
-              {% endif %}
+            {% for val in field|field_to_python %}
+              {% include "spider_base/partials/rdfvalue.html" with value=val field=field %}
             {% empty %}
               <data hidden="hidden" property="spkc:value" about="rdf:nil"></data>
             {% endfor %}
           {% else %}
-            {% literalize field as LiteralData %}
-            {% if LiteralData|is_uriref %}
-              <data hidden="hidden" resource="{{LiteralData}}"></data>
-            {% else %}
-              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}">{{LiteralData}}</data>
-            {% endif %}
+              {% include "spider_base/partials/rdfvalue.html" with value=field %}
           {% endif %}
           {% block form_widget %}
           {% if field|widget_type == "checkboxselectmultiple" %}

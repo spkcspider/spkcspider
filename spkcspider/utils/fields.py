@@ -15,6 +15,8 @@ from spkcspider.constants import spkcgraph
 # for not spamming sets
 _empty_set = frozenset()
 
+_datacontent_set = frozenset({"quota_data", "free_data"})
+
 
 def field_to_python(value):
     if isinstance(value, BoundField):
@@ -45,6 +47,39 @@ def literalize(
         datatype = getattr(datatype, "spkc_datatype", None)
     if ob is None:
         return RDF.nil
+    if isinstance(datatype, dict):
+        if isinstance(ob, dict):
+            return {
+                "type": datatype.get(None),
+                "items": [
+                    literalize(
+                        ob.get(key),
+                        dtype,
+                        use_uriref,
+                        domain_base
+                    )
+                    for key, dtype in filter(
+                        lambda x: x[0] is not None,
+                        datatype.items()
+                    )
+                ]
+            }
+        elif _datacontent_set.issubset(ob.__dict__.keys()):
+            return {
+                "type": datatype.get(None),
+                "items": [
+                    literalize(
+                        ob.free_data.get(key, ob.quota_data.get(key)),
+                        dtype,
+                        use_uriref,
+                        domain_base
+                    )
+                    for key, dtype in filter(
+                        lambda x: x[0] is not None,
+                        datatype.items()
+                    )
+                ]
+            }
     if hasattr(ob, "get_absolute_url"):
         if not datatype:
             # add raw=embed, download and hash downloaded object
@@ -55,7 +90,7 @@ def literalize(
     elif isinstance(ob, str) and not datatype:
         datatype = XSD.string
     if use_uriref:
-        return URIRef(urljoin(domain_base, ob))
+        return URIRef(urljoin(domain_base, ob.lstrip("/")))
     return Literal(ob, datatype=datatype)
 
 

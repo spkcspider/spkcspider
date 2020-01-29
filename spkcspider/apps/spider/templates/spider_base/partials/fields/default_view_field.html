@@ -9,37 +9,65 @@
   {% if field.field.widget.allow_multiple_selected %}
     <ul class="w3-white">
       {% for val in field|field_to_python %}
-        {% literalize val field as LiteralData %}
-        {% if LiteralData != 'http://www.w3.org/1999/02/22-rdf-syntax-ns#nil'|uriref %}
-          {% if LiteralData|is_uriref %}
-            <li>
-              <a href="{{LiteralData}}" property="spkc:value">{{val|default_if_none:""}}</a>
-            </li>
-          {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref or LiteralData.datatype == 'https://spkcspider.net/static/schemes/spkcgraph#hashableURI'|uriref %}
-            <li>
-              <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
-              <a href="{{LiteralData}}" resource="">{{val|default_if_none:""}}</a>
-            </li>
-          {% else %}
-            <li property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{val|default_if_none:""}}</li>
-          {% endif %}
+        {% literalize val field as valueData %}
+        {% if valueData|is_dict %}
+          <li>
+            <data hidden="hidden" rel="spkc:value">
+              <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %}>
+              {% for subval in valueData.items %}
+                  {% if subval|is_uriref %}
+                  <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+                  {% else %}
+                  <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
+                  {% endif %}
+              {% endfor %}
+              </data>
+            </data>
+            <pre class="w3-white" style="overflow-x: auto;">{{val}}</pre>
+          </li>
+        {% elif valueData|is_uriref %}
+          <li>
+            <a href="{{valueData}}" property="spkc:value">{{val|default_if_none:""}}</a>
+          </li>
+        {% elif valueData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref or valueData.datatype == 'https://spkcspider.net/static/schemes/spkcgraph#hashableURI'|uriref %}
+          <li>
+            <data hidden="hidden" property="spkc:value" datatype="{{valueData.datatype}}" content="{{valueData}}"></data>
+            <a href="{{valueData}}" resource="">{{val|default_if_none:""}}</a>
+          </li>
+        {% else %}
+          <li property="spkc:value" datatype="{{valueData.datatype}}" content="{{valueData}}">{{val|default_if_none:""}}</li>
         {% endif %}
       {% empty %}
         <li property="spkc:value" hidden="hidden" resource="rdf:nil"></li>
       {% endfor %}
     </ul>
   {% else %}
-    {% literalize field as LiteralData %}
-    {% if LiteralData|is_uriref %}
-      <a class="w3-white" property="spkc:value" href="{{LiteralData}}">{{field|field_to_python|default_if_none:""}}</a>
-    {% elif LiteralData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref or LiteralData.datatype == 'https://spkcspider.net/static/schemes/spkcgraph#hashableURI'|uriref %}
+    {% literalize field as valueData %}
+    {% if valueData|is_dict %}
+      <li>
+        <data hidden="hidden" rel="spkc:value">
+          <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %}>
+          {% for subval in valueData.items %}
+              {% if subval|is_uriref %}
+              <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+              {% else %}
+              <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
+              {% endif %}
+          {% endfor %}
+          </data>
+        </data>
+        <pre class="w3-white" style="overflow-x: auto;">{{field|field_to_python}}</pre>
+      </li>
+    {% elif valueData|is_uriref %}
+      <a class="w3-white" property="spkc:value" href="{{valueData}}">{{field|field_to_python|default_if_none:""}}</a>
+    {% elif valueData.datatype == 'http://www.w3.org/2001/XMLSchema#anyURI'|uriref or valueData.datatype == 'https://spkcspider.net/static/schemes/spkcgraph#hashableURI'|uriref %}
       <span>
-        <data hidden="hidden" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}"></data>
-        <a class="w3-white" href="{{LiteralData}}" resource="">{{field|field_to_python|default_if_none:""}}</a>
+        <data hidden="hidden" property="spkc:value" datatype="{{valueData.datatype}}" content="{{valueData}}"></data>
+        <a class="w3-white" href="{{valueData}}" resource="">{{field|field_to_python|default_if_none:""}}</a>
       </span>
     {% else %}
-      {% literalize field as LiteralData %}
-      <pre class="w3-white" style="overflow-x: auto;" property="spkc:value" datatype="{{LiteralData.datatype}}" content="{{LiteralData}}">{{field|field_to_python|default_if_none:""}}</pre>
+      {% literalize field as valueData %}
+      <pre class="w3-white" style="overflow-x: auto;" property="spkc:value" datatype="{{valueData.datatype}}" content="{{valueData}}">{{field|field_to_python|default_if_none:""}}</pre>
     {% endif %}
   {% endif %}
 </li>

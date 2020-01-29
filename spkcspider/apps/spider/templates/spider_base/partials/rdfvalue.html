@@ -1,0 +1,21 @@
+{% load spider_rdf %}
+{% literalize value field as valueData %}
+{% if valueData|is_dict %}
+<data hidden="hidden" rel="spkc:value">
+    <data {% if valueData.type %}typeof="{{valueData.type}}"{% endif %}>
+    {% for subval in valueData.items %}
+        {% if subval|is_uriref %}
+        <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+        {% else %}
+        <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
+        {% endif %}
+    {% endfor %}
+    </data>
+</data>
+{% else %}
+    {% if valueData|is_uriref %}
+    <data hidden="hidden" property="spkc:value" about="{{valueData}}"></data>
+    {% else %}
+    <data hidden="hidden" property="spkc:value" datatype="{{valueData.datatype}}">{{valueData}}</data>
+    {% endif %}
+{% endif %}
