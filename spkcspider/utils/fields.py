@@ -32,7 +32,8 @@ def literalize(
     ob=None, datatype=None, use_uriref=None, domain_base=""
 ):
     if isinstance(ob, BoundField):
-        if not datatype:
+        # if datatype is None or Field: overwrite
+        if isinstance(datatype, (BoundField, Field, int)):
             datatype = getattr(ob.field, "spkc_datatype", None)
         if use_uriref is None:
             use_uriref = getattr(ob.field, "spkc_use_uriref", None)
@@ -50,38 +51,54 @@ def literalize(
     if isinstance(datatype, dict):
         if isinstance(ob, dict):
             return {
+                "ref":
+                    URIRef(
+                        urljoin(
+                            domain_base,
+                            ob[None].get_absolute_url().lstrip("/")
+                        )
+                    ) if ob.get(None) else BNode(),
                 "type": datatype.get(None),
-                "items": {
-                    key: literalize(
-                        ob.get(key),
-                        dtype,
-                        use_uriref,
-                        domain_base
-                    )
-                    for key, dtype in filter(
-                        lambda x: x[0] is not None,
-                        datatype.items()
-                    )
-                }
+                "items":
+                    {
+                        key: literalize(
+                            ob.get(key),
+                            dtype,
+                            use_uriref,
+                            domain_base
+                        )
+                        for key, dtype in filter(
+                            lambda x: x[0] is not None,
+                            datatype.items()
+                        )
+                    }
             }
         elif (
             hasattr(ob, "__dict__") and
             _datacontent_set.issubset(ob.__dict__.keys())
         ):
             return {
+                "ref":
+                    URIRef(
+                        urljoin(
+                            domain_base,
+                            ob.get_absolute_url().lstrip("/")
+                        )
+                    ),
                 "type": datatype.get(None),
-                "items": {
-                    key: literalize(
-                        ob.free_data.get(key, ob.quota_data.get(key)),
-                        dtype,
-                        use_uriref,
-                        domain_base
-                    )
-                    for key, dtype in filter(
-                        lambda x: x[0] is not None,
-                        datatype.items()
-                    )
-                }
+                "items":
+                    {
+                        key: literalize(
+                            ob.free_data.get(key, ob.quota_data.get(key)),
+                            dtype,
+                            use_uriref,
+                            domain_base
+                        )
+                        for key, dtype in filter(
+                            lambda x: x[0] is not None,
+                            datatype.items()
+                        )
+                    }
             }
     if hasattr(ob, "get_absolute_url"):
         if not datatype:
@@ -119,6 +136,9 @@ def add_property(
             value_node
         ))
     graph.add((
+        value_node, RDF["type"], spkcgraph["Property"]
+    ))
+    graph.add((
         value_node, spkcgraph["name"],
         Literal(name, datatype=XSD.string)
     ))
@@ -129,7 +149,7 @@ def add_property(
     for l in literal:
         graph.add((
             value_node, spkcgraph["value"],
-            Literal(l, datatype=datatype)
+            Literal(l, datatype=datatype)  # returns Literal unchanged
         ))
     if not literal:
         graph.set((value_node, spkcgraph["value"], RDF.nil))

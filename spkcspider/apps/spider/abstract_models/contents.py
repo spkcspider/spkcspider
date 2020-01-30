@@ -5,7 +5,7 @@ import logging
 from datetime import timedelta
 from urllib.parse import urljoin
 
-from rdflib import RDF, XSD, BNode, Graph, Literal, URIRef
+from rdflib import RDF, XSD, Graph, Literal, URIRef
 
 from django.conf import settings
 from django.contrib import messages
@@ -343,7 +343,21 @@ class BaseContent(models.Model):
                 "SPIDER_FILE_EMBED_FUNC",
                 "spkcspider.apps.spider.functions.embed_file_default"
             )(name, data, self, context)
-        return literalize(data, field, domain_base=context["hostpart"])
+        ret = literalize(data, field, domain_base=context["hostpart"])
+        if isinstance(ret, dict):
+            base = ret["ref"]
+            if ret["type"]:
+                graph.add((base, RDF["type"], ret["type"]))
+            # create subproperties
+            for key, val in ret["items"].items():
+                value_node = add_property(graph, key, ref=base, literal=val)
+                graph.add((
+                    value_node,
+                    spkcgraph["hashable"],
+                    Literal(is_hashable(field, key))
+                ))
+            return base
+        return ret
 
     def serialize(self, graph, ref_content, context):
         # context may not be updated here
@@ -385,13 +399,19 @@ class BaseContent(models.Model):
                     name, form, exc
                 )
                 continue
-            value_node = BNode()
 
-            graph.add((
-                ref_content,
-                spkcgraph["properties"],
-                value_node
-            ))
+            if not isinstance(value, (list, tuple, models.QuerySet)):
+                value = [value]
+            value_node = add_property(
+                graph,
+                name,
+                ref=ref_content,
+                literal=map(
+                    lambda i: self.map_data(name, field, i, graph, context),
+                    value
+                ),
+                iterate=True
+            )
             graph.add((
                 value_node,
                 spkcgraph["hashable"],
@@ -399,30 +419,9 @@ class BaseContent(models.Model):
             ))
             graph.add((
                 value_node,
-                spkcgraph["name"],
-                Literal(name, datatype=XSD.string)
-            ))
-            graph.add((
-                value_node,
                 spkcgraph["fieldname"],
                 Literal(form.add_prefix(name), datatype=XSD.string)
             ))
-
-            if not isinstance(value, (list, tuple, models.QuerySet)):
-                value = [value]
-
-            for i in value:
-                graph.add((
-                    value_node,
-                    spkcgraph["value"],
-                    self.map_data(name, field, i, graph, context)
-                ))
-            if not value:
-                graph.add((
-                    value_node,
-                    spkcgraph["value"],
-                    RDF.nil
-                ))
 
     def render_serialize(self, **kwargs):
         from ..models import AssignedContent
