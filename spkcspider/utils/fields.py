@@ -9,7 +9,8 @@ from functools import reduce
 
 from django.conf import settings
 from django.forms import BoundField, Field
-from rdflib import RDF, XSD, BNode, Literal, URIRef, Identifier
+from rdflib import RDF, XSD, BNode, Literal, URIRef
+from rdflib.term import Identifier
 from spkcspider.constants import spkcgraph
 
 # for not spamming sets
