@@ -315,6 +315,9 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * css theme instead inline style
 
 ## Later
+* verify subproperties without resource:
+  * delay hash calculation if Bnode, then create hash from hashable hash of bnode
+  * this case currently doesn't happen as embed/raw is solely used and no bigger no-contents are currently in use
 * delayed deletion of user (disable and strength 9 everywhere)
 * maybe: make quota type overridable (maybe add extra nonsaved quota: other or use 0)
 * create client side script for import (pushing to server, index token for auth?)
