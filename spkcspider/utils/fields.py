@@ -9,7 +9,7 @@ from functools import reduce
 
 from django.conf import settings
 from django.forms import BoundField, Field
-from rdflib import RDF, XSD, BNode, Literal, URIRef
+from rdflib import RDF, XSD, BNode, Literal, URIRef, Identifier
 from spkcspider.constants import spkcgraph
 
 # for not spamming sets
@@ -150,7 +150,7 @@ def add_property(
         graph.add((
             value_node, spkcgraph["value"],
             l
-            if not datatype and isinstance(l, (URIRef, Literal)) else
+            if not datatype and isinstance(l, Identifier) else
             Literal(l, datatype=datatype)
         ))
     if not literal:
