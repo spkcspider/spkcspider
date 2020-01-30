@@ -151,7 +151,7 @@ def add_property(
             value_node, spkcgraph["value"],
             l
             if not datatype and isinstance(l, (URIRef, Literal)) else
-            Literal(l, datatype=datatype)  # returns Literal unchanged
+            Literal(l, datatype=datatype)
         ))
     if not literal:
         graph.set((value_node, spkcgraph["value"], RDF.nil))
