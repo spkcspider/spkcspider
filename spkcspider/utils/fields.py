@@ -149,6 +149,8 @@ def add_property(
     for l in literal:
         graph.add((
             value_node, spkcgraph["value"],
+            l
+            if not datatype and isinstance(l, (URIRef, Literal)) else
             Literal(l, datatype=datatype)  # returns Literal unchanged
         ))
     if not literal:
