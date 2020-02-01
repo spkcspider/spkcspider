@@ -26,17 +26,17 @@ keywords = [
 [tool.poetry.dependencies]
 python = ">=3.6"
 django = '>=3.0'
-django-simple-jsonfield = '>=0.3'
 requests = '*'
 certifi = '*'
-bleach = '*'
-rdflib = '*'
-html5lib = '*'
 cryptography = "*"
-django-ranged-response = "*"
-django-widget-tweaks = "*"
-django-next-prev = "*"
-django-fast-ratelimit = "*"
+rdflib = "*"
+html5lib = "*"
+django-simple-jsonfield = {version=">=0.3", optional = true}
+bleach = {version="*", optional = true}
+django-ranged-response = {version="*", optional = true}
+django-widget-tweaks = {version="*", optional = true}
+django-next-prev = {version="*", optional = true}
+django-fast-ratelimit = {version="*", optional = true}
 
 django-simple-captcha = {version="*", optional = true}
 flipflop = {version="*", optional = true}
@@ -58,6 +58,7 @@ django-simple-captcha = {version="*"}
 
 
 [tool.poetry.extras]
+full = ["django-simple-jsonfield", "bleach", "django-ranged-response", "django-widget-tweaks", "django-next-prev", "django-fast-ratelimit"]
 fastcgi = ["flipflop"]
 postgresql = ["psycopg2"]
 mysql = ["mysqlclient", "django-mysql"]
@@ -70,6 +71,9 @@ legacy_tox_ini = """
 minversion = 3.4.0
 isolated_build = True
 envlist = py{36,37,38}-django{30,master}-{sqlite3,postgresql,mysql}
+extras =
+  test
+  full
 
 [testenv]
 whitelist_externals =
@@ -87,11 +91,6 @@ setenv =
     mysql: DJANGO_SETTINGS_MODULE=testsettings.test_mysql
 
 deps =
-  django-simple-captcha
-  celery
-  spkcspider-domainauth>=0.4
-  django-webtest
-  WSGIProxy2
   django30: Django>=3.0,<3.1
   djangomaster: https://github.com/django/django/archive/master.zip
   postgresql: psycopg2-binary
