@@ -240,6 +240,7 @@ def serialize_stream(
     from .models import UserComponent
     if not isinstance(paginators, (tuple, list)):
         paginators = [paginators]
+    assert isinstance(page, int)
     if page <= 1:
         num_pages = max(map(lambda p: p.num_pages, paginators))
         per_page = sum(map(lambda p: p.per_page, paginators))
@@ -253,6 +254,13 @@ def serialize_stream(
             spkcgraph["pages.size_page"],
             Literal(per_page, datatype=XSD.positiveInteger)
         ))
+
+    graph.add((
+        context["sourceref"],
+        spkcgraph["pages.current_page"],
+        Literal(page, datatype=XSD.positiveInteger)
+    ))
+
     invalid_pages = 0
     for paginator in paginators:
         try:
@@ -266,11 +274,6 @@ def serialize_stream(
             invalid_pages += 1
             continue
 
-        graph.add((
-            context["sourceref"],
-            spkcgraph["pages.current_page"],
-            Literal(page_view.number, datatype=XSD.positiveInteger)
-        ))
         if paginator.object_list.model == UserComponent:
             if embed:
                 prefetch_related_objects(
