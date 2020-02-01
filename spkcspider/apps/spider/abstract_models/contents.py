@@ -233,17 +233,18 @@ class BaseContent(models.Model):
             return 'spider_base/partials/base_form.html'
         return 'spider_base/view_form.html'
 
-    def update_used_space(self, size_diff):
+    def update_used_space(self, size_diff, quota_type=None):
         if size_diff == 0:
             return
-        f = "local"
-        if VariantType.component_feature in self.associated.ctype.ctype:
-            f = "remote"
+        if not quota_type:
+            quota_type = "local"
+            if VariantType.component_feature in self.associated.ctype.ctype:
+                quota_type = "remote"
         with transaction.atomic():
-            self.associated.usercomponent.user_info.update_with_quota(
-                    size_diff, f
-                )
-            self.associated.usercomponent.user_info.save(
+            self.associated.user_info.update_with_quota(
+                size_diff, quota_type
+            )
+            self.associated.user_info.save(
                 update_fields=[
                     "used_space_local", "used_space_remote"
                 ]

@@ -1,5 +1,5 @@
 __all__ = (
-    "merge_get_url", "extract_host"
+    "merge_get_url", "extract_host", "replace_action"
 )
 
 import re
@@ -41,3 +41,14 @@ def merge_get_url(_url, **kwargs):
         GET.pop(item, None)
     ret = urlunsplit((*urlparsed[:3], urlencode(GET, doseq=True), ""))
     return ret
+
+
+def replace_action(url, action):
+    url = url.split("?", 1)
+    # urljoin does not join correctly, removes token because of no ending /
+    return "%s?%s" % (
+        "%s/%s" % (
+            url[0].rstrip("/").rsplit("/", 1)[0], action.lstrip("/")
+        ),
+        url[1] if len(url) >= 2 else ""
+    )

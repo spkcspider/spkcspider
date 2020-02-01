@@ -8,6 +8,7 @@ __all__ = [
     "UserComponent", "UserComponentManager", "TokenCreationError", "UserInfo"
 ]
 
+import math
 import logging
 import datetime
 
@@ -409,21 +410,38 @@ class UserInfo(models.Model):
             else:
                 self.used_space_local += c.get_size()
 
-    def update_with_quota(self, size_diff, quota_type):
-        fname = "used_space_{}".format(quota_type)
-        qval = getattr(self, fname)
+    def get_quota(self, quota_type):
         quota = get_settings_func(
             "SPIDER_GET_QUOTA",
             "spkcspider.apps.spider.functions.get_quota"
         )(self.user, quota_type)
-        # if over quota: reducing size is always good and should never fail
-        # be nice and also allow keeping the same amount of space
-        if quota and size_diff > 0 and qval + size_diff > quota:
-            raise ValidationError(
-                _("Exceeds quota by %(diff)s Bytes"),
-                code='quota_exceeded',
-                params={'diff': size_diff},
-            )
+        if quota is None:
+            return math.inf
+        return quota
+
+    def get_free_space(self, quota_type):
+        quota = self.get_quota(quota_type)
+        # float inf if not quota
+        if quota == math.inf:
+            return quota
+        fname = "used_space_{}".format(quota_type)
+        qval = getattr(self, fname)
+        # can be negative if over quota
+        return quota - qval
+
+    def update_with_quota(self, size_diff, quota_type):
+        fname = "used_space_{}".format(quota_type)
+        qval = getattr(self, fname)
+        quota = self.get_quota(quota_type)
+        if quota != math.inf:
+            # if over quota: reducing size is always good and should never fail
+            # be nice and also allow keeping the same amount of space
+            if size_diff > 0 and qval + size_diff > quota:
+                raise ValidationError(
+                    _("Exceeds quota by %(diff)s Bytes"),
+                    code='quota_exceeded',
+                    params={'diff': size_diff},
+                )
         setattr(
             self, fname, models.F(fname)+size_diff
         )

@@ -18,3 +18,7 @@ class BaseSubUserModel(models.Model):
     @property
     def username(self):
         return self.usercomponent.username  # pylint: disable=no-member
+
+    @property
+    def user_info(self):
+        return self.user.spider_info  # pylint: disable=no-member
