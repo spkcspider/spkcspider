@@ -62,7 +62,7 @@ fastcgi = ["flipflop"]
 postgresql = ["psycopg2"]
 mysql = ["mysqlclient", "django-mysql"]
 tasks = ["celery", "sqlalchemy"]
-test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery", "sqlalchemy", "spkcspider-domainauth"]
+test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery", "spkcspider-domainauth"]
 
 [tool.tox]
 legacy_tox_ini = """
@@ -70,6 +70,8 @@ legacy_tox_ini = """
 minversion = 3.4.0
 isolated_build = True
 envlist = py{36,37,38}-django{30,master}-{sqlite3,postgresql,mysql}
+extras =
+  test
 
 [testenv]
 whitelist_externals =
@@ -87,11 +89,6 @@ setenv =
     mysql: DJANGO_SETTINGS_MODULE=testsettings.test_mysql
 
 deps =
-  django-simple-captcha
-  celery
-  spkcspider-domainauth>=0.4
-  django-webtest
-  WSGIProxy2
   django30: Django>=3.0,<3.1
   djangomaster: https://github.com/django/django/archive/master.zip
   postgresql: psycopg2-binary
