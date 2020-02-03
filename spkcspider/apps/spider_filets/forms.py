@@ -124,8 +124,8 @@ class FileForm(LicenseForm):
                 _("key_list is not a dictionary")
             )
         for val in ret.values():
-            # 256 bits = current maximum of AESGCM
-            if len(val) > 32:
+            # key is extended by padding + base64 so extra buffer
+            if len(val) > 8000:
                 raise forms.ValidationError(
                     _("key has invalid length")
                 )
@@ -263,8 +263,8 @@ class TextForm(LicenseForm):
                 _("key_list is not a dictionary")
             )
         for val in ret.values():
-            # 256 bits = current maximum of AESGCM
-            if len(val) > 32:
+            # key is extended by padding + base64 so extra buffer
+            if len(val) > 8000:
                 raise forms.ValidationError(
                     _("key has invalid length")
                 )
