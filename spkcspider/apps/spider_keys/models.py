@@ -124,9 +124,15 @@ class PublicKey(DataContent):
             self.associated.attachedblobs.get(
                 name="key"
             ).as_bytes.decode("ascii")
-        kwargs["form"] = self.get_form("view")(
-            **self.get_form_kwargs(disable_data=True, **kwargs)
+        kwargs["hash_algo"] = settings.SPIDER_HASH_ALGORITHM.name
+        kwargs["hash"] = self.associated.getlist(
+            "hash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
+        )[0]
+        k = self.associated.getlist(
+            "pubkeyhash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
         )
+        if k:
+            kwargs["pubkeyhash"] = k[0]
         return render_to_string(
             "spider_keys/key.html", request=kwargs["request"],
             context=kwargs

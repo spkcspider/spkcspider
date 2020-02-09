@@ -8,7 +8,7 @@
       <td class="w3-white w3-padding" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">hash_algorithm</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        <span property="spkc:value" datatype="xsd:string">{{form.initial.hash_algorithm}}</span>
+        <span property="spkc:value" datatype="xsd:string">{{hash_algo}}</span>
       </td>
     </tr>
     <tr>
@@ -16,21 +16,19 @@
       <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">hash</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        <span property="spkc:value" datatype="xsd:string">{{form.initial.hash}}</span>
+        <span property="spkc:value" datatype="xsd:string">{{hash}}</span>
       </td>
     </tr>
+    {% if pubkeyhash %}
     <tr>
       <td>{% trans 'Hash of public key' %}</td>
-      {% if form.initial.pubkeyhash %}
       <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
         <data hidden="hidden" property="spkc:name" datatype="xsd:string">pubkeyhash</data>
         <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        <span property="spkc:value" datatype="xsd:string">{{form.initial.pubkeyhash}}</span>
+        <span property="spkc:value" datatype="xsd:string">{{pubkeyhash}}</span>
       </td>
-      {% else %}
-        <td>{% trans 'No Public Key could be extracted' %}</td>
-      {% endif %}
     </tr>
+    {% endif %}
     <tr style="margin-top:5px">
       <td>{% trans 'key' %}</td>
       <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
