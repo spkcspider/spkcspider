@@ -13,19 +13,15 @@
     </tr>
     <tr>
       <td>{% trans 'Hash' %}</td>
-      <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
-        <data hidden="hidden" property="spkc:name" datatype="xsd:string">hash</data>
-        <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        <span property="spkc:value" datatype="xsd:string">{{hash}}</span>
+      <td class="w3-white w3-padding" style="word-break: break-all">
+        {{hash}}
       </td>
     </tr>
     <tr>
       <td>{% trans 'Hash of public key' %}</td>
       {% if pubkeyhash %}
-      <td class="w3-white w3-padding" style="word-break: break-all" typeof="spkc:Property">
-        <data hidden="hidden" property="spkc:name" datatype="xsd:string">pubkeyhash</data>
-        <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">false</data>
-        <span property="spkc:value" datatype="xsd:string">{{pubkeyhash}}</span>
+      <td class="w3-white w3-padding" style="word-break: break-all">
+        {{pubkeyhash}}
       </td>
       {% else %}
         <td class="w3-white w3-padding">{% trans 'No Public Key could be extracted' %}</td>
