@@ -83,11 +83,13 @@ class KeyTest(TransactionWebTest):
                 ),
                 g
             )
-            self.assertIn(
+            # NEVER expose both, could be forged, so clients should never rely
+            #   on
+            self.assertNotIn(
                 (None, None, Literal("hash", datatype=XSD.string)),
                 g
             )
-            self.assertIn(
+            self.assertNotIn(
                 (None, None, Literal("pubkeyhash", datatype=XSD.string)),
                 g
             )

@@ -55,6 +55,8 @@ class KeyForm(DataContentForm):
         key = key.as_bytes.decode("ascii") if key else ""
         self.initial["key"] = key
         self.initial["hash_algorithm"] = settings.SPIDER_HASH_ALGORITHM.name
+        # never calculate hash or pubkeyhash!!!!
+        #    must be calculated by clients itself
         setattr(self.fields['hash_algorithm'], "hashable", False)
         setattr(self.fields['key'], "hashable", True)
 
