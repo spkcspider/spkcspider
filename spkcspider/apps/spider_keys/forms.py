@@ -40,6 +40,12 @@ class KeyForm(DataContentForm):
     hash_algorithm = forms.CharField(
         widget=forms.HiddenInput(), disabled=True
     )
+    hash = forms.CharField(
+        widget=forms.HiddenInput(), disabled=True
+    )
+    pubkeyhash = forms.CharField(
+        widget=forms.HiddenInput(), disabled=True
+    )
     key = forms.CharField(
         widget=UploadTextareaWidget(), strip=True, required=False,
         validators=[valid_pkey_properties]
@@ -49,12 +55,27 @@ class KeyForm(DataContentForm):
         super().__init__(**kwargs)
         key = None
         if self.instance.pk:
+            self.initial["hash"] = self.instance.associated.getlist(
+                "hash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
+            )[0]
+            k = self.instance.associated.getlist(
+                "pubkeyhash=%s" % settings.SPIDER_HASH_ALGORITHM.name, 1
+            )
+            if k:
+                self.initial["pubkeyhash"] = k[0]
+            else:
+                del self.fields["pubkeyhash"]
             key = self.instance.associated.attachedblobs.filter(
                 name="key"
             ).first()
+        else:
+            del self.fields["hash"]
+            del self.fields["pubkeyhash"]
+
         key = key.as_bytes.decode("ascii") if key else ""
         self.initial["key"] = key
         self.initial["hash_algorithm"] = settings.SPIDER_HASH_ALGORITHM.name
+
         setattr(self.fields['hash_algorithm'], "hashable", False)
         setattr(self.fields['key'], "hashable", True)
 
