@@ -1,14 +1,14 @@
 {
   "private": true,
   "dependencies": {
-    "@devkral/selectize": "^0.13.0",
-    "@fortawesome/fontawesome-free": "^5.10.2",
-    "@json-editor/json-editor": "^1.3.5",
-    "base64-js": "^1.3.1",
-    "flatpickr": "^4.6.3",
+    "@devkral/selectize": "*",
+    "@fortawesome/fontawesome-free": "^5.12.1",
+    "@json-editor/json-editor": "*",
+    "base64-js": "*",
+    "flatpickr": "*",
     "jquery": "^3.4.1",
-    "qrcode-generator": "^1.4.4",
-    "trumbowyg": "^2.20.0",
-    "w3-css": "^4.1.0"
+    "qrcode-generator": "*",
+    "trumbowyg": "*",
+    "w3-css": "*"
   }
 }

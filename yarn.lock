@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@devkral/selectize@^0.13.0":
+"@devkral/selectize@*":
   version "0.13.0"
   resolved "https://registry.yarnpkg.com/@devkral/selectize/-/selectize-0.13.0.tgz#1e17b3f0bfd25cb7b385cd3533ba1baaf6a3083f"
   integrity sha512-SROftbfeCUv5/WxFFdrs1el+fS6/yXY2U7Lym2QeSSyB9fElE99/LeJu6FuTkNz51IgtSPrV9L0Pjxq1JMQknQ==
@@ -15,22 +15,22 @@
   resolved "https://registry.yarnpkg.com/@devkral/sifter/-/sifter-0.6.0.tgz#413a634dcdc8b3eb42d213759d59098d6f52735d"
   integrity sha512-v20vtZFDZz07YbGvcnHkIWK7sjkBM1wuNwUV64+vwSC20kaXCegX2Sb81+aVduADEgjeOtIFSUP2GhDwcdsrAA==
 
-"@fortawesome/fontawesome-free@^5.10.2":
-  version "5.12.0"
-  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.12.0.tgz#8ceb9f09edfb85ea18a6c7bf098f6f5dd5ffd62b"
-  integrity sha512-vKDJUuE2GAdBERaQWmmtsciAMzjwNrROXA5KTGSZvayAsmuTGjam5z6QNqNPCwDfVljLWuov1nEC3mEQf/n6fQ==
+"@fortawesome/fontawesome-free@^5.12.1":
+  version "5.12.1"
+  resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.12.1.tgz#2a98fea9fbb8a606ddc79a4680034e9d5591c550"
+  integrity sha512-ZtjIIFplxncqxvogq148C3hBLQE+W3iJ8E4UvJ09zIJUgzwLcROsWwFDErVSXY2Plzao5J9KUYNHKHMEUYDMKw==
 
-"@json-editor/json-editor@^1.3.5":
-  version "1.3.5"
-  resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-1.3.5.tgz#b8ec91b2ad53d65a031c90941e3c3bbd084bc321"
-  integrity sha512-maU/05CzSvW5waIqWXhhiekLhDKwu8cOkGESIVyV2UrONedRzO/qk+WBFKkBbLmm5TeyRnkwVL6CkKNyaa2d4w==
+"@json-editor/json-editor@*":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-2.0.0.tgz#03bf765d588d398ad12b2a67b8edb406aad6f5d0"
+  integrity sha512-1XbqTNAWH0bGEcEPA5u02dV0dMS3AQPxNCzaidCy0nef5/PXYWUCbdhDl+fu5D8rKRQ3gWGfdtRIg+E9tMGMXw==
 
-base64-js@^1.3.1:
+base64-js@*:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.3.1.tgz#58ece8cb75dd07e71ed08c736abc5fac4dbf8df1"
   integrity sha512-mLQ4i2QO1ytvGWFWmcngKO//JXAQueZvwEKtjgQFM4jIK0kU+ytMfplL8j+n5mspOfjHwoAg+9yhb7BwAHm36g==
 
-flatpickr@^4.6.3:
+flatpickr@*:
   version "4.6.3"
   resolved "https://registry.yarnpkg.com/flatpickr/-/flatpickr-4.6.3.tgz#15a8b76b6e34e3a072861250503a5995b9d3bc60"
   integrity sha512-007VucCkqNOMMb9ggRLNuJowwaJcyOh4sKAFcdGfahfGc7JQbf94zSzjdBq/wVyHWUEs5o3+idhFZ0wbZMRmVQ==
@@ -45,17 +45,17 @@ microplugin@0.0.3:
   resolved "https://registry.yarnpkg.com/microplugin/-/microplugin-0.0.3.tgz#1fc2e1bb7c9e19e82bd84bba9137bbe71250d8cd"
   integrity sha1-H8Lhu3yeGegr2Eu6kTe75xJQ2M0=
 
-qrcode-generator@^1.4.4:
+qrcode-generator@*:
   version "1.4.4"
   resolved "https://registry.yarnpkg.com/qrcode-generator/-/qrcode-generator-1.4.4.tgz#63f771224854759329a99048806a53ed278740e7"
   integrity sha512-HM7yY8O2ilqhmULxGMpcHSF1EhJJ9yBj8gvDEuZ6M+KGJ0YY2hKpnXvRD+hZPLrDVck3ExIGhmPtSdcjC+guuw==
 
-trumbowyg@^2.20.0:
+trumbowyg@*:
   version "2.21.0"
   resolved "https://registry.yarnpkg.com/trumbowyg/-/trumbowyg-2.21.0.tgz#ca133bb960d3302d362ca73358e268d3830c74cc"
   integrity sha512-TUatXrv2PgaYjgIZdh4G0UgZsFd9cmkw4ZGrQBWrXNDtf2cn+1TEgLGd/jVj0MWGxEYfbrZXmURf9UQlEMLGFg==
 
-w3-css@^4.1.0:
+w3-css@*:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/w3-css/-/w3-css-4.1.0.tgz#7872f2738d96a5732bac7718869151e3a5373ce4"
   integrity sha512-nBomstRa3ITEDFG3EsYvVijueT3O1iwmjf96656VOR2BG6cwfkKwtwy/Gat7golUaA9ULPZPpo/Vj+3mYkeVfw==
