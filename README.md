@@ -302,6 +302,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * >=0.22: switch to datacontent (except in rare special cases like in SpiderTag), 3party modules will break if they used BaseContent
 
 # TODO
+* implement encryption: a flag marks keys they should be used for encryption
 * implement UploadTextareaWidget
 * maybe: status codes if forms fail should represent it
 * fix RDF export and view of spider_tags
