@@ -24,7 +24,7 @@ class WebConfig(DataContent):
             "strength": 0
         },
         {
-            # only one per domain, times out, don't require user permission
+            # only one per domain, has life time, don't require user permission
             "name": "TmpConfig",
             "ctype": (
                 VariantType.unique + VariantType.component_feature +

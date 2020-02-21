@@ -95,6 +95,10 @@ class FileFilet(LicenseMixin, DataContent):
                 ftype = "image"
             elif extension in media_extensions:
                 ftype = "media"
+        if self.quota_data.get("key_list"):
+            ret = "%sencrypted\x1e%s\x1e" % (
+                ret, "\x1epubkeyhash=".join(self.quota_data["key_list"].keys())
+            )
         return "%sname=%s\x1efile_type=%s\x1e" % (
             ret, name, ftype
         )
@@ -188,21 +192,30 @@ class TextFilet(LicenseMixin, DataContent):
 
     def get_content_description(self):
         # use javascript instead
-        if self.prepared_attachements:
-            t = self.prepared_attachements["attachedblobs"][0]
+        if self.quota_data.get("key_list"):
+            t = ""
         else:
-            t = self.associated.attachedblobs.filter(name="text").first()
+            if self.prepared_attachements:
+                t = self.prepared_attachements["attachedblobs"][0]
+            else:
+                t = self.associated.attachedblobs.filter(name="text").first()
+            t = t.as_bytes.decode("utf8") if t else ""
         return " ".join(
             prepare_description(
-                t.as_bytes.decode("utf8") if t else "", 51
+                t, 51
             )[:50]
         )
 
     def get_info(self):
         ret = super().get_info()
-        return "%sname=%s\x1efile_type=text\x1e" % (
+        if self.quota_data.get("key_list"):
+            ret = "%sencrypted\x1e%s\x1e" % (
+                ret, "\x1epubkeyhash=".join(self.quota_data["key_list"].keys())
+            )
+        ret = "%sname=%s\x1efile_type=text\x1e" % (
             ret, self.associated.name
         )
+        return ret
 
     def get_form(self, scope):
         if scope in ("raw", "export", "list"):

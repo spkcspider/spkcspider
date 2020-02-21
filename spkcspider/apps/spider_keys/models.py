@@ -46,6 +46,12 @@ class PublicKey(DataContent):
         _ = pgettext
         return _("content name", "Public Key")
 
+    def get_priority(self):
+        # pull thirdparty keys down
+        if self.free_data.get("thirdparty"):
+            return -10
+        return 0
+
     def get_info(self):
         ret = super().get_info()
         h = get_hashob()
@@ -54,6 +60,8 @@ class PublicKey(DataContent):
         else:
             key = self.associated.attachedblobs.get(name="key")
         h.update(key.blob)
+        if self.free_data.get("thirdparty"):
+            ret = f"{ret}thirdparty\x1e"
         pubkeyhash = ""
         k = self.get_key_ob(key.blob)
         if k:
@@ -87,7 +95,7 @@ class PublicKey(DataContent):
         except exceptions.UnsupportedAlgorithm:
             return None
         except ValueError:
-            pass
+            return None
 
     def get_key_name(self):
         if self.prepared_attachements:

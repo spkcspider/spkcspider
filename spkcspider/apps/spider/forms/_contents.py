@@ -56,6 +56,11 @@ class LinkForm(DataContentForm):
         if self.instance.id:
             self.initial["content"] = \
                 self.instance.associated.attached_to_content
+            if (
+                not self.initial["content"].attached_contents.empty() or
+                not self.initial["content"].attached_tokens.empty()
+            ):
+                self.fields["content"].disabled = True
         q = self.fields["content"].queryset
         travel = AssignedContent.travel.get_active_for_request(request)
         travel = travel.filter(loggedin_active_tprotections_q)
@@ -75,6 +80,7 @@ class LinkForm(DataContentForm):
             )
 
     def save(self, commit=True):
+        # for not counting contents multiple times
         self.instance.associated.attached_to_content = \
             self.cleaned_data["content"]
         return super().save(commit)

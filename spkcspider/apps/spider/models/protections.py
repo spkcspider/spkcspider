@@ -338,7 +338,7 @@ class AuthToken(BaseSubUserModel):
     )
     attached_to_content = models.ForeignKey(
         "spider_base.AssignedContent", on_delete=models.CASCADE,
-        related_name="attachedtokens", null=True, blank=True
+        related_name="attached_tokens", null=True, blank=True
     )
     # -1=false,0=usercomponent,1-...=anchor
     persist: int = models.BigIntegerField(

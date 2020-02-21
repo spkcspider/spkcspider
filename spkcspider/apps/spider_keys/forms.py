@@ -45,6 +45,15 @@ class KeyForm(DataContentForm):
         validators=[valid_pkey_properties]
     )
 
+    thirdparty = forms.BooleanField(
+        initial=False,
+        help_text=_(
+            "Key of thirdparty, only for access to encrypted content"
+        )
+    )
+
+    free_fields = {"thirdparty": False}
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         key = None
@@ -58,7 +67,28 @@ class KeyForm(DataContentForm):
         # never calculate hash or pubkeyhash!!!!
         #    must be calculated by clients itself
         setattr(self.fields['hash_algorithm'], "hashable", False)
-        setattr(self.fields['key'], "hashable", True)
+        setattr(
+            self.fields['key'],
+            "hashable",
+            not self.initial.get("thirdparty", False)
+        )
+        if self.instance.id:
+            # elsewise every relation would break
+            self.fields['thirdparty'].disabled = True
+
+    def clean(self):
+        ret = super().clean()
+        if self.cleaned_data.get("thirdparty"):
+            k = self.instance.get_key_ob(
+                self.cleaned_data["key"].encode("ascii")
+            )
+            if not k:
+                self.add_error(
+                    "key", forms.ValidationError(
+                        _("Thirdparty key must be parsable")
+                    )
+                )
+        return ret
 
     def get_prepared_attachements(self):
         b = None
@@ -141,8 +171,10 @@ class AnchorKeyForm(DataContentForm):
     )
     key = forms.ModelChoiceField(
         queryset=AssignedContent.objects.filter(
-            ctype__name="PublicKey",
-            info__contains="\x1epubkeyhash="
+            models.Q(info__contains="\x1etype=PublicKey\x1e") &
+            models.Q(info__contains="\x1epubkeyhash=")
+        ).exclude(
+            info__contains="\x1ethirdparty\x1e"
         )
     )
     anchor_type = forms.CharField(disabled=True, initial="signature")
@@ -193,7 +225,10 @@ class AnchorKeyForm(DataContentForm):
         ret = super().clean()
         pubkeycontent = self.cleaned_data.get("key")
         if pubkeycontent:
-            pubkey = pubkeycontent.content.get_key_ob()
+            if pubkeycontent.ctype.name != "PublicKey":
+                pubkey = pubkeycontent.attached_to_content.content.get_key_ob()
+            else:
+                pubkey = pubkeycontent.content.get_key_ob()
             if not pubkey:
                 self.add_error("key", forms.ValidationError(
                     _("key not usable for signing"),
