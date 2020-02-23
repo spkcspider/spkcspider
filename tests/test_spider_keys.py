@@ -42,8 +42,6 @@ class KeyTest(TransactionWebTest):
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         ).strip()
-        with self.subTest(msg="stripped pem format"):
-            self.assertEquals(pempub, pempub.strip())
 
         self.app.set_user(user="testuser1")
         createurl = reverse(
@@ -128,8 +126,6 @@ class KeyTest(TransactionWebTest):
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
         ).strip()
-        with self.subTest(msg="stripped pem format"):
-            self.assertEquals(pempub, pempub.strip())
 
         createurl = reverse(
             "spider_base:ucontent-add",
