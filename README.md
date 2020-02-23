@@ -158,7 +158,8 @@ There are special GET parameters for controlling spkcspider:
 * raw=embed: embed content of components, use turtle format
 * id=id&id=id: limit content ids (Content lists only)
 * search=foo&search=!notfoo: search case insensitive a string
-* search=\_unlisted: List "unlisted" content if owner, special user (doesn't work in public list).
+* search=\_unlisted, search=%1eunlisted%1e: List "unlisted" content if owner, special user (doesn't work in public list)
+* search=%1efoobar%1e: activate strict info search
 * protection=false: fail if protections are required
 * protection=xy&protection=yx...: protections to use
 * intention=auth: try to login with UserComponent authentication (falls back to login redirect)
@@ -178,7 +179,10 @@ There are special GET parameters for controlling spkcspider:
 * server-less referrer mode (sl): token is transferred as GET parameter and no POST request is made (less secure as client sees token and client is not authenticated)
 * domain referrer mode (domain): referrer domain is add to token. Doesn't work with other intentions (but "live" mode is active as no filter will be created) and works only if domain_mode is for context active (e.g. feature or access context (content)). Can be automated, doesn't require user approval. Useful for tag updates (only active if feature requests domain mode).
 
+verified_by urls should return last verification date for a hash
+
 ### special intentions:
+* persist: referrer token is persistent and can persist contents
 * sl: activates server less mode
 * live: filter live instead using fixed ids
 
@@ -187,13 +191,17 @@ There are special GET parameters for controlling spkcspider:
 * search also searches UserComponents name and description fields
 * can only be used with "list"-views
 * items can be negated with !foo
-* strict infofield search can be activated with \_
+* strict infofield, name search can be activated with \_
+* strict infofield search can be activated with 1e chars
 * !!foo escapes a !foo item
 * \_\_foo escapes a \_foo item
-* !\_ negates a strict infofield search
-* \_unlisted is a special search: it lists with "unlisted" marked contents
+* !\_ negates a strict infofield, name search
+* \_unlisted: it lists with "unlisted" marked contents
 
-verified_by urls should return last verification date for a hash
+### component search
+
+* \_index, index: reveals the index component
+* !\_index, !index: explicit hides the index component
 
 ## raw mode
 
@@ -302,6 +310,7 @@ Note: AssignedContent.objects.from_url_part(url) returns tuple: (matched feature
 * >=0.22: switch to datacontent (except in rare special cases like in SpiderTag), 3party modules will break if they used BaseContent
 
 # TODO
+* split out constants and common features
 * implement encryption: a flag marks keys they should be used for encryption
 * implement UploadTextareaWidget
 * maybe: status codes if forms fail should represent it

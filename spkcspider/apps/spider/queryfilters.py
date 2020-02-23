@@ -66,30 +66,43 @@ def filter_components(
         notsearch = ~Q(contents__info__contains="\x1eunlisted\x1e")
 
     for item in search_filters:
-        if filter_unlisted and item == "_unlisted":
-            continue
         if counter > max_counter:
             break
         counter += 1
         if len(item) == 0:
             continue
-        use_strict = False
+        use_strict = 0
+        negate = False
         if item.startswith("!!"):
             _item = item[1:]
         elif item.startswith("__"):
             _item = item[1:]
         elif item.startswith("!_"):
             _item = item[2:]
-            use_strict = True
+            use_strict = 1
+            negate = True
         elif item.startswith("!"):
             _item = item[1:]
         elif item.startswith("_"):
             _item = item[1:]
-            use_strict = True
+            use_strict = 1
         else:
             _item = item
+
+        if _item == "unlisted":
+            # ignore unlisted if filtered
+            if filter_unlisted:
+                continue
+            _item = "\x1eunlisted\x1e"
         qob = Q()
-        if use_strict:
+        if "\x1e" in _item:
+            use_strict = 2
+        if use_strict == 2:
+            if use_contents:
+                qob |= Q(contents__info__contains=_item)
+                # exclude unlisted from searchterms
+                qob &= notsearch
+        elif use_strict == 1:
             if use_contents:
                 qob |= Q(contents__info__contains="\x1e%s\x1e" % _item)
                 # exclude unlisted from searchterms
@@ -97,20 +110,19 @@ def filter_components(
         else:
             qob |= Q(description__icontains=_item)
         if _item == "index":
+            # only if queried for index list index
             qob |= Q(strength=10)
-        elif use_strict:
+        elif use_strict == 1:
             qob |= Q(
                 name=_item,
                 strength__lt=10
             )
-        else:
+        elif use_strict == 0:
             qob |= Q(
                 name__icontains=_item,
                 strength__lt=10
             )
-        if item.startswith("!!"):
-            searchq |= qob
-        elif item.startswith("!"):
+        if negate:
             searchq_exc |= qob
         else:
             searchq |= qob
@@ -122,14 +134,14 @@ def filter_contents(
     use_components=False
 ):
     """
-    [summary]
+    Filter contents with mini filter language
 
     Arguments:
         search_filters {iterable} -- search filters
 
     Keyword Arguments:
-        ids {[type]} -- [description] (default: {None})
-        filter_unlisted {bool} -- [description] (default: {True})
+        ids {iterable} -- allowed content ids (default: {None})
+        filter_unlisted {bool,int} -- [description] (default: {True})
         feature_exception {bool} -- [description] (default: {True})
         use_components {bool} -- [description] (default: {False})
 
@@ -145,16 +157,12 @@ def filter_contents(
     max_counter = settings.SPIDER_MAX_SEARCH_PARAMETERS
 
     for item in search_filters:
-        if filter_unlisted is True and item == "_unlisted":
-            continue
-        elif item == "_unlisted":
-            unlisted_active = True
         if counter > max_counter:
             break
         counter += 1
         if len(item) == 0:
             continue
-        use_strict = False
+        use_strict = 0
         negate = False
         if item.startswith("!!"):
             _item = item[1:]
@@ -162,17 +170,29 @@ def filter_contents(
             _item = item[1:]
         elif item.startswith("!_"):
             _item = item[2:]
-            use_strict = True
+            use_strict = 1
             negate = True
         elif item.startswith("!"):
             _item = item[1:]
             negate = True
         elif item.startswith("_"):
             _item = item[1:]
-            use_strict = True
+            use_strict = 1
         else:
             _item = item
-        if use_strict:
+
+        if _item == "unlisted":
+            # ignore unlisted if filtered
+            if filter_unlisted:
+                continue
+            _item = "\x1eunlisted\x1e"
+            unlisted_active = True
+        if "\x1e" in _item:
+            use_strict = 2
+        if use_strict == 2:
+            qob = Q(info__contains=_item)
+        elif use_strict == 1:
+            # check against name
             qob = Q(name=_item)
             qob |= Q(info__contains="\x1e%s\x1e" % _item)
             # can exclude/include specific usercomponents names
