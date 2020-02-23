@@ -20,7 +20,7 @@
                     <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
                     <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{key}}</data>
                     {% if subval|is_uriref %}
-                    <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+                    <data hidden="hidden" property="spkc:value" resource="{{subval}}"></data>
                     {% else %}
                     <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
                     {% endif %}
@@ -60,7 +60,7 @@
                 <data hidden="hidden" property="spkc:hashable" datatype="xsd:boolean">{{hashable}}</data>
                 <data hidden="hidden" property="spkc:name" datatype="xsd:string">{{key}}</data>
                 {% if subval|is_uriref %}
-                <data hidden="hidden" property="spkc:value" about="{{subval}}"></data>
+                <data hidden="hidden" property="spkc:value" resource="{{subval}}"></data>
                 {% else %}
                 <data hidden="hidden" property="spkc:value" datatype="{{subval.datatype}}">{{subval}}</data>
                 {% endif %}
