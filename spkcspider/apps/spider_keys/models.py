@@ -68,7 +68,7 @@ class PublicKey(DataContent):
             pem = k.public_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PublicFormat.SubjectPublicKeyInfo
-            )
+            ).strip()
             h2 = get_hashob()
             h2.update(pem)
             pubkeyhash = "pubkeyhash=%s=%s\x1e" % (

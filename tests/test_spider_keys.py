@@ -26,7 +26,6 @@ class KeyTest(TransactionWebTest):
         )
         update_dynamic.send(self)
 
-    # @unittest.expectedFailure
     def test_keys(self):
         home = self.user.usercomponent_set.get(name="home")
         privkey = rsa.generate_private_key(
@@ -42,7 +41,9 @@ class KeyTest(TransactionWebTest):
         pempub = privkey.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
+        ).strip()
+        with self.subTest(msg="stripped pem format"):
+            self.assertEquals(pempub, pempub.strip())
 
         self.app.set_user(user="testuser1")
         createurl = reverse(
@@ -126,7 +127,9 @@ class KeyTest(TransactionWebTest):
         pempub = privkey.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
+        ).strip()
+        with self.subTest(msg="stripped pem format"):
+            self.assertEquals(pempub, pempub.strip())
 
         createurl = reverse(
             "spider_base:ucontent-add",
