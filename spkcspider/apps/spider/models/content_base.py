@@ -511,8 +511,10 @@ class AssignedContent(BaseInfoModel, BaseSubUserModel):
 
     # info extra flags:
     #  primary: primary content of type for usercomponent
-    #  unlisted: not listed
-    #  anchor:
+    #  unlisted: not listed, only visible for owner
+    #  anchor: anchor content
+    #  encrypted: content is encrypted
+    #  encrypted and unlisted: only encrypt for own keys
     objects = AssignedContentManager()
     travel = TravelProtectionManager()
 

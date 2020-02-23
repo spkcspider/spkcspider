@@ -657,27 +657,24 @@ class BaseContent(models.Model):
                 VariantType.content_feature in
                 self.associated.ctype.ctype
             )
+        ret = f"\x1etype={self.associated.ctype.name}\x1e"
 
-        anchortag = ""
-        if VariantType.anchor in self.associated.ctype.ctype:
-            anchortag = "anchor\x1e"
-
-        idtag = "primary\x1e"
         # simulates beeing not unique, by adding id
         if not unique:
-            # placeholder
-            idtag = "id=\x1e"
             if self.associated_id:
-                idtag = "id={}\x1e".format(self.associated_id)
-        unlistedtag = ""
+                ret = f"{ret}id={self.associated_id}\x1e"
+            else:
+                # placeholder
+                ret = f"{ret}id=\x1e"
+        else:
+            ret = f"{ret}primary\x1e"
+
+        if VariantType.anchor in self.associated.ctype.ctype:
+            ret = f"{ret}anchor\x1e"
+
         if unlisted:
-            unlistedtag = "unlisted\x1e"
-        return "\x1etype={}\x1e{}{}{}".format(
-            self.associated.ctype.name,
-            idtag,
-            anchortag,
-            unlistedtag
-        )
+            ret = f"{ret}unlisted\x1e"
+        return ret
 
     def full_clean(self, **kwargs):
         # checked with clean
