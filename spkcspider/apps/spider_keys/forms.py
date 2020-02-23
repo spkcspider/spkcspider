@@ -46,7 +46,7 @@ class KeyForm(DataContentForm):
     )
 
     thirdparty = forms.BooleanField(
-        initial=False,
+        initial=False, required=False,
         help_text=_(
             "Key of thirdparty, only for access to encrypted content"
         )
