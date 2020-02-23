@@ -1,5 +1,6 @@
 
 import logging
+import json
 import posixpath
 
 from django.conf import settings
@@ -153,6 +154,8 @@ class FileFilet(LicenseMixin, DataContent):
             )
 
         response["Access-Control-Allow-Origin"] = "*"
+        if self.quota_data.get("key_list"):
+            response["X-KEYLIST"] = json.dumps(self.quota_data["key_list"])
         return response
 
     def access_add(self, **kwargs):
@@ -246,10 +249,11 @@ class TextFilet(LicenseMixin, DataContent):
 
     def access_view(self, **kwargs):
         kwargs["object"] = self
-        kwargs["text"] = \
-            self.associated.attachedblobs.get(name="text").as_bytes.decode(
-                "utf8"
-            )
+        if not self.quota_data.get("key_list"):
+            kwargs["text"] = \
+                self.associated.attachedblobs.get(name="text").as_bytes.decode(
+                    "utf8"
+                )
         kwargs["download"] = "{}?{}".format(
             reverse(
                 'spider_base:ucontent-access',
@@ -268,4 +272,6 @@ class TextFilet(LicenseMixin, DataContent):
         t = self.associated.attachedblobs.get(name="text")
         response = t.get_response()
         response["Access-Control-Allow-Origin"] = "*"
+        if self.quota_data.get("key_list"):
+            response["X-KEYLIST"] = json.dumps(self.quota_data["key_list"])
         return response
