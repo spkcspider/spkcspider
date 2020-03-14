@@ -47,10 +47,15 @@ class PublicKey(DataContent):
         return _("content name", "Public Key")
 
     def get_priority(self):
-        # pull thirdparty keys down
+        # depriorize thirdparty keys
         if self.free_data.get("thirdparty"):
             return -10
         return 0
+
+    def get_strength_link(self):
+        if self.free_data.get("thirdparty"):
+            return 11
+        return super().get_strength_link()
 
     def get_info(self):
         ret = super().get_info()
