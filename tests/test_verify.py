@@ -137,7 +137,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
             (
                 None, spkcgraph["hash.algorithm"], Literal(
                     getattr(
-                        settings, "VERIFICATION_HASH_ALGORITHM",
+                        settings, "VERIFIER_HASH_ALGORITHM",
                         settings.SPIDER_HASH_ALGORITHM
                     ).name,
                     datatype=XSD.string
@@ -269,7 +269,7 @@ class VerifyTest(WebTestMixin, LiveServerTestCase):
             (
                 None, spkcgraph["hash.algorithm"], Literal(
                     getattr(
-                        settings, "VERIFICATION_HASH_ALGORITHM",
+                        settings, "VERIFIER_HASH_ALGORITHM",
                         settings.SPIDER_HASH_ALGORITHM
                     ).name,
                     datatype=XSD.string

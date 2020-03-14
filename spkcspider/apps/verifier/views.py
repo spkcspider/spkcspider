@@ -3,7 +3,7 @@
 Requires celery
 
 """
-__all__ = ["HashAlgoView", "CreateEntry", "HashAlgoView"]
+__all__ = ["InfoView", "CreateEntry", "VerifyEntry"]
 
 from urllib.parse import parse_qs, urlencode
 
@@ -14,7 +14,7 @@ from celery.exceptions import TimeoutError
 from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import NON_FIELD_ERRORS
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
@@ -137,6 +137,11 @@ class CreateEntry(DefinitionsMixin, UpdateView):
                 form.save(),
                 "{}://{}".format(
                     self.request.scheme, self.request.get_host()
+                ),
+                getattr(
+                    settings,
+                    "VERIFIER_INFO_FILTERS",
+                    []
                 )
             ), track_started=True
         )
@@ -162,20 +167,29 @@ class VerifyEntry(DefinitionsMixin, DetailView):
         else:
             kwargs["verified"] = Literal(False)
         kwargs["hash_algorithm"] = getattr(
-            settings, "VERIFICATION_HASH_ALGORITHM",
+            settings, "VERIFIER_HASH_ALGORITHM",
             settings.SPIDER_HASH_ALGORITHM
         ).name
+        kwargs["info_filters"] = getattr(
+            settings, "VERIFIER_INFO_FILTERS",
+            []
+        )
         return super().get_context_data(**kwargs)
 
 
-class HashAlgoView(View):
+class InfoView(View):
 
     def get(self, request, *args, **kwargs):
         algo = getattr(
-            settings, "VERIFICATION_HASH_ALGORITHM",
+            settings, "VERIFIER_HASH_ALGORITHM",
             settings.SPIDER_HASH_ALGORITHM
         ).name
-        return HttpResponse(
-            content=algo.encode("utf8"),
-            content_type="text/plain; charset=utf8"
+        return JsonResponse(
+            {
+                "hash_algorithm": algo,
+                "info_filters": getattr(
+                    settings, "VERIFIER_INFO_FILTERS",
+                    []
+                )
+            }
         )

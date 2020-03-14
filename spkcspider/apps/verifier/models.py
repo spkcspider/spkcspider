@@ -43,6 +43,9 @@ class VerifySourceObject(BaseReverseToken):
             return "{}{}/?{}".format(split[0], access, self.get_params)
         return "{}?{}".format(self.url, self.get_params)
 
+    def get_info_filters(self):
+        return
+
 
 class DataVerificationTag(models.Model):
     """ Contains verified data """

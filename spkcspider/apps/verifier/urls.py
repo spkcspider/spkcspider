@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import CreateEntry, HashAlgoView, VerifyEntry
+from .views import CreateEntry, InfoView, VerifyEntry
 
 app_name = "spider_verifier"
 
@@ -16,9 +16,9 @@ urlpatterns = [
         name='verify'
     ),
     path(
-        'hash/',
-        HashAlgoView.as_view(),
-        name='hash_algo'
+        'info/',
+        InfoView.as_view(),
+        name='info'
     ),
     # NOTE: this view is csrf_exempted
     path(

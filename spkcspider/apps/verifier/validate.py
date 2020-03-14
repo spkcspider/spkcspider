@@ -7,6 +7,7 @@ __all__ = {
 }
 
 import io
+import os
 import logging
 import tempfile
 
@@ -155,24 +156,29 @@ def retrieve_object(obj, current_size, graph=None, session=None):
     return ret
 
 
-def validate(ob, hostpart, task=None):
+def validate(ob, hostpart, task=None, info_filters=None):
     dvfile = None
     source = None
+    if not info_filters:
+        info_filters = []
+    info_filters = set(info_filters)
     g = Graph()
     g.namespace_manager.bind("spkc", spkcgraph, replace=True)
     with requests.session() as session:
+        view_url = None
         if isinstance(ob, tuple):
             current_size = ob[1]
             with open(ob[0], "rb") as f:
                 retrieve_object(f, [current_size], graph=g, session=session)
+            if ob[2]:
+                try:
+                    os.unlink(ob[0])
+                except FileNotFoundError:
+                    pass
         else:
             current_size = 0
-
-            source = VerifySourceObject.objects.get(
-                id=ob
-            )
-            url = source.get_url()
-            retrieve_object(url, [current_size], graph=g, session=session)
+            view_url = ob
+            retrieve_object(ob, [current_size], graph=g, session=session)
 
         tmp = list(g.query(
             """
@@ -197,9 +203,33 @@ def validate(ob, hostpart, task=None):
             )
         tmp = tmp[0]
         start = tmp.base
-        # scope = tmp.scope.toPython()
-        view_url = tmp.view.toPython()
         pages = tmp.pages.toPython()
+        # scope = tmp.scope.toPython()
+        if not view_url:
+            view_url = tmp.view.toPython()
+
+        # normalize view_url
+        splitted = view_url.split("?", 1)
+        if len(splitted) != 2:
+            splitted = [splitted[0], ""]
+        # update/create source object
+        source = VerifySourceObject.objects.update_or_create(
+            url=splitted[0], defaults={"get_params": splitted[1]}
+        )[0]
+
+        # create internal info filter (only those contents are checked)
+        # differs from info field
+        _filter_info = ""
+        for filt in info_filters:
+            fchar = filt[0]
+            if fchar == "\x1e":
+                _filter_info = \
+                    f"{_filter_info}FILTER CONTAINS(?info, {filt})\n"
+            elif fchar == "!" and not filt[1] == "!":
+                _filter_info = \
+                    f"{_filter_info}FILTER NOT CONTAINS(?info, {filt[1:]})\n"
+            else:
+                raise ValueError("Invalid filter")
 
         if task:
             task.update_state(
@@ -209,16 +239,11 @@ def validate(ob, hostpart, task=None):
                     'num_pages': pages
                 }
             )
-        if isinstance(ob, tuple):
-            split = view_url.split("?", 1)
-            source = VerifySourceObject.objects.update_or_create(
-                url=split[0], defaults={"get_params": split[1]}
-            )
 
         # retrieve further pages
         for page in range(2, pages+1):
             url = merge_get_url(
-                source.get_url(), raw="embed", page=str(page)
+                view_url, raw="embed", page=str(page)
             )
             retrieve_object(url, [current_size], graph=g, session=session)
 
@@ -244,20 +269,23 @@ def validate(ob, hostpart, task=None):
         g.remove((None, spkcgraph["csrftoken"], None))
 
         hashable_nodes = g.query(
-            """
-                SELECT DISTINCT ?base ?type ?name ?value
-                WHERE {
-                    ?base spkc:type ?type ;
-                          spkc:properties ?prop .
-                    ?prop spkc:hashable "true"^^xsd:boolean ;
-                          spkc:name ?name ;
-                          spkc:value ?value .
-                    OPTIONAL {
+            f"""
+                SELECT DISTINCT ?base ?info ?type ?name ?value
+                WHERE {{
+                    ?base  spkc:type ?type ;
+                           spkc:properties ?pinfo, ?pval .
+                    ?pinfo spkc:name "info"^^xsd:string ;
+                           spkc:value ?info .
+                    ?pval  spkc:hashable "true"^^xsd:boolean ;
+                           spkc:name ?name ;
+                           spkc:value ?value .
+                    OPTIONAL {{
                         ?value spkc:properties ?prop2 ;
                                spkc:name "info"^^xsd:string ;
-                               spkc:value ?info .
-                    } .
-                }
+                               spkc:value ?val_info .
+                    }}
+                    {_filter_info}
+                }}
             """,
             initNs={"spkc": spkcgraph}
         )
@@ -278,12 +306,12 @@ def validate(ob, hostpart, task=None):
         resources_with_hash = {}
         for count, val in enumerate(hashable_nodes, start=1):
             if isinstance(val.value, URIRef):
-                assert(val.info)
+                assert(val.val_info)
                 h = get_hashob()
                 # should always hash with xsd.string
                 h.update(XSD.string.encode("utf8"))
                 # don't strip id, as some contents seperate only by id
-                h.update(str(val.info).encode("utf8"))
+                h.update(str(val.val_info).encode("utf8"))
                 _hash = h.finalize()
             elif val.value.datatype == spkcgraph["hashableURI"]:
                 _hash = resources_with_hash.get(val.value.value)
@@ -398,11 +426,11 @@ def validate(ob, hostpart, task=None):
 
 if celery_app:
     @celery_app.task(bind=True, name='async validation')
-    def async_validate(self, ob, hostpart):
-        ret = validate(ob, hostpart, self)
+    def async_validate(self, ob, hostpart, info_filters=None):
+        ret = validate(ob, hostpart, task=self, info_filters=info_filters)
         return ret.get_absolute_url()
 else:
-    def async_validate(self, ob, hostpart):
+    def async_validate(self, ob, hostpart, async_validate=None):
         raise Exception("no celery installed")
 
 

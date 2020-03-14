@@ -10,7 +10,6 @@ from django.utils.translation import gettext_lazy as _
 from spkcspider.utils.settings import get_settings_func
 from spkcspider.utils.urls import merge_get_url
 
-from .models import VerifySourceObject
 
 _source_url_help = _(
     "Url to content or content list to verify"
@@ -64,11 +63,9 @@ class CreateEntryForm(forms.Form):
 
     def save(self):
         if self.cleaned_data.get("url", None):
-            split = self.cleaned_data["url"].split("?", 1)
-            return VerifySourceObject.objects.update_or_create(
-                url=split[0], defaults={"get_params": split[1]}
-            )[0].id
+            return self.cleaned_data["url"]
         else:
+            # should be done better
             f = tempfile.mkstemp()
             shutil.copyfileobj(self.cleaned_data["dvfile"].file, f)
-            return f.name, self.cleaned_data["dvfile"].size
+            return f.name, self.cleaned_data["dvfile"].size, True

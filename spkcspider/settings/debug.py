@@ -45,6 +45,7 @@ VERIFIER_REQUEST_KWARGS_MAP = {
         "proxies": {}
     }
 }
+
 # how many verification requests of user/ip per minute
 VERIFIER_REQUEST_RATE = "10/m"
 # 40 mb maximal size

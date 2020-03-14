@@ -224,6 +224,11 @@ UPDATE_DYNAMIC_AFTER_MIGRATION = True
 ## in units  # noqa: E266
 # SPIDER_USER_QUOTA_USERCOMPONENTS
 
+# set seperate hash algorithm for verifier
+# VERIFIER_HASH_ALGORITHM
+# only look at contents with this info properties
+# VERIFIER_INFO_FILTERS
+
 # unbreak old links after switch to a new machine friendly url layout
 SPIDER_LEGACY_REDIRECT = True
 

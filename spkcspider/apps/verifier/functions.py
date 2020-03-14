@@ -127,7 +127,7 @@ def clean_graph(graph, start, source, hostpart):
 def get_hashob():
     return hashes.Hash(
         getattr(
-           settings, "VERIFICATION_HASH_ALGORITHM",
+           settings, "VERIFIER_HASH_ALGORITHM",
            settings.SPIDER_HASH_ALGORITHM
         ),
         backend=default_backend()

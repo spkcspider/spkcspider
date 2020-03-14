@@ -13,6 +13,14 @@
     <td property="spkc:hash.algorithm" datatype="xsd:string">{{hash_algorithm}}</td>
   </tr>
   <tr>
+    <td>{% trans "Info Filters:" %}</td>
+    <td>
+      {% for f in info_filters %}
+        <div property="spkc:hash.info_filters" datatype="xsd:string">{{f}}</div>
+      {% endfor %}
+    </td>
+  </tr>
+  <tr>
     <td>{% trans "Verification State:" %}</td>
     <td property="spkc:verified" datatype="{{verified.datatype}}" content="{{verified}}">{% if object.verification_state == "verified" %}{% trans 'verified' %}:{{verified}}{% else %}{% trans 'unverified' %}{% endif %}</td>
   </tr>
