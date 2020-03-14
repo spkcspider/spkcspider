@@ -21,9 +21,9 @@
   integrity sha512-ZtjIIFplxncqxvogq148C3hBLQE+W3iJ8E4UvJ09zIJUgzwLcROsWwFDErVSXY2Plzao5J9KUYNHKHMEUYDMKw==
 
 "@json-editor/json-editor@*":
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-2.0.0.tgz#03bf765d588d398ad12b2a67b8edb406aad6f5d0"
-  integrity sha512-1XbqTNAWH0bGEcEPA5u02dV0dMS3AQPxNCzaidCy0nef5/PXYWUCbdhDl+fu5D8rKRQ3gWGfdtRIg+E9tMGMXw==
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/@json-editor/json-editor/-/json-editor-2.1.0.tgz#31ad1812376fd564059cf2e47d1d848b9886bdeb"
+  integrity sha512-fsIWEMBKy6kNOIlqDE9Ik6+l/tUztuPDOcfb0+1cC6F+qbpTcqWaHLo/XoZJk0NoGZMnnYgoILhGW+a5DPZjWA==
 
 base64-js@*:
   version "1.3.1"
