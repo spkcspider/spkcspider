@@ -268,9 +268,7 @@ def generate_form(name, layout):
             self.instance.associated.attached_to_primary_anchor = \
                 attached_to_primary_anchor
             if self.instance.layout.usertag:
-                _cached_references.append(
-                    self.instance.layout.usertag.associated
-                )
+                _cached_references.append(self.instance.layout.usertag)
             return (
                 _cached_references,
                 self.instance.associated.attached_to_primary_anchor !=
