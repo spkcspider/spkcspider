@@ -12,14 +12,13 @@ class SchemeWidget(widgets.TextInput):
     template_name = 'spider_base/forms/widgets/wrapped_scroll_input.html'
 
     class Media:
-        # css = {
-        #     'all': [
-        #         'node_modules/selectize/dist/css/selectize.default.css'
-        #     ]
-        # }
+        css = {
+            'all': [
+                'node_modules/choices.js/public/assets/styles/choices%s.css' % _extra  # noqa:E501
+            ]
+        }
         js = [
-            # 'node_modules/jquery/dist/jquery%s.js' % _extra,
-            # 'node_modules/selectize/dist/js/standalone/selectize%s.js' % _extra,  # noqa: E501
+            'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
             'node_modules/@json-editor/json-editor/dist/jsoneditor%s.js' % _extra,  # noqa:E501,
             'spider_tags/scheme_editor.js'
         ]

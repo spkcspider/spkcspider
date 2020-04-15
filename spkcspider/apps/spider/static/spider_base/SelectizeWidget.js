@@ -1,10 +1,11 @@
 
 document.addEventListener("DOMContentLoaded", function(){
-  $(".SelectizeWidgetTarget").selectize({
-    create: false,
-    delimiter: null,
-    plugins: {
-      'remove_button': {}
-    }
-  });
+  for (let element of document.getElementsByClassName("SelectizeWidgetTarget")) {
+    new Choices(element, {
+      addItems: false,
+      removeItems: false,
+      delimiter: null,
+      duplicateItemsAllowed: false
+    });
+  }
 })

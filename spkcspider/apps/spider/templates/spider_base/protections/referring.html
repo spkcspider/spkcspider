@@ -6,16 +6,14 @@
 
 {% block extrahead %}
 {{block.super}}
-<link rel="stylesheet" href="{% static 'node_modules/@devkral/selectize/dist/css/selectize.default.css' %}">
 {% if DEBUG %}
-  <script src="{% static 'node_modules/jquery/dist/jquery.js' %}"></script>
-  <script src="{% static 'node_modules/@devkral/selectize/dist/js/standalone/selectize.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'node_modules/choices.js/public/assets/styles/choices.css' %}">
+  <script src="{% static 'node_modules/choices.js/public/scripts/choices.js' %}"></script>
 {% else %}
-  <script src="{% static 'node_modules/jquery/dist/jquery.min.js' %}"></script>
-  <script src="{% static 'node_modules/@devkral/selectize/dist/js/standalone/selectize.min.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'node_modules/choices.js/public/assets/styles/choices.min.css' %}">
+  <script src="{% static 'node_modules/choices.js/public/scripts/choices.min.js' %}"></script>
 {% endif %}
 {% endblock %}
-
 {% block content %}
 <form class="w3-padding" id="SPKCReferringForm" name="SPKCReferringForm" action="{{ request.get_full_path }}" method="post">
   <input type="hidden" property="spkc:csrftoken" name="csrfmiddlewaretoken" datatype="xsd:string" content="{{csrf_token}}" value="{{csrf_token}}">
@@ -175,13 +173,11 @@
 {% block outercontent %}
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  $("#scope_filter").selectize({
-    create: true,
-    placeholder: '{% trans "Filter" %}',
-    delimiter: null,
-    plugins: {
-      'remove_button': {}
-    }
+  new Choices(document.getElementsByClassName("#scope_filter"), {
+    addItems: true,
+    removeItems: true,
+    removeItemButton: true,
+    placeholderValue: '{% trans "Filter" %}'
   });
 });
 </script>

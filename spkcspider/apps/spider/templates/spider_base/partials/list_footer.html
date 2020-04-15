@@ -71,13 +71,11 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  $("#search_field_list_footer").selectize({
-    create: true,
-    placeholder: '{% trans "Search" %}',
-    delimiter: null,
-    plugins: {
-      'remove_button': {}
-    }
+  new Choices(document.getElementsByClassName("#search_field_list_footer"), {
+    addItems: true,
+    removeItems: true,
+    removeItemButton: true,
+    placeholderValue: '{% trans "Search" %}'
   });
 });
 </script>

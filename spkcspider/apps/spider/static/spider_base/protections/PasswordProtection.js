@@ -52,7 +52,7 @@ let updatePWs = async function(pwfrom, pwto, salt){
       );
     }
     promises.push(_promise.then(
-      function(result){
+      async result => {
         let new_iv = window.crypto.getRandomValues(new Uint8Array(16));
         opt.text = tdecoder.decode(result);
         return window.crypto.subtle.encrypt(
@@ -64,15 +64,7 @@ let updatePWs = async function(pwfrom, pwto, salt){
           result
         ).then(
           function(result2){
-            let oldval=opt.value;
             opt.value = `${base64js.fromByteArray(new_iv)}:${base64js.fromByteArray(new Uint8Array(result2))}`;
-            opt.parentElement.selectize.updateOption(
-              oldval,
-              {
-                text: opt.text,
-                value: opt.value
-              }
-            );
             return Promise.resolve();
           },
           function(error2){
@@ -82,7 +74,7 @@ let updatePWs = async function(pwfrom, pwto, salt){
           }
         )
       },
-      function(error){
+      async error => {
         console.error(`decryption error: salt: ${salt}, iv: ${iv_val[0]}, pw: ${iv_val[1]}: ${error}`);
         has_error=true;
         return Promise.resolve();
@@ -98,7 +90,7 @@ document.addEventListener("DOMContentLoaded", async function(){
   /* for encode/decoding */
   let tencoder = new TextEncoder();
   let tdecoder = new TextDecoder();
-  let selectizers = null;
+  let choices_objects = [];
   let some_succeeded = false;
   let block_submits = true;
   let promises = [];
@@ -120,9 +112,9 @@ document.addEventListener("DOMContentLoaded", async function(){
   master_pw.form.addEventListener("submit", submit_block_handler, false);
 
   let init_key = await getKeyForPw(effective_pw, salt);
-  $(".PWProtectionTarget > option").each(function() {
-    let iv_val = this.value.split(":", 2);
-    let opt = this;
+
+  for (let opt of document.querySelectorAll(".PWProtectionTarget > option")) {
+    let iv_val = opt.value.split(":", 2);
     let _promise;
     if (iv_val.length == 2){
       if (iv_val[0] == "bogo"){
@@ -154,32 +146,42 @@ document.addEventListener("DOMContentLoaded", async function(){
     } else {
       console.warn(`Invalid value: ${iv_val}`)
     }
-  });
+  };
   await Promise.all(promises);
   /* unlock after initialization complete */
   block_submits = false;
-  selectizers = $(".PWProtectionTarget").selectize({
-    delimiter: null,
-    plugins: {
-      'remove_button': {}
-    },
-    create: function (input) {
-      let term = $.trim(input);
-      all_succeeded = false;
-      return {
-        "value": `bogo:${term}`,
-        "text": term
-      };
-    }
-  });
 
+  for (let element of document.getElementsByClassName("PWProtectionTarget")) {
+    choices_objects.push(new Choices(element, {
+      addItems: true,
+      removeItems: true,
+      removeItemButton: true,
+      delimiter: null,
+      duplicateItemsAllowed: false,
+      callbackOnCreateTemplates: () => ({
+        option: (...args) => {
+          let term = $.trim(args.value);
+          all_succeeded = false;
+          const opt = new Option(args.label, `bogo:${term}`, false, args.active);
+
+          if (args.customProperties) {
+            opt.dataset.customProperties = `${args.customProperties}`;
+          }
+
+          opt.disabled = !!args.disabled;
+
+          return opt;
+        }
+      }),
+    }));
+  }
   let change_master_pw_handler = async function (event){
     let effective_pw = default_master_pw;
     if (event.target.value != ""){
       effective_pw = event.target.value;
     }
     block_submits=true;
-    selectizers.each(function(){this.selectize.lock()});
+    choices_objects.forEach(obj => { obj.disable() });
     if (some_succeeded){
       await updatePWs(last_pw, effective_pw, salt);
     } else {
@@ -188,15 +190,14 @@ document.addEventListener("DOMContentLoaded", async function(){
       }
     }
     last_pw = effective_pw;
-    selectizers.each(function(){this.selectize.unlock()});
+    choices_objects.forEach(obj => { obj.enable() });
     block_submits=false;
   }
 
   master_pw.addEventListener("change", change_master_pw_handler, false);
-  $(".PWProtectionTarget").on('change', function (event){
-    /* fix missing compatibility to async by triggering events*/
-    master_pw.dispatchEvent(new CustomEvent("change"));
-    return true;
-  });
+
+  for (let obj of choices_objects) {
+      obj.addEventListener("addItem", change_master_pw_handler, false);
+  }
 
 })

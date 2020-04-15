@@ -211,12 +211,11 @@ class SelectizeWidget(widgets.Select):
     class Media:
         css = {
             'all': [
-                'node_modules/@devkral/selectize/dist/css/selectize.default.css'  # noqa:E501
+                'node_modules/choices.js/public/assets/styles/choices%s.css' % _extra  # noqa:E501
             ]
         }
         js = [
-            'node_modules/jquery/dist/jquery%s.js' % _extra,
-            'node_modules/@devkral/selectize/dist/js/standalone/selectize%s.js' % _extra,  # noqa: E501
+            'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
             'spider_base/SelectizeWidget.js'
         ]
 
@@ -236,12 +235,11 @@ class OpenChoiceWidget(widgets.Select):
     class Media:
         css = {
             'all': [
-                'node_modules/@devkral/selectize/dist/css/selectize.default.css'  # noqa:E501
+                'node_modules/choices.js/public/assets/styles/choices%s.css' % _extra  # noqa:E501
             ]
         }
         js = [
-            'node_modules/jquery/dist/jquery%s.js' % _extra,
-            'node_modules/@devkral/selectize/dist/js/standalone/selectize%s.js' % _extra,  # noqa: E501
+            'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
             'spider_base/OpenChoiceWidget.js'
         ]
 

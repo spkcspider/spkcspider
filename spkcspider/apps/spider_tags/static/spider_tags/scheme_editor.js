@@ -1,5 +1,4 @@
 
-/* JSONEditor.plugins.selectize.enable = true; */
 
 document.addEventListener("DOMContentLoaded", function(){
   let collection = document.getElementsByClassName("SchemeEditorTarget");

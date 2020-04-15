@@ -1,10 +1,10 @@
 {
   "private": true,
   "dependencies": {
-    "@devkral/selectize": "*",
     "@fortawesome/fontawesome-free": "^5.12.1",
     "@json-editor/json-editor": "*",
     "base64-js": "*",
+    "choices.js": "*",
     "flatpickr": "*",
     "jquery": "^3.4.1",
     "qrcode-generator": "*",
