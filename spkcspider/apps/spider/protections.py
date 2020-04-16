@@ -521,7 +521,7 @@ class PasswordProtection(BaseProtection):
             ]
         }
         js = [
-            'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
+            'node_modules/choices.js/public/assets/scripts/choices%s.js' % _extra,  # noqa: E501
             'node_modules/base64-js/base64js.min.js',
             'spider_base/protections/PasswordProtection.js'
         ]

@@ -476,7 +476,7 @@ class ReferrerMixin(object):
                     ]
                 },
                 js=[
-                    'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
+                    'node_modules/choices.js/public/assets/scripts/choices%s.js' % _extra,  # noqa: E501
                 ]
             )
             return self.response_class(

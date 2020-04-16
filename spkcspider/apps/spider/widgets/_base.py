@@ -46,7 +46,7 @@ class ListWidget(widgets.SelectMultiple):
         items=None, item_label=_("Item"), **kwargs
     ):
         if attrs is None:
-            attrs = {"class": ""}
+            attrs = {"class": "", "hidden": "hidden"}
         if wrapper_attrs is None:
             wrapper_attrs = {}
         if items is None:
@@ -56,6 +56,7 @@ class ListWidget(widgets.SelectMultiple):
             }
         attrs.setdefault("class", "")
         attrs["class"] += " SpiderListTarget"
+        attrs.setdefault("hidden", "hidden")
         # don't eval items here as they are lazy evaluated for localization
         self.items = items
         # don't eval item_label as it is lazy evaluated for localization
@@ -215,7 +216,7 @@ class SelectizeWidget(widgets.Select):
             ]
         }
         js = [
-            'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
+            'node_modules/choices.js/public/assets/scripts/choices%s.js' % _extra,  # noqa: E501
             'spider_base/SelectizeWidget.js'
         ]
 
@@ -239,7 +240,7 @@ class OpenChoiceWidget(widgets.Select):
             ]
         }
         js = [
-            'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
+            'node_modules/choices.js/public/assets/scripts/choices%s.js' % _extra,  # noqa: E501
             'spider_base/OpenChoiceWidget.js'
         ]
 

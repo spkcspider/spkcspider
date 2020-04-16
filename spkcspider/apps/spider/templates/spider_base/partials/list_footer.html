@@ -71,10 +71,11 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  new Choices(document.getElementsByClassName("#search_field_list_footer"), {
+  new Choices(document.getElementById("search_field_list_footer"), {
     addItems: true,
-    removeItems: true,
     removeItemButton: true,
+    duplicateItemsAllowed: false,
+    delimiter: null,
     placeholderValue: '{% trans "Search" %}'
   });
 });

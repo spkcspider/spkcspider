@@ -8,10 +8,10 @@
 {{block.super}}
 {% if DEBUG %}
   <link rel="stylesheet" href="{% static 'node_modules/choices.js/public/assets/styles/choices.css' %}">
-  <script src="{% static 'node_modules/choices.js/public/scripts/choices.js' %}"></script>
+  <script src="{% static 'node_modules/choices.js/public/assets/scripts/choices.js' %}"></script>
 {% else %}
   <link rel="stylesheet" href="{% static 'node_modules/choices.js/public/assets/styles/choices.min.css' %}">
-  <script src="{% static 'node_modules/choices.js/public/scripts/choices.min.js' %}"></script>
+  <script src="{% static 'node_modules/choices.js/public/assets/scripts/choices.min.js' %}"></script>
 {% endif %}
 {% endblock %}
 {% block content %}
@@ -173,10 +173,11 @@
 {% block outercontent %}
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  new Choices(document.getElementsByClassName("#scope_filter"), {
+  new Choices(document.getElementById("scope_filter"), {
     addItems: true,
-    removeItems: true,
     removeItemButton: true,
+    duplicateItemsAllowed: false,
+    delimiter: null,
     placeholderValue: '{% trans "Filter" %}'
   });
 });

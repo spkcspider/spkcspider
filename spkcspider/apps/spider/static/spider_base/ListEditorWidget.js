@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function(){
   for (let element of document.getElementsByClassName("SpiderListTarget")){
-
     let items;
     try {
       items = JSON.parse(element.dataset.items);
@@ -34,11 +33,9 @@ document.addEventListener("DOMContentLoaded", function(){
         "options": {
           "compact": true,
         },
-        "uniqueItems": true,
         "items": items
       }
     });
-    element.style.display = "none";
     let handler = function (ev){
       let errors = editor.validate();
       if (errors.length){
@@ -59,6 +56,5 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     };
     element.form.addEventListener("submit", handler, false);
-
   }
 })

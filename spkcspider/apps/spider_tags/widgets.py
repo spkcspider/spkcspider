@@ -18,7 +18,7 @@ class SchemeWidget(widgets.TextInput):
             ]
         }
         js = [
-            'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
+            'node_modules/choices.js/public/assets/scripts/choices%s.js' % _extra,  # noqa: E501
             'node_modules/@json-editor/json-editor/dist/jsoneditor%s.js' % _extra,  # noqa:E501,
             'spider_tags/scheme_editor.js'
         ]

@@ -43,7 +43,7 @@ class ComponentIndexBase(ExpiryMixin, ListView):
                 ]
             },
             js=[
-                'node_modules/choices.js/public/scripts/choices%s.js' % _extra,  # noqa: E501
+                'node_modules/choices.js/public/assets/scripts/choices%s.js' % _extra,  # noqa: E501
             ]
         )
         return super().get_context_data(**kwargs)
