@@ -30,7 +30,7 @@ django-simple-jsonfield = '>=0.3'
 requests = '*'
 certifi = '*'
 bleach = '*'
-rdflib = '*'
+rdflib = '<5'
 html5lib = '*'
 cryptography = "*"
 django-ranged-response = "*"
@@ -70,10 +70,11 @@ legacy_tox_ini = """
 minversion = 3.4.0
 isolated_build = True
 envlist = py{36,37,38}-django{30,master}-{sqlite3,postgresql,mysql}
-extras =
-  test
 
 [testenv]
+skip_install = false
+extras =
+  test
 whitelist_externals =
   psql
 commands =

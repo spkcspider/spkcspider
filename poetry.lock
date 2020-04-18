@@ -220,10 +220,10 @@ description = "Django-MySQL extends Django's built-in MySQL and MariaDB support 
 name = "django-mysql"
 optional = true
 python-versions = ">=3.5"
-version = "3.3.0"
+version = "3.4.0"
 
 [package.dependencies]
-Django = ">=1.11"
+Django = ">=2.0"
 
 [[package]]
 category = "main"
@@ -700,7 +700,7 @@ tasks = ["celery", "sqlalchemy"]
 test = ["django-webtest", "django-simple-captcha", "WSGIProxy2", "celery", "spkcspider-domainauth"]
 
 [metadata]
-content-hash = "e23b522648ceb936fccfcdb4db3e0294f272c27cefd194acbfb703128cb73539"
+content-hash = "8ed456b21faa30add46f5e3cccfd20d8e784e5bcc8770225dc2932d9b025a886"
 python-versions = ">=3.6"
 
 [metadata.files]
@@ -809,8 +809,8 @@ django-fast-ratelimit = [
     {file = "django_fast_ratelimit-0.5.0.2-py3-none-any.whl", hash = "sha256:05786cea9d313b84739d60993c3e1a02382169c6a730d84a91a87586af56ae09"},
 ]
 django-mysql = [
-    {file = "django-mysql-3.3.0.tar.gz", hash = "sha256:b984dfe75bedeb01bfcb974fe8400c224a6b55677b98a799f1c96274d96c5a72"},
-    {file = "django_mysql-3.3.0-py3-none-any.whl", hash = "sha256:ceaf6d93396b7f7b3798ac5f9a819dd70d5f0e1112850f2a34c57f062fa19398"},
+    {file = "django-mysql-3.4.0.tar.gz", hash = "sha256:b92b2026df1cdc2e960d876f7f7facf0e0106c830e3663f597174b531b2b6dea"},
+    {file = "django_mysql-3.4.0-py3-none-any.whl", hash = "sha256:fe4693c4e001c49b62af463d196b6972f247cfe3841af5b0d5d35afe0e3fe9fb"},
 ]
 django-next-prev = [
     {file = "django-next-prev-1.0.1.tar.gz", hash = "sha256:5fe2c693db551c0f444cb82284335a0e303518215050b3cb56551abb251e9376"},
