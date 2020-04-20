@@ -19,7 +19,7 @@ base64-js@*:
 
 choices.js@devkral/Choices#feature/add_select_options:
   version "9.0.1"
-  resolved "https://codeload.github.com/devkral/Choices/tar.gz/ac30fd21bdefcebc4b02999b661857f54f0b1fe5"
+  resolved "https://codeload.github.com/devkral/Choices/tar.gz/327faffaf6494a1f528db60a7af859cf73b83bc4"
   dependencies:
     deepmerge "^4.2.0"
     fuse.js "^3.4.6"
