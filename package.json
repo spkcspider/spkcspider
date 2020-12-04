@@ -1,12 +1,12 @@
 {
   "private": true,
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.12.1",
+    "@fortawesome/fontawesome-free": "^5.15.1",
     "@json-editor/json-editor": "*",
     "base64-js": "*",
     "choices.js": "devkral/Choices#feature/add_select_options",
     "flatpickr": "*",
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.1",
     "qrcode-generator": "*",
     "trumbowyg": "*",
     "w3-css": "*"
